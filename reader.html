@@ -77,6 +77,7 @@ body{background:var(--bg);color:var(--t1);font-family:'Noto Serif TC',serif;font
   }
   .dsk-btn:hover{border-color:rgba(255,255,255,.2);color:var(--t1)}
   .dsk-btn.active{border-color:var(--amber);color:var(--amber)}
+  .dsk-btn-toggle.expanded{border-color:var(--jade);color:var(--jade)}
   /* Sidebar internals */
   .sb-head{padding:18px 16px 12px;border-bottom:1px solid var(--line2);flex-shrink:0}
   .sb-logo{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:17px;color:var(--t1);margin-bottom:2px;letter-spacing:.06em}
@@ -315,7 +316,7 @@ body{background:var(--bg);color:var(--t1);font-family:'Noto Serif TC',serif;font
 .fab-item:active{opacity:.65}
 .fab-icon{font-size:19px;line-height:1.1;color:var(--t2)}
 .fab-label{font-family:'Noto Sans TC',sans-serif;font-size:9.5px;color:var(--t2);letter-spacing:.04em}
-/* ── 一鍵收合 special button ── */
+/* ── desktop topbar special buttons ── */
 .fab-item.fab-collapse .fab-icon{color:var(--amber);font-size:16px}
 .fab-item.fab-collapse .fab-label{color:var(--amber)}
 .fab-item.fab-guide .fab-icon{color:var(--f6);font-size:16px}
@@ -518,7 +519,8 @@ body.day-mode #hero-canvas{opacity:.3}
     <!-- Desktop top bar -->
     <div id="desktop-topbar">
       <div id="desktop-ep-title">時間裡的兩個妳</div>
-      <button class="dsk-btn" onclick="toggleInfoPanel()" id="btn-collapse">⏳ 一鍵收合</button>
+      <button class="dsk-btn" onclick="toggleInfoPanel()">⏳ 故事導覽</button>
+      <button class="dsk-btn dsk-btn-toggle" onclick="toggleAllSections()" id="dsk-toggle-all">⊞ 一鍵展開</button>
       <button class="dsk-btn" onclick="cycleFont()" id="btn-font">字 A</button>
       <button class="dsk-btn" onclick="toggleDay()">☀ 日間</button>
       <button class="dsk-btn" onclick="openJump()">☰ 跳章</button>
@@ -966,6 +968,9 @@ function toggleAllSections(){
   const icon=document.getElementById('fab-ta-icon');const label=document.getElementById('fab-ta-label');
   if(icon)icon.textContent=allExpanded?'⊟':'⊞';
   if(label)label.textContent=allExpanded?'一鍵收合':'一鍵展開';
+  // update desktop button
+  const dskBtn=document.getElementById('dsk-toggle-all');
+  if(dskBtn){dskBtn.textContent=allExpanded?'⊟ 一鍵收合':'⊞ 一鍵展開';dskBtn.classList.toggle('expanded',allExpanded);}
 }
 
 // ── Hero canvas ──
