@@ -56,6 +56,14 @@ a,button,[role="button"],input{touch-action:manipulation}
 .a-dot.rainbow{background:conic-gradient(var(--f1) 0deg,var(--f2) 60deg,var(--f3) 120deg,var(--f4) 180deg,var(--f5) 240deg,var(--f6) 300deg,var(--f1) 360deg)}
 .hero-cta{width:100%;max-width:248px;padding:15px 0;border-radius:3px;background:rgba(22,168,100,.14);border:1px solid rgba(22,168,100,.54);color:#7ce5b2;cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.24em;text-transform:uppercase;transition:background .2s,border-color .2s,box-shadow .2s;-webkit-tap-highlight-color:transparent;box-shadow:0 0 0 rgba(22,168,100,0)}
 .hero-cta:active,.hero-cta:hover{background:rgba(22,168,100,.24);border-color:rgba(22,168,100,.82);box-shadow:0 0 24px rgba(22,168,100,.12)}
+.hero-scene-link{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  margin-top:12px;padding:11px 18px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.035);color:rgba(234,230,222,.78);
+  text-decoration:none;font-family:'DM Mono',monospace;font-size:8.8px;letter-spacing:.18em;text-transform:uppercase;
+  transition:border-color .16s,background .16s,color .16s
+}
+.hero-scene-link:hover,.hero-scene-link:active{border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.06);color:var(--t1)}
 .hero-resume{display:none;margin:18px auto 0;max-width:320px;padding:14px 16px;border:1px solid rgba(255,255,255,.1);border-radius:10px;background:rgba(255,255,255,.04);text-align:left;cursor:pointer;transition:border-color .15s,background .15s}
 .hero-resume.show{display:block}
 .hero-resume:hover,.hero-resume:active{border-color:rgba(22,168,100,.42);background:rgba(255,255,255,.06)}
@@ -1052,6 +1060,7 @@ input[type=range].ap-slider::-moz-range-thumb{width:14px;height:14px;border-radi
       <div class="arc-pill"><div class="a-dot" style="background:var(--ember)"></div>複合視角</div>
     </div>
     <button class="hero-cta" onclick="goToEp(0)">↓ &nbsp; 開始閱讀</button>
+    <a class="hero-scene-link" href="lm402.html">↗ &nbsp; LM402 一眼瞬間</a>
     <button class="hero-resume" id="resume-card" onclick="resumeReading()" aria-label="繼續上次閱讀進度">
       <span class="resume-eyebrow">Continue Reading</span>
       <span class="resume-title" id="resume-title">繼續上次閱讀</span>
