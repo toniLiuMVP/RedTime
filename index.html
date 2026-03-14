@@ -23,6 +23,8 @@ html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;scroll-padding-top:82p
 body{background:var(--ink);color:var(--parchment);font-family:'Noto Serif TC',serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;cursor:default}
 a,button,[role="button"]{touch-action:manipulation}
 :focus-visible{outline:2px solid rgba(22,168,100,.78);outline-offset:3px}
+.ui-sprite{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
+.icon-svg{display:block;width:100%;height:100%;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;fill:none}
 
 /* ─── Grain overlay ─── */
 body::before{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
@@ -105,8 +107,11 @@ section{padding:clamp(72px,12vw,140px) var(--gutter);position:relative}
 .arcs-header{max-width:1100px;margin:0 auto 56px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:end}
 @media(max-width:768px){.arcs-header{grid-template-columns:1fr}}
 .arcs-intro{font-size:14.8px;font-weight:300;line-height:1.92;color:rgba(234,230,222,.7);letter-spacing:.028em;max-width:34em;text-wrap:pretty}
-.arc-cards{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
-.arc-card{padding:24px 20px;border:1px solid var(--seam);border-radius:8px;background:rgba(255,255,255,.018);position:relative;overflow:hidden;transition:border-color .2s,transform .2s;cursor:default}
+.arc-cards{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;align-items:stretch}
+.arc-card{
+  padding:24px 20px;border:1px solid var(--seam);border-radius:8px;background:rgba(255,255,255,.018);position:relative;overflow:hidden;transition:border-color .2s,transform .2s;cursor:default;
+  display:flex;flex-direction:column;height:100%
+}
 .arc-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
 .arc-card:hover{transform:translateY(-2px)}
 .arc-father::before{background:linear-gradient(180deg,transparent,var(--jade),transparent)}
@@ -119,7 +124,19 @@ section{padding:clamp(72px,12vw,140px) var(--gutter);position:relative}
 .arc-daughter:hover{border-color:rgba(200,144,16,.35)}
 .arc-mixed::before{background:linear-gradient(180deg,transparent,rgba(184,72,32,.7),transparent)}
 .arc-mixed:hover{border-color:rgba(184,72,32,.3)}
-.arc-card-icon{font-size:22px;margin-bottom:14px}
+.arc-card-icon{
+  width:54px;height:54px;margin-bottom:16px;border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(255,255,255,.08);
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.018));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 12px 24px rgba(0,0,0,.18)
+}
+.arc-card-icon svg{width:28px;height:28px}
+.arc-father .arc-card-icon{color:var(--jade);background:linear-gradient(180deg,rgba(22,168,100,.12),rgba(22,168,100,.03));border-color:rgba(22,168,100,.18)}
+.arc-male .arc-card-icon{color:rgba(210,206,198,.86);background:linear-gradient(180deg,rgba(168,164,156,.12),rgba(168,164,156,.03));border-color:rgba(168,164,156,.18)}
+.arc-female .arc-card-icon{color:rgba(255,248,244,.94);background:linear-gradient(135deg,rgba(255,72,88,.22),rgba(232,204,16,.12) 48%,rgba(56,128,255,.18));border-color:rgba(255,120,128,.18)}
+.arc-daughter .arc-card-icon{color:var(--amber);background:linear-gradient(180deg,rgba(200,144,16,.13),rgba(200,144,16,.03));border-color:rgba(200,144,16,.18)}
+.arc-mixed .arc-card-icon{color:rgba(238,188,164,.92);background:linear-gradient(180deg,rgba(184,72,32,.14),rgba(184,72,32,.04));border-color:rgba(184,72,32,.18)}
 .arc-card-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;letter-spacing:.08em;margin-bottom:6px}
 .arc-father .arc-card-name{color:var(--jade)}
 .arc-male .arc-card-name{color:rgba(168,164,156,.9)}
@@ -127,8 +144,8 @@ section{padding:clamp(72px,12vw,140px) var(--gutter);position:relative}
 .arc-daughter .arc-card-name{color:var(--amber)}
 .arc-mixed .arc-card-name{color:rgba(184,72,32,.9)}
 .arc-card-sub{font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--mist);margin-bottom:12px}
-.arc-card-desc{font-family:'Noto Sans TC',sans-serif;font-size:12.7px;color:rgba(234,230,222,.68);line-height:1.8;font-weight:300;text-wrap:pretty}
-.arc-eps{font-family:'DM Mono',monospace;font-size:9px;color:var(--mist);margin-top:12px;letter-spacing:.12em}
+.arc-card-desc{font-family:'Noto Sans TC',sans-serif;font-size:12.7px;color:rgba(234,230,222,.68);line-height:1.8;font-weight:300;text-wrap:pretty;flex:1}
+.arc-eps{font-family:'DM Mono',monospace;font-size:9px;color:var(--mist);margin-top:auto;padding-top:14px;letter-spacing:.12em}
 
 /* ─── TIMELINE TEASER ─── */
 #timeline-sec{background:linear-gradient(180deg,var(--ink2),var(--ink))}
@@ -136,14 +153,32 @@ section{padding:clamp(72px,12vw,140px) var(--gutter);position:relative}
 .tl-header{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:end;margin-bottom:60px}
 @media(max-width:768px){.tl-header{grid-template-columns:1fr}}
 .tl-intro{font-size:14.8px;font-weight:300;line-height:1.92;color:rgba(234,230,222,.7);letter-spacing:.028em;max-width:34em;text-wrap:pretty}
-.tl-track{position:relative;padding:0 0 0 40px}
-.tl-axis{position:absolute;left:12px;top:8px;bottom:8px;width:1px;background:linear-gradient(180deg,transparent,var(--seam) 15%,var(--seam) 85%,transparent)}
-.tl-event{position:relative;margin-bottom:32px;padding-bottom:32px;border-bottom:1px solid var(--seam2)}
-.tl-event:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
-.tl-dot{position:absolute;left:-34px;top:4px;width:12px;height:12px;border-radius:50%;border:1.5px solid;background:var(--ink2)}
-.tl-event-year{font-family:'DM Mono',monospace;font-size:10px;color:var(--mist);letter-spacing:.15em;margin-bottom:4px}
-.tl-event-label{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:300;color:var(--parchment);margin-bottom:5px;letter-spacing:.04em}
-.tl-event-desc{font-family:'Noto Sans TC',sans-serif;font-size:12.5px;color:var(--warm);line-height:1.85;font-weight:300}
+.tl-track{position:relative;padding:0 0 0 62px}
+.tl-axis{position:absolute;left:18px;top:12px;bottom:12px;width:1px;background:linear-gradient(180deg,transparent,var(--seam) 15%,var(--seam) 85%,transparent)}
+.tl-event{
+  position:relative;display:flex;flex-direction:column;gap:8px;
+  margin-bottom:18px;padding:18px 20px 20px 18px;
+  border:1px solid var(--seam2);border-left:none;border-radius:0 14px 14px 0;
+  background:linear-gradient(180deg,rgba(255,255,255,.022),rgba(255,255,255,.01));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025),0 10px 22px rgba(0,0,0,.08)
+}
+.tl-event:last-child{margin-bottom:0}
+.tl-dot{
+  position:absolute;left:-62px;top:-1px;width:40px;height:40px;border-radius:14px;border:1px solid;
+  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 12px 28px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.04)
+}
+.tl-dot svg{width:20px;height:20px}
+.tl-event-year{
+  display:inline-flex;align-items:center;align-self:flex-start;
+  padding:4px 9px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.018);
+  font-family:'DM Mono',monospace;font-size:9.2px;color:var(--mist);letter-spacing:.13em
+}
+.tl-event-label{font-family:'Cormorant Garamond',serif;font-size:20px;line-height:1.18;font-weight:300;color:var(--parchment);letter-spacing:.04em}
+.tl-event-desc{max-width:30em;font-family:'Noto Sans TC',sans-serif;font-size:12.5px;color:var(--warm);line-height:1.9;font-weight:300}
 
 /* ─── READ SECTION ─── */
 #read{text-align:center;background:radial-gradient(ellipse 100% 80% at 50% 50%,rgba(8,28,14,.9) 0%,var(--ink) 70%)}
@@ -163,11 +198,16 @@ section{padding:clamp(72px,12vw,140px) var(--gutter);position:relative}
 .platform-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
 .platform-card{display:flex;align-items:center;gap:18px;padding:22px 22px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,.024),rgba(255,255,255,.012));text-decoration:none;transition:all .2s;-webkit-tap-highlight-color:transparent}
 .platform-card:hover{border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.05);transform:translateY(-2px)}
-.plat-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;font-family:'DM Mono',monospace;font-weight:bold}
+.plat-icon{
+  width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-family:'DM Mono',monospace;font-weight:bold;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 10px 24px rgba(0,0,0,.16)
+}
+.plat-icon svg{width:23px;height:23px;display:block}
 .plat-icon.yt{background:rgba(255,0,0,.1);border:1px solid rgba(255,0,0,.2);color:#ff4444}
 .plat-icon.fb{background:rgba(24,119,242,.1);border:1px solid rgba(24,119,242,.2);color:#4488ff}
 .plat-icon.ln{background:rgba(0,195,0,.1);border:1px solid rgba(0,195,0,.2);color:#00c844}
-.plat-icon.th{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:var(--parchment);font-size:18px}
+.plat-icon.th{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:var(--parchment)}
 .plat-info{flex:1}
 .plat-name{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--mist);margin-bottom:3px}
 .plat-label{font-family:'Noto Sans TC',sans-serif;font-size:14px;color:var(--parchment);font-weight:300}
@@ -209,6 +249,20 @@ footer{padding:60px var(--gutter) 40px;border-top:1px solid var(--seam2);backgro
   .read-epbadges{gap:7px 6px;margin-bottom:34px}
   .about-stats{margin-top:30px}
   .stat-box{padding:20px 16px}
+  .arc-card{padding:22px 18px}
+  .arc-card-icon{width:50px;height:50px;border-radius:14px}
+  .arc-card-icon svg{width:25px;height:25px}
+  .tl-track{padding-left:54px}
+  .tl-axis{left:16px}
+  .tl-event{gap:7px;padding:14px 14px 18px 12px;margin-bottom:18px;border-radius:0 12px 12px 0}
+  .tl-dot{left:-54px;width:34px;height:34px;border-radius:12px}
+  .tl-dot svg{width:17px;height:17px}
+  .tl-event-year{padding:4px 8px;font-size:8.5px}
+  .tl-event-label{font-size:17px}
+  .tl-event-desc{max-width:none;line-height:1.82}
+  .platform-card{gap:14px;padding:18px 18px}
+  .plat-icon{width:44px;height:44px;border-radius:12px}
+  .plat-icon svg{width:20px;height:20px}
 }
 @media(min-width:1360px){
   #hero{padding-top:92px;padding-bottom:110px}
@@ -223,6 +277,53 @@ footer{padding:60px var(--gutter) 40px;border-top:1px solid var(--seam2);backgro
 </style>
 </head>
 <body>
+
+<svg class="ui-sprite" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="ic-person" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="8" r="3.2"></circle>
+      <path d="M6.8 18c1.2-2.6 3.1-4 5.2-4s4 1.4 5.2 4"></path>
+    </symbol>
+    <symbol id="ic-cap" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3.5 9.4 12 5.6l8.5 3.8L12 13.2 3.5 9.4Z"></path>
+      <path d="M7 11.6v3c1.3 1 3 1.5 5 1.5s3.7-.5 5-1.5v-3"></path>
+      <path d="M20.5 10v4.4"></path>
+    </symbol>
+    <symbol id="ic-starburst" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m12 3.5 1.7 5 5 1.7-5 1.6-1.7 5-1.6-5-5-1.6 5-1.7 1.6-5Z"></path>
+      <path d="m18.2 4.6.7 1.9 1.9.7-1.9.7-.7 1.9-.7-1.9-1.9-.7 1.9-.7.7-1.9Z"></path>
+    </symbol>
+    <symbol id="ic-moon" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16.7 4.6a7.8 7.8 0 1 0 2.6 12.5 7.1 7.1 0 0 1-2.6-12.5Z"></path>
+      <circle cx="17.7" cy="8.2" r=".7" fill="currentColor" stroke="none"></circle>
+      <circle cx="19.3" cy="11.1" r=".55" fill="currentColor" stroke="none"></circle>
+    </symbol>
+    <symbol id="ic-orbit" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="2.3"></circle>
+      <ellipse cx="12" cy="12" rx="7.5" ry="3.8"></ellipse>
+      <ellipse cx="12" cy="12" rx="7.5" ry="3.8" transform="rotate(60 12 12)"></ellipse>
+    </symbol>
+    <symbol id="ic-phone" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15.8 14.2 18.2 16.6a1 1 0 0 1 0 1.4l-1.1 1.1a2.3 2.3 0 0 1-2.3.6c-1.7-.5-4.1-1.8-6.2-3.9S5.2 11.3 4.8 9.6A2.3 2.3 0 0 1 5.4 7.3l1.1-1.1a1 1 0 0 1 1.4 0l2.4 2.4a1 1 0 0 1 .2 1.1l-.8 2a10.2 10.2 0 0 0 3.6 3.6l2-.8a1 1 0 0 1 1.1.2Z"></path>
+    </symbol>
+    <symbol id="ic-youtube" viewBox="0 0 24 24" stroke="none" fill="currentColor">
+      <path d="M20.2 7.2a2.5 2.5 0 0 0-1.8-1.8C16.8 5 12 5 12 5s-4.8 0-6.4.4A2.5 2.5 0 0 0 3.8 7.2C3.4 8.8 3.4 12 3.4 12s0 3.2.4 4.8a2.5 2.5 0 0 0 1.8 1.8c1.6.4 6.4.4 6.4.4s4.8 0 6.4-.4a2.5 2.5 0 0 0 1.8-1.8c.4-1.6.4-4.8.4-4.8s0-3.2-.4-4.8ZM10.3 15.4V8.6l5.7 3.4-5.7 3.4Z"></path>
+    </symbol>
+    <symbol id="ic-facebook" viewBox="0 0 24 24" stroke="none" fill="currentColor">
+      <path d="M13.8 20v-6h2.5l.4-3h-2.9V9.1c0-.9.3-1.6 1.7-1.6h1.4V4.8c-.2 0-1-.1-2-.1-2.9 0-4.5 1.5-4.5 4.2V11H8.1v3h2.3v6h3.4Z"></path>
+    </symbol>
+    <symbol id="ic-line" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4.6 8.1C6.1 6.6 8.7 5.6 12 5.6s5.9 1 7.4 2.5c1.1 1.1 1.7 2.5 1.7 4 0 3.6-4 6.5-9.1 6.5-.8 0-1.7-.1-2.4-.2L5.5 20l1-3c-1.2-.9-1.9-2.1-1.9-4 0-1.5.6-2.8 1.7-3.9Z"></path>
+      <path d="M8.6 10.3v3.3"></path>
+      <path d="M11.9 10.3v3.3"></path>
+      <path d="M15.2 10.3v3.3"></path>
+    </symbol>
+    <symbol id="ic-threads" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15.9 9.3c-.8-1.7-2.3-2.6-4.2-2.6-3.3 0-5.8 2.3-5.8 5.4 0 3.2 2.4 5.6 5.8 5.6 2.8 0 4.8-1.7 4.8-4.1 0-2.1-1.5-3.5-3.7-3.5-1.9 0-3.3 1-3.3 2.6 0 1.3 1.1 2.2 2.5 2.2 1.2 0 2.2-.7 2.5-1.8"></path>
+      <path d="M16 9.4c1.1.8 1.9 2 1.9 4 0 3.7-2.7 6.1-6.5 6.1-4.3 0-7.3-3.1-7.3-7.4 0-4.2 3.1-7.2 7.4-7.2 3.3 0 5.7 1.6 6.8 4.5"></path>
+    </symbol>
+  </defs>
+</svg>
 
 <!-- NAV -->
 <nav id="nav">
@@ -320,35 +421,35 @@ footer{padding:60px var(--gutter) 40px;border-top:1px solid var(--seam2);backgro
   </div>
   <div class="arc-cards">
     <div class="arc-card arc-father reveal">
-      <div class="arc-card-icon">👨</div>
+      <div class="arc-card-icon"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-person"></use></svg></div>
       <div class="arc-card-name">把拔</div>
       <div class="arc-card-sub">父親視角</div>
       <div class="arc-card-desc">一個自以為能預知女兒青春期的補習班老師。</div>
       <div class="arc-eps">EP0 · 1 · 4 · 15</div>
     </div>
     <div class="arc-card arc-male reveal">
-      <div class="arc-card-icon">🎓</div>
+      <div class="arc-card-icon"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-cap"></use></svg></div>
       <div class="arc-card-name">學長</div>
       <div class="arc-card-sub">男主視角</div>
       <div class="arc-card-desc">他始終相信。</div>
       <div class="arc-eps">EP2 · 3 · 5–9 · 13 · 18 · 19 · 27–29 · 31 · 39 · 40</div>
     </div>
     <div class="arc-card arc-female reveal">
-      <div class="arc-card-icon">✨</div>
+      <div class="arc-card-icon"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-starburst"></use></svg></div>
       <div class="arc-card-name">學妹</div>
       <div class="arc-card-sub">女主視角</div>
       <div class="arc-card-desc">當他變成他，我才是我。</div>
       <div class="arc-eps">EP11 · 12 · 14 · 17 · 20 · 38</div>
     </div>
     <div class="arc-card arc-daughter reveal">
-      <div class="arc-card-icon">🌙</div>
+      <div class="arc-card-icon"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-moon"></use></svg></div>
       <div class="arc-card-name">女兒</div>
       <div class="arc-card-sub">夢境視角</div>
       <div class="arc-card-desc">她在夢裡飛過不同時間，也一次次看見把拔與阿姨的過去。</div>
       <div class="arc-eps">EP16 · 21–23 · 26 · 30 · 32–35</div>
     </div>
     <div class="arc-card arc-mixed reveal">
-      <div class="arc-card-icon">⏳</div>
+      <div class="arc-card-icon"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-orbit"></use></svg></div>
       <div class="arc-card-name">複合視角</div>
       <div class="arc-card-sub">多線交織</div>
       <div class="arc-card-desc">這些章節把兩條或三條時間線放在同一集裡，讓不同視角彼此照見。</div>
@@ -370,25 +471,25 @@ footer{padding:60px var(--gutter) 40px;border-top:1px solid var(--seam2);backgro
     <div class="tl-track reveal">
       <div class="tl-axis"></div>
       <div class="tl-event">
-        <div class="tl-dot" style="border-color:var(--jade);background:rgba(22,168,100,.1)"></div>
+        <div class="tl-dot" style="border-color:var(--jade);background:linear-gradient(180deg,rgba(22,168,100,.14),rgba(22,168,100,.04));color:var(--jade)"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-person"></use></svg></div>
         <div class="tl-event-year">1997年 · 某個夜晚</div>
         <div class="tl-event-label">把拔，十三歲</div>
         <div class="tl-event-desc">他不知道有人飛到他身邊，那一夜，他並不孤單。</div>
       </div>
       <div class="tl-event">
-        <div class="tl-dot" style="border-color:rgba(168,164,156,.5);background:rgba(168,164,156,.06)"></div>
+        <div class="tl-dot" style="border-color:rgba(168,164,156,.5);background:linear-gradient(180deg,rgba(168,164,156,.14),rgba(168,164,156,.04));color:rgba(210,206,198,.9)"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-cap"></use></svg></div>
         <div class="tl-event-year">2005年 · 大學校園</div>
         <div class="tl-event-label">一眼瞬間</div>
         <div class="tl-event-desc">這一次，依然再次遇見妳。</div>
       </div>
       <div class="tl-event">
-        <div class="tl-dot" style="border-color:rgba(255,72,88,.6);background:rgba(255,72,88,.06)"></div>
+        <div class="tl-dot" style="border-color:rgba(255,72,88,.6);background:linear-gradient(180deg,rgba(255,72,88,.16),rgba(255,72,88,.04));color:rgba(255,212,218,.92)"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-phone"></use></svg></div>
         <div class="tl-event-year">2005年9月22日 · 20:57</div>
         <div class="tl-event-label">那通一定要接到的電話</div>
         <div class="tl-event-desc">2005年9月22日20:57，那通電話準時響起。</div>
       </div>
       <div class="tl-event">
-        <div class="tl-dot" style="border-color:var(--amber);background:rgba(200,144,16,.06)"></div>
+        <div class="tl-dot" style="border-color:var(--amber);background:linear-gradient(180deg,rgba(200,144,16,.16),rgba(200,144,16,.05));color:var(--amber)"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-moon"></use></svg></div>
         <div class="tl-event-year">2025年之後 · 夢境</div>
         <div class="tl-event-label">女兒</div>
         <div class="tl-event-desc">她開始在夢裡飛行，也開始看見更早以前的時間。</div>
@@ -434,7 +535,7 @@ footer{padding:60px var(--gutter) 40px;border-top:1px solid var(--seam2);backgro
     </div>
     <div class="platform-cards">
       <a class="platform-card reveal" href="https://www.youtube.com/c/toniMVP" target="_blank" rel="noopener">
-        <div class="plat-icon yt">▶</div>
+        <div class="plat-icon yt"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-youtube"></use></svg></div>
         <div class="plat-info">
           <div class="plat-name">YouTube</div>
           <div class="plat-label">toni</div>
@@ -443,7 +544,7 @@ footer{padding:60px var(--gutter) 40px;border-top:1px solid var(--seam2);backgro
         <div class="plat-arrow">→</div>
       </a>
       <a class="platform-card reveal" href="https://www.facebook.com/share/16aMnThEBX/?mibextid=wwXIfr" target="_blank" rel="noopener">
-        <div class="plat-icon fb">f</div>
+        <div class="plat-icon fb"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-facebook"></use></svg></div>
         <div class="plat-info">
           <div class="plat-name">Facebook</div>
           <div class="plat-label">官方粉絲頁</div>
@@ -452,7 +553,7 @@ footer{padding:60px var(--gutter) 40px;border-top:1px solid var(--seam2);backgro
         <div class="plat-arrow">→</div>
       </a>
       <a class="platform-card reveal" href="https://lin.ee/VNdWUvr" target="_blank" rel="noopener">
-        <div class="plat-icon ln">L</div>
+        <div class="plat-icon ln"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-line"></use></svg></div>
         <div class="plat-info">
           <div class="plat-name">LINE 社群</div>
           <div class="plat-label">官方社群</div>
@@ -461,7 +562,7 @@ footer{padding:60px var(--gutter) 40px;border-top:1px solid var(--seam2);backgro
         <div class="plat-arrow">→</div>
       </a>
       <a class="platform-card reveal" href="https://www.threads.com/@toniliumvp" target="_blank" rel="noopener">
-        <div class="plat-icon th">⊕</div>
+        <div class="plat-icon th"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-threads"></use></svg></div>
         <div class="plat-info">
           <div class="plat-name">Threads</div>
           <div class="plat-label">@toniliumvp</div>
