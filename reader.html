@@ -26,6 +26,12 @@ html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;scroll-padding-top:var
 body{background:var(--bg);color:var(--t1);font-family:'Noto Serif TC',serif;font-size:var(--fs);line-height:var(--lh);font-weight:300;overflow-x:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 a,button,[role="button"],input{touch-action:manipulation}
 :focus-visible{outline:2px solid rgba(22,168,100,.78);outline-offset:3px}
+.ui-sprite{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
+.ui-glyph{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;flex-shrink:0}
+.ui-glyph svg,.ui-icon-svg{display:block;width:100%;height:100%;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.icon-md{width:18px;height:18px}
+.btn-icon{width:14px;height:14px}
+.nav-icon{width:16px;height:16px}
 
 /* ── Progress Bar ─── */
 #prog-bar{position:fixed;top:0;left:0;right:0;height:2.5px;z-index:1000;background:linear-gradient(90deg,var(--jade),var(--amber),var(--ember));transform-origin:left;transform:scaleX(0);transition:transform .1s linear;pointer-events:none}
@@ -87,6 +93,7 @@ a,button,[role="button"],input{touch-action:manipulation}
     cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;
     transition:border-color .15s,color .15s;-webkit-tap-highlight-color:transparent
   }
+  .dsk-btn .btn-icon{width:13px;height:13px}
   .dsk-btn:hover{border-color:rgba(255,255,255,.24);color:var(--t1)}
   .dsk-btn.active{border-color:var(--amber);color:var(--amber)}
   .dsk-btn-toggle.expanded{border-color:var(--jade);color:var(--jade)}
@@ -139,6 +146,10 @@ a,button,[role="button"],input{touch-action:manipulation}
   .jp-handle{display:none}
   .episode{padding:56px 48px 52px}
   #main{padding-bottom:calc(var(--page-bottom-space) - 20px);width:100%;margin:0 auto}
+}
+@media(min-width:1280px){
+  #info-panel{width:392px}
+  #ip-content{padding:20px 22px}
 }
 @media(max-width:767px){
   #desktop-layout{display:block}
@@ -224,11 +235,28 @@ a,button,[role="button"],input{touch-action:manipulation}
 #ip-content{flex:1;overflow-y:auto;padding:18px;scrollbar-width:none}
 #ip-content::-webkit-scrollbar{display:none}
 .ipanel{display:none}.ipanel.active{display:block}
+.ip-section-note{
+  margin:0 0 14px;
+  padding:10px 12px;
+  border:1px solid var(--line2);
+  border-radius:10px;
+  background:linear-gradient(180deg,rgba(255,255,255,.022),rgba(255,255,255,.008));
+  font-family:'Noto Sans TC',sans-serif;
+  font-size:11.4px;
+  line-height:1.72;
+  color:rgba(234,230,222,.68)
+}
 /* Timeline list */
-.tl-entry{display:flex;gap:14px;margin-bottom:15px;padding-bottom:15px;border-bottom:1px solid var(--line2)}
+.tl-entry{display:flex;gap:15px;margin-bottom:15px;padding-bottom:15px;border-bottom:1px solid var(--line2)}
 .tl-entry:last-child{border-bottom:none}
-.tl-dot-col{display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0}
-.tl-circle{width:28px;height:28px;border-radius:50%;border:1px solid;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.tl-dot-col{display:flex;flex-direction:column;align-items:center;width:34px;flex-shrink:0}
+.tl-circle{
+  width:34px;height:34px;border-radius:14px;border:1px solid;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 10px 20px rgba(0,0,0,.18)
+}
+.tl-circle .ui-glyph{width:18px;height:18px}
 .tl-line-seg{flex:1;width:1px;background:var(--line);margin-top:4px}
 .tl-info{flex:1;padding-top:2px}
 .tl-ep-badge{font-family:'DM Mono',monospace;font-style:italic;font-size:10px;color:var(--t3);margin-bottom:2px}
@@ -237,11 +265,110 @@ a,button,[role="button"],input{touch-action:manipulation}
 /* Traversal */
 .tv-container{padding:2px 0}
 .tv-title{font-family:'DM Mono',monospace;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--t3);margin-bottom:12px}
-.tv-svg-wrap{overflow-x:auto;margin-bottom:14px;border:1px solid var(--line2);border-radius:6px;padding:10px;background:rgba(0,0,0,.15)}
+.tv-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 12px}
+.tv-stat{
+  padding:11px 12px;
+  border:1px solid var(--line2);
+  border-radius:11px;
+  background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.012));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)
+}
+.tv-stat-num{
+  display:block;
+  font-family:'Cormorant Garamond',serif;
+  font-size:24px;
+  line-height:1;
+  color:var(--t1);
+  margin-bottom:5px
+}
+.tv-stat-label{
+  display:block;
+  font-family:'DM Mono',monospace;
+  font-size:8px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--t3)
+}
+.tv-stat-sub{
+  display:block;
+  margin-top:3px;
+  font-family:'Noto Sans TC',sans-serif;
+  font-size:10.5px;
+  line-height:1.45;
+  color:rgba(234,230,222,.64)
+}
+.tv-legend{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.tv-legend-item{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:5px 9px;border-radius:999px;
+  border:1px solid var(--line2);
+  background:rgba(255,255,255,.02);
+  font-family:'DM Mono',monospace;
+  font-size:8.1px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--t2)
+}
+.tv-legend-dot{width:8px;height:8px;border-radius:999px;flex-shrink:0}
+.tv-svg-wrap{overflow-x:auto;margin-bottom:14px;border:1px solid var(--line2);border-radius:10px;padding:12px;background:radial-gradient(circle at top,rgba(255,255,255,.05),transparent 52%),rgba(0,0,0,.22)}
 .tv-svg-wrap svg{display:block;width:100%;min-width:300px}
-.tv-event{margin-bottom:10px;padding:9px 13px;border-left:2px solid var(--line);background:rgba(255,255,255,.012);border-radius:0 4px 4px 0}
-.tv-event-label{font-family:'Noto Sans TC',sans-serif;font-size:11.5px;color:var(--t1);margin-bottom:2px;font-weight:400}
-.tv-event-desc{font-family:'Noto Sans TC',sans-serif;font-size:11px;color:var(--t1);line-height:1.7}
+.tv-events{display:grid;gap:10px}
+.tv-event{
+  padding:12px 13px;
+  border:1px solid var(--line2);
+  border-left:2px solid var(--line);
+  background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01));
+  border-radius:0 12px 12px 0
+}
+.tv-event-head{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.tv-step{display:flex;gap:10px;align-items:flex-start;min-width:0}
+.tv-step-count{
+  width:28px;height:28px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  border:1px solid currentColor;
+  background:rgba(255,255,255,.03);
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  letter-spacing:.08em
+}
+.tv-step-copy{min-width:0}
+.tv-step-title{font-family:'Noto Sans TC',sans-serif;font-size:12.1px;color:var(--t1);line-height:1.4;font-weight:400}
+.tv-step-sub{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.14em;color:var(--t3);margin-top:2px}
+.tv-badges{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.tv-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 8px;border-radius:999px;
+  border:1px solid var(--line2);
+  background:rgba(255,255,255,.018);
+  font-family:'DM Mono',monospace;
+  font-size:7.9px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--t2)
+}
+.tv-route{
+  display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  gap:10px;align-items:center
+}
+.tv-node{
+  min-width:0;
+  padding:10px 11px;
+  border:1px solid var(--line2);
+  border-radius:11px;
+  background:rgba(255,255,255,.015)
+}
+.tv-node-kicker{font-family:'DM Mono',monospace;font-size:7.7px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-bottom:4px}
+.tv-node-label{font-family:'Noto Sans TC',sans-serif;font-size:11.7px;line-height:1.45;color:var(--t1)}
+.tv-node-year{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.13em;color:var(--t3);margin-top:4px;white-space:pre-line}
+.tv-route-arrow{
+  width:28px;height:28px;border-radius:999px;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.02)
+}
+.tv-route-arrow .ui-glyph{width:14px;height:14px}
+.tv-event-desc{
+  margin-top:10px;padding-top:10px;border-top:1px solid var(--line2);
+  font-family:'Noto Sans TC',sans-serif;font-size:11px;color:var(--t1);line-height:1.72
+}
 .tv-event.type-traverse{border-left-color:rgba(255,72,88,.55)}
 .tv-event.type-dream{border-left-color:rgba(200,144,16,.55)}
 .tv-event.type-push{border-left-color:rgba(56,128,255,.55)}
@@ -279,7 +406,8 @@ a,button,[role="button"],input{touch-action:manipulation}
 .ep-info-strip{margin-bottom:14px;border:1px solid var(--line2);border-radius:6px;overflow:hidden}
 .ep-info-head{display:flex;align-items:center;gap:10px;padding:10px 13px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
 .ep-info-head:active{background:rgba(255,255,255,.03)}
-.eih-icon{font-size:14px;opacity:.55}
+.eih-icon{width:18px;height:18px;opacity:.6;display:flex;align-items:center;justify-content:center}
+.eih-icon .ui-glyph{width:16px;height:16px}
 .eih-label{font-family:'Noto Sans TC',sans-serif;font-size:12px;color:var(--t2);letter-spacing:.06em;flex:1;font-weight:400}
 .eih-lbl-c{font-family:'Noto Sans TC',sans-serif;font-size:12px;color:var(--t1);letter-spacing:.06em;flex:1;font-weight:400}.eih-lbl-o{font-family:'Noto Sans TC',sans-serif;font-size:12px;color:var(--t2);letter-spacing:.06em;flex:1;font-weight:400}
 .ep-tline-wrap{margin-bottom:12px}
@@ -297,11 +425,18 @@ a,button,[role="button"],input{touch-action:manipulation}
 .tl-inline::-webkit-scrollbar{display:none}
 .tl-row-inline{display:flex;gap:8px;min-width:max-content}
 .tl-evt-inline{display:flex;flex-direction:column;align-items:center;width:70px;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.tli-dot{width:26px;height:26px;border-radius:50%;border:1px solid;display:flex;align-items:center;justify-content:center;font-size:12px;margin-bottom:4px}
+.tli-dot{
+  width:30px;height:30px;border-radius:12px;border:1px solid;
+  display:flex;align-items:center;justify-content:center;margin-bottom:5px;
+  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 8px 16px rgba(0,0,0,.16)
+}
+.tli-dot .ui-glyph{width:15px;height:15px}
 .tli-ep{font-family:'DM Mono',monospace;font-style:italic;font-size:8.5px;color:var(--t3);margin-bottom:2px}
 .tli-label{font-family:'Noto Sans TC',sans-serif;font-size:9px;color:var(--t2);text-align:center;line-height:1.35;max-width:68px}
 .tli-now{opacity:.25;width:52px;display:flex;flex-direction:column;align-items:center}
-.tli-now-dot{width:22px;height:22px;border-radius:50%;border:1px dashed var(--t3);display:flex;align-items:center;justify-content:center;font-size:9px;margin-bottom:4px}
+.tli-now-dot{width:24px;height:24px;border-radius:999px;border:1px dashed var(--t3);display:flex;align-items:center;justify-content:center;margin-bottom:4px}
+.tli-now-dot .ui-glyph{width:12px;height:12px}
 .tli-now-lbl{font-family:'DM Mono',monospace;font-size:8.5px;color:var(--t3);text-align:center}
 /* Note */
 .ep-note{margin-bottom:14px;padding:11px 13px;border-left:2px solid var(--line);background:rgba(255,255,255,.015);border-radius:0 4px 4px 0}
@@ -331,7 +466,7 @@ a,button,[role="button"],input{touch-action:manipulation}
 .et-arrow{text-align:right;margin-top:9px;font-family:'DM Mono',monospace;font-size:9.5px;color:var(--t3)}
 /* EP nav */
 .ep-nav{display:flex;gap:8px;margin-top:16px}
-.ep-nav-btn{flex:1;padding:11px 0;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.08);color:rgba(234,230,222,.78);font-family:'DM Mono',monospace;font-size:10.5px;letter-spacing:.11em;cursor:pointer;border-radius:4px;-webkit-tap-highlight-color:transparent;transition:border-color .1s,color .1s,background .1s;font-weight:400}
+.ep-nav-btn{flex:1;padding:11px 0;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.08);color:rgba(234,230,222,.78);font-family:'DM Mono',monospace;font-size:10.5px;letter-spacing:.11em;cursor:pointer;border-radius:4px;-webkit-tap-highlight-color:transparent;transition:border-color .1s,color .1s,background .1s;font-weight:400;display:flex;align-items:center;justify-content:center;gap:8px}
 .ep-nav-btn:active,.ep-nav-btn:hover{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.045);color:var(--t1)}
 .ep-nav-btn.disabled{opacity:.2;pointer-events:none}
 
@@ -348,7 +483,13 @@ a,button,[role="button"],input{touch-action:manipulation}
 .fab-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .1s,background .1s;border-radius:10px}
 .fab-item:active{opacity:.65}
 .fab-item:hover{background:rgba(255,255,255,.035)}
-.fab-icon{font-size:18px;line-height:1.1;color:rgba(234,230,222,.82)}
+.fab-icon{width:20px;height:20px;line-height:1.1;color:rgba(234,230,222,.82);position:relative;display:flex;align-items:center;justify-content:center}
+.fab-icon .ui-glyph{width:100%;height:100%}
+.fab-count{
+  position:absolute;right:-8px;top:-7px;min-width:14px;height:14px;padding:0 4px;border-radius:999px;
+  display:flex;align-items:center;justify-content:center;background:var(--amber);color:#160e04;
+  font-family:'DM Mono',monospace;font-size:7px;letter-spacing:0;line-height:1
+}
 .fab-label{font-family:'Noto Sans TC',sans-serif;font-size:9px;color:rgba(234,230,222,.72);letter-spacing:.03em}
 .fab-nav-btn{
   min-height:34px;border-radius:999px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.055);
@@ -385,7 +526,8 @@ body[data-width="wide"]{--measure:38em}
   transition:opacity .3s,transform .3s cubic-bezier(.34,1.56,.64,1);-webkit-tap-highlight-color:transparent
 }
 #toast.show{opacity:1;pointer-events:auto;transform:none}
-#toast-glyph{font-size:26px;flex-shrink:0}
+#toast-glyph{width:26px;height:26px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+#toast-glyph .ui-glyph{width:100%;height:100%}
 #toast-body{flex:1;min-width:0}
 .toast-label{font-family:'DM Mono',monospace;font-size:8.5px;color:var(--amber);letter-spacing:.28em;text-transform:uppercase;margin-bottom:3px}
 #toast-title{font-size:13.5px;color:var(--t1);line-height:1.4;font-weight:400}
@@ -418,7 +560,8 @@ body[data-width="wide"]{--measure:38em}
 .modal-hd{padding:16px 20px 0;flex-shrink:0}
 .modal-ey{display:flex;align-items:center;justify-content:space-between;font-family:'DM Mono',monospace;font-size:8.5px;color:var(--amber);letter-spacing:.28em;text-transform:uppercase;margin-bottom:6px}
 #modal-close{background:none;border:none;color:var(--t2);font-size:18px;cursor:pointer;padding:0;line-height:1;-webkit-tap-highlight-color:transparent}
-#modal-glyph{font-size:26px;display:block;margin-bottom:5px}
+#modal-glyph{width:26px;height:26px;display:flex;align-items:center;justify-content:flex-start;margin-bottom:5px}
+#modal-glyph .ui-glyph{width:100%;height:100%}
 #modal-title{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:300;color:var(--t1);line-height:1.3;letter-spacing:.04em;margin-bottom:12px}
 .modal-tabs{display:flex;border-bottom:1px solid var(--line);padding:0 20px;flex-shrink:0;overflow-x:auto;scrollbar-width:none}
 .modal-tabs::-webkit-scrollbar{display:none}
@@ -471,12 +614,14 @@ body.day-mode #hero-canvas{opacity:.3}
 .ep-granny{margin-bottom:16px;border:1px solid rgba(144,64,240,.22);border-radius:8px;overflow:hidden;background:rgba(144,64,240,.03)}
 .ep-granny-toggle{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
 .ep-granny-toggle:active{background:rgba(144,64,240,.05)}
-.eg-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6020c0,#9040f0);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;border:1px solid rgba(144,64,240,.4)}
+.eg-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6020c0,#9040f0);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(144,64,240,.4);box-shadow:0 8px 18px rgba(0,0,0,.2)}
+.eg-avatar .ui-glyph{width:15px;height:15px;color:#f3ecff}
 .eg-label{font-family:'Noto Sans TC',sans-serif;font-size:12px;color:var(--f6);flex:1;letter-spacing:.06em;font-weight:400}
 .eg-arrow{font-size:10px;color:rgba(144,64,240,.5);transition:transform .2s}
 .ep-granny-toggle.open .eg-arrow{transform:rotate(180deg)}
 .ep-granny-body{display:none;padding:14px 16px 16px;border-top:1px solid rgba(144,64,240,.15)}
 .ep-granny-body.open{display:block}
+.eg-kicker{font-family:'DM Mono',monospace;font-size:8.1px;color:rgba(200,176,255,.72);letter-spacing:.16em;text-transform:uppercase;margin-bottom:6px}
 .eg-title{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--t1);margin-bottom:8px;font-weight:300;line-height:1.4}
 .eg-text{font-family:'Noto Sans TC',sans-serif;font-size:12.5px;color:var(--t1);line-height:1.95;margin-bottom:12px;font-weight:400}
 .eg-diagram{margin:10px 0;border:1px solid rgba(144,64,240,.18);border-radius:6px;background:rgba(0,0,0,.2);padding:10px;overflow-x:auto}
@@ -493,7 +638,8 @@ body.day-mode #hero-canvas{opacity:.3}
 .ft-links{display:flex;flex-direction:column;gap:10px;max-width:280px;margin:0 auto 28px}
 .ft-link{display:flex;align-items:center;gap:14px;padding:13px 18px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.018);text-decoration:none;transition:border-color .15s,background .15s;-webkit-tap-highlight-color:transparent}
 .ft-link:active,.ft-link:hover{border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.04)}
-.ft-link-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.ft-link-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.ft-link-icon .ui-glyph{width:17px;height:17px}
 .ft-link-icon.yt{background:rgba(255,0,0,.12);border:1px solid rgba(255,0,0,.2)}
 .ft-link-icon.fb{background:rgba(24,119,242,.12);border:1px solid rgba(24,119,242,.2)}
 .ft-link-icon.ln{background:rgba(0,195,0,.12);border:1px solid rgba(0,195,0,.2)}
@@ -550,7 +696,7 @@ input[type=range].ap-slider{flex:1;-webkit-appearance:none;height:3px;border-rad
 input[type=range].ap-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--jade);border:2px solid var(--bg);cursor:pointer}
 input[type=range].ap-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--jade);border:2px solid var(--bg);cursor:pointer}
 .ap-btns{display:flex;gap:8px}
-.ap-btn{flex:1;padding:9px 0;border-radius:6px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--t2);font-family:'Noto Sans TC',sans-serif;font-size:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s,border-color .15s,color .15s}
+.ap-btn{flex:1;padding:9px 0;border-radius:6px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--t2);font-family:'Noto Sans TC',sans-serif;font-size:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s,border-color .15s,color .15s;display:flex;align-items:center;justify-content:center;gap:6px}
 .ap-btn:hover{background:rgba(255,255,255,.08);color:var(--t1)}
 .ap-btn.primary{background:rgba(22,168,100,.12);border-color:rgba(22,168,100,.4);color:var(--jade)}
 .ap-btn.primary:hover{background:rgba(22,168,100,.2)}
@@ -606,6 +752,41 @@ input[type=range].ap-slider::-moz-range-thumb{width:14px;height:14px;border-radi
   .ep-bg-num{font-size:64px;top:36px}
   #topnav-mobile{padding-left:12px;padding-right:8px}
   .nav-btn{width:38px;height:38px}
+  .tl-dot-col{width:30px}
+  .tl-circle{width:30px;height:30px;border-radius:12px}
+  .tl-circle .ui-glyph{width:16px;height:16px}
+  .tl-entry{gap:12px}
+  .tl-ev-desc{font-size:11.6px;line-height:1.72}
+  .ip-section-note{padding:9px 11px;font-size:11px;line-height:1.68}
+  .tv-title{margin-bottom:10px}
+  .tv-overview{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .tv-stat{padding:10px 9px}
+  .tv-stat-num{font-size:21px}
+  .tv-stat-label{font-size:7.5px}
+  .tv-stat-sub{font-size:10px}
+  .tv-legend{gap:6px;margin-bottom:10px}
+  .tv-legend-item{padding:4px 8px;font-size:7.9px}
+  .tv-legend-dot{width:7px;height:7px}
+  .tv-svg-wrap{padding:10px}
+  .tv-event{padding:10px 12px}
+  .tv-event-head{flex-direction:column;gap:8px}
+  .tv-step{gap:8px}
+  .tv-step-count{width:24px;height:24px;border-radius:8px;font-size:8px}
+  .tv-step-title{font-size:11.5px}
+  .tv-step-sub{font-size:7.6px}
+  .tv-badges{justify-content:flex-start}
+  .tv-badge{font-size:7.5px;padding:4px 7px}
+  .tv-route{grid-template-columns:1fr;gap:8px}
+  .tv-route-arrow{width:26px;height:26px;justify-self:start;transform:rotate(90deg)}
+  .tv-route-arrow .ui-glyph{width:13px;height:13px}
+  .tv-node{padding:9px 10px}
+  .tv-node-label{font-size:11.2px}
+  .tv-node-year{font-size:7.8px}
+  .tv-event-desc{font-size:10.8px;line-height:1.64}
+  .tl-evt-inline{width:66px}
+  .tli-dot{width:28px;height:28px;border-radius:11px}
+  .tli-dot .ui-glyph{width:14px;height:14px}
+  .tli-label{max-width:64px}
   #jump-tb{display:none}
   #fab-bar{
     padding:8px 10px calc(10px + env(safe-area-inset-bottom,0px));
@@ -659,6 +840,193 @@ input[type=range].ap-slider::-moz-range-thumb{width:14px;height:14px;border-radi
 </style>
 </head>
 <body data-fs="md" data-width="default">
+<svg class="ui-sprite" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="ic-home" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4.5 11.2 12 5l7.5 6.2"></path>
+      <path d="M6.5 10.5V19h11v-8.5"></path>
+    </symbol>
+    <symbol id="ic-guide" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 5.5v13"></path>
+      <path d="M16 5.5v13"></path>
+      <circle cx="8" cy="9" r="1.7"></circle>
+      <circle cx="16" cy="14.5" r="1.7"></circle>
+      <path d="M8 10.7c1.3 1.1 2.4 1.7 4 2.2"></path>
+    </symbol>
+    <symbol id="ic-grid-plus" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4.5" y="4.5" width="5" height="5" rx="1"></rect>
+      <rect x="4.5" y="14.5" width="5" height="5" rx="1"></rect>
+      <rect x="14.5" y="4.5" width="5" height="5" rx="1"></rect>
+      <path d="M17 14.5v5"></path>
+      <path d="M14.5 17h5"></path>
+    </symbol>
+    <symbol id="ic-grid-minus" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4.5" y="4.5" width="5" height="5" rx="1"></rect>
+      <rect x="4.5" y="14.5" width="5" height="5" rx="1"></rect>
+      <rect x="14.5" y="4.5" width="5" height="5" rx="1"></rect>
+      <path d="M14.5 17h5"></path>
+    </symbol>
+    <symbol id="ic-play" viewBox="0 0 24 24" stroke="none" fill="currentColor">
+      <path d="M8 6.2v11.6l9-5.8-9-5.8Z"></path>
+    </symbol>
+    <symbol id="ic-pause" viewBox="0 0 24 24" stroke="none" fill="currentColor">
+      <path d="M7.5 6.2h3.5v11.6H7.5zM13 6.2h3.5v11.6H13z"></path>
+    </symbol>
+    <symbol id="ic-sun" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="4"></circle>
+      <path d="M12 3.8v2.1M12 18.1v2.1M20.2 12h-2.1M5.9 12H3.8M17.8 6.2l-1.5 1.5M7.7 16.3l-1.5 1.5M17.8 17.8l-1.5-1.5M7.7 7.7 6.2 6.2"></path>
+    </symbol>
+    <symbol id="ic-menu" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round">
+      <path d="M5 7h14M5 12h14M5 17h14"></path>
+    </symbol>
+    <symbol id="ic-egg" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 4.5c2.8 0 5.2 4.3 5.2 8.1 0 3.3-2.3 5.9-5.2 5.9s-5.2-2.6-5.2-5.9c0-3.8 2.4-8.1 5.2-8.1Z"></path>
+      <path d="M9.6 12.2c.9.8 1.7 1.2 2.4 1.2s1.5-.4 2.4-1.2"></path>
+    </symbol>
+    <symbol id="ic-person" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="8" r="3.2"></circle>
+      <path d="M6.8 18c1.2-2.6 3.1-4 5.2-4s4 1.4 5.2 4"></path>
+    </symbol>
+    <symbol id="ic-cap" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3.5 9.4 12 5.6l8.5 3.8L12 13.2 3.5 9.4Z"></path>
+      <path d="M7 11.6v3c1.3 1 3 1.5 5 1.5s3.7-.5 5-1.5v-3"></path>
+      <path d="M20.5 10v4.4"></path>
+    </symbol>
+    <symbol id="ic-door" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 4.5h10v15H7z"></path>
+      <path d="M10.5 12h.01"></path>
+    </symbol>
+    <symbol id="ic-wind" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4.5 9.5c2.1-1.8 4.4-2.7 7.5-2.7 3.2 0 5.4.9 7.5 2.7"></path>
+      <path d="M6 13c1.7 1.4 3.8 2.1 6 2.1 2.3 0 4.3-.7 6-2.1"></path>
+      <path d="M8 16.6c1.2.7 2.6 1 4 1s2.8-.3 4-1"></path>
+    </symbol>
+    <symbol id="ic-lock" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="6.5" y="10.5" width="11" height="8" rx="2"></rect>
+      <path d="M8.8 10.5V8.8A3.2 3.2 0 0 1 12 5.6a3.2 3.2 0 0 1 3.2 3.2v1.7"></path>
+    </symbol>
+    <symbol id="ic-broken-heart" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 18.6 6 13c-1.8-1.7-2.1-4.4-.5-6.1 1.5-1.7 4.1-1.8 5.8-.3l.7.6.7-.6c1.7-1.5 4.3-1.4 5.8.3 1.6 1.7 1.3 4.4-.5 6.1l-6 5.6Z"></path>
+      <path d="m12.5 7.5-1.3 3.2 2 1-.9 4"></path>
+    </symbol>
+    <symbol id="ic-tree" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 18.5v-4.2"></path>
+      <path d="M9 18.5h6"></path>
+      <path d="M12 5.3 6.6 12h3.2l-2 2.5h8.4l-2-2.5h3.2L12 5.3Z"></path>
+    </symbol>
+    <symbol id="ic-figure" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="8" r="3"></circle>
+      <path d="M12 11.6v6.7M8.4 18.3h7.2M8.8 14.8l3.2-1.4 3.2 1.4"></path>
+    </symbol>
+    <symbol id="ic-note" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 4.5h7l4 4v11H7z"></path>
+      <path d="M14 4.5v4h4"></path>
+      <path d="M9.5 12.2h5M9.5 15.5h5"></path>
+    </symbol>
+    <symbol id="ic-search" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="10.2" cy="10.2" r="4.2"></circle>
+      <path d="m13.4 13.4 4.8 4.8"></path>
+    </symbol>
+    <symbol id="ic-medal" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8.5 4.8 12 10l3.5-5.2"></path>
+      <circle cx="12" cy="14.2" r="4"></circle>
+      <path d="m12 12.3.8 1.6 1.8.3-1.3 1.3.3 1.8-1.6-.8-1.6.8.3-1.8-1.3-1.3 1.8-.3.8-1.6Z"></path>
+    </symbol>
+    <symbol id="ic-comet" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m12 5.2 1.1 3.3 3.3 1.1-3.3 1-1.1 3.3-1-3.3-3.3-1 3.3-1.1L12 5.2Z"></path>
+      <path d="M6.2 16.8 4 19M9.2 17.4l-2.6 2.6"></path>
+    </symbol>
+    <symbol id="ic-spiral" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 19c-4 0-7-2.8-7-6.5S8 6 12 6c3.4 0 5.8 2.1 5.8 5s-1.9 4.7-4.3 4.7c-2.1 0-3.7-1.4-3.7-3.3 0-1.8 1.3-3 3-3 1.4 0 2.4.8 2.8 2"></path>
+    </symbol>
+    <symbol id="ic-voice" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 16.5H5.5A2.5 2.5 0 0 1 3 14V9.8a2.5 2.5 0 0 1 2.5-2.5H7"></path>
+      <path d="M7 7.3c2.5 0 4.7 2.1 4.7 4.7S9.5 16.7 7 16.7"></path>
+      <path d="M14.6 9.2c1.2.8 2 1.8 2 3 0 1.1-.8 2.2-2 3"></path>
+      <path d="M17.8 7.6c1.7 1.1 2.7 2.7 2.7 4.5 0 1.7-1 3.4-2.7 4.5"></path>
+    </symbol>
+    <symbol id="ic-handshake" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4.5 12.5 8 9l3 1.2 2-1.2L16 10l3.5 3.5"></path>
+      <path d="m8.2 14.2 1.4 1.4a1.1 1.1 0 0 0 1.6 0l.8-.8"></path>
+      <path d="m10.7 15 1.3 1.3a1.1 1.1 0 0 0 1.6 0l1.2-1.2"></path>
+      <path d="m13.4 14.7 1 1a1.1 1.1 0 0 0 1.6 0l1.1-1.1"></path>
+      <path d="M5.7 11.4 4 13.1"></path>
+      <path d="M20 13.1 18.3 11.4"></path>
+    </symbol>
+    <symbol id="ic-orb" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="10.8" r="4.6"></circle>
+      <path d="M9.2 18.5h5.6"></path>
+      <path d="M10.3 16.8h3.4"></path>
+      <path d="M12 6.2v9.8"></path>
+      <path d="M8 10.8h8"></path>
+    </symbol>
+    <symbol id="ic-feather" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18.5 5.5c-3.9.5-7 3.5-7.8 7.5l-1.1 5.5 5.5-1.1c4-.8 7-3.9 7.5-7.8.2-1.8-.7-3.6-2.6-4.1-.5-.1-1-.2-1.5 0Z"></path>
+      <path d="M9.8 18.2 16.7 11.3"></path>
+      <path d="M12.2 13.8h4"></path>
+    </symbol>
+    <symbol id="ic-arrow-up" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m12 6-5 5M12 6l5 5M12 6v12"></path>
+    </symbol>
+    <symbol id="ic-arrow-down" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m12 18-5-5M12 18l5-5M12 18V6"></path>
+    </symbol>
+    <symbol id="ic-arrow-left" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m6 12 5-5M6 12l5 5M6 12h12"></path>
+    </symbol>
+    <symbol id="ic-arrow-right" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m18 12-5-5M18 12l-5 5M18 12H6"></path>
+    </symbol>
+    <symbol id="ic-phone" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15.8 14.2 18.2 16.6a1 1 0 0 1 0 1.4l-1.1 1.1a2.3 2.3 0 0 1-2.3.6c-1.7-.5-4.1-1.8-6.2-3.9S5.2 11.3 4.8 9.6A2.3 2.3 0 0 1 5.4 7.3l1.1-1.1a1 1 0 0 1 1.4 0l2.4 2.4a1 1 0 0 1 .2 1.1l-.8 2a10.2 10.2 0 0 0 3.6 3.6l2-.8a1 1 0 0 1 1.1.2Z"></path>
+    </symbol>
+    <symbol id="ic-moon" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16.7 4.6a7.8 7.8 0 1 0 2.6 12.5 7.1 7.1 0 0 1-2.6-12.5Z"></path>
+      <circle cx="17.7" cy="8.2" r=".7" fill="currentColor" stroke="none"></circle>
+      <circle cx="19.3" cy="11.1" r=".55" fill="currentColor" stroke="none"></circle>
+    </symbol>
+    <symbol id="ic-orbit" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="2.3"></circle>
+      <ellipse cx="12" cy="12" rx="7.5" ry="3.8"></ellipse>
+      <ellipse cx="12" cy="12" rx="7.5" ry="3.8" transform="rotate(60 12 12)"></ellipse>
+    </symbol>
+    <symbol id="ic-granny" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 9.5c0-2.3 1.8-4.1 4-4.1s4 1.8 4 4.1"></path>
+      <circle cx="12" cy="11" r="3.2"></circle>
+      <path d="M7.4 18c1.1-2.2 2.7-3.4 4.6-3.4s3.5 1.2 4.6 3.4"></path>
+      <path d="M7.7 7.2 5.8 5.8M16.3 7.2l1.9-1.4"></path>
+    </symbol>
+    <symbol id="ic-youtube" viewBox="0 0 24 24" stroke="none" fill="currentColor">
+      <path d="M20.2 7.2a2.5 2.5 0 0 0-1.8-1.8C16.8 5 12 5 12 5s-4.8 0-6.4.4A2.5 2.5 0 0 0 3.8 7.2C3.4 8.8 3.4 12 3.4 12s0 3.2.4 4.8a2.5 2.5 0 0 0 1.8 1.8c1.6.4 6.4.4 6.4.4s4.8 0 6.4-.4a2.5 2.5 0 0 0 1.8-1.8c.4-1.6.4-4.8.4-4.8s0-3.2-.4-4.8ZM10.3 15.4V8.6l5.7 3.4-5.7 3.4Z"></path>
+    </symbol>
+    <symbol id="ic-facebook" viewBox="0 0 24 24" stroke="none" fill="currentColor">
+      <path d="M13.8 20v-6h2.5l.4-3h-2.9V9.1c0-.9.3-1.6 1.7-1.6h1.4V4.8c-.2 0-1-.1-2-.1-2.9 0-4.5 1.5-4.5 4.2V11H8.1v3h2.3v6h3.4Z"></path>
+    </symbol>
+    <symbol id="ic-line" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4.6 8.1C6.1 6.6 8.7 5.6 12 5.6s5.9 1 7.4 2.5c1.1 1.1 1.7 2.5 1.7 4 0 3.6-4 6.5-9.1 6.5-.8 0-1.7-.1-2.4-.2L5.5 20l1-3c-1.2-.9-1.9-2.1-1.9-4 0-1.5.6-2.8 1.7-3.9Z"></path>
+      <path d="M8.6 10.3v3.3"></path>
+      <path d="M11.9 10.3v3.3"></path>
+      <path d="M15.2 10.3v3.3"></path>
+    </symbol>
+    <symbol id="ic-threads" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15.9 9.3c-.8-1.7-2.3-2.6-4.2-2.6-3.3 0-5.8 2.3-5.8 5.4 0 3.2 2.4 5.6 5.8 5.6 2.8 0 4.8-1.7 4.8-4.1 0-2.1-1.5-3.5-3.7-3.5-1.9 0-3.3 1-3.3 2.6 0 1.3 1.1 2.2 2.5 2.2 1.2 0 2.2-.7 2.5-1.8"></path>
+      <path d="M16 9.4c1.1.8 1.9 2 1.9 4 0 3.7-2.7 6.1-6.5 6.1-4.3 0-7.3-3.1-7.3-7.4 0-4.2 3.1-7.2 7.4-7.2 3.3 0 5.7 1.6 6.8 4.5"></path>
+    </symbol>
+    <symbol id="ic-wave" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4.5 11c1.4-1 2.5-1.5 3.8-1.5 2 0 2.8 1.8 4.7 1.8 1.1 0 2.3-.5 3.8-1.6"></path>
+      <path d="M4.5 14.4c1.4-1 2.5-1.5 3.8-1.5 2 0 2.8 1.8 4.7 1.8 1.1 0 2.3-.5 3.8-1.6"></path>
+    </symbol>
+    <symbol id="ic-sprout" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 18.5v-6"></path>
+      <path d="M12 12.5c0-3 2-5.3 5.2-6-0.2 3.4-2.3 5.8-5.2 6Z"></path>
+      <path d="M12 14c-2.8 0-4.8-1.7-5.5-4.8 3.4-.1 5.5 1.8 5.5 4.8Z"></path>
+    </symbol>
+    <symbol id="ic-starburst" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m12 3.5 1.7 5 5 1.7-5 1.6-1.7 5-1.6-5-5-1.6 5-1.7 1.6-5Z"></path>
+      <path d="m18.2 4.6.7 1.9 1.9.7-1.9.7-.7 1.9-.7-1.9-1.9-.7 1.9-.7.7-1.9Z"></path>
+    </symbol>
+  </defs>
+</svg>
 <div id="prog-bar"></div>
 
 <!-- HERO -->
@@ -717,24 +1085,24 @@ input[type=range].ap-slider::-moz-range-thumb{width:14px;height:14px;border-radi
     <!-- Desktop top bar -->
     <div id="desktop-topbar">
       <div id="desktop-ep-title">時間裡的兩個妳</div>
-      <a class="dsk-btn dsk-home-btn" href="https://toniliumvp.github.io/RedTime/">⌂ 首頁</a>
-      <button class="dsk-btn" onclick="toggleInfoPanel()">⏳ 故事導覽</button>
-      <button class="dsk-btn dsk-btn-toggle" onclick="toggleAllSections()" id="dsk-toggle-all">⊞ 一鍵展開</button>
-      <button class="dsk-btn dsk-auto-btn" onclick="toggleAutoMode()" id="dsk-auto-btn">▶ 自動模式</button>
+      <a class="dsk-btn dsk-home-btn" href="https://toniliumvp.github.io/RedTime/"><span class="ui-glyph btn-icon" data-ui-icon="home"></span><span>首頁</span></a>
+      <button class="dsk-btn" onclick="toggleInfoPanel()"><span class="ui-glyph btn-icon" data-ui-icon="guide"></span><span>故事導覽</span></button>
+      <button class="dsk-btn dsk-btn-toggle" onclick="toggleAllSections()" id="dsk-toggle-all"><span class="ui-glyph btn-icon" data-ui-icon="grid-plus"></span><span>一鍵展開</span></button>
+      <button class="dsk-btn dsk-auto-btn" onclick="toggleAutoMode()" id="dsk-auto-btn"><span class="ui-glyph btn-icon" data-ui-icon="play"></span><span>自動模式</span></button>
       <button class="dsk-btn" onclick="cycleFont()" id="btn-font">字 A</button>
-      <button class="dsk-btn" onclick="toggleDay()">☀ 日間</button>
-      <button class="dsk-btn" onclick="openJump()">☰ 跳章</button>
-      <button class="dsk-btn" onclick="openEggShelf()" id="dsk-egg-btn">✦ 彩蛋</button>
+      <button class="dsk-btn" onclick="toggleDay()"><span class="ui-glyph btn-icon" data-ui-icon="sun"></span><span>日間</span></button>
+      <button class="dsk-btn" onclick="openJump()"><span class="ui-glyph btn-icon" data-ui-icon="menu"></span><span>跳章</span></button>
+      <button class="dsk-btn" onclick="openEggShelf()" id="dsk-egg-btn"><span class="ui-glyph btn-icon" data-ui-icon="egg"></span><span>彩蛋</span></button>
     </div>
     <!-- Mobile top nav -->
     <div id="topnav-mobile">
       <div class="nav-title" id="nav-ep-title">時間裡的兩個妳</div>
       <div class="nav-actions">
-        <a class="nav-btn nav-home-btn" href="https://toniliumvp.github.io/RedTime/">⌂</a>
+        <a class="nav-btn nav-home-btn" href="https://toniliumvp.github.io/RedTime/"><span class="ui-glyph nav-icon" data-ui-icon="home"></span></a>
         <button class="nav-btn" onclick="cycleFont()" id="mob-font-btn">A</button>
-        <button class="nav-btn" onclick="toggleDay()">☀</button>
-        <button class="nav-btn" onclick="openJump()">☰</button>
-        <button class="nav-btn" onclick="toggleInfoPanel()">⏳</button>
+        <button class="nav-btn" onclick="toggleDay()"><span class="ui-glyph nav-icon" data-ui-icon="sun"></span></button>
+        <button class="nav-btn" onclick="openJump()"><span class="ui-glyph nav-icon" data-ui-icon="menu"></span></button>
+        <button class="nav-btn" onclick="toggleInfoPanel()"><span class="ui-glyph nav-icon" data-ui-icon="guide"></span></button>
       </div>
     </div>
     <!-- Episodes -->
@@ -786,7 +1154,7 @@ input[type=range].ap-slider::-moz-range-thumb{width:14px;height:14px;border-radi
     <span class="ap-speed-val" id="ap-speed-num">3</span>
   </div>
   <div class="ap-btns">
-    <button class="ap-btn primary" id="ap-play-btn" onclick="playAutoMode()">▶ 開始</button>
+    <button class="ap-btn primary" id="ap-play-btn" onclick="playAutoMode()"><span class="ui-glyph btn-icon" data-ui-icon="play"></span><span>開始</span></button>
     <button class="ap-btn" onclick="closeAutoPanel()">收起</button>
   </div>
 </div>
@@ -798,22 +1166,22 @@ input[type=range].ap-slider::-moz-range-thumb{width:14px;height:14px;border-radi
   <div class="ft-sub">toni · 跟著故事，不會迷路</div>
   <div class="ft-links">
     <a class="ft-link" href="https://www.youtube.com/c/toniMVP" target="_blank" rel="noopener">
-      <div class="ft-link-icon yt">▶</div>
+      <div class="ft-link-icon yt"><span class="ui-glyph" data-ui-icon="youtube"></span></div>
       <div class="ft-link-text"><div class="ft-link-platform">YouTube</div><div class="ft-link-name">toni</div></div>
       <div class="ft-link-arrow">→</div>
     </a>
     <a class="ft-link" href="https://www.facebook.com/share/16aMnThEBX/?mibextid=wwXIfr" target="_blank" rel="noopener">
-      <div class="ft-link-icon fb">f</div>
+      <div class="ft-link-icon fb"><span class="ui-glyph" data-ui-icon="facebook"></span></div>
       <div class="ft-link-text"><div class="ft-link-platform">Facebook</div><div class="ft-link-name">官方粉絲頁</div></div>
       <div class="ft-link-arrow">→</div>
     </a>
     <a class="ft-link" href="https://lin.ee/VNdWUvr" target="_blank" rel="noopener">
-      <div class="ft-link-icon ln">L</div>
+      <div class="ft-link-icon ln"><span class="ui-glyph" data-ui-icon="line"></span></div>
       <div class="ft-link-text"><div class="ft-link-platform">LINE</div><div class="ft-link-name">官方社群</div></div>
       <div class="ft-link-arrow">→</div>
     </a>
     <a class="ft-link" href="https://www.threads.com/@toniliumvp" target="_blank" rel="noopener">
-      <div class="ft-link-icon th">⊕</div>
+      <div class="ft-link-icon th"><span class="ui-glyph" data-ui-icon="threads"></span></div>
       <div class="ft-link-text"><div class="ft-link-platform">Threads</div><div class="ft-link-name">@toniliumvp</div></div>
       <div class="ft-link-arrow">→</div>
     </a>
@@ -827,12 +1195,12 @@ input[type=range].ap-slider::-moz-range-thumb{width:14px;height:14px;border-radi
 
 <div id="fab-bar">
   <div class="fab-main-row">
-    <div class="fab-item" onclick="openJump()"><span class="fab-icon">☰</span><span class="fab-label">章節</span></div>
-    <div class="fab-item fab-auto" onclick="toggleAutoMode()" id="fab-auto-btn"><span class="fab-icon" id="fab-auto-icon">▶</span><span class="fab-label" id="fab-auto-label">自動</span></div>
-    <div class="fab-item fab-guide" onclick="toggleInfoPanel()"><span class="fab-icon">⏳</span><span class="fab-label">導覽</span></div>
-    <div class="fab-item fab-toggle-all" onclick="toggleAllSections()" id="fab-toggle-all"><span class="fab-icon" id="fab-ta-icon">⊞</span><span class="fab-label" id="fab-ta-label">展開</span></div>
+    <div class="fab-item" onclick="openJump()"><span class="fab-icon" data-ui-icon="menu"></span><span class="fab-label">章節</span></div>
+    <div class="fab-item fab-auto" onclick="toggleAutoMode()" id="fab-auto-btn"><span class="fab-icon" id="fab-auto-icon" data-ui-icon="play"></span><span class="fab-label" id="fab-auto-label">自動</span></div>
+    <div class="fab-item fab-guide" onclick="toggleInfoPanel()"><span class="fab-icon" data-ui-icon="guide"></span><span class="fab-label">導覽</span></div>
+    <div class="fab-item fab-toggle-all" onclick="toggleAllSections()" id="fab-toggle-all"><span class="fab-icon" id="fab-ta-icon" data-ui-icon="grid-plus"></span><span class="fab-label" id="fab-ta-label">展開</span></div>
     <div class="fab-item" onclick="cycleFont()"><span class="fab-icon" id="fab-font-icon">A</span><span class="fab-label">字體</span></div>
-    <div class="fab-item" onclick="openEggShelf()"><span class="fab-icon" id="egg-icon">✦</span><span class="fab-label">彩蛋</span></div>
+    <div class="fab-item" onclick="openEggShelf()"><span class="fab-icon" id="egg-icon" data-ui-icon="egg"></span><span class="fab-label">彩蛋</span></div>
   </div>
   <div class="fab-nav-row">
     <button class="fab-nav-btn" id="fab-prev" onclick="navEp(-1)">上一集</button>
@@ -844,7 +1212,7 @@ input[type=range].ap-slider::-moz-range-thumb{width:14px;height:14px;border-radi
 
 <!-- TOAST -->
 <div id="toast" onclick="openFromToast()">
-  <div id="toast-glyph">✨</div>
+  <div id="toast-glyph"><span class="ui-glyph" data-ui-icon="starburst"></span></div>
   <div id="toast-body"><div class="toast-label">隱藏彩蛋解鎖</div><div id="toast-title"></div><div id="toast-sub"></div></div>
   <div class="toast-cta">展開 →</div>
 </div>
@@ -873,15 +1241,37 @@ const TRAVERSALS=[{"revealAfterEp": 11, "from_label": "學妹", "from_year": "20
 const GRANNY=[{"ep": 11, "title": "她怎麼回到 2005 年 9 月 22 日？", "body": "學妹在2006年初想回到2005年9月22日晚上20:57，在那通電話響起前接到它。這裡先讓人讀到，她不是順著時間往前，而是回到那個已經發生過的時刻。", "type": "traverse", "diagram": "reverse_traverse", "arc_note": null, "from_year": "2006", "to_year": "2005.09.22 20:57", "from_label": "學妹", "to_label": "學長", "note": "這一集先把她和時間賽跑的狀態寫出來，也讓「命運欺負人，我並不想停留在這裡。」這句話第一次出現。", "label": "時間線觀察"}, {"ep": 12, "title": "她為什麼又回到了 2025 年？", "body": "EP12 讀到的，是她從2005年又回到2025年。Line 裡沒有學長，眼前也不是她想留下的那條時間線。", "type": "push", "diagram": "push_back", "arc_note": "彩虹線代表學妹視角。線的中斷，表示她從 2005 年又回到 2025 年。", "from_year": "2025", "to_year": "2005", "from_label": "學妹意識", "to_label": "身體", "note": "故事在這裡直接寫出那條「沒有學長的2025年」，也讓人看見她一次次被推回原位。", "label": "時間線觀察"}, {"ep": 21, "title": "女兒怎麼突然會飛了？", "body": "女兒從小就有一項能力，可以穿越到把拔和阿姨的時間線。她小時候還不會控制，直到18歲生日才終於學會。每次穿越時，命運阿嬤都會提醒她：不能干預任何事件，也不能和任何人互動；而且只有在睡著的時候，她才能進去。", "type": "dream", "diagram": "daughter_flight", "arc_note": "女兒的弧線是黃色。她的飛行發生在夢裡；阿姨則是意識回到不同時間點。", "from_year": "2025+", "to_year": "2005-2026", "from_label": "女兒（夢境）", "to_label": "任意時間線"}, {"ep": 26, "title": "為什麼飛得再遠，還是飛不到？", "body": "女兒沿著把拔和阿姨的紅線飛行，想再往更早以前去，卻一次次因為餓醒而中斷。這一集也把「命運不是命定，但紅線，是命中注定。」放進了她的飛行裡。", "type": "dream", "diagram": "fly_into_heart", "arc_note": "黃色的女兒視角。她每次飛行都發生在夢裡，醒來就會回到現實。", "from_year": "2025夢境", "to_year": "2006初", "from_label": "女兒", "to_label": "阿姨心裡"}, {"ep": 30, "title": "她飛到了把拔十三歲的那一夜", "body": "女兒飛到1997年，去看13歲的把拔。她沒有開口，只是在旁邊看著那個還不知道未來會變成誰的少年。", "type": "dream", "diagram": "1994_flight", "arc_note": "黃色線從2025延伸到1997，是女兒飛得最遠的一次。", "from_year": "2025夢境", "to_year": "1997年夜", "from_label": "女兒", "to_label": "把拔13歲"}, {"ep": 38, "title": "29歲身體裡的18歲", "body": "EP38 把2005年10月17日上午10:40的 LM402 教室重新打開。學妹的身體是29歲，但那一刻進來的是18歲的意識；不同時間的自己都在她心裡說話。", "type": "superpose", "diagram": "superpose", "arc_note": "彩虹線在這一集交疊得最密，因為她同時帶著不只一個時間點的自己。", "from_year": "2005.10.17", "to_year": "1994高中", "from_label": "學妹29歲身體", "to_label": "18歲意識", "note": "這一集把「一眼瞬間」前後的時間重新對齊，也讓不同時間裡的她在同一副身體裡碰面。", "label": "時間線觀察"}];
 
 const ARC_LBL={father:'把拔視角',male:'學長視角',female:'學妹視角',daughter:'女兒視角',mixed:'複合視角'};
-const ARC_DS={father:'border-color:var(--jade);color:var(--jade)',male:'border-color:rgba(168,164,156,.45);color:var(--silver)',female:'background:conic-gradient(var(--f1),var(--f3),var(--f5));border-color:transparent',daughter:'border-color:var(--amber);color:var(--amber)',mixed:'border-color:var(--ember);color:var(--ember)'};
+const ARC_DS={
+  father:'border-color:rgba(22,168,100,.42);color:var(--jade);background:linear-gradient(180deg,rgba(22,168,100,.13),rgba(22,168,100,.03))',
+  male:'border-color:rgba(168,164,156,.32);color:var(--silver);background:linear-gradient(180deg,rgba(168,164,156,.12),rgba(168,164,156,.03))',
+  female:'border-color:rgba(255,255,255,.08);color:rgba(255,248,244,.96);background:conic-gradient(from 210deg,var(--f1),var(--f3),var(--f5),var(--f1))',
+  daughter:'border-color:rgba(200,144,16,.34);color:var(--amber);background:linear-gradient(180deg,rgba(200,144,16,.14),rgba(200,144,16,.03))',
+  mixed:'border-color:rgba(184,72,32,.34);color:var(--ember);background:linear-gradient(180deg,rgba(184,72,32,.14),rgba(184,72,32,.03))'
+};
 const ARC_C={father:'var(--jade)',male:'rgba(168,164,156,.6)',female:null,daughter:'var(--amber)',mixed:'var(--ember)'};
 const ARC_DOT={father:'var(--jade)',male:'var(--silver)',daughter:'var(--amber)',mixed:'var(--ember)'};
 const PREF_KEYS={font:'redtime-font-size',theme:'redtime-theme',progress:'redtime-progress'};
+const TL_ICON_MAP={'👨':'person','🎓':'cap','🚪':'door','🌬':'wind','🔒':'lock','💔':'broken-heart','🌳':'tree','👤':'figure','📝':'note','🔍':'search','🎖':'medal','💫':'comet','🌀':'spiral','🗣':'voice','🤝':'handshake','🔮':'orb','🕊':'feather'};
+const EGG_ICON_MAP={'🌊':'wave','📝':'note','💫':'comet','🌿':'sprout','🕊':'feather','✨':'starburst','✦':'egg','🔒':'lock'};
+const TRAVERSE_ICON_MAP={traverse:'orbit',push:'arrow-left',dream:'moon',superpose:'orb'};
+const TRAVERSE_COLOR_MAP={traverse:'rgba(255,72,88,.78)',push:'rgba(56,128,255,.78)',dream:'rgba(200,144,16,.82)',superpose:'rgba(144,64,240,.8)'};
+const TRAVERSE_LABEL_MAP={traverse:'穿越（逆時）',dream:'夢境穿越',push:'命運驅逐',superpose:'意識菜市場'};
 
 function stripHtml(h){return h.replace(/<[^>]+>/g,'').trim()}
 function readMins(h){return Math.max(1,Math.ceil(stripHtml(h).length/400))}
 function fmtEp(n){return 'EP'+String(n)}
 function normalizeEpText(text){return String(text).replace(/\bEP0([1-9])\b/g,'EP$1')}
+function renderIcon(name,cls='icon-md'){return `<span class="ui-glyph ${cls}"><svg class="ui-icon-svg" viewBox="0 0 24 24"><use href="#ic-${name}"></use></svg></span>`}
+function setIconHolder(el,name){if(!el)return;el.innerHTML=`<svg class="ui-icon-svg" viewBox="0 0 24 24"><use href="#ic-${name}"></use></svg>`}
+function setLabeledButton(el,icon,label){if(!el)return;el.innerHTML=`${renderIcon(icon,'btn-icon')}<span>${label}</span>`}
+function setFabIcon(el,icon,count=0){
+  if(!el)return;
+  el.innerHTML=`<svg class="ui-icon-svg" viewBox="0 0 24 24"><use href="#ic-${icon}"></use></svg>${count?`<span class="fab-count">${count}</span>`:''}`;
+}
+function timelineIcon(token){return renderIcon(TL_ICON_MAP[token]||'orbit')}
+function eggGlyphMarkup(token){const name=EGG_ICON_MAP[token];return name?renderIcon(name):String(token)}
+function formatYearLabel(text){return String(text).replace(/\n/g,' · ')}
+function hydrateStaticIcons(){document.querySelectorAll('[data-ui-icon]').forEach(el=>setIconHolder(el,el.dataset.uiIcon))}
 function shortEpisodeTitle(ep){
   return (ep.title||'')
     .replace(/《時間裡的兩個妳》/g,'')
@@ -890,6 +1280,7 @@ function shortEpisodeTitle(ep){
     .replace(/\s*x\s*/gi,' · ')
     .trim()||fmtEp(ep.ep);
 }
+hydrateStaticIcons();
 function savePref(key,val){try{localStorage.setItem(key,val)}catch(_e){}}
 function loadPref(key){try{return localStorage.getItem(key)}catch(_e){return null}}
 function updateResumeCard(epNum){
@@ -992,32 +1383,52 @@ function buildTimelinePanel(maxEp){
   const vis=TL.filter(e=>e.from<=maxEp);
   const p=document.getElementById('ip-panel-0');
   if(!vis.length){p.innerHTML='<p style="color:var(--t3);font-family:\'Noto Sans TC\',sans-serif;font-size:13px">閱讀更多章節，時間線將逐步揭示…</p>';return}
-  p.innerHTML=vis.map((e,i)=>`<div class="tl-entry"><div class="tl-dot-col"><div class="tl-circle" style="${ARC_DS[e.arc]||ARC_DS.mixed}">${e.icon}</div>${i<vis.length-1?'<div class="tl-line-seg"></div>':''}</div><div class="tl-info"><div class="tl-ep-badge">${fmtEp(e.ep)}</div><div class="tl-ev-label">${e.label}</div><div class="tl-ev-desc">${e.desc}</div></div></div>`).join('');
+  p.innerHTML=`<div class="ip-section-note">以下節點會隨閱讀進度逐步出現，適合拿來快速確認目前讀到哪一段時間。</div>${vis.map((e,i)=>`<div class="tl-entry"><div class="tl-dot-col"><div class="tl-circle" style="${ARC_DS[e.arc]||ARC_DS.mixed}">${timelineIcon(e.icon)}</div>${i<vis.length-1?'<div class="tl-line-seg"></div>':''}</div><div class="tl-info"><div class="tl-ep-badge">${fmtEp(e.ep)}</div><div class="tl-ev-label">${e.label}</div><div class="tl-ev-desc">${e.desc}</div></div></div>`).join('')}`;
 }
 function buildTraversePanel(maxEp){
   const vis=TRAVERSALS.filter(t=>t.revealAfterEp<=maxEp);
   const p=document.getElementById('ip-panel-1');
   if(!vis.length){p.innerHTML='<p style="color:var(--t3);font-family:\'Noto Sans TC\',sans-serif;font-size:13px">繼續閱讀，時空穿越圖將逐漸揭示…</p>';return}
-  const W=Math.max(320,vis.length*70+80);const H=145;
-  const xP=38,xE=W-24,YM=1994,YX=2026;
+  const femaleCount=vis.filter(t=>t.who==='female').length;
+  const daughterCount=vis.filter(t=>t.who==='daughter').length;
+  const W=Math.max(360,vis.length*92+120),H=178;
+  const xP=56,xE=W-30,YM=1994,YX=2026;
+  const laneY={female:42,time:90,daughter:138};
   const yx=y=>xP+(y-YM)/(YX-YM)*(xE-xP);
   const yrs=[1994,2000,2005,2010,2015,2020,2026];
-  const axL=yrs.map(y=>`<line x1="${yx(y)}" y1="66" x2="${yx(y)}" y2="74" stroke="rgba(255,255,255,.07)" stroke-width="1"/><text x="${yx(y)}" y="85" fill="rgba(255,255,255,.18)" font-size="7" text-anchor="middle" font-family="DM Mono,monospace">${y}</text>`).join('');
-  const axes=`<line x1="${xP}" y1="35" x2="${xE}" y2="35" stroke="rgba(255,72,88,.18)" stroke-width="1.5" stroke-dasharray="3,3"/><text x="${xP-4}" y="39" fill="rgba(255,72,88,.5)" font-size="7.5" text-anchor="end" font-family="DM Mono">學妹</text><line x1="${xP}" y1="66" x2="${xE}" y2="66" stroke="rgba(168,164,156,.12)" stroke-width="1"/><text x="${xP-4}" y="70" fill="rgba(168,164,156,.35)" font-size="7.5" text-anchor="end" font-family="DM Mono">時間</text><line x1="${xP}" y1="100" x2="${xE}" y2="100" stroke="rgba(200,144,16,.18)" stroke-width="1.5" stroke-dasharray="3,3"/><text x="${xP-4}" y="104" fill="rgba(200,144,16,.4)" font-size="7.5" text-anchor="end" font-family="DM Mono">女兒</text>`;
-  let defs='<defs><marker id="a1" markerWidth="6" markerHeight="6" refX="4" refY="2" orient="auto"><path d="M0,0 L0,4 L6,2 z" fill="rgba(255,72,88,.75)"/></marker><marker id="a2" markerWidth="6" markerHeight="6" refX="4" refY="2" orient="auto"><path d="M0,0 L0,4 L6,2 z" fill="rgba(200,144,16,.75)"/></marker><marker id="a3" markerWidth="6" markerHeight="6" refX="4" refY="2" orient="auto"><path d="M0,0 L0,4 L6,2 z" fill="rgba(56,128,255,.75)"/></marker></defs>';
+  const grid=yrs.map(y=>`<line x1="${yx(y)}" y1="24" x2="${yx(y)}" y2="154" stroke="rgba(255,255,255,.06)" stroke-width="1"/><text x="${yx(y)}" y="169" fill="rgba(255,255,255,.2)" font-size="7.4" text-anchor="middle" font-family="DM Mono,monospace">${y}</text>`).join('');
+  const lanes=`<line x1="${xP}" y1="${laneY.female}" x2="${xE}" y2="${laneY.female}" stroke="rgba(255,72,88,.18)" stroke-width="1.5" stroke-dasharray="4,4"/><line x1="${xP}" y1="${laneY.time}" x2="${xE}" y2="${laneY.time}" stroke="rgba(168,164,156,.16)" stroke-width="1.2"/><line x1="${xP}" y1="${laneY.daughter}" x2="${xE}" y2="${laneY.daughter}" stroke="rgba(200,144,16,.2)" stroke-width="1.5" stroke-dasharray="4,4"/><text x="${xP-10}" y="${laneY.female+4}" fill="rgba(255,72,88,.56)" font-size="8" text-anchor="end" font-family="DM Mono">學妹</text><text x="${xP-10}" y="${laneY.time+4}" fill="rgba(168,164,156,.45)" font-size="8" text-anchor="end" font-family="DM Mono">時間</text><text x="${xP-10}" y="${laneY.daughter+4}" fill="rgba(200,144,16,.5)" font-size="8" text-anchor="end" font-family="DM Mono">女兒</text>`;
+  let defs='<defs>';
+  vis.forEach((t,i)=>{defs+=`<marker id="tvm${i}" markerWidth="8" markerHeight="8" refX="5.5" refY="2.8" orient="auto"><path d="M0,0 L0,5.6 L7.2,2.8 z" fill="${TRAVERSE_COLOR_MAP[t.type]||'rgba(255,255,255,.6)'}"/></marker>`});
+  defs+='</defs>';
   let arrs='';
-  vis.forEach(t=>{
-    const fy=parseInt((t.from_year.match(/\d{4}/)||['2006'])[0]);
-    const ty=parseInt((t.to_year.match(/\d{4}/)||['2005'])[0]);
-    const x1=Math.min(xE-5,Math.max(xP+5,yx(fy)));const x2=Math.min(xE-5,Math.max(xP+5,yx(ty)));
-    if(t.type==='traverse'){const cy=16;arrs+=`<path d="M ${x1} 35 Q ${(x1+x2)/2} ${cy} ${x2} 35" stroke="rgba(255,72,88,.55)" stroke-width="1.5" fill="none" marker-end="url(#a1)"/>`}
-    if(t.type==='push'){const cy=16;arrs+=`<path d="M ${x1} 35 Q ${(x1+x2)/2} ${cy} ${x2} 35" stroke="rgba(56,128,255,.5)" stroke-width="1.5" fill="none" stroke-dasharray="3,3" marker-end="url(#a3)"/>`}
-    if(t.type==='dream'){arrs+=`<path d="M ${x1} 90 Q ${x1} 75 ${x2} 66" stroke="rgba(200,144,16,.5)" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#a2)"/>`}
-    if(t.type==='superpose'){arrs+=`<ellipse cx="${x1}" cy="35" rx="9" ry="16" fill="none" stroke="rgba(144,64,240,.4)" stroke-width="1" stroke-dasharray="2,3"/>`}
+  vis.forEach((t,i)=>{
+    const fy=parseInt((String(t.from_year).match(/\d{4}/)||['2006'])[0],10);
+    const ty=parseInt((String(t.to_year).match(/\d{4}/)||['2005'])[0],10);
+    const x1=Math.min(xE-8,Math.max(xP+8,yx(fy))),x2=Math.min(xE-8,Math.max(xP+8,yx(ty)));
+    const color=TRAVERSE_COLOR_MAP[t.type]||'rgba(255,255,255,.6)';
+    if(t.type==='traverse'){
+      arrs+=`<path d="M ${x1} ${laneY.female} Q ${(x1+x2)/2} 10 ${x2} ${laneY.female}" stroke="${color}" stroke-width="2.2" fill="none" marker-end="url(#tvm${i})"/><circle cx="${x1}" cy="${laneY.female}" r="4.2" fill="${color}" opacity=".35"/><circle cx="${x2}" cy="${laneY.female}" r="4.6" fill="${color}" opacity=".85"/>`;
+    }
+    if(t.type==='push'){
+      arrs+=`<path d="M ${x1} ${laneY.female} Q ${(x1+x2)/2} 18 ${x2} ${laneY.female}" stroke="${color}" stroke-width="2.1" fill="none" stroke-dasharray="5,4" marker-end="url(#tvm${i})"/><rect x="${x1-4}" y="${laneY.female-4}" width="8" height="8" rx="2" fill="${color}" opacity=".3"/><circle cx="${x2}" cy="${laneY.female}" r="4.2" fill="${color}" opacity=".78"/>`;
+    }
+    if(t.type==='dream'){
+      arrs+=`<path d="M ${x1} ${laneY.daughter} C ${x1} ${laneY.daughter-24} ${(x1+x2)/2} ${laneY.time+12} ${x2} ${laneY.time}" stroke="${color}" stroke-width="2.1" fill="none" stroke-dasharray="4,4" marker-end="url(#tvm${i})"/><circle cx="${x1}" cy="${laneY.daughter}" r="4.2" fill="${color}" opacity=".42"/><circle cx="${x2}" cy="${laneY.time}" r="4.2" fill="${color}" opacity=".85"/>`;
+    }
+    if(t.type==='superpose'){
+      arrs+=`<ellipse cx="${x1}" cy="${laneY.female}" rx="15" ry="24" fill="none" stroke="${color}" stroke-width="1.8" stroke-dasharray="3,4"/><circle cx="${x1}" cy="${laneY.female}" r="5" fill="rgba(255,72,88,.82)"/><circle cx="${x1}" cy="${laneY.female}" r="9.5" fill="none" stroke="${color}" stroke-width="1.4" stroke-dasharray="2,3"/>`;
+    }
   });
-  const svg=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="min-width:${W}px">${defs}${axL}${axes}${arrs}</svg>`;
-  const evts=vis.map(t=>{const tl={traverse:'穿越（逆時）',dream:'夢境穿越',push:'命運驅逐',superpose:'意識菜市場'};const tc={traverse:'var(--f1)',dream:'var(--amber)',push:'var(--f5)',superpose:'var(--f6)'};return `<div class="tv-event type-${t.type}"><div class="tv-event-label" style="color:${tc[t.type]||'var(--t2)'}">${tl[t.type]||t.type}：${t.from_label} → ${t.to_label}</div><div class="tv-event-desc">${t.desc}</div></div>`}).join('');
-  p.innerHTML=`<div class="tv-container"><div class="tv-title">時空穿越圖（截至目前章節）</div><div class="tv-svg-wrap">${svg}</div>${evts}</div>`;
+  const svg=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="min-width:${W}px"><rect x="12" y="12" width="${W-24}" height="${H-34}" rx="18" fill="rgba(255,255,255,.015)" stroke="rgba(255,255,255,.04)"/><rect x="${xP-12}" y="22" width="${xE-xP+24}" height="128" rx="16" fill="rgba(0,0,0,.1)"/>${defs}${grid}${lanes}${arrs}</svg>`;
+  const stats=`<div class="tv-overview"><div class="tv-stat"><span class="tv-stat-num">${vis.length}</span><span class="tv-stat-label">先陪你看見的</span><span class="tv-stat-sub">目前先浮上來的幾段穿越</span></div><div class="tv-stat"><span class="tv-stat-num">${femaleCount}</span><span class="tv-stat-label">學妹那條線</span><span class="tv-stat-sub">從她那邊開始回頭的時間</span></div><div class="tv-stat"><span class="tv-stat-num">${daughterCount}</span><span class="tv-stat-label">女兒那條線</span><span class="tv-stat-sub">她在夢裡一路飛去的時間</span></div></div>`;
+  const evts=vis.map((t,i)=>{
+    const color=TRAVERSE_COLOR_MAP[t.type]||'var(--t2)';
+    const typeLabel=TRAVERSE_LABEL_MAP[t.type]||t.type;
+    const whoLabel=t.who==='daughter'?'女兒那條線':'學妹那條線';
+    return `<div class="tv-event type-${t.type}"><div class="tv-event-head"><div class="tv-step" style="color:${color}"><div class="tv-step-count">${String(i+1).padStart(2,'0')}</div><div class="tv-step-copy"><div class="tv-step-title" style="color:${color}">${typeLabel}</div><div class="tv-step-sub">這一段先在 ${fmtEp(t.revealAfterEp)} 遇見</div></div></div><div class="tv-badges"><span class="tv-badge" style="border-color:${color};color:${color}">${fmtEp(t.revealAfterEp)} 先遇見</span><span class="tv-badge">${whoLabel}</span></div></div><div class="tv-route"><div class="tv-node"><div class="tv-node-kicker">從這一端</div><div class="tv-node-label">${t.from_label}</div><div class="tv-node-year">${formatYearLabel(t.from_year)}</div></div><div class="tv-route-arrow" style="color:${color}">${renderIcon('arrow-right')}</div><div class="tv-node"><div class="tv-node-kicker">走向那一端</div><div class="tv-node-label">${t.to_label}</div><div class="tv-node-year">${formatYearLabel(t.to_year)}</div></div></div><div class="tv-event-desc">${t.desc}</div></div>`;
+  }).join('');
+  p.innerHTML=`<div class="tv-container"><div class="tv-title">時空穿越圖（截至目前章節）</div><div class="ip-section-note">命運阿嬤不會一下子把全部攤開，她會一段一段陪你看。你先看見哪一段，故事就先陪你走到哪一段。先看看線怎麼走，再往下對照每一段從哪裡來，往哪裡去。</div>${stats}<div class="tv-legend"><div class="tv-legend-item"><span class="tv-legend-dot" style="background:rgba(255,72,88,.85)"></span><span>學妹線</span></div><div class="tv-legend-item"><span class="tv-legend-dot" style="background:rgba(168,164,156,.72)"></span><span>時間軸</span></div><div class="tv-legend-item"><span class="tv-legend-dot" style="background:rgba(200,144,16,.85)"></span><span>女兒線</span></div></div><div class="tv-svg-wrap">${svg}</div><div class="tv-events">${evts}</div></div>`;
 }
 
 // ── Build episodes ──
@@ -1025,16 +1436,16 @@ const cont=document.getElementById('episodes');
 EPISODES.forEach((ep,idx)=>{
   const arc=ep.arc;const ann=ANNOTATIONS[String(ep.ep)]||['',''];const note=ann[0]||'',tline=ann[1]||'';
   const vis=TL.filter(e=>e.from<=ep.ep);
-  const evtsH=vis.map(e=>`<div class="tl-evt-inline" onclick="goToEp(${e.ep})"><div class="tli-dot" style="${ARC_DS[e.arc]||ARC_DS.mixed}">${e.icon}</div><div class="tli-ep">${fmtEp(e.ep)}</div><div class="tli-label">${e.label}</div></div>`).join('')+`<div class="tli-now"><div class="tli-now-dot">▶</div><div class="tli-now-lbl">${fmtEp(ep.ep)}<br>現在</div></div>`;
+  const evtsH=vis.map(e=>`<div class="tl-evt-inline" onclick="goToEp(${e.ep})"><div class="tli-dot" style="${ARC_DS[e.arc]||ARC_DS.mixed}">${timelineIcon(e.icon)}</div><div class="tli-ep">${fmtEp(e.ep)}</div><div class="tli-label">${e.label}</div></div>`).join('')+`<div class="tli-now"><div class="tli-now-dot">${renderIcon('arrow-right')}</div><div class="tli-now-lbl">${fmtEp(ep.ep)}<br>現在</div></div>`;
   const cT=ep.title.replace(/《時間裡的兩個妳》/g,'').replace(/EP\d+/g,'').replace(/[|｜]/g,'').replace(/\s*x\s*/gi,' · ').trim()||ep.title;
   let tH='';
   if(idx<EPISODES.length-1){const nx=EPISODES[idx+1];const pv=stripHtml(nx.html).substring(0,90).trim();tH=`<div class="ep-teaser" onclick="goToEp(${nx.ep})"><div class="et-label">下一集</div><div class="et-num">${fmtEp(nx.ep)} · ${ARC_LBL[nx.arc]||nx.arc}</div><div class="et-text">${pv}…</div><div class="et-arrow">繼續閱讀 →</div></div>`}
-  const pvBtn=idx>0?`<button class="ep-nav-btn" onclick="goToEp(${EPISODES[idx-1].ep})">← ${fmtEp(EPISODES[idx-1].ep)}</button>`:`<button class="ep-nav-btn disabled">← 第一集</button>`;
-  const nxBtn=idx<EPISODES.length-1?`<button class="ep-nav-btn" onclick="goToEp(${EPISODES[idx+1].ep})">${fmtEp(EPISODES[idx+1].ep)} →</button>`:`<button class="ep-nav-btn disabled">連載持續中 →</button>`;
+  const pvBtn=idx>0?`<button class="ep-nav-btn" onclick="goToEp(${EPISODES[idx-1].ep})">${renderIcon('arrow-left','btn-icon')}<span>${fmtEp(EPISODES[idx-1].ep)}</span></button>`:`<button class="ep-nav-btn disabled">${renderIcon('arrow-left','btn-icon')}<span>第一集</span></button>`;
+  const nxBtn=idx<EPISODES.length-1?`<button class="ep-nav-btn" onclick="goToEp(${EPISODES[idx+1].ep})"><span>${fmtEp(EPISODES[idx+1].ep)}</span>${renderIcon('arrow-right','btn-icon')}</button>`:`<button class="ep-nav-btn disabled"><span>連載持續中</span>${renderIcon('arrow-right','btn-icon')}</button>`;
   const sec=document.createElement('section');sec.className='episode arc-'+arc;sec.id='ep-'+ep.ep;
   const granny=GRANNY.find(g=>g.ep===ep.ep)||null;
   const grannyH=granny?buildGranny(granny):'';
-  sec.innerHTML=`<div class="ep-bg-num">${fmtEp(ep.ep).replace('EP','')}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${ARC_LBL[arc]||arc}</span></div><div class="ep-title">${cT}</div><div class="ep-meta-row"><span>${readMins(ep.html)} 分鐘</span><span class="ep-meta-dot"></span><span>${ep.chars||''} 字</span></div></div><div class="ep-info-strip"><div class="ep-info-head" onclick="toggleEpInfo(this)"><span class="eih-icon">⏳</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>${tline?`<div class="ep-tline-wrap"><div class="ep-tline-toggle" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${tline}</span></div></div>`:''}${note?`<div class="ep-note"><div class="ep-note-toggle" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${note}</div></div>`:''}${grannyH}<div class="ep-body-wrap"></div>${tH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
+  sec.innerHTML=`<div class="ep-bg-num">${fmtEp(ep.ep).replace('EP','')}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${ARC_LBL[arc]||arc}</span></div><div class="ep-title">${cT}</div><div class="ep-meta-row"><span>${readMins(ep.html)} 分鐘</span><span class="ep-meta-dot"></span><span>${ep.chars||''} 字</span></div></div><div class="ep-info-strip"><div class="ep-info-head" onclick="toggleEpInfo(this)"><span class="eih-icon">${renderIcon('guide')}</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>${tline?`<div class="ep-tline-wrap"><div class="ep-tline-toggle" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${tline}</span></div></div>`:''}${note?`<div class="ep-note"><div class="ep-note-toggle" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${note}</div></div>`:''}${grannyH}<div class="ep-body-wrap"></div>${tH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
   const bd=document.createElement('div');bd.className='ep-body';bd.innerHTML=ep.html;sec.querySelector('.ep-body-wrap').appendChild(bd);
   cont.appendChild(sec);
 });
@@ -1152,25 +1563,30 @@ function closeJump(){document.getElementById('jump-overlay').classList.remove('o
 
 // ── Eggs ──
 const unlockedEggs=new Set();let pendingEgg=null,toastTimer=null,eggShelfList=[];
-function showToast(egg){pendingEgg=egg;document.getElementById('toast-glyph').textContent=egg.glyph;document.getElementById('toast-title').textContent=egg.title;document.getElementById('toast-sub').textContent=normalizeEpText(egg.sub);document.getElementById('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>document.getElementById('toast').classList.remove('show'),7500)}
+function showToast(egg){pendingEgg=egg;document.getElementById('toast-glyph').innerHTML=eggGlyphMarkup(egg.glyph);document.getElementById('toast-title').textContent=egg.title;document.getElementById('toast-sub').textContent=normalizeEpText(egg.sub);document.getElementById('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>document.getElementById('toast').classList.remove('show'),7500)}
 function openFromToast(){document.getElementById('toast').classList.remove('show');if(pendingEgg)openModal(pendingEgg)}
-function addToEggShelf(egg){eggShelfList.push(egg);const cnt=eggShelfList.length;const ei=document.getElementById('egg-icon');if(ei)ei.textContent='✦'+cnt;const de=document.getElementById('dsk-egg-btn');if(de)de.textContent='✦ 彩蛋 ('+cnt+')'}
+function addToEggShelf(egg){
+  eggShelfList.push(egg);
+  const cnt=eggShelfList.length;
+  const ei=document.getElementById('egg-icon');if(ei)setFabIcon(ei,'egg',cnt);
+  const de=document.getElementById('dsk-egg-btn');if(de)setLabeledButton(de,'egg','彩蛋 ('+cnt+')');
+}
 function openEggShelf(){
   if(!eggShelfList.length){showToast({glyph:'🔒',title:'彩蛋尚未解鎖',sub:'繼續閱讀，隱藏彩蛋將在關鍵章節出現',id:0,triggerEp:999});return}
   if(eggShelfList.length===1){openModal(eggShelfList[0]);return}
   document.getElementById('modal-eyebrow').textContent='已解鎖彩蛋';
-  document.getElementById('modal-glyph').textContent='✦';
+  document.getElementById('modal-glyph').innerHTML=eggGlyphMarkup('✦');
   document.getElementById('modal-title').textContent='已解鎖 '+eggShelfList.length+' 個彩蛋';
   document.getElementById('modal-tabs').innerHTML='';
   const c=document.getElementById('modal-content');c.innerHTML='';
   const p=document.createElement('div');p.className='mpanel active';
-  p.innerHTML=eggShelfList.map(e=>`<div style="display:flex;align-items:center;gap:14px;padding:13px 15px;border:1px solid var(--line);border-radius:8px;margin-bottom:9px;cursor:pointer;background:rgba(255,255,255,.012)" onclick="openModal(EGGS.find(x=>x.id===${e.id}))"><span style="font-size:22px">${e.glyph}</span><div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:.2em;text-transform:uppercase;margin-bottom:3px">${e.eyebrow}</div><div style="font-size:14px;color:var(--t1)">${e.title}</div></div><span style="margin-left:auto;color:var(--t3);font-size:12px">→</span></div>`).join('');
+  p.innerHTML=eggShelfList.map(e=>`<div style="display:flex;align-items:center;gap:14px;padding:13px 15px;border:1px solid var(--line);border-radius:8px;margin-bottom:9px;cursor:pointer;background:rgba(255,255,255,.012)" onclick="openModal(EGGS.find(x=>x.id===${e.id}))"><span style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--amber)">${eggGlyphMarkup(e.glyph)}</span><div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:.2em;text-transform:uppercase;margin-bottom:3px">${e.eyebrow}</div><div style="font-size:14px;color:var(--t1)">${e.title}</div></div><span style="margin-left:auto;color:var(--t3);font-size:12px">→</span></div>`).join('');
   c.appendChild(p);document.getElementById('modal').classList.add('open');
 }
 function openModal(egg){
   if(!egg)return;
   document.getElementById('modal-eyebrow').textContent=egg.eyebrow;
-  document.getElementById('modal-glyph').textContent=egg.glyph;
+  document.getElementById('modal-glyph').innerHTML=eggGlyphMarkup(egg.glyph);
   document.getElementById('modal-title').textContent=egg.title;
   const tabs=egg.tabs||[];
   document.getElementById('modal-tabs').innerHTML=tabs.map((t,i)=>`<div class="mtab${i===0?' active':''}" onclick="switchModalTab(this,${i})">${t}</div>`).join('');
@@ -1213,44 +1629,38 @@ function buildRelMap(){
 
 // ── Granny diagrams ──
 function buildGranny(g){
-  const typeC={traverse:'rgba(255,72,88,.7)',push:'rgba(56,128,255,.7)',dream:'rgba(200,144,16,.7)',superpose:'rgba(144,64,240,.7)'};
-  const typeL={traverse:'逆時穿越',push:'命運驅逐',dream:'夢境飛行',superpose:'意識菜市場'};
-  const c=typeC[g.type]||'rgba(255,255,255,.5)';
+  const c=TRAVERSE_COLOR_MAP[g.type]||'rgba(255,255,255,.5)';
   const svg=buildGrannySVG(g);
+  const typeLabel=TRAVERSE_LABEL_MAP[g.type]||'這一段時間';
   const arcNote=g.arc_note?`<div class="eg-arc-note"><div class="eg-arc-dot" style="background:${c}"></div><div class="eg-arc-note-text">${g.arc_note}</div></div>`:'';
-  return `<div class="ep-granny"><div class="ep-granny-toggle" onclick="toggleGranny(this)"><div class="eg-avatar">👵</div><span class="eg-label">命運阿嬤說 · <span style="font-size:10px;opacity:.7;letter-spacing:.08em">${typeL[g.type]||'時空說明'}</span></span><span class="eg-arrow">▾</span></div><div class="ep-granny-body"><div class="eg-title">${g.title}</div><div class="eg-text">${g.body}</div><div class="eg-diagram">${svg}</div>${arcNote}</div></div>`;
+  return `<div class="ep-granny"><div class="ep-granny-toggle" onclick="toggleGranny(this)"><div class="eg-avatar">${renderIcon('granny')}</div><span class="eg-label">命運阿嬤說 · <span style="font-size:10px;opacity:.7;letter-spacing:.08em">陪你看這一段</span></span><span class="eg-arrow">▾</span></div><div class="ep-granny-body"><div class="eg-kicker">${typeLabel}</div><div class="eg-title">${g.title}</div><div class="eg-text">${g.body}</div><div class="eg-diagram">${svg}</div>${arcNote}</div></div>`;
 }
 function toggleGranny(h){h.classList.toggle('open');h.nextElementSibling.classList.toggle('open')}
 function buildGrannySVG(g){
-  const W=300,H=90;
-  const typeColor={traverse:'rgba(255,72,88,.8)',push:'rgba(56,128,255,.75)',dream:'rgba(200,144,16,.8)',superpose:'rgba(144,64,240,.8)'};
-  const c=typeColor[g.type]||'rgba(255,255,255,.5)';
+  const W=318,H=116;
+  const c=TRAVERSE_COLOR_MAP[g.type]||'rgba(255,255,255,.5)';
   const YM=1994,YX=2026;
-  const yx=y=>{const yr=parseInt((String(y).match(/\d{4}/)||['2005'])[0]);return 20+(yr-YM)/(YX-YM)*(W-40)};
+  const yx=y=>{const yr=parseInt((String(y).match(/\d{4}/)||['2005'])[0],10);return 34+(yr-YM)/(YX-YM)*(W-68)};
   const x1=yx(g.from_year),x2=yx(g.to_year);
-  let path='',defs='',extra='';
+  const baseY=66;
+  let defs=`<defs><marker id="ga-${g.ep}" markerWidth="8" markerHeight="8" refX="5.6" refY="2.8" orient="auto"><path d="M0,0 L0,5.6 L7.2,2.8 z" fill="${c}"/></marker><radialGradient id="gg-${g.ep}" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="${c}" stop-opacity=".22"/><stop offset="100%" stop-color="${c}" stop-opacity="0"/></radialGradient></defs>`;
+  let path='',points='';
   if(g.type==='traverse'){
-    const cy=H*0.2;
-    defs=`<defs><marker id="ga1" markerWidth="7" markerHeight="7" refX="5" refY="2.5" orient="auto"><path d="M0,0 L0,5 L7,2.5 z" fill="${c}"/></marker></defs>`;
-    path=`<path d="M ${x1} 55 Q ${(x1+x2)/2} ${cy} ${x2} 55" stroke="${c}" stroke-width="2" fill="none" marker-end="url(#ga1)"/>`;
-    extra=`<circle cx="${x1}" cy="55" r="5" fill="${c}" opacity=".4"/><text x="${x1}" y="72" text-anchor="middle" font-size="8" fill="${c}" font-family="Noto Sans TC">${g.from_label}</text><text x="${x2}" y="72" text-anchor="middle" font-size="8" fill="${c}" font-family="Noto Sans TC">${g.to_label}</text>`;
+    path=`<path d="M ${x1} ${baseY} Q ${(x1+x2)/2} 16 ${x2} ${baseY}" stroke="${c}" stroke-width="2.4" fill="none" marker-end="url(#ga-${g.ep})"/>`;
+    points=`<circle cx="${x1}" cy="${baseY}" r="5" fill="${c}" opacity=".34"/><circle cx="${x2}" cy="${baseY}" r="5" fill="${c}" opacity=".9"/>`;
   } else if(g.type==='push'){
-    defs=`<defs><marker id="ga2" markerWidth="7" markerHeight="7" refX="5" refY="2.5" orient="auto"><path d="M0,0 L0,5 L7,2.5 z" fill="${c}"/></marker></defs>`;
-    path=`<path d="M ${x1} 45 Q ${(x1+x2)/2} 25 ${x2} 45" stroke="${c}" stroke-width="2" fill="none" stroke-dasharray="5,3" marker-end="url(#ga2)"/>`;
-    extra=`<rect x="${x1-6}" y="38" width="12" height="12" rx="2" fill="${c}" opacity=".25" stroke="${c}" stroke-width="1"/><text x="${x1}" y="72" text-anchor="middle" font-size="8" fill="${c}" font-family="Noto Sans TC">${g.from_label}</text><text x="${x2}" y="72" text-anchor="middle" font-size="8" fill="${c}" font-family="Noto Sans TC">${g.to_label}</text>`;
+    path=`<path d="M ${x1} ${baseY-6} Q ${(x1+x2)/2} 22 ${x2} ${baseY-6}" stroke="${c}" stroke-width="2.2" fill="none" stroke-dasharray="5,4" marker-end="url(#ga-${g.ep})"/>`;
+    points=`<rect x="${x1-5}" y="${baseY-11}" width="10" height="10" rx="2" fill="${c}" opacity=".26"/><circle cx="${x2}" cy="${baseY-6}" r="5" fill="${c}" opacity=".86"/>`;
   } else if(g.type==='dream'){
-    defs=`<defs><marker id="ga3" markerWidth="7" markerHeight="7" refX="5" refY="2.5" orient="auto"><path d="M0,0 L0,5 L7,2.5 z" fill="${c}"/></marker></defs>`;
-    const pts=[[x1,55],[x1,38],[x2,28],[x2,45]];
-    path=`<path d="M ${pts.map(p=>p.join(' ')).join(' L ')}" stroke="${c}" stroke-width="2" fill="none" stroke-dasharray="4,3" marker-end="url(#ga3)"/>`;
-    extra=`<circle cx="${x1}" cy="55" r="5" fill="${c}" opacity=".5"/><polygon points="${x2-5},${28} ${x2+5},${28} ${x2},${18}" fill="${c}" opacity=".6"/><text x="${x1}" y="72" text-anchor="middle" font-size="8" fill="${c}" font-family="Noto Sans TC">${g.from_label}</text><text x="${x2}" y="80" text-anchor="middle" font-size="8" fill="${c}" font-family="Noto Sans TC">${g.to_label}</text>`;
+    path=`<path d="M ${x1} ${baseY+14} C ${x1} ${baseY-8} ${(x1+x2)/2} 20 ${x2} ${baseY-10}" stroke="${c}" stroke-width="2.2" fill="none" stroke-dasharray="4,4" marker-end="url(#ga-${g.ep})"/>`;
+    points=`<circle cx="${x1}" cy="${baseY+14}" r="5" fill="${c}" opacity=".36"/><circle cx="${x2}" cy="${baseY-10}" r="5" fill="${c}" opacity=".9"/>`;
   } else if(g.type==='superpose'){
-    const mx=(x1+x2)/2;
-    defs=`<defs><radialGradient id="sg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="${c}" stop-opacity=".3"/><stop offset="100%" stop-color="${c}" stop-opacity="0"/></radialGradient></defs>`;
-    path=`<ellipse cx="${x1}" cy="45" rx="22" ry="18" fill="url(#sg)" stroke="${c}" stroke-width="1.5" stroke-dasharray="3,3"/>`;
-    extra=`<circle cx="${x1}" cy="45" r="5" fill="rgba(255,72,88,.7)"/><circle cx="${x1}" cy="45" r="8" fill="none" stroke="rgba(255,72,88,.4)" stroke-width="1.5" stroke-dasharray="2,3"/><text x="${x1-20}" y="72" text-anchor="middle" font-size="8" fill="rgba(255,72,88,.8)" font-family="Noto Sans TC">29歲身體</text><text x="${x1+20}" y="72" text-anchor="middle" font-size="8" fill="${c}" font-family="Noto Sans TC">18歲意識</text>`;
+    path=`<ellipse cx="${x1}" cy="${baseY-4}" rx="18" ry="26" fill="url(#gg-${g.ep})" stroke="${c}" stroke-width="1.8" stroke-dasharray="3,4"/>`;
+    points=`<circle cx="${x1}" cy="${baseY-4}" r="5.2" fill="rgba(255,72,88,.84)"/><circle cx="${x1}" cy="${baseY-4}" r="9.8" fill="none" stroke="${c}" stroke-width="1.4" stroke-dasharray="2,3"/>`;
   }
-  const axis=`<line x1="18" y1="55" x2="${W-12}" y2="55" stroke="rgba(255,255,255,.08)" stroke-width="1"/><text x="10" y="58" font-size="7" fill="rgba(255,255,255,.15)" font-family="DM Mono">1994</text><text x="${W-28}" y="58" font-size="7" fill="rgba(255,255,255,.15)" font-family="DM Mono">2026</text>`;
-  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="min-width:260px">${defs}${axis}${path}${extra}</svg>`;
+  const axis=`<rect x="18" y="22" width="${W-36}" height="64" rx="14" fill="rgba(255,255,255,.014)" stroke="rgba(255,255,255,.05)"/><line x1="28" y1="${baseY}" x2="${W-20}" y2="${baseY}" stroke="rgba(255,255,255,.08)" stroke-width="1.2"/><text x="22" y="${baseY+3}" font-size="7.2" fill="rgba(255,255,255,.18)" font-family="DM Mono">1994</text><text x="${W-30}" y="${baseY+3}" font-size="7.2" fill="rgba(255,255,255,.18)" font-family="DM Mono">2026</text>`;
+  const labels=`<text x="${x1}" y="93" text-anchor="middle" font-size="8.2" fill="${c}" font-family="Noto Sans TC">${g.from_label}</text><text x="${x2}" y="93" text-anchor="middle" font-size="8.2" fill="${c}" font-family="Noto Sans TC">${g.to_label}</text><text x="${x1}" y="104" text-anchor="middle" font-size="6.8" fill="rgba(255,255,255,.28)" font-family="DM Mono">${formatYearLabel(g.from_year)}</text><text x="${x2}" y="104" text-anchor="middle" font-size="6.8" fill="rgba(255,255,255,.28)" font-family="DM Mono">${formatYearLabel(g.to_year)}</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="min-width:260px">${defs}${axis}${path}${points}${labels}</svg>`;
 }
 
 // ── Toggle ALL episode sections ──
@@ -1285,11 +1695,11 @@ function toggleAllSections(){
   });
   // Update FAB button
   const icon=document.getElementById('fab-ta-icon');const label=document.getElementById('fab-ta-label');
-  if(icon)icon.textContent=allExpanded?'⊟':'⊞';
+  if(icon)setFabIcon(icon,allExpanded?'grid-minus':'grid-plus');
   if(label)label.textContent=allExpanded?'一鍵收合':'一鍵展開';
   // update desktop button
   const dskBtn=document.getElementById('dsk-toggle-all');
-  if(dskBtn){dskBtn.textContent=allExpanded?'⊟ 一鍵收合':'⊞ 一鍵展開';dskBtn.classList.toggle('expanded',allExpanded);}
+  if(dskBtn){setLabeledButton(dskBtn,allExpanded?'grid-minus':'grid-plus',allExpanded?'一鍵收合':'一鍵展開');dskBtn.classList.toggle('expanded',allExpanded);}
 }
 
 // ── Hero canvas ──
@@ -1392,20 +1802,20 @@ function stopAutoScroll(){
 
 function updateAutoPlayBtn(){
   const pb=document.getElementById('ap-play-btn');
-  if(pb)pb.textContent=autoActive?'⏸ 暫停':'▶ 開始';
+  if(pb)setLabeledButton(pb,autoActive?'pause':'play',autoActive?'暫停':'開始');
   if(pb)pb.className='ap-btn '+(autoActive?'':'primary');
   // FAB
   const fab=document.getElementById('fab-auto-btn');
   const fi=document.getElementById('fab-auto-icon');
   const fl=document.getElementById('fab-auto-label');
   if(fab)fab.classList.toggle('active',autoActive);
-  if(fi)fi.textContent=autoActive?'⏸':'▶';
+  if(fi)setFabIcon(fi,autoActive?'pause':'play');
   if(fl)fl.textContent=autoActive?'暫停':'自動';
   // Desktop btn
   const db=document.getElementById('dsk-auto-btn');
   if(db){
     db.classList.toggle('active',autoActive);
-    db.textContent=autoActive?'⏸ 暫停':'▶ 自動模式';
+    setLabeledButton(db,autoActive?'pause':'play',autoActive?'暫停':'自動模式');
   }
 }
 
