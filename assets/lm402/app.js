@@ -8,6 +8,8 @@ import {
   INTRO_BEATS,
   ENDINGS,
   CINEMATIC_TIMELINE,
+  MOBILE_DENSITY_PRESETS,
+  CAMERA_PRESETS,
 } from "./data.js";
 import { createLm402Renderer } from "./renderer.js";
 
@@ -26,6 +28,7 @@ const dom = {
   rotateLock: document.getElementById("rotate-lock"),
   hud: document.getElementById("hud"),
   hudToggle: document.getElementById("hud-toggle"),
+  pointerPill: document.getElementById("pointer-pill"),
   objectiveKicker: document.getElementById("objective-kicker"),
   objectiveTitle: document.getElementById("objective-title"),
   objectiveCopy: document.getElementById("objective-copy"),
@@ -34,6 +37,10 @@ const dom = {
   memoryList: document.getElementById("memory-list"),
   hintPill: document.getElementById("hint-pill"),
   focusPrompt: document.getElementById("focus-prompt"),
+  bottomDock: document.getElementById("bottom-dock"),
+  ambienceBox: document.getElementById("ambience-box"),
+  ambienceChip: document.getElementById("ambience-chip"),
+  ambienceChipCopy: document.getElementById("ambience-chip-copy"),
   ambienceText: document.getElementById("ambience-text"),
   subtitleSource: document.getElementById("subtitle-source"),
   subtitleText: document.getElementById("subtitle-text"),
@@ -77,6 +84,7 @@ const state = {
     velocityX: 0,
     velocityZ: 0,
   },
+  pointerLockMode: "free",
   input: {
     moveX: 0,
     moveY: 0,
@@ -122,6 +130,10 @@ const state = {
   mobileReady: false,
   introSeenNow: Boolean(localStorage.getItem(STORAGE_KEYS.introSeen)),
   cinematicGlow: 0,
+  mobileDockExpanded: false,
+  mobileDensityTier: "regular",
+  introBeatIndex: 0,
+  introCameraTrack: "daughter_glow",
 };
 
 function isMobileLayout() {
@@ -130,6 +142,28 @@ function isMobileLayout() {
 
 function wantsLandscape() {
   return isMobileLayout() && window.innerHeight > window.innerWidth;
+}
+
+function isMobileLandscape() {
+  return isMobileLayout() && window.innerWidth >= window.innerHeight;
+}
+
+function currentDensityTier() {
+  if (!isMobileLandscape()) {
+    return "regular";
+  }
+  const shortSide = Math.min(window.innerWidth, window.innerHeight);
+  if (shortSide <= 360) {
+    return "tight";
+  }
+  if (shortSide <= 400) {
+    return "compact";
+  }
+  return "regular";
+}
+
+function condensedCopy(text, length = 28) {
+  return text.length > length ? `${text.slice(0, length - 1)}…` : text;
 }
 
 function setSubtitle(source, text, ttl = 3.6) {
@@ -141,6 +175,32 @@ function setSubtitle(source, text, ttl = 3.6) {
 function setAmbience(text) {
   state.ambience.text = text;
   dom.ambienceText.textContent = text;
+  dom.ambienceChipCopy.textContent = state.mobileDockExpanded ? "點一下收起" : condensedCopy(text);
+}
+
+function updatePointerHint() {
+  if (isMobileLayout()) {
+    dom.pointerPill.hidden = true;
+    canvas.classList.remove("pointer-locked");
+    return;
+  }
+  const locked = document.pointerLockElement === canvas;
+  state.pointerLockMode = locked ? "locked" : "free";
+  dom.pointerPill.hidden = false;
+  dom.pointerPill.textContent = locked ? "視角已鎖定 · 右鍵或 Esc 退出" : "右鍵進入視角鎖定";
+  dom.pointerPill.classList.toggle("locked", locked);
+  canvas.classList.toggle("pointer-locked", locked);
+}
+
+function syncDockState() {
+  const mobileLandscape = isMobileLandscape();
+  const expanded = !mobileLandscape || state.mobileDockExpanded;
+  dom.bottomDock.classList.toggle("ambience-expanded", expanded);
+  dom.bottomDock.classList.toggle("mobile-landscape", mobileLandscape);
+  dom.ambienceChip.hidden = !mobileLandscape;
+  dom.ambienceBox.hidden = !expanded;
+  dom.ambienceChip.setAttribute("aria-expanded", String(expanded));
+  dom.ambienceChipCopy.textContent = expanded ? "點一下收起" : condensedCopy(state.ambience.text);
 }
 
 function updateObjective() {
@@ -213,6 +273,9 @@ function toggleHud(force) {
 }
 
 function openDialogue(definition) {
+  if (document.pointerLockElement === canvas) {
+    document.exitPointerLock?.();
+  }
   state.dialogue = definition;
   dom.dialogueEyebrow.textContent = definition.eyebrow;
   dom.dialogueTitle.textContent = `${definition.speaker} · ${definition.title}`;
@@ -235,6 +298,7 @@ function closeDialogue() {
   dom.dialogueSheet.hidden = true;
   dom.body.classList.remove("dialogue-open");
   canvas.focus({ preventScroll: true });
+  updatePointerHint();
 }
 
 function collectMemory(id) {
@@ -424,14 +488,17 @@ function startIntro(replay = false) {
   state.intro.progress = 0;
   state.intro.time = 0;
   state.intro.replay = replay;
+  state.introBeatIndex = 0;
+  state.introCameraTrack = INTRO_BEATS[0].id;
   state.cinematicGlow = 0;
   state.ending = null;
   state.endingSequence = null;
   dom.endingOverlay.hidden = true;
   dom.body.classList.remove("ending-open");
   closeDialogue();
-  setSubtitle(INTRO_BEATS[0].kicker, INTRO_BEATS[0].text, 3.2);
-  setAmbience("紅線先在黑暗裡亮起，再把走廊、門牌、百葉窗與十一點的光一格一格牽出來。");
+  setSubtitle(INTRO_BEATS[0].kicker, INTRO_BEATS[0].text, 0.2);
+  setAmbience(INTRO_BEATS[0].ambience);
+  syncDockState();
 }
 
 function finishIntro() {
@@ -440,6 +507,7 @@ function finishIntro() {
   localStorage.setItem(STORAGE_KEYS.introSeen, "1");
   setSubtitle("女兒", "前門來電，要先從那句「妳在哪裡？」開始。", 3.8);
   setAmbience("十一點的風正從樓梯口往後門吹，光在右手邊的窗上慢慢發亮。");
+  syncDockState();
 }
 
 function startEnding(type) {
@@ -480,6 +548,9 @@ function resetScene() {
   state.characters.fatherEcho.alpha = 0;
   state.characters.auntEcho.alpha = 0;
   state.cinematicGlow = 0;
+  state.mobileDockExpanded = false;
+  state.introBeatIndex = 0;
+  state.introCameraTrack = INTRO_BEATS[0].id;
   dom.endingOverlay.hidden = true;
   dom.body.classList.remove("ending-open");
   dom.dialogueSheet.hidden = true;
@@ -488,6 +559,8 @@ function resetScene() {
   updateMemoryList();
   setSubtitle("女兒", "先讓前門那句電話響起來。", 3.6);
   setAmbience("粉筆味像一層薄雲，樓梯口那邊有風，十一點的光才剛準備進來。");
+  syncDockState();
+  updatePointerHint();
 }
 
 function collidesWithDivider(nx, nz) {
@@ -632,13 +705,16 @@ function updateEndingSequence(dt) {
 
 function updateIntro(dt) {
   state.intro.time += dt;
-  state.intro.progress = clamp(state.intro.time / 5.4, 0, 1);
-  if (state.intro.time < 1.9) {
-    setSubtitle(INTRO_BEATS[0].kicker, INTRO_BEATS[0].text, 0.2);
-  } else if (state.intro.time < 3.7) {
-    setSubtitle(INTRO_BEATS[1].kicker, INTRO_BEATS[1].text, 0.2);
-  } else {
-    setSubtitle(INTRO_BEATS[2].kicker, INTRO_BEATS[2].text, 0.2);
+  state.intro.progress = clamp(state.intro.time / CINEMATIC_TIMELINE.introDuration, 0, 1);
+  const beatIndex = INTRO_BEATS.findIndex(
+    (beat) => state.intro.time >= beat.start && state.intro.time < beat.end
+  );
+  const nextBeatIndex = beatIndex === -1 ? INTRO_BEATS.length - 1 : beatIndex;
+  if (nextBeatIndex !== state.introBeatIndex) {
+    state.introBeatIndex = nextBeatIndex;
+    state.introCameraTrack = INTRO_BEATS[nextBeatIndex].id;
+    setSubtitle(INTRO_BEATS[nextBeatIndex].kicker, INTRO_BEATS[nextBeatIndex].text, 0.2);
+    setAmbience(INTRO_BEATS[nextBeatIndex].ambience);
   }
   if (state.intro.progress >= 1) {
     finishIntro();
@@ -646,9 +722,11 @@ function updateIntro(dt) {
 }
 
 function buildCamera() {
+  const mobileLandscape = isMobileLandscape();
+  const preset = mobileLandscape ? CAMERA_PRESETS.mobile : CAMERA_PRESETS.desktop;
   const base = {
     x: state.player.x,
-    y: state.player.y,
+    y: preset.baseHeight,
     z: state.player.z,
     yaw: state.player.yaw,
     pitch: state.player.pitch,
@@ -656,12 +734,15 @@ function buildCamera() {
   if (state.mode === "intro") {
     const p = state.intro.progress;
     return {
-      x: lerp(-520, -200, smoothstep(0.2, 0.82, p)),
-      y: lerp(210, 166, smoothstep(0.08, 0.9, p)),
-      z: lerp(-220, 320, smoothstep(0.18, 0.92, p)),
-      yaw: lerp(0.9, 0.16, smoothstep(0.1, 0.88, p)),
-      pitch: lerp(-0.28, -0.08, smoothstep(0.12, 0.9, p)),
+      x: lerp(CAMERA_PRESETS.intro.start.x, CAMERA_PRESETS.intro.end.x, smoothstep(0.12, 0.92, p)),
+      y: lerp(CAMERA_PRESETS.intro.start.y, CAMERA_PRESETS.intro.end.y, smoothstep(0.08, 0.94, p)),
+      z: lerp(CAMERA_PRESETS.intro.start.z, CAMERA_PRESETS.intro.end.z, smoothstep(0.18, 0.92, p)),
+      yaw: lerp(CAMERA_PRESETS.intro.start.yaw, CAMERA_PRESETS.intro.end.yaw, smoothstep(0.1, 0.9, p)),
+      pitch: lerp(CAMERA_PRESETS.intro.start.pitch, CAMERA_PRESETS.intro.end.pitch, smoothstep(0.12, 0.92, p)),
     };
+  }
+  if (state.phase === "front_call" && !state.flags.frontCallHeard) {
+    base.pitch = preset.frontCallPitch;
   }
   if (state.endingSequence && state.ending !== "missed") {
     return {
@@ -680,10 +761,19 @@ function render() {
     mode: state.mode,
     phase: state.phase,
     intro: state.intro,
+    introBeatIndex: state.introBeatIndex,
+    introCameraTrack: state.introCameraTrack,
     camera: buildCamera(),
     characters: state.characters,
     hotspots: buildHotspotState(),
     cinematicGlow: state.cinematicGlow,
+    layout: {
+      mobile: isMobileLayout(),
+      mobileLandscape: isMobileLandscape(),
+      density: state.mobileDensityTier,
+      focalScale: (isMobileLandscape() ? CAMERA_PRESETS.mobile : CAMERA_PRESETS.desktop).focalScale,
+      pointerLocked: state.pointerLockMode === "locked",
+    },
   };
   renderer.render(scene);
 }
@@ -696,6 +786,7 @@ function tick(now) {
   tick.last = now;
 
   dom.rotateLock.hidden = !wantsLandscape();
+  dom.body.classList.toggle("landscape-prompt", wantsLandscape());
 
   if (state.mode === "intro") {
     updateIntro(dt);
@@ -734,6 +825,8 @@ function bindKeyboard() {
       button?.click();
     } else if (event.code === "Escape" && state.dialogue) {
       closeDialogue();
+    } else if (event.code === "Escape" && document.pointerLockElement === canvas) {
+      document.exitPointerLock?.();
     }
   });
   window.addEventListener("keyup", (event) => {
@@ -744,22 +837,36 @@ function bindKeyboard() {
 function bindPointerLook() {
   canvas.addEventListener("click", () => {
     attemptOrientationLock();
-    canvas.requestPointerLock?.();
     canvas.focus({ preventScroll: true });
+  });
+  canvas.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+  });
+  canvas.addEventListener("mousedown", (event) => {
+    if (event.button === 2 && !isMobileLayout()) {
+      event.preventDefault();
+      canvas.focus({ preventScroll: true });
+      if (document.pointerLockElement === canvas) {
+        document.exitPointerLock?.();
+      } else if (!state.dialogue && !state.ending && state.mode === "play") {
+        canvas.requestPointerLock?.();
+      }
+      return;
+    }
+    if (event.button !== 0 || event.pointerType === "touch") {
+      return;
+    }
+    state.dragLook = { x: event.clientX, y: event.clientY };
   });
   document.addEventListener("mousemove", (event) => {
     if (document.pointerLockElement !== canvas || state.dialogue || state.mode !== "play") {
       return;
     }
-    state.player.yaw += event.movementX * 0.0025;
-    state.player.pitch = clamp(state.player.pitch - event.movementY * 0.0021, -0.68, 0.54);
+    state.player.yaw += event.movementX * 0.00195;
+    state.player.pitch = clamp(state.player.pitch - event.movementY * 0.00178, -0.74, 0.62);
   });
-  canvas.addEventListener("pointerdown", (event) => {
-    if (event.pointerType === "touch") {
-      return;
-    }
-    state.dragLook = { x: event.clientX, y: event.clientY };
-  });
+  document.addEventListener("pointerlockchange", updatePointerHint);
+  document.addEventListener("pointerlockerror", () => revealHint("瀏覽器沒有成功鎖定視角。"));
   canvas.addEventListener("pointermove", (event) => {
     if (!state.dragLook || document.pointerLockElement === canvas || state.dialogue || state.mode !== "play") {
       return;
@@ -767,8 +874,8 @@ function bindPointerLook() {
     const dx = event.clientX - state.dragLook.x;
     const dy = event.clientY - state.dragLook.y;
     state.dragLook = { x: event.clientX, y: event.clientY };
-    state.player.yaw += dx * 0.004;
-    state.player.pitch = clamp(state.player.pitch - dy * 0.0032, -0.68, 0.54);
+    state.player.yaw += dx * 0.0036;
+    state.player.pitch = clamp(state.player.pitch - dy * 0.0028, -0.74, 0.62);
   });
   window.addEventListener("pointerup", () => {
     state.dragLook = null;
@@ -777,11 +884,11 @@ function bindPointerLook() {
 
 function bindJoystick(root, assign) {
   const thumb = root.querySelector(".joystick-thumb");
-  const radius = 44;
   const pointerState = { id: null };
 
   const setVector = (clientX, clientY) => {
     const rect = root.getBoundingClientRect();
+    const radius = Math.max(30, rect.width * 0.28);
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
     const dx = clientX - cx;
@@ -819,6 +926,10 @@ function bindJoystick(root, assign) {
 function bindUI() {
   toggleHud(true);
   dom.hudToggle.addEventListener("click", () => toggleHud());
+  dom.ambienceChip.addEventListener("click", () => {
+    state.mobileDockExpanded = !state.mobileDockExpanded;
+    syncDockState();
+  });
   dom.interactBtn.addEventListener("click", openActiveInteraction);
   dom.inspectBtn.addEventListener("click", () => {
     if (state.activeHotspot) {
@@ -847,10 +958,26 @@ function bindUI() {
 }
 
 function handleResize() {
+  state.mobileDensityTier = currentDensityTier();
+  const preset = MOBILE_DENSITY_PRESETS[state.mobileDensityTier];
+  dom.body.dataset.mobileTier = state.mobileDensityTier;
+  dom.body.classList.toggle("is-mobile", isMobileLayout());
+  dom.body.classList.toggle("is-mobile-landscape", isMobileLandscape());
+  dom.body.classList.toggle("is-mobile-portrait", isMobileLayout() && !isMobileLandscape());
+  dom.body.style.setProperty("--joystick-size", `${preset.stickSize}px`);
+  dom.body.style.setProperty("--joystick-thumb", `${preset.thumbSize}px`);
+  dom.body.style.setProperty("--action-size", `${preset.actionSize}px`);
+  dom.body.style.setProperty("--controls-clearance", `${preset.controlsClearance}px`);
+  dom.body.style.setProperty("--rail-min-height", `${preset.railMinHeight}px`);
   dom.mobileControls.setAttribute("aria-hidden", String(!isMobileLayout()));
   if (isMobileLayout()) {
     toggleHud(true);
   }
+  if (!isMobileLandscape()) {
+    state.mobileDockExpanded = false;
+  }
+  syncDockState();
+  updatePointerHint();
 }
 
 updateObjective();
@@ -862,9 +989,13 @@ handleResize();
 window.addEventListener("resize", handleResize);
 
 if (state.mode === "intro") {
-  setSubtitle(INTRO_BEATS[0].kicker, INTRO_BEATS[0].text, 3.2);
+  setSubtitle(INTRO_BEATS[0].kicker, INTRO_BEATS[0].text, 0.2);
+  setAmbience(INTRO_BEATS[0].ambience);
 } else {
   setSubtitle("女兒", "先讓前門那句電話響起來。", 3.2);
+  setAmbience("粉筆味像一層薄雲，樓梯口那邊有風，十一點的光才剛準備進來。");
 }
 
+syncDockState();
+updatePointerHint();
 requestAnimationFrame(tick);

@@ -49,6 +49,7 @@
       <canvas id="scene-canvas" aria-label="LM402 一眼瞬間互動場景" tabindex="0"></canvas>
       <div class="stage-vignette" aria-hidden="true"></div>
       <div id="crosshair" class="crosshair" aria-hidden="true"></div>
+      <div id="pointer-pill" class="pointer-pill" aria-live="polite">右鍵進入視角鎖定</div>
 
       <div id="objective-prompt" class="objective-prompt" aria-live="polite">
         <div class="objective-kicker" id="objective-kicker">目前任務</div>
@@ -61,11 +62,15 @@
       <div id="focus-prompt" class="focus-prompt" aria-live="polite"></div>
 
       <div id="bottom-dock" class="bottom-dock">
+        <button id="ambience-chip" class="ambience-chip" type="button" aria-expanded="false" hidden>
+          <span class="dock-kicker">現場聲音</span>
+          <span id="ambience-chip-copy" class="ambience-chip-copy">點一下展開</span>
+        </button>
         <div id="ambience-box" class="dock-box ambience-box">
           <div class="dock-kicker">現場聲音</div>
           <div id="ambience-text" class="dock-copy">粉筆味像一層薄雲，十一點的光正慢慢沿著百葉窗往教室裡推。</div>
         </div>
-        <div id="subtitle-box" class="dock-box subtitle-box">
+        <div id="subtitle-box" class="dock-box subtitle-box subtitle-rail">
           <div class="dock-kicker" id="subtitle-source">女兒</div>
           <div id="subtitle-text" class="dock-copy">我可以飛翔，只要沿著那條紅線往前，LM402 就會在光裡慢慢長出來。</div>
         </div>
@@ -113,7 +118,7 @@
       <section class="panel-card">
         <div class="panel-kicker">控制方式</div>
         <div class="tip-list">
-          <div class="tip-row"><span class="tip-key">WASD</span><span class="tip-copy">移動女兒的視角。滑鼠或觸控右搖桿都可以左右上下看。</span></div>
+          <div class="tip-row"><span class="tip-key">WASD</span><span class="tip-copy">移動女兒的視角。右鍵可切換視角鎖定；滑鼠或右搖桿都可以左右上下看。</span></div>
           <div class="tip-row"><span class="tip-key">F</span><span class="tip-copy">互動。靠近前門、門牌、黑板、座位與後門時會打開動作或對話選項。</span></div>
           <div class="tip-row"><span class="tip-key">R</span><span class="tip-copy">把視線帶回目標方向；手機右下角的「置」也是同一個功能。</span></div>
           <div class="tip-row"><span class="tip-key">G</span><span class="tip-copy">重播女兒跟著紅線飛進 LM402 的開場動畫。</span></div>
