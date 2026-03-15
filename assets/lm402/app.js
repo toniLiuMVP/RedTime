@@ -49,34 +49,34 @@ const WORLD_POINTS = {
     z: scale(WORLD.focusMark.z),
   },
   frontSpawn: {
-    x: scale(-468),
+    x: scale(-548),
     y: 0,
-    z: scale(126),
+    z: scale(182),
   },
   corridorFront: {
-    x: scale(-402),
+    x: scale(-286),
     y: 0,
-    z: scale(224),
+    z: scale(254),
   },
   juniorSeat: {
-    x: scale(216),
+    x: scale(202),
     y: 0,
-    z: scale(1038),
+    z: scale(1046),
   },
   frontLook: {
-    x: scale(-236),
-    y: 1.02,
-    z: scale(268),
+    x: scale(40),
+    y: 0.92,
+    z: scale(308),
   },
   rearLook: {
-    x: scale(-226),
-    y: 1.18,
-    z: scale(1248),
+    x: scale(-42),
+    y: 1.2,
+    z: scale(1258),
   },
   eyeLook: {
-    x: scale(-164),
-    y: 1.36,
-    z: scale(1258),
+    x: scale(34),
+    y: 1.42,
+    z: scale(1286),
   },
 };
 
@@ -187,13 +187,13 @@ function createInitialCharacters() {
       x: WORLD_POINTS.corridorFront.x,
       y: 0,
       z: WORLD_POINTS.corridorFront.z,
-      rotationY: Math.PI / 2,
+      rotationY: -Math.PI / 2,
     },
     junior: {
       x: WORLD_POINTS.juniorSeat.x,
       y: 0,
       z: WORLD_POINTS.juniorSeat.z,
-      rotationY: Math.PI,
+      rotationY: -Math.PI / 2,
     },
     fatherEcho: {
       x: scale(-348),
@@ -232,6 +232,16 @@ function angleDifference(a, b) {
   return Math.abs(diff);
 }
 
+function phaseDefaultPitch(phase) {
+  if (phase === "eye_contact") {
+    return -0.08;
+  }
+  if (phase === "rear_wait") {
+    return -0.18;
+  }
+  return -0.3;
+}
+
 function movementRotation(dx, dz, fallback = 0) {
   if (Math.hypot(dx, dz) < 0.0001) {
     return fallback;
@@ -245,13 +255,13 @@ function createInitialPlayer() {
     y: 0,
     z: WORLD_POINTS.frontSpawn.z,
     yaw: 0,
-    pitch: -0.18,
+    pitch: phaseDefaultPitch("front_call"),
     velocity: { x: 0, z: 0 },
     lookInput: { x: 0, y: 0 },
     isGhostObserver: true,
   };
   player.yaw = yawToTarget(player, WORLD_POINTS.frontLook);
-  player.pitch = pitchToTarget(player, WORLD_POINTS.frontLook);
+  player.pitch = phaseDefaultPitch("front_call");
   return player;
 }
 
@@ -683,7 +693,8 @@ function resetView() {
   } else if (state.phase === "eye_contact") {
     target = WORLD_POINTS.eyeLook;
   }
-  lookToward(target, 1);
+  state.player.yaw = yawToTarget(state.player, target);
+  state.player.pitch = phaseDefaultPitch(state.phase);
   revealHint("視線已帶回這一段的目標方向。");
 }
 
@@ -758,7 +769,7 @@ function finishIntro() {
       isGhostObserver: true,
     };
     setSubtitle("女兒", "前門來電，要先從那句「妳在哪裡？」開始。", 3.8);
-    setAmbience("十一點的風正從樓梯口往後門吹，光在右手邊的窗上慢慢發亮。");
+    setAmbience("十一點的風沿著四樓矮牆往後門吹，外面的樹影和右手邊的窗光一起慢慢亮起來。");
   }
 
   syncDockState();
@@ -821,7 +832,7 @@ function resetScene() {
   updateObjective(true);
   updateMemoryList();
   setSubtitle("女兒", "先讓前門那句電話響起來。", 3.6);
-  setAmbience("粉筆味像一層薄雲，樓梯口那邊有風，十一點的光才剛準備進來。");
+  setAmbience("粉筆味像一層薄雲，四樓外廊有風，十一點的光正沿著矮牆和窗帶一起往裡推。");
   syncDockState();
   updatePointerHint();
   logDebug("scene", "reset");
@@ -889,8 +900,8 @@ function setCharacterPose(name, x, z, rotationY, alpha = 1) {
 
 function updateCharacters() {
   if (state.phase === "front_call") {
-    setCharacterPose("senior", scale(-402), scale(224), Math.PI / 2);
-    setCharacterPose("junior", scale(216), scale(1038), Math.PI);
+    setCharacterPose("senior", scale(-286), scale(254), -1.18);
+    setCharacterPose("junior", scale(202), scale(1046), -Math.PI / 2);
     setCharacterPose("fatherEcho", scale(-348), scale(1250), Math.PI / 2, 0);
     setCharacterPose("auntEcho", scale(-178), scale(1258), -Math.PI / 2, 0);
     return;
@@ -899,12 +910,12 @@ function updateCharacters() {
   if (state.phase === "rear_wait") {
     const seniorT = smoothstep(0.1, 4.0, state.phaseClock);
     const juniorT = smoothstep(0.6, 3.5, state.phaseClock);
-    const seniorX = scale(-392);
-    const seniorZ = lerp(scale(250), scale(1016), seniorT);
-    const juniorX = lerp(scale(216), scale(138), juniorT);
-    const juniorZ = lerp(scale(1038), scale(1146), juniorT);
-    setCharacterPose("senior", seniorX, seniorZ, 0);
-    setCharacterPose("junior", juniorX, juniorZ, movementRotation(scale(-78), scale(108), Math.PI));
+    const seniorX = lerp(scale(-286), scale(-304), seniorT * 0.46);
+    const seniorZ = lerp(scale(254), scale(1204), seniorT);
+    const juniorX = lerp(scale(202), scale(126), juniorT);
+    const juniorZ = lerp(scale(1046), scale(1222), juniorT);
+    setCharacterPose("senior", seniorX, seniorZ, 0.04);
+    setCharacterPose("junior", juniorX, juniorZ, movementRotation(scale(-76), scale(176), -Math.PI / 2));
     setCharacterPose("fatherEcho", scale(-348), scale(1250), Math.PI / 2, 0);
     setCharacterPose("auntEcho", scale(-178), scale(1258), -Math.PI / 2, 0);
     return;
@@ -912,14 +923,14 @@ function updateCharacters() {
 
   const seniorT = smoothstep(0.6, 3.2, state.phaseClock);
   const juniorT = smoothstep(0.2, 2.8, state.phaseClock);
-  const seniorX = lerp(scale(-392), scale(-300), seniorT * 0.18);
-  const seniorZ = lerp(scale(1040), scale(1258), seniorT);
-  const juniorX = lerp(scale(138), scale(-164), juniorT);
-  const juniorZ = lerp(scale(1146), scale(1258), juniorT);
+  const seniorX = lerp(scale(-304), scale(-292), seniorT * 0.48);
+  const seniorZ = lerp(scale(1204), scale(1292), seniorT);
+  const juniorX = lerp(scale(126), scale(56), juniorT);
+  const juniorZ = lerp(scale(1222), scale(1286), juniorT);
   const echoAlpha = smoothstep(1.9, 3.1, state.phaseClock) * (1 - smoothstep(4.1, 5.0, state.phaseClock));
 
-  setCharacterPose("senior", seniorX, seniorZ, Math.PI / 2);
-  setCharacterPose("junior", juniorX, juniorZ, -Math.PI / 2);
+  setCharacterPose("senior", seniorX, seniorZ, 0.18);
+  setCharacterPose("junior", juniorX, juniorZ, Math.PI - 0.08);
   setCharacterPose("fatherEcho", scale(-348), scale(1250), Math.PI / 2, echoAlpha * 0.6);
   setCharacterPose("auntEcho", scale(-178), scale(1258), -Math.PI / 2, echoAlpha * 0.74);
 }
@@ -938,7 +949,7 @@ function updatePhaseLogic(dt) {
       setSubtitle("49 歲的聲音", "站好。留一點空白給命運，也留一點空白給妳自己。", 4.6);
     }
 
-    const target = { x: scale(-168), y: 1.36, z: scale(1258) };
+    const target = WORLD_POINTS.eyeLook;
     const aligned =
       angleDifference(state.player.yaw, yawToTarget(state.player, target)) < 0.3 &&
       Math.abs(state.player.pitch - pitchToTarget(state.player, target)) < 0.26 &&
@@ -964,8 +975,8 @@ function updateEndingSequence(dt) {
   state.endingSequence.time += dt;
   const target =
     state.ending === "missed"
-      ? { x: scale(-340), y: 1.34, z: scale(1238), pitch: -0.04 }
-      : { x: scale(-164), y: 1.38, z: scale(1258), pitch: -0.06 };
+      ? { x: scale(-368), y: 1.34, z: scale(1282), pitch: -0.06 }
+      : { x: WORLD_POINTS.eyeLook.x, y: 1.38, z: WORLD_POINTS.eyeLook.z, pitch: -0.08 };
 
   state.player.yaw = lerp(state.player.yaw, yawToTarget(state.player, target), 0.04);
   state.player.pitch = lerp(state.player.pitch, target.pitch, 0.05);
@@ -1018,6 +1029,8 @@ function renderDebugPanel() {
     mode: state.mode,
     phase: state.phase,
     cameraMode: state.cameraMode,
+    cameraAnchor:
+      state.mode === "intro" ? state.introCameraTrack : state.phase === "eye_contact" ? "eye_contact" : state.phase,
     hudMode: state.hudMode,
     subtitleMode: state.subtitleMode,
     pointerLockState: state.pointerLockState,
@@ -1038,6 +1051,8 @@ function snapshotDebug() {
     mode: state.mode,
     phase: state.phase,
     cameraMode: state.cameraMode,
+    cameraAnchor:
+      state.mode === "intro" ? state.introCameraTrack : state.phase === "eye_contact" ? "eye_contact" : state.phase,
     hudMode: state.hudMode,
     subtitleMode: state.subtitleMode,
     pointerLockState: state.pointerLockState,

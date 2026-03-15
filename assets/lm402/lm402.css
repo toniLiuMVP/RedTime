@@ -772,14 +772,14 @@ body.landscape-prompt .debug-panel{
   }
   .focus-prompt{
     position:fixed;
-    bottom:calc(88px + var(--bottom-gap));
+    bottom:calc(var(--controls-clearance) - 44px + var(--bottom-gap));
     padding:8px 12px;
   }
   .bottom-dock{
     position:fixed;
     left:calc(env(safe-area-inset-left) + var(--mobile-left-safe));
     right:calc(env(safe-area-inset-right) + var(--mobile-right-safe));
-    bottom:calc(10px + var(--bottom-gap));
+    bottom:calc(var(--controls-clearance) - 28px + var(--bottom-gap));
     gap:8px;
   }
   .ambience-chip{
@@ -812,7 +812,7 @@ body.landscape-prompt .debug-panel{
   }
   .ambience-chip[aria-expanded="true"] + .ambience-box{display:block}
   .subtitle-box{
-    min-height:58px;
+    min-height:60px;
     padding:10px 12px;
     gap:12px;
   }
