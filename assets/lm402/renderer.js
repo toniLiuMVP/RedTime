@@ -561,6 +561,11 @@ function buildIntroCurve() {
 }
 
 export function createLm402Scene(canvas) {
+  const quality = {
+    shadowMapSize: window.matchMedia("(pointer: coarse)").matches ? 768 : 1024,
+    maxPixelRatio: window.matchMedia("(pointer: coarse)").matches ? 1.3 : 1.15,
+    dustCount: window.matchMedia("(pointer: coarse)").matches ? 72 : 96,
+  };
   const renderer = new THREE.WebGLRenderer({
     canvas,
     antialias: true,
@@ -571,7 +576,7 @@ export function createLm402Scene(canvas) {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.12;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color("#cbd8e6");
@@ -608,7 +613,7 @@ export function createLm402Scene(canvas) {
   const sun = new THREE.DirectionalLight(0xffe0ad, 2.55);
   sun.position.set(-8.8, 9.8, 5.2);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.mapSize.set(quality.shadowMapSize, quality.shadowMapSize);
   sun.shadow.camera.near = 0.5;
   sun.shadow.camera.far = 40;
   sun.shadow.camera.left = -12;
@@ -1106,7 +1111,7 @@ export function createLm402Scene(canvas) {
       deskGroup.add(leg);
     });
 
-    setShadow(deskGroup);
+    setShadow(deskGroup, false, true);
     worldGroup.add(deskGroup);
     addCollider(colliders, x - 0.48, x + 0.56, z - 0.46, z + 0.46, `desk_${index}`);
   });
@@ -1130,6 +1135,7 @@ export function createLm402Scene(canvas) {
     const treeNode = createTree({ scale: tree.scale });
     treeNode.position.set(scaled(tree.x), 0, scaled(tree.z));
     treeNode.rotation.y = index * 0.7;
+    setShadow(treeNode, false, true);
     worldGroup.add(treeNode);
   });
 
@@ -1152,7 +1158,7 @@ export function createLm402Scene(canvas) {
 
   const dustGeometry = new THREE.BufferGeometry();
   const dustPositions = [];
-  for (let index = 0; index < 160; index += 1) {
+  for (let index = 0; index < quality.dustCount; index += 1) {
     dustPositions.push(
       THREE.MathUtils.lerp(minX + 0.24, maxX - 0.2, Math.random()),
       THREE.MathUtils.lerp(0.2, 2.7, Math.random()),
@@ -1277,6 +1283,9 @@ export function createLm402Scene(canvas) {
   const introAura = createGlowPlane("rgba(255,116,142,1)", 1.8, 2.4, 0.44);
   introGroup.add(introAura);
 
+  const introBloom = createGlowPlane("rgba(255,223,176,1)", 3.8, 3.2, 0.24);
+  introGroup.add(introBloom);
+
   const introSpark = new THREE.Mesh(
     new THREE.SphereGeometry(0.1, 16, 16),
     new THREE.MeshBasicMaterial({ color: "#ffd8e6" })
@@ -1288,7 +1297,7 @@ export function createLm402Scene(canvas) {
     const width = Math.max(1, Math.round(rect.width));
     const height = Math.max(1, Math.round(rect.height));
     if (canvas.width !== width || canvas.height !== height) {
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality.maxPixelRatio));
       renderer.setSize(width, height, false);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
@@ -1418,8 +1427,12 @@ export function createLm402Scene(canvas) {
     introDaughter.rotateY(Math.PI);
     introAura.position.copy(daughterPos).add(new THREE.Vector3(0, 0.32, -0.18));
     introAura.lookAt(camera.position);
-    introAura.material.opacity = THREE.MathUtils.lerp(0.48, 0.2, progress);
+    introAura.material.opacity = THREE.MathUtils.lerp(0.62, 0.24, progress);
+    introBloom.position.copy(daughterPos).add(new THREE.Vector3(-0.16, 0.26, -0.44));
+    introBloom.lookAt(camera.position);
+    introBloom.material.opacity = THREE.MathUtils.lerp(0.32, 0.12, progress) + Math.sin(progress * Math.PI * 4) * 0.04;
     introSpark.position.copy(introCurve.getPoint(THREE.MathUtils.clamp(progress + 0.08, 0, 1)));
+    introSpark.scale.setScalar(1 + Math.sin(progress * Math.PI * 6) * 0.32);
   }
 
   function pickHotspot(candidates, player, activeId) {

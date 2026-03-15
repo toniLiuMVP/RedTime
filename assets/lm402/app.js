@@ -120,6 +120,9 @@ const dom = {
   speedPresets: document.getElementById("speed-presets"),
   speedRange: document.getElementById("speed-range"),
   speedRangeValue: document.getElementById("speed-range-value"),
+  audioWidget: document.getElementById("audio-widget"),
+  audioToggle: document.getElementById("audio-toggle"),
+  audioToggleValue: document.getElementById("audio-toggle-value"),
   objectivePrompt: document.getElementById("objective-prompt"),
   objectiveKicker: document.getElementById("objective-kicker"),
   objectiveTitle: document.getElementById("objective-title"),
@@ -183,6 +186,7 @@ function loadLookSetting() {
 }
 
 const initialLookSetting = loadLookSetting();
+const initialAudioEnabled = localStorage.getItem(STORAGE_KEYS.audioEnabled) === "1";
 
 function isMobileLayout() {
   return window.matchMedia("(max-width: 1080px)").matches || window.matchMedia("(pointer: coarse)").matches;
@@ -329,6 +333,18 @@ function createInitialFlags() {
   };
 }
 
+function clearTransientInput() {
+  state.input.moveX = 0;
+  state.input.moveY = 0;
+  state.input.lookX = 0;
+  state.input.lookY = 0;
+  state.player.lookInput.x = 0;
+  state.player.lookInput.y = 0;
+  state.player.velocity.x = 0;
+  state.player.velocity.z = 0;
+  state.dragLook = null;
+}
+
 const state = {
   mode: localStorage.getItem(STORAGE_KEYS.introSeen) ? "play" : "intro",
   cameraMode: "intro",
@@ -340,6 +356,7 @@ const state = {
   debugEvents: [],
   lookSensitivityPreset: initialLookSetting.preset,
   lookSensitivityScalar: initialLookSetting.scalar,
+  audioEnabled: initialAudioEnabled,
   phase: "front_call",
   ending: null,
   endingSequence: null,
@@ -381,6 +398,202 @@ const state = {
   introCameraTrack: INTRO_BEATS[0].id,
 };
 
+function createAudioSystem() {
+  const phaseChords = {
+    front_call: [220, 293.66, 329.63],
+    rear_wait: [196, 261.63, 329.63],
+    eye_contact: [246.94, 329.63, 392],
+  };
+  let ctx = null;
+  let masterGain = null;
+  let musicGain = null;
+  let windGain = null;
+  let padNodes = [];
+  let windSource = null;
+  let introBeatIndex = -1;
+  let currentPhase = null;
+  let stepClock = 0;
+
+  function noiseBuffer() {
+    const buffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+    const channel = buffer.getChannelData(0);
+    for (let i = 0; i < channel.length; i += 1) {
+      channel[i] = (Math.random() * 2 - 1) * 0.34;
+    }
+    return buffer;
+  }
+
+  function ensure() {
+    if (ctx) {
+      return ctx;
+    }
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextCtor) {
+      return null;
+    }
+    ctx = new AudioContextCtor();
+    masterGain = ctx.createGain();
+    musicGain = ctx.createGain();
+    windGain = ctx.createGain();
+    const highCut = ctx.createBiquadFilter();
+    highCut.type = "lowpass";
+    highCut.frequency.value = 920;
+    const windFilter = ctx.createBiquadFilter();
+    windFilter.type = "bandpass";
+    windFilter.frequency.value = 520;
+    windFilter.Q.value = 0.4;
+    masterGain.gain.value = 0;
+    musicGain.gain.value = 0.0001;
+    windGain.gain.value = 0.0001;
+    musicGain.connect(masterGain);
+    windGain.connect(windFilter);
+    windFilter.connect(highCut);
+    highCut.connect(masterGain);
+    masterGain.connect(ctx.destination);
+
+    phaseChords.front_call.forEach((freq, index) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = index === 0 ? "triangle" : "sine";
+      osc.frequency.value = freq;
+      gain.gain.value = 0.0001;
+      osc.connect(gain);
+      gain.connect(musicGain);
+      osc.start();
+      padNodes.push({ osc, gain });
+    });
+
+    windSource = ctx.createBufferSource();
+    windSource.buffer = noiseBuffer();
+    windSource.loop = true;
+    windSource.connect(windGain);
+    windSource.start();
+    return ctx;
+  }
+
+  function unlock() {
+    if (!state.audioEnabled) {
+      return;
+    }
+    if (!ensure()) {
+      return;
+    }
+    if (ctx.state === "suspended") {
+      ctx.resume().catch(() => {});
+    }
+  }
+
+  function setMaster(enabled) {
+    if (!ensure()) {
+      return;
+    }
+    const now = ctx.currentTime;
+    masterGain.gain.cancelScheduledValues(now);
+    masterGain.gain.linearRampToValueAtTime(enabled ? 0.3 : 0.0001, now + 0.32);
+  }
+
+  function playCue(type = "spark") {
+    if (!state.audioEnabled || !ensure()) {
+      return;
+    }
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type === "bell" ? "triangle" : "sine";
+    osc.frequency.setValueAtTime(type === "bell" ? 660 : 392, now);
+    osc.frequency.exponentialRampToValueAtTime(type === "bell" ? 392 : 220, now + (type === "bell" ? 1.2 : 0.42));
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(type === "bell" ? 0.11 : 0.07, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + (type === "bell" ? 1.4 : 0.48));
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start(now);
+    osc.stop(now + (type === "bell" ? 1.5 : 0.56));
+  }
+
+  function playStep() {
+    if (!state.audioEnabled || !ensure()) {
+      return;
+    }
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.value = 280;
+    osc.type = "square";
+    osc.frequency.value = 84;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(0.018, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(masterGain);
+    osc.start(now);
+    osc.stop(now + 0.16);
+  }
+
+  function updatePadFrequencies(phase) {
+    if (!ensure()) {
+      return;
+    }
+    const chord = phaseChords[phase] || phaseChords.front_call;
+    padNodes.forEach((node, index) => {
+      node.osc.frequency.linearRampToValueAtTime(chord[index] || chord[chord.length - 1], ctx.currentTime + 0.5);
+    });
+  }
+
+  function update(dt) {
+    if (!ctx || !state.audioEnabled) {
+      return;
+    }
+    const now = ctx.currentTime;
+    const moving = Math.hypot(state.player.velocity.x, state.player.velocity.z) > scale(24);
+    const targetWind = state.mode === "intro" ? 0.08 : isMobileLandscape() ? 0.046 : 0.036;
+    const targetMusic = state.mode === "intro" ? 0.064 : state.phase === "eye_contact" ? 0.056 : 0.042;
+    windGain.gain.cancelScheduledValues(now);
+    windGain.gain.linearRampToValueAtTime(targetWind, now + 0.24);
+    musicGain.gain.cancelScheduledValues(now);
+    musicGain.gain.linearRampToValueAtTime(targetMusic, now + 0.34);
+
+    if (state.mode === "intro" && introBeatIndex !== state.introBeatIndex) {
+      introBeatIndex = state.introBeatIndex;
+      playCue(introBeatIndex === 3 ? "bell" : "spark");
+    }
+    if (state.mode === "play" && currentPhase !== state.phase) {
+      currentPhase = state.phase;
+      updatePadFrequencies(currentPhase);
+      playCue(currentPhase === "eye_contact" ? "bell" : "spark");
+    }
+    if (state.mode === "play" && moving) {
+      stepClock -= dt;
+      if (stepClock <= 0) {
+        playStep();
+        stepClock = state.phase === "eye_contact" ? 0.52 : 0.38;
+      }
+    } else {
+      stepClock = 0;
+    }
+  }
+
+  function setEnabled(enabled) {
+    state.audioEnabled = enabled;
+    persistAudioSetting();
+    syncAudioUI();
+    if (enabled) {
+      unlock();
+    }
+    setMaster(enabled);
+  }
+
+  return {
+    unlock,
+    update,
+    setEnabled,
+  };
+}
+
+const audioSystem = createAudioSystem();
 const debugEnabled = new URLSearchParams(window.location.search).get("debug") === "1";
 let objectiveCompactTimer = 0;
 
@@ -454,6 +667,15 @@ function toggleSpeedPanel(forceExpanded = null) {
 
 function currentLookScalar() {
   return state.lookSensitivityScalar;
+}
+
+function persistAudioSetting() {
+  localStorage.setItem(STORAGE_KEYS.audioEnabled, state.audioEnabled ? "1" : "0");
+}
+
+function syncAudioUI() {
+  dom.audioToggle.setAttribute("aria-pressed", String(state.audioEnabled));
+  dom.audioToggleValue.textContent = state.audioEnabled ? "開啟" : "關閉";
 }
 
 function rectSnapshot(node) {
@@ -858,6 +1080,7 @@ function startIntro(replay = false) {
   if (document.pointerLockElement === canvas) {
     document.exitPointerLock?.();
   }
+  clearTransientInput();
   state.mode = "intro";
   state.cameraMode = "intro";
   state.intro.progress = 0;
@@ -880,6 +1103,7 @@ function startIntro(replay = false) {
 function finishIntro() {
   localStorage.setItem(STORAGE_KEYS.introSeen, "1");
   const resume = state.intro.replay ? state.intro.resume : null;
+  clearTransientInput();
   state.mode = "play";
   state.cameraMode = "play";
   state.intro.replay = false;
@@ -936,6 +1160,7 @@ function finishEndingSequence() {
 }
 
 function resetScene() {
+  clearTransientInput();
   state.mode = "play";
   state.cameraMode = "play";
   state.phase = "front_call";
@@ -1187,6 +1412,7 @@ function renderDebugPanel() {
     cameraPitch: Number(state.player.pitch.toFixed(3)),
     lookSensitivityPreset: state.lookSensitivityPreset,
     lookSensitivityScalar: Number(state.lookSensitivityScalar.toFixed(3)),
+    audioEnabled: state.audioEnabled,
     mobileDensityTier: state.mobileDensityTier,
     objectiveCompact: dom.objectivePrompt.classList.contains("compact"),
     subtitleBounds: layout.subtitleBounds,
@@ -1219,6 +1445,7 @@ function snapshotDebug() {
     cameraPitch: state.player.pitch,
     lookSensitivityPreset: state.lookSensitivityPreset,
     lookSensitivityScalar: state.lookSensitivityScalar,
+    audioEnabled: state.audioEnabled,
     objectiveCompact: dom.objectivePrompt.classList.contains("compact"),
     mobileDensityTier: state.mobileDensityTier,
     subtitle: state.subtitle.text,
@@ -1279,12 +1506,14 @@ function tick(now) {
     updateActiveHotspot();
   }
 
+  audioSystem.update(dt);
   renderFrame();
   requestAnimationFrame(tick);
 }
 
 function bindKeyboard() {
   window.addEventListener("keydown", (event) => {
+    audioSystem.unlock();
     state.keyboard[event.code] = true;
     if (event.code === "KeyF" || event.code === "Enter") {
       event.preventDefault();
@@ -1324,10 +1553,7 @@ function bindKeyboard() {
 
   window.addEventListener("blur", () => {
     state.keyboard = Object.create(null);
-    state.input.moveX = 0;
-    state.input.moveY = 0;
-    state.input.lookX = 0;
-    state.input.lookY = 0;
+    clearTransientInput();
   });
 }
 
@@ -1355,6 +1581,7 @@ function togglePointerLock() {
 function bindPointerLook() {
   canvas.addEventListener("click", () => {
     attemptOrientationLock();
+    audioSystem.unlock();
     canvas.focus({ preventScroll: true });
   });
 
@@ -1372,6 +1599,7 @@ function bindPointerLook() {
     if (event.button !== 0 || isMobileLayout()) {
       return;
     }
+    audioSystem.unlock();
     canvas.focus({ preventScroll: true });
     state.dragLook = { x: event.clientX, y: event.clientY };
   });
@@ -1442,6 +1670,7 @@ function bindJoystick(root, assign) {
 
   root.addEventListener("pointerdown", (event) => {
     attemptOrientationLock();
+    audioSystem.unlock();
     pointerState.id = event.pointerId;
     root.setPointerCapture(event.pointerId);
     setVector(event.clientX, event.clientY);
@@ -1459,6 +1688,7 @@ function bindJoystick(root, assign) {
 
 function bindUI() {
   setHudCollapsed(true);
+  syncAudioUI();
   dom.hudToggle.addEventListener("click", () => {
     setHudCollapsed(!dom.hud.classList.contains("collapsed"));
   });
@@ -1472,6 +1702,9 @@ function bindUI() {
   });
   dom.speedRange.addEventListener("input", () => {
     setLookSensitivity({ preset: null, scalar: Number(dom.speedRange.value) / 100 });
+  });
+  dom.audioToggle.addEventListener("click", () => {
+    audioSystem.setEnabled(!state.audioEnabled);
   });
   dom.objectivePrompt.addEventListener("click", toggleObjectivePrompt);
   dom.ambienceChip.addEventListener("click", () => {
@@ -1513,20 +1746,23 @@ function bindUI() {
 }
 
 function handleResize() {
+  const mobileLayout = isMobileLayout();
   state.mobileDensityTier = currentDensityTier();
   const preset = MOBILE_DENSITY_PRESETS[state.mobileDensityTier];
   dom.body.dataset.mobileTier = state.mobileDensityTier;
-  dom.body.classList.toggle("is-mobile", isMobileLayout());
+  dom.body.classList.toggle("is-mobile", mobileLayout);
   dom.body.classList.toggle("is-mobile-landscape", isMobileLandscape());
-  dom.body.classList.toggle("is-mobile-portrait", isMobileLayout() && !isMobileLandscape());
+  dom.body.classList.toggle("is-mobile-portrait", mobileLayout && !isMobileLandscape());
   dom.body.style.setProperty("--joystick-size", `${preset.stickSize}px`);
   dom.body.style.setProperty("--joystick-thumb", `${preset.thumbSize}px`);
   dom.body.style.setProperty("--action-size", `${preset.actionSize}px`);
   dom.body.style.setProperty("--controls-clearance", `${preset.controlsClearance}px`);
   dom.body.style.setProperty("--rail-min-height", `${preset.railMinHeight}px`);
-  dom.mobileControls.setAttribute("aria-hidden", String(!isMobileLayout()));
-  if (isMobileLayout()) {
+  dom.mobileControls.setAttribute("aria-hidden", String(!mobileLayout));
+  if (mobileLayout) {
     setHudCollapsed(true);
+  } else {
+    clearTransientInput();
   }
   if (!isMobileLandscape()) {
     state.mobileDockExpanded = false;
