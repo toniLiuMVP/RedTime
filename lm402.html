@@ -51,6 +51,26 @@
       <div id="crosshair" class="crosshair" aria-hidden="true"></div>
       <div id="pointer-pill" class="pointer-pill" aria-live="polite">右鍵進入視角鎖定</div>
 
+      <section id="speed-widget" class="speed-widget">
+        <button id="speed-toggle" class="speed-toggle" type="button" aria-expanded="false">
+          <span class="speed-toggle-label">視角速度</span>
+          <span id="speed-toggle-value" class="speed-toggle-value">標準 · 100%</span>
+        </button>
+        <div id="speed-panel" class="speed-panel" hidden>
+          <div class="speed-panel-kicker">Look Speed</div>
+          <div class="speed-presets" id="speed-presets">
+            <button class="speed-preset" type="button" data-speed-preset="slow">慢</button>
+            <button class="speed-preset active" type="button" data-speed-preset="standard">標準</button>
+            <button class="speed-preset" type="button" data-speed-preset="fast">快</button>
+          </div>
+          <label class="speed-slider" for="speed-range">
+            <span class="speed-slider-label">精細微調</span>
+            <input id="speed-range" type="range" min="55" max="155" step="1" value="100">
+            <span id="speed-range-value" class="speed-range-value">100%</span>
+          </label>
+        </div>
+      </section>
+
       <div id="objective-prompt" class="objective-prompt" aria-live="polite">
         <div class="objective-kicker" id="objective-kicker">目前任務</div>
         <div class="objective-title" id="objective-title">前門來電</div>
@@ -127,6 +147,7 @@
           <div class="tip-row"><span class="tip-key">F</span><span class="tip-copy">互動。靠近前門、門牌、黑板、座位與後門時會打開動作或對話選項。</span></div>
           <div class="tip-row"><span class="tip-key">R</span><span class="tip-copy">把視線帶回目標方向；手機右下角的「置」也是同一個功能。</span></div>
           <div class="tip-row"><span class="tip-key">G</span><span class="tip-copy">重播女兒跟著紅線飛進 LM402 的開場動畫。</span></div>
+          <div class="tip-row"><span class="tip-key">速度</span><span class="tip-copy">右上角的「視角速度」可切換慢／標準／快，也能用滑桿微調，桌機和手機會共用同一組設定。</span></div>
         </div>
       </section>
 
