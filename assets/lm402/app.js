@@ -9,9 +9,8 @@ import {
   ENDINGS,
   CINEMATIC_TIMELINE,
   MOBILE_DENSITY_PRESETS,
-  CAMERA_PRESETS,
 } from "./data.js";
-import { createLm402Renderer } from "./renderer.js";
+import { createLm402Scene, WORLD_SCALE } from "./renderer.js";
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -19,9 +18,83 @@ const smoothstep = (a, b, x) => {
   const t = clamp((x - a) / (b - a), 0, 1);
   return t * t * (3 - 2 * t);
 };
+const scale = (value) => value * WORLD_SCALE;
+
+const PLAYER_RADIUS = scale(22);
+const PLAYER_EYE_HEIGHT = 1.62;
+const DESKTOP_LOOK_SPEED = 1.9;
+const MOBILE_LOOK_SPEED = 1.68;
+const DRAG_LOOK_SPEED_X = 0.0034;
+const DRAG_LOOK_SPEED_Y = 0.0026;
+const LOCK_LOOK_SPEED_X = 0.00165;
+const LOCK_LOOK_SPEED_Y = 0.00152;
+const MIN_PITCH = -0.96;
+const MAX_PITCH = 0.72;
+const OBJECTIVE_AUTO_COMPACT_MS = 2000;
+
+const WORLD_POINTS = {
+  frontDoor: {
+    x: scale(WORLD.frontDoor.center.x),
+    y: scale(WORLD.frontDoor.center.y),
+    z: scale(WORLD.frontDoor.center.z),
+  },
+  backDoor: {
+    x: scale(WORLD.backDoor.center.x),
+    y: scale(WORLD.backDoor.center.y),
+    z: scale(WORLD.backDoor.center.z),
+  },
+  focusMark: {
+    x: scale(WORLD.focusMark.x),
+    y: 1.44,
+    z: scale(WORLD.focusMark.z),
+  },
+  frontSpawn: {
+    x: scale(-468),
+    y: 0,
+    z: scale(126),
+  },
+  corridorFront: {
+    x: scale(-402),
+    y: 0,
+    z: scale(224),
+  },
+  juniorSeat: {
+    x: scale(216),
+    y: 0,
+    z: scale(1038),
+  },
+  frontLook: {
+    x: scale(-236),
+    y: 1.02,
+    z: scale(268),
+  },
+  rearLook: {
+    x: scale(-226),
+    y: 1.18,
+    z: scale(1248),
+  },
+  eyeLook: {
+    x: scale(-164),
+    y: 1.36,
+    z: scale(1258),
+  },
+};
+
+const HOTSPOT_MAP = Object.fromEntries(
+  HOTSPOTS.map((hotspot) => [
+    hotspot.id,
+    {
+      ...hotspot,
+      x: scale(hotspot.x),
+      y: scale(hotspot.y),
+      z: scale(hotspot.z),
+      radius: scale(hotspot.radius),
+    },
+  ])
+);
 
 const canvas = document.getElementById("scene-canvas");
-const renderer = createLm402Renderer(canvas);
+const scene = createLm402Scene(canvas);
 
 const dom = {
   body: document.body,
@@ -29,6 +102,7 @@ const dom = {
   hud: document.getElementById("hud"),
   hudToggle: document.getElementById("hud-toggle"),
   pointerPill: document.getElementById("pointer-pill"),
+  objectivePrompt: document.getElementById("objective-prompt"),
   objectiveKicker: document.getElementById("objective-kicker"),
   objectiveTitle: document.getElementById("objective-title"),
   objectiveCopy: document.getElementById("objective-copy"),
@@ -42,6 +116,7 @@ const dom = {
   ambienceChip: document.getElementById("ambience-chip"),
   ambienceChipCopy: document.getElementById("ambience-chip-copy"),
   ambienceText: document.getElementById("ambience-text"),
+  subtitleBox: document.getElementById("subtitle-box"),
   subtitleSource: document.getElementById("subtitle-source"),
   subtitleText: document.getElementById("subtitle-text"),
   mobileControls: document.getElementById("mobile-controls"),
@@ -63,81 +138,12 @@ const dom = {
   endingTitle: document.getElementById("ending-title"),
   endingCopy: document.getElementById("ending-copy"),
   endingRetry: document.getElementById("ending-retry"),
-};
-
-const state = {
-  mode: localStorage.getItem(STORAGE_KEYS.introSeen) ? "play" : "intro",
-  intro: {
-    progress: 0,
-    time: 0,
-    replay: false,
-  },
-  phase: "front_call",
-  ending: null,
-  endingSequence: null,
-  player: {
-    x: -500,
-    y: 150,
-    z: 120,
-    yaw: -0.7,
-    pitch: 0.02,
-    velocityX: 0,
-    velocityZ: 0,
-  },
-  pointerLockMode: "free",
-  input: {
-    moveX: 0,
-    moveY: 0,
-    lookX: 0,
-    lookY: 0,
-  },
-  keyboard: Object.create(null),
-  dragLook: null,
-  activeHotspot: null,
-  dialogue: null,
-  subtitle: {
-    source: "女兒",
-    text: "我可以飛翔，只要沿著那條紅線往前，LM402 就會在光裡慢慢長出來。",
-    ttl: 3.6,
-  },
-  ambience: {
-    text: "粉筆味像一層薄雲，十一點的光正慢慢沿著百葉窗往教室裡推。",
-  },
-  memories: new Set(),
-  flags: {
-    frontCallHeard: false,
-    backdoorAnchored: false,
-    juniorPrepared: false,
-  },
-  characters: {
-    senior: {
-      position: { x: -402, y: 0, z: 224 },
-    },
-    junior: {
-      position: { x: 216, y: 0, z: 1038 },
-    },
-    fatherEcho: {
-      position: { x: -348, y: 0, z: 1250 },
-      alpha: 0,
-    },
-    auntEcho: {
-      position: { x: -178, y: 0, z: 1258 },
-      alpha: 0,
-    },
-  },
-  sceneClock: 0,
-  phaseClock: 0,
-  mobileReady: false,
-  introSeenNow: Boolean(localStorage.getItem(STORAGE_KEYS.introSeen)),
-  cinematicGlow: 0,
-  mobileDockExpanded: false,
-  mobileDensityTier: "regular",
-  introBeatIndex: 0,
-  introCameraTrack: "daughter_glow",
+  debugPanel: document.getElementById("debug-panel"),
+  debugText: document.getElementById("debug-text"),
 };
 
 function isMobileLayout() {
-  return window.matchMedia("(max-width: 960px)").matches || window.matchMedia("(pointer: coarse)").matches;
+  return window.matchMedia("(max-width: 1080px)").matches || window.matchMedia("(pointer: coarse)").matches;
 }
 
 function wantsLandscape() {
@@ -162,8 +168,166 @@ function currentDensityTier() {
   return "regular";
 }
 
-function condensedCopy(text, length = 28) {
+function condensedCopy(text, length = 24) {
   return text.length > length ? `${text.slice(0, length - 1)}…` : text;
+}
+
+function cloneCharacters(characters) {
+  return {
+    senior: { ...characters.senior },
+    junior: { ...characters.junior },
+    fatherEcho: { ...characters.fatherEcho },
+    auntEcho: { ...characters.auntEcho },
+  };
+}
+
+function createInitialCharacters() {
+  return {
+    senior: {
+      x: WORLD_POINTS.corridorFront.x,
+      y: 0,
+      z: WORLD_POINTS.corridorFront.z,
+      rotationY: Math.PI / 2,
+    },
+    junior: {
+      x: WORLD_POINTS.juniorSeat.x,
+      y: 0,
+      z: WORLD_POINTS.juniorSeat.z,
+      rotationY: Math.PI,
+    },
+    fatherEcho: {
+      x: scale(-348),
+      y: 0,
+      z: scale(1250),
+      rotationY: Math.PI / 2,
+      alpha: 0,
+    },
+    auntEcho: {
+      x: scale(-178),
+      y: 0,
+      z: scale(1258),
+      rotationY: -Math.PI / 2,
+      alpha: 0,
+    },
+  };
+}
+
+function yawToTarget(from, target) {
+  const dx = target.x - from.x;
+  const dz = target.z - from.z;
+  return Math.atan2(-dx, -dz);
+}
+
+function pitchToTarget(from, target) {
+  const dx = target.x - from.x;
+  const dz = target.z - from.z;
+  const dy = (target.y ?? 1.28) - PLAYER_EYE_HEIGHT;
+  return clamp(Math.atan2(dy, Math.hypot(dx, dz)), MIN_PITCH, MAX_PITCH);
+}
+
+function angleDifference(a, b) {
+  let diff = a - b;
+  while (diff > Math.PI) diff -= Math.PI * 2;
+  while (diff < -Math.PI) diff += Math.PI * 2;
+  return Math.abs(diff);
+}
+
+function movementRotation(dx, dz, fallback = 0) {
+  if (Math.hypot(dx, dz) < 0.0001) {
+    return fallback;
+  }
+  return Math.atan2(dx, dz);
+}
+
+function createInitialPlayer() {
+  const player = {
+    x: WORLD_POINTS.frontSpawn.x,
+    y: 0,
+    z: WORLD_POINTS.frontSpawn.z,
+    yaw: 0,
+    pitch: -0.18,
+    velocity: { x: 0, z: 0 },
+    lookInput: { x: 0, y: 0 },
+    isGhostObserver: true,
+  };
+  player.yaw = yawToTarget(player, WORLD_POINTS.frontLook);
+  player.pitch = pitchToTarget(player, WORLD_POINTS.frontLook);
+  return player;
+}
+
+function createInitialFlags() {
+  return {
+    frontCallHeard: false,
+    backdoorAnchored: false,
+    juniorPrepared: false,
+    rearWaitHintPlayed: false,
+    eyeCuePlayed: false,
+  };
+}
+
+const state = {
+  mode: localStorage.getItem(STORAGE_KEYS.introSeen) ? "play" : "intro",
+  cameraMode: "intro",
+  hudMode: "chip",
+  subtitleMode: "full",
+  pointerLockState: "free",
+  boundaryCollisionState: null,
+  lastContextMenu: 0,
+  debugEvents: [],
+  phase: "front_call",
+  ending: null,
+  endingSequence: null,
+  intro: {
+    progress: 0,
+    time: 0,
+    replay: false,
+    resume: null,
+  },
+  player: createInitialPlayer(),
+  input: {
+    moveX: 0,
+    moveY: 0,
+    lookX: 0,
+    lookY: 0,
+  },
+  keyboard: Object.create(null),
+  dragLook: null,
+  activeHotspot: null,
+  activeHotspotId: null,
+  dialogue: null,
+  subtitle: {
+    source: "女兒",
+    text: "我可以飛翔。沿著紅線，利瑪竇和 LM402 會在光裡慢慢長出來。",
+    ttl: 3.6,
+  },
+  ambience: {
+    text: "粉筆味像一層薄雲，十一點的光正慢慢沿著百葉窗往教室裡推。",
+  },
+  memories: new Set(),
+  flags: createInitialFlags(),
+  characters: createInitialCharacters(),
+  time: 0,
+  phaseClock: 0,
+  cinematicGlow: 0,
+  mobileDockExpanded: false,
+  mobileDensityTier: "regular",
+  introBeatIndex: 0,
+  introCameraTrack: INTRO_BEATS[0].id,
+};
+
+const debugEnabled = new URLSearchParams(window.location.search).get("debug") === "1";
+let objectiveCompactTimer = 0;
+
+function logDebug(type, detail = "") {
+  const entry = {
+    time: new Date().toISOString().slice(11, 19),
+    type,
+    detail,
+  };
+  state.debugEvents.push(entry);
+  if (state.debugEvents.length > 18) {
+    state.debugEvents.shift();
+  }
 }
 
 function setSubtitle(source, text, ttl = 3.6) {
@@ -185,7 +349,7 @@ function updatePointerHint() {
     return;
   }
   const locked = document.pointerLockElement === canvas;
-  state.pointerLockMode = locked ? "locked" : "free";
+  state.pointerLockState = locked ? "locked" : "free";
   dom.pointerPill.hidden = false;
   dom.pointerPill.textContent = locked ? "視角已鎖定 · 右鍵或 Esc 退出" : "右鍵進入視角鎖定";
   dom.pointerPill.classList.toggle("locked", locked);
@@ -197,40 +361,78 @@ function syncDockState() {
   const expanded = !mobileLandscape || state.mobileDockExpanded;
   dom.bottomDock.classList.toggle("ambience-expanded", expanded);
   dom.bottomDock.classList.toggle("mobile-landscape", mobileLandscape);
+  dom.bottomDock.classList.toggle("compact-subtitle", state.subtitleMode !== "full");
   dom.ambienceChip.hidden = !mobileLandscape;
   dom.ambienceBox.hidden = !expanded;
   dom.ambienceChip.setAttribute("aria-expanded", String(expanded));
   dom.ambienceChipCopy.textContent = expanded ? "點一下收起" : condensedCopy(state.ambience.text);
 }
 
-function updateObjective() {
+function setHudCollapsed(collapsed) {
+  dom.hud.classList.toggle("collapsed", collapsed);
+  dom.hudToggle.setAttribute("aria-expanded", String(!collapsed));
+  dom.hudToggle.querySelector(".hud-toggle-label").textContent = collapsed ? "展開任務" : "縮起資訊";
+  dom.hudToggle.querySelector(".hud-toggle-icon").textContent = collapsed ? "+" : "−";
+}
+
+function syncObjectiveChip() {
+  dom.objectivePrompt.classList.toggle("compact", state.hudMode === "chip");
+}
+
+function expandObjectiveTemporarily(duration = OBJECTIVE_AUTO_COMPACT_MS) {
+  state.hudMode = "expanded";
+  syncObjectiveChip();
+  window.clearTimeout(objectiveCompactTimer);
+  objectiveCompactTimer = window.setTimeout(() => {
+    state.hudMode = "chip";
+    syncObjectiveChip();
+  }, duration);
+}
+
+function toggleObjectivePrompt() {
+  state.hudMode = state.hudMode === "expanded" ? "chip" : "expanded";
+  syncObjectiveChip();
+  if (state.hudMode === "expanded") {
+    expandObjectiveTemporarily();
+  }
+}
+
+function updateObjective(expand = false) {
   const phase = PHASES.find((item) => item.id === state.phase);
   dom.objectiveKicker.textContent = state.phase === "eye_contact" ? "最後一幕" : "目前任務";
   dom.objectiveTitle.textContent = phase.title;
+
   let copy = phase.copy;
   if (state.phase === "front_call") {
-    copy = "先靠近 LM402 前門外的走廊，把電話真正聽見。";
+    copy = "先靠近 LM402 前門外的走廊，把那句「妳在哪裡？」真正聽見。";
   } else if (state.phase === "rear_wait") {
-    copy = "進教室、收起筆記，走到後門旁，把那一點空白先留下來。";
+    copy = "進教室、站到後門旁，把那條走廊與一點空白先留出來。";
   } else if (state.phase === "eye_contact") {
-    copy = "留在後門視線點，別多跨一步，也別錯過那一道光。";
+    copy = "留在後門視線點。別多跨一步，也別錯過十一點那一道光。";
   }
   dom.objectiveCopy.textContent = copy;
   dom.panelObjective.textContent = copy;
 
   dom.phaseStrip.innerHTML = "";
-  PHASES.forEach((item) => {
+  const currentIndex = PHASES.findIndex((item) => item.id === state.phase);
+  PHASES.forEach((item, index) => {
     const row = document.createElement("div");
     row.className = "phase-row";
     if (item.id === state.phase) {
       row.classList.add("active");
     }
-    if (PHASES.findIndex((phaseItem) => phaseItem.id === item.id) < PHASES.findIndex((phaseItem) => phaseItem.id === state.phase)) {
+    if (index < currentIndex) {
       row.classList.add("done");
     }
-    row.innerHTML = `<div class="phase-index">${item.index}</div><div class="phase-copy"><strong>${item.title}</strong><span>${item.copy}</span></div>`;
+    row.innerHTML =
+      `<div class="phase-index">${item.index}</div>` +
+      `<div class="phase-copy"><strong>${item.title}</strong><span>${item.copy}</span></div>`;
     dom.phaseStrip.appendChild(row);
   });
+
+  if (expand) {
+    expandObjectiveTemporarily();
+  }
 }
 
 function updateMemoryList() {
@@ -238,7 +440,9 @@ function updateMemoryList() {
   if (!state.memories.size) {
     const empty = document.createElement("div");
     empty.className = "memory-item";
-    empty.innerHTML = `<div class="memory-kicker">還沒收進來</div><div class="memory-title">先去看門牌、黑板、靠窗座位或後門。</div>`;
+    empty.innerHTML =
+      `<div class="memory-kicker">還沒收進來</div>` +
+      `<div class="memory-title">先去看門牌、黑板、靠窗座位、講義邊角或後門。</div>`;
     dom.memoryList.appendChild(empty);
     return;
   }
@@ -246,7 +450,10 @@ function updateMemoryList() {
     const memory = MEMORY_FRAGMENTS[id];
     const item = document.createElement("div");
     item.className = "memory-item";
-    item.innerHTML = `<div class="memory-kicker">${memory.kicker}</div><div class="memory-title">${memory.title}</div><div class="memory-copy">${memory.copy[0]}</div>`;
+    item.innerHTML =
+      `<div class="memory-kicker">${memory.kicker}</div>` +
+      `<div class="memory-title">${memory.title}</div>` +
+      `<div class="memory-copy">${memory.copy[0]}</div>`;
     dom.memoryList.appendChild(item);
   });
 }
@@ -254,22 +461,8 @@ function updateMemoryList() {
 function revealHint(text) {
   dom.hintPill.textContent = text;
   dom.hintPill.classList.add("show");
-  clearTimeout(revealHint.timer);
-  revealHint.timer = setTimeout(() => dom.hintPill.classList.remove("show"), 2600);
-}
-
-function attemptOrientationLock() {
-  if (screen.orientation?.lock) {
-    screen.orientation.lock("landscape").catch(() => {});
-  }
-}
-
-function toggleHud(force) {
-  const collapsed = force ?? !dom.hud.classList.contains("collapsed");
-  dom.hud.classList.toggle("collapsed", collapsed);
-  dom.hudToggle.setAttribute("aria-expanded", String(!collapsed));
-  dom.hudToggle.querySelector(".hud-toggle-label").textContent = collapsed ? "展開任務" : "縮起資訊";
-  dom.hudToggle.querySelector(".hud-toggle-icon").textContent = collapsed ? "+" : "−";
+  window.clearTimeout(revealHint.timer);
+  revealHint.timer = window.setTimeout(() => dom.hintPill.classList.remove("show"), 2400);
 }
 
 function openDialogue(definition) {
@@ -277,6 +470,7 @@ function openDialogue(definition) {
     document.exitPointerLock?.();
   }
   state.dialogue = definition;
+  state.cameraMode = "dialogue";
   dom.dialogueEyebrow.textContent = definition.eyebrow;
   dom.dialogueTitle.textContent = `${definition.speaker} · ${definition.title}`;
   dom.dialogueCopy.innerHTML = definition.copy.map((text) => `<p>${text}</p>`).join("");
@@ -291,10 +485,14 @@ function openDialogue(definition) {
   });
   dom.dialogueSheet.hidden = false;
   dom.body.classList.add("dialogue-open");
+  logDebug("dialogue-open", definition.title);
 }
 
 function closeDialogue() {
   state.dialogue = null;
+  if (!state.endingSequence) {
+    state.cameraMode = state.mode === "intro" ? "intro" : "play";
+  }
   dom.dialogueSheet.hidden = true;
   dom.body.classList.remove("dialogue-open");
   canvas.focus({ preventScroll: true });
@@ -306,7 +504,19 @@ function collectMemory(id) {
     state.memories.add(id);
     updateMemoryList();
     revealHint(`已收進來：${MEMORY_FRAGMENTS[id].title}`);
+    logDebug("memory", id);
   }
+}
+
+function setPhase(id) {
+  if (state.phase === id) {
+    return;
+  }
+  state.phase = id;
+  state.phaseClock = 0;
+  state.cinematicGlow = 0;
+  updateObjective(true);
+  logDebug("phase", id);
 }
 
 function applyEffect(effect) {
@@ -314,7 +524,7 @@ function applyEffect(effect) {
     closeDialogue();
     return;
   }
-  if (effect === "collect_plaque") {
+  if (effect === "collect_plaque" || effect === "memory_plaque") {
     collectMemory("plaque");
     setSubtitle("女兒", "門牌：LM402。粉筆味像一層薄雲。", 3.8);
     closeDialogue();
@@ -322,16 +532,9 @@ function applyEffect(effect) {
   }
   if (effect === "advance_front_call") {
     state.flags.frontCallHeard = true;
-    state.phase = "rear_wait";
-    state.phaseClock = 0;
-    setSubtitle("學妹", "「你走到後門。」", 3.4);
-    setAmbience("鐘聲剛落，前門那邊傳來探頭的動靜，風把教室裡的紙邊輕輕掀起。");
-    updateObjective();
-    closeDialogue();
-    return;
-  }
-  if (effect === "memory_plaque") {
-    collectMemory("plaque");
+    setPhase("rear_wait");
+    setSubtitle("學妹", "「你走到後門。」", 3.6);
+    setAmbience("鐘聲剛落，前門那邊傳來探頭和腳步的動靜，風把教室裡的紙邊輕輕掀起。");
     closeDialogue();
     return;
   }
@@ -355,7 +558,7 @@ function applyEffect(effect) {
   }
   if (effect === "advance_rear_wait") {
     state.flags.juniorPrepared = true;
-    setSubtitle("學妹", "「好，那妳等我。」", 3.4);
+    setSubtitle("學妹", "「好，那妳等我。」", 3.6);
     revealHint("現在去後門，先把自己站穩。");
     closeDialogue();
     return;
@@ -368,13 +571,10 @@ function applyEffect(effect) {
   if (effect === "anchor_backdoor") {
     collectMemory("backdoor");
     state.flags.backdoorAnchored = true;
-    state.phase = "eye_contact";
-    state.phaseClock = 0;
-    setSubtitle("女兒", "我停在後門旁，剛好能看到走廊的一小段。", 4.4);
-    setAmbience("光從另一頭灑過來，把地板照得有點過分地亮。所有版本的呼吸都慢慢安靜下來。");
-    updateObjective();
+    setPhase("eye_contact");
+    setSubtitle("女兒", "我停在後門旁，剛好能看到走廊的一小段。", 4.2);
+    setAmbience("光從窗邊切進來，把地板照得有點過分地亮。所有版本的呼吸都慢慢安靜下來。");
     closeDialogue();
-    return;
   }
 }
 
@@ -397,61 +597,60 @@ function hotspotVisible(hotspot) {
 
 function buildHotspotState() {
   return HOTSPOTS.map((hotspot) => {
-    let x = hotspot.x;
-    let z = hotspot.z;
-    if (hotspot.id === "junior") {
-      x = state.characters.junior.position.x;
-      z = state.characters.junior.position.z;
+    const base = HOTSPOT_MAP[hotspot.id];
+    let x = base.x;
+    let z = base.z;
+    if (hotspot.id === "front_call") {
+      x = state.characters.senior.x;
+      z = state.characters.senior.z;
+    } else if (hotspot.id === "junior") {
+      x = state.characters.junior.x;
+      z = state.characters.junior.z;
     }
     return {
-      ...hotspot,
+      id: hotspot.id,
+      type: hotspot.type,
+      label: hotspot.label,
+      prompt: hotspot.prompt,
       x,
+      y: base.y,
       z,
+      radius: base.radius,
       visible: hotspotVisible(hotspot),
-      active: state.activeHotspot?.id === hotspot.id,
     };
   });
 }
 
-function distanceSquared(ax, az, bx, bz) {
-  const dx = ax - bx;
-  const dz = az - bz;
-  return dx * dx + dz * dz;
-}
-
-function angleToTarget(target) {
-  const dx = target.x - state.player.x;
-  const dz = target.z - state.player.z;
-  return -Math.atan2(dx, dz);
-}
-
-function angularDifference(a, b) {
-  let diff = a - b;
-  while (diff > Math.PI) diff -= Math.PI * 2;
-  while (diff < -Math.PI) diff += Math.PI * 2;
-  return Math.abs(diff);
+function updateActionButtons() {
+  const active = state.activeHotspot;
+  dom.interactBtn.disabled = false;
+  dom.inspectBtn.disabled = false;
+  dom.interactBtn.textContent = active ? (active.type === "memory" ? "看" : "互") : "互";
+  dom.interactBtn.setAttribute("aria-label", active ? active.prompt : "互動");
+  dom.inspectBtn.setAttribute("aria-label", active ? `對焦 ${active.label}` : "對焦目前目標");
 }
 
 function updateActiveHotspot() {
+  if (state.mode !== "play" || state.dialogue || state.ending) {
+    state.activeHotspot = null;
+    state.activeHotspotId = null;
+    dom.focusPrompt.classList.remove("show");
+    updateActionButtons();
+    return;
+  }
+
   const hotspots = buildHotspotState();
-  let best = null;
-  hotspots.forEach((hotspot) => {
-    if (!hotspot.visible) return;
-    const dist2 = distanceSquared(state.player.x, state.player.z, hotspot.x, hotspot.z);
-    if (dist2 > hotspot.radius * hotspot.radius) return;
-    const facing = angularDifference(state.player.yaw, angleToTarget(hotspot));
-    if (facing > 1.18) return;
-    if (!best || dist2 < best.dist2) {
-      best = { ...hotspot, dist2 };
-    }
-  });
-  state.activeHotspot = best;
-  if (best) {
-    dom.focusPrompt.textContent = `${best.prompt} · F / 點擊互動`;
+  const picked = scene.pickHotspot(hotspots, state.player, state.activeHotspotId);
+  state.activeHotspotId = picked?.id ?? null;
+  state.activeHotspot = picked ? hotspots.find((item) => item.id === picked.id) : null;
+
+  if (state.activeHotspot) {
+    dom.focusPrompt.textContent = `${state.activeHotspot.prompt} · F / 點一下互動`;
     dom.focusPrompt.classList.add("show");
   } else {
     dom.focusPrompt.classList.remove("show");
   }
+  updateActionButtons();
 }
 
 function openActiveInteraction() {
@@ -460,7 +659,7 @@ function openActiveInteraction() {
   }
   const hotspot = state.activeHotspot;
   if (!hotspot) {
-    revealHint("先靠近前門、學妹、黑板、座位或後門。");
+    revealHint("先靠近前門、學妹、黑板、座位、講義或後門。");
     return;
   }
   const interaction = getInteractionById(hotspot.id);
@@ -470,24 +669,55 @@ function openActiveInteraction() {
   openDialogue(interaction);
 }
 
+function lookToward(target, strength = 0.42) {
+  const yaw = yawToTarget(state.player, target);
+  const pitch = pitchToTarget(state.player, target);
+  state.player.yaw = lerp(state.player.yaw, yaw, strength);
+  state.player.pitch = lerp(state.player.pitch, pitch, strength);
+}
+
 function resetView() {
-  let targetYaw = 0;
-  if (state.phase === "front_call") {
-    targetYaw = angleToTarget({ x: -402, z: 224 });
-  } else if (state.phase === "rear_wait") {
-    targetYaw = angleToTarget(WORLD.focusMark);
-  } else {
-    targetYaw = angleToTarget({ x: -300, z: 1256 });
+  let target = WORLD_POINTS.frontLook;
+  if (state.phase === "rear_wait") {
+    target = WORLD_POINTS.rearLook;
+  } else if (state.phase === "eye_contact") {
+    target = WORLD_POINTS.eyeLook;
   }
-  state.player.yaw = targetYaw;
-  state.player.pitch = 0.02;
+  lookToward(target, 1);
+  revealHint("視線已帶回這一段的目標方向。");
+}
+
+function captureReplayState() {
+  return {
+    phase: state.phase,
+    phaseClock: state.phaseClock,
+    player: {
+      x: state.player.x,
+      y: state.player.y,
+      z: state.player.z,
+      yaw: state.player.yaw,
+      pitch: state.player.pitch,
+      velocity: { ...state.player.velocity },
+    },
+    subtitle: { ...state.subtitle },
+    ambience: { ...state.ambience },
+    activeHotspotId: state.activeHotspotId,
+  };
 }
 
 function startIntro(replay = false) {
+  if (state.dialogue) {
+    closeDialogue();
+  }
+  if (document.pointerLockElement === canvas) {
+    document.exitPointerLock?.();
+  }
   state.mode = "intro";
+  state.cameraMode = "intro";
   state.intro.progress = 0;
   state.intro.time = 0;
   state.intro.replay = replay;
+  state.intro.resume = replay ? captureReplayState() : null;
   state.introBeatIndex = 0;
   state.introCameraTrack = INTRO_BEATS[0].id;
   state.cinematicGlow = 0;
@@ -495,26 +725,59 @@ function startIntro(replay = false) {
   state.endingSequence = null;
   dom.endingOverlay.hidden = true;
   dom.body.classList.remove("ending-open");
-  closeDialogue();
   setSubtitle(INTRO_BEATS[0].kicker, INTRO_BEATS[0].text, 0.2);
   setAmbience(INTRO_BEATS[0].ambience);
   syncDockState();
+  logDebug("intro", replay ? "replay" : "start");
 }
 
 function finishIntro() {
-  state.mode = "play";
-  state.introSeenNow = true;
   localStorage.setItem(STORAGE_KEYS.introSeen, "1");
-  setSubtitle("女兒", "前門來電，要先從那句「妳在哪裡？」開始。", 3.8);
-  setAmbience("十一點的風正從樓梯口往後門吹，光在右手邊的窗上慢慢發亮。");
+  const resume = state.intro.replay ? state.intro.resume : null;
+  state.mode = "play";
+  state.cameraMode = "play";
+  state.intro.replay = false;
+  state.intro.resume = null;
+
+  if (resume) {
+    state.phase = resume.phase;
+    state.phaseClock = resume.phaseClock;
+    state.player.x = resume.player.x;
+    state.player.y = resume.player.y;
+    state.player.z = resume.player.z;
+    state.player.yaw = resume.player.yaw;
+    state.player.pitch = resume.player.pitch;
+    state.player.velocity = { ...resume.player.velocity };
+    setSubtitle(resume.subtitle.source, resume.subtitle.text, 2.8);
+    setAmbience(resume.ambience.text);
+  } else {
+    state.player = {
+      ...createInitialPlayer(),
+      velocity: { x: 0, z: 0 },
+      lookInput: { x: 0, y: 0 },
+      isGhostObserver: true,
+    };
+    setSubtitle("女兒", "前門來電，要先從那句「妳在哪裡？」開始。", 3.8);
+    setAmbience("十一點的風正從樓梯口往後門吹，光在右手邊的窗上慢慢發亮。");
+  }
+
   syncDockState();
+  updateObjective(true);
+  updatePointerHint();
 }
 
 function startEnding(type) {
+  if (state.endingSequence) {
+    return;
+  }
   state.ending = type;
   state.endingSequence = { type, time: 0 };
-  const ending = ENDINGS[type];
+  state.cameraMode = "ending";
+  if (document.pointerLockElement === canvas) {
+    document.exitPointerLock?.();
+  }
   setSubtitle("女兒", type === "missed" ? "紅線先回彈了。" : "他出現在光裡。", 4.4);
+  logDebug("ending", type);
 }
 
 function finishEndingSequence() {
@@ -528,157 +791,160 @@ function finishEndingSequence() {
 
 function resetScene() {
   state.mode = "play";
+  state.cameraMode = "play";
   state.phase = "front_call";
   state.phaseClock = 0;
-  state.sceneClock = 0;
+  state.time = 0;
   state.ending = null;
   state.endingSequence = null;
   state.dialogue = null;
-  state.flags.frontCallHeard = false;
-  state.flags.backdoorAnchored = false;
-  state.flags.juniorPrepared = false;
-  state.player.x = -500;
-  state.player.z = 120;
-  state.player.yaw = -0.7;
-  state.player.pitch = 0.02;
-  state.player.velocityX = 0;
-  state.player.velocityZ = 0;
-  state.characters.senior.position = { x: -402, y: 0, z: 224 };
-  state.characters.junior.position = { x: 216, y: 0, z: 1038 };
-  state.characters.fatherEcho.alpha = 0;
-  state.characters.auntEcho.alpha = 0;
+  state.flags = createInitialFlags();
+  state.player = {
+    ...createInitialPlayer(),
+    velocity: { x: 0, z: 0 },
+    lookInput: { x: 0, y: 0 },
+    isGhostObserver: true,
+  };
+  state.characters = createInitialCharacters();
   state.cinematicGlow = 0;
   state.mobileDockExpanded = false;
   state.introBeatIndex = 0;
   state.introCameraTrack = INTRO_BEATS[0].id;
+  state.memories = new Set();
+  state.activeHotspot = null;
+  state.activeHotspotId = null;
+  state.boundaryCollisionState = null;
   dom.endingOverlay.hidden = true;
   dom.body.classList.remove("ending-open");
   dom.dialogueSheet.hidden = true;
   dom.body.classList.remove("dialogue-open");
-  updateObjective();
+  updateObjective(true);
   updateMemoryList();
   setSubtitle("女兒", "先讓前門那句電話響起來。", 3.6);
   setAmbience("粉筆味像一層薄雲，樓梯口那邊有風，十一點的光才剛準備進來。");
   syncDockState();
   updatePointerHint();
-}
-
-function collidesWithDivider(nx, nz) {
-  const crossed = (state.player.x < WORLD.dividerX && nx >= WORLD.dividerX) || (state.player.x > WORLD.dividerX && nx <= WORLD.dividerX);
-  if (!crossed) {
-    return false;
-  }
-  const inFrontDoor = nz >= WORLD.frontDoor.z1 && nz <= WORLD.frontDoor.z2;
-  const inBackDoor = nz >= WORLD.backDoor.z1 && nz <= WORLD.backDoor.z2;
-  return !(inFrontDoor || inBackDoor);
+  logDebug("scene", "reset");
 }
 
 function updateMovement(dt) {
-  if (state.mode !== "play" || state.dialogue || state.ending) {
-    state.player.velocityX *= 0.84;
-    state.player.velocityZ *= 0.84;
+  if (state.mode !== "play" || state.dialogue || state.endingSequence || wantsLandscape()) {
+    state.player.velocity.x *= 0.72;
+    state.player.velocity.z *= 0.72;
+    state.subtitleMode = "full";
+    syncDockState();
     return;
   }
-  if (wantsLandscape()) {
-    state.player.velocityX *= 0.78;
-    state.player.velocityZ *= 0.78;
-    return;
-  }
+
   const keyMoveX = (state.keyboard.KeyD || state.keyboard.ArrowRight ? 1 : 0) - (state.keyboard.KeyA || state.keyboard.ArrowLeft ? 1 : 0);
   const keyMoveY = (state.keyboard.KeyW || state.keyboard.ArrowUp ? 1 : 0) - (state.keyboard.KeyS || state.keyboard.ArrowDown ? 1 : 0);
+  const keyLookX = (state.keyboard.KeyE ? 1 : 0) - (state.keyboard.KeyQ ? 1 : 0);
+  const keyLookY = (state.keyboard.PageUp ? 1 : 0) - (state.keyboard.PageDown ? 1 : 0);
   const moveX = clamp(state.input.moveX + keyMoveX, -1, 1);
   const moveY = clamp(state.input.moveY + keyMoveY, -1, 1);
-  const lookX = state.input.lookX + ((state.keyboard.KeyE ? 1 : 0) - (state.keyboard.KeyQ ? 1 : 0)) * 0.8;
-  const lookY = state.input.lookY + ((state.keyboard.PageUp ? 1 : 0) - (state.keyboard.PageDown ? 1 : 0)) * 0.8;
+  const lookX = clamp(state.input.lookX + keyLookX * 0.85, -1, 1);
+  const lookY = clamp(state.input.lookY + keyLookY * 0.85, -1, 1);
 
-  state.player.yaw += lookX * dt * 2.1;
-  state.player.pitch = clamp(state.player.pitch - lookY * dt * 1.55, -0.68, 0.54);
+  state.player.lookInput.x = lookX;
+  state.player.lookInput.y = lookY;
 
-  const speed = state.phase === "eye_contact" ? 160 : 224;
-  const forwardX = Math.sin(state.player.yaw);
-  const forwardZ = Math.cos(state.player.yaw);
-  const strafeX = Math.cos(state.player.yaw);
-  const strafeZ = -Math.sin(state.player.yaw);
-  const targetVX = (forwardX * moveY + strafeX * moveX) * speed;
-  const targetVZ = (forwardZ * moveY + strafeZ * moveX) * speed;
+  const lookSpeed = isMobileLayout() ? MOBILE_LOOK_SPEED : DESKTOP_LOOK_SPEED;
+  state.player.yaw -= lookX * dt * lookSpeed;
+  state.player.pitch = clamp(state.player.pitch - lookY * dt * 1.34, MIN_PITCH, MAX_PITCH);
 
-  state.player.velocityX = lerp(state.player.velocityX, targetVX, 0.16);
-  state.player.velocityZ = lerp(state.player.velocityZ, targetVZ, 0.16);
+  const forwardX = -Math.sin(state.player.yaw);
+  const forwardZ = -Math.cos(state.player.yaw);
+  const rightX = Math.cos(state.player.yaw);
+  const rightZ = -Math.sin(state.player.yaw);
+  const speed = state.phase === "eye_contact" ? scale(168) : scale(236);
 
-  const nx = state.player.x + state.player.velocityX * dt;
-  const nz = state.player.z + state.player.velocityZ * dt;
-  const boundedX = clamp(nx, WORLD.minX + 18, WORLD.maxX - 18);
-  const boundedZ = clamp(nz, WORLD.minZ + 18, WORLD.maxZ - 18);
+  const targetVX = (forwardX * moveY + rightX * moveX) * speed;
+  const targetVZ = (forwardZ * moveY + rightZ * moveX) * speed;
+  state.player.velocity.x = lerp(state.player.velocity.x, targetVX, 0.18);
+  state.player.velocity.z = lerp(state.player.velocity.z, targetVZ, 0.18);
 
-  if (!collidesWithDivider(boundedX, boundedZ)) {
-    state.player.x = boundedX;
-    state.player.z = boundedZ;
-  } else if (!collidesWithDivider(boundedX, state.player.z)) {
-    state.player.x = boundedX;
-  } else if (!collidesWithDivider(state.player.x, boundedZ)) {
-    state.player.z = boundedZ;
+  const desired = {
+    x: state.player.x + state.player.velocity.x * dt,
+    z: state.player.z + state.player.velocity.z * dt,
+  };
+  const resolved = scene.resolveMotion({ x: state.player.x, z: state.player.z }, desired, PLAYER_RADIUS);
+  state.player.x = resolved.x;
+  state.player.z = resolved.z;
+  state.boundaryCollisionState = resolved.collided ? resolved.label : null;
+
+  const moving = Math.hypot(state.player.velocity.x, state.player.velocity.z) > scale(26);
+  const looking = Math.abs(lookX) > 0.18 || Math.abs(lookY) > 0.18 || Boolean(state.dragLook) || document.pointerLockElement === canvas;
+  state.subtitleMode = isMobileLandscape() && (moving || looking) ? "compact" : "full";
+  syncDockState();
+}
+
+function setCharacterPose(name, x, z, rotationY, alpha = 1) {
+  state.characters[name].x = x;
+  state.characters[name].z = z;
+  state.characters[name].rotationY = rotationY;
+  if ("alpha" in state.characters[name]) {
+    state.characters[name].alpha = alpha;
   }
 }
 
-function updateCharacters(dt) {
+function updateCharacters() {
   if (state.phase === "front_call") {
-    state.characters.senior.position = { x: -402, y: 0, z: 224 };
-    state.characters.junior.position = { x: 216, y: 0, z: 1038 };
-  } else if (state.phase === "rear_wait") {
-    const walk = smoothstep(0, 4.2, state.phaseClock);
-    state.characters.senior.position = {
-      x: -402,
-      y: 0,
-      z: lerp(248, 1010, walk * 0.5),
-    };
-    state.characters.junior.position = {
-      x: lerp(216, 138, smoothstep(0.9, 3.8, state.phaseClock)),
-      y: 0,
-      z: lerp(1038, 1146, smoothstep(0.9, 3.8, state.phaseClock)),
-    };
-  } else if (state.phase === "eye_contact") {
-    const seniorT = smoothstep(0.6, 3.3, state.phaseClock);
-    const juniorT = smoothstep(0.1, 2.8, state.phaseClock);
-    state.characters.senior.position = {
-      x: -390,
-      y: 0,
-      z: lerp(1040, 1258, seniorT),
-    };
-    state.characters.junior.position = {
-      x: lerp(138, -164, juniorT),
-      y: 0,
-      z: lerp(1146, 1258, juniorT),
-    };
-    const echoAlpha = smoothstep(1.9, 3.1, state.phaseClock) * (1 - smoothstep(4.1, 5.0, state.phaseClock));
-    state.characters.fatherEcho.alpha = echoAlpha * 0.6;
-    state.characters.auntEcho.alpha = echoAlpha * 0.74;
+    setCharacterPose("senior", scale(-402), scale(224), Math.PI / 2);
+    setCharacterPose("junior", scale(216), scale(1038), Math.PI);
+    setCharacterPose("fatherEcho", scale(-348), scale(1250), Math.PI / 2, 0);
+    setCharacterPose("auntEcho", scale(-178), scale(1258), -Math.PI / 2, 0);
+    return;
   }
 
-  if (state.endingSequence) {
-    const fade = 1 - smoothstep(CINEMATIC_TIMELINE.duration - 0.8, CINEMATIC_TIMELINE.duration, state.endingSequence.time);
-    state.characters.fatherEcho.alpha *= fade;
-    state.characters.auntEcho.alpha *= fade;
+  if (state.phase === "rear_wait") {
+    const seniorT = smoothstep(0.1, 4.0, state.phaseClock);
+    const juniorT = smoothstep(0.6, 3.5, state.phaseClock);
+    const seniorX = scale(-392);
+    const seniorZ = lerp(scale(250), scale(1016), seniorT);
+    const juniorX = lerp(scale(216), scale(138), juniorT);
+    const juniorZ = lerp(scale(1038), scale(1146), juniorT);
+    setCharacterPose("senior", seniorX, seniorZ, 0);
+    setCharacterPose("junior", juniorX, juniorZ, movementRotation(scale(-78), scale(108), Math.PI));
+    setCharacterPose("fatherEcho", scale(-348), scale(1250), Math.PI / 2, 0);
+    setCharacterPose("auntEcho", scale(-178), scale(1258), -Math.PI / 2, 0);
+    return;
   }
+
+  const seniorT = smoothstep(0.6, 3.2, state.phaseClock);
+  const juniorT = smoothstep(0.2, 2.8, state.phaseClock);
+  const seniorX = lerp(scale(-392), scale(-300), seniorT * 0.18);
+  const seniorZ = lerp(scale(1040), scale(1258), seniorT);
+  const juniorX = lerp(scale(138), scale(-164), juniorT);
+  const juniorZ = lerp(scale(1146), scale(1258), juniorT);
+  const echoAlpha = smoothstep(1.9, 3.1, state.phaseClock) * (1 - smoothstep(4.1, 5.0, state.phaseClock));
+
+  setCharacterPose("senior", seniorX, seniorZ, Math.PI / 2);
+  setCharacterPose("junior", juniorX, juniorZ, -Math.PI / 2);
+  setCharacterPose("fatherEcho", scale(-348), scale(1250), Math.PI / 2, echoAlpha * 0.6);
+  setCharacterPose("auntEcho", scale(-178), scale(1258), -Math.PI / 2, echoAlpha * 0.74);
 }
 
 function updatePhaseLogic(dt) {
   state.phaseClock += dt;
-  state.sceneClock += dt;
 
-  if (state.phase === "rear_wait" && state.phaseClock > 1.2 && !state.flags.juniorPrepared) {
+  if (state.phase === "rear_wait" && state.phaseClock > 1.2 && !state.flags.rearWaitHintPlayed) {
+    state.flags.rearWaitHintPlayed = true;
     setSubtitle("39 歲的聲音", "難的是『站好』。等一下他真的往這裡走的時候，妳全身都會想往前衝。", 4.6);
-    state.flags.juniorPrepared = true;
   }
 
   if (state.phase === "eye_contact") {
-    const targetYaw = angleToTarget({ x: -300, z: 1258 });
-    const targetPitch = 0.01;
-    const aligned =
-      angularDifference(state.player.yaw, targetYaw) < 0.28 &&
-      Math.abs(state.player.pitch - targetPitch) < 0.22 &&
-      distanceSquared(state.player.x, state.player.z, WORLD.focusMark.x, WORLD.focusMark.z) < 120 * 120;
-    state.cinematicGlow = smoothstep(CINEMATIC_TIMELINE.successWindow[0], CINEMATIC_TIMELINE.successWindow[1], state.phaseClock);
+    if (state.phaseClock > 0.6 && !state.flags.eyeCuePlayed) {
+      state.flags.eyeCuePlayed = true;
+      setSubtitle("49 歲的聲音", "站好。留一點空白給命運，也留一點空白給妳自己。", 4.6);
+    }
 
+    const target = { x: scale(-168), y: 1.36, z: scale(1258) };
+    const aligned =
+      angleDifference(state.player.yaw, yawToTarget(state.player, target)) < 0.3 &&
+      Math.abs(state.player.pitch - pitchToTarget(state.player, target)) < 0.26 &&
+      Math.hypot(state.player.x - WORLD_POINTS.focusMark.x, state.player.z - WORLD_POINTS.focusMark.z) < scale(122);
+
+    state.cinematicGlow = smoothstep(CINEMATIC_TIMELINE.successWindow[0], CINEMATIC_TIMELINE.successWindow[1], state.phaseClock);
     if (state.phaseClock >= CINEMATIC_TIMELINE.lockWindow && !state.endingSequence) {
       if (aligned) {
         startEnding(state.memories.size >= 4 ? "memory" : "canon");
@@ -686,6 +952,8 @@ function updatePhaseLogic(dt) {
         startEnding("missed");
       }
     }
+  } else {
+    state.cinematicGlow = 0;
   }
 }
 
@@ -694,11 +962,15 @@ function updateEndingSequence(dt) {
     return;
   }
   state.endingSequence.time += dt;
-  const t = state.endingSequence.time;
-  const target = state.ending === "missed" ? { x: -340, z: 1238, pitch: 0.04 } : { x: -300, z: 1258, pitch: 0.02 };
-  state.player.yaw = lerp(state.player.yaw, angleToTarget(target), 0.05);
-  state.player.pitch = lerp(state.player.pitch, target.pitch, 0.06);
-  if (t > CINEMATIC_TIMELINE.duration && dom.endingOverlay.hidden) {
+  const target =
+    state.ending === "missed"
+      ? { x: scale(-340), y: 1.34, z: scale(1238), pitch: -0.04 }
+      : { x: scale(-164), y: 1.38, z: scale(1258), pitch: -0.06 };
+
+  state.player.yaw = lerp(state.player.yaw, yawToTarget(state.player, target), 0.04);
+  state.player.pitch = lerp(state.player.pitch, target.pitch, 0.05);
+
+  if (state.endingSequence.time > CINEMATIC_TIMELINE.duration && dom.endingOverlay.hidden) {
     finishEndingSequence();
   }
 }
@@ -706,76 +978,92 @@ function updateEndingSequence(dt) {
 function updateIntro(dt) {
   state.intro.time += dt;
   state.intro.progress = clamp(state.intro.time / CINEMATIC_TIMELINE.introDuration, 0, 1);
-  const beatIndex = INTRO_BEATS.findIndex(
-    (beat) => state.intro.time >= beat.start && state.intro.time < beat.end
-  );
-  const nextBeatIndex = beatIndex === -1 ? INTRO_BEATS.length - 1 : beatIndex;
-  if (nextBeatIndex !== state.introBeatIndex) {
-    state.introBeatIndex = nextBeatIndex;
-    state.introCameraTrack = INTRO_BEATS[nextBeatIndex].id;
-    setSubtitle(INTRO_BEATS[nextBeatIndex].kicker, INTRO_BEATS[nextBeatIndex].text, 0.2);
-    setAmbience(INTRO_BEATS[nextBeatIndex].ambience);
+  const nextBeatIndex = INTRO_BEATS.findIndex((beat) => state.intro.time >= beat.start && state.intro.time < beat.end);
+  const beatIndex = nextBeatIndex === -1 ? INTRO_BEATS.length - 1 : nextBeatIndex;
+  if (beatIndex !== state.introBeatIndex) {
+    state.introBeatIndex = beatIndex;
+    state.introCameraTrack = INTRO_BEATS[beatIndex].id;
+    setSubtitle(INTRO_BEATS[beatIndex].kicker, INTRO_BEATS[beatIndex].text, 0.2);
+    setAmbience(INTRO_BEATS[beatIndex].ambience);
   }
   if (state.intro.progress >= 1) {
     finishIntro();
   }
 }
 
-function buildCamera() {
-  const mobileLandscape = isMobileLandscape();
-  const preset = mobileLandscape ? CAMERA_PRESETS.mobile : CAMERA_PRESETS.desktop;
-  const base = {
-    x: state.player.x,
-    y: preset.baseHeight,
-    z: state.player.z,
-    yaw: state.player.yaw,
-    pitch: state.player.pitch,
-  };
-  if (state.mode === "intro") {
-    const p = state.intro.progress;
-    return {
-      x: lerp(CAMERA_PRESETS.intro.start.x, CAMERA_PRESETS.intro.end.x, smoothstep(0.12, 0.92, p)),
-      y: lerp(CAMERA_PRESETS.intro.start.y, CAMERA_PRESETS.intro.end.y, smoothstep(0.08, 0.94, p)),
-      z: lerp(CAMERA_PRESETS.intro.start.z, CAMERA_PRESETS.intro.end.z, smoothstep(0.18, 0.92, p)),
-      yaw: lerp(CAMERA_PRESETS.intro.start.yaw, CAMERA_PRESETS.intro.end.yaw, smoothstep(0.1, 0.9, p)),
-      pitch: lerp(CAMERA_PRESETS.intro.start.pitch, CAMERA_PRESETS.intro.end.pitch, smoothstep(0.12, 0.92, p)),
-    };
-  }
-  if (state.phase === "front_call" && !state.flags.frontCallHeard) {
-    base.pitch = preset.frontCallPitch;
-  }
-  if (state.endingSequence && state.ending !== "missed") {
-    return {
-      x: lerp(base.x, -270, 0.06),
-      y: lerp(base.y, 152, 0.06),
-      z: lerp(base.z, 1186, 0.06),
-      yaw: lerp(base.yaw, 0.95, 0.08),
-      pitch: lerp(base.pitch, 0.04, 0.08),
-    };
-  }
-  return base;
-}
-
-function render() {
-  const scene = {
+function buildSceneState() {
+  return {
     mode: state.mode,
     phase: state.phase,
     intro: state.intro,
     introBeatIndex: state.introBeatIndex,
     introCameraTrack: state.introCameraTrack,
-    camera: buildCamera(),
+    player: state.player,
     characters: state.characters,
     hotspots: buildHotspotState(),
+    activeHotspotId: state.activeHotspotId,
     cinematicGlow: state.cinematicGlow,
-    layout: {
-      mobile: isMobileLayout(),
-      mobileLandscape: isMobileLandscape(),
-      density: state.mobileDensityTier,
-      focalScale: (isMobileLandscape() ? CAMERA_PRESETS.mobile : CAMERA_PRESETS.desktop).focalScale,
-      pointerLocked: state.pointerLockMode === "locked",
-    },
+    time: state.time,
   };
-  renderer.render(scene);
+}
+
+function renderDebugPanel() {
+  if (!debugEnabled) {
+    dom.debugPanel.hidden = true;
+    return;
+  }
+  dom.debugPanel.hidden = false;
+  const snapshot = scene.getDebugSnapshot();
+  const text = {
+    mode: state.mode,
+    phase: state.phase,
+    cameraMode: state.cameraMode,
+    hudMode: state.hudMode,
+    subtitleMode: state.subtitleMode,
+    pointerLockState: state.pointerLockState,
+    lastContextMenu: state.lastContextMenu,
+    boundaryCollisionState: state.boundaryCollisionState,
+    activeHotspot: state.activeHotspotId,
+    cameraYaw: Number(state.player.yaw.toFixed(3)),
+    cameraPitch: Number(state.player.pitch.toFixed(3)),
+    mobileDensityTier: state.mobileDensityTier,
+    renderer: snapshot,
+    events: state.debugEvents,
+  };
+  dom.debugText.textContent = JSON.stringify(text, null, 2);
+}
+
+function snapshotDebug() {
+  return {
+    mode: state.mode,
+    phase: state.phase,
+    cameraMode: state.cameraMode,
+    hudMode: state.hudMode,
+    subtitleMode: state.subtitleMode,
+    pointerLockState: state.pointerLockState,
+    lastContextMenu: state.lastContextMenu,
+    boundaryCollisionState: state.boundaryCollisionState,
+    activeHotspot: state.activeHotspotId,
+    cameraYaw: state.player.yaw,
+    cameraPitch: state.player.pitch,
+    objectiveCompact: dom.objectivePrompt.classList.contains("compact"),
+    mobileDensityTier: state.mobileDensityTier,
+    subtitle: state.subtitle.text,
+    renderer: scene.getDebugSnapshot(),
+    events: [...state.debugEvents],
+  };
+}
+
+window.__LM402_DEBUG__ = {
+  snapshot: snapshotDebug,
+  reset: resetScene,
+  replayIntro: () => startIntro(true),
+  toggleObjective: toggleObjectivePrompt,
+};
+
+function renderFrame() {
+  scene.render(buildSceneState());
+  renderDebugPanel();
 }
 
 function tick(now) {
@@ -784,6 +1072,7 @@ function tick(now) {
   }
   const dt = Math.min((now - tick.last) / 1000, 0.033);
   tick.last = now;
+  state.time += dt;
 
   dom.rotateLock.hidden = !wantsLandscape();
   dom.body.classList.toggle("landscape-prompt", wantsLandscape());
@@ -795,7 +1084,7 @@ function tick(now) {
       state.subtitle.ttl = Math.max(0, state.subtitle.ttl - dt);
     }
     updateMovement(dt);
-    updateCharacters(dt);
+    updateCharacters();
     if (!state.endingSequence) {
       updatePhaseLogic(dt);
     }
@@ -803,7 +1092,7 @@ function tick(now) {
     updateActiveHotspot();
   }
 
-  render();
+  renderFrame();
   requestAnimationFrame(tick);
 }
 
@@ -813,25 +1102,67 @@ function bindKeyboard() {
     if (event.code === "KeyF" || event.code === "Enter") {
       event.preventDefault();
       openActiveInteraction();
-    } else if (event.code === "KeyR") {
+      return;
+    }
+    if (event.code === "KeyR") {
       event.preventDefault();
       resetView();
-    } else if (event.code === "KeyG") {
+      return;
+    }
+    if (event.code === "KeyG") {
       event.preventDefault();
       startIntro(true);
-    } else if (state.dialogue && /^Digit[1-9]$/.test(event.code)) {
+      return;
+    }
+    if (state.dialogue && /^Digit[1-9]$/.test(event.code)) {
       const index = Number(event.code.replace("Digit", "")) - 1;
       const button = dom.dialogueChoices.querySelectorAll("button")[index];
       button?.click();
-    } else if (event.code === "Escape" && state.dialogue) {
+      return;
+    }
+    if (event.code === "Escape" && state.dialogue) {
+      event.preventDefault();
       closeDialogue();
-    } else if (event.code === "Escape" && document.pointerLockElement === canvas) {
+      return;
+    }
+    if (event.code === "Escape" && document.pointerLockElement === canvas) {
+      event.preventDefault();
       document.exitPointerLock?.();
     }
   });
+
   window.addEventListener("keyup", (event) => {
     state.keyboard[event.code] = false;
   });
+
+  window.addEventListener("blur", () => {
+    state.keyboard = Object.create(null);
+    state.input.moveX = 0;
+    state.input.moveY = 0;
+    state.input.lookX = 0;
+    state.input.lookY = 0;
+  });
+}
+
+function attemptOrientationLock() {
+  if (isMobileLayout() && screen.orientation?.lock) {
+    screen.orientation.lock("landscape").catch(() => {});
+  }
+}
+
+function togglePointerLock() {
+  if (isMobileLayout()) {
+    return;
+  }
+  canvas.focus({ preventScroll: true });
+  if (document.pointerLockElement === canvas) {
+    document.exitPointerLock?.();
+    return;
+  }
+  if (state.mode !== "play" || state.dialogue || state.endingSequence || state.ending) {
+    return;
+  }
+  canvas.requestPointerLock?.();
 }
 
 function bindPointerLook() {
@@ -839,46 +1170,61 @@ function bindPointerLook() {
     attemptOrientationLock();
     canvas.focus({ preventScroll: true });
   });
+
   canvas.addEventListener("contextmenu", (event) => {
     event.preventDefault();
+    if (isMobileLayout()) {
+      return;
+    }
+    state.lastContextMenu = Date.now();
+    logDebug("contextmenu", document.pointerLockElement === canvas ? "exit" : "enter");
+    togglePointerLock();
   });
+
   canvas.addEventListener("mousedown", (event) => {
-    if (event.button === 2 && !isMobileLayout()) {
-      event.preventDefault();
-      canvas.focus({ preventScroll: true });
-      if (document.pointerLockElement === canvas) {
-        document.exitPointerLock?.();
-      } else if (!state.dialogue && !state.ending && state.mode === "play") {
-        canvas.requestPointerLock?.();
-      }
+    if (event.button !== 0 || isMobileLayout()) {
       return;
     }
-    if (event.button !== 0 || event.pointerType === "touch") {
-      return;
-    }
+    canvas.focus({ preventScroll: true });
     state.dragLook = { x: event.clientX, y: event.clientY };
   });
-  document.addEventListener("mousemove", (event) => {
-    if (document.pointerLockElement !== canvas || state.dialogue || state.mode !== "play") {
-      return;
-    }
-    state.player.yaw += event.movementX * 0.00195;
-    state.player.pitch = clamp(state.player.pitch - event.movementY * 0.00178, -0.74, 0.62);
-  });
-  document.addEventListener("pointerlockchange", updatePointerHint);
-  document.addEventListener("pointerlockerror", () => revealHint("瀏覽器沒有成功鎖定視角。"));
+
   canvas.addEventListener("pointermove", (event) => {
-    if (!state.dragLook || document.pointerLockElement === canvas || state.dialogue || state.mode !== "play") {
+    if (
+      !state.dragLook ||
+      document.pointerLockElement === canvas ||
+      state.dialogue ||
+      state.mode !== "play" ||
+      isMobileLayout()
+    ) {
       return;
     }
     const dx = event.clientX - state.dragLook.x;
     const dy = event.clientY - state.dragLook.y;
     state.dragLook = { x: event.clientX, y: event.clientY };
-    state.player.yaw += dx * 0.0036;
-    state.player.pitch = clamp(state.player.pitch - dy * 0.0028, -0.74, 0.62);
+    state.player.yaw -= dx * DRAG_LOOK_SPEED_X;
+    state.player.pitch = clamp(state.player.pitch - dy * DRAG_LOOK_SPEED_Y, MIN_PITCH, MAX_PITCH);
   });
+
+  document.addEventListener("mousemove", (event) => {
+    if (document.pointerLockElement !== canvas || state.dialogue || state.mode !== "play") {
+      return;
+    }
+    state.player.yaw -= event.movementX * LOCK_LOOK_SPEED_X;
+    state.player.pitch = clamp(state.player.pitch - event.movementY * LOCK_LOOK_SPEED_Y, MIN_PITCH, MAX_PITCH);
+  });
+
   window.addEventListener("pointerup", () => {
     state.dragLook = null;
+  });
+
+  document.addEventListener("pointerlockchange", () => {
+    updatePointerHint();
+    logDebug("pointerlock", document.pointerLockElement === canvas ? "locked" : "free");
+  });
+  document.addEventListener("pointerlockerror", () => {
+    revealHint("瀏覽器沒有成功鎖定視角。");
+    logDebug("pointerlock", "error");
   });
 }
 
@@ -888,7 +1234,7 @@ function bindJoystick(root, assign) {
 
   const setVector = (clientX, clientY) => {
     const rect = root.getBoundingClientRect();
-    const radius = Math.max(30, rect.width * 0.28);
+    const radius = Math.max(28, rect.width * 0.28);
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
     const dx = clientX - cx;
@@ -908,6 +1254,7 @@ function bindJoystick(root, assign) {
   };
 
   root.addEventListener("pointerdown", (event) => {
+    attemptOrientationLock();
     pointerState.id = event.pointerId;
     root.setPointerCapture(event.pointerId);
     setVector(event.clientX, event.clientY);
@@ -924,8 +1271,11 @@ function bindJoystick(root, assign) {
 }
 
 function bindUI() {
-  toggleHud(true);
-  dom.hudToggle.addEventListener("click", () => toggleHud());
+  setHudCollapsed(true);
+  dom.hudToggle.addEventListener("click", () => {
+    setHudCollapsed(!dom.hud.classList.contains("collapsed"));
+  });
+  dom.objectivePrompt.addEventListener("click", toggleObjectivePrompt);
   dom.ambienceChip.addEventListener("click", () => {
     state.mobileDockExpanded = !state.mobileDockExpanded;
     syncDockState();
@@ -933,8 +1283,7 @@ function bindUI() {
   dom.interactBtn.addEventListener("click", openActiveInteraction);
   dom.inspectBtn.addEventListener("click", () => {
     if (state.activeHotspot) {
-      const targetYaw = angleToTarget(state.activeHotspot);
-      state.player.yaw = lerp(state.player.yaw, targetYaw, 0.5);
+      lookToward(state.activeHotspot, 0.56);
       revealHint(`視線帶向：${state.activeHotspot.label}`);
     } else {
       revealHint("附近還沒有可看的目標。");
@@ -944,9 +1293,8 @@ function bindUI() {
   dom.replayBtn.addEventListener("click", () => startIntro(true));
   dom.dialogueClose.addEventListener("click", closeDialogue);
   dom.dialogueScrim.addEventListener("click", closeDialogue);
-  dom.endingRetry.addEventListener("click", () => {
-    resetScene();
-  });
+  dom.endingRetry.addEventListener("click", resetScene);
+
   bindJoystick(dom.moveStick, (x, y) => {
     state.input.moveX = x;
     state.input.moveY = -y;
@@ -971,16 +1319,19 @@ function handleResize() {
   dom.body.style.setProperty("--rail-min-height", `${preset.railMinHeight}px`);
   dom.mobileControls.setAttribute("aria-hidden", String(!isMobileLayout()));
   if (isMobileLayout()) {
-    toggleHud(true);
+    setHudCollapsed(true);
   }
   if (!isMobileLandscape()) {
     state.mobileDockExpanded = false;
   }
-  syncDockState();
   updatePointerHint();
+  syncDockState();
+  scene.resize();
+  renderDebugPanel();
+  logDebug("resize", `${window.innerWidth}x${window.innerHeight}`);
 }
 
-updateObjective();
+updateObjective(true);
 updateMemoryList();
 bindKeyboard();
 bindPointerLook();
@@ -992,10 +1343,13 @@ if (state.mode === "intro") {
   setSubtitle(INTRO_BEATS[0].kicker, INTRO_BEATS[0].text, 0.2);
   setAmbience(INTRO_BEATS[0].ambience);
 } else {
+  state.cameraMode = "play";
   setSubtitle("女兒", "先讓前門那句電話響起來。", 3.2);
   setAmbience("粉筆味像一層薄雲，樓梯口那邊有風，十一點的光才剛準備進來。");
 }
 
 syncDockState();
+syncObjectiveChip();
 updatePointerHint();
+updateActionButtons();
 requestAnimationFrame(tick);
