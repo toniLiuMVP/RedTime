@@ -1,6 +1,7 @@
 export const STORAGE_KEYS = {
   introSeen: "lm402_intro_seen_v5",
   lookSensitivity: "lm402_look_sensitivity_v1",
+  audioEnabled: "lm402_audio_enabled_v1",
 };
 
 export const WORLD = {
