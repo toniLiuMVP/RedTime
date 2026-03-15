@@ -31,6 +31,17 @@ const LOCK_LOOK_SPEED_Y = 0.00152;
 const MIN_PITCH = -0.96;
 const MAX_PITCH = 0.72;
 const OBJECTIVE_AUTO_COMPACT_MS = 2000;
+const LOOK_PRESETS = {
+  slow: 0.78,
+  standard: 1,
+  fast: 1.26,
+};
+const LOOK_PRESET_LABELS = {
+  slow: "慢",
+  standard: "標準",
+  fast: "快",
+  custom: "自訂",
+};
 
 const WORLD_POINTS = {
   frontDoor: {
@@ -49,34 +60,34 @@ const WORLD_POINTS = {
     z: scale(WORLD.focusMark.z),
   },
   frontSpawn: {
-    x: scale(-548),
+    x: scale(-572),
     y: 0,
-    z: scale(182),
+    z: scale(132),
   },
   corridorFront: {
-    x: scale(-286),
+    x: scale(-366),
     y: 0,
-    z: scale(254),
+    z: scale(286),
   },
   juniorSeat: {
-    x: scale(202),
+    x: scale(266),
     y: 0,
-    z: scale(1046),
+    z: scale(1050),
   },
   frontLook: {
-    x: scale(40),
-    y: 0.92,
-    z: scale(308),
+    x: scale(-402),
+    y: 0.98,
+    z: scale(304),
   },
   rearLook: {
-    x: scale(-42),
-    y: 1.2,
-    z: scale(1258),
+    x: scale(-248),
+    y: 1.24,
+    z: scale(1264),
   },
   eyeLook: {
-    x: scale(34),
-    y: 1.42,
-    z: scale(1286),
+    x: scale(72),
+    y: 1.3,
+    z: scale(1288),
   },
 };
 
@@ -102,6 +113,13 @@ const dom = {
   hud: document.getElementById("hud"),
   hudToggle: document.getElementById("hud-toggle"),
   pointerPill: document.getElementById("pointer-pill"),
+  speedWidget: document.getElementById("speed-widget"),
+  speedToggle: document.getElementById("speed-toggle"),
+  speedToggleValue: document.getElementById("speed-toggle-value"),
+  speedPanel: document.getElementById("speed-panel"),
+  speedPresets: document.getElementById("speed-presets"),
+  speedRange: document.getElementById("speed-range"),
+  speedRangeValue: document.getElementById("speed-range-value"),
   objectivePrompt: document.getElementById("objective-prompt"),
   objectiveKicker: document.getElementById("objective-kicker"),
   objectiveTitle: document.getElementById("objective-title"),
@@ -141,6 +159,30 @@ const dom = {
   debugPanel: document.getElementById("debug-panel"),
   debugText: document.getElementById("debug-text"),
 };
+
+function clampLookScalar(value) {
+  return clamp(Number(value) || LOOK_PRESETS.standard, 0.55, 1.55);
+}
+
+function normalizeLookSetting(raw) {
+  const scalar = clampLookScalar(raw?.scalar ?? LOOK_PRESETS.standard);
+  const preset = Object.entries(LOOK_PRESETS).find(([, value]) => Math.abs(value - scalar) <= 0.035)?.[0] ?? raw?.preset ?? "custom";
+  return {
+    preset: LOOK_PRESETS[preset] ? preset : "custom",
+    scalar,
+  };
+}
+
+function loadLookSetting() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEYS.lookSensitivity) || "null");
+    return normalizeLookSetting(raw);
+  } catch {
+    return normalizeLookSetting(null);
+  }
+}
+
+const initialLookSetting = loadLookSetting();
 
 function isMobileLayout() {
   return window.matchMedia("(max-width: 1080px)").matches || window.matchMedia("(pointer: coarse)").matches;
@@ -187,7 +229,7 @@ function createInitialCharacters() {
       x: WORLD_POINTS.corridorFront.x,
       y: 0,
       z: WORLD_POINTS.corridorFront.z,
-      rotationY: -Math.PI / 2,
+      rotationY: -1.28,
     },
     junior: {
       x: WORLD_POINTS.juniorSeat.x,
@@ -232,14 +274,26 @@ function angleDifference(a, b) {
   return Math.abs(diff);
 }
 
-function phaseDefaultPitch(phase) {
+function phaseLookTarget(phase) {
   if (phase === "eye_contact") {
-    return -0.08;
+    return WORLD_POINTS.eyeLook;
   }
   if (phase === "rear_wait") {
-    return -0.18;
+    return WORLD_POINTS.rearLook;
   }
-  return -0.3;
+  return WORLD_POINTS.frontLook;
+}
+
+function phaseDefaultPitch(phase, from = null) {
+  const origin = from ?? state?.player ?? createInitialPlayer();
+  const base = pitchToTarget(origin, phaseLookTarget(phase));
+  if (phase === "eye_contact") {
+    return clamp(base - 0.02, MIN_PITCH, MAX_PITCH);
+  }
+  if (phase === "rear_wait") {
+    return clamp(base - 0.052, MIN_PITCH, MAX_PITCH);
+  }
+  return clamp(base - 0.248, MIN_PITCH, MAX_PITCH);
 }
 
 function movementRotation(dx, dz, fallback = 0) {
@@ -255,13 +309,13 @@ function createInitialPlayer() {
     y: 0,
     z: WORLD_POINTS.frontSpawn.z,
     yaw: 0,
-    pitch: phaseDefaultPitch("front_call"),
+    pitch: 0,
     velocity: { x: 0, z: 0 },
     lookInput: { x: 0, y: 0 },
     isGhostObserver: true,
   };
   player.yaw = yawToTarget(player, WORLD_POINTS.frontLook);
-  player.pitch = phaseDefaultPitch("front_call");
+  player.pitch = phaseDefaultPitch("front_call", player);
   return player;
 }
 
@@ -284,6 +338,8 @@ const state = {
   boundaryCollisionState: null,
   lastContextMenu: 0,
   debugEvents: [],
+  lookSensitivityPreset: initialLookSetting.preset,
+  lookSensitivityScalar: initialLookSetting.scalar,
   phase: "front_call",
   ending: null,
   endingSequence: null,
@@ -352,6 +408,88 @@ function setAmbience(text) {
   dom.ambienceChipCopy.textContent = state.mobileDockExpanded ? "點一下收起" : condensedCopy(text);
 }
 
+function persistLookSetting() {
+  localStorage.setItem(
+    STORAGE_KEYS.lookSensitivity,
+    JSON.stringify({
+      preset: state.lookSensitivityPreset,
+      scalar: Number(state.lookSensitivityScalar.toFixed(3)),
+    })
+  );
+}
+
+function closestLookPreset(scalar) {
+  const match = Object.entries(LOOK_PRESETS).find(([, value]) => Math.abs(value - scalar) <= 0.035);
+  return match?.[0] ?? "custom";
+}
+
+function syncSpeedUI() {
+  const presetLabel = LOOK_PRESET_LABELS[state.lookSensitivityPreset] || LOOK_PRESET_LABELS.custom;
+  const percentage = `${Math.round(state.lookSensitivityScalar * 100)}%`;
+  dom.speedToggleValue.textContent = `${presetLabel} · ${percentage}`;
+  dom.speedRange.value = String(Math.round(state.lookSensitivityScalar * 100));
+  dom.speedRangeValue.textContent = percentage;
+  dom.speedPanel.hidden = !dom.speedToggle.getAttribute("aria-expanded") || dom.speedToggle.getAttribute("aria-expanded") === "false";
+  dom.speedPresets.querySelectorAll("[data-speed-preset]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.speedPreset === state.lookSensitivityPreset);
+  });
+}
+
+function setLookSensitivity({ preset = null, scalar = null, persist = true } = {}) {
+  const resolvedScalar = clampLookScalar(scalar ?? (preset ? LOOK_PRESETS[preset] : state.lookSensitivityScalar));
+  state.lookSensitivityScalar = resolvedScalar;
+  state.lookSensitivityPreset = preset ?? closestLookPreset(resolvedScalar);
+  syncSpeedUI();
+  if (persist) {
+    persistLookSetting();
+  }
+  logDebug("look-speed", `${state.lookSensitivityPreset}:${resolvedScalar.toFixed(2)}`);
+}
+
+function toggleSpeedPanel(forceExpanded = null) {
+  const expanded = forceExpanded ?? dom.speedToggle.getAttribute("aria-expanded") !== "true";
+  dom.speedToggle.setAttribute("aria-expanded", String(expanded));
+  dom.speedPanel.hidden = !expanded;
+}
+
+function currentLookScalar() {
+  return state.lookSensitivityScalar;
+}
+
+function rectSnapshot(node) {
+  if (!node || node.hidden) {
+    return null;
+  }
+  const rect = node.getBoundingClientRect();
+  if (!rect.width && !rect.height) {
+    return null;
+  }
+  return {
+    left: Math.round(rect.left),
+    top: Math.round(rect.top),
+    right: Math.round(rect.right),
+    bottom: Math.round(rect.bottom),
+    width: Math.round(rect.width),
+    height: Math.round(rect.height),
+  };
+}
+
+function currentControlBounds() {
+  if (!isMobileLandscape()) {
+    return null;
+  }
+  const leftCluster = dom.moveStick.closest(".control-cluster");
+  const rightCluster = dom.lookStick.closest(".control-cluster");
+  return {
+    leftStick: rectSnapshot(leftCluster),
+    rightStick: rectSnapshot(rightCluster),
+    interact: rectSnapshot(dom.interactBtn),
+    inspect: rectSnapshot(dom.inspectBtn),
+    center: rectSnapshot(dom.centerBtn),
+    replay: rectSnapshot(dom.replayBtn),
+  };
+}
+
 function updatePointerHint() {
   if (isMobileLayout()) {
     dom.pointerPill.hidden = true;
@@ -414,9 +552,9 @@ function updateObjective(expand = false) {
 
   let copy = phase.copy;
   if (state.phase === "front_call") {
-    copy = "先靠近 LM402 前門外的走廊，把那句「妳在哪裡？」真正聽見。";
+    copy = "先靠近前門外的學長，把那句「妳在哪裡？」真正聽見，也把門洞右側那片日光收進來。";
   } else if (state.phase === "rear_wait") {
-    copy = "進教室、站到後門旁，把那條走廊與一點空白先留出來。";
+    copy = "進教室、站到左邊後門旁，把走廊、光與一點空白先留出來。";
   } else if (state.phase === "eye_contact") {
     copy = "留在後門視線點。別多跨一步，也別錯過十一點那一道光。";
   }
@@ -543,6 +681,7 @@ function applyEffect(effect) {
   if (effect === "advance_front_call") {
     state.flags.frontCallHeard = true;
     setPhase("rear_wait");
+    resetView();
     setSubtitle("學妹", "「你走到後門。」", 3.6);
     setAmbience("鐘聲剛落，前門那邊傳來探頭和腳步的動靜，風把教室裡的紙邊輕輕掀起。");
     closeDialogue();
@@ -582,6 +721,7 @@ function applyEffect(effect) {
     collectMemory("backdoor");
     state.flags.backdoorAnchored = true;
     setPhase("eye_contact");
+    resetView();
     setSubtitle("女兒", "我停在後門旁，剛好能看到走廊的一小段。", 4.2);
     setAmbience("光從窗邊切進來，把地板照得有點過分地亮。所有版本的呼吸都慢慢安靜下來。");
     closeDialogue();
@@ -687,14 +827,9 @@ function lookToward(target, strength = 0.42) {
 }
 
 function resetView() {
-  let target = WORLD_POINTS.frontLook;
-  if (state.phase === "rear_wait") {
-    target = WORLD_POINTS.rearLook;
-  } else if (state.phase === "eye_contact") {
-    target = WORLD_POINTS.eyeLook;
-  }
+  const target = phaseLookTarget(state.phase);
   state.player.yaw = yawToTarget(state.player, target);
-  state.player.pitch = phaseDefaultPitch(state.phase);
+  state.player.pitch = phaseDefaultPitch(state.phase, state.player);
   revealHint("視線已帶回這一段的目標方向。");
 }
 
@@ -859,9 +994,9 @@ function updateMovement(dt) {
   state.player.lookInput.x = lookX;
   state.player.lookInput.y = lookY;
 
-  const lookSpeed = isMobileLayout() ? MOBILE_LOOK_SPEED : DESKTOP_LOOK_SPEED;
+  const lookSpeed = (isMobileLayout() ? MOBILE_LOOK_SPEED : DESKTOP_LOOK_SPEED) * currentLookScalar();
   state.player.yaw -= lookX * dt * lookSpeed;
-  state.player.pitch = clamp(state.player.pitch - lookY * dt * 1.34, MIN_PITCH, MAX_PITCH);
+  state.player.pitch = clamp(state.player.pitch - lookY * dt * 1.34 * currentLookScalar(), MIN_PITCH, MAX_PITCH);
 
   const forwardX = -Math.sin(state.player.yaw);
   const forwardZ = -Math.cos(state.player.yaw);
@@ -900,8 +1035,8 @@ function setCharacterPose(name, x, z, rotationY, alpha = 1) {
 
 function updateCharacters() {
   if (state.phase === "front_call") {
-    setCharacterPose("senior", scale(-286), scale(254), -1.18);
-    setCharacterPose("junior", scale(202), scale(1046), -Math.PI / 2);
+    setCharacterPose("senior", scale(-366), scale(286), -1.18);
+    setCharacterPose("junior", scale(266), scale(1050), -Math.PI / 2);
     setCharacterPose("fatherEcho", scale(-348), scale(1250), Math.PI / 2, 0);
     setCharacterPose("auntEcho", scale(-178), scale(1258), -Math.PI / 2, 0);
     return;
@@ -910,12 +1045,12 @@ function updateCharacters() {
   if (state.phase === "rear_wait") {
     const seniorT = smoothstep(0.1, 4.0, state.phaseClock);
     const juniorT = smoothstep(0.6, 3.5, state.phaseClock);
-    const seniorX = lerp(scale(-286), scale(-304), seniorT * 0.46);
-    const seniorZ = lerp(scale(254), scale(1204), seniorT);
-    const juniorX = lerp(scale(202), scale(126), juniorT);
-    const juniorZ = lerp(scale(1046), scale(1222), juniorT);
-    setCharacterPose("senior", seniorX, seniorZ, 0.04);
-    setCharacterPose("junior", juniorX, juniorZ, movementRotation(scale(-76), scale(176), -Math.PI / 2));
+    const seniorX = lerp(scale(-366), scale(-312), seniorT * 0.58);
+    const seniorZ = lerp(scale(286), scale(1212), seniorT);
+    const juniorX = lerp(scale(266), scale(136), juniorT);
+    const juniorZ = lerp(scale(1050), scale(1234), juniorT);
+    setCharacterPose("senior", seniorX, seniorZ, 0.08);
+    setCharacterPose("junior", juniorX, juniorZ, movementRotation(scale(-130), scale(184), -Math.PI / 2));
     setCharacterPose("fatherEcho", scale(-348), scale(1250), Math.PI / 2, 0);
     setCharacterPose("auntEcho", scale(-178), scale(1258), -Math.PI / 2, 0);
     return;
@@ -923,10 +1058,10 @@ function updateCharacters() {
 
   const seniorT = smoothstep(0.6, 3.2, state.phaseClock);
   const juniorT = smoothstep(0.2, 2.8, state.phaseClock);
-  const seniorX = lerp(scale(-304), scale(-292), seniorT * 0.48);
-  const seniorZ = lerp(scale(1204), scale(1292), seniorT);
-  const juniorX = lerp(scale(126), scale(56), juniorT);
-  const juniorZ = lerp(scale(1222), scale(1286), juniorT);
+  const seniorX = lerp(scale(-308), scale(-292), seniorT * 0.52);
+  const seniorZ = lerp(scale(1212), scale(1294), seniorT);
+  const juniorX = lerp(scale(136), scale(64), juniorT);
+  const juniorZ = lerp(scale(1234), scale(1288), juniorT);
   const echoAlpha = smoothstep(1.9, 3.1, state.phaseClock) * (1 - smoothstep(4.1, 5.0, state.phaseClock));
 
   setCharacterPose("senior", seniorX, seniorZ, 0.18);
@@ -975,8 +1110,8 @@ function updateEndingSequence(dt) {
   state.endingSequence.time += dt;
   const target =
     state.ending === "missed"
-      ? { x: scale(-368), y: 1.34, z: scale(1282), pitch: -0.06 }
-      : { x: WORLD_POINTS.eyeLook.x, y: 1.38, z: WORLD_POINTS.eyeLook.z, pitch: -0.08 };
+      ? { x: scale(-368), y: 1.34, z: scale(1282), pitch: -0.04 }
+      : { x: WORLD_POINTS.eyeLook.x, y: 1.38, z: WORLD_POINTS.eyeLook.z, pitch: -0.06 };
 
   state.player.yaw = lerp(state.player.yaw, yawToTarget(state.player, target), 0.04);
   state.player.pitch = lerp(state.player.pitch, target.pitch, 0.05);
@@ -1018,6 +1153,15 @@ function buildSceneState() {
   };
 }
 
+function buildLayoutSnapshot() {
+  return {
+    subtitleBounds: rectSnapshot(dom.subtitleBox),
+    ambienceBounds: rectSnapshot(dom.ambienceBox.hidden ? dom.ambienceChip : dom.ambienceBox),
+    objectiveBounds: rectSnapshot(dom.objectivePrompt),
+    controlBounds: currentControlBounds(),
+  };
+}
+
 function renderDebugPanel() {
   if (!debugEnabled) {
     dom.debugPanel.hidden = true;
@@ -1025,6 +1169,7 @@ function renderDebugPanel() {
   }
   dom.debugPanel.hidden = false;
   const snapshot = scene.getDebugSnapshot();
+  const layout = buildLayoutSnapshot();
   const text = {
     mode: state.mode,
     phase: state.phase,
@@ -1036,10 +1181,18 @@ function renderDebugPanel() {
     pointerLockState: state.pointerLockState,
     lastContextMenu: state.lastContextMenu,
     boundaryCollisionState: state.boundaryCollisionState,
+    collisionLabel: state.boundaryCollisionState,
     activeHotspot: state.activeHotspotId,
     cameraYaw: Number(state.player.yaw.toFixed(3)),
     cameraPitch: Number(state.player.pitch.toFixed(3)),
+    lookSensitivityPreset: state.lookSensitivityPreset,
+    lookSensitivityScalar: Number(state.lookSensitivityScalar.toFixed(3)),
     mobileDensityTier: state.mobileDensityTier,
+    objectiveCompact: dom.objectivePrompt.classList.contains("compact"),
+    subtitleBounds: layout.subtitleBounds,
+    controlBounds: layout.controlBounds,
+    projectedNodes: snapshot.projectedNodes,
+    hotspotLOS: snapshot.hotspotLOS,
     renderer: snapshot,
     events: state.debugEvents,
   };
@@ -1047,6 +1200,8 @@ function renderDebugPanel() {
 }
 
 function snapshotDebug() {
+  const layout = buildLayoutSnapshot();
+  const renderSnapshot = scene.getDebugSnapshot();
   return {
     mode: state.mode,
     phase: state.phase,
@@ -1058,13 +1213,22 @@ function snapshotDebug() {
     pointerLockState: state.pointerLockState,
     lastContextMenu: state.lastContextMenu,
     boundaryCollisionState: state.boundaryCollisionState,
+    collisionLabel: state.boundaryCollisionState,
     activeHotspot: state.activeHotspotId,
     cameraYaw: state.player.yaw,
     cameraPitch: state.player.pitch,
+    lookSensitivityPreset: state.lookSensitivityPreset,
+    lookSensitivityScalar: state.lookSensitivityScalar,
     objectiveCompact: dom.objectivePrompt.classList.contains("compact"),
     mobileDensityTier: state.mobileDensityTier,
     subtitle: state.subtitle.text,
-    renderer: scene.getDebugSnapshot(),
+    subtitleBounds: layout.subtitleBounds,
+    controlBounds: layout.controlBounds,
+    ambienceBounds: layout.ambienceBounds,
+    objectiveBounds: layout.objectiveBounds,
+    projectedNodes: renderSnapshot.projectedNodes,
+    hotspotLOS: renderSnapshot.hotspotLOS,
+    renderer: renderSnapshot,
     events: [...state.debugEvents],
   };
 }
@@ -1073,6 +1237,14 @@ window.__LM402_DEBUG__ = {
   snapshot: snapshotDebug,
   reset: resetScene,
   replayIntro: () => startIntro(true),
+  skipIntro: () => {
+    if (state.mode === "intro") {
+      finishIntro();
+    }
+  },
+  setPhase: (id) => setPhase(id),
+  applyEffect: (effect) => applyEffect(effect),
+  setLookSensitivity: (scalar, preset = null) => setLookSensitivity({ scalar, preset }),
   toggleObjective: toggleObjectivePrompt,
 };
 
@@ -1217,16 +1389,16 @@ function bindPointerLook() {
     const dx = event.clientX - state.dragLook.x;
     const dy = event.clientY - state.dragLook.y;
     state.dragLook = { x: event.clientX, y: event.clientY };
-    state.player.yaw -= dx * DRAG_LOOK_SPEED_X;
-    state.player.pitch = clamp(state.player.pitch - dy * DRAG_LOOK_SPEED_Y, MIN_PITCH, MAX_PITCH);
+    state.player.yaw -= dx * DRAG_LOOK_SPEED_X * currentLookScalar();
+    state.player.pitch = clamp(state.player.pitch - dy * DRAG_LOOK_SPEED_Y * currentLookScalar(), MIN_PITCH, MAX_PITCH);
   });
 
   document.addEventListener("mousemove", (event) => {
     if (document.pointerLockElement !== canvas || state.dialogue || state.mode !== "play") {
       return;
     }
-    state.player.yaw -= event.movementX * LOCK_LOOK_SPEED_X;
-    state.player.pitch = clamp(state.player.pitch - event.movementY * LOCK_LOOK_SPEED_Y, MIN_PITCH, MAX_PITCH);
+    state.player.yaw -= event.movementX * LOCK_LOOK_SPEED_X * currentLookScalar();
+    state.player.pitch = clamp(state.player.pitch - event.movementY * LOCK_LOOK_SPEED_Y * currentLookScalar(), MIN_PITCH, MAX_PITCH);
   });
 
   window.addEventListener("pointerup", () => {
@@ -1290,6 +1462,17 @@ function bindUI() {
   dom.hudToggle.addEventListener("click", () => {
     setHudCollapsed(!dom.hud.classList.contains("collapsed"));
   });
+  dom.speedToggle.addEventListener("click", () => {
+    toggleSpeedPanel();
+  });
+  dom.speedPresets.querySelectorAll("[data-speed-preset]").forEach((button) => {
+    button.addEventListener("click", () => {
+      setLookSensitivity({ preset: button.dataset.speedPreset, scalar: LOOK_PRESETS[button.dataset.speedPreset] });
+    });
+  });
+  dom.speedRange.addEventListener("input", () => {
+    setLookSensitivity({ preset: null, scalar: Number(dom.speedRange.value) / 100 });
+  });
   dom.objectivePrompt.addEventListener("click", toggleObjectivePrompt);
   dom.ambienceChip.addEventListener("click", () => {
     state.mobileDockExpanded = !state.mobileDockExpanded;
@@ -1318,6 +1501,15 @@ function bindUI() {
     state.input.lookX = x;
     state.input.lookY = y;
   });
+
+  document.addEventListener("click", (event) => {
+    if (dom.speedWidget.contains(event.target)) {
+      return;
+    }
+    toggleSpeedPanel(false);
+  });
+
+  syncSpeedUI();
 }
 
 function handleResize() {
