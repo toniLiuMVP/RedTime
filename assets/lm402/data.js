@@ -1,5 +1,5 @@
 export const STORAGE_KEYS = {
-  introSeen: "lm402_intro_seen_v3",
+  introSeen: "lm402_intro_seen_v4",
 };
 
 export const WORLD = {
@@ -338,18 +338,87 @@ export const INTERACTIONS = {
 
 export const INTRO_BEATS = [
   {
+    id: "daughter_glow",
+    start: 0,
+    end: 1,
     kicker: "女兒",
     text: "我可以飛翔。",
+    ambience: "紅線先在黑暗裡亮起來，像心跳一樣，一下一下，把我往前牽。",
   },
   {
+    id: "red_thread",
+    start: 1,
+    end: 2.2,
     kicker: "紅線",
     text: "只要我沿著那條專屬於把拔與阿姨的紅線往前飛，LM402 就會在光裡慢慢長出來。",
+    ambience: "空氣先被紅線劃開，整棟樓的輪廓像從記憶背面慢慢翻到正面。",
   },
   {
+    id: "corridor_arrives",
+    start: 2.2,
+    end: 3.4,
+    kicker: "利瑪竇",
+    text: "利瑪竇走廊和 LM402 門牌一起靠近，前門那一端先浮出來。",
+    ambience: "牆面、門牌、轉角與腳步聲都被牽進視線，像一段即將落地的軌道。",
+  },
+  {
+    id: "sunlight_bloom",
+    start: 3.4,
+    end: 4.6,
     kicker: "十一點",
     text: "光在百葉窗上亮起來，門牌和走廊一起被牽進視線。",
+    ambience: "十一點的陽光從窗邊切進來，粉筆灰和空氣一起變得很清楚。",
+  },
+  {
+    id: "front_door_settle",
+    start: 4.6,
+    end: 6,
+    kicker: "前門走廊",
+    text: "我要先把前門那句「妳在哪裡？」真正聽見，這一關才會開始。",
+    ambience: "鏡頭收進前門走廊，鐘聲和風都站好位置，等第一句話落下來。",
   },
 ];
+
+export const MOBILE_DENSITY_PRESETS = {
+  regular: {
+    stickSize: 138,
+    thumbSize: 50,
+    actionSize: 46,
+    controlsClearance: 144,
+    railMinHeight: 64,
+  },
+  compact: {
+    stickSize: 124,
+    thumbSize: 46,
+    actionSize: 42,
+    controlsClearance: 132,
+    railMinHeight: 60,
+  },
+  tight: {
+    stickSize: 108,
+    thumbSize: 40,
+    actionSize: 38,
+    controlsClearance: 118,
+    railMinHeight: 56,
+  },
+};
+
+export const CAMERA_PRESETS = {
+  desktop: {
+    baseHeight: 150,
+    focalScale: 0.96,
+    frontCallPitch: 0.06,
+  },
+  mobile: {
+    baseHeight: 162,
+    focalScale: 0.88,
+    frontCallPitch: 0.08,
+  },
+  intro: {
+    start: { x: -548, y: 220, z: -250, yaw: 0.88, pitch: -0.26 },
+    end: { x: -246, y: 168, z: 306, yaw: 0.16, pitch: -0.08 },
+  },
+};
 
 export const ENDINGS = {
   canon: {
@@ -376,4 +445,5 @@ export const CINEMATIC_TIMELINE = {
   duration: 5.4,
   lockWindow: 4.1,
   successWindow: [3.2, 4.4],
+  introDuration: 6,
 };
