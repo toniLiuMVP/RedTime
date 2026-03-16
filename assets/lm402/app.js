@@ -43,6 +43,8 @@ const LOOK_PRESET_LABELS = {
   custom: "自訂",
 };
 
+const LM402_ROOM = WORLD.floorRooms.find((room) => room.interactive) ?? WORLD.floorRooms[1];
+
 const WORLD_POINTS = {
   frontDoor: {
     x: scale(WORLD.frontDoor.center.x),
@@ -54,40 +56,50 @@ const WORLD_POINTS = {
     y: scale(WORLD.backDoor.center.y),
     z: scale(WORLD.backDoor.center.z),
   },
+  doorPlaque: {
+    x: scale(WORLD.plaque.x),
+    y: scale(WORLD.plaque.y),
+    z: scale(WORLD.plaque.z),
+  },
   focusMark: {
     x: scale(WORLD.focusMark.x),
     y: 1.44,
     z: scale(WORLD.focusMark.z),
   },
   frontSpawn: {
-    x: scale(-572),
+    x: scale(-730),
     y: 0,
-    z: scale(132),
+    z: scale(LM402_ROOM.z1 - 70),
   },
   corridorFront: {
-    x: scale(-366),
+    x: scale(-438),
     y: 0,
-    z: scale(286),
+    z: scale(WORLD.frontDoor.center.z + 34),
   },
   juniorSeat: {
-    x: scale(266),
+    x: scale(226),
     y: 0,
-    z: scale(1050),
+    z: scale(650),
   },
   frontLook: {
-    x: scale(-402),
-    y: 0.98,
-    z: scale(304),
+    x: scale(42),
+    y: 1.12,
+    z: scale(760),
   },
   rearLook: {
-    x: scale(-248),
-    y: 1.24,
-    z: scale(1264),
+    x: scale(-142),
+    y: 1.22,
+    z: scale(764),
   },
   eyeLook: {
-    x: scale(72),
-    y: 1.3,
-    z: scale(1288),
+    x: scale(54),
+    y: 1.36,
+    z: scale(764),
+  },
+  perfectOrbit: {
+    x: scale(94),
+    y: 1.4,
+    z: scale(760),
   },
 };
 
@@ -123,6 +135,9 @@ const dom = {
   audioWidget: document.getElementById("audio-widget"),
   audioToggle: document.getElementById("audio-toggle"),
   audioToggleValue: document.getElementById("audio-toggle-value"),
+  perfectEndingBtn: document.getElementById("perfect-ending-btn"),
+  perfectEndingSideBtn: document.getElementById("perfect-ending-side-btn"),
+  backStoryBtn: document.getElementById("back-story-btn"),
   objectivePrompt: document.getElementById("objective-prompt"),
   objectiveKicker: document.getElementById("objective-kicker"),
   objectiveTitle: document.getElementById("objective-title"),
@@ -159,6 +174,7 @@ const dom = {
   endingTitle: document.getElementById("ending-title"),
   endingCopy: document.getElementById("ending-copy"),
   endingRetry: document.getElementById("ending-retry"),
+  endingPerfectBtn: document.getElementById("ending-perfect-btn"),
   debugPanel: document.getElementById("debug-panel"),
   debugText: document.getElementById("debug-text"),
 };
@@ -186,7 +202,7 @@ function loadLookSetting() {
 }
 
 const initialLookSetting = loadLookSetting();
-const initialAudioEnabled = localStorage.getItem(STORAGE_KEYS.audioEnabled) === "1";
+const initialAudioEnabled = localStorage.getItem(STORAGE_KEYS.audioEnabled) !== "0";
 
 function isMobileLayout() {
   return window.matchMedia("(max-width: 1080px)").matches || window.matchMedia("(pointer: coarse)").matches;
@@ -233,25 +249,25 @@ function createInitialCharacters() {
       x: WORLD_POINTS.corridorFront.x,
       y: 0,
       z: WORLD_POINTS.corridorFront.z,
-      rotationY: -1.28,
+      rotationY: -0.92,
     },
     junior: {
       x: WORLD_POINTS.juniorSeat.x,
       y: 0,
       z: WORLD_POINTS.juniorSeat.z,
-      rotationY: -Math.PI / 2,
+      rotationY: 0,
     },
     fatherEcho: {
-      x: scale(-348),
+      x: scale(-312),
       y: 0,
-      z: scale(1250),
+      z: scale(776),
       rotationY: Math.PI / 2,
       alpha: 0,
     },
     auntEcho: {
-      x: scale(-178),
+      x: scale(-122),
       y: 0,
-      z: scale(1258),
+      z: scale(786),
       rotationY: -Math.PI / 2,
       alpha: 0,
     },
@@ -292,12 +308,12 @@ function phaseDefaultPitch(phase, from = null) {
   const origin = from ?? state?.player ?? createInitialPlayer();
   const base = pitchToTarget(origin, phaseLookTarget(phase));
   if (phase === "eye_contact") {
-    return clamp(base - 0.02, MIN_PITCH, MAX_PITCH);
+    return clamp(base - 0.01, MIN_PITCH, MAX_PITCH);
   }
   if (phase === "rear_wait") {
-    return clamp(base - 0.052, MIN_PITCH, MAX_PITCH);
+    return clamp(base - 0.03, MIN_PITCH, MAX_PITCH);
   }
-  return clamp(base - 0.248, MIN_PITCH, MAX_PITCH);
+  return clamp(base - 0.09, MIN_PITCH, MAX_PITCH);
 }
 
 function movementRotation(dx, dz, fallback = 0) {
@@ -346,7 +362,7 @@ function clearTransientInput() {
 }
 
 const state = {
-  mode: localStorage.getItem(STORAGE_KEYS.introSeen) ? "play" : "intro",
+  mode: "intro",
   cameraMode: "intro",
   hudMode: "chip",
   subtitleMode: "full",
@@ -400,8 +416,8 @@ const state = {
 
 function createAudioSystem() {
   const phaseChords = {
-    front_call: [220, 293.66, 329.63],
-    rear_wait: [196, 261.63, 329.63],
+    front_call: [220, 277.18, 329.63],
+    rear_wait: [196, 246.94, 329.63],
     eye_contact: [246.94, 329.63, 392],
   };
   let ctx = null;
@@ -481,6 +497,7 @@ function createAudioSystem() {
     if (ctx.state === "suspended") {
       ctx.resume().catch(() => {});
     }
+    setMaster(true);
   }
 
   function setMaster(enabled) {
@@ -497,17 +514,29 @@ function createAudioSystem() {
       return;
     }
     const now = ctx.currentTime;
+    const piano = ctx.createOscillator();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
+    const pianoGain = ctx.createGain();
+    piano.type = "triangle";
     osc.type = type === "bell" ? "triangle" : "sine";
-    osc.frequency.setValueAtTime(type === "bell" ? 660 : 392, now);
-    osc.frequency.exponentialRampToValueAtTime(type === "bell" ? 392 : 220, now + (type === "bell" ? 1.2 : 0.42));
+    piano.frequency.setValueAtTime(type === "bell" ? 523.25 : 392, now);
+    piano.frequency.exponentialRampToValueAtTime(type === "bell" ? 261.63 : 220, now + (type === "bell" ? 1.2 : 0.58));
+    osc.frequency.setValueAtTime(type === "bell" ? 784 : 440, now);
+    osc.frequency.exponentialRampToValueAtTime(type === "bell" ? 523.25 : 261.63, now + (type === "bell" ? 1.2 : 0.42));
+    pianoGain.gain.setValueAtTime(0.0001, now);
+    pianoGain.gain.linearRampToValueAtTime(type === "bell" ? 0.082 : 0.05, now + 0.02);
+    pianoGain.gain.exponentialRampToValueAtTime(0.0001, now + (type === "bell" ? 1.8 : 0.72));
     gain.gain.setValueAtTime(0.0001, now);
     gain.gain.linearRampToValueAtTime(type === "bell" ? 0.11 : 0.07, now + 0.02);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + (type === "bell" ? 1.4 : 0.48));
+    piano.connect(pianoGain);
+    pianoGain.connect(masterGain);
     osc.connect(gain);
     gain.connect(masterGain);
+    piano.start(now);
     osc.start(now);
+    piano.stop(now + (type === "bell" ? 1.9 : 0.76));
     osc.stop(now + (type === "bell" ? 1.5 : 0.56));
   }
 
@@ -550,7 +579,14 @@ function createAudioSystem() {
     const now = ctx.currentTime;
     const moving = Math.hypot(state.player.velocity.x, state.player.velocity.z) > scale(24);
     const targetWind = state.mode === "intro" ? 0.08 : isMobileLandscape() ? 0.046 : 0.036;
-    const targetMusic = state.mode === "intro" ? 0.064 : state.phase === "eye_contact" ? 0.056 : 0.042;
+    const targetMusic =
+      state.mode === "intro"
+        ? 0.068
+        : state.ending === "perfect"
+          ? 0.072
+          : state.phase === "eye_contact"
+            ? 0.058
+            : 0.042;
     windGain.gain.cancelScheduledValues(now);
     windGain.gain.linearRampToValueAtTime(targetWind, now + 0.24);
     musicGain.gain.cancelScheduledValues(now);
@@ -774,11 +810,11 @@ function updateObjective(expand = false) {
 
   let copy = phase.copy;
   if (state.phase === "front_call") {
-    copy = "先靠近前門外的學長，把那句「妳在哪裡？」真正聽見，也把門洞右側那片日光收進來。";
+    copy = "先靠近 LM402 前門外的學長，把那句「妳在哪裡？」真正聽見，也把門牌、門洞和矮牆外那片日光一起收進來。";
   } else if (state.phase === "rear_wait") {
-    copy = "進教室、站到左邊後門旁，把走廊、光與一點空白先留出來。";
+    copy = "進教室、站到左邊後門旁，把學長會走過來的那段走廊、那道光和一點空白先留出來。";
   } else if (state.phase === "eye_contact") {
-    copy = "留在後門視線點。別多跨一步，也別錯過十一點那一道光。";
+    copy = "留在後門視線點。別多跨一步，也別讓視線早一步撞到她；等十一點那一道光把她整個照亮。";
   }
   dom.objectiveCopy.textContent = copy;
   dom.panelObjective.textContent = copy;
@@ -812,7 +848,7 @@ function updateMemoryList() {
     empty.className = "memory-item";
     empty.innerHTML =
       `<div class="memory-kicker">還沒收進來</div>` +
-      `<div class="memory-title">先去看門牌、黑板、靠窗座位、講義邊角或後門。</div>`;
+      `<div class="memory-title">先去看門牌、黑板、靠窗座位、講義邊角或後門，把 LM402 這一層空氣收進來。</div>`;
     dom.memoryList.appendChild(empty);
     return;
   }
@@ -1101,7 +1137,6 @@ function startIntro(replay = false) {
 }
 
 function finishIntro() {
-  localStorage.setItem(STORAGE_KEYS.introSeen, "1");
   const resume = state.intro.replay ? state.intro.resume : null;
   clearTransientInput();
   state.mode = "play";
@@ -1136,18 +1171,42 @@ function finishIntro() {
   updatePointerHint();
 }
 
-function startEnding(type) {
+function startEnding(type, options = {}) {
   if (state.endingSequence) {
     return;
   }
+  const { manual = false } = options;
   state.ending = type;
-  state.endingSequence = { type, time: 0 };
+  state.endingSequence = { type, time: 0, manual };
   state.cameraMode = "ending";
   if (document.pointerLockElement === canvas) {
     document.exitPointerLock?.();
   }
-  setSubtitle("女兒", type === "missed" ? "紅線先回彈了。" : "他出現在光裡。", 4.4);
+  if (type === "perfect") {
+    state.phase = "eye_contact";
+    state.phaseClock = 0;
+    setSubtitle("旁白", "這一次,依然再次遇見妳.", 5.4);
+    setAmbience("風停在四樓後門那一側，只剩陽光、呼吸、腳步和她眼睛裡那一格慢慢亮起來的光。");
+  } else {
+    setSubtitle("女兒", type === "missed" ? "紅線先回彈了。" : "他出現在光裡。", 4.4);
+  }
   logDebug("ending", type);
+}
+
+function startPerfectEnding() {
+  if (state.dialogue) {
+    closeDialogue();
+  }
+  if (document.pointerLockElement === canvas) {
+    document.exitPointerLock?.();
+  }
+  clearTransientInput();
+  state.mode = "play";
+  state.ending = null;
+  state.endingSequence = null;
+  dom.endingOverlay.hidden = true;
+  dom.body.classList.remove("ending-open");
+  startEnding("perfect", { manual: true });
 }
 
 function finishEndingSequence() {
@@ -1259,40 +1318,53 @@ function setCharacterPose(name, x, z, rotationY, alpha = 1) {
 }
 
 function updateCharacters() {
+  if (state.endingSequence?.type === "perfect") {
+    const t = smoothstep(0.18, 3.4, state.endingSequence.time);
+    const seniorX = lerp(scale(-354), scale(-162), t);
+    const seniorZ = lerp(scale(558), scale(758), t);
+    const juniorX = lerp(scale(118), scale(36), smoothstep(0.08, 2.2, state.endingSequence.time));
+    const juniorZ = lerp(scale(736), scale(766), smoothstep(0.08, 2.2, state.endingSequence.time));
+    setCharacterPose("senior", seniorX, seniorZ, lerp(-0.94, 0.08, t));
+    setCharacterPose("junior", juniorX, juniorZ, Math.PI - 0.06);
+    setCharacterPose("fatherEcho", scale(-276), scale(786), Math.PI / 2, 0);
+    setCharacterPose("auntEcho", scale(-92), scale(792), -Math.PI / 2, 0);
+    return;
+  }
+
   if (state.phase === "front_call") {
-    setCharacterPose("senior", scale(-366), scale(286), -1.18);
-    setCharacterPose("junior", scale(266), scale(1050), -Math.PI / 2);
-    setCharacterPose("fatherEcho", scale(-348), scale(1250), Math.PI / 2, 0);
-    setCharacterPose("auntEcho", scale(-178), scale(1258), -Math.PI / 2, 0);
+    setCharacterPose("senior", scale(-438), scale(586), -0.88);
+    setCharacterPose("junior", scale(226), scale(650), 0.04);
+    setCharacterPose("fatherEcho", scale(-276), scale(790), Math.PI / 2, 0);
+    setCharacterPose("auntEcho", scale(-92), scale(796), -Math.PI / 2, 0);
     return;
   }
 
   if (state.phase === "rear_wait") {
     const seniorT = smoothstep(0.1, 4.0, state.phaseClock);
     const juniorT = smoothstep(0.6, 3.5, state.phaseClock);
-    const seniorX = lerp(scale(-366), scale(-312), seniorT * 0.58);
-    const seniorZ = lerp(scale(286), scale(1212), seniorT);
-    const juniorX = lerp(scale(266), scale(136), juniorT);
-    const juniorZ = lerp(scale(1050), scale(1234), juniorT);
-    setCharacterPose("senior", seniorX, seniorZ, 0.08);
-    setCharacterPose("junior", juniorX, juniorZ, movementRotation(scale(-130), scale(184), -Math.PI / 2));
-    setCharacterPose("fatherEcho", scale(-348), scale(1250), Math.PI / 2, 0);
-    setCharacterPose("auntEcho", scale(-178), scale(1258), -Math.PI / 2, 0);
+    const seniorX = lerp(scale(-438), scale(-228), seniorT * 0.56);
+    const seniorZ = lerp(scale(586), scale(740), seniorT);
+    const juniorX = lerp(scale(226), scale(108), juniorT);
+    const juniorZ = lerp(scale(650), scale(736), juniorT);
+    setCharacterPose("senior", seniorX, seniorZ, lerp(-0.94, -0.06, seniorT));
+    setCharacterPose("junior", juniorX, juniorZ, movementRotation(scale(-118), scale(86), 0.02));
+    setCharacterPose("fatherEcho", scale(-276), scale(790), Math.PI / 2, 0);
+    setCharacterPose("auntEcho", scale(-92), scale(796), -Math.PI / 2, 0);
     return;
   }
 
   const seniorT = smoothstep(0.6, 3.2, state.phaseClock);
   const juniorT = smoothstep(0.2, 2.8, state.phaseClock);
-  const seniorX = lerp(scale(-308), scale(-292), seniorT * 0.52);
-  const seniorZ = lerp(scale(1212), scale(1294), seniorT);
-  const juniorX = lerp(scale(136), scale(64), juniorT);
-  const juniorZ = lerp(scale(1234), scale(1288), juniorT);
+  const seniorX = lerp(scale(-228), scale(-162), seniorT * 0.6);
+  const seniorZ = lerp(scale(740), scale(760), seniorT);
+  const juniorX = lerp(scale(108), scale(38), juniorT);
+  const juniorZ = lerp(scale(736), scale(766), juniorT);
   const echoAlpha = smoothstep(1.9, 3.1, state.phaseClock) * (1 - smoothstep(4.1, 5.0, state.phaseClock));
 
-  setCharacterPose("senior", seniorX, seniorZ, 0.18);
+  setCharacterPose("senior", seniorX, seniorZ, 0.1);
   setCharacterPose("junior", juniorX, juniorZ, Math.PI - 0.08);
-  setCharacterPose("fatherEcho", scale(-348), scale(1250), Math.PI / 2, echoAlpha * 0.6);
-  setCharacterPose("auntEcho", scale(-178), scale(1258), -Math.PI / 2, echoAlpha * 0.74);
+  setCharacterPose("fatherEcho", scale(-276), scale(790), Math.PI / 2, echoAlpha * 0.6);
+  setCharacterPose("auntEcho", scale(-92), scale(796), -Math.PI / 2, echoAlpha * 0.74);
 }
 
 function updatePhaseLogic(dt) {
@@ -1333,9 +1405,16 @@ function updateEndingSequence(dt) {
     return;
   }
   state.endingSequence.time += dt;
+  if (state.ending === "perfect") {
+    if (state.endingSequence.time > CINEMATIC_TIMELINE.perfectDuration && dom.endingOverlay.hidden) {
+      finishEndingSequence();
+    }
+    return;
+  }
+
   const target =
     state.ending === "missed"
-      ? { x: scale(-368), y: 1.34, z: scale(1282), pitch: -0.04 }
+      ? { x: scale(-368), y: 1.34, z: scale(756), pitch: -0.04 }
       : { x: WORLD_POINTS.eyeLook.x, y: 1.38, z: WORLD_POINTS.eyeLook.z, pitch: -0.06 };
 
   state.player.yaw = lerp(state.player.yaw, yawToTarget(state.player, target), 0.04);
@@ -1374,12 +1453,16 @@ function buildSceneState() {
     hotspots: buildHotspotState(),
     activeHotspotId: state.activeHotspotId,
     cinematicGlow: state.cinematicGlow,
+    endingSequence: state.endingSequence,
+    ending: state.ending,
     time: state.time,
   };
 }
 
 function buildLayoutSnapshot() {
   return {
+    stageBounds: rectSnapshot(document.getElementById("stage")),
+    canvasBounds: rectSnapshot(canvas),
     subtitleBounds: rectSnapshot(dom.subtitleBox),
     ambienceBounds: rectSnapshot(dom.ambienceBox.hidden ? dom.ambienceChip : dom.ambienceBox),
     objectiveBounds: rectSnapshot(dom.objectivePrompt),
@@ -1415,8 +1498,12 @@ function renderDebugPanel() {
     audioEnabled: state.audioEnabled,
     mobileDensityTier: state.mobileDensityTier,
     objectiveCompact: dom.objectivePrompt.classList.contains("compact"),
+    stageViewport: layout.stageBounds,
+    canvasViewport: layout.canvasBounds,
     subtitleBounds: layout.subtitleBounds,
     controlBounds: layout.controlBounds,
+    webglViewport: snapshot.webglViewport,
+    mobileBlackRegionDetected: snapshot.mobileBlackRegionDetected,
     projectedNodes: snapshot.projectedNodes,
     hotspotLOS: snapshot.hotspotLOS,
     renderer: snapshot,
@@ -1449,10 +1536,14 @@ function snapshotDebug() {
     objectiveCompact: dom.objectivePrompt.classList.contains("compact"),
     mobileDensityTier: state.mobileDensityTier,
     subtitle: state.subtitle.text,
+    stageViewport: layout.stageBounds,
+    canvasViewport: layout.canvasBounds,
     subtitleBounds: layout.subtitleBounds,
     controlBounds: layout.controlBounds,
     ambienceBounds: layout.ambienceBounds,
     objectiveBounds: layout.objectiveBounds,
+    webglViewport: renderSnapshot.webglViewport,
+    mobileBlackRegionDetected: renderSnapshot.mobileBlackRegionDetected,
     projectedNodes: renderSnapshot.projectedNodes,
     hotspotLOS: renderSnapshot.hotspotLOS,
     renderer: renderSnapshot,
@@ -1706,6 +1797,8 @@ function bindUI() {
   dom.audioToggle.addEventListener("click", () => {
     audioSystem.setEnabled(!state.audioEnabled);
   });
+  dom.perfectEndingBtn.addEventListener("click", startPerfectEnding);
+  dom.perfectEndingSideBtn.addEventListener("click", startPerfectEnding);
   dom.objectivePrompt.addEventListener("click", toggleObjectivePrompt);
   dom.ambienceChip.addEventListener("click", () => {
     state.mobileDockExpanded = !state.mobileDockExpanded;
@@ -1725,6 +1818,7 @@ function bindUI() {
   dom.dialogueClose.addEventListener("click", closeDialogue);
   dom.dialogueScrim.addEventListener("click", closeDialogue);
   dom.endingRetry.addEventListener("click", resetScene);
+  dom.endingPerfectBtn.addEventListener("click", startPerfectEnding);
 
   bindJoystick(dom.moveStick, (x, y) => {
     state.input.moveX = x;

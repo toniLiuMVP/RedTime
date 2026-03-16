@@ -231,6 +231,8 @@ def assert_mobile_layout(snapshot, width, height):
             raise RuntimeError(f"subtitle overlaps {key} at {width}x{height}.")
     if objective and rects_overlap(objective, subtitle):
         raise RuntimeError(f"objective prompt overlaps subtitle rail at {width}x{height}.")
+    if snapshot.get("mobileBlackRegionDetected"):
+        raise RuntimeError(f"mobile black region detected at {width}x{height}.")
 
 
 def assert_front_frame(snapshot):
@@ -240,14 +242,18 @@ def assert_front_frame(snapshot):
     height = viewport["height"]
     senior = renderer["projectedNodes"]["senior"]
     front_door = renderer["projectedNodes"]["frontDoor"]
+    plaque = renderer["projectedNodes"]["doorPlaque"]
     parapet = renderer["projectedNodes"]["parapetBand"]
     assert_visible(senior, "senior")
     assert_visible(front_door, "frontDoor")
+    assert_visible(plaque, "doorPlaque")
     assert_visible(parapet, "parapetBand")
     if senior["screenX"] < width * 0.18 or senior["screenX"] > width * 0.74:
         raise RuntimeError("senior is out of the front-call composition band.")
     if front_door["screenX"] < width * 0.12 or front_door["screenX"] > width * 0.7:
         raise RuntimeError("front door is out of the front-call composition band.")
+    if plaque["screenX"] < width * 0.18 or plaque["screenX"] > width * 0.82:
+        raise RuntimeError("door plaque is out of the front-call composition band.")
     if parapet["screenX"] > width * 0.28:
         raise RuntimeError("parapet daylight band is not reading on the corridor side.")
     if senior["screenY"] < height * 0.2 or senior["screenY"] > height * 0.86:
