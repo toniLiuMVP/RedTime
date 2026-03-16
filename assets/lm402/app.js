@@ -43,8 +43,6 @@ const LOOK_PRESET_LABELS = {
   custom: "自訂",
 };
 
-const LM402_ROOM = WORLD.floorRooms.find((room) => room.interactive) ?? WORLD.floorRooms[0];
-
 const WORLD_POINTS = {
   frontStair: {
     x: scale(-522),
@@ -77,9 +75,9 @@ const WORLD_POINTS = {
     z: scale(WORLD.focusMark.z),
   },
   frontSpawn: {
-    x: scale(-742),
+    x: scale(-824),
     y: 0,
-    z: scale(938),
+    z: scale(1012),
   },
   corridorFront: {
     x: scale(-404),
@@ -87,14 +85,14 @@ const WORLD_POINTS = {
     z: scale(WORLD.frontDoor.center.z),
   },
   juniorSeat: {
-    x: scale(286),
+    x: scale(1536),
     y: 0,
     z: scale(622),
   },
   frontLook: {
-    x: scale(-196),
-    y: 1.36,
-    z: scale(776),
+    x: scale(-246),
+    y: 1.34,
+    z: scale(796),
   },
   rearLook: {
     x: scale(-84),
@@ -326,14 +324,16 @@ function phaseLookTarget(phase) {
     }
     return {
       x:
-        liveState.characters.senior.x * 0.26 +
-        WORLD_POINTS.doorPlaque.x * 0.42 +
-        WORLD_POINTS.frontLook.x * 0.32,
+        liveState.characters.senior.x * 0.3 +
+        WORLD_POINTS.doorPlaque.x * 0.34 +
+        WORLD_POINTS.frontLook.x * 0.22 +
+        (WORLD_POINTS.frontSpawn.x + scale(212)) * 0.14,
       y: WORLD_POINTS.frontLook.y,
       z:
-        liveState.characters.senior.z * 0.4 +
-        WORLD_POINTS.doorPlaque.z * 0.24 +
-        WORLD_POINTS.frontLook.z * 0.36,
+        liveState.characters.senior.z * 0.44 +
+        WORLD_POINTS.doorPlaque.z * 0.18 +
+        WORLD_POINTS.frontLook.z * 0.26 +
+        WORLD.frontDoor.center.z * WORLD_SCALE * 0.12,
     };
   }
   if (phase === "eye_contact") {
@@ -453,11 +453,17 @@ const state = {
   mobileDensityTier: "regular",
   introBeatIndex: 0,
   introCameraTrack: INTRO_BEATS[0].id,
+  sound: {
+    playerStepAt: 0,
+    seniorStepAt: 0,
+    juniorStepAt: 0,
+  },
 };
 liveState = state;
 
 function createAudioSystem() {
   let audio = null;
+  let context = null;
   let autoplayBlocked = false;
   let playAttempt = null;
 
@@ -465,7 +471,7 @@ function createAudioSystem() {
     if (audio) {
       return audio;
     }
-    audio = new Audio(new URL("../../02song.mp3", import.meta.url).href);
+    audio = new Audio(new URL("../../飛進你們的心裡.mp3", import.meta.url).href);
     audio.loop = true;
     audio.preload = "auto";
     audio.volume = 0.84;
@@ -481,6 +487,18 @@ function createAudioSystem() {
       }
     });
     return audio;
+  }
+
+  function ensureContext() {
+    if (context) {
+      return context;
+    }
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextCtor) {
+      return null;
+    }
+    context = new AudioContextCtor();
+    return context;
   }
 
   async function tryPlay(reason = "auto") {
@@ -519,6 +537,8 @@ function createAudioSystem() {
   }
 
   function unlock() {
+    const ctx = ensureContext();
+    ctx?.resume?.().catch(() => {});
     void tryPlay("unlock");
   }
 
@@ -538,18 +558,63 @@ function createAudioSystem() {
     if (!enabled) {
       autoplayBlocked = false;
       ensureAudio().pause();
+      context?.suspend?.().catch(() => {});
       syncMusicPrompt();
       logDebug("music", "disabled");
       return;
     }
+    ensureContext()?.resume?.().catch(() => {});
     void tryPlay("toggle");
+  }
+
+  function playEnvelope(ctx, { type = "sine", frequency = 440, duration = 0.12, gain = 0.04, when = 0, attack = 0.008, release = 0.08, detune = 0 }) {
+    const osc = ctx.createOscillator();
+    const amp = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(frequency, when);
+    osc.detune.setValueAtTime(detune, when);
+    amp.gain.setValueAtTime(0.0001, when);
+    amp.gain.exponentialRampToValueAtTime(gain, when + attack);
+    amp.gain.exponentialRampToValueAtTime(0.0001, when + duration + release);
+    osc.connect(amp).connect(ctx.destination);
+    osc.start(when);
+    osc.stop(when + duration + release + 0.03);
+  }
+
+  function playCue(type) {
+    if (!state.audioEnabled) {
+      return;
+    }
+    const ctx = ensureContext();
+    if (!ctx || ctx.state !== "running") {
+      return;
+    }
+    const when = ctx.currentTime + 0.01;
+    if (type === "step") {
+      playEnvelope(ctx, { type: "triangle", frequency: 110, duration: 0.04, gain: 0.018, when, attack: 0.004, release: 0.06 });
+      playEnvelope(ctx, { type: "sine", frequency: 220, duration: 0.028, gain: 0.008, when: when + 0.006, attack: 0.004, release: 0.05 });
+      return;
+    }
+    if (type === "phone") {
+      playEnvelope(ctx, { type: "sine", frequency: 880, duration: 0.12, gain: 0.028, when, attack: 0.01, release: 0.08 });
+      playEnvelope(ctx, { type: "sine", frequency: 1320, duration: 0.08, gain: 0.016, when: when + 0.04, attack: 0.008, release: 0.08 });
+      return;
+    }
+    if (type === "ending") {
+      playEnvelope(ctx, { type: "triangle", frequency: 392, duration: 0.18, gain: 0.018, when, attack: 0.02, release: 0.16 });
+      playEnvelope(ctx, { type: "sine", frequency: 784, duration: 0.14, gain: 0.012, when: when + 0.06, attack: 0.02, release: 0.18 });
+      return;
+    }
+    if (type === "thread") {
+      playEnvelope(ctx, { type: "triangle", frequency: 294, duration: 0.08, gain: 0.012, when, attack: 0.01, release: 0.08 });
+    }
   }
 
   return {
     unlock,
     update,
     setEnabled,
-    playCue() {},
+    playCue,
     tryPlay,
     syncPrompt: syncMusicPrompt,
   };
@@ -575,6 +640,10 @@ function setSubtitle(source, text, ttl = 3.6) {
   state.subtitle = { source, text, ttl };
   dom.subtitleSource.textContent = source;
   dom.subtitleText.textContent = text;
+  if (isMobileLandscape() && state.mode !== "intro") {
+    state.subtitleMode = "compact";
+    syncDockState();
+  }
 }
 
 function setAmbience(text) {
@@ -696,6 +765,7 @@ function syncDockState() {
   dom.bottomDock.classList.toggle("ambience-expanded", expanded);
   dom.bottomDock.classList.toggle("mobile-landscape", mobileLandscape);
   dom.bottomDock.classList.toggle("compact-subtitle", state.subtitleMode !== "full");
+  dom.bottomDock.classList.toggle("hidden-subtitle", state.subtitleMode === "hidden");
   dom.ambienceChip.hidden = true;
   dom.ambienceBox.hidden = !showSceneHint;
   dom.ambienceChip.setAttribute("aria-expanded", "false");
@@ -1064,6 +1134,7 @@ function startIntro(replay = false) {
   dom.body.classList.remove("ending-open");
   setSubtitle(INTRO_BEATS[0].kicker, INTRO_BEATS[0].text, 0.2);
   setAmbience(INTRO_BEATS[0].ambience);
+  state.subtitleMode = isMobileLandscape() ? "hidden" : "full";
   syncDockState();
   logDebug("intro", replay ? "replay" : "start");
 }
@@ -1098,6 +1169,7 @@ function finishIntro() {
     setAmbience("十一點的風沿著四樓矮牆和六間教室長度的走廊往後門吹，外面的樹影、前門門洞和教室兩側的陽光一起慢慢亮起來。");
   }
 
+  state.subtitleMode = isMobileLandscape() ? "hidden" : "full";
   syncDockState();
   updateObjective(true);
   updatePointerHint();
@@ -1117,7 +1189,7 @@ function startEnding(type, options = {}) {
   if (type === "perfect") {
     state.phase = "eye_contact";
     state.phaseClock = 0;
-    setSubtitle("學長", "這一次,依然再次遇見妳.", 5.4);
+    setSubtitle("學長", "這一次,依然再次遇見妳.", 6.2);
     setAmbience("四樓後門那一側忽然靜下來，只剩陽光慢慢落在她的白襯衫、頭髮和眼睛上。");
   } else {
     setSubtitle("女兒", type === "missed" ? "紅線先回彈了。" : "他出現在光裡。", 4.4);
@@ -1193,7 +1265,7 @@ function updateMovement(dt) {
   if (state.mode !== "play" || state.dialogue || state.endingSequence || wantsLandscape()) {
     state.player.velocity.x *= 0.72;
     state.player.velocity.z *= 0.72;
-    state.subtitleMode = "full";
+    state.subtitleMode = state.mode === "intro" && isMobileLandscape() ? "hidden" : "full";
     syncDockState();
     return;
   }
@@ -1236,8 +1308,17 @@ function updateMovement(dt) {
 
   const moving = Math.hypot(state.player.velocity.x, state.player.velocity.z) > scale(26);
   const looking = Math.abs(lookX) > 0.18 || Math.abs(lookY) > 0.18 || Boolean(state.dragLook) || document.pointerLockElement === canvas;
-  state.subtitleMode = isMobileLandscape() && (moving || looking) ? "compact" : "full";
+  if (isMobileLandscape()) {
+    state.subtitleMode = moving || looking ? "hidden" : state.subtitle.ttl > 0.12 ? "compact" : "hidden";
+  } else {
+    state.subtitleMode = "full";
+  }
   syncDockState();
+
+  if (moving && state.time - state.sound.playerStepAt > 0.42) {
+    state.sound.playerStepAt = state.time;
+    audioSystem.playCue("step");
+  }
 }
 
 function setCharacterPose(name, x, z, rotationY, alpha = 1) {
@@ -1251,11 +1332,11 @@ function setCharacterPose(name, x, z, rotationY, alpha = 1) {
 
 function updateCharacters() {
   if (state.endingSequence?.type === "perfect") {
-    const seniorWalkT = smoothstep(0.12, 4.2, state.endingSequence.time);
-    const juniorWalkT = smoothstep(0.32, 3.2, state.endingSequence.time);
-    const seniorX = lerp(scale(-404), scale(-392), seniorWalkT);
+    const seniorWalkT = smoothstep(0.12, 4.8, state.endingSequence.time);
+    const juniorWalkT = smoothstep(0.42, 4.1, state.endingSequence.time);
+    const seniorX = lerp(scale(-392), scale(-386), seniorWalkT);
     const seniorZ = lerp(scale(770), scale(548), seniorWalkT);
-    const juniorX = lerp(scale(286), scale(46), juniorWalkT);
+    const juniorX = lerp(scale(1536), scale(64), juniorWalkT);
     const juniorZ = lerp(scale(622), scale(548), juniorWalkT);
     const seniorFacing = movementRotation(juniorX - seniorX, juniorZ - seniorZ, 0);
     const juniorFacing = movementRotation(seniorX - juniorX, seniorZ - juniorZ, -Math.PI / 2);
@@ -1267,8 +1348,8 @@ function updateCharacters() {
   }
 
   if (state.phase === "front_call") {
-    setCharacterPose("senior", scale(-404), scale(774), -1.08);
-    setCharacterPose("junior", scale(286), scale(622), 0.06);
+    setCharacterPose("senior", scale(-346), scale(786), -1.18);
+    setCharacterPose("junior", scale(1536), scale(622), 0.06);
     setCharacterPose("fatherEcho", scale(-272), scale(540), Math.PI / 2, 0);
     setCharacterPose("auntEcho", scale(-116), scale(560), -Math.PI / 2, 0);
     return;
@@ -1279,7 +1360,7 @@ function updateCharacters() {
     const juniorT = smoothstep(0.6, 3.5, state.phaseClock);
     const seniorX = lerp(scale(-404), scale(-392), seniorT * 0.76);
     const seniorZ = lerp(scale(772), scale(550), seniorT);
-    const juniorX = lerp(scale(286), scale(58), juniorT);
+    const juniorX = lerp(scale(1536), scale(58), juniorT);
     const juniorZ = lerp(scale(622), scale(550), juniorT);
     setCharacterPose("senior", seniorX, seniorZ, movementRotation(juniorX - seniorX, juniorZ - seniorZ, -0.12));
     setCharacterPose("junior", juniorX, juniorZ, movementRotation(seniorX - juniorX, seniorZ - juniorZ, -Math.PI / 2));
@@ -1300,6 +1381,33 @@ function updateCharacters() {
   setCharacterPose("junior", juniorX, juniorZ, movementRotation(seniorX - juniorX, seniorZ - juniorZ, -Math.PI / 2));
   setCharacterPose("fatherEcho", scale(-272), scale(540), Math.PI / 2, echoAlpha * 0.6);
   setCharacterPose("auntEcho", scale(-116), scale(560), -Math.PI / 2, echoAlpha * 0.74);
+}
+
+function updateCharacterAudio(dt) {
+  if (state.mode === "intro") {
+    if (state.intro.time > 7.1 && state.intro.time < 11.6 && state.time - state.sound.seniorStepAt > 0.48) {
+      state.sound.seniorStepAt = state.time;
+      audioSystem.playCue("step");
+    }
+    return;
+  }
+
+  const seniorWalking =
+    (state.phase === "rear_wait" && state.phaseClock < 4.1) ||
+    (state.phase === "eye_contact" && state.phaseClock < 2.2) ||
+    (state.endingSequence?.type === "perfect" && state.endingSequence.time < 4.3);
+  const juniorWalking =
+    (state.phase === "rear_wait" && state.phaseClock > 0.5 && state.phaseClock < 3.6) ||
+    (state.endingSequence?.type === "perfect" && state.endingSequence.time > 0.3 && state.endingSequence.time < 3.4);
+
+  if (seniorWalking && state.time - state.sound.seniorStepAt > 0.48) {
+    state.sound.seniorStepAt = state.time;
+    audioSystem.playCue("step");
+  }
+  if (juniorWalking && state.time - state.sound.juniorStepAt > 0.56) {
+    state.sound.juniorStepAt = state.time;
+    audioSystem.playCue("step");
+  }
 }
 
 function updatePhaseLogic(dt) {
@@ -1533,6 +1641,7 @@ function tick(now) {
   }
 
   audioSystem.update(dt);
+  updateCharacterAudio(dt);
   renderFrame();
   requestAnimationFrame(tick);
 }

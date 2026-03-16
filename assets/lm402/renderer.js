@@ -481,8 +481,101 @@ function createPerson(spec) {
   }
 
   group.scale.setScalar(spec.scale ?? 0.95);
+  group.userData.pose = {
+    waist,
+    torso,
+    chest,
+    leftArm,
+    rightArm,
+    leftLeg,
+    rightLeg,
+    leftHand,
+    rightHand,
+    head,
+    jaw,
+    hairBack,
+    fringe,
+    shoulderL,
+    shoulderR,
+    female: Boolean(spec.female),
+    hasPhone: Boolean(spec.phone),
+  };
   setShadow(group);
   return group;
+}
+
+function resetCharacterPose(person) {
+  const pose = person.userData.pose;
+  if (!pose) {
+    return;
+  }
+  pose.waist.rotation.set(0, 0, 0);
+  pose.torso.rotation.set(0, 0, 0);
+  pose.chest.rotation.set(0, 0, 0);
+  pose.leftArm.rotation.set(0, 0, pose.female ? 0.12 : 0.15);
+  pose.rightArm.rotation.set(0, 0, pose.female ? -0.12 : -0.15);
+  pose.leftLeg.rotation.set(0, 0, 0.02);
+  pose.rightLeg.rotation.set(0, 0, -0.02);
+  pose.leftHand.rotation.set(0, 0, 0);
+  pose.rightHand.rotation.set(0, 0, 0);
+  pose.head.rotation.set(0, 0, 0);
+  pose.jaw.rotation.set(0, 0, 0);
+  pose.hairBack.rotation.set(0, 0, 0);
+  pose.fringe.rotation.set(0, 0, 0);
+  person.position.y = 0;
+}
+
+function applyWalkingPose(person, stride, sway = 1) {
+  const pose = person.userData.pose;
+  if (!pose) {
+    return;
+  }
+  const legAmp = pose.female ? 0.42 : 0.36;
+  const armAmp = pose.hasPhone ? 0.16 : 0.34;
+  pose.leftLeg.rotation.x = stride * legAmp;
+  pose.rightLeg.rotation.x = -stride * legAmp;
+  pose.leftArm.rotation.x = -stride * armAmp;
+  pose.rightArm.rotation.x = pose.hasPhone ? -0.56 + stride * 0.08 : stride * armAmp;
+  pose.torso.rotation.z = stride * 0.05 * sway;
+  pose.waist.rotation.z = stride * 0.03 * sway;
+  pose.head.rotation.z = -stride * 0.04 * sway;
+  person.position.y = Math.abs(stride) * 0.03;
+}
+
+function applyIdlePose(person, time, emphasis = 1) {
+  const pose = person.userData.pose;
+  if (!pose) {
+    return;
+  }
+  const breathe = Math.sin(time * 1.4) * 0.018 * emphasis;
+  pose.torso.rotation.x = breathe;
+  pose.chest.rotation.x = breathe * 0.6;
+  pose.head.rotation.y = Math.sin(time * 0.7) * 0.04 * emphasis;
+  pose.hairBack.rotation.z = Math.sin(time * 1.1) * 0.02 * emphasis;
+  person.position.y = Math.abs(Math.sin(time * 1.4)) * 0.012 * emphasis;
+}
+
+function applyFlyingPose(person, progress) {
+  const pose = person.userData.pose;
+  if (!pose) {
+    return;
+  }
+  const wing = Math.sin(progress * Math.PI * 5.8) * 0.08;
+  pose.torso.rotation.x = -0.72;
+  pose.chest.rotation.x = -0.34;
+  pose.waist.rotation.x = -0.22;
+  pose.leftArm.rotation.x = -1.42 + wing * 0.18;
+  pose.rightArm.rotation.x = -1.42 - wing * 0.18;
+  pose.leftArm.rotation.z = 0.06;
+  pose.rightArm.rotation.z = -0.06;
+  pose.leftHand.rotation.x = -0.36;
+  pose.rightHand.rotation.x = -0.36;
+  pose.leftLeg.rotation.x = 0.42 - wing * 0.1;
+  pose.rightLeg.rotation.x = 0.42 + wing * 0.1;
+  pose.head.rotation.x = 0.22;
+  pose.hairBack.rotation.x = 0.34;
+  pose.fringe.rotation.x = -0.1;
+  person.position.y = Math.sin(progress * Math.PI * 4.6) * 0.08;
 }
 
 function createTree({ scale: treeScale = 1 }) {
@@ -1232,9 +1325,12 @@ export function createLm402Scene(canvas) {
     worldGroup.add(handle);
   });
 
-  const plaque = buildTextPlane("LM402", 1.04, 0.28, { bg: "#495768", fg: "#f8efd5" });
+  const plaque = buildTextPlane("LM402", 1.26, 0.34, { bg: "#4c5967", fg: "#fff4da" });
   plaque.position.set(scaled(WORLD.plaque.x), scaled(WORLD.plaque.y), scaled(WORLD.plaque.z));
   plaque.rotation.y = Math.PI / 2;
+  plaque.material = plaque.material.clone();
+  plaque.material.emissive = new THREE.Color("#6b5f47");
+  plaque.material.emissiveIntensity = 0.18;
   worldGroup.add(plaque);
 
   const plaqueBacker = new THREE.Mesh(
@@ -1248,14 +1344,14 @@ export function createLm402Scene(canvas) {
     new THREE.BoxGeometry(0.08, 0.92, 1.12),
     new THREE.MeshStandardMaterial({ color: "#9b744b", map: woodTex, roughness: 0.82, metalness: 0.02 })
   );
-  noticeBoard.position.set(classroomMinX + 0.02, 1.42, scaled(690));
+  noticeBoard.position.set(classroomMinX + 0.02, 1.42, scaled(660));
   worldGroup.add(noticeBoard);
 
   const noticeSheet = new THREE.Mesh(
     new THREE.PlaneGeometry(0.84, 0.62),
     new THREE.MeshStandardMaterial({ color: "#f4efe5", roughness: 0.94, metalness: 0.01, side: THREE.DoubleSide })
   );
-  noticeSheet.position.set(classroomMinX + 0.06, 1.42, scaled(690));
+  noticeSheet.position.set(classroomMinX + 0.06, 1.42, scaled(660));
   noticeSheet.rotation.y = Math.PI / 2;
   worldGroup.add(noticeSheet);
 
@@ -1293,7 +1389,8 @@ export function createLm402Scene(canvas) {
 
   [
     scaled(560),
-    scaled(690),
+    scaled(648),
+    scaled(736),
   ].forEach((windowCenterZ) => {
     const exteriorGlass = new THREE.Mesh(new THREE.PlaneGeometry(1.52, 1.24), glassMat);
     exteriorGlass.position.set(classroomMaxX - 0.04, 1.54, windowCenterZ);
@@ -1357,8 +1454,8 @@ export function createLm402Scene(canvas) {
     null
   );
 
-  const lectern = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.98, 0.62), woodMat);
-  lectern.position.set(boardCenterX - 1.22, 0.49, boardZ - 0.82);
+  const lectern = new THREE.Mesh(new THREE.BoxGeometry(0.96, 0.98, 0.72), woodMat);
+  lectern.position.set(boardCenterX - 4.2, 0.49, boardZ - 0.86);
   lectern.castShadow = true;
   lectern.receiveShadow = true;
   worldGroup.add(lectern);
@@ -1369,7 +1466,7 @@ export function createLm402Scene(canvas) {
     new THREE.MeshStandardMaterial({ color: "#f6efe5", roughness: 0.9, metalness: 0.02 })
   );
   clock.rotation.z = Math.PI / 2;
-  clock.position.set(boardCenterX + 1.74, 2.14, boardZ - 0.02);
+  clock.position.set(boardCenterX + 6.1, 2.14, boardZ - 0.02);
   worldGroup.add(clock);
 
   WORLD.lightBeams.forEach((beam, index) => {
@@ -1394,31 +1491,37 @@ export function createLm402Scene(canvas) {
     worldGroup.add(plane);
   });
 
-  const corridorSunPatch = createGlowPlane("rgba(255,232,178,1)", 4.5, 2.4, 0.28);
+  const corridorSunPatch = createGlowPlane("rgba(255,232,178,1)", 5.8, 2.8, 0.3);
   corridorSunPatch.position.set(minX + 1.42, 0.018, scaled(WORLD.frontDoor.center.z));
   corridorSunPatch.rotation.x = -Math.PI / 2;
   corridorSunPatch.rotation.z = 0.12;
   worldGroup.add(corridorSunPatch);
 
-  const corridorWallLight = createGlowPlane("rgba(255,232,182,1)", 2.8, 2.2, 0.18);
-  corridorWallLight.position.set(classroomMinX + 0.06, 1.38, scaled(742));
+  const parapetSunPatch = createGlowPlane("rgba(255,240,205,1)", 6.6, 3.2, 0.24);
+  parapetSunPatch.position.set(minX + 0.72, 1.12, scaled(WORLD.frontDoor.center.z + 42));
+  parapetSunPatch.rotation.y = Math.PI / 2;
+  parapetSunPatch.rotation.z = 0.04;
+  worldGroup.add(parapetSunPatch);
+
+  const corridorWallLight = createGlowPlane("rgba(255,232,182,1)", 3.2, 2.6, 0.2);
+  corridorWallLight.position.set(classroomMinX + 0.06, 1.42, scaled(742));
   corridorWallLight.rotation.y = Math.PI / 2;
   worldGroup.add(corridorWallLight);
 
-  const classroomSunPatch = createGlowPlane("rgba(255,226,174,1)", 4.6, 2.9, 0.3);
-  classroomSunPatch.position.set(classroomMaxX - 1.52, 0.019, scaled(684));
+  const classroomSunPatch = createGlowPlane("rgba(255,226,174,1)", 8.6, 3.4, 0.34);
+  classroomSunPatch.position.set(classroomMaxX - 3.4, 0.019, scaled(684));
   classroomSunPatch.rotation.x = -Math.PI / 2;
   classroomSunPatch.rotation.z = -0.16;
   worldGroup.add(classroomSunPatch);
 
-  const backdoorSunPatch = createGlowPlane("rgba(255,240,198,1)", 3.0, 1.8, 0.2);
+  const backdoorSunPatch = createGlowPlane("rgba(255,240,198,1)", 3.8, 2.1, 0.22);
   backdoorSunPatch.position.set(classroomMinX + 1.04, 0.018, scaled(WORLD.backDoor.center.z));
   backdoorSunPatch.rotation.x = -Math.PI / 2;
   backdoorSunPatch.rotation.z = 0.08;
   worldGroup.add(backdoorSunPatch);
 
-  const seatSunPatch = createGlowPlane("rgba(255,226,184,1)", 2.9, 1.8, 0.2);
-  seatSunPatch.position.set(classroomMaxX - 1.14, 0.02, scaled(620));
+  const seatSunPatch = createGlowPlane("rgba(255,226,184,1)", 4.4, 2.2, 0.24);
+  seatSunPatch.position.set(scaled(1560), 0.02, scaled(620));
   seatSunPatch.rotation.x = -Math.PI / 2;
   seatSunPatch.rotation.z = -0.22;
   worldGroup.add(seatSunPatch);
@@ -1535,28 +1638,28 @@ export function createLm402Scene(canvas) {
   };
 
   const senior = createPerson({
-    torso: "#4b6687",
-    torsoAccent: "#7e9aba",
+    torso: "#45617f",
+    torsoAccent: "#7893b3",
     legs: "#151c26",
-    skin: "#e7c4ab",
-    hair: "#261c1c",
+    skin: "#ebccb6",
+    hair: "#1f1618",
     shoes: "#161316",
-    iris: "#35241f",
+    iris: "#463027",
     female: false,
     phone: true,
-    scale: 0.99,
+    scale: 1.01,
   });
   const junior = createPerson({
-    torso: "#fffdf9",
-    torsoAccent: "#fffefc",
-    legs: "#8ca7d8",
-    skin: "#f2d7c7",
-    hair: "#221718",
+    torso: "#fffefb",
+    torsoAccent: "#fffef9",
+    legs: "#8ba6df",
+    skin: "#f6dbcf",
+    hair: "#1f1617",
     shoes: "#fbf6ef",
-    iris: "#3b261d",
+    iris: "#5a3426",
     female: true,
     highlight: true,
-    scale: 1.06,
+    scale: 1.1,
   });
   const fatherEcho = createPerson({
     torso: "#f2c49e",
@@ -1651,7 +1754,7 @@ export function createLm402Scene(canvas) {
     hair: "#24191b",
     shoes: "#171317",
     female: false,
-    phone: true,
+    phone: false,
     scale: 0.98,
   });
   introGroup.add(introSenior);
@@ -1769,14 +1872,25 @@ export function createLm402Scene(canvas) {
   }
 
   function updateCharacters(game) {
+    const isIntro = game.mode === "intro";
+    senior.visible = !isIntro;
+    junior.visible = !isIntro;
+    fatherEcho.visible = !isIntro && game.characters.fatherEcho.alpha > 0.02;
+    auntEcho.visible = !isIntro && game.characters.auntEcho.alpha > 0.02;
+    introSenior.visible = isIntro;
+    introDaughter.visible = isIntro;
+    introAura.visible = isIntro;
+    introBloom.visible = isIntro;
+    introSpark.visible = isIntro;
+    introWake.visible = isIntro;
+    introRibbon.visible = isIntro;
+
     senior.position.set(game.characters.senior.x, 0, game.characters.senior.z);
     senior.rotation.y = game.characters.senior.rotationY ?? 0;
     junior.position.set(game.characters.junior.x, 0, game.characters.junior.z);
     junior.rotation.y = game.characters.junior.rotationY ?? 0;
     fatherEcho.position.set(game.characters.fatherEcho.x, 0, game.characters.fatherEcho.z);
     auntEcho.position.set(game.characters.auntEcho.x, 0, game.characters.auntEcho.z);
-    fatherEcho.visible = game.characters.fatherEcho.alpha > 0.02;
-    auntEcho.visible = game.characters.auntEcho.alpha > 0.02;
     fatherEcho.traverse((child) => {
       if (child.material) child.material.opacity = game.characters.fatherEcho.alpha;
     });
@@ -1786,6 +1900,41 @@ export function createLm402Scene(canvas) {
     if (junior.userData.glow) {
       junior.userData.glow.material.opacity = game.phase === "eye_contact" || game.ending === "perfect" ? 0.42 + game.cinematicGlow * 0.18 : 0.18;
     }
+
+    resetCharacterPose(senior);
+    resetCharacterPose(junior);
+    resetCharacterPose(introSenior);
+    resetCharacterPose(introDaughter);
+
+    if (isIntro) {
+      applyIdlePose(junior, game.time * 0.4, 0.4);
+    } else if (game.endingSequence?.type === "perfect") {
+      const seniorWalkT = THREE.MathUtils.smoothstep(game.endingSequence.time, 0.12, 4.2);
+      const juniorWalkT = THREE.MathUtils.smoothstep(game.endingSequence.time, 0.24, 3.2);
+      if (game.endingSequence.time < 4.2) {
+        applyWalkingPose(senior, Math.sin(game.endingSequence.time * 7.2) * 0.9, 0.9);
+      } else {
+        applyIdlePose(senior, game.time, 0.8);
+      }
+      if (game.endingSequence.time < 3.2) {
+        applyWalkingPose(junior, Math.sin(game.endingSequence.time * 6.6 + 0.8) * 0.84, 0.7);
+      } else {
+        applyIdlePose(junior, game.time * 0.84, 0.92);
+      }
+      senior.position.y += seniorWalkT * 0.01;
+      junior.position.y += juniorWalkT * 0.014;
+    } else if (game.phase === "front_call") {
+      applyIdlePose(senior, game.time * 0.9, 0.76);
+      applyIdlePose(junior, game.time * 0.72, 0.9);
+    } else if (game.phase === "rear_wait") {
+      const walk = Math.sin(game.time * 7.1);
+      applyWalkingPose(senior, walk * 0.76, 0.8);
+      applyWalkingPose(junior, Math.sin(game.time * 6.4 + 0.7) * 0.68, 0.66);
+    } else {
+      applyWalkingPose(senior, Math.sin(game.time * 6.2) * 0.34, 0.5);
+      applyIdlePose(junior, game.time * 0.9, 1);
+    }
+
     debugAnchors.senior.copy(senior.position).add(new THREE.Vector3(0, 1.34, 0));
     debugAnchors.junior.copy(junior.position).add(new THREE.Vector3(0, 1.34, 0));
   }
@@ -1835,6 +1984,7 @@ export function createLm402Scene(canvas) {
     introDaughter.rotateY(Math.PI);
     introDaughter.rotation.z = Math.sin(progress * Math.PI * 4.2) * 0.18;
     introDaughter.rotation.x = Math.sin(progress * Math.PI * 2.8) * 0.12;
+    applyFlyingPose(introDaughter, progress);
     introAura.position.copy(daughterPos).add(new THREE.Vector3(0, 0.32, -0.18));
     introAura.lookAt(camera.position);
     introAura.material.opacity = THREE.MathUtils.lerp(0.82, 0.2, progress);
@@ -1851,13 +2001,14 @@ export function createLm402Scene(canvas) {
     introWake.material.opacity = THREE.MathUtils.lerp(0.34, 0.06, progress);
 
     const seniorWalkT = THREE.MathUtils.smoothstep(progress, 0.56, 0.96);
-    const seniorStart = new THREE.Vector3(scaled(-420), 0, scaled(WORLD.stairs.front.landingZ));
-    const seniorEnd = new THREE.Vector3(scaled(-396), 0, scaled(WORLD.frontDoor.center.z + 4));
+    const seniorStart = new THREE.Vector3(scaled(-468), 0, scaled(WORLD.stairs.front.landingZ - 26));
+    const seniorEnd = new THREE.Vector3(scaled(-346), 0, scaled(WORLD.frontDoor.center.z + 10));
     introSenior.position.lerpVectors(seniorStart, seniorEnd, seniorWalkT);
     introSenior.rotation.y = Math.atan2(
       -(scaled(WORLD.frontDoor.center.x) - introSenior.position.x),
       -(scaled(WORLD.frontDoor.center.z) - introSenior.position.z)
     );
+    applyWalkingPose(introSenior, Math.sin(progress * Math.PI * 10.4) * 0.82, 0.9);
   }
 
   function applyPerfectEndingCamera(game) {
@@ -1870,24 +2021,25 @@ export function createLm402Scene(canvas) {
       const orbitT = THREE.MathUtils.clamp(totalTime / orbitDuration, 0, 1);
       const eased = THREE.MathUtils.smoothstep(orbitT, 0.04, 0.94);
       const radius = THREE.MathUtils.lerp(3.22, 0.92, THREE.MathUtils.smoothstep(orbitT, 0.12, 0.92));
-      const angle = THREE.MathUtils.lerp(-1.26, Math.PI * 2.12, eased);
+      const startAngle = -1.18;
+      const angle = THREE.MathUtils.lerp(startAngle, startAngle + Math.PI * 2, eased);
       camera.position.set(
         center.x + Math.cos(angle) * radius,
         THREE.MathUtils.lerp(1.54, 1.76, orbitT),
         center.z + Math.sin(angle) * radius
       );
       const lookTarget = center.clone().lerp(eyeTarget, THREE.MathUtils.smoothstep(orbitT, 0.72, 1));
-      camera.fov = THREE.MathUtils.lerp(66, 36, THREE.MathUtils.smoothstep(orbitT, 0.54, 0.98));
+      camera.fov = THREE.MathUtils.lerp(62, 34, THREE.MathUtils.smoothstep(orbitT, 0.54, 0.98));
       camera.updateProjectionMatrix();
       camera.lookAt(lookTarget.x, lookTarget.y, lookTarget.z);
       return;
     }
 
     const holdT = THREE.MathUtils.clamp((totalTime - orbitDuration) / holdDuration, 0, 1);
-    const startPos = new THREE.Vector3(center.x + 0.66, 1.72, center.z + 0.34);
-    const endPos = new THREE.Vector3(center.x + 0.12, 1.58, center.z + 0.18);
+    const startPos = new THREE.Vector3(center.x + 0.72, 1.72, center.z + 0.28);
+    const endPos = new THREE.Vector3(center.x + 0.06, 1.58, center.z + 0.16);
     camera.position.lerpVectors(startPos, endPos, THREE.MathUtils.smoothstep(holdT, 0, 1));
-    camera.fov = THREE.MathUtils.lerp(38, 24, holdT);
+    camera.fov = THREE.MathUtils.lerp(34, 22, holdT);
     camera.updateProjectionMatrix();
     camera.lookAt(eyeTarget.x, eyeTarget.y, eyeTarget.z);
   }
@@ -1977,7 +2129,7 @@ export function createLm402Scene(canvas) {
       applyPerfectEndingCamera(game);
     } else {
       introGroup.visible = false;
-      const targetFov = game.phase === "front_call" ? 72 : game.phase === "eye_contact" ? 62 : 68;
+      const targetFov = game.phase === "front_call" ? 62 : game.phase === "eye_contact" ? 58 : 64;
       if (camera.fov !== targetFov) {
         camera.fov = targetFov;
         camera.updateProjectionMatrix();
@@ -1989,11 +2141,12 @@ export function createLm402Scene(canvas) {
     sun.intensity = 1.96 * daylight + (game.phase === "eye_contact" || game.ending === "perfect" ? 0.62 : game.phase === "front_call" ? 0.18 : 0.12);
     ambient.intensity = 0.28 + daylight * 0.2;
     corridorFill.intensity = isIntro ? 0.66 : 0.98;
-    corridorSun.intensity = game.ending === "perfect" ? 1.34 : game.phase === "front_call" ? 1.16 : 0.96;
-    classroomAccent.intensity = game.phase === "eye_contact" || game.ending === "perfect" ? 1.26 : 0.86;
+    corridorSun.intensity = game.ending === "perfect" ? 1.42 : game.phase === "front_call" ? 1.36 : 1.02;
+    classroomAccent.intensity = game.phase === "eye_contact" || game.ending === "perfect" ? 1.34 : 0.94;
     backdoorAccent.intensity = game.phase === "eye_contact" || game.ending === "perfect" ? 1.04 : 0.62;
-    corridorSunPatch.material.opacity = game.ending === "perfect" ? 0.38 : game.phase === "front_call" ? 0.34 : 0.24;
-    classroomSunPatch.material.opacity = game.phase === "eye_contact" || game.ending === "perfect" ? 0.56 : 0.34;
+    corridorSunPatch.material.opacity = game.ending === "perfect" ? 0.42 : game.phase === "front_call" ? 0.46 : 0.24;
+    parapetSunPatch.material.opacity = game.phase === "front_call" ? 0.32 : game.ending === "perfect" ? 0.24 : 0.14;
+    classroomSunPatch.material.opacity = game.phase === "eye_contact" || game.ending === "perfect" ? 0.6 : 0.38;
     seatSunPatch.material.opacity = game.ending === "perfect" ? 0.46 : game.phase === "eye_contact" ? 0.36 : 0.22;
     backdoorSunPatch.material.opacity = game.ending === "perfect" ? 0.38 : game.phase === "eye_contact" ? 0.3 : 0.18;
     scene.background.setStyle(isIntro ? "#090d16" : "#dde8f2");
