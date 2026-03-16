@@ -43,9 +43,19 @@ const LOOK_PRESET_LABELS = {
   custom: "自訂",
 };
 
-const LM402_ROOM = WORLD.floorRooms.find((room) => room.interactive) ?? WORLD.floorRooms[1];
+const LM402_ROOM = WORLD.floorRooms.find((room) => room.interactive) ?? WORLD.floorRooms[0];
 
 const WORLD_POINTS = {
+  frontStair: {
+    x: scale(-522),
+    y: 0,
+    z: scale(WORLD.stairs.front.landingZ),
+  },
+  backStair: {
+    x: scale(-522),
+    y: 0,
+    z: scale(WORLD.stairs.back.landingZ),
+  },
   frontDoor: {
     x: scale(WORLD.frontDoor.center.x),
     y: scale(WORLD.frontDoor.center.y),
@@ -67,39 +77,39 @@ const WORLD_POINTS = {
     z: scale(WORLD.focusMark.z),
   },
   frontSpawn: {
-    x: scale(-692),
+    x: scale(-742),
     y: 0,
-    z: scale(700),
+    z: scale(938),
   },
   corridorFront: {
-    x: scale(-430),
+    x: scale(-404),
     y: 0,
-    z: scale(WORLD.frontDoor.center.z - 18),
+    z: scale(WORLD.frontDoor.center.z),
   },
   juniorSeat: {
-    x: scale(206),
+    x: scale(286),
     y: 0,
-    z: scale(630),
+    z: scale(622),
   },
   frontLook: {
-    x: scale(-548),
-    y: 1.18,
-    z: scale(786),
+    x: scale(-196),
+    y: 1.36,
+    z: scale(776),
   },
   rearLook: {
-    x: scale(-548),
-    y: 1.2,
-    z: scale(538),
+    x: scale(-84),
+    y: 1.38,
+    z: scale(550),
   },
   eyeLook: {
-    x: scale(-18),
-    y: 1.34,
-    z: scale(556),
+    x: scale(64),
+    y: 1.48,
+    z: scale(548),
   },
   perfectOrbit: {
-    x: scale(6),
-    y: 1.42,
-    z: scale(556),
+    x: scale(64),
+    y: 1.58,
+    z: scale(548),
   },
 };
 
@@ -137,6 +147,8 @@ const dom = {
   audioWidget: document.getElementById("audio-widget"),
   audioToggle: document.getElementById("audio-toggle"),
   audioToggleValue: document.getElementById("audio-toggle-value"),
+  musicPrompt: document.getElementById("music-prompt"),
+  musicPromptButton: document.getElementById("music-prompt-button"),
   perfectEndingBtn: document.getElementById("perfect-ending-btn"),
   perfectEndingSideBtn: document.getElementById("perfect-ending-side-btn"),
   backStoryBtn: document.getElementById("back-story-btn"),
@@ -251,7 +263,7 @@ function createInitialCharacters() {
       x: WORLD_POINTS.corridorFront.x,
       y: 0,
       z: WORLD_POINTS.corridorFront.z,
-      rotationY: -0.92,
+      rotationY: -1.18,
     },
     junior: {
       x: WORLD_POINTS.juniorSeat.x,
@@ -262,14 +274,14 @@ function createInitialCharacters() {
     fatherEcho: {
       x: scale(-312),
       y: 0,
-      z: scale(578),
+      z: scale(540),
       rotationY: Math.PI / 2,
       alpha: 0,
     },
     auntEcho: {
-      x: scale(-122),
+      x: scale(-116),
       y: 0,
-      z: scale(564),
+      z: scale(560),
       rotationY: -Math.PI / 2,
       alpha: 0,
     },
@@ -313,9 +325,15 @@ function phaseLookTarget(phase) {
       };
     }
     return {
-      x: lerp(liveState.characters.senior.x, WORLD_POINTS.frontLook.x, 0.42),
+      x:
+        liveState.characters.senior.x * 0.26 +
+        WORLD_POINTS.doorPlaque.x * 0.42 +
+        WORLD_POINTS.frontLook.x * 0.32,
       y: WORLD_POINTS.frontLook.y,
-      z: lerp(liveState.characters.senior.z, WORLD_POINTS.frontLook.z, 0.34),
+      z:
+        liveState.characters.senior.z * 0.4 +
+        WORLD_POINTS.doorPlaque.z * 0.24 +
+        WORLD_POINTS.frontLook.z * 0.36,
     };
   }
   if (phase === "eye_contact") {
@@ -439,220 +457,77 @@ const state = {
 liveState = state;
 
 function createAudioSystem() {
-  const phaseChords = {
-    front_call: [220, 277.18, 329.63],
-    rear_wait: [196, 246.94, 329.63],
-    eye_contact: [246.94, 329.63, 392],
-  };
-  let ctx = null;
-  let masterGain = null;
-  let musicGain = null;
-  let windGain = null;
-  let padNodes = [];
-  let windSource = null;
-  let introBeatIndex = -1;
-  let currentPhase = null;
-  let stepClock = 0;
+  let audio = null;
+  let autoplayBlocked = false;
+  let playAttempt = null;
 
-  function noiseBuffer() {
-    const buffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
-    const channel = buffer.getChannelData(0);
-    for (let i = 0; i < channel.length; i += 1) {
-      channel[i] = (Math.random() * 2 - 1) * 0.34;
+  function ensureAudio() {
+    if (audio) {
+      return audio;
     }
-    return buffer;
+    audio = new Audio(new URL("../../02song.mp3", import.meta.url).href);
+    audio.loop = true;
+    audio.preload = "auto";
+    audio.volume = 0.84;
+    audio.playsInline = true;
+    audio.addEventListener("playing", () => {
+      autoplayBlocked = false;
+      syncMusicPrompt();
+    });
+    audio.addEventListener("pause", () => {
+      if (!state.audioEnabled) {
+        autoplayBlocked = false;
+        syncMusicPrompt();
+      }
+    });
+    return audio;
   }
 
-  function ensure() {
-    if (ctx) {
-      return ctx;
+  async function tryPlay(reason = "auto") {
+    if (!state.audioEnabled) {
+      syncMusicPrompt();
+      return false;
     }
-    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextCtor) {
-      return null;
+    const player = ensureAudio();
+    if (playAttempt) {
+      return playAttempt;
     }
-    ctx = new AudioContextCtor();
-    masterGain = ctx.createGain();
-    musicGain = ctx.createGain();
-    windGain = ctx.createGain();
-    const highCut = ctx.createBiquadFilter();
-    highCut.type = "lowpass";
-    highCut.frequency.value = 920;
-    const windFilter = ctx.createBiquadFilter();
-    windFilter.type = "bandpass";
-    windFilter.frequency.value = 520;
-    windFilter.Q.value = 0.4;
-    masterGain.gain.value = 0;
-    musicGain.gain.value = 0.0001;
-    windGain.gain.value = 0.0001;
-    musicGain.connect(masterGain);
-    windGain.connect(windFilter);
-    windFilter.connect(highCut);
-    highCut.connect(masterGain);
-    masterGain.connect(ctx.destination);
+    playAttempt = player
+      .play()
+      .then(() => {
+        autoplayBlocked = false;
+        syncMusicPrompt();
+        logDebug("music", `${reason}:playing`);
+        return true;
+      })
+      .catch(() => {
+        autoplayBlocked = true;
+        syncMusicPrompt();
+        logDebug("music", `${reason}:blocked`);
+        return false;
+      })
+      .finally(() => {
+        playAttempt = null;
+      });
+    return playAttempt;
+  }
 
-    phaseChords.front_call.forEach((freq, index) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = index === 0 ? "triangle" : "sine";
-      osc.frequency.value = freq;
-      gain.gain.value = 0.0001;
-      osc.connect(gain);
-      gain.connect(musicGain);
-      osc.start();
-      padNodes.push({ osc, gain });
-    });
-
-    windSource = ctx.createBufferSource();
-    windSource.buffer = noiseBuffer();
-    windSource.loop = true;
-    windSource.connect(windGain);
-    windSource.start();
-    return ctx;
+  function syncMusicPrompt() {
+    const shouldShow = state.audioEnabled && autoplayBlocked;
+    dom.musicPrompt.classList.toggle("intro-mode", state.mode === "intro");
+    dom.musicPrompt.hidden = !shouldShow;
   }
 
   function unlock() {
-    if (!state.audioEnabled) {
-      return;
-    }
-    if (!ensure()) {
-      return;
-    }
-    if (ctx.state === "suspended") {
-      ctx.resume().catch(() => {});
-    }
-    setMaster(true);
+    void tryPlay("unlock");
   }
 
-  function setMaster(enabled) {
-    if (!ensure()) {
+  function update() {
+    if (!state.audioEnabled || !audio) {
       return;
     }
-    const now = ctx.currentTime;
-    masterGain.gain.cancelScheduledValues(now);
-    masterGain.gain.linearRampToValueAtTime(enabled ? 0.3 : 0.0001, now + 0.32);
-  }
-
-  function playCue(type = "spark") {
-    if (!state.audioEnabled || !ensure()) {
-      return;
-    }
-    const now = ctx.currentTime;
-    const piano = ctx.createOscillator();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    const pianoGain = ctx.createGain();
-    piano.type = type === "phone" ? "sine" : "triangle";
-    osc.type = type === "bell" || type === "ending" ? "triangle" : type === "phone" ? "square" : "sine";
-    const pianoStart = type === "bell" ? 523.25 : type === "ending" ? 587.33 : type === "thread" ? 466.16 : type === "phone" ? 659.25 : 392;
-    const pianoEnd = type === "bell" ? 261.63 : type === "ending" ? 293.66 : type === "thread" ? 349.23 : type === "phone" ? 523.25 : 220;
-    const oscStart = type === "bell" ? 784 : type === "ending" ? 880 : type === "thread" ? 622.25 : type === "phone" ? 987.77 : 440;
-    const oscEnd = type === "bell" ? 523.25 : type === "ending" ? 659.25 : type === "thread" ? 392 : type === "phone" ? 739.99 : 261.63;
-    const cueLength = type === "bell" ? 1.2 : type === "ending" ? 1.6 : type === "phone" ? 0.7 : type === "thread" ? 0.92 : 0.58;
-    piano.frequency.setValueAtTime(pianoStart, now);
-    piano.frequency.exponentialRampToValueAtTime(pianoEnd, now + cueLength);
-    osc.frequency.setValueAtTime(oscStart, now);
-    osc.frequency.exponentialRampToValueAtTime(oscEnd, now + Math.max(0.42, cueLength * 0.9));
-    pianoGain.gain.setValueAtTime(0.0001, now);
-    pianoGain.gain.linearRampToValueAtTime(type === "bell" ? 0.082 : type === "ending" ? 0.094 : type === "thread" ? 0.062 : type === "phone" ? 0.046 : 0.05, now + 0.02);
-    pianoGain.gain.exponentialRampToValueAtTime(0.0001, now + (type === "bell" ? 1.8 : type === "ending" ? 2.1 : type === "thread" ? 1.3 : 0.82));
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.linearRampToValueAtTime(type === "bell" ? 0.11 : type === "ending" ? 0.12 : type === "thread" ? 0.08 : type === "phone" ? 0.05 : 0.07, now + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + (type === "bell" ? 1.4 : type === "ending" ? 1.8 : type === "thread" ? 0.92 : type === "phone" ? 0.56 : 0.48));
-    piano.connect(pianoGain);
-    pianoGain.connect(masterGain);
-    osc.connect(gain);
-    gain.connect(masterGain);
-    piano.start(now);
-    osc.start(now);
-    piano.stop(now + (type === "bell" ? 1.9 : type === "ending" ? 2.2 : type === "thread" ? 1.4 : 0.96));
-    osc.stop(now + (type === "bell" ? 1.5 : type === "ending" ? 1.9 : type === "thread" ? 1.02 : 0.66));
-
-    if (type === "phone") {
-      const repeat = ctx.createOscillator();
-      const repeatGain = ctx.createGain();
-      repeat.type = "square";
-      repeat.frequency.setValueAtTime(880, now + 0.18);
-      repeat.frequency.exponentialRampToValueAtTime(659.25, now + 0.48);
-      repeatGain.gain.setValueAtTime(0.0001, now + 0.16);
-      repeatGain.gain.linearRampToValueAtTime(0.04, now + 0.2);
-      repeatGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.58);
-      repeat.connect(repeatGain);
-      repeatGain.connect(masterGain);
-      repeat.start(now + 0.16);
-      repeat.stop(now + 0.62);
-    }
-  }
-
-  function playStep() {
-    if (!state.audioEnabled || !ensure()) {
-      return;
-    }
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    const filter = ctx.createBiquadFilter();
-    filter.type = "lowpass";
-    filter.frequency.value = 280;
-    osc.type = "square";
-    osc.frequency.value = 84;
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.linearRampToValueAtTime(0.018, now + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
-    osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(masterGain);
-    osc.start(now);
-    osc.stop(now + 0.16);
-  }
-
-  function updatePadFrequencies(phase) {
-    if (!ensure()) {
-      return;
-    }
-    const chord = phaseChords[phase] || phaseChords.front_call;
-    padNodes.forEach((node, index) => {
-      node.osc.frequency.linearRampToValueAtTime(chord[index] || chord[chord.length - 1], ctx.currentTime + 0.5);
-    });
-  }
-
-  function update(dt) {
-    if (!ctx || !state.audioEnabled) {
-      return;
-    }
-    const now = ctx.currentTime;
-    const moving = Math.hypot(state.player.velocity.x, state.player.velocity.z) > scale(24);
-    const targetWind = state.mode === "intro" ? 0.08 : isMobileLandscape() ? 0.046 : 0.036;
-    const targetMusic =
-      state.mode === "intro"
-        ? 0.068
-        : state.ending === "perfect"
-          ? 0.072
-          : state.phase === "eye_contact"
-            ? 0.058
-            : 0.042;
-    windGain.gain.cancelScheduledValues(now);
-    windGain.gain.linearRampToValueAtTime(targetWind, now + 0.24);
-    musicGain.gain.cancelScheduledValues(now);
-    musicGain.gain.linearRampToValueAtTime(targetMusic, now + 0.34);
-
-    if (state.mode === "intro" && introBeatIndex !== state.introBeatIndex) {
-      introBeatIndex = state.introBeatIndex;
-      playCue(introBeatIndex === 1 ? "thread" : introBeatIndex === 3 ? "bell" : introBeatIndex === 4 ? "phone" : "spark");
-    }
-    if (state.mode === "play" && currentPhase !== state.phase) {
-      currentPhase = state.phase;
-      updatePadFrequencies(currentPhase);
-      playCue(currentPhase === "eye_contact" ? "ending" : currentPhase === "rear_wait" ? "thread" : "spark");
-    }
-    if (state.mode === "play" && moving) {
-      stepClock -= dt;
-      if (stepClock <= 0) {
-        playStep();
-        stepClock = state.phase === "eye_contact" ? 0.52 : 0.38;
-      }
-    } else {
-      stepClock = 0;
+    if (!document.hidden && audio.paused && !autoplayBlocked) {
+      void tryPlay("resume");
     }
   }
 
@@ -660,17 +535,23 @@ function createAudioSystem() {
     state.audioEnabled = enabled;
     persistAudioSetting();
     syncAudioUI();
-    if (enabled) {
-      unlock();
+    if (!enabled) {
+      autoplayBlocked = false;
+      ensureAudio().pause();
+      syncMusicPrompt();
+      logDebug("music", "disabled");
+      return;
     }
-    setMaster(enabled);
+    void tryPlay("toggle");
   }
 
   return {
     unlock,
     update,
     setEnabled,
-    playCue,
+    playCue() {},
+    tryPlay,
+    syncPrompt: syncMusicPrompt,
   };
 }
 
@@ -757,6 +638,7 @@ function persistAudioSetting() {
 function syncAudioUI() {
   dom.audioToggle.setAttribute("aria-pressed", String(state.audioEnabled));
   dom.audioToggleValue.textContent = state.audioEnabled ? "開啟" : "關閉";
+  audioSystem.syncPrompt();
 }
 
 function rectSnapshot(node) {
@@ -809,14 +691,15 @@ function updatePointerHint() {
 
 function syncDockState() {
   const mobileLandscape = isMobileLandscape();
-  const expanded = !mobileLandscape || state.mobileDockExpanded;
+  const showSceneHint = !mobileLandscape;
+  const expanded = showSceneHint && state.mobileDockExpanded;
   dom.bottomDock.classList.toggle("ambience-expanded", expanded);
   dom.bottomDock.classList.toggle("mobile-landscape", mobileLandscape);
   dom.bottomDock.classList.toggle("compact-subtitle", state.subtitleMode !== "full");
-  dom.ambienceChip.hidden = !mobileLandscape;
-  dom.ambienceBox.hidden = !expanded;
-  dom.ambienceChip.setAttribute("aria-expanded", String(expanded));
-  dom.ambienceChipCopy.textContent = expanded ? "點一下收起" : condensedCopy(state.ambience.text);
+  dom.ambienceChip.hidden = true;
+  dom.ambienceBox.hidden = !showSceneHint;
+  dom.ambienceChip.setAttribute("aria-expanded", "false");
+  dom.ambienceChipCopy.textContent = condensedCopy(state.ambience.text);
 }
 
 function setHudCollapsed(collapsed) {
@@ -831,13 +714,14 @@ function syncObjectiveChip() {
 }
 
 function expandObjectiveTemporarily(duration = OBJECTIVE_AUTO_COMPACT_MS) {
+  const actualDuration = isMobileLandscape() ? Math.min(duration, 1200) : duration;
   state.hudMode = "expanded";
   syncObjectiveChip();
   window.clearTimeout(objectiveCompactTimer);
   objectiveCompactTimer = window.setTimeout(() => {
     state.hudMode = "chip";
     syncObjectiveChip();
-  }, duration);
+  }, actualDuration);
 }
 
 function toggleObjectivePrompt() {
@@ -855,9 +739,9 @@ function updateObjective(expand = false) {
 
   let copy = phase.copy;
   if (state.phase === "front_call") {
-    copy = "先靠近 LM402 前門外的學長，把那句「妳在哪裡？」真正聽見，也把門牌、門洞和矮牆外那片日光一起收進來。";
+    copy = "先靠近剛從樓梯走到 LM402 前門外的學長，把那句「妳在哪裡？」真正聽見，也把門牌、門洞和矮牆外那片十一點日光一起收進來。";
   } else if (state.phase === "rear_wait") {
-    copy = "進教室、站到左邊後門旁，把學長會走過來的那段走廊、那道光和一點空白先留出來。";
+    copy = "進教室、站到另一端的後門旁，把學長會走過來的那段走廊、那道光和一點空白先留出來。";
   } else if (state.phase === "eye_contact") {
     copy = "留在後門視線點。別多跨一步，也別讓視線早一步撞到她；等十一點那一道光把她整個照亮。";
   }
@@ -1211,7 +1095,7 @@ function finishIntro() {
       isGhostObserver: true,
     };
     setSubtitle("女兒", "前門來電，要先從那句「妳在哪裡？」開始。", 3.8);
-    setAmbience("十一點的風沿著四樓矮牆往後門吹，外面的樹影和右手邊的窗光一起慢慢亮起來。");
+    setAmbience("十一點的風沿著四樓矮牆和六間教室長度的走廊往後門吹，外面的樹影、前門門洞和教室兩側的陽光一起慢慢亮起來。");
   }
 
   syncDockState();
@@ -1233,9 +1117,8 @@ function startEnding(type, options = {}) {
   if (type === "perfect") {
     state.phase = "eye_contact";
     state.phaseClock = 0;
-    audioSystem.playCue("ending");
-    setSubtitle("旁白", "這一次,依然再次遇見妳.", 5.4);
-    setAmbience("風停在四樓後門那一側，只剩陽光、呼吸、腳步和她眼睛裡那一格慢慢亮起來的光。");
+    setSubtitle("學長", "這一次,依然再次遇見妳.", 5.4);
+    setAmbience("四樓後門那一側忽然靜下來，只剩陽光慢慢落在她的白襯衫、頭髮和眼睛上。");
   } else {
     setSubtitle("女兒", type === "missed" ? "紅線先回彈了。" : "他出現在光裡。", 4.4);
   }
@@ -1300,7 +1183,7 @@ function resetScene() {
   updateObjective(true);
   updateMemoryList();
   setSubtitle("女兒", "先讓前門那句電話響起來。", 3.6);
-  setAmbience("粉筆味像一層薄雲，四樓外廊有風，十一點的光正沿著矮牆和窗帶一起往裡推。");
+  setAmbience("粉筆味像一層薄雲，四樓長走廊有風，十一點的光正沿著矮牆、前門門洞和教室兩側一起往裡推。");
   syncDockState();
   updatePointerHint();
   logDebug("scene", "reset");
@@ -1335,7 +1218,7 @@ function updateMovement(dt) {
   const forwardZ = -Math.cos(state.player.yaw);
   const rightX = Math.cos(state.player.yaw);
   const rightZ = -Math.sin(state.player.yaw);
-  const speed = state.phase === "eye_contact" ? scale(168) : scale(236);
+  const speed = state.phase === "eye_contact" ? scale(182) : scale(278);
 
   const targetVX = (forwardX * moveY + rightX * moveX) * speed;
   const targetVZ = (forwardZ * moveY + rightZ * moveX) * speed;
@@ -1368,52 +1251,55 @@ function setCharacterPose(name, x, z, rotationY, alpha = 1) {
 
 function updateCharacters() {
   if (state.endingSequence?.type === "perfect") {
-    const t = smoothstep(0.18, 3.4, state.endingSequence.time);
-    const seniorX = lerp(scale(-430), scale(-164), t);
-    const seniorZ = lerp(scale(752), scale(558), t);
-    const juniorX = lerp(scale(94), scale(20), smoothstep(0.08, 2.2, state.endingSequence.time));
-    const juniorZ = lerp(scale(602), scale(556), smoothstep(0.08, 2.2, state.endingSequence.time));
-    setCharacterPose("senior", seniorX, seniorZ, lerp(-1.2, 0.08, t));
-    setCharacterPose("junior", juniorX, juniorZ, Math.PI - 0.05);
-    setCharacterPose("fatherEcho", scale(-278), scale(578), Math.PI / 2, 0);
-    setCharacterPose("auntEcho", scale(-88), scale(564), -Math.PI / 2, 0);
+    const seniorWalkT = smoothstep(0.12, 4.2, state.endingSequence.time);
+    const juniorWalkT = smoothstep(0.32, 3.2, state.endingSequence.time);
+    const seniorX = lerp(scale(-404), scale(-392), seniorWalkT);
+    const seniorZ = lerp(scale(770), scale(548), seniorWalkT);
+    const juniorX = lerp(scale(286), scale(46), juniorWalkT);
+    const juniorZ = lerp(scale(622), scale(548), juniorWalkT);
+    const seniorFacing = movementRotation(juniorX - seniorX, juniorZ - seniorZ, 0);
+    const juniorFacing = movementRotation(seniorX - juniorX, seniorZ - juniorZ, -Math.PI / 2);
+    setCharacterPose("senior", seniorX, seniorZ, seniorFacing);
+    setCharacterPose("junior", juniorX, juniorZ, juniorFacing);
+    setCharacterPose("fatherEcho", scale(-272), scale(540), Math.PI / 2, 0);
+    setCharacterPose("auntEcho", scale(-116), scale(560), -Math.PI / 2, 0);
     return;
   }
 
   if (state.phase === "front_call") {
-    setCharacterPose("senior", scale(-430), scale(752), -1.18);
-    setCharacterPose("junior", scale(206), scale(630), 0.14);
-    setCharacterPose("fatherEcho", scale(-278), scale(578), Math.PI / 2, 0);
-    setCharacterPose("auntEcho", scale(-88), scale(564), -Math.PI / 2, 0);
+    setCharacterPose("senior", scale(-404), scale(774), -1.08);
+    setCharacterPose("junior", scale(286), scale(622), 0.06);
+    setCharacterPose("fatherEcho", scale(-272), scale(540), Math.PI / 2, 0);
+    setCharacterPose("auntEcho", scale(-116), scale(560), -Math.PI / 2, 0);
     return;
   }
 
   if (state.phase === "rear_wait") {
     const seniorT = smoothstep(0.1, 4.0, state.phaseClock);
     const juniorT = smoothstep(0.6, 3.5, state.phaseClock);
-    const seniorX = lerp(scale(-430), scale(-228), seniorT * 0.58);
-    const seniorZ = lerp(scale(752), scale(586), seniorT);
-    const juniorX = lerp(scale(206), scale(84), juniorT);
-    const juniorZ = lerp(scale(630), scale(586), juniorT);
-    setCharacterPose("senior", seniorX, seniorZ, lerp(-1.18, -0.18, seniorT));
-    setCharacterPose("junior", juniorX, juniorZ, movementRotation(scale(-122), scale(-44), 0.08));
-    setCharacterPose("fatherEcho", scale(-278), scale(578), Math.PI / 2, 0);
-    setCharacterPose("auntEcho", scale(-88), scale(564), -Math.PI / 2, 0);
+    const seniorX = lerp(scale(-404), scale(-392), seniorT * 0.76);
+    const seniorZ = lerp(scale(772), scale(550), seniorT);
+    const juniorX = lerp(scale(286), scale(58), juniorT);
+    const juniorZ = lerp(scale(622), scale(550), juniorT);
+    setCharacterPose("senior", seniorX, seniorZ, movementRotation(juniorX - seniorX, juniorZ - seniorZ, -0.12));
+    setCharacterPose("junior", juniorX, juniorZ, movementRotation(seniorX - juniorX, seniorZ - juniorZ, -Math.PI / 2));
+    setCharacterPose("fatherEcho", scale(-272), scale(540), Math.PI / 2, 0);
+    setCharacterPose("auntEcho", scale(-116), scale(560), -Math.PI / 2, 0);
     return;
   }
 
   const seniorT = smoothstep(0.6, 3.2, state.phaseClock);
   const juniorT = smoothstep(0.2, 2.8, state.phaseClock);
-  const seniorX = lerp(scale(-228), scale(-164), seniorT * 0.62);
-  const seniorZ = lerp(scale(586), scale(558), seniorT);
-  const juniorX = lerp(scale(84), scale(18), juniorT);
-  const juniorZ = lerp(scale(586), scale(556), juniorT);
+  const seniorX = lerp(scale(-392), scale(-392), seniorT * 0.8);
+  const seniorZ = lerp(scale(550), scale(548), seniorT);
+  const juniorX = lerp(scale(58), scale(46), juniorT);
+  const juniorZ = lerp(scale(550), scale(548), juniorT);
   const echoAlpha = smoothstep(1.9, 3.1, state.phaseClock) * (1 - smoothstep(4.1, 5.0, state.phaseClock));
 
-  setCharacterPose("senior", seniorX, seniorZ, 0.1);
-  setCharacterPose("junior", juniorX, juniorZ, Math.PI - 0.05);
-  setCharacterPose("fatherEcho", scale(-278), scale(578), Math.PI / 2, echoAlpha * 0.6);
-  setCharacterPose("auntEcho", scale(-88), scale(564), -Math.PI / 2, echoAlpha * 0.74);
+  setCharacterPose("senior", seniorX, seniorZ, movementRotation(juniorX - seniorX, juniorZ - seniorZ, 0));
+  setCharacterPose("junior", juniorX, juniorZ, movementRotation(seniorX - juniorX, seniorZ - juniorZ, -Math.PI / 2));
+  setCharacterPose("fatherEcho", scale(-272), scale(540), Math.PI / 2, echoAlpha * 0.6);
+  setCharacterPose("auntEcho", scale(-116), scale(560), -Math.PI / 2, echoAlpha * 0.74);
 }
 
 function updatePhaseLogic(dt) {
@@ -1846,13 +1732,12 @@ function bindUI() {
   dom.audioToggle.addEventListener("click", () => {
     audioSystem.setEnabled(!state.audioEnabled);
   });
+  dom.musicPromptButton.addEventListener("click", () => {
+    audioSystem.unlock();
+  });
   dom.perfectEndingBtn.addEventListener("click", startPerfectEnding);
   dom.perfectEndingSideBtn.addEventListener("click", startPerfectEnding);
   dom.objectivePrompt.addEventListener("click", toggleObjectivePrompt);
-  dom.ambienceChip.addEventListener("click", () => {
-    state.mobileDockExpanded = !state.mobileDockExpanded;
-    syncDockState();
-  });
   dom.interactBtn.addEventListener("click", openActiveInteraction);
   dom.inspectBtn.addEventListener("click", () => {
     if (state.activeHotspot) {
@@ -1947,4 +1832,5 @@ syncDockState();
 syncObjectiveChip();
 updatePointerHint();
 updateActionButtons();
+void audioSystem.tryPlay("startup");
 requestAnimationFrame(tick);
