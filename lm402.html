@@ -72,11 +72,17 @@
       </section>
 
       <section id="audio-widget" class="audio-widget">
-        <button id="audio-toggle" class="audio-toggle" type="button" aria-pressed="false">
-          <span class="audio-toggle-label">聲音氛圍</span>
-          <span id="audio-toggle-value" class="audio-toggle-value">關閉</span>
+        <button id="audio-toggle" class="audio-toggle" type="button" aria-pressed="true">
+          <span class="audio-toggle-label">背景音樂</span>
+          <span id="audio-toggle-value" class="audio-toggle-value">開啟</span>
         </button>
       </section>
+
+      <div id="music-prompt" class="music-prompt" hidden>
+        <div class="music-prompt-kicker">02song.mp3</div>
+        <div class="music-prompt-copy">瀏覽器先把音樂擋住了。點一下，讓這一層樓重新有聲音。</div>
+        <button id="music-prompt-button" class="music-prompt-button" type="button">開啟音樂</button>
+      </div>
 
       <div id="objective-prompt" class="objective-prompt" aria-live="polite">
         <div class="objective-kicker" id="objective-kicker">目前任務</div>
@@ -90,11 +96,11 @@
 
       <div id="bottom-dock" class="bottom-dock">
         <button id="ambience-chip" class="ambience-chip" type="button" aria-expanded="false" hidden>
-          <span class="dock-kicker">現場聲音</span>
+          <span class="dock-kicker">場景提示</span>
           <span id="ambience-chip-copy" class="ambience-chip-copy">點一下展開</span>
         </button>
         <div id="ambience-box" class="dock-box ambience-box">
-          <div class="dock-kicker">現場聲音</div>
+          <div class="dock-kicker">場景提示</div>
           <div id="ambience-text" class="dock-copy">粉筆味像一層薄雲，十一點的光正慢慢沿著百葉窗往教室裡推。</div>
         </div>
         <div id="subtitle-box" class="dock-box subtitle-box subtitle-rail">

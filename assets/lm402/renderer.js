@@ -1,5 +1,5 @@
 import * as THREE from "./vendor-three.module.js";
-import { WORLD } from "./data.js";
+import { WORLD, CINEMATIC_TIMELINE } from "./data.js";
 
 export const WORLD_SCALE = 1 / 80;
 
@@ -260,6 +260,13 @@ function createPerson(spec) {
   nose.rotation.x = Math.PI * 0.5;
   group.add(nose);
 
+  const noseBridge = new THREE.Mesh(
+    new THREE.BoxGeometry(0.022, 0.08, 0.012),
+    new THREE.MeshStandardMaterial({ color: "#fff8f2", roughness: 0.34, metalness: 0.01, transparent: true, opacity: 0.2 })
+  );
+  noseBridge.position.set(0, 1.57, 0.135);
+  group.add(noseBridge);
+
   const lip = new THREE.Mesh(
     new THREE.TorusGeometry(0.045, 0.009, 8, 18, Math.PI),
     new THREE.MeshStandardMaterial({ color: spec.female ? "#cc7282" : "#ae7670", roughness: 0.5, metalness: 0.03 })
@@ -288,7 +295,7 @@ function createPerson(spec) {
   group.add(lidL, lidR);
 
   const eyeWhiteMat = new THREE.MeshStandardMaterial({ color: "#fcfcfd", roughness: 0.36, metalness: 0.02 });
-  const irisMat = new THREE.MeshStandardMaterial({ color: spec.female ? "#3a261f" : "#2b1c18", roughness: 0.48, metalness: 0.02 });
+  const irisMat = new THREE.MeshStandardMaterial({ color: spec.iris ?? (spec.female ? "#3a261f" : "#2b1c18"), roughness: 0.48, metalness: 0.02 });
   const eyeWhiteL = new THREE.Mesh(new THREE.SphereGeometry(0.022, 12, 12), eyeWhiteMat);
   eyeWhiteL.position.set(-0.062, 1.56, 0.15);
   eyeWhiteL.scale.set(1.35, 0.9, 0.5);
@@ -300,6 +307,17 @@ function createPerson(spec) {
   irisR.position.x = 0.062;
   group.add(eyeWhiteL, eyeWhiteR, irisL, irisR);
 
+  if (spec.female) {
+    const lashMat = new THREE.MeshStandardMaterial({ color: "#241618", roughness: 0.52, metalness: 0.02 });
+    const lashL = new THREE.Mesh(new THREE.BoxGeometry(0.058, 0.01, 0.014), lashMat);
+    lashL.position.set(-0.062, 1.585, 0.168);
+    lashL.rotation.z = -0.06;
+    const lashR = lashL.clone();
+    lashR.position.x = 0.062;
+    lashR.rotation.z = 0.06;
+    group.add(lashL, lashR);
+  }
+
   const cheekGeo = new THREE.SphereGeometry(0.028, 12, 12);
   const cheekL = new THREE.Mesh(cheekGeo, blushMat);
   cheekL.position.set(-0.094, 1.48, 0.142);
@@ -307,6 +325,13 @@ function createPerson(spec) {
   const cheekR = cheekL.clone();
   cheekR.position.x = 0.094;
   group.add(cheekL, cheekR);
+
+  const eyeSparkleMat = new THREE.MeshStandardMaterial({ color: "#ffffff", emissive: "#ffffff", emissiveIntensity: 0.12, roughness: 0.2, metalness: 0.02 });
+  const eyeSparkleL = new THREE.Mesh(new THREE.SphereGeometry(0.004, 8, 8), eyeSparkleMat);
+  eyeSparkleL.position.set(-0.055, 1.568, 0.176);
+  const eyeSparkleR = eyeSparkleL.clone();
+  eyeSparkleR.position.x = 0.069;
+  group.add(eyeSparkleL, eyeSparkleR);
 
   const hairCap = new THREE.Mesh(
     new THREE.SphereGeometry(spec.female ? 0.194 : 0.188, 28, 28, 0, Math.PI * 2, 0, Math.PI * 0.72),
@@ -344,10 +369,17 @@ function createPerson(spec) {
   face.scale.setScalar(0.94);
   group.add(face);
 
+  const browShadow = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.18, 0.06),
+    new THREE.MeshBasicMaterial({ color: "#5a3d3c", transparent: true, opacity: 0.08, depthWrite: false })
+  );
+  browShadow.position.set(0, 1.59, 0.17);
+  group.add(browShadow);
+
   if (spec.female) {
     const backStrand = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.64, 0.08), hairMat);
     backStrand.position.set(0, 1.22, -0.11);
-    backStrand.scale.z = 0.68;
+    backStrand.scale.set(1, 1.06, 0.82);
     group.add(backStrand);
 
     const wispL = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.26, 0.028), hairMat);
@@ -357,6 +389,14 @@ function createPerson(spec) {
     wispR.position.x = 0.112;
     wispR.rotation.z = 0.12;
     group.add(wispL, wispR);
+
+    const midStrandL = new THREE.Mesh(new THREE.BoxGeometry(0.034, 0.34, 0.032), hairMat);
+    midStrandL.position.set(-0.152, 1.36, 0.02);
+    midStrandL.rotation.z = -0.08;
+    const midStrandR = midStrandL.clone();
+    midStrandR.position.x = 0.152;
+    midStrandR.rotation.z = 0.08;
+    group.add(midStrandL, midStrandR);
 
     const collar = new THREE.Mesh(
       new THREE.TorusGeometry(0.1, 0.018, 8, 20, Math.PI),
@@ -378,6 +418,13 @@ function createPerson(spec) {
     blouseHem.position.set(0, 0.84, 0.02);
     blouseHem.rotation.x = Math.PI / 2;
     group.add(blouseHem);
+
+    const blouseFold = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.12, 0.34),
+      new THREE.MeshStandardMaterial({ color: "#efe7dc", roughness: 0.74, metalness: 0.01, transparent: true, opacity: 0.24 })
+    );
+    blouseFold.position.set(0, 1.02, 0.2);
+    group.add(blouseFold);
   }
 
   if (!spec.female) {
@@ -387,6 +434,14 @@ function createPerson(spec) {
     );
     shirtPanel.position.set(0, 1.08, 0.19);
     group.add(shirtPanel);
+
+    const shirtCollar = new THREE.Mesh(
+      new THREE.TorusGeometry(0.092, 0.014, 8, 20, Math.PI),
+      new THREE.MeshStandardMaterial({ color: "#dbe4ee", roughness: 0.66, metalness: 0.02 })
+    );
+    shirtCollar.position.set(0, 1.2, 0.08);
+    shirtCollar.rotation.x = Math.PI * 0.54;
+    group.add(shirtCollar);
   }
 
   if (spec.phone) {
@@ -439,6 +494,13 @@ function createTree({ scale: treeScale = 1 }) {
   trunk.position.y = 1.09 * treeScale;
   group.add(trunk);
 
+  const trunkHighlight = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.056 * treeScale, 0.074 * treeScale, 1.76 * treeScale, 10),
+    new THREE.MeshStandardMaterial({ color: "#8b6445", roughness: 0.84, metalness: 0.02, transparent: true, opacity: 0.36 })
+  );
+  trunkHighlight.position.set(-0.02 * treeScale, 1.18 * treeScale, 0.09 * treeScale);
+  group.add(trunkHighlight);
+
   const leafMat = new THREE.MeshStandardMaterial({ color: "#567a48", roughness: 0.94, metalness: 0.01 });
   [
     [0, 2.84, 0, 1.04, 1.2, 0.92],
@@ -447,6 +509,8 @@ function createTree({ scale: treeScale = 1 }) {
     [0.06, 3.28, -0.16, 0.82, 0.84, 0.72],
     [-0.26, 3.02, -0.26, 0.7, 0.72, 0.62],
     [0.24, 2.94, 0.32, 0.68, 0.7, 0.6],
+    [-0.52, 2.82, -0.22, 0.78, 0.82, 0.68],
+    [0.58, 2.86, 0.18, 0.74, 0.8, 0.66],
   ].forEach(([x, y, z, sx, sy, sz]) => {
     const cluster = new THREE.Mesh(new THREE.SphereGeometry(0.52 * treeScale, 20, 20), leafMat);
     cluster.position.set(x * treeScale, y * treeScale, z * treeScale);
@@ -621,6 +685,27 @@ function buildTextPlane(text, width = 0.82, height = 0.26, { bg = "#44505f", fg 
   return new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
 }
 
+function buildWallLabel(text, width = 0.92, height = 0.26) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 160;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, 512, 160);
+  ctx.fillStyle = "rgba(255,255,255,.92)";
+  ctx.font = "600 84px DM Mono";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, 256, 80);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    depthWrite: false,
+  });
+  return new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
+}
+
 function addCollider(colliders, minX, maxX, minZ, maxZ, label) {
   colliders.push({ minX, maxX, minZ, maxZ, label });
 }
@@ -677,9 +762,9 @@ function buildIntroCurve() {
 export function createLm402Scene(canvas) {
   const coarse = window.matchMedia("(pointer: coarse)").matches;
   const quality = {
-    shadowMapSize: coarse ? 512 : 640,
-    maxPixelRatio: coarse ? 1 : 0.92,
-    dustCount: coarse ? 42 : 52,
+    shadowMapSize: coarse ? 448 : 576,
+    maxPixelRatio: coarse ? 0.96 : 0.88,
+    dustCount: coarse ? 38 : 46,
   };
   const renderer = new THREE.WebGLRenderer({
     canvas,
@@ -737,16 +822,21 @@ export function createLm402Scene(canvas) {
   const corridorHeight = 2.92;
   const wallThickness = 0.12;
   const parapetHeight = scaled(WORLD.corridor.parapetHeight);
-  const boardX = scaled(WORLD.board.x);
-  const boardZ1 = scaled(WORLD.board.z1);
-  const boardZ2 = scaled(WORLD.board.z2);
+  const boardZ = scaled(WORLD.board.z);
+  const boardX1 = scaled(WORLD.board.x1);
+  const boardX2 = scaled(WORLD.board.x2);
+  const boardCenterX = (boardX1 + boardX2) / 2;
   const frontDoorZ1 = scaled(WORLD.frontDoor.z1);
   const frontDoorZ2 = scaled(WORLD.frontDoor.z2);
   const backDoorZ1 = scaled(WORLD.backDoor.z1);
   const backDoorZ2 = scaled(WORLD.backDoor.z2);
-  const lm402Room = WORLD.floorRooms.find((room) => room.interactive) ?? WORLD.floorRooms[1];
+  const lm402Room = WORLD.floorRooms.find((room) => room.interactive) ?? WORLD.floorRooms[0];
   const lm402Z1 = scaled(lm402Room.z1);
   const lm402Z2 = scaled(lm402Room.z2);
+  const frontStairZ1 = scaled(WORLD.stairs.front.z1);
+  const frontStairZ2 = scaled(WORLD.stairs.front.z2);
+  const backStairZ1 = scaled(WORLD.stairs.back.z1);
+  const backStairZ2 = scaled(WORLD.stairs.back.z2);
 
   const worldPointScaled = (x, y, z) => new THREE.Vector3(scaled(x), scaled(y), scaled(z));
   const roomCenter = (room) => scaled((room.z1 + room.z2) / 2);
@@ -769,17 +859,21 @@ export function createLm402Scene(canvas) {
   sun.shadow.camera.bottom = -16;
   scene.add(sun);
 
-  const corridorFill = new THREE.PointLight(0xaec3dd, 0.76, 36, 2);
-  corridorFill.position.set(corridorMinX + 2.1, 2.7, scaled(742));
+  const corridorFill = new THREE.PointLight(0xbad0e2, 0.82, 34, 2);
+  corridorFill.position.set(corridorMinX + 2.2, 2.72, scaled(WORLD.frontDoor.center.z - 20));
   scene.add(corridorFill);
 
-  const corridorSun = new THREE.PointLight(0xffe9bf, 0.78, 28, 2);
-  corridorSun.position.set(minX - 0.6, 3.4, scaled(756));
+  const corridorSun = new THREE.PointLight(0xffe6b0, 0.9, 32, 2);
+  corridorSun.position.set(minX - 0.7, 3.5, scaled(WORLD.frontDoor.center.z));
   scene.add(corridorSun);
 
-  const classroomAccent = new THREE.PointLight(0xffd7ae, 0.64, 20, 2);
-  classroomAccent.position.set(classroomMaxX - 1.8, 2.24, scaled(618));
+  const classroomAccent = new THREE.PointLight(0xffd5a2, 0.82, 22, 2);
+  classroomAccent.position.set(classroomMaxX - 1.84, 2.3, scaled(WORLD.classroom.lightWellZ));
   scene.add(classroomAccent);
+
+  const backdoorAccent = new THREE.PointLight(0xffefcf, 0.72, 18, 2);
+  backdoorAccent.position.set(classroomMinX + 1.12, 2.04, scaled(WORLD.backDoor.center.z));
+  scene.add(backdoorAccent);
 
   const classroomFloorTex = makeWoodTexture({ base: "#856549", dark: "#5c422d", highlight: "#b18a63" });
   const corridorFloorTex = makeTileTexture({ base: "#bcc5d0", line: "rgba(244,246,249,.76)", speck: "rgba(124,136,148," });
@@ -961,242 +1055,293 @@ export function createLm402Scene(canvas) {
   parapetShadow.rotation.x = -Math.PI / 2;
   worldGroup.add(parapetShadow);
 
-  const roomDoors = [];
+  const stairWoodMat = new THREE.MeshStandardMaterial({ color: "#b08d67", map: woodTex, roughness: 0.82, metalness: 0.03 });
+  const stairRailMat = new THREE.MeshStandardMaterial({ color: "#f1ece3", map: wallTex, roughness: 0.84, metalness: 0.02 });
+  const stairZones = [
+    { id: "back_stair", z1: backStairZ1, z2: backStairZ2, direction: -1 },
+    { id: "front_stair", z1: frontStairZ1, z2: frontStairZ2, direction: 1 },
+  ];
+  stairZones.forEach((zone) => {
+    const zoneCenter = (zone.z1 + zone.z2) / 2;
+    const landing = new THREE.Mesh(new THREE.BoxGeometry(corridorWidth - 0.28, 0.08, zone.z2 - zone.z1), corridorFloorMat);
+    landing.position.set(corridorCenterX, FLOOR_Y - 0.035, zoneCenter);
+    landing.receiveShadow = true;
+    worldGroup.add(landing);
 
-  function addRoomDoor(room, index) {
-    const z1 = scaled(room.z1);
-    const z2 = scaled(room.z2);
-    const centerZ = (z1 + z2) / 2;
-    const roomLength = z2 - z1;
-
-    addBox(
-      worldGroup,
-      occluders,
-      new THREE.BoxGeometry(roomDepth, corridorHeight, wallThickness),
-      wallMat,
-      new THREE.Vector3((classroomMinX + classroomMaxX) / 2, corridorHeight / 2, z1),
-      null,
-      colliders,
-      { minX: classroomMinX, maxX: classroomMaxX, minZ: z1 - wallThickness / 2, maxZ: z1 + wallThickness / 2, label: `${room.id}_front_wall` }
-    );
-    addBox(
-      worldGroup,
-      occluders,
-      new THREE.BoxGeometry(roomDepth, corridorHeight, wallThickness),
-      wallMat,
-      new THREE.Vector3((classroomMinX + classroomMaxX) / 2, corridorHeight / 2, z2),
-      null,
-      colliders,
-      { minX: classroomMinX, maxX: classroomMaxX, minZ: z2 - wallThickness / 2, maxZ: z2 + wallThickness / 2, label: `${room.id}_back_wall` }
-    );
-
-    const exteriorWindow = new THREE.Mesh(
-      new THREE.PlaneGeometry(roomLength * 0.84, 1.18),
-      glassMat
-    );
-    exteriorWindow.position.set(maxX - 0.04, 1.5, centerZ);
-    exteriorWindow.rotation.y = -Math.PI / 2;
-    worldGroup.add(exteriorWindow);
-    const exteriorSill = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.08, roomLength * 0.84 + 0.12), stoneMat);
-    exteriorSill.position.set(maxX - 0.1, 0.82, centerZ);
-    worldGroup.add(exteriorSill);
-
-    if (!room.interactive) {
-      addBox(
-        worldGroup,
-        occluders,
-        new THREE.BoxGeometry(wallThickness, corridorHeight, roomLength),
-        corridorWallMat,
-        new THREE.Vector3(classroomMinX, corridorHeight / 2, centerZ),
-        null,
-        colliders,
-        { minX: classroomMinX - wallThickness / 2, maxX: classroomMinX + wallThickness / 2, minZ: z1, maxZ: z2, label: `${room.id}_divider` }
+    const stairCount = 7;
+    for (let index = 0; index < stairCount; index += 1) {
+      const t = index / stairCount;
+      const treadZ =
+        zone.direction > 0
+          ? THREE.MathUtils.lerp(zone.z1 + 0.12, zone.z2 - 0.18, t)
+          : THREE.MathUtils.lerp(zone.z2 - 0.12, zone.z1 + 0.18, t);
+      const step = new THREE.Mesh(
+        new THREE.BoxGeometry(corridorWidth * 0.74, 0.09, 0.18),
+        stairWoodMat
       );
-      const doorLeaf = new THREE.Mesh(
-        new THREE.BoxGeometry(0.04, 2.06, 0.78),
-        new THREE.MeshStandardMaterial({ color: "#d7d1c8", map: wallTex, roughness: 0.86, metalness: 0.02 })
-      );
-      doorLeaf.position.set(classroomMinX + 0.04, 1.03, centerZ);
-      worldGroup.add(doorLeaf);
-      addCollider(colliders, classroomMinX - 0.04, classroomMinX + 0.12, centerZ - 0.42, centerZ + 0.42, `${room.id}_door`);
+      step.position.set(corridorCenterX - 0.08, FLOOR_Y - 0.08 - index * 0.064, treadZ);
+      step.receiveShadow = true;
+      step.castShadow = false;
+      worldGroup.add(step);
+    }
 
-      const plaque = buildTextPlane(room.label, 0.78, 0.22, { bg: "#53606d", fg: "#f7eed2" });
-      plaque.position.set(classroomMinX - 0.18, 1.94, centerZ);
-      plaque.rotation.y = Math.PI / 2;
-      worldGroup.add(plaque);
-      roomDoors.push({ id: room.id, centerZ, center: new THREE.Vector3(classroomMinX - 0.02, 1.12, centerZ) });
+    const stairRail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.96, zone.z2 - zone.z1 - 0.22), stairRailMat);
+    stairRail.position.set(corridorMinX + 1.18, 0.44, zoneCenter);
+    worldGroup.add(stairRail);
+
+    const stairWall = new THREE.Mesh(new THREE.BoxGeometry(0.22, corridorHeight, zone.z2 - zone.z1), corridorWallMat);
+    stairWall.position.set(classroomMinX, corridorHeight / 2, zoneCenter);
+    stairWall.castShadow = true;
+    stairWall.receiveShadow = true;
+    worldGroup.add(stairWall);
+    addCollider(colliders, classroomMinX - 0.11, classroomMinX + 0.11, zone.z1, zone.z2, `${zone.id}_wall`);
+
+    addCollider(
+      colliders,
+      corridorMinX + 0.36,
+      classroomMinX - 0.2,
+      zone.direction > 0 ? zone.z1 + 0.06 : zone.z1,
+      zone.direction > 0 ? zone.z1 + 0.22 : zone.z2 - 0.22,
+      `${zone.id}_guard`
+    );
+  });
+
+  const room = lm402Room;
+  const z1 = lm402Z1;
+  const z2 = lm402Z2;
+  const roomLength = z2 - z1;
+  const centerZ = (z1 + z2) / 2;
+  const openings = [
+    { ...WORLD.frontDoor, kind: "front", z1: frontDoorZ1, z2: frontDoorZ2 },
+    { ...WORLD.backDoor, kind: "back", z1: backDoorZ1, z2: backDoorZ2 },
+  ].sort((a, b) => a.z1 - b.z1);
+
+  addBox(
+    worldGroup,
+    occluders,
+    new THREE.BoxGeometry(roomDepth, corridorHeight, wallThickness),
+    wallMat,
+    new THREE.Vector3((classroomMinX + classroomMaxX) / 2, corridorHeight / 2, z1),
+    null,
+    colliders,
+    { minX: classroomMinX, maxX: classroomMaxX, minZ: z1 - wallThickness / 2, maxZ: z1 + wallThickness / 2, label: `${room.id}_back_wall` }
+  );
+  addBox(
+    worldGroup,
+    occluders,
+    new THREE.BoxGeometry(roomDepth, corridorHeight, wallThickness),
+    wallMat,
+    new THREE.Vector3((classroomMinX + classroomMaxX) / 2, corridorHeight / 2, z2),
+    null,
+    colliders,
+    { minX: classroomMinX, maxX: classroomMaxX, minZ: z2 - wallThickness / 2, maxZ: z2 + wallThickness / 2, label: `${room.id}_front_wall` }
+  );
+
+  addBox(
+    worldGroup,
+    occluders,
+    new THREE.BoxGeometry(wallThickness, corridorHeight, roomLength),
+    wallMat,
+    new THREE.Vector3(classroomMaxX, corridorHeight / 2, centerZ),
+    null,
+    colliders,
+    { minX: classroomMaxX - wallThickness / 2, maxX: classroomMaxX + wallThickness / 2, minZ: z1, maxZ: z2, label: "right_wall" }
+  );
+
+  const dividerSegments = [];
+  if (minZ < z1) {
+    dividerSegments.push([minZ, z1]);
+  }
+  let cursor = z1;
+  openings.forEach((opening) => {
+    if (opening.z1 > cursor) {
+      dividerSegments.push([cursor, opening.z1]);
+    }
+    cursor = Math.max(cursor, opening.z2);
+  });
+  if (cursor < z2) {
+    dividerSegments.push([cursor, z2]);
+  }
+  if (z2 < maxZ) {
+    dividerSegments.push([z2, maxZ]);
+  }
+  dividerSegments.forEach(([start, end]) => {
+    if (end <= start) {
       return;
     }
-
-    const openings = [
-      { ...WORLD.frontDoor, kind: "front", z1: frontDoorZ1, z2: frontDoorZ2 },
-      { ...WORLD.backDoor, kind: "back", z1: backDoorZ1, z2: backDoorZ2 },
-    ].sort((a, b) => a.z1 - b.z1);
-    const dividerSegments = [];
-    let cursor = z1;
-    openings.forEach((opening) => {
-      if (opening.z1 > cursor) {
-        dividerSegments.push([cursor, opening.z1]);
-      }
-      cursor = Math.max(cursor, opening.z2);
-    });
-    if (cursor < z2) {
-      dividerSegments.push([cursor, z2]);
-    }
-    dividerSegments.forEach(([start, end]) => {
-      if (end <= start) {
-        return;
-      }
-      addBox(
-        worldGroup,
-        occluders,
-        new THREE.BoxGeometry(wallThickness, corridorHeight, end - start),
-        corridorWallMat,
-        new THREE.Vector3(classroomMinX, corridorHeight / 2, start + (end - start) / 2),
-        null,
-        colliders,
-        { minX: classroomMinX - wallThickness / 2, maxX: classroomMinX + wallThickness / 2, minZ: start, maxZ: end, label: "divider_wall" }
-      );
-    });
-
-    openings.forEach((door) => {
-      const dz1 = door.z1;
-      const dz2 = door.z2;
-      const centerDoorZ = (dz1 + dz2) / 2;
-      addBox(
-        worldGroup,
-        occluders,
-        new THREE.BoxGeometry(0.22, 2.28, 0.18),
-        beamMat,
-        new THREE.Vector3(classroomMinX - 0.02, 1.14, dz1),
-        null,
-        colliders,
-        { minX: classroomMinX - 0.14, maxX: classroomMinX + 0.08, minZ: dz1 - 0.08, maxZ: dz1 + 0.08, label: "door_frame" }
-      );
-      addBox(
-        worldGroup,
-        occluders,
-        new THREE.BoxGeometry(0.22, 2.28, 0.18),
-        beamMat,
-        new THREE.Vector3(classroomMinX - 0.02, 1.14, dz2),
-        null,
-        colliders,
-        { minX: classroomMinX - 0.14, maxX: classroomMinX + 0.08, minZ: dz2 - 0.08, maxZ: dz2 + 0.08, label: "door_frame" }
-      );
-      addBox(
-        worldGroup,
-        occluders,
-        new THREE.BoxGeometry(0.22, 0.16, dz2 - dz1),
-        beamMat,
-        new THREE.Vector3(classroomMinX - 0.02, 2.28, centerDoorZ),
-        null,
-        colliders,
-        null
-      );
-      const leaf = new THREE.Mesh(
-        new THREE.BoxGeometry(0.04, 2.08, (dz2 - dz1) * 0.9),
-        new THREE.MeshStandardMaterial({ color: "#dfd8ce", map: wallTex, roughness: 0.86, metalness: 0.02 })
-      );
-      const isFrontDoor = door.kind === "front";
-      leaf.position.set(classroomMinX + 0.3, 1.04, centerDoorZ + (isFrontDoor ? 0.16 : -0.12));
-      leaf.rotation.y = isFrontDoor ? -1.02 : 0.78;
-      worldGroup.add(leaf);
-    });
-
-    const plaque = buildTextPlane("LM402", 0.88, 0.24, { bg: "#4c5966", fg: "#f7edd1" });
-    plaque.position.set(scaled(WORLD.plaque.x), scaled(WORLD.plaque.y), scaled(WORLD.plaque.z));
-    plaque.rotation.y = Math.PI / 2;
-    worldGroup.add(plaque);
-  }
-
-  WORLD.floorRooms.forEach(addRoomDoor);
-
-  WORLD.floorRooms.forEach((room, index) => {
-    const centerZ = roomCenter(room);
-    const ceilingLight = new THREE.Mesh(
-      new THREE.BoxGeometry(1.12, 0.04, 0.24),
-      new THREE.MeshStandardMaterial({ color: "#fff8ea", roughness: 0.42, metalness: 0.08, emissive: "#fff1d7", emissiveIntensity: room.interactive ? 0.18 : 0.1 })
+    addBox(
+      worldGroup,
+      occluders,
+      new THREE.BoxGeometry(wallThickness, corridorHeight, end - start),
+      corridorWallMat,
+      new THREE.Vector3(classroomMinX, corridorHeight / 2, start + (end - start) / 2),
+      null,
+      colliders,
+      { minX: classroomMinX - wallThickness / 2, maxX: classroomMinX + wallThickness / 2, minZ: start, maxZ: end, label: "divider_wall" }
     );
-    ceilingLight.position.set(corridorCenterX + 1.12, corridorHeight - 0.18, centerZ);
-    worldGroup.add(ceilingLight);
+  });
 
-    const ceilingGlow = createGlowPlane("rgba(255,241,214,1)", 1.6, 0.76, room.interactive ? 0.16 : 0.1);
-    ceilingGlow.position.set(corridorCenterX + 1.1, corridorHeight - 0.32, centerZ);
-    ceilingGlow.rotation.x = Math.PI / 2;
-    worldGroup.add(ceilingGlow);
+  openings.forEach((door) => {
+    const dz1 = door.z1;
+    const dz2 = door.z2;
+    const centerDoorZ = (dz1 + dz2) / 2;
+    addBox(
+      worldGroup,
+      occluders,
+      new THREE.BoxGeometry(0.22, 2.28, 0.18),
+      beamMat,
+      new THREE.Vector3(classroomMinX - 0.02, 1.14, dz1),
+      null,
+      colliders,
+      { minX: classroomMinX - 0.14, maxX: classroomMinX + 0.08, minZ: dz1 - 0.08, maxZ: dz1 + 0.08, label: "door_frame" }
+    );
+    addBox(
+      worldGroup,
+      occluders,
+      new THREE.BoxGeometry(0.22, 2.28, 0.18),
+      beamMat,
+      new THREE.Vector3(classroomMinX - 0.02, 1.14, dz2),
+      null,
+      colliders,
+      { minX: classroomMinX - 0.14, maxX: classroomMinX + 0.08, minZ: dz2 - 0.08, maxZ: dz2 + 0.08, label: "door_frame" }
+    );
+    addBox(
+      worldGroup,
+      occluders,
+      new THREE.BoxGeometry(0.22, 0.16, dz2 - dz1),
+      beamMat,
+      new THREE.Vector3(classroomMinX - 0.02, 2.28, centerDoorZ),
+      null,
+      colliders,
+      null
+    );
+    const leaf = new THREE.Mesh(
+      new THREE.BoxGeometry(0.04, 2.08, (dz2 - dz1) * 0.9),
+      new THREE.MeshStandardMaterial({ color: "#dfd8ce", map: wallTex, roughness: 0.84, metalness: 0.02 })
+    );
+    const isFrontDoor = door.kind === "front";
+    leaf.position.set(classroomMinX + 0.3, 1.04, centerDoorZ + (isFrontDoor ? 0.1 : -0.06));
+    leaf.rotation.y = isFrontDoor ? -1.06 : 0.94;
+    worldGroup.add(leaf);
 
-    if (index < WORLD.floorRooms.length - 1) {
-      const threshold = new THREE.Mesh(
-        new THREE.BoxGeometry(0.02, 0.012, 0.92),
-        new THREE.MeshStandardMaterial({ color: "#a3adb6", roughness: 0.74, metalness: 0.2 })
+    const handle = new THREE.Mesh(
+      new THREE.BoxGeometry(0.02, 0.08, 0.02),
+      new THREE.MeshStandardMaterial({ color: "#8f8f8c", roughness: 0.34, metalness: 0.58 })
+    );
+    handle.position.set(classroomMinX + 0.32, 1.08, centerDoorZ + (isFrontDoor ? 0.16 : -0.16));
+    worldGroup.add(handle);
+  });
+
+  const plaque = buildTextPlane("LM402", 1.04, 0.28, { bg: "#495768", fg: "#f8efd5" });
+  plaque.position.set(scaled(WORLD.plaque.x), scaled(WORLD.plaque.y), scaled(WORLD.plaque.z));
+  plaque.rotation.y = Math.PI / 2;
+  worldGroup.add(plaque);
+
+  const plaqueBacker = new THREE.Mesh(
+    new THREE.BoxGeometry(0.06, 0.46, 1.18),
+    new THREE.MeshStandardMaterial({ color: "#ded6cb", map: wallTex, roughness: 0.9, metalness: 0.01 })
+  );
+  plaqueBacker.position.set(classroomMinX + 0.01, 1.94, scaled(WORLD.plaque.z));
+  worldGroup.add(plaqueBacker);
+
+  const noticeBoard = new THREE.Mesh(
+    new THREE.BoxGeometry(0.08, 0.92, 1.12),
+    new THREE.MeshStandardMaterial({ color: "#9b744b", map: woodTex, roughness: 0.82, metalness: 0.02 })
+  );
+  noticeBoard.position.set(classroomMinX + 0.02, 1.42, scaled(690));
+  worldGroup.add(noticeBoard);
+
+  const noticeSheet = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.84, 0.62),
+    new THREE.MeshStandardMaterial({ color: "#f4efe5", roughness: 0.94, metalness: 0.01, side: THREE.DoubleSide })
+  );
+  noticeSheet.position.set(classroomMinX + 0.06, 1.42, scaled(690));
+  noticeSheet.rotation.y = Math.PI / 2;
+  worldGroup.add(noticeSheet);
+
+  WORLD.floorRooms
+    .filter((room) => !room.interactive)
+    .forEach((room, index) => {
+      const roomCenterZ = roomCenter(room);
+      const plaqueText = `4F-${String.fromCharCode(65 + index)}`;
+      const doorPanel = new THREE.Mesh(
+        new THREE.BoxGeometry(0.036, 2.12, 0.68),
+        new THREE.MeshStandardMaterial({ color: "#dfd8ce", map: wallTex, roughness: 0.84, metalness: 0.02 })
       );
-      threshold.position.set(classroomMinX + 0.02, 0.01, centerZ + scaled((WORLD.floorRooms[index + 1].z1 - room.z2) / 2));
-      worldGroup.add(threshold);
-    }
+      doorPanel.position.set(classroomMinX + 0.02, 1.06, roomCenterZ);
+      worldGroup.add(doorPanel);
+
+      const roomPlaque = buildTextPlane(plaqueText, 0.8, 0.22, { bg: "#5c6672", fg: "#f7f0de" });
+      roomPlaque.position.set(classroomMinX - 0.29, 1.92, roomCenterZ + 0.22);
+      roomPlaque.rotation.y = Math.PI / 2;
+      worldGroup.add(roomPlaque);
+    });
+
+  WORLD.wallLabels.forEach((label) => {
+    const labelNode = buildWallLabel(label.id);
+    labelNode.position.set(scaled(label.x), scaled(label.y), scaled(label.z));
+    labelNode.rotation.y = label.rotateY ?? 0;
+    worldGroup.add(labelNode);
   });
 
-  const lm402FrontWall = new THREE.Group();
-  WORLD.frontWallWindows.forEach((panel) => {
-    const centerX = scaled(panel.x);
-    const width = scaled(panel.width);
-    const y1 = scaled(panel.y1);
-    const y2 = scaled(panel.y2);
-    const height = y2 - y1;
-    const glass = new THREE.Mesh(new THREE.PlaneGeometry(width, height), glassMat);
-    glass.position.set(centerX, y1 + height / 2, lm402Z2 - 0.035);
-    glass.rotation.y = Math.PI;
-    worldGroup.add(glass);
-    const frameTop = new THREE.Mesh(new THREE.BoxGeometry(width + 0.08, 0.08, 0.08), beamMat);
-    frameTop.position.set(centerX, y2 + 0.04, lm402Z2 - 0.04);
-    const frameBottom = frameTop.clone();
-    frameBottom.position.y = y1 - 0.04;
-    const frameStart = new THREE.Mesh(new THREE.BoxGeometry(0.08, height + 0.12, 0.08), beamMat);
-    frameStart.position.set(centerX - width / 2, y1 + height / 2, lm402Z2 - 0.04);
-    const frameEnd = frameStart.clone();
-    frameEnd.position.x = centerX + width / 2;
-    lm402FrontWall.add(frameTop, frameBottom, frameStart, frameEnd);
-  });
-  worldGroup.add(lm402FrontWall);
+  const ceilingLight = new THREE.Mesh(
+    new THREE.BoxGeometry(1.48, 0.04, 0.32),
+    new THREE.MeshStandardMaterial({ color: "#fff8ea", roughness: 0.42, metalness: 0.08, emissive: "#fff1d7", emissiveIntensity: 0.2 })
+  );
+  ceilingLight.position.set(corridorCenterX + 1.5, corridorHeight - 0.18, centerZ + 0.04);
+  worldGroup.add(ceilingLight);
 
-  const lm402BackWall = new THREE.Group();
-  WORLD.backWallWindows.forEach((panel) => {
-    const centerX = scaled(panel.x);
-    const width = scaled(panel.width);
-    const y1 = scaled(panel.y1);
-    const y2 = scaled(panel.y2);
-    const height = y2 - y1;
-    const glass = new THREE.Mesh(new THREE.PlaneGeometry(width, height), glassMat);
-    glass.position.set(centerX, y1 + height / 2, lm402Z1 + 0.035);
-    worldGroup.add(glass);
-    const frameTop = new THREE.Mesh(new THREE.BoxGeometry(width + 0.08, 0.08, 0.08), beamMat);
-    frameTop.position.set(centerX, y2 + 0.04, lm402Z1 + 0.04);
-    const frameBottom = frameTop.clone();
-    frameBottom.position.y = y1 - 0.04;
-    const frameStart = new THREE.Mesh(new THREE.BoxGeometry(0.08, height + 0.12, 0.08), beamMat);
-    frameStart.position.set(centerX - width / 2, y1 + height / 2, lm402Z1 + 0.04);
-    const frameEnd = frameStart.clone();
-    frameEnd.position.x = centerX + width / 2;
-    lm402BackWall.add(frameTop, frameBottom, frameStart, frameEnd);
+  [
+    scaled(560),
+    scaled(690),
+  ].forEach((windowCenterZ) => {
+    const exteriorGlass = new THREE.Mesh(new THREE.PlaneGeometry(1.52, 1.24), glassMat);
+    exteriorGlass.position.set(classroomMaxX - 0.04, 1.54, windowCenterZ);
+    exteriorGlass.rotation.y = -Math.PI / 2;
+    worldGroup.add(exteriorGlass);
+    const windowFrame = new THREE.Mesh(new THREE.BoxGeometry(0.18, 1.36, 1.64), beamMat);
+    windowFrame.position.set(classroomMaxX - 0.06, 1.5, windowCenterZ);
+    windowFrame.scale.x = 0.8;
+    worldGroup.add(windowFrame);
   });
-  worldGroup.add(lm402BackWall);
+
+  WORLD.rightWallWindows.forEach((panel) => {
+    const centerPanelZ = scaled(panel.z);
+    const height = scaled(panel.y2 - panel.y1);
+    const centerY = scaled((panel.y1 + panel.y2) / 2);
+    const glass = new THREE.Mesh(new THREE.PlaneGeometry(scaled(panel.width), height), glassMat);
+    glass.position.set(classroomMaxX - 0.045, centerY, centerPanelZ);
+    glass.rotation.y = -Math.PI / 2;
+    worldGroup.add(glass);
+  });
+
+  WORLD.leftWallWindows.forEach((panel) => {
+    const centerPanelZ = scaled(panel.z);
+    const height = scaled(panel.y2 - panel.y1);
+    const centerY = scaled((panel.y1 + panel.y2) / 2);
+    const glass = new THREE.Mesh(new THREE.PlaneGeometry(0.54, height), glassMat);
+    glass.position.set(classroomMinX + 0.04, centerY, centerPanelZ);
+    glass.rotation.y = Math.PI / 2;
+    worldGroup.add(glass);
+  });
 
   addBox(
     worldGroup,
     occluders,
-    new THREE.BoxGeometry(wallThickness, corridorHeight, boardZ2 - boardZ1 + 0.14),
+    new THREE.BoxGeometry(boardX2 - boardX1 + 0.22, corridorHeight, wallThickness),
     wallMat,
-    new THREE.Vector3(maxX, corridorHeight / 2, (boardZ1 + boardZ2) / 2),
+    new THREE.Vector3((boardX1 + boardX2) / 2, corridorHeight / 2, z2),
     null,
     colliders,
-    { minX: maxX - wallThickness / 2, maxX: maxX + wallThickness / 2, minZ: boardZ1 - 0.08, maxZ: boardZ2 + 0.08, label: "board_wall" }
+    { minX: boardX1 - 0.12, maxX: boardX2 + 0.12, minZ: z2 - wallThickness / 2, maxZ: z2 + wallThickness / 2, label: "board_wall" }
   );
 
   addBox(
     worldGroup,
     occluders,
-    new THREE.BoxGeometry(0.06, scaled(WORLD.board.y2 - WORLD.board.y1), boardZ2 - boardZ1),
+    new THREE.BoxGeometry(boardX2 - boardX1, scaled(WORLD.board.y2 - WORLD.board.y1), 0.06),
     boardMat,
-    new THREE.Vector3(boardX - 0.02, scaled((WORLD.board.y1 + WORLD.board.y2) / 2), (boardZ1 + boardZ2) / 2),
+    new THREE.Vector3(boardCenterX, scaled((WORLD.board.y1 + WORLD.board.y2) / 2), boardZ - 0.02),
     null,
     colliders,
     null
@@ -1204,64 +1349,78 @@ export function createLm402Scene(canvas) {
   addBox(
     worldGroup,
     occluders,
-    new THREE.BoxGeometry(0.16, 0.07, boardZ2 - boardZ1 + 0.18),
+    new THREE.BoxGeometry(boardX2 - boardX1 + 0.18, 0.07, 0.16),
     beamMat,
-    new THREE.Vector3(boardX - 0.1, scaled(WORLD.board.y1) - 0.12, (boardZ1 + boardZ2) / 2),
+    new THREE.Vector3(boardCenterX, scaled(WORLD.board.y1) - 0.12, boardZ - 0.1),
     null,
     colliders,
     null
   );
 
-  const lectern = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.94, 0.62), woodMat);
-  lectern.position.set(boardX - 1.12, 0.47, scaled(742));
+  const lectern = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.98, 0.62), woodMat);
+  lectern.position.set(boardCenterX - 1.22, 0.49, boardZ - 0.82);
   lectern.castShadow = true;
   lectern.receiveShadow = true;
   worldGroup.add(lectern);
-  addCollider(colliders, lectern.position.x - 0.31, lectern.position.x + 0.31, lectern.position.z - 0.31, lectern.position.z + 0.31, "lectern");
+  addCollider(colliders, lectern.position.x - 0.36, lectern.position.x + 0.36, lectern.position.z - 0.31, lectern.position.z + 0.31, "lectern");
 
   const clock = new THREE.Mesh(
     new THREE.CylinderGeometry(0.22, 0.22, 0.05, 32),
     new THREE.MeshStandardMaterial({ color: "#f6efe5", roughness: 0.9, metalness: 0.02 })
   );
   clock.rotation.z = Math.PI / 2;
-  clock.position.set(boardX - 0.1, 2.16, scaled(768));
+  clock.position.set(boardCenterX + 1.74, 2.14, boardZ - 0.02);
   worldGroup.add(clock);
 
   WORLD.lightBeams.forEach((beam, index) => {
-    const beamMat = new THREE.MeshBasicMaterial({
-      color: beam.side === "front" ? "#ffd79f" : "#f4dabc",
+    const beamMaterial = new THREE.MeshBasicMaterial({
+      color: beam.side === "right" ? "#ffd79f" : "#f7e2be",
       transparent: true,
       opacity: beam.alpha,
       depthWrite: false,
       side: THREE.DoubleSide,
     });
-    const plane = new THREE.Mesh(
-      new THREE.PlaneGeometry(scaled(beam.width), scaled(beam.reach)),
-      beamMat
-    );
-    const sourceZ = beam.side === "front" ? lm402Z2 - 0.06 : lm402Z1 + 0.06;
-    plane.position.set(scaled(beam.x), 1.32, sourceZ + (beam.side === "front" ? -scaled(beam.reach) * 0.32 : scaled(beam.reach) * 0.32));
-    plane.rotation.x = beam.side === "front" ? -Math.PI / 2.54 : Math.PI / 2.54;
+    const plane = new THREE.Mesh(new THREE.PlaneGeometry(scaled(beam.width), scaled(beam.reach)), beamMaterial);
+    if (beam.side === "right") {
+      plane.position.set(classroomMaxX - 0.18, 1.3, scaled(beam.z));
+      plane.rotation.x = -Math.PI / 2.76;
+      plane.rotation.z = 0.12;
+    } else {
+      plane.position.set(classroomMinX + 0.44, 1.24, scaled(beam.z));
+      plane.rotation.x = Math.PI / 2.7;
+      plane.rotation.z = -0.12;
+    }
     plane.rotation.y = index % 2 ? 0.06 : -0.06;
     worldGroup.add(plane);
   });
 
-  const corridorSunPatch = createGlowPlane("rgba(255,230,172,1)", 4.8, 2.4, 0.22);
-  corridorSunPatch.position.set(minX + 1.34, 0.018, scaled(752));
+  const corridorSunPatch = createGlowPlane("rgba(255,232,178,1)", 4.5, 2.4, 0.28);
+  corridorSunPatch.position.set(minX + 1.42, 0.018, scaled(WORLD.frontDoor.center.z));
   corridorSunPatch.rotation.x = -Math.PI / 2;
-  corridorSunPatch.rotation.z = 0.14;
+  corridorSunPatch.rotation.z = 0.12;
   worldGroup.add(corridorSunPatch);
 
-  const classroomSunPatch = createGlowPlane("rgba(255,224,170,1)", 3.8, 2.1, 0.24);
-  classroomSunPatch.position.set(classroomMaxX - 1.74, 0.019, scaled(758));
+  const corridorWallLight = createGlowPlane("rgba(255,232,182,1)", 2.8, 2.2, 0.18);
+  corridorWallLight.position.set(classroomMinX + 0.06, 1.38, scaled(742));
+  corridorWallLight.rotation.y = Math.PI / 2;
+  worldGroup.add(corridorWallLight);
+
+  const classroomSunPatch = createGlowPlane("rgba(255,226,174,1)", 4.6, 2.9, 0.3);
+  classroomSunPatch.position.set(classroomMaxX - 1.52, 0.019, scaled(684));
   classroomSunPatch.rotation.x = -Math.PI / 2;
-  classroomSunPatch.rotation.z = -0.18;
+  classroomSunPatch.rotation.z = -0.16;
   worldGroup.add(classroomSunPatch);
 
-  const seatSunPatch = createGlowPlane("rgba(255,229,186,1)", 2.6, 1.5, 0.16);
-  seatSunPatch.position.set(scaled(206), 0.018, scaled(630));
+  const backdoorSunPatch = createGlowPlane("rgba(255,240,198,1)", 3.0, 1.8, 0.2);
+  backdoorSunPatch.position.set(classroomMinX + 1.04, 0.018, scaled(WORLD.backDoor.center.z));
+  backdoorSunPatch.rotation.x = -Math.PI / 2;
+  backdoorSunPatch.rotation.z = 0.08;
+  worldGroup.add(backdoorSunPatch);
+
+  const seatSunPatch = createGlowPlane("rgba(255,226,184,1)", 2.9, 1.8, 0.2);
+  seatSunPatch.position.set(classroomMaxX - 1.14, 0.02, scaled(620));
   seatSunPatch.rotation.x = -Math.PI / 2;
-  seatSunPatch.rotation.z = 0.05;
+  seatSunPatch.rotation.z = -0.22;
   worldGroup.add(seatSunPatch);
 
   WORLD.desks.forEach((desk, index) => {
@@ -1270,59 +1429,53 @@ export function createLm402Scene(canvas) {
     const deskGroup = new THREE.Group();
     deskGroup.position.set(x, 0, z);
 
-    const top = new THREE.Mesh(new THREE.BoxGeometry(0.92, 0.08, 0.68), woodMat);
-    top.position.set(0.12, 0.78, 0);
-    const topLip = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.04, 0.05), woodMat);
-    topLip.position.set(0.12, 0.82, -0.31);
-    const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.64, 0.05, 0.18), woodMat);
-    shelf.position.set(0.12, 0.48, 0);
-    const modesty = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.24, 0.04), woodMat);
-    modesty.position.set(0.12, 0.66, -0.18);
+    const top = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.08, 0.84), woodMat);
+    top.position.set(0, 0.78, 0.08);
+    const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.05, 0.24), woodMat);
+    shelf.position.set(0, 0.48, 0.1);
+    const modesty = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.24, 0.04), woodMat);
+    modesty.position.set(0, 0.64, -0.16);
+    const chairSeat = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.05, 0.3), woodMat);
+    chairSeat.position.set(0, 0.49, -0.42);
+    const chairBack = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.44, 0.05), woodMat);
+    chairBack.position.set(0, 0.78, -0.56);
+    deskGroup.add(top, shelf, modesty, chairSeat, chairBack);
 
-    const chairSeat = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.05, 0.3), woodMat);
-    chairSeat.position.set(-0.42, 0.49, 0);
-    const chairBack = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.44, 0.3), woodMat);
-    chairBack.position.set(-0.56, 0.78, 0);
-    const chairFrame = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.04, 0.24), metalMat);
-    chairFrame.position.set(-0.44, 0.36, 0);
-    deskGroup.add(top, topLip, shelf, modesty, chairSeat, chairBack, chairFrame);
-
-    const legGeo = new THREE.BoxGeometry(0.06, 0.78, 0.06);
     [
-      [-0.26, -0.22],
-      [0.38, -0.22],
-      [-0.26, 0.22],
-      [0.38, 0.22],
+      [-0.24, -0.2],
+      [0.24, -0.2],
+      [-0.24, 0.28],
+      [0.24, 0.28],
     ].forEach(([dx, dz]) => {
-      const leg = new THREE.Mesh(legGeo, metalMat);
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.78, 0.06), metalMat);
       leg.position.set(dx, 0.39, dz);
       deskGroup.add(leg);
     });
 
     [
-      [-0.52, -0.12],
-      [-0.52, 0.12],
-      [-0.34, -0.12],
-      [-0.34, 0.12],
+      [-0.12, -0.54],
+      [0.12, -0.54],
+      [-0.12, -0.3],
+      [0.12, -0.3],
     ].forEach(([dx, dz]) => {
       const chairLeg = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.46, 0.04), metalMat);
       chairLeg.position.set(dx, 0.23, dz);
       deskGroup.add(chairLeg);
     });
 
-    if (index % 3 === 1) {
+    if (index % 4 === 2) {
       const notebook = new THREE.Mesh(
-        new THREE.BoxGeometry(0.18, 0.018, 0.13),
+        new THREE.BoxGeometry(0.19, 0.018, 0.14),
         new THREE.MeshStandardMaterial({ color: "#f2eee8", roughness: 0.94, metalness: 0.01 })
       );
-      notebook.position.set(0.16, 0.83, 0.06);
-      notebook.rotation.y = 0.2;
+      notebook.position.set(0.1, 0.83, 0.14);
+      notebook.rotation.y = 0.26;
       deskGroup.add(notebook);
     }
 
     setShadow(deskGroup, false, true);
     worldGroup.add(deskGroup);
-    addCollider(colliders, x - 0.48, x + 0.48, z - 0.38, z + 0.38, `desk_${index}`);
+    addCollider(colliders, x - 0.38, x + 0.38, z - 0.66, z + 0.5, `desk_${index}`);
   });
 
   WORLD.notes.forEach((note) => {
@@ -1377,31 +1530,33 @@ export function createLm402Scene(canvas) {
     frontDoor: worldPointScaled(WORLD.frontDoor.center.x, WORLD.frontDoor.center.y, WORLD.frontDoor.center.z),
     backDoor: worldPointScaled(WORLD.backDoor.center.x, WORLD.backDoor.center.y, WORLD.backDoor.center.z),
     doorPlaque: worldPointScaled(WORLD.plaque.x, WORLD.plaque.y, WORLD.plaque.z),
-    parapetBand: new THREE.Vector3(minX + 0.22, scaled(WORLD.corridor.parapetHeight) + 0.32, scaled(744)),
-    boardWall: new THREE.Vector3(boardX - 0.08, scaled((WORLD.board.y1 + WORLD.board.y2) / 2), (boardZ1 + boardZ2) / 2),
+    parapetBand: new THREE.Vector3(minX + 0.22, scaled(WORLD.corridor.parapetHeight) + 0.32, scaled(WORLD.frontDoor.center.z - 8)),
+    boardWall: new THREE.Vector3(boardCenterX, scaled((WORLD.board.y1 + WORLD.board.y2) / 2), boardZ - 0.02),
   };
 
   const senior = createPerson({
-    torso: "#405876",
-    torsoAccent: "#5d7592",
-    legs: "#101720",
-    skin: "#e1b89d",
-    hair: "#23191a",
+    torso: "#4b6687",
+    torsoAccent: "#7e9aba",
+    legs: "#151c26",
+    skin: "#e7c4ab",
+    hair: "#261c1c",
     shoes: "#161316",
+    iris: "#35241f",
     female: false,
     phone: true,
-    scale: 0.94,
+    scale: 0.99,
   });
   const junior = createPerson({
-    torso: "#faf7f2",
-    torsoAccent: "#fffdfa",
-    legs: "#7999d0",
-    skin: "#efcfbd",
+    torso: "#fffdf9",
+    torsoAccent: "#fffefc",
+    legs: "#8ca7d8",
+    skin: "#f2d7c7",
     hair: "#221718",
-    shoes: "#f8f3ea",
+    shoes: "#fbf6ef",
+    iris: "#3b261d",
     female: true,
     highlight: true,
-    scale: 1.02,
+    scale: 1.06,
   });
   const fatherEcho = createPerson({
     torso: "#f2c49e",
@@ -1450,22 +1605,23 @@ export function createLm402Scene(canvas) {
   });
 
   const introCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(minX - campusDepth * 0.34, 7.2, scaled(120)),
-    new THREE.Vector3(minX - campusDepth * 0.28, 6.4, scaled(360)),
-    new THREE.Vector3(minX - campusDepth * 0.22, 5.5, scaled(618)),
-    new THREE.Vector3(minX - campusDepth * 0.14, 4.6, scaled(852)),
-    new THREE.Vector3(minX + 0.6, 4.0, scaled(900)),
-    new THREE.Vector3(minX + 1.28, 3.28, scaled(842)),
-    new THREE.Vector3(corridorMinX + 1.84, 2.58, scaled(792)),
-    new THREE.Vector3(corridorMinX + 2.56, 2.04, scaled(764)),
-    new THREE.Vector3(corridorMinX + 3.12, 1.82, scaled(748)),
+    new THREE.Vector3(minX - campusDepth * 0.58, 9.4, scaled(2110)),
+    new THREE.Vector3(minX - campusDepth * 0.48, 8.9, scaled(1980)),
+    new THREE.Vector3(minX - campusDepth * 0.38, 8.1, scaled(1810)),
+    new THREE.Vector3(minX - campusDepth * 0.28, 6.9, scaled(1540)),
+    new THREE.Vector3(minX - campusDepth * 0.18, 5.9, scaled(1280)),
+    new THREE.Vector3(minX - campusDepth * 0.08, 5.2, scaled(1048)),
+    new THREE.Vector3(minX + 0.3, 4.5, scaled(930)),
+    new THREE.Vector3(minX + 1.1, 3.52, scaled(848)),
+    new THREE.Vector3(corridorMinX + 1.88, 2.46, scaled(796)),
+    new THREE.Vector3(corridorMinX + 2.86, 2.04, scaled(770)),
   ]);
   const introTube = new THREE.Mesh(
-    new THREE.TubeGeometry(introCurve, 180, 0.06, 10, false),
+    new THREE.TubeGeometry(introCurve, 220, 0.074, 12, false),
     new THREE.MeshStandardMaterial({
       color: "#f1627d",
       emissive: "#f1627d",
-      emissiveIntensity: 1.5,
+      emissiveIntensity: 1.72,
       roughness: 0.2,
       metalness: 0.08,
       transparent: true,
@@ -1475,30 +1631,59 @@ export function createLm402Scene(canvas) {
   introGroup.add(introTube);
 
   const introDaughter = createPerson({
-    torso: "#f6d9d1",
-    torsoAccent: "#fff0ea",
-    legs: "#f3e4d8",
-    skin: "#efd0bd",
-    hair: "#2f2426",
+    torso: "#f7ddd6",
+    torsoAccent: "#fff3ee",
+    legs: "#f5e7dc",
+    skin: "#efd3c3",
+    hair: "#2d2324",
     shoes: "#f7efe6",
+    iris: "#3a241f",
     female: true,
     scale: 0.96,
   });
   introGroup.add(introDaughter);
 
+  const introSenior = createPerson({
+    torso: "#455c7b",
+    torsoAccent: "#6c88aa",
+    legs: "#1a212b",
+    skin: "#e7c0a8",
+    hair: "#24191b",
+    shoes: "#171317",
+    female: false,
+    phone: true,
+    scale: 0.98,
+  });
+  introGroup.add(introSenior);
+
   const introAura = createGlowPlane("rgba(255,116,142,1)", 1.8, 2.4, 0.44);
-  const introBloom = createGlowPlane("rgba(255,223,176,1)", 4.4, 3.8, 0.24);
+  const introBloom = createGlowPlane("rgba(255,223,176,1)", 5.8, 4.6, 0.28);
   const introSpark = new THREE.Mesh(
     new THREE.SphereGeometry(0.1, 16, 16),
     new THREE.MeshBasicMaterial({ color: "#ffd8e6" })
   );
-  introGroup.add(introAura, introBloom, introSpark);
+  const introWake = createGlowPlane("rgba(255,157,182,1)", 3.2, 1.8, 0.22);
+  introGroup.add(introAura, introBloom, introSpark, introWake);
+
+  const introRibbon = createGlowPlane("rgba(255,100,136,1)", 4.8, 2.2, 0.18);
+  introGroup.add(introRibbon);
 
   function resize() {
     const host = canvas.parentElement ?? canvas;
     const rect = host.getBoundingClientRect();
-    const width = Math.max(1, Math.round(rect.width));
-    const height = Math.max(1, Math.round(rect.height));
+    const visual = window.visualViewport;
+    const width = Math.max(
+      1,
+      Math.round(rect.width || 0),
+      Math.round(visual?.width || 0),
+      Math.round(window.innerWidth || 0)
+    );
+    const height = Math.max(
+      1,
+      Math.round(rect.height || 0),
+      Math.round(visual?.height || 0),
+      Math.round(window.innerHeight || 0)
+    );
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality.maxPixelRatio));
     renderer.setSize(width, height, false);
     renderer.setViewport(0, 0, width, height);
@@ -1605,61 +1790,106 @@ export function createLm402Scene(canvas) {
     debugAnchors.junior.copy(junior.position).add(new THREE.Vector3(0, 1.34, 0));
   }
 
-  function applyPlayerCamera(player) {
-    camera.position.set(player.x, PLAYER_EYE, player.z);
+  function applyPlayerCamera(player, time = 0, allowBob = true) {
+    const motion = Math.hypot(player.velocity?.x || 0, player.velocity?.z || 0);
+    const bobStrength = allowBob ? Math.min(0.028, motion * 0.008) : 0;
+    const bob = bobStrength ? Math.sin(time * 8.4) * bobStrength : 0;
+    camera.position.set(player.x, PLAYER_EYE + bob, player.z);
     camera.rotation.y = player.yaw;
     camera.rotation.x = player.pitch;
   }
 
   function applyIntroCamera(intro) {
     const progress = THREE.MathUtils.clamp(intro.progress, 0, 1);
-    const cameraT = THREE.MathUtils.smoothstep(progress, 0.02, 0.96);
+    const cameraT = THREE.MathUtils.smoothstep(progress, 0.02, 0.98);
     const camPos = introCurve.getPoint(cameraT);
     const target = introCurve.getPoint(THREE.MathUtils.clamp(cameraT + 0.06, 0, 1));
-    camera.fov = THREE.MathUtils.lerp(82, 68, THREE.MathUtils.smoothstep(progress, 0.08, 0.94));
+    camera.fov = THREE.MathUtils.lerp(88, 64, THREE.MathUtils.smoothstep(progress, 0.08, 0.94));
     camera.updateProjectionMatrix();
     camera.position.copy(camPos);
-    camera.lookAt(
-      target.x + THREE.MathUtils.lerp(1.8, 0.18, progress),
-      THREE.MathUtils.lerp(2.9, 1.52, progress),
-      target.z + THREE.MathUtils.lerp(-0.16, -0.04, progress)
+    const settleT = THREE.MathUtils.smoothstep(progress, 0.7, 1);
+    const settleTarget = new THREE.Vector3(
+      THREE.MathUtils.lerp(
+        target.x + THREE.MathUtils.lerp(2.2, 0.22, progress),
+        debugAnchors.senior.x * 0.48 + debugAnchors.doorPlaque.x * 0.34 + debugAnchors.parapetBand.x * 0.18,
+        settleT
+      ),
+      THREE.MathUtils.lerp(3.4, 1.56, progress),
+      THREE.MathUtils.lerp(
+        target.z + THREE.MathUtils.lerp(-0.18, -0.04, progress),
+        debugAnchors.senior.z * 0.54 + debugAnchors.doorPlaque.z * 0.18 + debugAnchors.parapetBand.z * 0.28,
+        settleT
+      )
     );
+    camera.lookAt(settleTarget);
+    camera.rotateZ(Math.sin(progress * Math.PI * 3.2) * THREE.MathUtils.lerp(0.3, 0.02, progress));
 
     introGroup.visible = true;
     introTube.material.opacity = THREE.MathUtils.lerp(0.88, 0.14, progress);
-    introTube.material.emissiveIntensity = THREE.MathUtils.lerp(1.8, 0.54, progress);
+    introTube.material.emissiveIntensity = THREE.MathUtils.lerp(2.1, 0.58, progress);
     const daughterT = THREE.MathUtils.clamp(progress + 0.03, 0, 1);
     const daughterPos = introCurve.getPoint(daughterT);
     const daughterNext = introCurve.getPoint(THREE.MathUtils.clamp(daughterT + 0.015, 0, 1));
-    introDaughter.position.copy(daughterPos).add(new THREE.Vector3(0, Math.sin(progress * Math.PI * 5) * 0.08, 0));
+    introDaughter.position.copy(daughterPos).add(new THREE.Vector3(0, Math.sin(progress * Math.PI * 5.4) * 0.12, 0));
     introDaughter.lookAt(daughterNext);
     introDaughter.rotateY(Math.PI);
-    introDaughter.rotation.z = Math.sin(progress * Math.PI * 3.8) * 0.08;
+    introDaughter.rotation.z = Math.sin(progress * Math.PI * 4.2) * 0.18;
+    introDaughter.rotation.x = Math.sin(progress * Math.PI * 2.8) * 0.12;
     introAura.position.copy(daughterPos).add(new THREE.Vector3(0, 0.32, -0.18));
     introAura.lookAt(camera.position);
-    introAura.material.opacity = THREE.MathUtils.lerp(0.72, 0.2, progress);
-    introBloom.position.copy(daughterPos).add(new THREE.Vector3(-0.16, 0.28, -0.42));
+    introAura.material.opacity = THREE.MathUtils.lerp(0.82, 0.2, progress);
+    introBloom.position.copy(daughterPos).add(new THREE.Vector3(-0.2, 0.34, -0.48));
     introBloom.lookAt(camera.position);
-    introBloom.material.opacity = THREE.MathUtils.lerp(0.44, 0.12, progress);
+    introBloom.material.opacity = THREE.MathUtils.lerp(0.5, 0.14, progress);
+    introRibbon.position.copy(daughterPos).add(new THREE.Vector3(-0.14, 0.22, -0.74));
+    introRibbon.lookAt(camera.position);
+    introRibbon.material.opacity = THREE.MathUtils.lerp(0.32, 0.04, progress);
     introSpark.position.copy(introCurve.getPoint(THREE.MathUtils.clamp(progress + 0.08, 0, 1)));
     introSpark.scale.setScalar(1 + Math.sin(progress * Math.PI * 6) * 0.32);
+    introWake.position.copy(daughterPos).add(new THREE.Vector3(0.1, 0.14, -0.56));
+    introWake.lookAt(camera.position);
+    introWake.material.opacity = THREE.MathUtils.lerp(0.34, 0.06, progress);
+
+    const seniorWalkT = THREE.MathUtils.smoothstep(progress, 0.56, 0.96);
+    const seniorStart = new THREE.Vector3(scaled(-420), 0, scaled(WORLD.stairs.front.landingZ));
+    const seniorEnd = new THREE.Vector3(scaled(-396), 0, scaled(WORLD.frontDoor.center.z + 4));
+    introSenior.position.lerpVectors(seniorStart, seniorEnd, seniorWalkT);
+    introSenior.rotation.y = Math.atan2(
+      -(scaled(WORLD.frontDoor.center.x) - introSenior.position.x),
+      -(scaled(WORLD.frontDoor.center.z) - introSenior.position.z)
+    );
   }
 
   function applyPerfectEndingCamera(game) {
-    const orbitT = THREE.MathUtils.clamp((game.endingSequence?.time ?? 0) / 7.6, 0, 1);
-    const center = junior.position.clone().add(new THREE.Vector3(0, 1.48, 0));
-    const eyeTarget = center.clone().add(new THREE.Vector3(0.016, 0.02, 0.16));
-    const radius = THREE.MathUtils.lerp(2.36, 0.42, THREE.MathUtils.smoothstep(orbitT, 0.12, 0.96));
-    const angle = THREE.MathUtils.lerp(-1.28, Math.PI * 1.56, THREE.MathUtils.smoothstep(orbitT, 0.04, 0.86));
-    camera.position.set(
-      center.x + Math.cos(angle) * radius,
-      THREE.MathUtils.lerp(1.54, 1.66, orbitT),
-      center.z + Math.sin(angle) * radius
-    );
-    const lookTarget = center.lerp(eyeTarget, THREE.MathUtils.smoothstep(orbitT, 0.74, 0.98));
-    camera.fov = THREE.MathUtils.lerp(70, 42, THREE.MathUtils.smoothstep(orbitT, 0.64, 0.98));
+    const totalTime = game.endingSequence?.time ?? 0;
+    const holdDuration = 5;
+    const orbitDuration = Math.max(1, CINEMATIC_TIMELINE.perfectDuration - holdDuration);
+    const center = junior.position.clone().add(new THREE.Vector3(0, 1.5, 0));
+    const eyeTarget = center.clone().add(new THREE.Vector3(0.01, 0.015, 0.145));
+    if (totalTime < orbitDuration) {
+      const orbitT = THREE.MathUtils.clamp(totalTime / orbitDuration, 0, 1);
+      const eased = THREE.MathUtils.smoothstep(orbitT, 0.04, 0.94);
+      const radius = THREE.MathUtils.lerp(3.22, 0.92, THREE.MathUtils.smoothstep(orbitT, 0.12, 0.92));
+      const angle = THREE.MathUtils.lerp(-1.26, Math.PI * 2.12, eased);
+      camera.position.set(
+        center.x + Math.cos(angle) * radius,
+        THREE.MathUtils.lerp(1.54, 1.76, orbitT),
+        center.z + Math.sin(angle) * radius
+      );
+      const lookTarget = center.clone().lerp(eyeTarget, THREE.MathUtils.smoothstep(orbitT, 0.72, 1));
+      camera.fov = THREE.MathUtils.lerp(66, 36, THREE.MathUtils.smoothstep(orbitT, 0.54, 0.98));
+      camera.updateProjectionMatrix();
+      camera.lookAt(lookTarget.x, lookTarget.y, lookTarget.z);
+      return;
+    }
+
+    const holdT = THREE.MathUtils.clamp((totalTime - orbitDuration) / holdDuration, 0, 1);
+    const startPos = new THREE.Vector3(center.x + 0.66, 1.72, center.z + 0.34);
+    const endPos = new THREE.Vector3(center.x + 0.12, 1.58, center.z + 0.18);
+    camera.position.lerpVectors(startPos, endPos, THREE.MathUtils.smoothstep(holdT, 0, 1));
+    camera.fov = THREE.MathUtils.lerp(38, 24, holdT);
     camera.updateProjectionMatrix();
-    camera.lookAt(lookTarget.x, lookTarget.y, lookTarget.z);
+    camera.lookAt(eyeTarget.x, eyeTarget.y, eyeTarget.z);
   }
 
   function pickHotspot(candidates, player, activeId) {
@@ -1747,22 +1977,25 @@ export function createLm402Scene(canvas) {
       applyPerfectEndingCamera(game);
     } else {
       introGroup.visible = false;
-      if (camera.fov !== 74) {
-        camera.fov = 74;
+      const targetFov = game.phase === "front_call" ? 72 : game.phase === "eye_contact" ? 62 : 68;
+      if (camera.fov !== targetFov) {
+        camera.fov = targetFov;
         camera.updateProjectionMatrix();
       }
-      applyPlayerCamera(game.player);
+      applyPlayerCamera(game.player, time, true);
     }
 
     const daylight = isIntro ? THREE.MathUtils.lerp(0.34, 1, game.intro.progress) : 1;
-    sun.intensity = 1.78 * daylight + (game.phase === "eye_contact" || game.ending === "perfect" ? 0.46 : 0.08);
-    ambient.intensity = 0.22 + daylight * 0.16;
-    corridorFill.intensity = isIntro ? 0.54 : 0.84;
-    corridorSun.intensity = game.ending === "perfect" ? 1.18 : game.phase === "front_call" ? 0.94 : 0.82;
-    classroomAccent.intensity = game.phase === "eye_contact" || game.ending === "perfect" ? 1.08 : 0.72;
-    corridorSunPatch.material.opacity = game.ending === "perfect" ? 0.32 : game.phase === "front_call" ? 0.26 : 0.2;
-    classroomSunPatch.material.opacity = game.phase === "eye_contact" || game.ending === "perfect" ? 0.42 : 0.26;
-    seatSunPatch.material.opacity = game.ending === "perfect" ? 0.3 : game.phase === "eye_contact" ? 0.24 : 0.16;
+    sun.intensity = 1.96 * daylight + (game.phase === "eye_contact" || game.ending === "perfect" ? 0.62 : game.phase === "front_call" ? 0.18 : 0.12);
+    ambient.intensity = 0.28 + daylight * 0.2;
+    corridorFill.intensity = isIntro ? 0.66 : 0.98;
+    corridorSun.intensity = game.ending === "perfect" ? 1.34 : game.phase === "front_call" ? 1.16 : 0.96;
+    classroomAccent.intensity = game.phase === "eye_contact" || game.ending === "perfect" ? 1.26 : 0.86;
+    backdoorAccent.intensity = game.phase === "eye_contact" || game.ending === "perfect" ? 1.04 : 0.62;
+    corridorSunPatch.material.opacity = game.ending === "perfect" ? 0.38 : game.phase === "front_call" ? 0.34 : 0.24;
+    classroomSunPatch.material.opacity = game.phase === "eye_contact" || game.ending === "perfect" ? 0.56 : 0.34;
+    seatSunPatch.material.opacity = game.ending === "perfect" ? 0.46 : game.phase === "eye_contact" ? 0.36 : 0.22;
+    backdoorSunPatch.material.opacity = game.ending === "perfect" ? 0.38 : game.phase === "eye_contact" ? 0.3 : 0.18;
     scene.background.setStyle(isIntro ? "#090d16" : "#dde8f2");
     scene.fog.color.setStyle(isIntro ? "#121722" : "#d6e1eb");
     scene.fog.near = isIntro ? 3 : 16;
