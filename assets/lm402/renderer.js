@@ -10,6 +10,8 @@ const tempVecA = new THREE.Vector3();
 const tempVecB = new THREE.Vector3();
 const tempVecC = new THREE.Vector3();
 const tempBox = new THREE.Box3();
+const tempSize2D = new THREE.Vector2();
+const tempDrawSize2D = new THREE.Vector2();
 
 function scaled(value) {
   return value * WORLD_SCALE;
@@ -148,12 +150,14 @@ function createPerson(spec) {
   const group = new THREE.Group();
   group.userData.baseY = 0;
 
-  const torsoMat = new THREE.MeshStandardMaterial({ color: spec.torso, roughness: 0.72, metalness: 0.04 });
-  const accentMat = new THREE.MeshStandardMaterial({ color: spec.torsoAccent ?? spec.torso, roughness: 0.66, metalness: 0.06 });
-  const legsMat = new THREE.MeshStandardMaterial({ color: spec.legs, roughness: 0.82, metalness: 0.03 });
-  const skinMat = new THREE.MeshStandardMaterial({ color: spec.skin, roughness: 0.82, metalness: 0.01 });
-  const hairMat = new THREE.MeshStandardMaterial({ color: spec.hair, roughness: 0.7, metalness: 0.08 });
-  const shoeMat = new THREE.MeshStandardMaterial({ color: spec.shoes, roughness: 0.88, metalness: 0.08 });
+  const torsoMat = new THREE.MeshStandardMaterial({ color: spec.torso, roughness: 0.64, metalness: 0.04 });
+  const accentMat = new THREE.MeshStandardMaterial({ color: spec.torsoAccent ?? spec.torso, roughness: 0.58, metalness: 0.05 });
+  const legsMat = new THREE.MeshStandardMaterial({ color: spec.legs, roughness: 0.72, metalness: 0.04 });
+  const skinMat = new THREE.MeshStandardMaterial({ color: spec.skin, roughness: 0.68, metalness: 0.01 });
+  const blushMat = new THREE.MeshStandardMaterial({ color: spec.female ? "#f3c3bc" : "#d7a18f", roughness: 0.72, metalness: 0.01, transparent: true, opacity: spec.female ? 0.26 : 0.14 });
+  const hairMat = new THREE.MeshStandardMaterial({ color: spec.hair, roughness: 0.56, metalness: 0.09 });
+  const shoeMat = new THREE.MeshStandardMaterial({ color: spec.shoes, roughness: 0.76, metalness: 0.1 });
+  const buttonMat = new THREE.MeshStandardMaterial({ color: "#f6ede3", roughness: 0.48, metalness: 0.12 });
 
   const waist = new THREE.Mesh(new THREE.CapsuleGeometry(spec.female ? 0.126 : 0.132, 0.18, 5, 10), torsoMat);
   waist.position.set(0, 0.84, 0);
@@ -213,6 +217,13 @@ function createPerson(spec) {
   rightArm.rotation.z = spec.female ? -0.12 : -0.15;
   group.add(leftArm, rightArm);
 
+  const handGeo = new THREE.SphereGeometry(spec.female ? 0.048 : 0.054, 18, 18);
+  const leftHand = new THREE.Mesh(handGeo, skinMat);
+  leftHand.position.set(spec.female ? -0.264 : -0.286, 0.71, 0.04);
+  const rightHand = leftHand.clone();
+  rightHand.position.x = spec.female ? 0.264 : 0.286;
+  group.add(leftHand, rightHand);
+
   const sleeveGeo = new THREE.CylinderGeometry(spec.female ? 0.072 : 0.078, spec.female ? 0.078 : 0.084, 0.2, 14);
   const leftSleeve = new THREE.Mesh(sleeveGeo, accentMat);
   leftSleeve.position.set(spec.female ? -0.18 : -0.2, 1.1, 0.02);
@@ -230,6 +241,19 @@ function createPerson(spec) {
   head.position.set(0, 1.56, 0);
   head.scale.set(spec.female ? 0.94 : 0.98, 1.08, 0.91);
   group.add(head);
+
+  const jaw = new THREE.Mesh(new THREE.SphereGeometry(spec.female ? 0.14 : 0.146, 28, 28), skinMat);
+  jaw.position.set(0, spec.female ? 1.47 : 1.48, 0.02);
+  jaw.scale.set(spec.female ? 0.92 : 0.98, 0.78, 0.88);
+  group.add(jaw);
+
+  const earGeo = new THREE.SphereGeometry(0.032, 16, 16);
+  const earL = new THREE.Mesh(earGeo, skinMat);
+  earL.position.set(-0.165, 1.55, 0.01);
+  earL.scale.set(0.72, 1.02, 0.56);
+  const earR = earL.clone();
+  earR.position.x = 0.165;
+  group.add(earL, earR);
 
   const nose = new THREE.Mesh(new THREE.ConeGeometry(0.024, 0.062, 12), skinMat);
   nose.position.set(0, 1.54, 0.154);
@@ -254,6 +278,15 @@ function createPerson(spec) {
   browR.rotation.z = 0.12;
   group.add(browL, browR);
 
+  const lidGeo = new THREE.TorusGeometry(0.032, 0.004, 6, 18, Math.PI);
+  const lidMat = new THREE.MeshStandardMaterial({ color: spec.female ? "#3a1f20" : "#2f1d1e", roughness: 0.54, metalness: 0.02 });
+  const lidL = new THREE.Mesh(lidGeo, lidMat);
+  lidL.position.set(-0.062, 1.57, 0.162);
+  lidL.rotation.z = Math.PI;
+  const lidR = lidL.clone();
+  lidR.position.x = 0.062;
+  group.add(lidL, lidR);
+
   const eyeWhiteMat = new THREE.MeshStandardMaterial({ color: "#fcfcfd", roughness: 0.36, metalness: 0.02 });
   const irisMat = new THREE.MeshStandardMaterial({ color: spec.female ? "#3a261f" : "#2b1c18", roughness: 0.48, metalness: 0.02 });
   const eyeWhiteL = new THREE.Mesh(new THREE.SphereGeometry(0.022, 12, 12), eyeWhiteMat);
@@ -266,6 +299,14 @@ function createPerson(spec) {
   const irisR = irisL.clone();
   irisR.position.x = 0.062;
   group.add(eyeWhiteL, eyeWhiteR, irisL, irisR);
+
+  const cheekGeo = new THREE.SphereGeometry(0.028, 12, 12);
+  const cheekL = new THREE.Mesh(cheekGeo, blushMat);
+  cheekL.position.set(-0.094, 1.48, 0.142);
+  cheekL.scale.set(1.7, 1.2, 0.4);
+  const cheekR = cheekL.clone();
+  cheekR.position.x = 0.094;
+  group.add(cheekL, cheekR);
 
   const hairCap = new THREE.Mesh(
     new THREE.SphereGeometry(spec.female ? 0.194 : 0.188, 28, 28, 0, Math.PI * 2, 0, Math.PI * 0.72),
@@ -290,8 +331,17 @@ function createPerson(spec) {
   sideHairR.position.x = 0.15;
   group.add(sideHairL, sideHairR);
 
+  const crownShine = new THREE.Mesh(
+    new THREE.SphereGeometry(spec.female ? 0.16 : 0.15, 20, 20),
+    new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.2, metalness: 0.02, transparent: true, opacity: 0.08 })
+  );
+  crownShine.position.set(0.02, 1.66, 0.04);
+  crownShine.scale.set(0.82, 0.42, 0.5);
+  group.add(crownShine);
+
   const face = createFacePlane(makeFaceTexture({ female: spec.female }));
   face.position.y = 1.55;
+  face.scale.setScalar(0.94);
   group.add(face);
 
   if (spec.female) {
@@ -300,6 +350,14 @@ function createPerson(spec) {
     backStrand.scale.z = 0.68;
     group.add(backStrand);
 
+    const wispL = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.26, 0.028), hairMat);
+    wispL.position.set(-0.112, 1.46, 0.118);
+    wispL.rotation.z = -0.12;
+    const wispR = wispL.clone();
+    wispR.position.x = 0.112;
+    wispR.rotation.z = 0.12;
+    group.add(wispL, wispR);
+
     const collar = new THREE.Mesh(
       new THREE.TorusGeometry(0.1, 0.018, 8, 20, Math.PI),
       new THREE.MeshStandardMaterial({ color: "#fffef8", roughness: 0.76, metalness: 0.01 })
@@ -307,6 +365,28 @@ function createPerson(spec) {
     collar.position.set(0, 1.2, 0.08);
     collar.rotation.x = Math.PI * 0.54;
     group.add(collar);
+
+    const blouse = new THREE.Mesh(
+      new THREE.CapsuleGeometry(0.164, 0.48, 8, 16),
+      new THREE.MeshStandardMaterial({ color: "#fffdf7", roughness: 0.58, metalness: 0.02 })
+    );
+    blouse.position.set(0, 1.06, 0.02);
+    blouse.scale.set(0.94, 0.92, 0.76);
+    group.add(blouse);
+
+    const blouseHem = new THREE.Mesh(new THREE.TorusGeometry(0.146, 0.012, 8, 20), buttonMat);
+    blouseHem.position.set(0, 0.84, 0.02);
+    blouseHem.rotation.x = Math.PI / 2;
+    group.add(blouseHem);
+  }
+
+  if (!spec.female) {
+    const shirtPanel = new THREE.Mesh(
+      new THREE.BoxGeometry(0.11, 0.52, 0.03),
+      new THREE.MeshStandardMaterial({ color: "#637d9c", roughness: 0.58, metalness: 0.03, transparent: true, opacity: 0.92 })
+    );
+    shirtPanel.position.set(0, 1.08, 0.19);
+    group.add(shirtPanel);
   }
 
   if (spec.phone) {
@@ -316,6 +396,7 @@ function createPerson(spec) {
     rightSleeve.position.set(0.164, 1.2, 0.03);
     rightSleeve.rotation.z = -0.78;
     rightSleeve.rotation.x = -0.46;
+    rightHand.position.set(0.19, 1.24, 0.08);
     const phone = new THREE.Mesh(
       new THREE.BoxGeometry(0.05, 0.12, 0.018),
       new THREE.MeshStandardMaterial({ color: "#141518", roughness: 0.38, metalness: 0.28 })
@@ -327,7 +408,7 @@ function createPerson(spec) {
 
   if (spec.highlight) {
     const glow = createGlowPlane("rgba(255,234,184,1)", 1.2, 1.8, 0.28);
-    glow.position.set(0.18, 1.18, -0.08);
+    glow.position.set(0.12, 1.16, -0.08);
     group.add(glow);
     group.userData.glow = glow;
   }
@@ -352,21 +433,22 @@ function createPerson(spec) {
 function createTree({ scale: treeScale = 1 }) {
   const group = new THREE.Group();
   const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.1 * treeScale, 0.18 * treeScale, 1.62 * treeScale, 12),
+    new THREE.CylinderGeometry(0.08 * treeScale, 0.2 * treeScale, 2.18 * treeScale, 14),
     new THREE.MeshStandardMaterial({ color: "#6e4b34", roughness: 0.92, metalness: 0.02 })
   );
-  trunk.position.y = 0.81 * treeScale;
+  trunk.position.y = 1.09 * treeScale;
   group.add(trunk);
 
-  const leafMat = new THREE.MeshStandardMaterial({ color: "#557b49", roughness: 0.98, metalness: 0.01 });
+  const leafMat = new THREE.MeshStandardMaterial({ color: "#567a48", roughness: 0.94, metalness: 0.01 });
   [
-    [0, 2.04, 0, 0.78, 0.96, 0.7],
-    [-0.28, 1.78, 0.12, 0.62, 0.74, 0.58],
-    [0.34, 1.86, -0.08, 0.66, 0.82, 0.62],
-    [0.02, 2.34, -0.12, 0.58, 0.56, 0.5],
-    [-0.16, 2.18, -0.22, 0.48, 0.5, 0.46],
+    [0, 2.84, 0, 1.04, 1.2, 0.92],
+    [-0.4, 2.46, 0.18, 0.86, 0.92, 0.74],
+    [0.46, 2.52, -0.14, 0.9, 1.02, 0.78],
+    [0.06, 3.28, -0.16, 0.82, 0.84, 0.72],
+    [-0.26, 3.02, -0.26, 0.7, 0.72, 0.62],
+    [0.24, 2.94, 0.32, 0.68, 0.7, 0.6],
   ].forEach(([x, y, z, sx, sy, sz]) => {
-    const cluster = new THREE.Mesh(new THREE.SphereGeometry(0.44 * treeScale, 18, 18), leafMat);
+    const cluster = new THREE.Mesh(new THREE.SphereGeometry(0.52 * treeScale, 20, 20), leafMat);
     cluster.position.set(x * treeScale, y * treeScale, z * treeScale);
     cluster.scale.set(sx, sy, sz);
     group.add(cluster);
@@ -595,9 +677,9 @@ function buildIntroCurve() {
 export function createLm402Scene(canvas) {
   const coarse = window.matchMedia("(pointer: coarse)").matches;
   const quality = {
-    shadowMapSize: coarse ? 640 : 768,
-    maxPixelRatio: coarse ? 1.18 : 1,
-    dustCount: coarse ? 56 : 72,
+    shadowMapSize: coarse ? 512 : 640,
+    maxPixelRatio: coarse ? 1 : 0.92,
+    dustCount: coarse ? 42 : 52,
   };
   const renderer = new THREE.WebGLRenderer({
     canvas,
@@ -688,15 +770,15 @@ export function createLm402Scene(canvas) {
   scene.add(sun);
 
   const corridorFill = new THREE.PointLight(0xaec3dd, 0.76, 36, 2);
-  corridorFill.position.set(corridorMinX + 2.1, 2.7, scaled(560));
+  corridorFill.position.set(corridorMinX + 2.1, 2.7, scaled(742));
   scene.add(corridorFill);
 
   const corridorSun = new THREE.PointLight(0xffe9bf, 0.78, 28, 2);
-  corridorSun.position.set(minX - 0.8, 3.4, scaled(960));
+  corridorSun.position.set(minX - 0.6, 3.4, scaled(756));
   scene.add(corridorSun);
 
   const classroomAccent = new THREE.PointLight(0xffd7ae, 0.64, 20, 2);
-  classroomAccent.position.set(classroomMaxX - 1.8, 2.2, scaled(664));
+  classroomAccent.position.set(classroomMaxX - 1.8, 2.24, scaled(618));
   scene.add(classroomAccent);
 
   const classroomFloorTex = makeWoodTexture({ base: "#856549", dark: "#5c422d", highlight: "#b18a63" });
@@ -946,11 +1028,21 @@ export function createLm402Scene(canvas) {
       return;
     }
 
-    const dividerSegments = [
-      [z1, frontDoorZ1],
-      [frontDoorZ2, backDoorZ1],
-      [backDoorZ2, z2],
-    ];
+    const openings = [
+      { ...WORLD.frontDoor, kind: "front", z1: frontDoorZ1, z2: frontDoorZ2 },
+      { ...WORLD.backDoor, kind: "back", z1: backDoorZ1, z2: backDoorZ2 },
+    ].sort((a, b) => a.z1 - b.z1);
+    const dividerSegments = [];
+    let cursor = z1;
+    openings.forEach((opening) => {
+      if (opening.z1 > cursor) {
+        dividerSegments.push([cursor, opening.z1]);
+      }
+      cursor = Math.max(cursor, opening.z2);
+    });
+    if (cursor < z2) {
+      dividerSegments.push([cursor, z2]);
+    }
     dividerSegments.forEach(([start, end]) => {
       if (end <= start) {
         return;
@@ -967,9 +1059,9 @@ export function createLm402Scene(canvas) {
       );
     });
 
-    [WORLD.frontDoor, WORLD.backDoor].forEach((door, doorIndex) => {
-      const dz1 = scaled(door.z1);
-      const dz2 = scaled(door.z2);
+    openings.forEach((door) => {
+      const dz1 = door.z1;
+      const dz2 = door.z2;
       const centerDoorZ = (dz1 + dz2) / 2;
       addBox(
         worldGroup,
@@ -1005,8 +1097,9 @@ export function createLm402Scene(canvas) {
         new THREE.BoxGeometry(0.04, 2.08, (dz2 - dz1) * 0.9),
         new THREE.MeshStandardMaterial({ color: "#dfd8ce", map: wallTex, roughness: 0.86, metalness: 0.02 })
       );
-      leaf.position.set(classroomMinX + 0.3, 1.04, centerDoorZ + (doorIndex === 0 ? 0.16 : -0.12));
-      leaf.rotation.y = doorIndex === 0 ? -1.02 : 0.78;
+      const isFrontDoor = door.kind === "front";
+      leaf.position.set(classroomMinX + 0.3, 1.04, centerDoorZ + (isFrontDoor ? 0.16 : -0.12));
+      leaf.rotation.y = isFrontDoor ? -1.02 : 0.78;
       worldGroup.add(leaf);
     });
 
@@ -1018,30 +1111,32 @@ export function createLm402Scene(canvas) {
 
   WORLD.floorRooms.forEach(addRoomDoor);
 
+  WORLD.floorRooms.forEach((room, index) => {
+    const centerZ = roomCenter(room);
+    const ceilingLight = new THREE.Mesh(
+      new THREE.BoxGeometry(1.12, 0.04, 0.24),
+      new THREE.MeshStandardMaterial({ color: "#fff8ea", roughness: 0.42, metalness: 0.08, emissive: "#fff1d7", emissiveIntensity: room.interactive ? 0.18 : 0.1 })
+    );
+    ceilingLight.position.set(corridorCenterX + 1.12, corridorHeight - 0.18, centerZ);
+    worldGroup.add(ceilingLight);
+
+    const ceilingGlow = createGlowPlane("rgba(255,241,214,1)", 1.6, 0.76, room.interactive ? 0.16 : 0.1);
+    ceilingGlow.position.set(corridorCenterX + 1.1, corridorHeight - 0.32, centerZ);
+    ceilingGlow.rotation.x = Math.PI / 2;
+    worldGroup.add(ceilingGlow);
+
+    if (index < WORLD.floorRooms.length - 1) {
+      const threshold = new THREE.Mesh(
+        new THREE.BoxGeometry(0.02, 0.012, 0.92),
+        new THREE.MeshStandardMaterial({ color: "#a3adb6", roughness: 0.74, metalness: 0.2 })
+      );
+      threshold.position.set(classroomMinX + 0.02, 0.01, centerZ + scaled((WORLD.floorRooms[index + 1].z1 - room.z2) / 2));
+      worldGroup.add(threshold);
+    }
+  });
+
   const lm402FrontWall = new THREE.Group();
   WORLD.frontWallWindows.forEach((panel) => {
-    const centerX = scaled(panel.x);
-    const width = scaled(panel.width);
-    const y1 = scaled(panel.y1);
-    const y2 = scaled(panel.y2);
-    const height = y2 - y1;
-    const glass = new THREE.Mesh(new THREE.PlaneGeometry(width, height), glassMat);
-    glass.position.set(centerX, y1 + height / 2, lm402Z1 + 0.035);
-    worldGroup.add(glass);
-    const frameTop = new THREE.Mesh(new THREE.BoxGeometry(width + 0.08, 0.08, 0.08), beamMat);
-    frameTop.position.set(centerX, y2 + 0.04, lm402Z1 + 0.04);
-    const frameBottom = frameTop.clone();
-    frameBottom.position.y = y1 - 0.04;
-    const frameStart = new THREE.Mesh(new THREE.BoxGeometry(0.08, height + 0.12, 0.08), beamMat);
-    frameStart.position.set(centerX - width / 2, y1 + height / 2, lm402Z1 + 0.04);
-    const frameEnd = frameStart.clone();
-    frameEnd.position.x = centerX + width / 2;
-    lm402FrontWall.add(frameTop, frameBottom, frameStart, frameEnd);
-  });
-  worldGroup.add(lm402FrontWall);
-
-  const lm402BackWall = new THREE.Group();
-  WORLD.backWallWindows.forEach((panel) => {
     const centerX = scaled(panel.x);
     const width = scaled(panel.width);
     const y1 = scaled(panel.y1);
@@ -1057,6 +1152,28 @@ export function createLm402Scene(canvas) {
     frameBottom.position.y = y1 - 0.04;
     const frameStart = new THREE.Mesh(new THREE.BoxGeometry(0.08, height + 0.12, 0.08), beamMat);
     frameStart.position.set(centerX - width / 2, y1 + height / 2, lm402Z2 - 0.04);
+    const frameEnd = frameStart.clone();
+    frameEnd.position.x = centerX + width / 2;
+    lm402FrontWall.add(frameTop, frameBottom, frameStart, frameEnd);
+  });
+  worldGroup.add(lm402FrontWall);
+
+  const lm402BackWall = new THREE.Group();
+  WORLD.backWallWindows.forEach((panel) => {
+    const centerX = scaled(panel.x);
+    const width = scaled(panel.width);
+    const y1 = scaled(panel.y1);
+    const y2 = scaled(panel.y2);
+    const height = y2 - y1;
+    const glass = new THREE.Mesh(new THREE.PlaneGeometry(width, height), glassMat);
+    glass.position.set(centerX, y1 + height / 2, lm402Z1 + 0.035);
+    worldGroup.add(glass);
+    const frameTop = new THREE.Mesh(new THREE.BoxGeometry(width + 0.08, 0.08, 0.08), beamMat);
+    frameTop.position.set(centerX, y2 + 0.04, lm402Z1 + 0.04);
+    const frameBottom = frameTop.clone();
+    frameBottom.position.y = y1 - 0.04;
+    const frameStart = new THREE.Mesh(new THREE.BoxGeometry(0.08, height + 0.12, 0.08), beamMat);
+    frameStart.position.set(centerX - width / 2, y1 + height / 2, lm402Z1 + 0.04);
     const frameEnd = frameStart.clone();
     frameEnd.position.x = centerX + width / 2;
     lm402BackWall.add(frameTop, frameBottom, frameStart, frameEnd);
@@ -1096,7 +1213,7 @@ export function createLm402Scene(canvas) {
   );
 
   const lectern = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.94, 0.62), woodMat);
-  lectern.position.set(boardX - 1.12, 0.47, scaled(642));
+  lectern.position.set(boardX - 1.12, 0.47, scaled(742));
   lectern.castShadow = true;
   lectern.receiveShadow = true;
   worldGroup.add(lectern);
@@ -1107,7 +1224,7 @@ export function createLm402Scene(canvas) {
     new THREE.MeshStandardMaterial({ color: "#f6efe5", roughness: 0.9, metalness: 0.02 })
   );
   clock.rotation.z = Math.PI / 2;
-  clock.position.set(boardX - 0.1, 2.18, scaled(548));
+  clock.position.set(boardX - 0.1, 2.16, scaled(768));
   worldGroup.add(clock);
 
   WORLD.lightBeams.forEach((beam, index) => {
@@ -1122,27 +1239,27 @@ export function createLm402Scene(canvas) {
       new THREE.PlaneGeometry(scaled(beam.width), scaled(beam.reach)),
       beamMat
     );
-    const sourceZ = beam.side === "front" ? lm402Z1 + 0.06 : lm402Z2 - 0.06;
-    plane.position.set(scaled(beam.x), 1.28, sourceZ + (beam.side === "front" ? scaled(beam.reach) * 0.32 : -scaled(beam.reach) * 0.32));
-    plane.rotation.x = beam.side === "front" ? Math.PI / 2.54 : -Math.PI / 2.54;
+    const sourceZ = beam.side === "front" ? lm402Z2 - 0.06 : lm402Z1 + 0.06;
+    plane.position.set(scaled(beam.x), 1.32, sourceZ + (beam.side === "front" ? -scaled(beam.reach) * 0.32 : scaled(beam.reach) * 0.32));
+    plane.rotation.x = beam.side === "front" ? -Math.PI / 2.54 : Math.PI / 2.54;
     plane.rotation.y = index % 2 ? 0.06 : -0.06;
     worldGroup.add(plane);
   });
 
   const corridorSunPatch = createGlowPlane("rgba(255,230,172,1)", 4.8, 2.4, 0.22);
-  corridorSunPatch.position.set(minX + 1.46, 0.018, scaled(560));
+  corridorSunPatch.position.set(minX + 1.34, 0.018, scaled(752));
   corridorSunPatch.rotation.x = -Math.PI / 2;
   corridorSunPatch.rotation.z = 0.14;
   worldGroup.add(corridorSunPatch);
 
   const classroomSunPatch = createGlowPlane("rgba(255,224,170,1)", 3.8, 2.1, 0.24);
-  classroomSunPatch.position.set(classroomMaxX - 1.76, 0.019, scaled(748));
+  classroomSunPatch.position.set(classroomMaxX - 1.74, 0.019, scaled(758));
   classroomSunPatch.rotation.x = -Math.PI / 2;
   classroomSunPatch.rotation.z = -0.18;
   worldGroup.add(classroomSunPatch);
 
   const seatSunPatch = createGlowPlane("rgba(255,229,186,1)", 2.6, 1.5, 0.16);
-  seatSunPatch.position.set(scaled(232), 0.018, scaled(648));
+  seatSunPatch.position.set(scaled(206), 0.018, scaled(630));
   seatSunPatch.rotation.x = -Math.PI / 2;
   seatSunPatch.rotation.z = 0.05;
   worldGroup.add(seatSunPatch);
@@ -1153,15 +1270,22 @@ export function createLm402Scene(canvas) {
     const deskGroup = new THREE.Group();
     deskGroup.position.set(x, 0, z);
 
-    const top = new THREE.Mesh(new THREE.BoxGeometry(0.88, 0.08, 0.66), woodMat);
+    const top = new THREE.Mesh(new THREE.BoxGeometry(0.92, 0.08, 0.68), woodMat);
     top.position.set(0.12, 0.78, 0);
-    const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.05, 0.18), woodMat);
+    const topLip = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.04, 0.05), woodMat);
+    topLip.position.set(0.12, 0.82, -0.31);
+    const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.64, 0.05, 0.18), woodMat);
     shelf.position.set(0.12, 0.48, 0);
-    const chairSeat = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.05, 0.28), woodMat);
+    const modesty = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.24, 0.04), woodMat);
+    modesty.position.set(0.12, 0.66, -0.18);
+
+    const chairSeat = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.05, 0.3), woodMat);
     chairSeat.position.set(-0.42, 0.49, 0);
-    const chairBack = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.36, 0.28), woodMat);
-    chairBack.position.set(-0.54, 0.74, 0);
-    deskGroup.add(top, shelf, chairSeat, chairBack);
+    const chairBack = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.44, 0.3), woodMat);
+    chairBack.position.set(-0.56, 0.78, 0);
+    const chairFrame = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.04, 0.24), metalMat);
+    chairFrame.position.set(-0.44, 0.36, 0);
+    deskGroup.add(top, topLip, shelf, modesty, chairSeat, chairBack, chairFrame);
 
     const legGeo = new THREE.BoxGeometry(0.06, 0.78, 0.06);
     [
@@ -1174,6 +1298,27 @@ export function createLm402Scene(canvas) {
       leg.position.set(dx, 0.39, dz);
       deskGroup.add(leg);
     });
+
+    [
+      [-0.52, -0.12],
+      [-0.52, 0.12],
+      [-0.34, -0.12],
+      [-0.34, 0.12],
+    ].forEach(([dx, dz]) => {
+      const chairLeg = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.46, 0.04), metalMat);
+      chairLeg.position.set(dx, 0.23, dz);
+      deskGroup.add(chairLeg);
+    });
+
+    if (index % 3 === 1) {
+      const notebook = new THREE.Mesh(
+        new THREE.BoxGeometry(0.18, 0.018, 0.13),
+        new THREE.MeshStandardMaterial({ color: "#f2eee8", roughness: 0.94, metalness: 0.01 })
+      );
+      notebook.position.set(0.16, 0.83, 0.06);
+      notebook.rotation.y = 0.2;
+      deskGroup.add(notebook);
+    }
 
     setShadow(deskGroup, false, true);
     worldGroup.add(deskGroup);
@@ -1232,7 +1377,7 @@ export function createLm402Scene(canvas) {
     frontDoor: worldPointScaled(WORLD.frontDoor.center.x, WORLD.frontDoor.center.y, WORLD.frontDoor.center.z),
     backDoor: worldPointScaled(WORLD.backDoor.center.x, WORLD.backDoor.center.y, WORLD.backDoor.center.z),
     doorPlaque: worldPointScaled(WORLD.plaque.x, WORLD.plaque.y, WORLD.plaque.z),
-    parapetBand: new THREE.Vector3(minX + 0.18, scaled(WORLD.corridor.parapetHeight) + 0.26, scaled(536)),
+    parapetBand: new THREE.Vector3(minX + 0.22, scaled(WORLD.corridor.parapetHeight) + 0.32, scaled(744)),
     boardWall: new THREE.Vector3(boardX - 0.08, scaled((WORLD.board.y1 + WORLD.board.y2) / 2), (boardZ1 + boardZ2) / 2),
   };
 
@@ -1305,14 +1450,15 @@ export function createLm402Scene(canvas) {
   });
 
   const introCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(minX - campusDepth * 0.28, 5.6, scaled(220)),
-    new THREE.Vector3(minX - campusDepth * 0.18, 5.2, scaled(520)),
-    new THREE.Vector3(minX - campusDepth * 0.1, 4.4, scaled(760)),
-    new THREE.Vector3(minX + 1.4, 4.0, scaled(860)),
-    new THREE.Vector3(minX + 0.6, 3.4, scaled(720)),
-    new THREE.Vector3(minX + 0.2, 2.7, scaled(620)),
-    new THREE.Vector3(corridorMinX + 1.9, 2.18, scaled(566)),
-    new THREE.Vector3(corridorMinX + 2.8, 1.92, scaled(552)),
+    new THREE.Vector3(minX - campusDepth * 0.34, 7.2, scaled(120)),
+    new THREE.Vector3(minX - campusDepth * 0.28, 6.4, scaled(360)),
+    new THREE.Vector3(minX - campusDepth * 0.22, 5.5, scaled(618)),
+    new THREE.Vector3(minX - campusDepth * 0.14, 4.6, scaled(852)),
+    new THREE.Vector3(minX + 0.6, 4.0, scaled(900)),
+    new THREE.Vector3(minX + 1.28, 3.28, scaled(842)),
+    new THREE.Vector3(corridorMinX + 1.84, 2.58, scaled(792)),
+    new THREE.Vector3(corridorMinX + 2.56, 2.04, scaled(764)),
+    new THREE.Vector3(corridorMinX + 3.12, 1.82, scaled(748)),
   ]);
   const introTube = new THREE.Mesh(
     new THREE.TubeGeometry(introCurve, 180, 0.06, 10, false),
@@ -1349,15 +1495,19 @@ export function createLm402Scene(canvas) {
   introGroup.add(introAura, introBloom, introSpark);
 
   function resize() {
-    const rect = canvas.getBoundingClientRect();
+    const host = canvas.parentElement ?? canvas;
+    const rect = host.getBoundingClientRect();
     const width = Math.max(1, Math.round(rect.width));
     const height = Math.max(1, Math.round(rect.height));
-    if (canvas.width !== width || canvas.height !== height) {
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality.maxPixelRatio));
-      renderer.setSize(width, height, false);
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-    }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality.maxPixelRatio));
+    renderer.setSize(width, height, false);
+    renderer.setViewport(0, 0, width, height);
+    renderer.setScissor(0, 0, width, height);
+    renderer.setScissorTest(false);
+    renderer.domElement.style.width = `${width}px`;
+    renderer.domElement.style.height = `${height}px`;
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
   }
 
   function resolveMotion(current, desired, radius = 0.28) {
@@ -1466,39 +1616,50 @@ export function createLm402Scene(canvas) {
     const cameraT = THREE.MathUtils.smoothstep(progress, 0.02, 0.96);
     const camPos = introCurve.getPoint(cameraT);
     const target = introCurve.getPoint(THREE.MathUtils.clamp(cameraT + 0.06, 0, 1));
+    camera.fov = THREE.MathUtils.lerp(82, 68, THREE.MathUtils.smoothstep(progress, 0.08, 0.94));
+    camera.updateProjectionMatrix();
     camera.position.copy(camPos);
-    camera.lookAt(target.x + THREE.MathUtils.lerp(0.8, 0.1, progress), THREE.MathUtils.lerp(2.1, 1.52, progress), target.z);
+    camera.lookAt(
+      target.x + THREE.MathUtils.lerp(1.8, 0.18, progress),
+      THREE.MathUtils.lerp(2.9, 1.52, progress),
+      target.z + THREE.MathUtils.lerp(-0.16, -0.04, progress)
+    );
 
     introGroup.visible = true;
     introTube.material.opacity = THREE.MathUtils.lerp(0.88, 0.14, progress);
-    introTube.material.emissiveIntensity = THREE.MathUtils.lerp(1.5, 0.48, progress);
+    introTube.material.emissiveIntensity = THREE.MathUtils.lerp(1.8, 0.54, progress);
     const daughterT = THREE.MathUtils.clamp(progress + 0.03, 0, 1);
     const daughterPos = introCurve.getPoint(daughterT);
     const daughterNext = introCurve.getPoint(THREE.MathUtils.clamp(daughterT + 0.015, 0, 1));
     introDaughter.position.copy(daughterPos).add(new THREE.Vector3(0, Math.sin(progress * Math.PI * 5) * 0.08, 0));
     introDaughter.lookAt(daughterNext);
     introDaughter.rotateY(Math.PI);
+    introDaughter.rotation.z = Math.sin(progress * Math.PI * 3.8) * 0.08;
     introAura.position.copy(daughterPos).add(new THREE.Vector3(0, 0.32, -0.18));
     introAura.lookAt(camera.position);
-    introAura.material.opacity = THREE.MathUtils.lerp(0.62, 0.22, progress);
+    introAura.material.opacity = THREE.MathUtils.lerp(0.72, 0.2, progress);
     introBloom.position.copy(daughterPos).add(new THREE.Vector3(-0.16, 0.28, -0.42));
     introBloom.lookAt(camera.position);
-    introBloom.material.opacity = THREE.MathUtils.lerp(0.36, 0.12, progress);
+    introBloom.material.opacity = THREE.MathUtils.lerp(0.44, 0.12, progress);
     introSpark.position.copy(introCurve.getPoint(THREE.MathUtils.clamp(progress + 0.08, 0, 1)));
     introSpark.scale.setScalar(1 + Math.sin(progress * Math.PI * 6) * 0.32);
   }
 
   function applyPerfectEndingCamera(game) {
-    const orbitT = THREE.MathUtils.clamp((game.endingSequence?.time ?? 0) / 6.8, 0, 1);
-    const center = junior.position.clone().add(new THREE.Vector3(0, 1.46, 0));
-    const radius = THREE.MathUtils.lerp(1.98, 0.74, THREE.MathUtils.smoothstep(orbitT, 0.18, 0.92));
-    const angle = THREE.MathUtils.lerp(-1.12, Math.PI * 1.42, orbitT);
+    const orbitT = THREE.MathUtils.clamp((game.endingSequence?.time ?? 0) / 7.6, 0, 1);
+    const center = junior.position.clone().add(new THREE.Vector3(0, 1.48, 0));
+    const eyeTarget = center.clone().add(new THREE.Vector3(0.016, 0.02, 0.16));
+    const radius = THREE.MathUtils.lerp(2.36, 0.42, THREE.MathUtils.smoothstep(orbitT, 0.12, 0.96));
+    const angle = THREE.MathUtils.lerp(-1.28, Math.PI * 1.56, THREE.MathUtils.smoothstep(orbitT, 0.04, 0.86));
     camera.position.set(
       center.x + Math.cos(angle) * radius,
-      THREE.MathUtils.lerp(1.52, 1.66, orbitT),
+      THREE.MathUtils.lerp(1.54, 1.66, orbitT),
       center.z + Math.sin(angle) * radius
     );
-    camera.lookAt(center.x, center.y, center.z);
+    const lookTarget = center.lerp(eyeTarget, THREE.MathUtils.smoothstep(orbitT, 0.74, 0.98));
+    camera.fov = THREE.MathUtils.lerp(70, 42, THREE.MathUtils.smoothstep(orbitT, 0.64, 0.98));
+    camera.updateProjectionMatrix();
+    camera.lookAt(lookTarget.x, lookTarget.y, lookTarget.z);
   }
 
   function pickHotspot(candidates, player, activeId) {
@@ -1586,18 +1747,22 @@ export function createLm402Scene(canvas) {
       applyPerfectEndingCamera(game);
     } else {
       introGroup.visible = false;
+      if (camera.fov !== 74) {
+        camera.fov = 74;
+        camera.updateProjectionMatrix();
+      }
       applyPlayerCamera(game.player);
     }
 
     const daylight = isIntro ? THREE.MathUtils.lerp(0.34, 1, game.intro.progress) : 1;
-    sun.intensity = 1.62 * daylight + (game.phase === "eye_contact" || game.ending === "perfect" ? 0.4 : 0);
-    ambient.intensity = 0.2 + daylight * 0.14;
-    corridorFill.intensity = isIntro ? 0.48 : 0.76;
-    corridorSun.intensity = game.ending === "perfect" ? 1.02 : 0.78;
-    classroomAccent.intensity = game.phase === "eye_contact" || game.ending === "perfect" ? 0.98 : 0.62;
-    corridorSunPatch.material.opacity = game.ending === "perfect" ? 0.28 : 0.2;
-    classroomSunPatch.material.opacity = game.phase === "eye_contact" || game.ending === "perfect" ? 0.34 : 0.22;
-    seatSunPatch.material.opacity = game.ending === "perfect" ? 0.26 : 0.16;
+    sun.intensity = 1.78 * daylight + (game.phase === "eye_contact" || game.ending === "perfect" ? 0.46 : 0.08);
+    ambient.intensity = 0.22 + daylight * 0.16;
+    corridorFill.intensity = isIntro ? 0.54 : 0.84;
+    corridorSun.intensity = game.ending === "perfect" ? 1.18 : game.phase === "front_call" ? 0.94 : 0.82;
+    classroomAccent.intensity = game.phase === "eye_contact" || game.ending === "perfect" ? 1.08 : 0.72;
+    corridorSunPatch.material.opacity = game.ending === "perfect" ? 0.32 : game.phase === "front_call" ? 0.26 : 0.2;
+    classroomSunPatch.material.opacity = game.phase === "eye_contact" || game.ending === "perfect" ? 0.42 : 0.26;
+    seatSunPatch.material.opacity = game.ending === "perfect" ? 0.3 : game.phase === "eye_contact" ? 0.24 : 0.16;
     scene.background.setStyle(isIntro ? "#090d16" : "#dde8f2");
     scene.fog.color.setStyle(isIntro ? "#121722" : "#d6e1eb");
     scene.fog.near = isIntro ? 3 : 16;
@@ -1606,12 +1771,23 @@ export function createLm402Scene(canvas) {
     dust.rotation.y = time * 0.018;
     dust.position.x = Math.sin(time * 0.12) * 0.08;
 
+    const stageRect = (canvas.parentElement ?? canvas).getBoundingClientRect();
     const cssRect = canvas.getBoundingClientRect();
-    const viewportWidth = renderer.domElement.width || 0;
-    const viewportHeight = renderer.domElement.height || 0;
+    const logicalViewport = renderer.getSize(tempSize2D);
+    const drawViewport = renderer.getDrawingBufferSize(tempDrawSize2D);
+    const viewportWidth = renderer.domElement.width || drawViewport.x || 0;
+    const viewportHeight = renderer.domElement.height || drawViewport.y || 0;
     const cssWidth = Math.round(cssRect.width);
     const cssHeight = Math.round(cssRect.height);
-    const mobileBlackRegionDetected = cssWidth > 0 && viewportWidth > 0 && Math.abs(cssWidth - canvas.clientWidth) > 4;
+    const stageWidth = Math.round(stageRect.width);
+    const stageHeight = Math.round(stageRect.height);
+    const mobileBlackRegionDetected =
+      (stageWidth > 0 && cssWidth > 0 && Math.abs(stageWidth - cssWidth) > 4) ||
+      (stageHeight > 0 && cssHeight > 0 && Math.abs(stageHeight - cssHeight) > 4) ||
+      Math.abs(cssWidth - canvas.clientWidth) > 4 ||
+      Math.abs(cssHeight - canvas.clientHeight) > 4 ||
+      Math.abs(Math.round(logicalViewport.x) - stageWidth) > 4 ||
+      Math.abs(Math.round(logicalViewport.y) - stageHeight) > 4;
 
     lastDebugSnapshot = {
       camera: {
@@ -1623,8 +1799,8 @@ export function createLm402Scene(canvas) {
       },
       viewport: { width: viewportWidth, height: viewportHeight },
       cssViewport: { width: cssWidth, height: cssHeight },
-      stageViewport: { width: cssWidth, height: cssHeight },
-      webglViewport: { width: viewportWidth, height: viewportHeight },
+      stageViewport: { width: stageWidth, height: stageHeight },
+      webglViewport: { width: Math.round(logicalViewport.x), height: Math.round(logicalViewport.y) },
       projectedNodes: {
         senior: projectNode("senior", debugAnchors.senior, viewportWidth, viewportHeight),
         junior: projectNode("junior", debugAnchors.junior, viewportWidth, viewportHeight),

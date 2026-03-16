@@ -19,18 +19,23 @@
   --joystick-size:160px;
   --joystick-thumb:62px;
   --action-size:52px;
-  --mobile-left-safe:calc(var(--joystick-size) + 28px);
-  --mobile-right-safe:calc(var(--joystick-size) + var(--action-size) + 34px);
+  --mobile-left-safe:calc(var(--joystick-size) + 36px);
+  --mobile-right-safe:calc(var(--joystick-size) + var(--action-size) + 46px);
 }
 
 *,
 *::before,
 *::after{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
+html{
+  -webkit-text-size-adjust:100%;
+  width:100%;
+  height:100%;
+}
 body{
   margin:0;
   min-height:100vh;
   min-height:100dvh;
+  width:100%;
   background:
     radial-gradient(circle at 82% 18%,rgba(255,222,162,.12),transparent 20%),
     radial-gradient(circle at 14% 84%,rgba(74,92,138,.14),transparent 28%),
@@ -201,6 +206,7 @@ a{text-decoration:none}
   height:100dvh;
   width:100%;
   max-width:100vw;
+  min-width:0;
   padding:20px var(--side-gap-right) 20px var(--side-gap);
   overflow:hidden;
   align-items:stretch;
@@ -214,6 +220,7 @@ a{text-decoration:none}
   height:calc(100dvh - 40px);
   border-radius:38px;
   overflow:hidden;
+  contain:layout paint size;
   background:linear-gradient(180deg,#111824,#080c12);
   border:1px solid rgba(255,255,255,.06);
   box-shadow:var(--shadow);
@@ -224,6 +231,8 @@ a{text-decoration:none}
   display:block;
   width:100%;
   height:100%;
+  max-width:100%;
+  max-height:100%;
   background:#111723;
 }
 .stage-vignette{
@@ -540,13 +549,14 @@ a{text-decoration:none}
   flex-direction:column;
   gap:16px;
   padding-top:112px;
-  padding-bottom:calc(22px + var(--bottom-gap));
+  padding-bottom:calc(120px + var(--bottom-gap));
   min-width:0;
   min-height:0;
   max-height:calc(100vh - 40px);
   max-height:calc(100dvh - 40px);
   overflow:auto;
-  padding-right:2px;
+  padding-right:6px;
+  scrollbar-gutter:stable both-edges;
   overscroll-behavior:contain;
 }
 .panel-card{
@@ -857,12 +867,15 @@ body.landscape-prompt .debug-panel{
 
 @media (max-width: 1080px){
   .game-shell{
+    position:fixed;
+    inset:0;
     grid-template-columns:1fr;
     padding:0;
     width:100vw;
     max-width:100vw;
     height:100vh;
     height:100dvh;
+    overflow:hidden;
   }
   .stage{
     min-height:100vh;
@@ -870,8 +883,13 @@ body.landscape-prompt .debug-panel{
     width:100vw;
     height:100vh;
     height:100dvh;
+    max-width:100vw;
     border-radius:0;
     border:none;
+  }
+  #scene-canvas{
+    width:100vw !important;
+    height:100dvh !important;
   }
   .side-panel{display:none}
   .mobile-controls{display:block}
@@ -969,7 +987,9 @@ body.landscape-prompt .debug-panel{
     position:fixed;
     left:calc(env(safe-area-inset-left) + var(--mobile-left-safe));
     right:calc(env(safe-area-inset-right) + var(--mobile-right-safe));
-    bottom:calc(var(--controls-clearance) - 18px + var(--bottom-gap));
+    bottom:calc(var(--controls-clearance) - 8px + var(--bottom-gap));
+    width:min(460px,calc(var(--stage-width) - var(--mobile-left-safe) - var(--mobile-right-safe) - 18px));
+    max-width:calc(100vw - var(--mobile-left-safe) - var(--mobile-right-safe) - 18px);
     gap:8px;
     z-index:16;
   }
@@ -1003,9 +1023,10 @@ body.landscape-prompt .debug-panel{
   }
   .ambience-chip[aria-expanded="true"] + .ambience-box{display:block}
   .subtitle-box{
-    min-height:60px;
+    min-height:var(--rail-min-height);
     padding:10px 12px;
     gap:12px;
+    max-width:100%;
     box-shadow:0 12px 28px rgba(0,0,0,.18);
   }
   .subtitle-box .dock-kicker{font-size:9px}

@@ -67,39 +67,39 @@ const WORLD_POINTS = {
     z: scale(WORLD.focusMark.z),
   },
   frontSpawn: {
-    x: scale(-730),
+    x: scale(-692),
     y: 0,
-    z: scale(LM402_ROOM.z1 - 70),
+    z: scale(700),
   },
   corridorFront: {
-    x: scale(-438),
+    x: scale(-430),
     y: 0,
-    z: scale(WORLD.frontDoor.center.z + 34),
+    z: scale(WORLD.frontDoor.center.z - 18),
   },
   juniorSeat: {
-    x: scale(226),
+    x: scale(206),
     y: 0,
-    z: scale(650),
+    z: scale(630),
   },
   frontLook: {
-    x: scale(42),
-    y: 1.12,
-    z: scale(760),
+    x: scale(-548),
+    y: 1.18,
+    z: scale(786),
   },
   rearLook: {
-    x: scale(-142),
-    y: 1.22,
-    z: scale(764),
+    x: scale(-548),
+    y: 1.2,
+    z: scale(538),
   },
   eyeLook: {
-    x: scale(54),
-    y: 1.36,
-    z: scale(764),
+    x: scale(-18),
+    y: 1.34,
+    z: scale(556),
   },
   perfectOrbit: {
-    x: scale(94),
-    y: 1.4,
-    z: scale(760),
+    x: scale(6),
+    y: 1.42,
+    z: scale(556),
   },
 };
 
@@ -115,6 +115,8 @@ const HOTSPOT_MAP = Object.fromEntries(
     },
   ])
 );
+
+let liveState = null;
 
 const canvas = document.getElementById("scene-canvas");
 const scene = createLm402Scene(canvas);
@@ -260,14 +262,14 @@ function createInitialCharacters() {
     fatherEcho: {
       x: scale(-312),
       y: 0,
-      z: scale(776),
+      z: scale(578),
       rotationY: Math.PI / 2,
       alpha: 0,
     },
     auntEcho: {
       x: scale(-122),
       y: 0,
-      z: scale(786),
+      z: scale(564),
       rotationY: -Math.PI / 2,
       alpha: 0,
     },
@@ -295,6 +297,27 @@ function angleDifference(a, b) {
 }
 
 function phaseLookTarget(phase) {
+  if (liveState?.characters) {
+    if (phase === "eye_contact") {
+      return {
+        x: lerp(liveState.characters.junior.x, WORLD_POINTS.eyeLook.x, 0.38),
+        y: WORLD_POINTS.eyeLook.y,
+        z: lerp(liveState.characters.junior.z, WORLD_POINTS.eyeLook.z, 0.7),
+      };
+    }
+    if (phase === "rear_wait") {
+      return {
+        x: lerp(liveState.characters.senior.x, WORLD_POINTS.rearLook.x, 0.72),
+        y: WORLD_POINTS.rearLook.y,
+        z: lerp(liveState.characters.senior.z, WORLD_POINTS.rearLook.z, 0.58),
+      };
+    }
+    return {
+      x: lerp(liveState.characters.senior.x, WORLD_POINTS.frontLook.x, 0.42),
+      y: WORLD_POINTS.frontLook.y,
+      z: lerp(liveState.characters.senior.z, WORLD_POINTS.frontLook.z, 0.34),
+    };
+  }
   if (phase === "eye_contact") {
     return WORLD_POINTS.eyeLook;
   }
@@ -308,12 +331,12 @@ function phaseDefaultPitch(phase, from = null) {
   const origin = from ?? state?.player ?? createInitialPlayer();
   const base = pitchToTarget(origin, phaseLookTarget(phase));
   if (phase === "eye_contact") {
-    return clamp(base - 0.01, MIN_PITCH, MAX_PITCH);
+    return clamp(base - 0.02, MIN_PITCH, MAX_PITCH);
   }
   if (phase === "rear_wait") {
-    return clamp(base - 0.03, MIN_PITCH, MAX_PITCH);
+    return clamp(base - 0.02, MIN_PITCH, MAX_PITCH);
   }
-  return clamp(base - 0.09, MIN_PITCH, MAX_PITCH);
+  return clamp(base - 0.03, MIN_PITCH, MAX_PITCH);
 }
 
 function movementRotation(dx, dz, fallback = 0) {
@@ -413,6 +436,7 @@ const state = {
   introBeatIndex: 0,
   introCameraTrack: INTRO_BEATS[0].id,
 };
+liveState = state;
 
 function createAudioSystem() {
   const phaseChords = {
@@ -518,26 +542,46 @@ function createAudioSystem() {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     const pianoGain = ctx.createGain();
-    piano.type = "triangle";
-    osc.type = type === "bell" ? "triangle" : "sine";
-    piano.frequency.setValueAtTime(type === "bell" ? 523.25 : 392, now);
-    piano.frequency.exponentialRampToValueAtTime(type === "bell" ? 261.63 : 220, now + (type === "bell" ? 1.2 : 0.58));
-    osc.frequency.setValueAtTime(type === "bell" ? 784 : 440, now);
-    osc.frequency.exponentialRampToValueAtTime(type === "bell" ? 523.25 : 261.63, now + (type === "bell" ? 1.2 : 0.42));
+    piano.type = type === "phone" ? "sine" : "triangle";
+    osc.type = type === "bell" || type === "ending" ? "triangle" : type === "phone" ? "square" : "sine";
+    const pianoStart = type === "bell" ? 523.25 : type === "ending" ? 587.33 : type === "thread" ? 466.16 : type === "phone" ? 659.25 : 392;
+    const pianoEnd = type === "bell" ? 261.63 : type === "ending" ? 293.66 : type === "thread" ? 349.23 : type === "phone" ? 523.25 : 220;
+    const oscStart = type === "bell" ? 784 : type === "ending" ? 880 : type === "thread" ? 622.25 : type === "phone" ? 987.77 : 440;
+    const oscEnd = type === "bell" ? 523.25 : type === "ending" ? 659.25 : type === "thread" ? 392 : type === "phone" ? 739.99 : 261.63;
+    const cueLength = type === "bell" ? 1.2 : type === "ending" ? 1.6 : type === "phone" ? 0.7 : type === "thread" ? 0.92 : 0.58;
+    piano.frequency.setValueAtTime(pianoStart, now);
+    piano.frequency.exponentialRampToValueAtTime(pianoEnd, now + cueLength);
+    osc.frequency.setValueAtTime(oscStart, now);
+    osc.frequency.exponentialRampToValueAtTime(oscEnd, now + Math.max(0.42, cueLength * 0.9));
     pianoGain.gain.setValueAtTime(0.0001, now);
-    pianoGain.gain.linearRampToValueAtTime(type === "bell" ? 0.082 : 0.05, now + 0.02);
-    pianoGain.gain.exponentialRampToValueAtTime(0.0001, now + (type === "bell" ? 1.8 : 0.72));
+    pianoGain.gain.linearRampToValueAtTime(type === "bell" ? 0.082 : type === "ending" ? 0.094 : type === "thread" ? 0.062 : type === "phone" ? 0.046 : 0.05, now + 0.02);
+    pianoGain.gain.exponentialRampToValueAtTime(0.0001, now + (type === "bell" ? 1.8 : type === "ending" ? 2.1 : type === "thread" ? 1.3 : 0.82));
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.linearRampToValueAtTime(type === "bell" ? 0.11 : 0.07, now + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + (type === "bell" ? 1.4 : 0.48));
+    gain.gain.linearRampToValueAtTime(type === "bell" ? 0.11 : type === "ending" ? 0.12 : type === "thread" ? 0.08 : type === "phone" ? 0.05 : 0.07, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + (type === "bell" ? 1.4 : type === "ending" ? 1.8 : type === "thread" ? 0.92 : type === "phone" ? 0.56 : 0.48));
     piano.connect(pianoGain);
     pianoGain.connect(masterGain);
     osc.connect(gain);
     gain.connect(masterGain);
     piano.start(now);
     osc.start(now);
-    piano.stop(now + (type === "bell" ? 1.9 : 0.76));
-    osc.stop(now + (type === "bell" ? 1.5 : 0.56));
+    piano.stop(now + (type === "bell" ? 1.9 : type === "ending" ? 2.2 : type === "thread" ? 1.4 : 0.96));
+    osc.stop(now + (type === "bell" ? 1.5 : type === "ending" ? 1.9 : type === "thread" ? 1.02 : 0.66));
+
+    if (type === "phone") {
+      const repeat = ctx.createOscillator();
+      const repeatGain = ctx.createGain();
+      repeat.type = "square";
+      repeat.frequency.setValueAtTime(880, now + 0.18);
+      repeat.frequency.exponentialRampToValueAtTime(659.25, now + 0.48);
+      repeatGain.gain.setValueAtTime(0.0001, now + 0.16);
+      repeatGain.gain.linearRampToValueAtTime(0.04, now + 0.2);
+      repeatGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.58);
+      repeat.connect(repeatGain);
+      repeatGain.connect(masterGain);
+      repeat.start(now + 0.16);
+      repeat.stop(now + 0.62);
+    }
   }
 
   function playStep() {
@@ -594,12 +638,12 @@ function createAudioSystem() {
 
     if (state.mode === "intro" && introBeatIndex !== state.introBeatIndex) {
       introBeatIndex = state.introBeatIndex;
-      playCue(introBeatIndex === 3 ? "bell" : "spark");
+      playCue(introBeatIndex === 1 ? "thread" : introBeatIndex === 3 ? "bell" : introBeatIndex === 4 ? "phone" : "spark");
     }
     if (state.mode === "play" && currentPhase !== state.phase) {
       currentPhase = state.phase;
       updatePadFrequencies(currentPhase);
-      playCue(currentPhase === "eye_contact" ? "bell" : "spark");
+      playCue(currentPhase === "eye_contact" ? "ending" : currentPhase === "rear_wait" ? "thread" : "spark");
     }
     if (state.mode === "play" && moving) {
       stepClock -= dt;
@@ -626,6 +670,7 @@ function createAudioSystem() {
     unlock,
     update,
     setEnabled,
+    playCue,
   };
 }
 
@@ -940,6 +985,7 @@ function applyEffect(effect) {
     state.flags.frontCallHeard = true;
     setPhase("rear_wait");
     resetView();
+    audioSystem.playCue("phone");
     setSubtitle("學妹", "「你走到後門。」", 3.6);
     setAmbience("鐘聲剛落，前門那邊傳來探頭和腳步的動靜，風把教室裡的紙邊輕輕掀起。");
     closeDialogue();
@@ -965,6 +1011,7 @@ function applyEffect(effect) {
   }
   if (effect === "advance_rear_wait") {
     state.flags.juniorPrepared = true;
+    audioSystem.playCue("thread");
     setSubtitle("學妹", "「好，那妳等我。」", 3.6);
     revealHint("現在去後門，先把自己站穩。");
     closeDialogue();
@@ -980,6 +1027,7 @@ function applyEffect(effect) {
     state.flags.backdoorAnchored = true;
     setPhase("eye_contact");
     resetView();
+    audioSystem.playCue("ending");
     setSubtitle("女兒", "我停在後門旁，剛好能看到走廊的一小段。", 4.2);
     setAmbience("光從窗邊切進來，把地板照得有點過分地亮。所有版本的呼吸都慢慢安靜下來。");
     closeDialogue();
@@ -1185,6 +1233,7 @@ function startEnding(type, options = {}) {
   if (type === "perfect") {
     state.phase = "eye_contact";
     state.phaseClock = 0;
+    audioSystem.playCue("ending");
     setSubtitle("旁白", "這一次,依然再次遇見妳.", 5.4);
     setAmbience("風停在四樓後門那一側，只剩陽光、呼吸、腳步和她眼睛裡那一格慢慢亮起來的光。");
   } else {
@@ -1320,51 +1369,51 @@ function setCharacterPose(name, x, z, rotationY, alpha = 1) {
 function updateCharacters() {
   if (state.endingSequence?.type === "perfect") {
     const t = smoothstep(0.18, 3.4, state.endingSequence.time);
-    const seniorX = lerp(scale(-354), scale(-162), t);
-    const seniorZ = lerp(scale(558), scale(758), t);
-    const juniorX = lerp(scale(118), scale(36), smoothstep(0.08, 2.2, state.endingSequence.time));
-    const juniorZ = lerp(scale(736), scale(766), smoothstep(0.08, 2.2, state.endingSequence.time));
-    setCharacterPose("senior", seniorX, seniorZ, lerp(-0.94, 0.08, t));
-    setCharacterPose("junior", juniorX, juniorZ, Math.PI - 0.06);
-    setCharacterPose("fatherEcho", scale(-276), scale(786), Math.PI / 2, 0);
-    setCharacterPose("auntEcho", scale(-92), scale(792), -Math.PI / 2, 0);
+    const seniorX = lerp(scale(-430), scale(-164), t);
+    const seniorZ = lerp(scale(752), scale(558), t);
+    const juniorX = lerp(scale(94), scale(20), smoothstep(0.08, 2.2, state.endingSequence.time));
+    const juniorZ = lerp(scale(602), scale(556), smoothstep(0.08, 2.2, state.endingSequence.time));
+    setCharacterPose("senior", seniorX, seniorZ, lerp(-1.2, 0.08, t));
+    setCharacterPose("junior", juniorX, juniorZ, Math.PI - 0.05);
+    setCharacterPose("fatherEcho", scale(-278), scale(578), Math.PI / 2, 0);
+    setCharacterPose("auntEcho", scale(-88), scale(564), -Math.PI / 2, 0);
     return;
   }
 
   if (state.phase === "front_call") {
-    setCharacterPose("senior", scale(-438), scale(586), -0.88);
-    setCharacterPose("junior", scale(226), scale(650), 0.04);
-    setCharacterPose("fatherEcho", scale(-276), scale(790), Math.PI / 2, 0);
-    setCharacterPose("auntEcho", scale(-92), scale(796), -Math.PI / 2, 0);
+    setCharacterPose("senior", scale(-430), scale(752), -1.18);
+    setCharacterPose("junior", scale(206), scale(630), 0.14);
+    setCharacterPose("fatherEcho", scale(-278), scale(578), Math.PI / 2, 0);
+    setCharacterPose("auntEcho", scale(-88), scale(564), -Math.PI / 2, 0);
     return;
   }
 
   if (state.phase === "rear_wait") {
     const seniorT = smoothstep(0.1, 4.0, state.phaseClock);
     const juniorT = smoothstep(0.6, 3.5, state.phaseClock);
-    const seniorX = lerp(scale(-438), scale(-228), seniorT * 0.56);
-    const seniorZ = lerp(scale(586), scale(740), seniorT);
-    const juniorX = lerp(scale(226), scale(108), juniorT);
-    const juniorZ = lerp(scale(650), scale(736), juniorT);
-    setCharacterPose("senior", seniorX, seniorZ, lerp(-0.94, -0.06, seniorT));
-    setCharacterPose("junior", juniorX, juniorZ, movementRotation(scale(-118), scale(86), 0.02));
-    setCharacterPose("fatherEcho", scale(-276), scale(790), Math.PI / 2, 0);
-    setCharacterPose("auntEcho", scale(-92), scale(796), -Math.PI / 2, 0);
+    const seniorX = lerp(scale(-430), scale(-228), seniorT * 0.58);
+    const seniorZ = lerp(scale(752), scale(586), seniorT);
+    const juniorX = lerp(scale(206), scale(84), juniorT);
+    const juniorZ = lerp(scale(630), scale(586), juniorT);
+    setCharacterPose("senior", seniorX, seniorZ, lerp(-1.18, -0.18, seniorT));
+    setCharacterPose("junior", juniorX, juniorZ, movementRotation(scale(-122), scale(-44), 0.08));
+    setCharacterPose("fatherEcho", scale(-278), scale(578), Math.PI / 2, 0);
+    setCharacterPose("auntEcho", scale(-88), scale(564), -Math.PI / 2, 0);
     return;
   }
 
   const seniorT = smoothstep(0.6, 3.2, state.phaseClock);
   const juniorT = smoothstep(0.2, 2.8, state.phaseClock);
-  const seniorX = lerp(scale(-228), scale(-162), seniorT * 0.6);
-  const seniorZ = lerp(scale(740), scale(760), seniorT);
-  const juniorX = lerp(scale(108), scale(38), juniorT);
-  const juniorZ = lerp(scale(736), scale(766), juniorT);
+  const seniorX = lerp(scale(-228), scale(-164), seniorT * 0.62);
+  const seniorZ = lerp(scale(586), scale(558), seniorT);
+  const juniorX = lerp(scale(84), scale(18), juniorT);
+  const juniorZ = lerp(scale(586), scale(556), juniorT);
   const echoAlpha = smoothstep(1.9, 3.1, state.phaseClock) * (1 - smoothstep(4.1, 5.0, state.phaseClock));
 
   setCharacterPose("senior", seniorX, seniorZ, 0.1);
-  setCharacterPose("junior", juniorX, juniorZ, Math.PI - 0.08);
-  setCharacterPose("fatherEcho", scale(-276), scale(790), Math.PI / 2, echoAlpha * 0.6);
-  setCharacterPose("auntEcho", scale(-92), scale(796), -Math.PI / 2, echoAlpha * 0.74);
+  setCharacterPose("junior", juniorX, juniorZ, Math.PI - 0.05);
+  setCharacterPose("fatherEcho", scale(-278), scale(578), Math.PI / 2, echoAlpha * 0.6);
+  setCharacterPose("auntEcho", scale(-88), scale(564), -Math.PI / 2, echoAlpha * 0.74);
 }
 
 function updatePhaseLogic(dt) {
@@ -1843,6 +1892,8 @@ function handleResize() {
   const mobileLayout = isMobileLayout();
   state.mobileDensityTier = currentDensityTier();
   const preset = MOBILE_DENSITY_PRESETS[state.mobileDensityTier];
+  const stageNode = document.getElementById("stage");
+  const stageRect = stageNode.getBoundingClientRect();
   dom.body.dataset.mobileTier = state.mobileDensityTier;
   dom.body.classList.toggle("is-mobile", mobileLayout);
   dom.body.classList.toggle("is-mobile-landscape", isMobileLandscape());
@@ -1852,6 +1903,8 @@ function handleResize() {
   dom.body.style.setProperty("--action-size", `${preset.actionSize}px`);
   dom.body.style.setProperty("--controls-clearance", `${preset.controlsClearance}px`);
   dom.body.style.setProperty("--rail-min-height", `${preset.railMinHeight}px`);
+  dom.body.style.setProperty("--stage-width", `${Math.round(stageRect.width)}px`);
+  dom.body.style.setProperty("--stage-height", `${Math.round(stageRect.height)}px`);
   dom.mobileControls.setAttribute("aria-hidden", String(!mobileLayout));
   if (mobileLayout) {
     setHudCollapsed(true);
@@ -1864,6 +1917,10 @@ function handleResize() {
   updatePointerHint();
   syncDockState();
   scene.resize();
+  window.requestAnimationFrame(() => {
+    scene.resize();
+    renderDebugPanel();
+  });
   renderDebugPanel();
   logDebug("resize", `${window.innerWidth}x${window.innerHeight}`);
 }
@@ -1875,6 +1932,7 @@ bindPointerLook();
 bindUI();
 handleResize();
 window.addEventListener("resize", handleResize);
+window.visualViewport?.addEventListener("resize", handleResize);
 
 if (state.mode === "intro") {
   setSubtitle(INTRO_BEATS[0].kicker, INTRO_BEATS[0].text, 0.2);
