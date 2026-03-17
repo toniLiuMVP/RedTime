@@ -258,6 +258,9 @@ def assert_front_frame(snapshot):
         raise RuntimeError("parapet daylight band is not reading on the corridor side.")
     if senior["screenY"] < height * 0.2 or senior["screenY"] > height * 0.86:
         raise RuntimeError("senior vertical framing is off.")
+    current_rooms = snapshot.get("currentRoomIds") or renderer.get("currentRoomIds")
+    if current_rooms != ["LM401", "LM402", "LM403", "LM404"]:
+        raise RuntimeError(f"currentRoomIds mismatch: {current_rooms!r}")
 
 
 def write_json(path, payload):
@@ -320,6 +323,14 @@ def main():
     call_debug(session, "window.__LM402_DEBUG__.applyEffect('advance_rear_wait'), true")
     call_debug(session, "window.__LM402_DEBUG__.applyEffect('anchor_backdoor'), true")
     eye_contact_snapshot = wait_for(lambda: (wait_for_snapshot(session) or {}).get("phase") == "eye_contact" and wait_for_snapshot(session), message="eye_contact")
+    call_debug(session, "window.__LM402_DEBUG__.toggleObjective(false), window.__LM402_DEBUG__.skipIntro(), true")
+    call_debug(session, "window.__LM402_DEBUG__.applyEffect('anchor_backdoor'), true")
+    call_debug(session, "document.getElementById('perfect-ending-btn').click(), true")
+    perfect_snapshot = wait_for(
+        lambda: (wait_for_snapshot(session) or {}).get("endingShotPhase") == "orbit" and wait_for_snapshot(session),
+        timeout=24,
+        message="perfect ending orbit",
+    )
 
     mobile_reports = {}
     for width, height in [(932, 430), (844, 390), (780, 360)]:
@@ -347,6 +358,7 @@ def main():
         "phases": {
             "rear_wait": rear_wait_snapshot,
             "eye_contact": eye_contact_snapshot,
+            "perfect": perfect_snapshot,
         },
         "mobile": mobile_reports,
     }

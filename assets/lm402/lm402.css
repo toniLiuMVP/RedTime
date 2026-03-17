@@ -315,38 +315,45 @@ a{text-decoration:none}
 }
 .music-prompt{
   position:absolute;
-  left:18px;
-  top:124px;
+  right:18px;
+  left:auto;
+  top:68px;
   z-index:22;
-  width:min(280px,calc(100% - 40px));
-  padding:12px 14px 14px;
-  border-radius:22px;
+  width:min(220px,calc(100% - 40px));
+  padding:8px 10px 10px;
+  border-radius:18px;
   border:1px solid rgba(255,255,255,.1);
   background:linear-gradient(180deg,rgba(10,14,22,.94),rgba(8,11,17,.88));
   box-shadow:0 20px 44px rgba(0,0,0,.26);
   backdrop-filter:blur(18px);
 }
 .music-prompt.intro-mode{
-  width:min(236px,calc(100% - 40px));
-  padding:9px 11px 11px;
+  width:min(196px,calc(100% - 40px));
+  padding:7px 9px 9px;
   background:linear-gradient(180deg,rgba(10,14,22,.88),rgba(8,11,17,.8));
 }
 .music-prompt-kicker{
-  font:500 10px "DM Mono",monospace;
+  font:500 9px "DM Mono",monospace;
   letter-spacing:.16em;
   text-transform:uppercase;
   color:var(--gold);
 }
 .music-prompt-copy{
-  margin-top:8px;
+  margin-top:4px;
   color:var(--muted);
-  line-height:1.6;
-  font-size:13px;
+  line-height:1.4;
+  font-size:11px;
+}
+.music-prompt.intro-mode .music-prompt-copy{
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
 }
 .music-prompt-button{
-  margin-top:12px;
+  margin-top:8px;
   width:100%;
-  min-height:38px;
+  min-height:30px;
   border:none;
   border-radius:999px;
   border:1px solid rgba(115,208,165,.28);
@@ -1028,8 +1035,8 @@ body.landscape-prompt .debug-panel{
   .objective-prompt{
     position:fixed;
     top:max(8px,env(safe-area-inset-top));
-    width:min(294px,calc(100vw - 18px));
-    padding:12px 14px 13px;
+    width:min(276px,calc(100vw - 16px));
+    padding:10px 12px 11px;
   }
   .objective-title{font-size:26px}
   .objective-copy{font-size:13px;line-height:1.48}
@@ -1094,9 +1101,9 @@ body.landscape-prompt .debug-panel{
     left:50%;
     right:auto;
     transform:translateX(-50%);
-    bottom:calc(max(74px,min(104px,var(--controls-clearance) - 34px)) + var(--bottom-gap));
-    width:min(312px,calc(min(var(--stage-width),100dvw) - var(--mobile-left-safe) - var(--mobile-right-safe) - 14px));
-    max-width:calc(min(var(--stage-width),100dvw) - var(--mobile-left-safe) - var(--mobile-right-safe) - 14px);
+    bottom:calc(max(86px,min(116px,var(--controls-clearance) - 20px)) + var(--bottom-gap));
+    width:min(240px,calc(min(var(--stage-width),100dvw) - var(--mobile-left-safe) - var(--mobile-right-safe) - 28px));
+    max-width:calc(min(var(--stage-width),100dvw) - var(--mobile-left-safe) - var(--mobile-right-safe) - 28px);
     gap:0;
     z-index:16;
   }
@@ -1105,12 +1112,12 @@ body.landscape-prompt .debug-panel{
     display:none !important;
   }
   .subtitle-box{
-    min-height:max(42px,calc(var(--rail-min-height) - 18px));
-    padding:5px 9px;
-    gap:8px;
+    min-height:max(38px,calc(var(--rail-min-height) - 20px));
+    padding:3px 7px;
+    gap:7px;
     max-width:100%;
     box-shadow:0 12px 28px rgba(0,0,0,.18);
-    background:linear-gradient(180deg,rgba(8,11,16,.7),rgba(8,10,14,.52));
+    background:linear-gradient(180deg,rgba(8,11,16,.58),rgba(8,10,14,.42));
   }
   .subtitle-box .dock-kicker{font-size:9px}
   .subtitle-box .dock-copy{
@@ -1118,13 +1125,13 @@ body.landscape-prompt .debug-panel{
     -webkit-box-orient:vertical;
     -webkit-line-clamp:1;
     overflow:hidden;
-    font-size:10.5px;
-    line-height:1.24;
+    font-size:9px;
+    line-height:1.16;
   }
   .bottom-dock.hidden-subtitle .subtitle-box{
-    min-height:10px;
-    width:min(128px,42vw);
-    opacity:.04;
+    min-height:8px;
+    width:min(76px,22vw);
+    opacity:.02;
   }
   .control-cluster{
     position:fixed;
