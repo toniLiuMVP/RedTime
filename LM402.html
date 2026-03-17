@@ -109,6 +109,22 @@
         </div>
       </div>
 
+      <section id="transcript-dock" class="transcript-dock">
+        <button id="transcript-toggle" class="transcript-toggle" type="button" aria-expanded="false">
+          <span class="dock-kicker">文字視窗</span>
+          <span id="transcript-status" class="transcript-status">展開對話紀錄</span>
+        </button>
+        <div id="transcript-box" class="transcript-box" hidden>
+          <div class="transcript-head">
+            <div>
+              <div class="dock-kicker">一眼瞬間 · 對話紀錄</div>
+              <div class="transcript-copy">浮出字幕會完整顯示 5 秒，然後淡化；所有文字都會留在這裡。</div>
+            </div>
+          </div>
+          <div id="transcript-list" class="transcript-list" aria-live="polite"></div>
+        </div>
+      </section>
+
       <section id="debug-panel" class="debug-panel" hidden aria-live="polite">
         <div class="debug-kicker">Debug</div>
         <pre id="debug-text" class="debug-text"></pre>

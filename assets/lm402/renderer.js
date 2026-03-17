@@ -104,10 +104,11 @@ function makeFaceTexture({ female = false, referenceJunior = false } = {}) {
   return texture;
 }
 
-function createFacePlane(texture) {
+function createFacePlane(texture, opacity = 1) {
   const material = new THREE.MeshBasicMaterial({
     map: texture,
     transparent: true,
+    opacity,
     depthWrite: false,
   });
   const plane = new THREE.Mesh(new THREE.PlaneGeometry(0.27, 0.3), material);
@@ -150,15 +151,48 @@ function createPerson(spec) {
   const group = new THREE.Group();
   group.userData.baseY = 0;
   const referenceJunior = Boolean(spec.referenceJunior);
+  const realisticJunior = spec.female && referenceJunior;
 
-  const torsoMat = new THREE.MeshStandardMaterial({ color: spec.torso, roughness: 0.5, metalness: 0.04 });
-  const accentMat = new THREE.MeshStandardMaterial({ color: spec.torsoAccent ?? spec.torso, roughness: 0.44, metalness: 0.06 });
-  const legsMat = new THREE.MeshStandardMaterial({ color: spec.legs, roughness: 0.56, metalness: 0.04 });
-  const skinMat = new THREE.MeshStandardMaterial({ color: spec.skin, roughness: 0.42, metalness: 0.01 });
-  const blushMat = new THREE.MeshStandardMaterial({ color: spec.female ? "#f3c3bc" : "#d7a18f", roughness: 0.68, metalness: 0.01, transparent: true, opacity: spec.female ? 0.22 : 0.12 });
-  const hairMat = new THREE.MeshStandardMaterial({ color: spec.hair, roughness: 0.4, metalness: 0.1 });
-  const shoeMat = new THREE.MeshStandardMaterial({ color: spec.shoes, roughness: 0.64, metalness: 0.12 });
-  const buttonMat = new THREE.MeshStandardMaterial({ color: "#f6ede3", roughness: 0.48, metalness: 0.12 });
+  const torsoMat = new THREE.MeshPhysicalMaterial({
+    color: spec.torso,
+    roughness: spec.female ? 0.42 : 0.5,
+    metalness: 0.02,
+    clearcoat: spec.female ? 0.14 : 0.06,
+    clearcoatRoughness: 0.52,
+  });
+  const accentMat = new THREE.MeshPhysicalMaterial({
+    color: spec.torsoAccent ?? spec.torso,
+    roughness: spec.female ? 0.36 : 0.42,
+    metalness: 0.03,
+    clearcoat: spec.female ? 0.18 : 0.08,
+    clearcoatRoughness: 0.44,
+  });
+  const legsMat = new THREE.MeshPhysicalMaterial({
+    color: spec.legs,
+    roughness: spec.female ? 0.44 : 0.54,
+    metalness: 0.02,
+    clearcoat: spec.female ? 0.1 : 0.04,
+    clearcoatRoughness: 0.4,
+  });
+  const skinMat = new THREE.MeshPhysicalMaterial({
+    color: spec.skin,
+    roughness: realisticJunior ? 0.24 : 0.34,
+    metalness: 0,
+    clearcoat: realisticJunior ? 0.4 : 0.24,
+    clearcoatRoughness: realisticJunior ? 0.38 : 0.58,
+    sheen: realisticJunior ? 0.18 : 0,
+    sheenRoughness: realisticJunior ? 0.42 : 1,
+  });
+  const blushMat = new THREE.MeshPhysicalMaterial({ color: spec.female ? "#f3c3bc" : "#d7a18f", roughness: 0.62, metalness: 0, transparent: true, opacity: spec.female ? 0.22 : 0.12 });
+  const hairMat = new THREE.MeshPhysicalMaterial({
+    color: spec.hair,
+    roughness: realisticJunior ? 0.16 : 0.34,
+    metalness: 0.08,
+    clearcoat: realisticJunior ? 0.42 : 0.12,
+    clearcoatRoughness: realisticJunior ? 0.18 : 0.3,
+  });
+  const shoeMat = new THREE.MeshPhysicalMaterial({ color: spec.shoes, roughness: 0.56, metalness: 0.1, clearcoat: 0.12, clearcoatRoughness: 0.4 });
+  const buttonMat = new THREE.MeshPhysicalMaterial({ color: "#f6ede3", roughness: 0.42, metalness: 0.06, clearcoat: 0.16, clearcoatRoughness: 0.28 });
 
   const waist = new THREE.Mesh(new THREE.CapsuleGeometry(spec.female ? 0.126 : 0.132, 0.18, 5, 10), torsoMat);
   waist.position.set(0, 0.84, 0);
@@ -257,18 +291,18 @@ function createPerson(spec) {
   const head = new THREE.Mesh(new THREE.SphereGeometry(spec.female ? 0.168 : 0.182, 34, 34), skinMat);
   head.position.set(0, 1.56, 0);
   head.scale.set(
-    spec.female ? (referenceJunior ? 0.84 : 0.94) : 0.98,
-    spec.female ? (referenceJunior ? 1.08 : 1.08) : 1.04,
-    spec.female ? (referenceJunior ? 0.82 : 0.91) : 0.9
+    spec.female ? (referenceJunior ? 0.74 : 0.94) : 0.98,
+    spec.female ? (referenceJunior ? 1.18 : 1.08) : 1.04,
+    spec.female ? (referenceJunior ? 0.79 : 0.91) : 0.9
   );
   group.add(head);
 
   const jaw = new THREE.Mesh(new THREE.SphereGeometry(spec.female ? 0.14 : 0.154, 28, 28), skinMat);
   jaw.position.set(0, spec.female ? 1.47 : 1.48, 0.02);
   jaw.scale.set(
-    spec.female ? (referenceJunior ? 0.74 : 0.92) : 1.02,
-    spec.female ? (referenceJunior ? 0.62 : 0.78) : 0.84,
-    spec.female ? (referenceJunior ? 0.76 : 0.88) : 0.92
+    spec.female ? (referenceJunior ? 0.54 : 0.92) : 1.02,
+    spec.female ? (referenceJunior ? 0.48 : 0.78) : 0.84,
+    spec.female ? (referenceJunior ? 0.68 : 0.88) : 0.92
   );
   group.add(jaw);
 
@@ -280,82 +314,92 @@ function createPerson(spec) {
   earR.position.x = 0.165;
   group.add(earL, earR);
 
-  const nose = new THREE.Mesh(new THREE.ConeGeometry(spec.female ? (referenceJunior ? 0.017 : 0.024) : 0.026, spec.female ? (referenceJunior ? 0.044 : 0.062) : 0.07, 12), skinMat);
-  nose.position.set(0, referenceJunior ? 1.536 : 1.54, referenceJunior ? 0.15 : 0.154);
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(spec.female ? (referenceJunior ? 0.012 : 0.024) : 0.026, spec.female ? (referenceJunior ? 0.034 : 0.062) : 0.07, 12), skinMat);
+  nose.position.set(0, referenceJunior ? 1.54 : 1.54, referenceJunior ? 0.148 : 0.154);
   nose.rotation.x = Math.PI * 0.5;
   group.add(nose);
 
   const noseBridge = new THREE.Mesh(
     new THREE.BoxGeometry(0.022, 0.08, 0.012),
-    new THREE.MeshStandardMaterial({ color: "#fff8f2", roughness: 0.34, metalness: 0.01, transparent: true, opacity: 0.2 })
+    new THREE.MeshPhysicalMaterial({ color: "#fff8f2", roughness: 0.28, metalness: 0, transparent: true, opacity: 0.24, clearcoat: 0.22, clearcoatRoughness: 0.16 })
   );
-  noseBridge.position.set(0, 1.57, 0.135);
+  noseBridge.position.set(0, referenceJunior ? 1.578 : 1.57, referenceJunior ? 0.14 : 0.135);
   group.add(noseBridge);
 
   const lip = new THREE.Mesh(
-    new THREE.TorusGeometry(spec.female ? (referenceJunior ? 0.04 : 0.045) : 0.045, spec.female ? (referenceJunior ? 0.008 : 0.009) : 0.009, 8, 18, Math.PI),
+    new THREE.TorusGeometry(spec.female ? (referenceJunior ? 0.036 : 0.045) : 0.045, spec.female ? (referenceJunior ? 0.007 : 0.009) : 0.009, 8, 18, Math.PI),
     new THREE.MeshStandardMaterial({ color: spec.female ? "#cc7282" : "#ae7670", roughness: 0.5, metalness: 0.03 })
   );
-  lip.position.set(0, referenceJunior ? 1.458 : 1.46, referenceJunior ? 0.144 : 0.148);
+  lip.position.set(0, referenceJunior ? 1.452 : 1.46, referenceJunior ? 0.148 : 0.148);
   lip.rotation.x = Math.PI;
   group.add(lip);
 
-  const browGeo = new THREE.BoxGeometry(spec.female ? (referenceJunior ? 0.07 : 0.08) : 0.09, 0.014, 0.02);
+  if (realisticJunior) {
+    const lowerLip = new THREE.Mesh(
+      new THREE.SphereGeometry(0.024, 14, 14),
+      new THREE.MeshStandardMaterial({ color: "#f3b6bc", roughness: 0.48, metalness: 0.02, transparent: true, opacity: 0.72 })
+    );
+    lowerLip.position.set(0, 1.435, 0.152);
+    lowerLip.scale.set(1.56, 0.44, 0.44);
+    group.add(lowerLip);
+  }
+
+  const browGeo = new THREE.BoxGeometry(spec.female ? (referenceJunior ? 0.062 : 0.08) : 0.09, 0.012, 0.02);
   const browMat = new THREE.MeshStandardMaterial({ color: spec.female ? "#3a2422" : "#31201e", roughness: 0.7, metalness: 0.02 });
   const browL = new THREE.Mesh(browGeo, browMat);
-  browL.position.set(referenceJunior ? -0.07 : -0.074, referenceJunior ? 1.614 : 1.62, 0.13);
-  browL.rotation.z = -0.12;
+  browL.position.set(referenceJunior ? -0.066 : -0.074, referenceJunior ? 1.618 : 1.62, 0.132);
+  browL.rotation.z = referenceJunior ? -0.05 : -0.08;
   const browR = browL.clone();
-  browR.position.x = referenceJunior ? 0.07 : 0.072;
-  browR.rotation.z = 0.12;
+  browR.position.x = referenceJunior ? 0.066 : 0.072;
+  browR.rotation.z = referenceJunior ? 0.05 : 0.08;
   group.add(browL, browR);
 
   const lidGeo = new THREE.TorusGeometry(spec.female ? (referenceJunior ? 0.034 : 0.032) : 0.032, 0.004, 6, 18, Math.PI);
   const lidMat = new THREE.MeshStandardMaterial({ color: spec.female ? "#3a1f20" : "#2f1d1e", roughness: 0.54, metalness: 0.02 });
   const lidL = new THREE.Mesh(lidGeo, lidMat);
-  lidL.position.set(referenceJunior ? -0.066 : -0.062, referenceJunior ? 1.566 : 1.57, 0.162);
+  lidL.position.set(referenceJunior ? -0.066 : -0.062, referenceJunior ? 1.57 : 1.57, 0.164);
   lidL.rotation.z = Math.PI;
   const lidR = lidL.clone();
   lidR.position.x = referenceJunior ? 0.064 : 0.062;
   group.add(lidL, lidR);
 
-  const eyeWhiteMat = new THREE.MeshStandardMaterial({ color: "#fcfcfd", roughness: 0.36, metalness: 0.02 });
-  const irisMat = new THREE.MeshStandardMaterial({ color: spec.iris ?? (spec.female ? "#3a261f" : "#2b1c18"), roughness: 0.48, metalness: 0.02 });
-  const eyeWhiteL = new THREE.Mesh(new THREE.SphereGeometry(spec.female ? (referenceJunior ? 0.024 : 0.022) : 0.022, 12, 12), eyeWhiteMat);
-  eyeWhiteL.position.set(referenceJunior ? -0.066 : -0.062, referenceJunior ? 1.558 : 1.56, 0.15);
-  eyeWhiteL.scale.set(spec.female && referenceJunior ? 1.58 : 1.35, spec.female && referenceJunior ? 1.02 : 0.9, 0.5);
+  const eyeWhiteMat = new THREE.MeshPhysicalMaterial({ color: "#fcfcfd", roughness: 0.18, metalness: 0.01, clearcoat: 0.14, clearcoatRoughness: 0.12 });
+  const irisMat = new THREE.MeshPhysicalMaterial({ color: spec.iris ?? (spec.female ? "#3a261f" : "#2b1c18"), roughness: 0.34, metalness: 0.02, clearcoat: 0.12, clearcoatRoughness: 0.2 });
+  const eyeWhiteL = new THREE.Mesh(new THREE.SphereGeometry(spec.female ? (referenceJunior ? 0.025 : 0.022) : 0.022, 12, 12), eyeWhiteMat);
+  eyeWhiteL.position.set(referenceJunior ? -0.068 : -0.062, referenceJunior ? 1.562 : 1.56, referenceJunior ? 0.154 : 0.15);
+  eyeWhiteL.scale.set(spec.female && referenceJunior ? 1.56 : 1.35, spec.female && referenceJunior ? 1.02 : 0.9, 0.5);
   const eyeWhiteR = eyeWhiteL.clone();
-  eyeWhiteR.position.x = referenceJunior ? 0.064 : 0.062;
-  const irisL = new THREE.Mesh(new THREE.SphereGeometry(spec.female && referenceJunior ? 0.0125 : 0.011, 10, 10), irisMat);
-  irisL.position.set(referenceJunior ? -0.066 : -0.062, referenceJunior ? 1.558 : 1.56, 0.166);
+  eyeWhiteR.position.x = referenceJunior ? 0.068 : 0.062;
+  const irisL = new THREE.Mesh(new THREE.SphereGeometry(spec.female && referenceJunior ? 0.0126 : 0.011, 10, 10), irisMat);
+  irisL.position.set(referenceJunior ? -0.068 : -0.062, referenceJunior ? 1.56 : 1.56, referenceJunior ? 0.171 : 0.166);
   const irisR = irisL.clone();
-  irisR.position.x = referenceJunior ? 0.064 : 0.062;
+  irisR.position.x = referenceJunior ? 0.068 : 0.062;
   group.add(eyeWhiteL, eyeWhiteR, irisL, irisR);
 
   if (spec.female) {
     const lashMat = new THREE.MeshStandardMaterial({ color: "#241618", roughness: 0.52, metalness: 0.02 });
     const lashL = new THREE.Mesh(new THREE.BoxGeometry(0.058, 0.01, 0.014), lashMat);
-    lashL.position.set(referenceJunior ? -0.066 : -0.062, 1.582, 0.168);
-    lashL.rotation.z = -0.06;
-    const lashR = lashL.clone();
-    lashR.position.x = referenceJunior ? 0.064 : 0.062;
-    lashR.rotation.z = 0.06;
+  lashL.position.set(referenceJunior ? -0.068 : -0.062, referenceJunior ? 1.582 : 1.586, 0.171);
+  lashL.rotation.z = referenceJunior ? -0.02 : -0.03;
+  const lashR = lashL.clone();
+  lashR.position.x = referenceJunior ? 0.068 : 0.062;
+  lashR.rotation.z = referenceJunior ? 0.02 : 0.03;
     group.add(lashL, lashR);
   }
 
   const cheekGeo = new THREE.SphereGeometry(0.028, 12, 12);
   const cheekL = new THREE.Mesh(cheekGeo, blushMat);
-  cheekL.position.set(referenceJunior ? -0.09 : -0.094, 1.478, 0.142);
-  cheekL.scale.set(1.7, 1.2, 0.4);
+  cheekL.position.set(referenceJunior ? -0.084 : -0.094, 1.486, 0.144);
+  cheekL.scale.set(referenceJunior ? 1.36 : 1.7, referenceJunior ? 0.96 : 1.2, 0.4);
   const cheekR = cheekL.clone();
   cheekR.position.x = referenceJunior ? 0.092 : 0.094;
   group.add(cheekL, cheekR);
 
   const eyeSparkleMat = new THREE.MeshStandardMaterial({ color: "#ffffff", emissive: "#ffffff", emissiveIntensity: 0.12, roughness: 0.2, metalness: 0.02 });
-  const eyeSparkleL = new THREE.Mesh(new THREE.SphereGeometry(0.004, 8, 8), eyeSparkleMat);
-  eyeSparkleL.position.set(referenceJunior ? -0.056 : -0.055, 1.568, 0.176);
+  const eyeSparkleL = new THREE.Mesh(new THREE.SphereGeometry(realisticJunior ? 0.0055 : 0.004, 8, 8), eyeSparkleMat);
+  eyeSparkleL.position.set(referenceJunior ? -0.058 : -0.055, realisticJunior ? 1.571 : 1.568, realisticJunior ? 0.182 : 0.176);
   const eyeSparkleR = eyeSparkleL.clone();
-  eyeSparkleR.position.x = referenceJunior ? 0.07 : 0.069;
+  eyeSparkleR.position.x = referenceJunior ? 0.072 : 0.069;
   group.add(eyeSparkleL, eyeSparkleR);
 
   const hairCap = new THREE.Mesh(
@@ -371,12 +415,12 @@ function createPerson(spec) {
   hairBack.scale.set(0.88, spec.female ? 1.42 : 0.42, spec.female ? 0.7 : 0.52);
   group.add(hairBack);
 
-  const fringe = new THREE.Mesh(new THREE.BoxGeometry(spec.female ? (referenceJunior ? 0.162 : 0.2) : 0.144, referenceJunior ? 0.11 : 0.08, 0.05), hairMat);
-  fringe.position.set(0, referenceJunior ? 1.606 : 1.612, 0.12);
+  const fringe = new THREE.Mesh(new THREE.BoxGeometry(spec.female ? (referenceJunior ? 0.126 : 0.2) : 0.144, referenceJunior ? 0.136 : 0.08, 0.05), hairMat);
+  fringe.position.set(0, referenceJunior ? 1.622 : 1.612, referenceJunior ? 0.124 : 0.12);
   group.add(fringe);
 
-  const sideHairL = new THREE.Mesh(new THREE.BoxGeometry(spec.female ? (referenceJunior ? 0.068 : 0.076) : 0.058, spec.female ? (referenceJunior ? 0.46 : 0.42) : 0.22, 0.06), hairMat);
-  sideHairL.position.set(referenceJunior ? -0.13 : -0.14, spec.female ? 1.45 : 1.49, 0.02);
+  const sideHairL = new THREE.Mesh(new THREE.BoxGeometry(spec.female ? (referenceJunior ? 0.058 : 0.076) : 0.058, spec.female ? (referenceJunior ? 0.38 : 0.42) : 0.22, 0.06), hairMat);
+  sideHairL.position.set(referenceJunior ? -0.118 : -0.14, spec.female ? 1.462 : 1.49, 0.042);
   const sideHairR = sideHairL.clone();
   sideHairR.position.x = referenceJunior ? 0.13 : 0.15;
   group.add(sideHairL, sideHairR);
@@ -389,10 +433,13 @@ function createPerson(spec) {
   crownShine.scale.set(0.82, 0.42, 0.5);
   group.add(crownShine);
 
-  const face = createFacePlane(makeFaceTexture({ female: spec.female, referenceJunior }));
-  face.position.y = 1.55;
-  face.position.z = referenceJunior ? 0.186 : spec.female ? 0.178 : 0.172;
-  face.scale.setScalar(referenceJunior ? 1.02 : spec.female ? 0.95 : 0.92);
+  const face = createFacePlane(
+    makeFaceTexture({ female: spec.female, referenceJunior }),
+    realisticJunior ? 0.42 : 0.86
+  );
+  face.position.y = realisticJunior ? 1.554 : 1.55;
+  face.position.z = realisticJunior ? 0.184 : spec.female ? 0.178 : 0.172;
+  face.scale.setScalar(realisticJunior ? 0.82 : spec.female ? 0.95 : 0.92);
   group.add(face);
 
   const browShadow = new THREE.Mesh(
@@ -408,13 +455,23 @@ function createPerson(spec) {
     backStrand.scale.set(1, 1.06, 0.82);
     group.add(backStrand);
 
-    const wispL = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.26, 0.028), hairMat);
-    wispL.position.set(-0.112, 1.46, 0.118);
+    const wispL = new THREE.Mesh(new THREE.BoxGeometry(0.028, realisticJunior ? 0.32 : 0.26, 0.028), hairMat);
+    wispL.position.set(realisticJunior ? -0.102 : -0.112, realisticJunior ? 1.44 : 1.46, realisticJunior ? 0.124 : 0.118);
     wispL.rotation.z = -0.12;
     const wispR = wispL.clone();
-    wispR.position.x = 0.112;
+    wispR.position.x = realisticJunior ? 0.104 : 0.112;
     wispR.rotation.z = 0.12;
     group.add(wispL, wispR);
+
+    if (realisticJunior) {
+      const frontWispL = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.24, 0.018), hairMat);
+      frontWispL.position.set(-0.052, 1.514, 0.15);
+      frontWispL.rotation.z = -0.04;
+      const frontWispR = frontWispL.clone();
+      frontWispR.position.x = 0.056;
+      frontWispR.rotation.z = 0.04;
+      group.add(frontWispL, frontWispR);
+    }
 
     const midStrandL = new THREE.Mesh(new THREE.BoxGeometry(0.034, 0.34, 0.032), hairMat);
     midStrandL.position.set(-0.152, 1.36, 0.02);
@@ -434,10 +491,10 @@ function createPerson(spec) {
 
     const blouse = new THREE.Mesh(
       new THREE.CapsuleGeometry(0.164, 0.48, 8, 16),
-      new THREE.MeshStandardMaterial({ color: "#fffdf7", roughness: 0.4, metalness: 0.02 })
+      new THREE.MeshPhysicalMaterial({ color: "#fffdfa", roughness: 0.3, metalness: 0.01, clearcoat: 0.2, clearcoatRoughness: 0.24 })
     );
     blouse.position.set(0, 1.06, 0.02);
-    blouse.scale.set(referenceJunior ? 0.9 : 0.94, referenceJunior ? 0.98 : 0.92, 0.74);
+    blouse.scale.set(referenceJunior ? 0.9 : 0.94, referenceJunior ? 1.03 : 0.92, 0.78);
     group.add(blouse);
 
     const blouseHem = new THREE.Mesh(new THREE.TorusGeometry(0.146, 0.012, 8, 20), buttonMat);
@@ -447,7 +504,7 @@ function createPerson(spec) {
 
     const blouseFold = new THREE.Mesh(
       new THREE.PlaneGeometry(0.12, 0.34),
-      new THREE.MeshStandardMaterial({ color: "#efe7dc", roughness: 0.62, metalness: 0.01, transparent: true, opacity: 0.22 })
+      new THREE.MeshPhysicalMaterial({ color: "#efe7dc", roughness: 0.54, metalness: 0, transparent: true, opacity: 0.22, clearcoat: 0.08, clearcoatRoughness: 0.22 })
     );
     blouseFold.position.set(0, 1.02, 0.2);
     group.add(blouseFold);
@@ -473,29 +530,29 @@ function createPerson(spec) {
     group.add(leftSock, rightSock);
 
     const ponytailBase = new THREE.Mesh(new THREE.SphereGeometry(0.056, 18, 18), hairMat);
-    ponytailBase.position.set(0.03, 1.67, -0.16);
+    ponytailBase.position.set(0.03, 1.692, -0.17);
     group.add(ponytailBase);
 
     const scrunchie = new THREE.Mesh(
       new THREE.TorusGeometry(0.052, 0.016, 8, 20),
       new THREE.MeshStandardMaterial({ color: "#1f1a22", roughness: 0.7, metalness: 0.04 })
     );
-    scrunchie.position.set(0.03, 1.67, -0.16);
+    scrunchie.position.set(0.03, 1.692, -0.17);
     scrunchie.rotation.x = Math.PI / 2;
     group.add(scrunchie);
 
-    const ponytail = new THREE.Mesh(new THREE.CapsuleGeometry(0.05, 0.62, 6, 12), hairMat);
-    ponytail.position.set(0.092, 1.24, -0.24);
-    ponytail.rotation.z = -0.18;
+    const ponytail = new THREE.Mesh(new THREE.CapsuleGeometry(realisticJunior ? 0.045 : 0.05, realisticJunior ? 0.68 : 0.62, 6, 12), hairMat);
+    ponytail.position.set(realisticJunior ? 0.1 : 0.092, realisticJunior ? 1.3 : 1.24, realisticJunior ? -0.246 : -0.24);
+    ponytail.rotation.z = realisticJunior ? -0.06 : -0.18;
     ponytail.rotation.x = 0.08;
-    ponytail.scale.set(0.86, 1.24, 0.8);
+    ponytail.scale.set(realisticJunior ? 0.82 : 0.86, realisticJunior ? 1.34 : 1.24, realisticJunior ? 0.76 : 0.8);
     group.add(ponytail);
 
-    const ponytailTail = new THREE.Mesh(new THREE.CapsuleGeometry(0.036, 0.42, 6, 10), hairMat);
-    ponytailTail.position.set(0.14, 0.92, -0.16);
-    ponytailTail.rotation.z = -0.22;
+    const ponytailTail = new THREE.Mesh(new THREE.CapsuleGeometry(realisticJunior ? 0.03 : 0.036, realisticJunior ? 0.5 : 0.42, 6, 10), hairMat);
+    ponytailTail.position.set(realisticJunior ? 0.15 : 0.14, realisticJunior ? 1.0 : 0.92, realisticJunior ? -0.124 : -0.16);
+    ponytailTail.rotation.z = realisticJunior ? -0.08 : -0.22;
     ponytailTail.rotation.x = -0.02;
-    ponytailTail.scale.set(0.84, 1.28, 0.82);
+    ponytailTail.scale.set(realisticJunior ? 0.8 : 0.84, realisticJunior ? 1.36 : 1.28, realisticJunior ? 0.78 : 0.82);
     group.add(ponytailTail);
   }
 
@@ -1021,6 +1078,62 @@ export function createLm402Scene(canvas) {
 
   const worldPointScaled = (x, y, z) => new THREE.Vector3(scaled(x), scaled(y), scaled(z));
   const roomCenter = (room) => scaled((room.z1 + room.z2) / 2);
+  const openingFromPanel = (panel, side) => ({
+    side,
+    z1: scaled(panel.z - panel.width / 2 + 18),
+    z2: scaled(panel.z + panel.width / 2 - 18),
+    y1: scaled(panel.y1 + 6),
+    y2: scaled(panel.y2 - 4),
+  });
+
+  const buildWallWithOpenings = ({ x, zStart, zEnd, openings, material, label }) => {
+    const zEdges = [zStart, zEnd];
+    openings.forEach((opening) => {
+      if (opening.z2 <= zStart || opening.z1 >= zEnd) {
+        return;
+      }
+      zEdges.push(Math.max(zStart, opening.z1), Math.min(zEnd, opening.z2));
+    });
+    const sortedZ = [...new Set(zEdges.map((value) => Number(value.toFixed(4))))].sort((a, b) => a - b);
+
+    for (let zIndex = 0; zIndex < sortedZ.length - 1; zIndex += 1) {
+      const segZ1 = sortedZ[zIndex];
+      const segZ2 = sortedZ[zIndex + 1];
+      if (segZ2 - segZ1 <= 0.01) {
+        continue;
+      }
+      const midZ = (segZ1 + segZ2) / 2;
+      const overlapping = openings.filter((opening) => midZ >= opening.z1 && midZ <= opening.z2);
+      const yEdges = [0, corridorHeight];
+      overlapping.forEach((opening) => {
+        yEdges.push(opening.y1, opening.y2);
+      });
+      const sortedY = [...new Set(yEdges.map((value) => Number(value.toFixed(4))))].sort((a, b) => a - b);
+
+      for (let yIndex = 0; yIndex < sortedY.length - 1; yIndex += 1) {
+        const segY1 = sortedY[yIndex];
+        const segY2 = sortedY[yIndex + 1];
+        if (segY2 - segY1 <= 0.01) {
+          continue;
+        }
+        const midY = (segY1 + segY2) / 2;
+        const insideOpening = overlapping.some((opening) => midY > opening.y1 && midY < opening.y2);
+        if (insideOpening) {
+          continue;
+        }
+        addBox(
+          worldGroup,
+          occluders,
+          new THREE.BoxGeometry(wallThickness, segY2 - segY1, segZ2 - segZ1),
+          material,
+          new THREE.Vector3(x, segY1 + (segY2 - segY1) / 2, segZ1 + (segZ2 - segZ1) / 2),
+          null,
+          colliders,
+          { minX: x - wallThickness / 2, maxX: x + wallThickness / 2, minZ: segZ1, maxZ: segZ2, label }
+        );
+      }
+    }
+  };
 
   const hemiLight = new THREE.HemisphereLight(0xf5f7fc, 0x70624d, 1.08);
   scene.add(hemiLight);
@@ -1078,12 +1191,20 @@ export function createLm402Scene(canvas) {
   const lawnMat = new THREE.MeshStandardMaterial({ color: "#708e5d", map: lawnTex, roughness: 1, metalness: 0.01 });
   const plazaMat = new THREE.MeshStandardMaterial({ color: "#c7cdd3", map: plazaTex, roughness: 0.96, metalness: 0.02 });
   const glassMat = new THREE.MeshPhysicalMaterial({
-    color: "#fff3d9",
-    roughness: 0.08,
-    transmission: 0.68,
+    color: "#fbfdff",
+    roughness: 0.01,
+    transmission: 0.996,
     transparent: true,
     opacity: 0.28,
-    thickness: 0.08,
+    thickness: 0.12,
+    ior: 1.36,
+    clearcoat: 1,
+    clearcoatRoughness: 0.02,
+    reflectivity: 0.64,
+    envMapIntensity: 0.9,
+    side: THREE.DoubleSide,
+    attenuationColor: new THREE.Color("#fff7ec"),
+    attenuationDistance: 7.6,
   });
 
   const campusDepth = scaled(WORLD.corridor.campusDepth);
@@ -1310,30 +1431,27 @@ export function createLm402Scene(canvas) {
     { minX: classroomMinX, maxX: classroomMaxX, minZ: z2 - wallThickness / 2, maxZ: z2 + wallThickness / 2, label: `${room.id}_front_wall` }
   );
 
-  addBox(
-    worldGroup,
-    occluders,
-    new THREE.BoxGeometry(wallThickness, corridorHeight, roomLength),
-    wallMat,
-    new THREE.Vector3(classroomMaxX, corridorHeight / 2, centerZ),
-    null,
-    colliders,
-    { minX: classroomMaxX - wallThickness / 2, maxX: classroomMaxX + wallThickness / 2, minZ: z1, maxZ: z2, label: "right_wall" }
-  );
+  const leftWindowOpenings = WORLD.leftWallWindows.map((panel) => openingFromPanel(panel, "left"));
+  const rightWindowOpenings = WORLD.rightWallWindows.map((panel) => openingFromPanel(panel, "right"));
+  const doorOpenings = openings.map((door) => ({
+    z1: door.z1,
+    z2: door.z2,
+    y1: 0,
+    y2: 2.28,
+  }));
+
+  buildWallWithOpenings({
+    x: classroomMaxX,
+    zStart: z1,
+    zEnd: z2,
+    openings: rightWindowOpenings,
+    material: wallMat,
+    label: "right_wall",
+  });
 
   const dividerSegments = [];
   if (minZ < z1) {
     dividerSegments.push([minZ, z1]);
-  }
-  let cursor = z1;
-  openings.forEach((opening) => {
-    if (opening.z1 > cursor) {
-      dividerSegments.push([cursor, opening.z1]);
-    }
-    cursor = Math.max(cursor, opening.z2);
-  });
-  if (cursor < z2) {
-    dividerSegments.push([cursor, z2]);
   }
   if (z2 < maxZ) {
     dividerSegments.push([z2, maxZ]);
@@ -1352,6 +1470,15 @@ export function createLm402Scene(canvas) {
       colliders,
       { minX: classroomMinX - wallThickness / 2, maxX: classroomMinX + wallThickness / 2, minZ: start, maxZ: end, label: "divider_wall" }
     );
+  });
+
+  buildWallWithOpenings({
+    x: classroomMinX,
+    zStart: z1,
+    zEnd: z2,
+    openings: [...doorOpenings, ...leftWindowOpenings],
+    material: corridorWallMat,
+    label: "divider_wall",
   });
 
   openings.forEach((door) => {
@@ -1472,7 +1599,14 @@ export function createLm402Scene(canvas) {
     const glass = new THREE.Mesh(new THREE.PlaneGeometry(width, height), glassMat);
     glass.position.set(classroomMaxX - 0.045, centerY, centerPanelZ);
     glass.rotation.y = -Math.PI / 2;
+    glass.castShadow = false;
+    glass.receiveShadow = false;
     worldGroup.add(glass);
+    const highlight = createGlowPlane("rgba(255,255,255,1)", width * 0.72, height * 0.78, 0.08);
+    highlight.position.set(classroomMaxX - 0.08, centerY + height * 0.02, centerPanelZ - 0.02);
+    highlight.rotation.y = -Math.PI / 2;
+    highlight.rotation.z = -0.06;
+    worldGroup.add(highlight);
     const frame = new THREE.Mesh(new THREE.BoxGeometry(0.12, height + 0.18, width + 0.16), beamMat);
     frame.position.set(classroomMaxX - 0.06, centerY, centerPanelZ);
     frame.scale.x = 0.78;
@@ -1493,7 +1627,14 @@ export function createLm402Scene(canvas) {
     const glass = new THREE.Mesh(new THREE.PlaneGeometry(width, height), glassMat);
     glass.position.set(classroomMinX + 0.04, centerY, centerPanelZ);
     glass.rotation.y = Math.PI / 2;
+    glass.castShadow = false;
+    glass.receiveShadow = false;
     worldGroup.add(glass);
+    const highlight = createGlowPlane("rgba(255,255,255,1)", width * 0.72, height * 0.78, 0.07);
+    highlight.position.set(classroomMinX + 0.08, centerY + height * 0.02, centerPanelZ + 0.02);
+    highlight.rotation.y = Math.PI / 2;
+    highlight.rotation.z = 0.06;
+    worldGroup.add(highlight);
     const frame = new THREE.Mesh(new THREE.BoxGeometry(0.12, height + 0.18, width + 0.16), beamMat);
     frame.position.set(classroomMinX + 0.06, centerY, centerPanelZ);
     frame.scale.x = 0.78;
@@ -1733,25 +1874,25 @@ export function createLm402Scene(canvas) {
   };
 
   const senior = createPerson({
-    torso: "#f4f7fb",
-    torsoAccent: "#dde5ef",
-    legs: "#2a3240",
-    skin: "#efd2c3",
-    hair: "#20181a",
+    torso: "#f6f7fb",
+    torsoAccent: "#dde4ee",
+    legs: "#273140",
+    skin: "#f0d5c7",
+    hair: "#23191a",
     shoes: "#f4f5f6",
-    iris: "#4a362d",
+    iris: "#5c463b",
     female: false,
     phone: true,
     scale: 1.08,
   });
   const junior = createPerson({
-    torso: "#fffdf9",
+    torso: "#fffdfa",
     torsoAccent: "#ffffff",
-    legs: "#35577d",
-    skin: "#f6e0d5",
-    hair: "#5b4338",
+    legs: "#2f5b84",
+    skin: "#f6ddd0",
+    hair: "#5b4438",
     shoes: "#fffefb",
-    iris: "#6a4b35",
+    iris: "#6d5039",
     female: true,
     highlight: true,
     referenceJunior: true,
@@ -2113,48 +2254,85 @@ function applyIntroCamera(intro) {
     applyWalkingPose(introSenior, Math.sin(progress * Math.PI * 10.4) * 0.82, 0.9);
   }
 
+function perfectEndingPhase(time) {
+  if (time < (CINEMATIC_TIMELINE.perfectOrbitStart ?? 8)) {
+    return "walk-in";
+  }
+  if (time < (CINEMATIC_TIMELINE.perfectOrbitEnd ?? 24)) {
+    return "orbit";
+  }
+  if (time < (CINEMATIC_TIMELINE.perfectPushEnd ?? 30)) {
+    return "push-in";
+  }
+  return "eyes";
+}
+
 function applyPerfectEndingCamera(game) {
   const totalTime = game.endingSequence?.time ?? 0;
-  const holdDuration = 12;
-  const orbitDuration = Math.max(1, CINEMATIC_TIMELINE.perfectDuration - holdDuration);
+  const orbitStart = CINEMATIC_TIMELINE.perfectOrbitStart ?? 8;
+  const orbitEnd = CINEMATIC_TIMELINE.perfectOrbitEnd ?? 24;
+  const pushEnd = CINEMATIC_TIMELINE.perfectPushEnd ?? 30;
+  const finalHoldEnd = CINEMATIC_TIMELINE.perfectDuration;
   const center = junior.position.clone().add(new THREE.Vector3(0, 1.5, 0));
   const faceForward = new THREE.Vector3(Math.sin(junior.rotation.y), 0, Math.cos(junior.rotation.y));
-  const eyeTarget = center.clone().add(faceForward.clone().multiplyScalar(0.148)).add(new THREE.Vector3(0.01, 0.02, 0));
-  if (totalTime < orbitDuration) {
-      const orbitT = THREE.MathUtils.clamp(totalTime / orbitDuration, 0, 1);
-      const eased = THREE.MathUtils.smoothstep(orbitT, 0.04, 0.94);
-      const radius = THREE.MathUtils.lerp(7.2, 2.42, THREE.MathUtils.smoothstep(orbitT, 0.06, 0.94));
-      const startAngle = -1.34;
-      const angle = THREE.MathUtils.lerp(startAngle, startAngle + Math.PI * 2, eased);
-      camera.position.set(
-        center.x + Math.cos(angle) * radius,
-        THREE.MathUtils.lerp(1.42, 1.8, orbitT),
-        center.z + Math.sin(angle) * radius
-      );
-      const lookTarget = center.clone().lerp(eyeTarget, THREE.MathUtils.smoothstep(orbitT, 0.7, 1));
-      camera.fov = THREE.MathUtils.lerp(68, 16, THREE.MathUtils.smoothstep(orbitT, 0.42, 0.98));
-      camera.updateProjectionMatrix();
-      camera.lookAt(lookTarget.x, lookTarget.y, lookTarget.z);
-      return;
-    }
+  const eyeTarget = center.clone().add(faceForward.clone().multiplyScalar(0.138)).add(new THREE.Vector3(0.004, 0.018, 0));
+  const pushDirection = faceForward.clone().multiplyScalar(-1);
+  const orbitStartAngle = -1.48;
+  const orbitRadiusStart = 7.2;
+  const orbitRadiusEnd = 3.84;
 
-    const holdT = THREE.MathUtils.clamp((totalTime - orbitDuration) / holdDuration, 0, 1);
-    const pushDirection = faceForward.clone().multiplyScalar(-1);
-    const pushDuration = 2;
-    const eyePhaseTime = totalTime - orbitDuration;
-    const pushT = THREE.MathUtils.clamp(eyePhaseTime / pushDuration, 0, 1);
-    const startPos = eyeTarget.clone().add(pushDirection.clone().multiplyScalar(3.46)).add(new THREE.Vector3(0.16, 0.28, 0.2));
-    const endPos = eyeTarget.clone().add(pushDirection.clone().multiplyScalar(0.016)).add(new THREE.Vector3(0.0012, 0.006, 0.0024));
-    if (eyePhaseTime <= pushDuration) {
-      camera.position.lerpVectors(startPos, endPos, THREE.MathUtils.smoothstep(pushT, 0, 1));
-      camera.fov = THREE.MathUtils.lerp(16, 5.6, pushT);
-    } else {
-      camera.position.copy(endPos);
-      camera.fov = 5.4;
-    }
+  if (totalTime < orbitStart) {
+    const walkT = THREE.MathUtils.clamp(totalTime / orbitStart, 0, 1);
+    const eased = THREE.MathUtils.smoothstep(walkT, 0, 1);
+    const sideOffset = new THREE.Vector3(-3.1, 0.26, 2.8);
+    const startPos = center.clone().add(sideOffset);
+    const settlePos = center.clone().add(new THREE.Vector3(-4.8, 0.38, 3.48));
+    camera.position.lerpVectors(startPos, settlePos, eased);
+    camera.fov = THREE.MathUtils.lerp(52, 36, eased);
     camera.updateProjectionMatrix();
-    camera.lookAt(eyeTarget.x, eyeTarget.y, eyeTarget.z);
+    camera.lookAt(center.x + 0.1, center.y - 0.03, center.z - 0.02);
+    return;
   }
+
+  if (totalTime < orbitEnd) {
+    const orbitT = THREE.MathUtils.clamp((totalTime - orbitStart) / (orbitEnd - orbitStart), 0, 1);
+    const eased = THREE.MathUtils.smoothstep(orbitT, 0.03, 0.97);
+    const radius = THREE.MathUtils.lerp(orbitRadiusStart, orbitRadiusEnd, eased);
+    const angle = THREE.MathUtils.lerp(orbitStartAngle, orbitStartAngle + Math.PI * 2, eased);
+    camera.position.set(
+      center.x + Math.cos(angle) * radius,
+      THREE.MathUtils.lerp(1.48, 1.74, orbitT),
+      center.z + Math.sin(angle) * radius
+    );
+    const lookTarget = center.clone().lerp(eyeTarget, THREE.MathUtils.smoothstep(orbitT, 0.52, 1));
+    camera.fov = THREE.MathUtils.lerp(40, 20, THREE.MathUtils.smoothstep(orbitT, 0.18, 1));
+    camera.updateProjectionMatrix();
+    camera.lookAt(lookTarget.x, lookTarget.y, lookTarget.z);
+    return;
+  }
+
+  if (totalTime < pushEnd) {
+    const pushT = THREE.MathUtils.clamp((totalTime - orbitEnd) / (pushEnd - orbitEnd), 0, 1);
+    const startPos = eyeTarget.clone().add(pushDirection.clone().multiplyScalar(3.82)).add(new THREE.Vector3(0.24, 0.24, 0.2));
+    const endPos = eyeTarget.clone().add(pushDirection.clone().multiplyScalar(0.28)).add(new THREE.Vector3(0.014, 0.028, 0.01));
+    camera.position.lerpVectors(startPos, endPos, THREE.MathUtils.smoothstep(pushT, 0, 1));
+    camera.fov = THREE.MathUtils.lerp(18, 10.2, pushT);
+    camera.updateProjectionMatrix();
+    camera.lookAt(eyeTarget.x, eyeTarget.y + 0.004, eyeTarget.z);
+    return;
+  }
+
+  const holdT = THREE.MathUtils.clamp((totalTime - pushEnd) / Math.max(0.001, finalHoldEnd - pushEnd), 0, 1);
+  const breathing = Math.sin(totalTime * 0.42) * 0.0036;
+  const eyeHoldStart = eyeTarget.clone().add(pushDirection.clone().multiplyScalar(0.28)).add(new THREE.Vector3(0.014, 0.03, 0.01));
+  const eyeHoldEnd = eyeTarget.clone().add(pushDirection.clone().multiplyScalar(0.16)).add(new THREE.Vector3(0.004, 0.02, 0.003));
+  const eyeHoldPos = eyeHoldStart.lerp(eyeHoldEnd, THREE.MathUtils.smoothstep(holdT, 0.08, 1));
+  eyeHoldPos.y += breathing;
+  camera.position.copy(eyeHoldPos);
+  camera.fov = THREE.MathUtils.lerp(10.2, 8.8, holdT);
+  camera.updateProjectionMatrix();
+  camera.lookAt(eyeTarget.x, eyeTarget.y + 0.002, eyeTarget.z);
+}
 
   function pickHotspot(candidates, player, activeId) {
     applyPlayerCamera(player);
@@ -2267,6 +2445,7 @@ function applyPerfectEndingCamera(game) {
     scene.fog.near = isIntro ? 3 : 16;
     scene.fog.far = isIntro ? 20 : 68;
 
+    dust.visible = game.endingSequence?.type !== "perfect";
     dust.rotation.y = time * 0.018;
     dust.position.x = Math.sin(time * 0.12) * 0.08;
 
@@ -2313,7 +2492,7 @@ function applyPerfectEndingCamera(game) {
       currentRoomIds: WORLD.floorRooms.map((room) => room.id),
       endingShotPhase:
         game.endingSequence?.type === "perfect"
-          ? (game.endingSequence.time < 8.2 ? "walk-in" : game.endingSequence.time < CINEMATIC_TIMELINE.perfectDuration - 12 ? "orbit" : game.endingSequence.time < CINEMATIC_TIMELINE.perfectDuration - 10 ? "push-in" : "eyes")
+          ? perfectEndingPhase(game.endingSequence.time)
           : null,
       colliders: colliders.length,
       mobileBlackRegionDetected,
