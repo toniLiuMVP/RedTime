@@ -168,6 +168,11 @@ const dom = {
   subtitleBox: document.getElementById("subtitle-box"),
   subtitleSource: document.getElementById("subtitle-source"),
   subtitleText: document.getElementById("subtitle-text"),
+  transcriptDock: document.getElementById("transcript-dock"),
+  transcriptToggle: document.getElementById("transcript-toggle"),
+  transcriptStatus: document.getElementById("transcript-status"),
+  transcriptBox: document.getElementById("transcript-box"),
+  transcriptList: document.getElementById("transcript-list"),
   mobileControls: document.getElementById("mobile-controls"),
   moveStick: document.getElementById("move-stick"),
   lookStick: document.getElementById("look-stick"),
@@ -409,6 +414,7 @@ const state = {
   cameraMode: "intro",
   hudMode: "chip",
   subtitleMode: "full",
+  transcriptExpanded: true,
   pointerLockState: "free",
   pointerLockPending: false,
   boundaryCollisionState: null,
@@ -443,6 +449,7 @@ const state = {
     text: "我可以飛翔。沿著紅線，利瑪竇和 LM402 會在光裡慢慢長出來。",
     ttl: 3.6,
   },
+  subtitleLog: [],
   ambience: {
     text: "粉筆味像一層薄雲，十一點的光正慢慢沿著百葉窗往教室裡推。",
   },
@@ -639,14 +646,92 @@ function logDebug(type, detail = "") {
   }
 }
 
-function setSubtitle(source, text, ttl = 3.6) {
-  state.subtitle = { source, text, ttl };
+function transcriptTimeLabel(date = new Date()) {
+  return date.toLocaleTimeString("zh-TW", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+}
+
+function appendTranscriptEntry(source, text, kind = "subtitle") {
+  const cleaned = `${text || ""}`.trim();
+  if (!cleaned) {
+    return;
+  }
+  const last = state.subtitleLog[state.subtitleLog.length - 1];
+  if (last && last.source === source && last.text === cleaned && last.kind === kind) {
+    return;
+  }
+  state.subtitleLog.push({
+    id: `${Date.now()}-${state.subtitleLog.length}`,
+    source,
+    text: cleaned,
+    kind,
+    time: transcriptTimeLabel(),
+  });
+  if (state.subtitleLog.length > 120) {
+    state.subtitleLog.shift();
+  }
+  renderTranscriptLog();
+}
+
+function renderTranscriptLog() {
+  if (!dom.transcriptList) {
+    return;
+  }
+  dom.transcriptList.innerHTML = "";
+  if (!state.subtitleLog.length) {
+    const empty = document.createElement("div");
+    empty.className = "transcript-item";
+    empty.innerHTML =
+      `<div class="transcript-item-head"><span class="transcript-source">LM402</span><span class="transcript-time">等待開始</span></div>` +
+      `<div class="transcript-text">當文字開始浮上來，它們都會留在這裡。</div>`;
+    dom.transcriptList.appendChild(empty);
+  } else {
+    state.subtitleLog.forEach((item) => {
+      const row = document.createElement("div");
+      row.className = "transcript-item";
+      row.innerHTML =
+        `<div class="transcript-item-head"><span class="transcript-source">${item.source}</span><span class="transcript-time">${item.time}</span></div>` +
+        `<div class="transcript-text">${item.text.replace(/\n/g, "<br>")}</div>`;
+      dom.transcriptList.appendChild(row);
+    });
+  }
+  dom.transcriptStatus.textContent = state.transcriptExpanded
+    ? `收起對話紀錄 · ${state.subtitleLog.length} 則`
+    : state.subtitleLog.length
+      ? `展開對話紀錄 · ${state.subtitleLog.length} 則`
+      : "展開對話紀錄";
+  if (state.transcriptExpanded) {
+    dom.transcriptList.scrollTop = dom.transcriptList.scrollHeight;
+  }
+}
+
+function syncTranscriptUI() {
+  if (!dom.transcriptToggle || !dom.transcriptBox) {
+    return;
+  }
+  dom.transcriptToggle.setAttribute("aria-expanded", String(state.transcriptExpanded));
+  dom.transcriptDock?.classList.toggle("expanded", state.transcriptExpanded);
+  dom.transcriptBox.hidden = !state.transcriptExpanded;
+  renderTranscriptLog();
+}
+
+function toggleTranscript(forceExpanded = null) {
+  state.transcriptExpanded = forceExpanded ?? !state.transcriptExpanded;
+  syncTranscriptUI();
+}
+
+function setSubtitle(source, text, ttl = 5) {
+  const resolvedTtl = Math.max(ttl, 5);
+  state.subtitle = { source, text, ttl: resolvedTtl };
   dom.subtitleSource.textContent = source;
   dom.subtitleText.textContent = text;
-  if (isMobileLandscape() && state.mode !== "intro") {
-    state.subtitleMode = "compact";
-    syncDockState();
-  }
+  appendTranscriptEntry(source, text);
+  state.subtitleMode = "full";
+  syncDockState();
 }
 
 function setAmbience(text) {
@@ -886,6 +971,7 @@ function openDialogue(definition) {
   dom.dialogueEyebrow.textContent = definition.eyebrow;
   dom.dialogueTitle.textContent = `${definition.speaker} · ${definition.title}`;
   dom.dialogueCopy.innerHTML = definition.copy.map((text) => `<p>${text}</p>`).join("");
+  appendTranscriptEntry(definition.speaker, definition.copy.join("\n"), "dialogue");
   dom.dialogueChoices.innerHTML = "";
   definition.choices.forEach((choice, index) => {
     const button = document.createElement("button");
@@ -1141,7 +1227,7 @@ function startIntro(replay = false) {
   dom.body.classList.remove("ending-open");
   setSubtitle(INTRO_BEATS[0].kicker, INTRO_BEATS[0].text, 0.2);
   setAmbience(INTRO_BEATS[0].ambience);
-  state.subtitleMode = isMobileLandscape() ? "hidden" : "full";
+  state.subtitleMode = "full";
   syncDockState();
   logDebug("intro", replay ? "replay" : "start");
 }
@@ -1176,7 +1262,7 @@ function finishIntro() {
     setAmbience("十一點的風沿著四樓矮牆和四間教室長度的走廊往後門吹，外面的樹影、前門門洞和教室兩側的陽光一起慢慢亮起來。");
   }
 
-  state.subtitleMode = isMobileLandscape() ? "hidden" : "full";
+  state.subtitleMode = "full";
   syncDockState();
   updateObjective(true);
   updatePointerHint();
@@ -1190,6 +1276,8 @@ function startEnding(type, options = {}) {
   state.ending = type;
   state.endingSequence = { type, time: 0, manual, shotPhase: type === "perfect" ? "walk-in" : "fade" };
   state.cameraMode = "ending";
+  state.transcriptExpanded = true;
+  syncTranscriptUI();
   if (document.pointerLockElement === canvas) {
     document.exitPointerLock?.();
   }
@@ -1226,6 +1314,8 @@ function finishEndingSequence() {
   dom.endingKicker.textContent = ending.kicker;
   dom.endingTitle.textContent = ending.title;
   dom.endingCopy.textContent = ending.copy;
+  state.endingSequence = null;
+  state.cameraMode = "play";
   dom.endingOverlay.hidden = false;
   dom.body.classList.add("ending-open");
 }
@@ -1252,6 +1342,7 @@ function resetScene() {
   state.mobileDockExpanded = false;
   state.introBeatIndex = 0;
   state.introCameraTrack = INTRO_BEATS[0].id;
+  state.transcriptExpanded = true;
   state.memories = new Set();
   state.activeHotspot = null;
   state.activeHotspotId = null;
@@ -1273,7 +1364,7 @@ function updateMovement(dt) {
   if (state.mode !== "play" || state.dialogue || state.endingSequence || wantsLandscape()) {
     state.player.velocity.x *= 0.72;
     state.player.velocity.z *= 0.72;
-    state.subtitleMode = state.mode === "intro" && isMobileLandscape() ? "hidden" : "full";
+    state.subtitleMode = state.subtitle.ttl > 0.12 ? "full" : wantsLandscape() ? "hidden" : "compact";
     syncDockState();
     return;
   }
@@ -1316,10 +1407,14 @@ function updateMovement(dt) {
 
   const moving = Math.hypot(state.player.velocity.x, state.player.velocity.z) > scale(26);
   const looking = Math.abs(lookX) > 0.18 || Math.abs(lookY) > 0.18 || Boolean(state.dragLook) || document.pointerLockElement === canvas;
-  if (isMobileLandscape()) {
-    state.subtitleMode = moving || looking ? "hidden" : state.subtitle.ttl > 0.12 ? "compact" : "hidden";
-  } else {
+  if (state.subtitle.ttl > 0.12) {
     state.subtitleMode = "full";
+  } else if (isMobileLandscape()) {
+    state.subtitleMode = "hidden";
+  } else if (moving || looking) {
+    state.subtitleMode = "compact";
+  } else {
+    state.subtitleMode = "compact";
   }
   syncDockState();
 
@@ -1464,17 +1559,26 @@ function updateEndingSequence(dt) {
   if (!state.endingSequence) {
     return;
   }
+  if (!Number.isFinite(state.endingSequence.time)) {
+    finishEndingSequence();
+    return;
+  }
   state.endingSequence.time += dt;
   if (state.ending === "perfect") {
-    if (!state.flags.perfectLinePlayed && state.endingSequence.time >= 22.1) {
-      state.flags.perfectLinePlayed = true;
-      setSubtitle("學長", "這一次,依然再次遇見妳.", 10.2);
-      if (isMobileLandscape()) {
-        state.subtitleMode = "compact";
-        syncDockState();
-      }
+    if (state.endingSequence.time < (CINEMATIC_TIMELINE.perfectOrbitStart ?? 8)) {
+      state.endingSequence.shotPhase = "walk-in";
+    } else if (state.endingSequence.time < (CINEMATIC_TIMELINE.perfectOrbitEnd ?? 24)) {
+      state.endingSequence.shotPhase = "orbit";
+    } else if (state.endingSequence.time < (CINEMATIC_TIMELINE.perfectPushEnd ?? 30)) {
+      state.endingSequence.shotPhase = "push-in";
+    } else {
+      state.endingSequence.shotPhase = "eyes";
     }
-    if (state.endingSequence.time > CINEMATIC_TIMELINE.perfectDuration && dom.endingOverlay.hidden) {
+    if (!state.flags.perfectLinePlayed && state.endingSequence.time >= (CINEMATIC_TIMELINE.perfectLineAt ?? 30)) {
+      state.flags.perfectLinePlayed = true;
+      setSubtitle("學長", "這一次,依然再次遇見妳.", 10.6);
+    }
+    if (state.endingSequence.time > (CINEMATIC_TIMELINE.perfectDuration + 0.35) && dom.endingOverlay.hidden) {
       finishEndingSequence();
     }
     return;
@@ -1566,6 +1670,8 @@ function renderDebugPanel() {
     audioEnabled: state.audioEnabled,
     mobileDensityTier: state.mobileDensityTier,
     objectiveCompact: dom.objectivePrompt.classList.contains("compact"),
+    subtitleLogCount: state.subtitleLog.length,
+    transcriptExpanded: state.transcriptExpanded,
     stageViewport: layout.stageBounds,
     canvasViewport: layout.canvasBounds,
     subtitleBounds: layout.subtitleBounds,
@@ -1604,6 +1710,8 @@ function snapshotDebug() {
     lookSensitivityScalar: state.lookSensitivityScalar,
     audioEnabled: state.audioEnabled,
     objectiveCompact: dom.objectivePrompt.classList.contains("compact"),
+    subtitleLogCount: state.subtitleLog.length,
+    transcriptExpanded: state.transcriptExpanded,
     mobileDensityTier: state.mobileDensityTier,
     subtitle: state.subtitle.text,
     stageViewport: layout.stageBounds,
@@ -1639,7 +1747,23 @@ window.__LM402_DEBUG__ = {
 };
 
 function renderFrame() {
-  scene.render(buildSceneState());
+  try {
+    scene.render(buildSceneState());
+  } catch (error) {
+    const detail = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+    logDebug("render_error", detail.slice(0, 180));
+    if (state.endingSequence) {
+      state.endingSequence = null;
+      state.cinematicGlow = 0;
+      if (!state.ending) {
+        state.ending = "canon";
+      }
+      finishEndingSequence();
+      setSubtitle("LM402", "鏡頭先退回現場，但這一眼還是被留下來了。", 5.2);
+      return;
+    }
+    throw error;
+  }
   renderDebugPanel();
 }
 
@@ -1755,10 +1879,17 @@ function togglePointerLock() {
   if (state.pointerLockPending) {
     return;
   }
+  if (typeof canvas.requestPointerLock !== "function") {
+    revealHint("這個瀏覽器目前不支援視角鎖定。");
+    updatePointerHint();
+    return;
+  }
   state.pointerLockPending = true;
   updatePointerHint();
-  Promise.resolve(canvas.requestPointerLock?.()).catch(() => {
+  const requestLock = canvas.requestPointerLock.bind(canvas);
+  Promise.resolve(requestLock()).catch(() => {
     state.pointerLockPending = false;
+    revealHint("瀏覽器沒有成功鎖定視角。");
     updatePointerHint();
   });
   window.setTimeout(() => {
@@ -1790,58 +1921,58 @@ function bindPointerLook() {
     togglePointerLock();
   };
 
-  const bindStageRightLock = (node) => {
-    node.addEventListener(
-      "pointerdown",
-      (event) => {
-        if (event.button !== 2 || isStageUiTarget(event.target)) {
-          return;
-        }
-        event.preventDefault();
-        event.stopPropagation();
-        canvas.focus({ preventScroll: true });
-        audioSystem.unlock();
-        suppressContextMenuUntil = Date.now() + 280;
-        if (state.mode === "play" && !state.dialogue && !state.endingSequence && !state.ending) {
-          handleRightLockGesture(event);
-        }
-      },
-      true
-    );
-    node.addEventListener(
-      "contextmenu",
-      (event) => {
-        if (isStageUiTarget(event.target)) {
-          return;
-        }
-        if (Date.now() < suppressContextMenuUntil) {
-          event.preventDefault();
-          event.stopPropagation();
-          return;
-        }
-        handleRightLockGesture(event);
-      },
-      true
-    );
-    node.addEventListener(
-      "auxclick",
-      (event) => {
-        if (event.button === 2 && !isStageUiTarget(event.target)) {
-          event.preventDefault();
-          event.stopPropagation();
-        }
-      },
-      true
-    );
-  };
-
   canvas.addEventListener("click", () => {
     attemptOrientationLock();
     audioSystem.unlock();
     canvas.focus({ preventScroll: true });
   });
 
-  bindStageRightLock(dom.stage);
+  dom.stage.addEventListener(
+    "mousedown",
+    (event) => {
+      if (event.button !== 2 || isStageUiTarget(event.target)) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      canvas.focus({ preventScroll: true });
+      audioSystem.unlock();
+      suppressContextMenuUntil = Date.now() + 280;
+      if (
+        document.pointerLockElement === canvas ||
+        (state.mode === "play" && !state.dialogue && !state.endingSequence && !state.ending)
+      ) {
+        handleRightLockGesture(event);
+      }
+    },
+    true
+  );
+
+  dom.stage.addEventListener(
+    "contextmenu",
+    (event) => {
+      if (isStageUiTarget(event.target)) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      if (Date.now() >= suppressContextMenuUntil && document.pointerLockElement === canvas) {
+        handleRightLockGesture(event);
+      }
+    },
+    true
+  );
+
+  dom.stage.addEventListener(
+    "auxclick",
+    (event) => {
+      if (event.button === 2 && !isStageUiTarget(event.target)) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    },
+    true
+  );
 
   canvas.addEventListener("mousedown", (event) => {
     if (event.button !== 0 || isMobileLayout() || document.pointerLockElement === canvas) {
@@ -1963,6 +2094,7 @@ function bindUI() {
   dom.perfectEndingBtn.addEventListener("click", startPerfectEnding);
   dom.perfectEndingSideBtn.addEventListener("click", startPerfectEnding);
   dom.objectivePrompt.addEventListener("click", toggleObjectivePrompt);
+  dom.transcriptToggle?.addEventListener("click", () => toggleTranscript());
   dom.interactBtn.addEventListener("click", openActiveInteraction);
   dom.inspectBtn.addEventListener("click", () => {
     if (state.activeHotspot) {
@@ -2000,14 +2132,16 @@ function bindUI() {
 
 function handleResize() {
   const mobileLayout = isMobileLayout();
+  const mobileLandscape = isMobileLandscape();
+  const wasMobileLandscape = dom.body.classList.contains("is-mobile-landscape");
   state.mobileDensityTier = currentDensityTier();
   const preset = MOBILE_DENSITY_PRESETS[state.mobileDensityTier];
   const stageNode = document.getElementById("stage");
   const stageRect = stageNode.getBoundingClientRect();
   dom.body.dataset.mobileTier = state.mobileDensityTier;
   dom.body.classList.toggle("is-mobile", mobileLayout);
-  dom.body.classList.toggle("is-mobile-landscape", isMobileLandscape());
-  dom.body.classList.toggle("is-mobile-portrait", mobileLayout && !isMobileLandscape());
+  dom.body.classList.toggle("is-mobile-landscape", mobileLandscape);
+  dom.body.classList.toggle("is-mobile-portrait", mobileLayout && !mobileLandscape);
   dom.body.style.setProperty("--joystick-size", `${preset.stickSize}px`);
   dom.body.style.setProperty("--joystick-thumb", `${preset.thumbSize}px`);
   dom.body.style.setProperty("--action-size", `${preset.actionSize}px`);
@@ -2024,8 +2158,15 @@ function handleResize() {
   if (!isMobileLandscape()) {
     state.mobileDockExpanded = false;
   }
+  if (mobileLandscape && !wasMobileLandscape) {
+    state.transcriptExpanded = true;
+  }
+  if (!mobileLandscape && wasMobileLandscape) {
+    state.transcriptExpanded = true;
+  }
   updatePointerHint();
   syncDockState();
+  syncTranscriptUI();
   scene.resize();
   window.requestAnimationFrame(() => {
     scene.resize();
@@ -2054,6 +2195,7 @@ if (state.mode === "intro") {
 }
 
 syncDockState();
+syncTranscriptUI();
 syncObjectiveChip();
 updatePointerHint();
 updateActionButtons();
