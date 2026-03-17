@@ -75,39 +75,39 @@ const WORLD_POINTS = {
     z: scale(WORLD.focusMark.z),
   },
   frontSpawn: {
-    x: scale(-824),
+    x: scale(-736),
     y: 0,
-    z: scale(1012),
+    z: scale(WORLD.frontDoor.center.z - 552),
   },
   corridorFront: {
-    x: scale(-404),
+    x: scale(-548),
     y: 0,
-    z: scale(WORLD.frontDoor.center.z),
+    z: scale(WORLD.frontDoor.center.z - 326),
   },
   juniorSeat: {
-    x: scale(1536),
+    x: scale(1896),
     y: 0,
-    z: scale(622),
+    z: scale(2058),
   },
   frontLook: {
-    x: scale(-246),
-    y: 1.34,
-    z: scale(796),
+    x: scale(-238),
+    y: 1.48,
+    z: scale(WORLD.frontDoor.center.z + 18),
   },
   rearLook: {
-    x: scale(-84),
-    y: 1.38,
-    z: scale(550),
+    x: scale(24),
+    y: 1.42,
+    z: scale(WORLD.backDoor.center.z + 6),
   },
   eyeLook: {
-    x: scale(64),
-    y: 1.48,
-    z: scale(548),
+    x: scale(92),
+    y: 1.5,
+    z: scale(WORLD.backDoor.center.z + 4),
   },
   perfectOrbit: {
-    x: scale(64),
+    x: scale(108),
     y: 1.58,
-    z: scale(548),
+    z: scale(WORLD.backDoor.center.z + 6),
   },
 };
 
@@ -131,6 +131,7 @@ const scene = createLm402Scene(canvas);
 
 const dom = {
   body: document.body,
+  stage: document.getElementById("stage"),
   rotateLock: document.getElementById("rotate-lock"),
   hud: document.getElementById("hud"),
   hudToggle: document.getElementById("hud-toggle"),
@@ -261,25 +262,25 @@ function createInitialCharacters() {
       x: WORLD_POINTS.corridorFront.x,
       y: 0,
       z: WORLD_POINTS.corridorFront.z,
-      rotationY: -1.18,
+      rotationY: -1.32,
     },
     junior: {
       x: WORLD_POINTS.juniorSeat.x,
       y: 0,
       z: WORLD_POINTS.juniorSeat.z,
-      rotationY: 0,
+      rotationY: 0.04,
     },
     fatherEcho: {
       x: scale(-312),
       y: 0,
-      z: scale(540),
+      z: scale(WORLD.backDoor.center.z + 2),
       rotationY: Math.PI / 2,
       alpha: 0,
     },
     auntEcho: {
       x: scale(-116),
       y: 0,
-      z: scale(560),
+      z: scale(WORLD.backDoor.center.z + 26),
       rotationY: -Math.PI / 2,
       alpha: 0,
     },
@@ -325,15 +326,15 @@ function phaseLookTarget(phase) {
     return {
       x:
         liveState.characters.senior.x * 0.3 +
-        WORLD_POINTS.doorPlaque.x * 0.34 +
-        WORLD_POINTS.frontLook.x * 0.22 +
-        (WORLD_POINTS.frontSpawn.x + scale(212)) * 0.14,
+        WORLD_POINTS.doorPlaque.x * 0.4 +
+        WORLD_POINTS.frontDoor.x * 0.16 +
+        WORLD_POINTS.frontLook.x * 0.14,
       y: WORLD_POINTS.frontLook.y,
       z:
-        liveState.characters.senior.z * 0.44 +
-        WORLD_POINTS.doorPlaque.z * 0.18 +
-        WORLD_POINTS.frontLook.z * 0.26 +
-        WORLD.frontDoor.center.z * WORLD_SCALE * 0.12,
+        liveState.characters.senior.z * 0.26 +
+        WORLD_POINTS.doorPlaque.z * 0.34 +
+        WORLD_POINTS.frontDoor.z * 0.18 +
+        WORLD_POINTS.frontLook.z * 0.22,
     };
   }
   if (phase === "eye_contact") {
@@ -387,6 +388,7 @@ function createInitialFlags() {
     juniorPrepared: false,
     rearWaitHintPlayed: false,
     eyeCuePlayed: false,
+    perfectLinePlayed: false,
   };
 }
 
@@ -408,6 +410,7 @@ const state = {
   hudMode: "chip",
   subtitleMode: "full",
   pointerLockState: "free",
+  pointerLockPending: false,
   boundaryCollisionState: null,
   lastContextMenu: 0,
   debugEvents: [],
@@ -751,9 +754,13 @@ function updatePointerHint() {
     return;
   }
   const locked = document.pointerLockElement === canvas;
-  state.pointerLockState = locked ? "locked" : "free";
+  state.pointerLockState = locked ? "locked" : state.pointerLockPending ? "pending" : "free";
   dom.pointerPill.hidden = false;
-  dom.pointerPill.textContent = locked ? "視角已鎖定 · 右鍵或 Esc 退出" : "右鍵進入視角鎖定";
+  dom.pointerPill.textContent = locked
+    ? "視角已鎖定 · 右鍵或 Esc 退出"
+    : state.pointerLockPending
+      ? "正在鎖定視角…"
+      : "右鍵進入視角鎖定";
   dom.pointerPill.classList.toggle("locked", locked);
   canvas.classList.toggle("pointer-locked", locked);
 }
@@ -1166,7 +1173,7 @@ function finishIntro() {
       isGhostObserver: true,
     };
     setSubtitle("女兒", "前門來電，要先從那句「妳在哪裡？」開始。", 3.8);
-    setAmbience("十一點的風沿著四樓矮牆和六間教室長度的走廊往後門吹，外面的樹影、前門門洞和教室兩側的陽光一起慢慢亮起來。");
+    setAmbience("十一點的風沿著四樓矮牆和四間教室長度的走廊往後門吹，外面的樹影、前門門洞和教室兩側的陽光一起慢慢亮起來。");
   }
 
   state.subtitleMode = isMobileLandscape() ? "hidden" : "full";
@@ -1181,7 +1188,7 @@ function startEnding(type, options = {}) {
   }
   const { manual = false } = options;
   state.ending = type;
-  state.endingSequence = { type, time: 0, manual };
+  state.endingSequence = { type, time: 0, manual, shotPhase: type === "perfect" ? "walk-in" : "fade" };
   state.cameraMode = "ending";
   if (document.pointerLockElement === canvas) {
     document.exitPointerLock?.();
@@ -1189,8 +1196,9 @@ function startEnding(type, options = {}) {
   if (type === "perfect") {
     state.phase = "eye_contact";
     state.phaseClock = 0;
-    setSubtitle("學長", "這一次,依然再次遇見妳.", 6.2);
-    setAmbience("四樓後門那一側忽然靜下來，只剩陽光慢慢落在她的白襯衫、頭髮和眼睛上。");
+    state.flags.perfectLinePlayed = false;
+    setSubtitle("女兒", "光先落在她身上，像整條四樓走廊和整間教室都往後慢慢退開，只剩她一個人被時間輕輕托住。", 6.2);
+    setAmbience("四樓後門那一側忽然靜下來，只剩陽光沿著無天花板的走廊、玻璃和地面慢慢推進來，把她留在最亮的那一格。");
   } else {
     setSubtitle("女兒", type === "missed" ? "紅線先回彈了。" : "他出現在光裡。", 4.4);
   }
@@ -1255,7 +1263,7 @@ function resetScene() {
   updateObjective(true);
   updateMemoryList();
   setSubtitle("女兒", "先讓前門那句電話響起來。", 3.6);
-  setAmbience("粉筆味像一層薄雲，四樓長走廊有風，十一點的光正沿著矮牆、前門門洞和教室兩側一起往裡推。");
+  setAmbience("粉筆味像一層薄雲，四樓長走廊有風，沒有天花板的日光正沿著矮牆、前門門洞和教室兩側一起往裡推。");
   syncDockState();
   updatePointerHint();
   logDebug("scene", "reset");
@@ -1332,60 +1340,68 @@ function setCharacterPose(name, x, z, rotationY, alpha = 1) {
 
 function updateCharacters() {
   if (state.endingSequence?.type === "perfect") {
-    const seniorWalkT = smoothstep(0.12, 4.8, state.endingSequence.time);
-    const juniorWalkT = smoothstep(0.42, 4.1, state.endingSequence.time);
-    const seniorX = lerp(scale(-392), scale(-386), seniorWalkT);
-    const seniorZ = lerp(scale(770), scale(548), seniorWalkT);
-    const juniorX = lerp(scale(1536), scale(64), juniorWalkT);
-    const juniorZ = lerp(scale(622), scale(548), juniorWalkT);
+    const seniorWalkT = smoothstep(0.18, 8.2, state.endingSequence.time);
+    const juniorWalkT = smoothstep(0.4, 5.6, state.endingSequence.time);
+    const seniorX = lerp(scale(-334), scale(-318), seniorWalkT * 0.82);
+    const seniorZ = lerp(scale(WORLD.frontDoor.center.z - 44), scale(WORLD.backDoor.center.z + 4), seniorWalkT);
+    const juniorX = lerp(scale(1896), scale(64), juniorWalkT);
+    const juniorZ = lerp(scale(2058), scale(WORLD.backDoor.center.z - 4), juniorWalkT);
     const seniorFacing = movementRotation(juniorX - seniorX, juniorZ - seniorZ, 0);
     const juniorFacing = movementRotation(seniorX - juniorX, seniorZ - juniorZ, -Math.PI / 2);
     setCharacterPose("senior", seniorX, seniorZ, seniorFacing);
     setCharacterPose("junior", juniorX, juniorZ, juniorFacing);
-    setCharacterPose("fatherEcho", scale(-272), scale(540), Math.PI / 2, 0);
-    setCharacterPose("auntEcho", scale(-116), scale(560), -Math.PI / 2, 0);
+    setCharacterPose("fatherEcho", scale(-272), scale(WORLD.backDoor.center.z + 2), Math.PI / 2, 0);
+    setCharacterPose("auntEcho", scale(-116), scale(WORLD.backDoor.center.z + 26), -Math.PI / 2, 0);
     return;
   }
 
   if (state.phase === "front_call") {
-    setCharacterPose("senior", scale(-346), scale(786), -1.18);
-    setCharacterPose("junior", scale(1536), scale(622), 0.06);
-    setCharacterPose("fatherEcho", scale(-272), scale(540), Math.PI / 2, 0);
-    setCharacterPose("auntEcho", scale(-116), scale(560), -Math.PI / 2, 0);
+    const seniorWalkT = smoothstep(0.08, 3.8, state.phaseClock);
+    const seniorX = lerp(scale(-520), scale(-336), seniorWalkT);
+    const seniorZ = lerp(scale(WORLD.frontDoor.center.z - 286), scale(WORLD.frontDoor.center.z - 42), seniorWalkT);
+    setCharacterPose(
+      "senior",
+      seniorX,
+      seniorZ,
+      movementRotation(scale(-236) - seniorX, scale(WORLD.frontDoor.center.z + 10) - seniorZ, -1.08)
+    );
+    setCharacterPose("junior", scale(1896), scale(2058), 0.03);
+    setCharacterPose("fatherEcho", scale(-272), scale(WORLD.backDoor.center.z + 2), Math.PI / 2, 0);
+    setCharacterPose("auntEcho", scale(-116), scale(WORLD.backDoor.center.z + 26), -Math.PI / 2, 0);
     return;
   }
 
   if (state.phase === "rear_wait") {
-    const seniorT = smoothstep(0.1, 4.0, state.phaseClock);
-    const juniorT = smoothstep(0.6, 3.5, state.phaseClock);
-    const seniorX = lerp(scale(-404), scale(-392), seniorT * 0.76);
-    const seniorZ = lerp(scale(772), scale(550), seniorT);
-    const juniorX = lerp(scale(1536), scale(58), juniorT);
-    const juniorZ = lerp(scale(622), scale(550), juniorT);
+    const seniorT = smoothstep(0.1, 5.8, state.phaseClock);
+    const juniorT = smoothstep(0.6, 4.8, state.phaseClock);
+    const seniorX = lerp(scale(-342), scale(-324), seniorT * 0.84);
+    const seniorZ = lerp(scale(WORLD.frontDoor.center.z - 42), scale(WORLD.backDoor.center.z), seniorT);
+    const juniorX = lerp(scale(1896), scale(74), juniorT);
+    const juniorZ = lerp(scale(2058), scale(WORLD.backDoor.center.z - 2), juniorT);
     setCharacterPose("senior", seniorX, seniorZ, movementRotation(juniorX - seniorX, juniorZ - seniorZ, -0.12));
     setCharacterPose("junior", juniorX, juniorZ, movementRotation(seniorX - juniorX, seniorZ - juniorZ, -Math.PI / 2));
-    setCharacterPose("fatherEcho", scale(-272), scale(540), Math.PI / 2, 0);
-    setCharacterPose("auntEcho", scale(-116), scale(560), -Math.PI / 2, 0);
+    setCharacterPose("fatherEcho", scale(-272), scale(WORLD.backDoor.center.z + 2), Math.PI / 2, 0);
+    setCharacterPose("auntEcho", scale(-116), scale(WORLD.backDoor.center.z + 26), -Math.PI / 2, 0);
     return;
   }
 
-  const seniorT = smoothstep(0.6, 3.2, state.phaseClock);
-  const juniorT = smoothstep(0.2, 2.8, state.phaseClock);
-  const seniorX = lerp(scale(-392), scale(-392), seniorT * 0.8);
-  const seniorZ = lerp(scale(550), scale(548), seniorT);
-  const juniorX = lerp(scale(58), scale(46), juniorT);
-  const juniorZ = lerp(scale(550), scale(548), juniorT);
-  const echoAlpha = smoothstep(1.9, 3.1, state.phaseClock) * (1 - smoothstep(4.1, 5.0, state.phaseClock));
+  const seniorT = smoothstep(0.8, 4.0, state.phaseClock);
+  const juniorT = smoothstep(0.2, 3.4, state.phaseClock);
+  const seniorX = lerp(scale(-356), scale(-332), seniorT * 0.8);
+  const seniorZ = lerp(scale(WORLD.backDoor.center.z + 4), scale(WORLD.backDoor.center.z), seniorT);
+  const juniorX = lerp(scale(84), scale(58), juniorT);
+  const juniorZ = lerp(scale(WORLD.backDoor.center.z + 2), scale(WORLD.backDoor.center.z - 2), juniorT);
+  const echoAlpha = smoothstep(2.2, 4.0, state.phaseClock) * (1 - smoothstep(5.2, 6.1, state.phaseClock));
 
   setCharacterPose("senior", seniorX, seniorZ, movementRotation(juniorX - seniorX, juniorZ - seniorZ, 0));
   setCharacterPose("junior", juniorX, juniorZ, movementRotation(seniorX - juniorX, seniorZ - juniorZ, -Math.PI / 2));
-  setCharacterPose("fatherEcho", scale(-272), scale(540), Math.PI / 2, echoAlpha * 0.6);
-  setCharacterPose("auntEcho", scale(-116), scale(560), -Math.PI / 2, echoAlpha * 0.74);
+  setCharacterPose("fatherEcho", scale(-272), scale(WORLD.backDoor.center.z + 2), Math.PI / 2, echoAlpha * 0.6);
+  setCharacterPose("auntEcho", scale(-116), scale(WORLD.backDoor.center.z + 26), -Math.PI / 2, echoAlpha * 0.74);
 }
 
 function updateCharacterAudio(dt) {
   if (state.mode === "intro") {
-    if (state.intro.time > 7.1 && state.intro.time < 11.6 && state.time - state.sound.seniorStepAt > 0.48) {
+    if (state.intro.time > 10.2 && state.intro.time < 17.2 && state.time - state.sound.seniorStepAt > 0.48) {
       state.sound.seniorStepAt = state.time;
       audioSystem.playCue("step");
     }
@@ -1393,12 +1409,13 @@ function updateCharacterAudio(dt) {
   }
 
   const seniorWalking =
-    (state.phase === "rear_wait" && state.phaseClock < 4.1) ||
-    (state.phase === "eye_contact" && state.phaseClock < 2.2) ||
-    (state.endingSequence?.type === "perfect" && state.endingSequence.time < 4.3);
+    (state.phase === "front_call" && state.phaseClock < 3.8) ||
+    (state.phase === "rear_wait" && state.phaseClock < 5.8) ||
+    (state.phase === "eye_contact" && state.phaseClock < 2.8) ||
+    (state.endingSequence?.type === "perfect" && state.endingSequence.time < 8.2);
   const juniorWalking =
-    (state.phase === "rear_wait" && state.phaseClock > 0.5 && state.phaseClock < 3.6) ||
-    (state.endingSequence?.type === "perfect" && state.endingSequence.time > 0.3 && state.endingSequence.time < 3.4);
+    (state.phase === "rear_wait" && state.phaseClock > 0.5 && state.phaseClock < 4.8) ||
+    (state.endingSequence?.type === "perfect" && state.endingSequence.time > 0.3 && state.endingSequence.time < 5.4);
 
   if (seniorWalking && state.time - state.sound.seniorStepAt > 0.48) {
     state.sound.seniorStepAt = state.time;
@@ -1449,6 +1466,14 @@ function updateEndingSequence(dt) {
   }
   state.endingSequence.time += dt;
   if (state.ending === "perfect") {
+    if (!state.flags.perfectLinePlayed && state.endingSequence.time >= 22.1) {
+      state.flags.perfectLinePlayed = true;
+      setSubtitle("學長", "這一次,依然再次遇見妳.", 10.2);
+      if (isMobileLandscape()) {
+        state.subtitleMode = "compact";
+        syncDockState();
+      }
+    }
     if (state.endingSequence.time > CINEMATIC_TIMELINE.perfectDuration && dom.endingOverlay.hidden) {
       finishEndingSequence();
     }
@@ -1549,6 +1574,8 @@ function renderDebugPanel() {
     mobileBlackRegionDetected: snapshot.mobileBlackRegionDetected,
     projectedNodes: snapshot.projectedNodes,
     hotspotLOS: snapshot.hotspotLOS,
+    currentRoomIds: snapshot.currentRoomIds,
+    endingShotPhase: snapshot.endingShotPhase,
     renderer: snapshot,
     events: state.debugEvents,
   };
@@ -1589,6 +1616,8 @@ function snapshotDebug() {
     mobileBlackRegionDetected: renderSnapshot.mobileBlackRegionDetected,
     projectedNodes: renderSnapshot.projectedNodes,
     hotspotLOS: renderSnapshot.hotspotLOS,
+    currentRoomIds: renderSnapshot.currentRoomIds,
+    endingShotPhase: renderSnapshot.endingShotPhase,
     renderer: renderSnapshot,
     events: [...state.debugEvents],
   };
@@ -1698,40 +1727,124 @@ function attemptOrientationLock() {
   }
 }
 
+function isStageUiTarget(target) {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+  return Boolean(
+    target.closest(
+      ".speed-widget, .speed-panel, .audio-widget, .music-prompt, .objective-prompt, .bottom-dock, .mobile-controls, button, a, input, label"
+    )
+  );
+}
+
 function togglePointerLock() {
   if (isMobileLayout()) {
     return;
   }
   canvas.focus({ preventScroll: true });
   if (document.pointerLockElement === canvas) {
+    state.pointerLockPending = false;
     document.exitPointerLock?.();
+    updatePointerHint();
     return;
   }
   if (state.mode !== "play" || state.dialogue || state.endingSequence || state.ending) {
     return;
   }
-  canvas.requestPointerLock?.();
+  if (state.pointerLockPending) {
+    return;
+  }
+  state.pointerLockPending = true;
+  updatePointerHint();
+  Promise.resolve(canvas.requestPointerLock?.()).catch(() => {
+    state.pointerLockPending = false;
+    updatePointerHint();
+  });
+  window.setTimeout(() => {
+    if (document.pointerLockElement !== canvas) {
+      state.pointerLockPending = false;
+      updatePointerHint();
+    }
+  }, 520);
 }
 
 function bindPointerLook() {
+  let lastRightLockAt = 0;
+  let suppressContextMenuUntil = 0;
+  const handleRightLockGesture = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (isMobileLayout()) {
+      return;
+    }
+    const now = Date.now();
+    if (now - lastRightLockAt < 180) {
+      return;
+    }
+    lastRightLockAt = now;
+    state.lastContextMenu = now;
+    logDebug("contextmenu", document.pointerLockElement === canvas ? "exit" : "enter");
+    audioSystem.unlock();
+    canvas.focus({ preventScroll: true });
+    togglePointerLock();
+  };
+
+  const bindStageRightLock = (node) => {
+    node.addEventListener(
+      "pointerdown",
+      (event) => {
+        if (event.button !== 2 || isStageUiTarget(event.target)) {
+          return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        canvas.focus({ preventScroll: true });
+        audioSystem.unlock();
+        suppressContextMenuUntil = Date.now() + 280;
+        if (state.mode === "play" && !state.dialogue && !state.endingSequence && !state.ending) {
+          handleRightLockGesture(event);
+        }
+      },
+      true
+    );
+    node.addEventListener(
+      "contextmenu",
+      (event) => {
+        if (isStageUiTarget(event.target)) {
+          return;
+        }
+        if (Date.now() < suppressContextMenuUntil) {
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
+        handleRightLockGesture(event);
+      },
+      true
+    );
+    node.addEventListener(
+      "auxclick",
+      (event) => {
+        if (event.button === 2 && !isStageUiTarget(event.target)) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      },
+      true
+    );
+  };
+
   canvas.addEventListener("click", () => {
     attemptOrientationLock();
     audioSystem.unlock();
     canvas.focus({ preventScroll: true });
   });
 
-  canvas.addEventListener("contextmenu", (event) => {
-    event.preventDefault();
-    if (isMobileLayout()) {
-      return;
-    }
-    state.lastContextMenu = Date.now();
-    logDebug("contextmenu", document.pointerLockElement === canvas ? "exit" : "enter");
-    togglePointerLock();
-  });
+  bindStageRightLock(dom.stage);
 
   canvas.addEventListener("mousedown", (event) => {
-    if (event.button !== 0 || isMobileLayout()) {
+    if (event.button !== 0 || isMobileLayout() || document.pointerLockElement === canvas) {
       return;
     }
     audioSystem.unlock();
@@ -1769,12 +1882,15 @@ function bindPointerLook() {
   });
 
   document.addEventListener("pointerlockchange", () => {
+    state.pointerLockPending = false;
     updatePointerHint();
     logDebug("pointerlock", document.pointerLockElement === canvas ? "locked" : "free");
   });
   document.addEventListener("pointerlockerror", () => {
+    state.pointerLockPending = false;
     revealHint("瀏覽器沒有成功鎖定視角。");
     logDebug("pointerlock", "error");
+    updatePointerHint();
   });
 }
 
