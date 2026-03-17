@@ -77,12 +77,12 @@ const WORLD_POINTS = {
   frontSpawn: {
     x: scale(-736),
     y: 0,
-    z: scale(WORLD.frontDoor.center.z - 552),
+    z: scale(WORLD.frontDoor.center.z - 612),
   },
   corridorFront: {
     x: scale(-548),
     y: 0,
-    z: scale(WORLD.frontDoor.center.z - 326),
+    z: scale(WORLD.frontDoor.center.z - 356),
   },
   juniorSeat: {
     x: scale(1896),
@@ -90,9 +90,9 @@ const WORLD_POINTS = {
     z: scale(2058),
   },
   frontLook: {
-    x: scale(-238),
-    y: 1.48,
-    z: scale(WORLD.frontDoor.center.z + 18),
+    x: scale(-256),
+    y: 1.52,
+    z: scale(WORLD.frontDoor.center.z - 4),
   },
   rearLook: {
     x: scale(24),
@@ -1569,12 +1569,12 @@ function updateEndingSequence(dt) {
       state.endingSequence.shotPhase = "walk-in";
     } else if (state.endingSequence.time < (CINEMATIC_TIMELINE.perfectOrbitEnd ?? 24)) {
       state.endingSequence.shotPhase = "orbit";
-    } else if (state.endingSequence.time < (CINEMATIC_TIMELINE.perfectPushEnd ?? 30)) {
-      state.endingSequence.shotPhase = "push-in";
+    } else if (state.endingSequence.time < (CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 32)) {
+      state.endingSequence.shotPhase = "senior_pov_push";
     } else {
       state.endingSequence.shotPhase = "eyes";
     }
-    if (!state.flags.perfectLinePlayed && state.endingSequence.time >= (CINEMATIC_TIMELINE.perfectLineAt ?? 30)) {
+    if (!state.flags.perfectLinePlayed && state.endingSequence.time >= (CINEMATIC_TIMELINE.perfectLineAt ?? 32)) {
       state.flags.perfectLinePlayed = true;
       setSubtitle("學長", "這一次,依然再次遇見妳.", 10.6);
     }
@@ -1902,7 +1902,6 @@ function togglePointerLock() {
 
 function bindPointerLook() {
   let lastRightLockAt = 0;
-  let suppressContextMenuUntil = 0;
   const handleRightLockGesture = (event) => {
     event.preventDefault();
     event.stopPropagation();
@@ -1937,13 +1936,6 @@ function bindPointerLook() {
       event.stopPropagation();
       canvas.focus({ preventScroll: true });
       audioSystem.unlock();
-      suppressContextMenuUntil = Date.now() + 280;
-      if (
-        document.pointerLockElement === canvas ||
-        (state.mode === "play" && !state.dialogue && !state.endingSequence && !state.ending)
-      ) {
-        handleRightLockGesture(event);
-      }
     },
     true
   );
@@ -1956,7 +1948,10 @@ function bindPointerLook() {
       }
       event.preventDefault();
       event.stopPropagation();
-      if (Date.now() >= suppressContextMenuUntil && document.pointerLockElement === canvas) {
+      if (
+        document.pointerLockElement === canvas ||
+        (state.mode === "play" && !state.dialogue && !state.endingSequence && !state.ending)
+      ) {
         handleRightLockGesture(event);
       }
     },
@@ -2159,7 +2154,7 @@ function handleResize() {
     state.mobileDockExpanded = false;
   }
   if (mobileLandscape && !wasMobileLandscape) {
-    state.transcriptExpanded = true;
+    state.transcriptExpanded = false;
   }
   if (!mobileLandscape && wasMobileLandscape) {
     state.transcriptExpanded = true;
