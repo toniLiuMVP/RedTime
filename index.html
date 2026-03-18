@@ -91,8 +91,7 @@ section{padding:clamp(72px,12vw,140px) var(--gutter);position:relative}
 #about{background:linear-gradient(180deg,var(--ink) 0%,rgba(6,12,8,.96) 50%,var(--ink) 100%)}
 .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(40px,6vw,100px);align-items:center;max-width:1100px;margin:0 auto}
 @media(max-width:768px){.about-grid{grid-template-columns:1fr}}
-.about-left{}
-.about-right{}
+
 .about-quote{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(18px,3vw,26px);font-weight:300;line-height:1.7;color:rgba(234,230,222,.8);margin-bottom:16px;letter-spacing:.04em}
 .about-quote-src{font-family:'DM Mono',monospace;font-size:9px;color:var(--mist);letter-spacing:.2em}
 .about-body{font-size:15.5px;font-weight:300;line-height:2.04;color:rgba(234,230,222,.74);letter-spacing:.028em;max-width:33em;text-wrap:pretty}
@@ -586,7 +585,7 @@ footer{padding:60px var(--gutter) 40px;border-top:1px solid var(--seam2);backgro
       <div class="foot-logo">時間裡的兩個妳</div>
       <div class="foot-title-line">THE TWO YOUS IN TIME</div>
       <div style="text-align:center;margin:24px 0 8px">
-    <a href="/cdn-cgi/l/email-protection#8cf8e3e2e5c0e5f9c1dadcccebe1ede5e0a2efe3e1" style="display:inline-flex;align-items:center;gap:8px;font-family:'Noto Sans TC',sans-serif;font-size:13px;letter-spacing:.08em;padding:10px 24px;border-radius:4px;border:1px solid rgba(22,168,100,.35);color:#16a864;text-decoration:none;background:rgba(22,168,100,.05);transition:border-color .15s">✉ 寫信給作者</a>
+    <a href="mailto:toniLiuMVP@gmail.com" style="display:inline-flex;align-items:center;gap:8px;font-family:'Noto Sans TC',sans-serif;font-size:13px;letter-spacing:.08em;padding:10px 24px;border-radius:4px;border:1px solid rgba(22,168,100,.35);color:#16a864;text-decoration:none;background:rgba(22,168,100,.05);transition:border-color .15s">✉ 寫信給作者</a>
   </div>
   <div class="foot-copy">© toni · 版權所有</div>
     </div>
@@ -599,7 +598,7 @@ footer{padding:60px var(--gutter) 40px;border-top:1px solid var(--seam2);backgro
   </div>
 </footer>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 // NAV scroll
 window.addEventListener('scroll',()=>{document.getElementById('nav').classList.toggle('scrolled',window.scrollY>40)},{passive:true});
 
