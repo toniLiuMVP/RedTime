@@ -34,42 +34,42 @@ function makeFaceTexture({ female = false, referenceJunior = false } = {}) {
   ctx.fillStyle = skinGradient;
   ctx.fillRect(0, 0, 320, 320);
 
-  ctx.strokeStyle = female ? (referenceJunior ? "rgba(116,82,70,.76)" : "rgba(82,48,47,.7)") : "rgba(74,43,40,.72)";
-  ctx.lineWidth = female ? (referenceJunior ? 4 : 6) : 7;
+  ctx.strokeStyle = female ? (referenceJunior ? "rgba(112,84,74,.68)" : "rgba(82,48,47,.7)") : "rgba(74,43,40,.72)";
+  ctx.lineWidth = female ? (referenceJunior ? 3.2 : 6) : 7;
   ctx.beginPath();
-  ctx.moveTo(88, referenceJunior ? 122 : 116);
-  ctx.quadraticCurveTo(116, female ? (referenceJunior ? 108 : 94) : 100, 142, referenceJunior ? 116 : 110);
-  ctx.moveTo(178, referenceJunior ? 116 : 110);
-  ctx.quadraticCurveTo(206, female ? (referenceJunior ? 108 : 94) : 100, 234, referenceJunior ? 122 : 116);
+  ctx.moveTo(92, referenceJunior ? 124 : 116);
+  ctx.quadraticCurveTo(118, female ? (referenceJunior ? 112 : 94) : 100, 142, referenceJunior ? 120 : 110);
+  ctx.moveTo(178, referenceJunior ? 120 : 110);
+  ctx.quadraticCurveTo(202, female ? (referenceJunior ? 112 : 94) : 100, 228, referenceJunior ? 124 : 116);
   ctx.stroke();
 
   ctx.fillStyle = "#24191a";
   ctx.beginPath();
-  ctx.ellipse(112, referenceJunior ? 150 : 146, referenceJunior ? 18 : 15, referenceJunior ? 12.8 : 12, -0.04, 0, Math.PI * 2);
-  ctx.ellipse(208, referenceJunior ? 150 : 146, referenceJunior ? 18 : 15, referenceJunior ? 12.8 : 12, 0.04, 0, Math.PI * 2);
+  ctx.ellipse(114, referenceJunior ? 152 : 146, referenceJunior ? 17.5 : 15, referenceJunior ? 13.4 : 12, -0.02, 0, Math.PI * 2);
+  ctx.ellipse(206, referenceJunior ? 152 : 146, referenceJunior ? 17.5 : 15, referenceJunior ? 13.4 : 12, 0.02, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.fillStyle = female ? (referenceJunior ? "#5b3929" : "#3f231f") : "#35201d";
   ctx.beginPath();
-  ctx.ellipse(112, referenceJunior ? 150 : 146, referenceJunior ? 7.4 : 6, referenceJunior ? 8.6 : 7, 0, 0, Math.PI * 2);
-  ctx.ellipse(208, referenceJunior ? 150 : 146, referenceJunior ? 7.4 : 6, referenceJunior ? 8.6 : 7, 0, 0, Math.PI * 2);
+  ctx.ellipse(114, referenceJunior ? 152 : 146, referenceJunior ? 7.2 : 6, referenceJunior ? 8.8 : 7, 0, 0, Math.PI * 2);
+  ctx.ellipse(206, referenceJunior ? 152 : 146, referenceJunior ? 7.2 : 6, referenceJunior ? 8.8 : 7, 0, 0, Math.PI * 2);
   ctx.fill();
 
   if (female) {
     ctx.strokeStyle = referenceJunior ? "rgba(64,38,34,.72)" : "rgba(39,20,18,.7)";
     ctx.lineWidth = referenceJunior ? 2.1 : 2;
     ctx.beginPath();
-    ctx.moveTo(92, referenceJunior ? 155 : 154);
-    ctx.quadraticCurveTo(112, referenceJunior ? 162 : 162, 132, referenceJunior ? 155 : 154);
-    ctx.moveTo(188, referenceJunior ? 155 : 154);
-    ctx.quadraticCurveTo(208, referenceJunior ? 162 : 162, 228, referenceJunior ? 155 : 154);
+    ctx.moveTo(94, referenceJunior ? 158 : 154);
+    ctx.quadraticCurveTo(114, referenceJunior ? 164 : 162, 134, referenceJunior ? 158 : 154);
+    ctx.moveTo(186, referenceJunior ? 158 : 154);
+    ctx.quadraticCurveTo(206, referenceJunior ? 164 : 162, 226, referenceJunior ? 158 : 154);
     ctx.stroke();
   }
 
   ctx.fillStyle = "rgba(255,255,255,.94)";
   ctx.beginPath();
-  ctx.ellipse(106, 142, referenceJunior ? 3.6 : 3, referenceJunior ? 3.6 : 3, 0, 0, Math.PI * 2);
-  ctx.ellipse(202, 142, referenceJunior ? 3.6 : 3, referenceJunior ? 3.6 : 3, 0, 0, Math.PI * 2);
+  ctx.ellipse(110, referenceJunior ? 145 : 142, referenceJunior ? 3.9 : 3, referenceJunior ? 3.9 : 3, 0, 0, Math.PI * 2);
+  ctx.ellipse(202, referenceJunior ? 145 : 142, referenceJunior ? 3.9 : 3, referenceJunior ? 3.9 : 3, 0, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.strokeStyle = referenceJunior ? "rgba(152,104,96,.46)" : "rgba(144,97,91,.52)";
@@ -88,15 +88,15 @@ function makeFaceTexture({ female = false, referenceJunior = false } = {}) {
   ctx.strokeStyle = female ? (referenceJunior ? "rgba(186,126,132,.7)" : "rgba(176,86,112,.92)") : "rgba(126,82,76,.86)";
   ctx.lineWidth = female ? (referenceJunior ? 4.8 : 7) : 6;
   ctx.beginPath();
-  ctx.moveTo(referenceJunior ? 126 : 116, referenceJunior ? 235 : 236);
-  ctx.quadraticCurveTo(160, referenceJunior ? 246 : 258, referenceJunior ? 194 : 208, referenceJunior ? 235 : 236);
+  ctx.moveTo(referenceJunior ? 130 : 116, referenceJunior ? 236 : 236);
+  ctx.quadraticCurveTo(160, referenceJunior ? 244 : 258, referenceJunior ? 190 : 208, referenceJunior ? 236 : 236);
   ctx.stroke();
 
   ctx.strokeStyle = "rgba(255,255,255,.18)";
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(referenceJunior ? 132 : 126, referenceJunior ? 233 : 234);
-  ctx.quadraticCurveTo(160, referenceJunior ? 241 : 248, referenceJunior ? 188 : 194, referenceJunior ? 233 : 234);
+  ctx.moveTo(referenceJunior ? 136 : 126, referenceJunior ? 232 : 234);
+  ctx.quadraticCurveTo(160, referenceJunior ? 239 : 248, referenceJunior ? 184 : 194, referenceJunior ? 232 : 234);
   ctx.stroke();
 
   const texture = new THREE.CanvasTexture(canvas);
@@ -296,6 +296,9 @@ function createPerson(spec) {
     spec.female ? (referenceJunior ? 0.82 : 0.91) : 0.9
   );
   group.add(head);
+  if (realisticJunior) {
+    head.scale.set(0.73, 1.18, 0.8);
+  }
 
   const jaw = new THREE.Mesh(new THREE.SphereGeometry(spec.female ? 0.14 : 0.154, 28, 28), skinMat);
   jaw.position.set(0, spec.female ? 1.47 : 1.48, 0.02);
@@ -305,6 +308,10 @@ function createPerson(spec) {
     spec.female ? (referenceJunior ? 0.7 : 0.88) : 0.92
   );
   group.add(jaw);
+  if (realisticJunior) {
+    jaw.position.set(0, 1.474, 0.024);
+    jaw.scale.set(0.56, 0.5, 0.68);
+  }
 
   const earGeo = new THREE.SphereGeometry(0.032, 16, 16);
   const earL = new THREE.Mesh(earGeo, skinMat);
@@ -313,9 +320,15 @@ function createPerson(spec) {
   const earR = earL.clone();
   earR.position.x = 0.165;
   group.add(earL, earR);
+  if (realisticJunior) {
+    earL.position.set(-0.142, 1.548, -0.004);
+    earR.position.set(0.142, 1.548, -0.004);
+    earL.scale.set(0.62, 0.92, 0.5);
+    earR.scale.copy(earL.scale);
+  }
 
-  const nose = new THREE.Mesh(new THREE.ConeGeometry(spec.female ? (referenceJunior ? 0.011 : 0.024) : 0.026, spec.female ? (referenceJunior ? 0.038 : 0.062) : 0.07, 12), skinMat);
-  nose.position.set(0, referenceJunior ? 1.54 : 1.54, referenceJunior ? 0.146 : 0.154);
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(spec.female ? (referenceJunior ? 0.0105 : 0.024) : 0.026, spec.female ? (referenceJunior ? 0.034 : 0.062) : 0.07, 12), skinMat);
+  nose.position.set(0, referenceJunior ? 1.538 : 1.54, referenceJunior ? 0.149 : 0.154);
   nose.rotation.x = Math.PI * 0.5;
   group.add(nose);
 
@@ -323,14 +336,14 @@ function createPerson(spec) {
     new THREE.BoxGeometry(0.022, 0.08, 0.012),
     new THREE.MeshPhysicalMaterial({ color: "#fff8f2", roughness: 0.28, metalness: 0, transparent: true, opacity: 0.24, clearcoat: 0.22, clearcoatRoughness: 0.16 })
   );
-  noseBridge.position.set(0, referenceJunior ? 1.582 : 1.57, referenceJunior ? 0.138 : 0.135);
+  noseBridge.position.set(0, referenceJunior ? 1.578 : 1.57, referenceJunior ? 0.142 : 0.135);
   group.add(noseBridge);
 
   const lip = new THREE.Mesh(
     new THREE.TorusGeometry(spec.female ? (referenceJunior ? 0.038 : 0.045) : 0.045, spec.female ? (referenceJunior ? 0.0065 : 0.009) : 0.009, 8, 18, Math.PI),
     new THREE.MeshStandardMaterial({ color: spec.female ? "#cc7282" : "#ae7670", roughness: 0.5, metalness: 0.03 })
   );
-  lip.position.set(0, referenceJunior ? 1.448 : 1.46, referenceJunior ? 0.15 : 0.148);
+  lip.position.set(0, referenceJunior ? 1.446 : 1.46, referenceJunior ? 0.154 : 0.148);
   lip.rotation.x = Math.PI;
   group.add(lip);
 
@@ -347,17 +360,21 @@ function createPerson(spec) {
   const browGeo = new THREE.BoxGeometry(spec.female ? (referenceJunior ? 0.062 : 0.08) : 0.09, 0.012, 0.02);
   const browMat = new THREE.MeshStandardMaterial({ color: spec.female ? "#3a2422" : "#31201e", roughness: 0.7, metalness: 0.02 });
   const browL = new THREE.Mesh(browGeo, browMat);
-  browL.position.set(referenceJunior ? -0.066 : -0.074, referenceJunior ? 1.622 : 1.62, 0.132);
-  browL.rotation.z = referenceJunior ? -0.035 : -0.08;
+  browL.position.set(referenceJunior ? -0.067 : -0.074, referenceJunior ? 1.616 : 1.62, 0.136);
+  browL.rotation.z = referenceJunior ? -0.02 : -0.08;
   const browR = browL.clone();
-  browR.position.x = referenceJunior ? 0.066 : 0.072;
-  browR.rotation.z = referenceJunior ? 0.035 : 0.08;
+  browR.position.x = referenceJunior ? 0.067 : 0.072;
+  browR.rotation.z = referenceJunior ? 0.02 : 0.08;
   group.add(browL, browR);
+  if (realisticJunior) {
+    browL.position.set(-0.064, 1.612, 0.138);
+    browR.position.set(0.064, 1.612, 0.138);
+  }
 
   const lidGeo = new THREE.TorusGeometry(spec.female ? (referenceJunior ? 0.034 : 0.032) : 0.032, 0.004, 6, 18, Math.PI);
   const lidMat = new THREE.MeshStandardMaterial({ color: spec.female ? "#3a1f20" : "#2f1d1e", roughness: 0.54, metalness: 0.02 });
   const lidL = new THREE.Mesh(lidGeo, lidMat);
-  lidL.position.set(referenceJunior ? -0.066 : -0.062, referenceJunior ? 1.572 : 1.57, 0.166);
+  lidL.position.set(referenceJunior ? -0.068 : -0.062, referenceJunior ? 1.57 : 1.57, 0.168);
   lidL.rotation.z = Math.PI;
   const lidR = lidL.clone();
   lidR.position.x = referenceJunior ? 0.064 : 0.062;
@@ -366,15 +383,23 @@ function createPerson(spec) {
   const eyeWhiteMat = new THREE.MeshPhysicalMaterial({ color: "#fcfcfd", roughness: 0.18, metalness: 0.01, clearcoat: 0.14, clearcoatRoughness: 0.12 });
   const irisMat = new THREE.MeshPhysicalMaterial({ color: spec.iris ?? (spec.female ? "#3a261f" : "#2b1c18"), roughness: 0.34, metalness: 0.02, clearcoat: 0.12, clearcoatRoughness: 0.2 });
   const eyeWhiteL = new THREE.Mesh(new THREE.SphereGeometry(spec.female ? (referenceJunior ? 0.025 : 0.022) : 0.022, 12, 12), eyeWhiteMat);
-  eyeWhiteL.position.set(referenceJunior ? -0.068 : -0.062, referenceJunior ? 1.564 : 1.56, referenceJunior ? 0.156 : 0.15);
-  eyeWhiteL.scale.set(spec.female && referenceJunior ? 1.6 : 1.35, spec.female && referenceJunior ? 1.04 : 0.9, 0.5);
+  eyeWhiteL.position.set(referenceJunior ? -0.068 : -0.062, referenceJunior ? 1.56 : 1.56, referenceJunior ? 0.158 : 0.15);
+  eyeWhiteL.scale.set(spec.female && referenceJunior ? 1.56 : 1.35, spec.female && referenceJunior ? 1.02 : 0.9, 0.5);
   const eyeWhiteR = eyeWhiteL.clone();
   eyeWhiteR.position.x = referenceJunior ? 0.068 : 0.062;
-  const irisL = new THREE.Mesh(new THREE.SphereGeometry(spec.female && referenceJunior ? 0.0126 : 0.011, 10, 10), irisMat);
-  irisL.position.set(referenceJunior ? -0.068 : -0.062, referenceJunior ? 1.562 : 1.56, referenceJunior ? 0.173 : 0.166);
+  const irisL = new THREE.Mesh(new THREE.SphereGeometry(spec.female && referenceJunior ? 0.0122 : 0.011, 10, 10), irisMat);
+  irisL.position.set(referenceJunior ? -0.068 : -0.062, referenceJunior ? 1.558 : 1.56, referenceJunior ? 0.175 : 0.166);
   const irisR = irisL.clone();
   irisR.position.x = referenceJunior ? 0.068 : 0.062;
   group.add(eyeWhiteL, eyeWhiteR, irisL, irisR);
+  if (realisticJunior) {
+    eyeWhiteL.position.set(-0.064, 1.557, 0.16);
+    eyeWhiteR.position.set(0.064, 1.557, 0.16);
+    eyeWhiteL.scale.set(1.52, 1.06, 0.52);
+    eyeWhiteR.scale.copy(eyeWhiteL.scale);
+    irisL.position.set(-0.064, 1.555, 0.177);
+    irisR.position.set(0.064, 1.555, 0.177);
+  }
 
   if (spec.female) {
     const lashMat = new THREE.MeshStandardMaterial({ color: "#241618", roughness: 0.52, metalness: 0.02 });
@@ -389,10 +414,10 @@ function createPerson(spec) {
 
   const cheekGeo = new THREE.SphereGeometry(0.028, 12, 12);
   const cheekL = new THREE.Mesh(cheekGeo, blushMat);
-  cheekL.position.set(referenceJunior ? -0.086 : -0.094, 1.49, 0.146);
-  cheekL.scale.set(referenceJunior ? 1.44 : 1.7, referenceJunior ? 0.92 : 1.2, 0.38);
+  cheekL.position.set(referenceJunior ? -0.084 : -0.094, 1.488, 0.148);
+  cheekL.scale.set(referenceJunior ? 1.34 : 1.7, referenceJunior ? 0.84 : 1.2, 0.38);
   const cheekR = cheekL.clone();
-  cheekR.position.x = referenceJunior ? 0.092 : 0.094;
+  cheekR.position.x = referenceJunior ? 0.084 : 0.094;
   group.add(cheekL, cheekR);
 
   const eyeSparkleMat = new THREE.MeshStandardMaterial({ color: "#ffffff", emissive: "#ffffff", emissiveIntensity: 0.12, roughness: 0.2, metalness: 0.02 });
@@ -415,15 +440,25 @@ function createPerson(spec) {
   hairBack.scale.set(0.88, spec.female ? 1.42 : 0.42, spec.female ? 0.7 : 0.52);
   group.add(hairBack);
 
-  const fringe = new THREE.Mesh(new THREE.BoxGeometry(spec.female ? (referenceJunior ? 0.144 : 0.2) : 0.144, referenceJunior ? 0.15 : 0.08, 0.05), hairMat);
-  fringe.position.set(0, referenceJunior ? 1.624 : 1.612, referenceJunior ? 0.128 : 0.12);
+  const fringe = new THREE.Mesh(new THREE.BoxGeometry(spec.female ? (referenceJunior ? 0.154 : 0.2) : 0.144, referenceJunior ? 0.162 : 0.08, 0.05), hairMat);
+  fringe.position.set(0, referenceJunior ? 1.622 : 1.612, referenceJunior ? 0.134 : 0.12);
   group.add(fringe);
+  if (realisticJunior) {
+    fringe.position.set(0, 1.618, 0.138);
+    fringe.scale.set(1.04, 1.08, 1);
+  }
 
   const sideHairL = new THREE.Mesh(new THREE.BoxGeometry(spec.female ? (referenceJunior ? 0.058 : 0.076) : 0.058, spec.female ? (referenceJunior ? 0.38 : 0.42) : 0.22, 0.06), hairMat);
-  sideHairL.position.set(referenceJunior ? -0.116 : -0.14, spec.female ? 1.46 : 1.49, 0.044);
+  sideHairL.position.set(referenceJunior ? -0.108 : -0.14, spec.female ? 1.458 : 1.49, 0.05);
   const sideHairR = sideHairL.clone();
-  sideHairR.position.x = referenceJunior ? 0.13 : 0.15;
+  sideHairR.position.x = referenceJunior ? 0.108 : 0.15;
   group.add(sideHairL, sideHairR);
+  if (realisticJunior) {
+    sideHairL.position.set(-0.102, 1.462, 0.06);
+    sideHairR.position.set(0.102, 1.462, 0.06);
+    sideHairL.scale.set(0.96, 1.04, 1);
+    sideHairR.scale.copy(sideHairL.scale);
+  }
 
   const crownShine = new THREE.Mesh(
     new THREE.SphereGeometry(spec.female ? 0.16 : 0.15, 20, 20),
@@ -435,12 +470,16 @@ function createPerson(spec) {
 
   const face = createFacePlane(
     makeFaceTexture({ female: spec.female, referenceJunior }),
-    realisticJunior ? 0.42 : 0.86
+    realisticJunior ? 0.5 : 0.86
   );
   face.position.y = realisticJunior ? 1.556 : 1.55;
-  face.position.z = realisticJunior ? 0.186 : spec.female ? 0.178 : 0.172;
+  face.position.z = realisticJunior ? 0.19 : spec.female ? 0.178 : 0.172;
   face.scale.setScalar(realisticJunior ? 0.84 : spec.female ? 0.95 : 0.92);
   group.add(face);
+  if (realisticJunior) {
+    face.position.set(0, 1.554, 0.194);
+    face.scale.setScalar(0.87);
+  }
 
   const browShadow = new THREE.Mesh(
     new THREE.PlaneGeometry(0.18, 0.06),
@@ -465,10 +504,10 @@ function createPerson(spec) {
 
     if (realisticJunior) {
       const frontWispL = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.24, 0.018), hairMat);
-      frontWispL.position.set(-0.05, 1.508, 0.152);
+      frontWispL.position.set(-0.046, 1.512, 0.158);
       frontWispL.rotation.z = -0.02;
       const frontWispR = frontWispL.clone();
-      frontWispR.position.x = 0.056;
+      frontWispR.position.x = 0.05;
       frontWispR.rotation.z = 0.02;
       group.add(frontWispL, frontWispR);
     }
@@ -530,30 +569,39 @@ function createPerson(spec) {
     group.add(leftSock, rightSock);
 
     const ponytailBase = new THREE.Mesh(new THREE.SphereGeometry(0.056, 18, 18), hairMat);
-    ponytailBase.position.set(0.036, 1.706, -0.176);
+    ponytailBase.position.set(0.028, 1.698, -0.17);
     group.add(ponytailBase);
 
     const scrunchie = new THREE.Mesh(
       new THREE.TorusGeometry(0.052, 0.016, 8, 20),
       new THREE.MeshStandardMaterial({ color: "#1f1a22", roughness: 0.7, metalness: 0.04 })
     );
-    scrunchie.position.set(0.036, 1.706, -0.176);
+    scrunchie.position.set(0.028, 1.698, -0.17);
     scrunchie.rotation.x = Math.PI / 2;
     group.add(scrunchie);
 
     const ponytail = new THREE.Mesh(new THREE.CapsuleGeometry(realisticJunior ? 0.044 : 0.05, realisticJunior ? 0.74 : 0.62, 6, 12), hairMat);
-    ponytail.position.set(realisticJunior ? 0.108 : 0.092, realisticJunior ? 1.28 : 1.24, realisticJunior ? -0.252 : -0.24);
-    ponytail.rotation.z = realisticJunior ? -0.04 : -0.18;
+    ponytail.position.set(realisticJunior ? 0.1 : 0.092, realisticJunior ? 1.286 : 1.24, realisticJunior ? -0.246 : -0.24);
+    ponytail.rotation.z = realisticJunior ? -0.02 : -0.18;
     ponytail.rotation.x = 0.1;
     ponytail.scale.set(realisticJunior ? 0.8 : 0.86, realisticJunior ? 1.42 : 1.24, realisticJunior ? 0.76 : 0.8);
     group.add(ponytail);
 
     const ponytailTail = new THREE.Mesh(new THREE.CapsuleGeometry(realisticJunior ? 0.029 : 0.036, realisticJunior ? 0.56 : 0.42, 6, 10), hairMat);
-    ponytailTail.position.set(realisticJunior ? 0.162 : 0.14, realisticJunior ? 0.96 : 0.92, realisticJunior ? -0.118 : -0.16);
-    ponytailTail.rotation.z = realisticJunior ? -0.06 : -0.22;
+    ponytailTail.position.set(realisticJunior ? 0.154 : 0.14, realisticJunior ? 0.98 : 0.92, realisticJunior ? -0.102 : -0.16);
+    ponytailTail.rotation.z = realisticJunior ? -0.03 : -0.22;
     ponytailTail.rotation.x = -0.04;
     ponytailTail.scale.set(realisticJunior ? 0.78 : 0.84, realisticJunior ? 1.42 : 1.28, realisticJunior ? 0.76 : 0.82);
     group.add(ponytailTail);
+
+    if (realisticJunior) {
+      ponytailBase.position.set(0.02, 1.692, -0.164);
+      scrunchie.position.set(0.02, 1.692, -0.164);
+      ponytail.position.set(0.094, 1.304, -0.234);
+      ponytail.scale.set(0.82, 1.46, 0.8);
+      ponytailTail.position.set(0.144, 1.012, -0.09);
+      ponytailTail.scale.set(0.82, 1.46, 0.8);
+    }
   }
 
   if (!spec.female) {
@@ -1192,19 +1240,19 @@ export function createLm402Scene(canvas) {
   const plazaMat = new THREE.MeshStandardMaterial({ color: "#c7cdd3", map: plazaTex, roughness: 0.96, metalness: 0.02 });
   const glassMat = new THREE.MeshPhysicalMaterial({
     color: "#fbfdff",
-    roughness: 0.005,
+    roughness: 0.002,
     transmission: 1,
     transparent: true,
-    opacity: 0.16,
-    thickness: 0.16,
-    ior: 1.38,
+    opacity: 0.08,
+    thickness: 0.1,
+    ior: 1.32,
     clearcoat: 1,
-    clearcoatRoughness: 0.015,
-    reflectivity: 0.72,
-    envMapIntensity: 1.08,
+    clearcoatRoughness: 0.01,
+    reflectivity: 0.84,
+    envMapIntensity: 1.16,
     side: THREE.DoubleSide,
-    attenuationColor: new THREE.Color("#fff7ec"),
-    attenuationDistance: 10.2,
+    attenuationColor: new THREE.Color("#fffaf2"),
+    attenuationDistance: 16,
   });
 
   const campusDepth = scaled(WORLD.corridor.campusDepth);
@@ -1434,8 +1482,8 @@ export function createLm402Scene(canvas) {
   const leftWindowOpenings = WORLD.leftWallWindows.map((panel) => openingFromPanel(panel, "left"));
   const rightWindowOpenings = WORLD.rightWallWindows.map((panel) => openingFromPanel(panel, "right"));
   const doorOpenings = openings.map((door) => ({
-    z1: door.z1,
-    z2: door.z2,
+    z1: door.z1 - 0.14,
+    z2: door.z2 + 0.14,
     y1: 0,
     y2: 2.28,
   }));
@@ -1492,8 +1540,8 @@ export function createLm402Scene(canvas) {
       beamMat,
       new THREE.Vector3(classroomMinX - 0.02, 1.14, dz1),
       null,
-      colliders,
-      { minX: classroomMinX - 0.14, maxX: classroomMinX + 0.08, minZ: dz1 - 0.08, maxZ: dz1 + 0.08, label: "door_frame" }
+      null,
+      null
     );
     addBox(
       worldGroup,
@@ -1502,8 +1550,8 @@ export function createLm402Scene(canvas) {
       beamMat,
       new THREE.Vector3(classroomMinX - 0.02, 1.14, dz2),
       null,
-      colliders,
-      { minX: classroomMinX - 0.14, maxX: classroomMinX + 0.08, minZ: dz2 - 0.08, maxZ: dz2 + 0.08, label: "door_frame" }
+      null,
+      null
     );
     addBox(
       worldGroup,
@@ -1512,24 +1560,9 @@ export function createLm402Scene(canvas) {
       beamMat,
       new THREE.Vector3(classroomMinX - 0.02, 2.28, centerDoorZ),
       null,
-      colliders,
+      null,
       null
     );
-    const leaf = new THREE.Mesh(
-      new THREE.BoxGeometry(0.04, 2.08, (dz2 - dz1) * 0.86),
-      new THREE.MeshStandardMaterial({ color: "#dfd8ce", map: wallTex, roughness: 0.84, metalness: 0.02 })
-    );
-    const isFrontDoor = door.kind === "front";
-    leaf.position.set(classroomMinX + (isFrontDoor ? 0.64 : 0.58), 1.04, centerDoorZ + (isFrontDoor ? 0.16 : -0.18));
-    leaf.rotation.y = isFrontDoor ? -1.56 : 1.56;
-    worldGroup.add(leaf);
-
-    const handle = new THREE.Mesh(
-      new THREE.BoxGeometry(0.02, 0.08, 0.02),
-      new THREE.MeshStandardMaterial({ color: "#8f8f8c", roughness: 0.34, metalness: 0.58 })
-    );
-    handle.position.set(classroomMinX + (isFrontDoor ? 0.66 : 0.6), 1.08, centerDoorZ + (isFrontDoor ? 0.22 : -0.22));
-    worldGroup.add(handle);
   });
 
   const plaque = buildTextPlane("LM402", 1.72, 0.42, { bg: "#4a5562", fg: "#fff6de" });
@@ -1571,13 +1604,6 @@ export function createLm402Scene(canvas) {
     .forEach((room, index) => {
       const roomCenterZ = roomCenter(room);
       const plaqueText = room.label;
-      const doorPanel = new THREE.Mesh(
-        new THREE.BoxGeometry(0.036, 2.12, 0.68),
-        new THREE.MeshStandardMaterial({ color: "#dfd8ce", map: wallTex, roughness: 0.84, metalness: 0.02 })
-      );
-      doorPanel.position.set(classroomMinX + 0.02, 1.06, roomCenterZ);
-      worldGroup.add(doorPanel);
-
       const roomPlaque = buildTextPlane(plaqueText, 1.04, 0.26, { bg: "#5c6672", fg: "#f7f0de" });
       roomPlaque.position.set(classroomMinX - 0.31, 1.92, roomCenterZ + 0.22);
       roomPlaque.rotation.y = Math.PI / 2;
@@ -2262,7 +2288,7 @@ function perfectEndingPhase(time) {
     return "orbit";
   }
   if (time < (CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 32)) {
-    return "senior_pov_push";
+    return "senior_pov_hold";
   }
   return "eyes";
 }
@@ -2272,13 +2298,10 @@ function applyPerfectEndingCamera(game) {
   const orbitStart = CINEMATIC_TIMELINE.perfectOrbitStart ?? 8;
   const orbitEnd = CINEMATIC_TIMELINE.perfectOrbitEnd ?? 24;
   const seniorPovEnd = CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 32;
-  const finalHoldEnd = CINEMATIC_TIMELINE.perfectDuration;
   const center = junior.position.clone().add(new THREE.Vector3(0, 1.5, 0));
   const faceForward = new THREE.Vector3(Math.sin(junior.rotation.y), 0, Math.cos(junior.rotation.y));
   const eyeTarget = center.clone().add(faceForward.clone().multiplyScalar(0.138)).add(new THREE.Vector3(0.004, 0.018, 0));
   const seniorEye = senior.position.clone().add(new THREE.Vector3(0.03, 1.57, 0.04));
-  const seniorViewDirection = eyeTarget.clone().sub(seniorEye).normalize();
-  const pushDirection = faceForward.clone().multiplyScalar(-1);
   const orbitStartAngle = -1.48;
   const orbitRadiusStart = 7.2;
   const orbitRadiusEnd = 3.84;
@@ -2314,24 +2337,21 @@ function applyPerfectEndingCamera(game) {
   }
 
   if (totalTime < seniorPovEnd) {
-    const pushT = THREE.MathUtils.clamp((totalTime - orbitEnd) / (seniorPovEnd - orbitEnd), 0, 1);
-    const startPos = seniorEye.clone().add(new THREE.Vector3(0.02, 0.02, 0));
-    const endPos = eyeTarget.clone().add(seniorViewDirection.clone().multiplyScalar(-0.72)).add(new THREE.Vector3(0.02, 0.018, 0.008));
-    camera.position.lerpVectors(startPos, endPos, THREE.MathUtils.smoothstep(pushT, 0, 1));
-    camera.fov = THREE.MathUtils.lerp(28, 11.2, THREE.MathUtils.smoothstep(pushT, 0.04, 1));
+    const seniorHoldPos = seniorEye.clone().add(new THREE.Vector3(0.022, 0.014, 0.004));
+    seniorHoldPos.y += Math.sin(totalTime * 0.32) * 0.0012;
+    seniorHoldPos.x += Math.cos(totalTime * 0.18) * 0.0009;
+    camera.position.copy(seniorHoldPos);
+    camera.fov = 12.8;
     camera.updateProjectionMatrix();
-    camera.lookAt(eyeTarget.x, eyeTarget.y + 0.002, eyeTarget.z);
+    camera.lookAt(eyeTarget.x, eyeTarget.y + 0.0012, eyeTarget.z);
     return;
   }
 
-  const holdT = THREE.MathUtils.clamp((totalTime - seniorPovEnd) / Math.max(0.001, finalHoldEnd - seniorPovEnd), 0, 1);
-  const breathing = Math.sin(totalTime * 0.36) * 0.0024;
-  const eyeHoldStart = eyeTarget.clone().add(seniorViewDirection.clone().multiplyScalar(-0.72)).add(new THREE.Vector3(0.02, 0.02, 0.008));
-  const eyeHoldEnd = eyeTarget.clone().add(seniorViewDirection.clone().multiplyScalar(-0.14)).add(new THREE.Vector3(0.002, 0.008, 0.001));
-  const eyeHoldPos = eyeHoldStart.lerp(eyeHoldEnd, THREE.MathUtils.smoothstep(holdT, 0.12, 1));
-  eyeHoldPos.y += breathing;
+  const eyeHoldPos = seniorEye.clone().add(new THREE.Vector3(0.022, 0.014, 0.004));
+  eyeHoldPos.y += Math.sin(totalTime * 0.3) * 0.0014;
+  eyeHoldPos.x += Math.cos(totalTime * 0.16) * 0.001;
   camera.position.copy(eyeHoldPos);
-  camera.fov = THREE.MathUtils.lerp(11.2, 7.2, holdT);
+  camera.fov = 12.8;
   camera.updateProjectionMatrix();
   camera.lookAt(eyeTarget.x, eyeTarget.y + 0.0015, eyeTarget.z);
 }

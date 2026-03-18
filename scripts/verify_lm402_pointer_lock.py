@@ -332,9 +332,9 @@ def main():
         message="perfect ending orbit",
     )
     perfect_push_snapshot = wait_for(
-        lambda: (wait_for_snapshot(session) or {}).get("endingShotPhase") == "senior_pov_push" and wait_for_snapshot(session),
+        lambda: (wait_for_snapshot(session) or {}).get("endingShotPhase") == "senior_pov_hold" and wait_for_snapshot(session),
         timeout=20,
-        message="perfect ending senior pov push",
+        message="perfect ending senior pov hold",
     )
     perfect_eyes_snapshot = wait_for(
         lambda: (wait_for_snapshot(session) or {}).get("endingShotPhase") == "eyes" and wait_for_snapshot(session),
@@ -369,7 +369,7 @@ def main():
             "rear_wait": rear_wait_snapshot,
             "eye_contact": eye_contact_snapshot,
             "perfect_orbit": perfect_snapshot,
-            "perfect_senior_pov_push": perfect_push_snapshot,
+            "perfect_senior_pov_hold": perfect_push_snapshot,
             "perfect_eyes": perfect_eyes_snapshot,
         },
         "mobile": mobile_reports,
