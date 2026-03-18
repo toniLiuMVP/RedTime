@@ -1504,10 +1504,10 @@ export function createLm402Scene(canvas) {
   const leftWindowOpenings = WORLD.leftWallWindows.map((panel) => openingFromPanel(panel, "left"));
   const rightWindowOpenings = WORLD.rightWallWindows.map((panel) => openingFromPanel(panel, "right"));
   const doorOpenings = openings.map((door) => ({
-    z1: door.z1 - 0.36,
-    z2: door.z2 + 0.36,
+    z1: door.z1 - 0.50,
+    z2: door.z2 + 0.50,
     y1: 0,
-    y2: 2.42,
+    y2: 2.50,
   }));
 
   buildWallWithOpenings({
@@ -1551,41 +1551,7 @@ export function createLm402Scene(canvas) {
     label: "divider_wall",
   });
 
-  openings.forEach((door) => {
-    const dz1 = door.z1;
-    const dz2 = door.z2;
-    const centerDoorZ = (dz1 + dz2) / 2;
-    addBox(
-      worldGroup,
-      occluders,
-      new THREE.BoxGeometry(0.22, 2.28, 0.18),
-      beamMat,
-      new THREE.Vector3(classroomMinX - 0.02, 1.14, dz1),
-      null,
-      null,
-      null
-    );
-    addBox(
-      worldGroup,
-      occluders,
-      new THREE.BoxGeometry(0.22, 2.28, 0.18),
-      beamMat,
-      new THREE.Vector3(classroomMinX - 0.02, 1.14, dz2),
-      null,
-      null,
-      null
-    );
-    addBox(
-      worldGroup,
-      occluders,
-      new THREE.BoxGeometry(0.22, 0.16, dz2 - dz1),
-      beamMat,
-      new THREE.Vector3(classroomMinX - 0.02, 2.28, centerDoorZ),
-      null,
-      null,
-      null
-    );
-  });
+  /* Door frame meshes removed — doorways are completely open */
 
   const plaque = buildTextPlane("LM402", 1.72, 0.42, { bg: "#4a5562", fg: "#fff6de" });
   plaque.position.set(scaled(WORLD.plaque.x), scaled(WORLD.plaque.y), scaled(WORLD.plaque.z));
