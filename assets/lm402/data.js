@@ -53,14 +53,14 @@ export const WORLD = {
     { z: 1962, y1: 92, y2: 246, width: 224 },
   ],
   lightBeams: [
-    { side: "right", z: 920, width: 236, reach: 1020, alpha: 0.24 },
-    { side: "right", z: 1280, width: 268, reach: 1160, alpha: 0.34 },
-    { side: "right", z: 1640, width: 272, reach: 1220, alpha: 0.36 },
-    { side: "right", z: 2000, width: 236, reach: 1040, alpha: 0.24 },
-    { side: "left", z: 882, width: 222, reach: 980, alpha: 0.22 },
-    { side: "left", z: 1242, width: 252, reach: 1120, alpha: 0.3 },
-    { side: "left", z: 1602, width: 252, reach: 1140, alpha: 0.32 },
-    { side: "left", z: 1962, width: 222, reach: 980, alpha: 0.22 },
+    { side: "right", z: 920, width: 236, reach: 1020, alpha: 0.36 },
+    { side: "right", z: 1280, width: 268, reach: 1160, alpha: 0.48 },
+    { side: "right", z: 1640, width: 272, reach: 1220, alpha: 0.50 },
+    { side: "right", z: 2000, width: 236, reach: 1040, alpha: 0.36 },
+    { side: "left", z: 882, width: 222, reach: 980, alpha: 0.32 },
+    { side: "left", z: 1242, width: 252, reach: 1120, alpha: 0.42 },
+    { side: "left", z: 1602, width: 252, reach: 1140, alpha: 0.44 },
+    { side: "left", z: 1962, width: 222, reach: 980, alpha: 0.32 },
   ],
   desks: [930, 1090, 1250, 1410, 1570, 1730, 1890, 2050].flatMap((z) =>
     [300, 580, 860, 1140, 1420, 1700, 1980].map((x) => ({ x, z }))

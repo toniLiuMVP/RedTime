@@ -1362,8 +1362,11 @@ function resetScene() {
 
 function updateMovement(dt) {
   if (state.mode !== "play" || state.dialogue || state.endingSequence || wantsLandscape()) {
-    state.player.velocity.x *= 0.72;
-    state.player.velocity.z *= 0.72;
+    const friction = 1 - Math.min(1, 6.4 * dt);
+    state.player.velocity.x *= friction;
+    state.player.velocity.z *= friction;
+    if (Math.abs(state.player.velocity.x) < 0.0001) state.player.velocity.x = 0;
+    if (Math.abs(state.player.velocity.z) < 0.0001) state.player.velocity.z = 0;
     state.subtitleMode = state.subtitle.ttl > 0.12 ? "full" : wantsLandscape() ? "hidden" : "compact";
     syncDockState();
     return;
@@ -1382,6 +1385,7 @@ function updateMovement(dt) {
   state.player.lookInput.y = lookY;
 
   const lookSpeed = (isMobileLayout() ? MOBILE_LOOK_SPEED : DESKTOP_LOOK_SPEED) * currentLookScalar();
+  const lookSmooth = 1 - Math.exp(-14 * dt);
   state.player.yaw -= lookX * dt * lookSpeed;
   state.player.pitch = clamp(state.player.pitch - lookY * dt * 1.34 * currentLookScalar(), MIN_PITCH, MAX_PITCH);
 
@@ -1389,23 +1393,43 @@ function updateMovement(dt) {
   const forwardZ = -Math.cos(state.player.yaw);
   const rightX = Math.cos(state.player.yaw);
   const rightZ = -Math.sin(state.player.yaw);
-  const speed = state.phase === "eye_contact" ? scale(182) : scale(278);
+  const baseSpeed = state.phase === "eye_contact" ? scale(168) : scale(264);
+  const inputMag = Math.min(1, Math.hypot(moveX, moveY));
 
-  const targetVX = (forwardX * moveY + rightX * moveX) * speed;
-  const targetVZ = (forwardZ * moveY + rightZ * moveX) * speed;
-  state.player.velocity.x = lerp(state.player.velocity.x, targetVX, 0.18);
-  state.player.velocity.z = lerp(state.player.velocity.z, targetVZ, 0.18);
+  const targetVX = (forwardX * moveY + rightX * moveX) * baseSpeed;
+  const targetVZ = (forwardZ * moveY + rightZ * moveX) * baseSpeed;
+
+  const isAccelerating = inputMag > 0.05;
+  const accelRate = isAccelerating ? 1 - Math.exp(-5.8 * dt) : 0;
+  const decelRate = isAccelerating ? 0 : 1 - Math.exp(-4.2 * dt);
+  const blendRate = isAccelerating ? accelRate : decelRate;
+
+  if (isAccelerating) {
+    state.player.velocity.x = lerp(state.player.velocity.x, targetVX, blendRate);
+    state.player.velocity.z = lerp(state.player.velocity.z, targetVZ, blendRate);
+  } else {
+    const friction = 1 - Math.min(1, 4.2 * dt);
+    state.player.velocity.x *= friction;
+    state.player.velocity.z *= friction;
+    if (Math.abs(state.player.velocity.x) < 0.0002) state.player.velocity.x = 0;
+    if (Math.abs(state.player.velocity.z) < 0.0002) state.player.velocity.z = 0;
+  }
 
   const desired = {
     x: state.player.x + state.player.velocity.x * dt,
     z: state.player.z + state.player.velocity.z * dt,
   };
   const resolved = scene.resolveMotion({ x: state.player.x, z: state.player.z }, desired, PLAYER_RADIUS);
+  if (resolved.collided) {
+    state.player.velocity.x *= 0.3;
+    state.player.velocity.z *= 0.3;
+  }
   state.player.x = resolved.x;
   state.player.z = resolved.z;
   state.boundaryCollisionState = resolved.collided ? resolved.label : null;
 
-  const moving = Math.hypot(state.player.velocity.x, state.player.velocity.z) > scale(26);
+  const currentSpeed = Math.hypot(state.player.velocity.x, state.player.velocity.z);
+  const moving = currentSpeed > scale(26);
   const looking = Math.abs(lookX) > 0.18 || Math.abs(lookY) > 0.18 || Boolean(state.dragLook) || document.pointerLockElement === canvas;
   if (state.subtitle.ttl > 0.12) {
     state.subtitleMode = "full";
@@ -1418,7 +1442,8 @@ function updateMovement(dt) {
   }
   syncDockState();
 
-  if (moving && state.time - state.sound.playerStepAt > 0.42) {
+  const stepInterval = moving ? Math.max(0.28, 0.52 - currentSpeed * 0.6) : 0.42;
+  if (moving && state.time - state.sound.playerStepAt > stepInterval) {
     state.sound.playerStepAt = state.time;
     audioSystem.playCue("step");
   }
@@ -1867,9 +1892,11 @@ function togglePointerLock() {
     return;
   }
   canvas.focus({ preventScroll: true });
-  if (document.pointerLockElement === canvas) {
+  const lockElement = document.pointerLockElement || document.webkitPointerLockElement || document.mozPointerLockElement;
+  if (lockElement === canvas) {
     state.pointerLockPending = false;
-    document.exitPointerLock?.();
+    const exitLock = document.exitPointerLock || document.webkitExitPointerLock || document.mozExitPointerLock;
+    exitLock?.call(document);
     updatePointerHint();
     return;
   }
@@ -1879,14 +1906,15 @@ function togglePointerLock() {
   if (state.pointerLockPending) {
     return;
   }
-  if (typeof canvas.requestPointerLock !== "function") {
+  const requestLockFn = canvas.requestPointerLock || canvas.webkitRequestPointerLock || canvas.mozRequestPointerLock;
+  if (typeof requestLockFn !== "function") {
     revealHint("這個瀏覽器目前不支援視角鎖定。");
     updatePointerHint();
     return;
   }
   state.pointerLockPending = true;
   updatePointerHint();
-  const requestLock = canvas.requestPointerLock.bind(canvas);
+  const requestLock = requestLockFn.bind(canvas);
   Promise.resolve(requestLock()).catch(() => {
     state.pointerLockPending = false;
     revealHint("瀏覽器沒有成功鎖定視角。");
@@ -2007,17 +2035,24 @@ function bindPointerLook() {
     state.dragLook = null;
   });
 
-  document.addEventListener("pointerlockchange", () => {
+  const onLockChange = () => {
     state.pointerLockPending = false;
     updatePointerHint();
-    logDebug("pointerlock", document.pointerLockElement === canvas ? "locked" : "free");
-  });
-  document.addEventListener("pointerlockerror", () => {
+    const locked = (document.pointerLockElement || document.webkitPointerLockElement || document.mozPointerLockElement) === canvas;
+    logDebug("pointerlock", locked ? "locked" : "free");
+  };
+  const onLockError = () => {
     state.pointerLockPending = false;
     revealHint("瀏覽器沒有成功鎖定視角。");
     logDebug("pointerlock", "error");
     updatePointerHint();
-  });
+  };
+  document.addEventListener("pointerlockchange", onLockChange);
+  document.addEventListener("webkitpointerlockchange", onLockChange);
+  document.addEventListener("mozpointerlockchange", onLockChange);
+  document.addEventListener("pointerlockerror", onLockError);
+  document.addEventListener("webkitpointerlockerror", onLockError);
+  document.addEventListener("mozpointerlockerror", onLockError);
 }
 
 function bindJoystick(root, assign) {
