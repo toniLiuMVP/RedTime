@@ -127,6 +127,7 @@ a{text-decoration:none}
   border:none;
   border-radius:999px;
   background:rgba(8,12,18,.78);
+  -webkit-backdrop-filter:blur(20px);
   backdrop-filter:blur(20px);
   box-shadow:0 16px 38px rgba(0,0,0,.24);
 }
@@ -149,6 +150,7 @@ a{text-decoration:none}
   border:1px solid var(--line);
   border-radius:30px;
   background:linear-gradient(180deg,rgba(10,14,22,.92),rgba(8,10,16,.82));
+  -webkit-backdrop-filter:blur(20px);
   backdrop-filter:blur(20px);
   box-shadow:var(--shadow);
   transition:opacity .22s ease,transform .22s ease;
@@ -285,6 +287,7 @@ a{text-decoration:none}
 .debug-panel{
   position:absolute;
   z-index:12;
+  -webkit-backdrop-filter:blur(18px);
   backdrop-filter:blur(18px);
 }
 .pointer-pill{
@@ -327,6 +330,7 @@ a{text-decoration:none}
   border:1px solid rgba(255,255,255,.1);
   background:linear-gradient(180deg,rgba(10,14,22,.94),rgba(8,11,17,.88));
   box-shadow:0 20px 44px rgba(0,0,0,.26);
+  -webkit-backdrop-filter:blur(18px);
   backdrop-filter:blur(18px);
 }
 .music-prompt.intro-mode{
@@ -544,6 +548,7 @@ a{text-decoration:none}
   border:1px solid var(--line);
   background:linear-gradient(180deg,rgba(8,11,16,.84),rgba(8,10,14,.74));
   box-shadow:0 16px 40px rgba(0,0,0,.2);
+  -webkit-backdrop-filter:blur(18px);
   backdrop-filter:blur(18px);
 }
 .ambience-box{
@@ -639,6 +644,7 @@ a{text-decoration:none}
   border:1px solid rgba(255,255,255,.08);
   background:linear-gradient(180deg,rgba(8,11,16,.9),rgba(8,10,14,.82));
   box-shadow:0 18px 40px rgba(0,0,0,.24);
+  -webkit-backdrop-filter:blur(16px);
   backdrop-filter:blur(16px);
 }
 .transcript-head{
@@ -917,6 +923,7 @@ a{text-decoration:none}
   border:1px solid rgba(255,255,255,.1);
   background:
     radial-gradient(circle at center,rgba(255,255,255,.06),rgba(255,255,255,.02) 58%,rgba(0,0,0,.16));
+  -webkit-backdrop-filter:blur(18px);
   backdrop-filter:blur(18px);
 }
 .joystick-thumb{
@@ -972,6 +979,7 @@ a{text-decoration:none}
   position:absolute;
   inset:0;
   background:rgba(3,5,8,.6);
+  -webkit-backdrop-filter:blur(8px);
   backdrop-filter:blur(8px);
 }
 .dialogue-card,
@@ -1036,6 +1044,7 @@ a{text-decoration:none}
 }
 .ending-overlay{
   background:rgba(3,5,8,.64);
+  -webkit-backdrop-filter:blur(10px);
   backdrop-filter:blur(10px);
 }
 .ending-card{

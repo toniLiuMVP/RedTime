@@ -176,14 +176,15 @@ function createPerson(spec) {
   });
   const skinMat = new THREE.MeshPhysicalMaterial({
     color: spec.skin,
-    roughness: realisticJunior ? 0.24 : 0.34,
+    roughness: realisticJunior ? 0.22 : 0.32,
     metalness: 0,
-    clearcoat: realisticJunior ? 0.4 : 0.24,
-    clearcoatRoughness: realisticJunior ? 0.38 : 0.58,
-    sheen: realisticJunior ? 0.18 : 0,
-    sheenRoughness: realisticJunior ? 0.42 : 1,
+    clearcoat: realisticJunior ? 0.44 : 0.28,
+    clearcoatRoughness: realisticJunior ? 0.34 : 0.52,
+    sheen: realisticJunior ? 0.28 : 0.12,
+    sheenRoughness: realisticJunior ? 0.38 : 0.72,
+    sheenColor: new THREE.Color(spec.female ? '#f8c8b8' : '#e8b8a4'),
   });
-  const blushMat = new THREE.MeshPhysicalMaterial({ color: spec.female ? "#f3c3bc" : "#d7a18f", roughness: 0.62, metalness: 0, transparent: true, opacity: spec.female ? 0.22 : 0.12 });
+  const blushMat = new THREE.MeshPhysicalMaterial({ color: spec.female ? "#f3c3bc" : "#d7a18f", roughness: 0.56, metalness: 0, transparent: true, opacity: spec.female ? 0.26 : 0.14, sheen: 0.1 });
   const hairMat = new THREE.MeshPhysicalMaterial({
     color: spec.hair,
     roughness: realisticJunior ? 0.16 : 0.34,
@@ -288,7 +289,7 @@ function createPerson(spec) {
   neck.position.set(0, 1.33, 0.02);
   group.add(neck);
 
-  const head = new THREE.Mesh(new THREE.SphereGeometry(spec.female ? 0.168 : 0.182, 34, 34), skinMat);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(spec.female ? 0.168 : 0.182, 48, 48), skinMat);
   head.position.set(0, 1.56, 0);
   head.scale.set(
     spec.female ? (referenceJunior ? 0.76 : 0.94) : 0.98,
@@ -300,7 +301,7 @@ function createPerson(spec) {
     head.scale.set(0.73, 1.18, 0.8);
   }
 
-  const jaw = new THREE.Mesh(new THREE.SphereGeometry(spec.female ? 0.14 : 0.154, 28, 28), skinMat);
+  const jaw = new THREE.Mesh(new THREE.SphereGeometry(spec.female ? 0.14 : 0.154, 36, 36), skinMat);
   jaw.position.set(0, spec.female ? 1.47 : 1.48, 0.02);
   jaw.scale.set(
     spec.female ? (referenceJunior ? 0.6 : 0.92) : 1.02,
@@ -721,18 +722,23 @@ function applyWalkingPose(person, stride, sway = 1) {
   if (!pose) {
     return;
   }
-  const legAmp = pose.female ? 0.42 : 0.36;
-  const armAmp = pose.hasPhone ? 0.16 : 0.34;
+  const legAmp = pose.female ? 0.44 : 0.38;
+  const armAmp = pose.hasPhone ? 0.16 : 0.36;
+  const armDelay = stride * 0.92;
   pose.leftLeg.rotation.x = stride * legAmp;
   pose.rightLeg.rotation.x = -stride * legAmp;
-  pose.leftArm.rotation.x = -stride * armAmp;
-  pose.rightArm.rotation.x = pose.hasPhone ? -0.56 + stride * 0.08 : stride * armAmp;
-  pose.torso.rotation.z = stride * 0.05 * sway;
-  pose.waist.rotation.z = stride * 0.03 * sway;
-  pose.chest.rotation.y = stride * 0.08 * sway;
-  pose.head.rotation.z = -stride * 0.04 * sway;
-  pose.head.rotation.y = stride * 0.06 * sway;
-  person.position.y = Math.abs(stride) * 0.03;
+  pose.leftArm.rotation.x = -armDelay * armAmp;
+  pose.rightArm.rotation.x = pose.hasPhone ? -0.56 + stride * 0.08 : armDelay * armAmp;
+  pose.torso.rotation.z = stride * 0.06 * sway;
+  pose.torso.rotation.x = Math.abs(stride) * 0.03;
+  pose.waist.rotation.z = stride * 0.04 * sway;
+  pose.waist.rotation.y = -stride * 0.03 * sway;
+  pose.chest.rotation.y = stride * 0.1 * sway;
+  pose.head.rotation.z = -stride * 0.05 * sway;
+  pose.head.rotation.y = stride * 0.07 * sway;
+  pose.shoulderL.rotation.z = stride * 0.04;
+  pose.shoulderR.rotation.z = -stride * 0.04;
+  person.position.y = Math.abs(stride) * 0.035 + Math.abs(Math.sin(stride * 2)) * 0.008;
 }
 
 function applyIdlePose(person, time, emphasis = 1) {
@@ -740,12 +746,17 @@ function applyIdlePose(person, time, emphasis = 1) {
   if (!pose) {
     return;
   }
-  const breathe = Math.sin(time * 1.4) * 0.018 * emphasis;
+  const breathe = Math.sin(time * 1.4) * 0.02 * emphasis;
+  const breathe2 = Math.sin(time * 1.4 + 0.3) * 0.012 * emphasis;
   pose.torso.rotation.x = breathe;
-  pose.chest.rotation.x = breathe * 0.6;
-  pose.head.rotation.y = Math.sin(time * 0.7) * 0.04 * emphasis;
-  pose.hairBack.rotation.z = Math.sin(time * 1.1) * 0.02 * emphasis;
-  person.position.y = Math.abs(Math.sin(time * 1.4)) * 0.012 * emphasis;
+  pose.chest.rotation.x = breathe * 0.7 + breathe2 * 0.3;
+  pose.waist.rotation.x = breathe * 0.2;
+  pose.head.rotation.y = Math.sin(time * 0.7) * 0.045 * emphasis;
+  pose.head.rotation.x = Math.sin(time * 0.9) * 0.012 * emphasis;
+  pose.hairBack.rotation.z = Math.sin(time * 1.1) * 0.024 * emphasis;
+  pose.shoulderL.rotation.z = Math.sin(time * 1.2 + 0.5) * 0.008 * emphasis;
+  pose.shoulderR.rotation.z = -Math.sin(time * 1.2 + 0.5) * 0.008 * emphasis;
+  person.position.y = Math.abs(Math.sin(time * 1.4)) * 0.014 * emphasis;
 }
 
 function applyFlyingPose(person, progress) {
@@ -1048,9 +1059,9 @@ function buildIntroCurve() {
 export function createLm402Scene(canvas) {
   const coarse = window.matchMedia("(pointer: coarse)").matches;
   const quality = {
-    shadowMapSize: coarse ? 448 : 640,
-    maxPixelRatio: coarse ? 0.94 : 0.96,
-    dustCount: coarse ? 38 : 54,
+    shadowMapSize: coarse ? 640 : 1024,
+    maxPixelRatio: coarse ? 0.96 : 1,
+    dustCount: coarse ? 42 : 64,
   };
   const renderer = new THREE.WebGLRenderer({
     canvas,
@@ -1060,9 +1071,9 @@ export function createLm402Scene(canvas) {
   });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.08;
+  renderer.toneMappingExposure = 1.14;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFShadowMap;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color("#d4dfeb");
@@ -1183,13 +1194,13 @@ export function createLm402Scene(canvas) {
     }
   };
 
-  const hemiLight = new THREE.HemisphereLight(0xf5f7fc, 0x70624d, 1.08);
+  const hemiLight = new THREE.HemisphereLight(0xf5f7fc, 0x7a6c52, 1.16);
   scene.add(hemiLight);
 
-  const ambient = new THREE.AmbientLight(0xffffff, 0.32);
+  const ambient = new THREE.AmbientLight(0xfff8ee, 0.38);
   scene.add(ambient);
 
-  const sun = new THREE.DirectionalLight(0xffe4b6, 2.1);
+  const sun = new THREE.DirectionalLight(0xffe4b6, 2.28);
   sun.position.set(-11.2, 10.8, 5.4);
   sun.castShadow = true;
   sun.shadow.mapSize.set(quality.shadowMapSize, quality.shadowMapSize);
@@ -1199,23 +1210,33 @@ export function createLm402Scene(canvas) {
   sun.shadow.camera.right = 16;
   sun.shadow.camera.top = 18;
   sun.shadow.camera.bottom = -16;
+  sun.shadow.bias = -0.0004;
+  sun.shadow.normalBias = 0.02;
   scene.add(sun);
 
-  const corridorFill = new THREE.PointLight(0xd8e7f4, 1.18, 58, 2);
+  const corridorFill = new THREE.PointLight(0xd8e7f4, 1.28, 58, 2);
   corridorFill.position.set(corridorMinX + 2.42, 3.64, scaled(WORLD.frontDoor.center.z - 122));
   scene.add(corridorFill);
 
-  const corridorSun = new THREE.PointLight(0xffe9b8, 1.58, 68, 2);
+  const corridorSun = new THREE.PointLight(0xffe9b8, 1.72, 68, 2);
   corridorSun.position.set(minX - 1.72, 6.42, scaled(WORLD.frontDoor.center.z - 8));
   scene.add(corridorSun);
 
-  const classroomAccent = new THREE.PointLight(0xffd9ab, 1.42, 46, 2);
+  const classroomAccent = new THREE.PointLight(0xffd9ab, 1.58, 46, 2);
   classroomAccent.position.set(classroomMaxX - 1.46, 2.78, scaled(WORLD.classroom.lightWellZ + 64));
   scene.add(classroomAccent);
 
-  const backdoorAccent = new THREE.PointLight(0xffefcf, 1.26, 36, 2);
+  const backdoorAccent = new THREE.PointLight(0xffefcf, 1.42, 36, 2);
   backdoorAccent.position.set(classroomMinX + 1.56, 2.44, scaled(WORLD.backDoor.center.z + 28));
   scene.add(backdoorAccent);
+
+  const windowBounce = new THREE.PointLight(0xffeacc, 0.62, 28, 2);
+  windowBounce.position.set(classroomMaxX - 3.8, 0.22, scaled(WORLD.classroom.lightWellZ));
+  scene.add(windowBounce);
+
+  const corridorBounce = new THREE.PointLight(0xf0e8dd, 0.48, 22, 2);
+  corridorBounce.position.set(corridorCenterX, 0.18, scaled(WORLD.frontDoor.center.z - 60));
+  scene.add(corridorBounce);
 
   const classroomFloorTex = makeWoodTexture({ base: "#856549", dark: "#5c422d", highlight: "#b18a63" });
   const corridorFloorTex = makeTileTexture({ base: "#bcc5d0", line: "rgba(244,246,249,.76)", speck: "rgba(124,136,148," });
@@ -1239,20 +1260,21 @@ export function createLm402Scene(canvas) {
   const lawnMat = new THREE.MeshStandardMaterial({ color: "#708e5d", map: lawnTex, roughness: 1, metalness: 0.01 });
   const plazaMat = new THREE.MeshStandardMaterial({ color: "#c7cdd3", map: plazaTex, roughness: 0.96, metalness: 0.02 });
   const glassMat = new THREE.MeshPhysicalMaterial({
-    color: "#fbfdff",
-    roughness: 0.002,
+    color: "#ffffff",
+    roughness: 0.001,
     transmission: 1,
     transparent: true,
-    opacity: 0.08,
-    thickness: 0.1,
-    ior: 1.32,
-    clearcoat: 1,
-    clearcoatRoughness: 0.01,
-    reflectivity: 0.84,
-    envMapIntensity: 1.16,
+    opacity: 0,
+    thickness: 0.02,
+    ior: 1.05,
+    clearcoat: 0,
+    clearcoatRoughness: 0,
+    reflectivity: 0,
+    envMapIntensity: 0,
     side: THREE.DoubleSide,
-    attenuationColor: new THREE.Color("#fffaf2"),
-    attenuationDistance: 16,
+    attenuationColor: new THREE.Color("#ffffff"),
+    attenuationDistance: 100,
+    depthWrite: false,
   });
 
   const campusDepth = scaled(WORLD.corridor.campusDepth);
@@ -1482,10 +1504,10 @@ export function createLm402Scene(canvas) {
   const leftWindowOpenings = WORLD.leftWallWindows.map((panel) => openingFromPanel(panel, "left"));
   const rightWindowOpenings = WORLD.rightWallWindows.map((panel) => openingFromPanel(panel, "right"));
   const doorOpenings = openings.map((door) => ({
-    z1: door.z1 - 0.14,
-    z2: door.z2 + 0.14,
+    z1: door.z1 - 0.36,
+    z2: door.z2 + 0.36,
     y1: 0,
-    y2: 2.28,
+    y2: 2.42,
   }));
 
   buildWallWithOpenings({
@@ -2210,19 +2232,26 @@ export function createLm402Scene(canvas) {
 
   function applyPlayerCamera(player, time = 0, allowBob = true) {
     const motion = Math.hypot(player.velocity?.x || 0, player.velocity?.z || 0);
-    const bobStrength = allowBob ? Math.min(0.028, motion * 0.008) : 0;
-    const bob = bobStrength ? Math.sin(time * 8.4) * bobStrength : 0;
-    camera.position.set(player.x, PLAYER_EYE + bob, player.z);
+    const bobStrength = allowBob ? Math.min(0.032, motion * 0.01) : 0;
+    const bobY = bobStrength ? Math.sin(time * 8.4) * bobStrength : 0;
+    const bobX = bobStrength ? Math.cos(time * 4.2) * bobStrength * 0.35 : 0;
+    const roll = bobStrength ? Math.sin(time * 4.2) * bobStrength * 0.4 : 0;
+    const landingDip = !allowBob ? 0 : Math.max(0, 0.015 - motion * 0.04) * Math.exp(-time * 2);
+    camera.position.set(player.x + bobX, PLAYER_EYE + bobY - landingDip, player.z);
     camera.rotation.y = player.yaw;
     camera.rotation.x = player.pitch;
+    camera.rotation.z = roll;
   }
 
 function applyIntroCamera(intro) {
   const progress = THREE.MathUtils.clamp(intro.progress, 0, 1);
-  const cameraT = THREE.MathUtils.smoothstep(progress, 0.02, 0.98);
+  const speedCurve = 0.5 + 0.5 * Math.sin(progress * Math.PI * 2.6 - Math.PI * 0.5);
+  const cameraT = THREE.MathUtils.smoothstep(THREE.MathUtils.clamp(progress * (0.7 + speedCurve * 0.3), 0, 1), 0.02, 0.98);
   const camPos = introCurve.getPoint(cameraT);
   const target = introCurve.getPoint(THREE.MathUtils.clamp(cameraT + 0.06, 0, 1));
-  camera.fov = THREE.MathUtils.lerp(104, 42, THREE.MathUtils.smoothstep(progress, 0.08, 0.94));
+  const heartbeat = Math.sin(progress * Math.PI * 8.4) * Math.exp(-progress * 1.8) * 4;
+  const baseFov = THREE.MathUtils.lerp(108, 42, THREE.MathUtils.smoothstep(progress, 0.06, 0.92));
+  camera.fov = baseFov + heartbeat;
   camera.updateProjectionMatrix();
   camera.position.copy(camPos);
   const settleT = THREE.MathUtils.smoothstep(progress, 0.7, 1);
@@ -2240,34 +2269,39 @@ function applyIntroCamera(intro) {
     )
   );
   camera.lookAt(settleTarget);
-  camera.rotateZ(Math.sin(progress * Math.PI * 3.2) * THREE.MathUtils.lerp(0.46, 0.008, progress));
+  const spiralRoll = Math.sin(progress * Math.PI * 3.2) * THREE.MathUtils.lerp(0.56, 0.006, progress);
+  const microShake = Math.sin(progress * Math.PI * 18) * THREE.MathUtils.lerp(0.02, 0, progress) * 0.3;
+  camera.rotateZ(spiralRoll + microShake);
 
     introGroup.visible = true;
-    introTube.material.opacity = THREE.MathUtils.lerp(0.88, 0.14, progress);
-    introTube.material.emissiveIntensity = THREE.MathUtils.lerp(2.1, 0.58, progress);
+    const threadPulse = 0.5 + 0.5 * Math.sin(progress * Math.PI * 6.2);
+    introTube.material.opacity = THREE.MathUtils.lerp(0.92, 0.18, progress) * (0.85 + threadPulse * 0.15);
+    introTube.material.emissiveIntensity = THREE.MathUtils.lerp(2.6, 0.62, progress) * (0.8 + threadPulse * 0.2);
     const daughterT = THREE.MathUtils.clamp(progress + 0.03, 0, 1);
     const daughterPos = introCurve.getPoint(daughterT);
     const daughterNext = introCurve.getPoint(THREE.MathUtils.clamp(daughterT + 0.015, 0, 1));
-    introDaughter.position.copy(daughterPos).add(new THREE.Vector3(0, Math.sin(progress * Math.PI * 5.4) * 0.12, 0));
+    const flyBob = Math.sin(progress * Math.PI * 5.4) * 0.14;
+    const flyDrift = Math.cos(progress * Math.PI * 3.8) * 0.06;
+    introDaughter.position.copy(daughterPos).add(new THREE.Vector3(flyDrift, flyBob, 0));
     introDaughter.lookAt(daughterNext);
     introDaughter.rotateY(Math.PI);
-    introDaughter.rotation.z = Math.sin(progress * Math.PI * 4.2) * 0.18;
-    introDaughter.rotation.x = Math.sin(progress * Math.PI * 2.8) * 0.12;
+    introDaughter.rotation.z = Math.sin(progress * Math.PI * 4.2) * 0.22;
+    introDaughter.rotation.x = Math.sin(progress * Math.PI * 2.8) * 0.16;
     applyFlyingPose(introDaughter, progress);
     introAura.position.copy(daughterPos).add(new THREE.Vector3(0, 0.32, -0.18));
     introAura.lookAt(camera.position);
-    introAura.material.opacity = THREE.MathUtils.lerp(0.82, 0.2, progress);
+    introAura.material.opacity = THREE.MathUtils.lerp(0.92, 0.24, progress) * (0.8 + threadPulse * 0.2);
     introBloom.position.copy(daughterPos).add(new THREE.Vector3(-0.2, 0.34, -0.48));
     introBloom.lookAt(camera.position);
-    introBloom.material.opacity = THREE.MathUtils.lerp(0.5, 0.14, progress);
+    introBloom.material.opacity = THREE.MathUtils.lerp(0.62, 0.18, progress);
     introRibbon.position.copy(daughterPos).add(new THREE.Vector3(-0.14, 0.22, -0.74));
     introRibbon.lookAt(camera.position);
-    introRibbon.material.opacity = THREE.MathUtils.lerp(0.32, 0.04, progress);
+    introRibbon.material.opacity = THREE.MathUtils.lerp(0.42, 0.06, progress);
     introSpark.position.copy(introCurve.getPoint(THREE.MathUtils.clamp(progress + 0.08, 0, 1)));
-    introSpark.scale.setScalar(1 + Math.sin(progress * Math.PI * 6) * 0.32);
+    introSpark.scale.setScalar(1 + Math.sin(progress * Math.PI * 6) * 0.42);
     introWake.position.copy(daughterPos).add(new THREE.Vector3(0.1, 0.14, -0.56));
     introWake.lookAt(camera.position);
-    introWake.material.opacity = THREE.MathUtils.lerp(0.34, 0.06, progress);
+    introWake.material.opacity = THREE.MathUtils.lerp(0.42, 0.08, progress);
 
     const seniorWalkT = THREE.MathUtils.smoothstep(progress, 0.56, 0.96);
     const seniorStart = new THREE.Vector3(scaled(-474), 0, scaled(WORLD.stairs.front.landingZ + 8));
@@ -2277,7 +2311,7 @@ function applyIntroCamera(intro) {
       -(scaled(WORLD.frontDoor.center.x) - introSenior.position.x),
       -(scaled(WORLD.frontDoor.center.z) - introSenior.position.z)
     );
-    applyWalkingPose(introSenior, Math.sin(progress * Math.PI * 10.4) * 0.82, 0.9);
+    applyWalkingPose(introSenior, Math.sin(progress * Math.PI * 10.4) * 0.84, 0.92);
   }
 
 function perfectEndingPhase(time) {
@@ -2306,6 +2340,9 @@ function applyPerfectEndingCamera(game) {
   const orbitRadiusStart = 7.2;
   const orbitRadiusEnd = 3.84;
 
+  const breatheSway = Math.sin(totalTime * 0.42) * 0.0008;
+  const breatheRise = Math.sin(totalTime * 0.38) * 0.0006;
+
   if (totalTime < orbitStart) {
     const walkT = THREE.MathUtils.clamp(totalTime / orbitStart, 0, 1);
     const eased = THREE.MathUtils.smoothstep(walkT, 0, 1);
@@ -2313,47 +2350,60 @@ function applyPerfectEndingCamera(game) {
     const startPos = center.clone().add(sideOffset);
     const settlePos = center.clone().add(new THREE.Vector3(-4.8, 0.38, 3.48));
     camera.position.lerpVectors(startPos, settlePos, eased);
+    camera.position.y += breatheRise;
+    camera.position.x += breatheSway;
     camera.fov = THREE.MathUtils.lerp(52, 36, eased);
     camera.updateProjectionMatrix();
     camera.lookAt(center.x + 0.1, center.y - 0.03, center.z - 0.02);
+    camera.rotateZ(Math.sin(totalTime * 0.8) * 0.003);
     return;
   }
 
   if (totalTime < orbitEnd) {
     const orbitT = THREE.MathUtils.clamp((totalTime - orbitStart) / (orbitEnd - orbitStart), 0, 1);
-    const eased = THREE.MathUtils.smoothstep(orbitT, 0.03, 0.97);
+    const slowMidT = orbitT < 0.5 ? orbitT * 0.8 : 0.4 + (orbitT - 0.5) * 1.2;
+    const eased = THREE.MathUtils.smoothstep(THREE.MathUtils.clamp(slowMidT, 0, 1), 0.03, 0.97);
     const radius = THREE.MathUtils.lerp(orbitRadiusStart, orbitRadiusEnd, eased);
     const angle = THREE.MathUtils.lerp(orbitStartAngle, orbitStartAngle + Math.PI * 2, eased);
     camera.position.set(
-      center.x + Math.cos(angle) * radius,
-      THREE.MathUtils.lerp(1.48, 1.74, orbitT),
+      center.x + Math.cos(angle) * radius + breatheSway,
+      THREE.MathUtils.lerp(1.48, 1.74, orbitT) + breatheRise,
       center.z + Math.sin(angle) * radius
     );
     const lookTarget = center.clone().lerp(eyeTarget, THREE.MathUtils.smoothstep(orbitT, 0.52, 1));
-    camera.fov = THREE.MathUtils.lerp(40, 20, THREE.MathUtils.smoothstep(orbitT, 0.18, 1));
+    camera.fov = THREE.MathUtils.lerp(40, 18, THREE.MathUtils.smoothstep(orbitT, 0.18, 1));
     camera.updateProjectionMatrix();
     camera.lookAt(lookTarget.x, lookTarget.y, lookTarget.z);
+    const orbitRoll = Math.sin(orbitT * Math.PI * 2) * 0.012 * (1 - orbitT);
+    camera.rotateZ(orbitRoll);
     return;
   }
 
   if (totalTime < seniorPovEnd) {
+    const holdT = THREE.MathUtils.clamp((totalTime - orbitEnd) / (seniorPovEnd - orbitEnd), 0, 1);
     const seniorHoldPos = seniorEye.clone().add(new THREE.Vector3(0.022, 0.014, 0.004));
-    seniorHoldPos.y += Math.sin(totalTime * 0.32) * 0.0012;
-    seniorHoldPos.x += Math.cos(totalTime * 0.18) * 0.0009;
+    const heartSway = Math.sin(totalTime * 1.1) * 0.0014 * (1 + holdT * 0.5);
+    const heartRise = Math.cos(totalTime * 0.82) * 0.001;
+    seniorHoldPos.y += heartRise;
+    seniorHoldPos.x += heartSway;
     camera.position.copy(seniorHoldPos);
-    camera.fov = 12.8;
+    camera.fov = THREE.MathUtils.lerp(14, 11.8, THREE.MathUtils.smoothstep(holdT, 0.2, 0.9));
     camera.updateProjectionMatrix();
     camera.lookAt(eyeTarget.x, eyeTarget.y + 0.0012, eyeTarget.z);
+    camera.rotateZ(Math.sin(totalTime * 0.6) * 0.002);
     return;
   }
 
+  const eyesElapsed = totalTime - seniorPovEnd;
   const eyeHoldPos = seniorEye.clone().add(new THREE.Vector3(0.022, 0.014, 0.004));
-  eyeHoldPos.y += Math.sin(totalTime * 0.3) * 0.0014;
-  eyeHoldPos.x += Math.cos(totalTime * 0.16) * 0.001;
+  const tremble = Math.min(1, eyesElapsed * 0.12);
+  eyeHoldPos.y += Math.sin(totalTime * 0.3) * 0.0014 + Math.sin(totalTime * 2.2) * 0.0004 * tremble;
+  eyeHoldPos.x += Math.cos(totalTime * 0.16) * 0.001 + Math.cos(totalTime * 1.8) * 0.0003 * tremble;
   camera.position.copy(eyeHoldPos);
-  camera.fov = 12.8;
+  camera.fov = THREE.MathUtils.lerp(12.8, 10.4, THREE.MathUtils.smoothstep(eyesElapsed, 0, 8));
   camera.updateProjectionMatrix();
   camera.lookAt(eyeTarget.x, eyeTarget.y + 0.0015, eyeTarget.z);
+  camera.rotateZ(Math.sin(totalTime * 0.4) * 0.0015 * tremble);
 }
 
   function pickHotspot(candidates, player, activeId) {
