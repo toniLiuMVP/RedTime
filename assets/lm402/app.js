@@ -1570,7 +1570,7 @@ function updateEndingSequence(dt) {
     } else if (state.endingSequence.time < (CINEMATIC_TIMELINE.perfectOrbitEnd ?? 24)) {
       state.endingSequence.shotPhase = "orbit";
     } else if (state.endingSequence.time < (CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 32)) {
-      state.endingSequence.shotPhase = "senior_pov_push";
+      state.endingSequence.shotPhase = "senior_pov_hold";
     } else {
       state.endingSequence.shotPhase = "eyes";
     }
