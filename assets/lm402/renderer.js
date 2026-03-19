@@ -1555,180 +1555,134 @@ export function createLm402Scene(canvas) {
     { ...WORLD.backDoor, kind: "back", z1: backDoorZ1, z2: backDoorZ2 },
   ].sort((a, b) => a.z1 - b.z1);
 
-  // ── Helper: build an end-wall (running along X axis) with 4 large window openings ──
-  // winGap: glass window height range [y1, y2]
-  // doorOpening: { x1, x2 } in scene units (where the door gap is, no wall placed here)
+  // ── Shared window geometry constants ──
+  const winY1 = scaled(84);
+  const winY2 = scaled(256);
+  const winH = winY2 - winY1;
+  const winCY = (winY1 + winY2) / 2;
+  const pillarW = 0.10;
+
+  // ── Door materials ──
   const doorMat = new THREE.MeshPhysicalMaterial({
-    color: "#d4c8b4",
-    roughness: 0.62,
-    metalness: 0.04,
-    clearcoat: 0.12,
-    clearcoatRoughness: 0.44,
+    color: "#c8b898", roughness: 0.58, metalness: 0.04,
+    clearcoat: 0.16, clearcoatRoughness: 0.40,
   });
+  const doorFrameMat = new THREE.MeshStandardMaterial({ color: "#a09078", roughness: 0.72, metalness: 0.03 });
 
-  const buildEndWall = (wallZ, inwardDir, doorXCenter, doorXHalfWidth) => {
-    const winY1 = scaled(84);
-    const winY2 = scaled(256);
-    const winH = winY2 - winY1;
-    const winCY = (winY1 + winY2) / 2;
-    const totalX = roomDepth; // classroomMaxX - classroomMinX
-    // 4 windows evenly spaced across the room, with door gap excluded
-    const margins = 0.22;
-    const gap = 0.14; // gap between window frames
-    const doorClearX1 = doorXCenter - doorXHalfWidth - 0.14;
-    const doorClearX2 = doorXCenter + doorXHalfWidth + 0.14;
-
-    // Create window segments across the full wall (skipping over door gap if any)
-    // We create: [classroomMinX..doorClearX1] window zone + [doorClearX2..classroomMaxX] window zone
-    // Then add solid wall above/below window height and at narrow pillars
-    const buildWindowZone = (fromX, toX) => {
-      const zoneWidth = toX - fromX;
-      if (zoneWidth < 0.5) return;
-      const numWin = zoneWidth > 2.0 ? 2 : 1;
-      const winWidth = (zoneWidth - (numWin + 1) * gap) / numWin;
-      for (let wi = 0; wi < numWin; wi++) {
-        const wx = fromX + gap + (winWidth + gap) * wi + winWidth / 2;
-        // Glass
-        const gp = new THREE.Mesh(new THREE.PlaneGeometry(winWidth, winH), glassMat);
-        gp.position.set(wx, winCY, wallZ + inwardDir * 0.045);
-        gp.castShadow = false; gp.receiveShadow = false;
-        worldGroup.add(gp);
-        // Highlight shimmer
-        const hl = createGlowPlane("rgba(255,255,255,1)", winWidth * 0.72, winH * 0.78, 0.02);
-        hl.position.set(wx, winCY + winH * 0.02, wallZ + inwardDir * 0.09);
-        worldGroup.add(hl);
-        // Frame
-        const fr = new THREE.Mesh(new THREE.BoxGeometry(winWidth + 0.12, winH + 0.14, 0.10), beamMat);
-        fr.position.set(wx, winCY, wallZ);
-        worldGroup.add(fr);
-        // Solid wall above window (transom strip)
-        const above = new THREE.Mesh(
-          new THREE.BoxGeometry(winWidth + 0.04, corridorHeight - winY2 + 0.04, wallThickness),
-          wallMat
-        );
-        above.position.set(wx, winY2 + (corridorHeight - winY2) / 2, wallZ);
-        worldGroup.add(above);
-        // Solid wall below window (sill strip)
-        const below = new THREE.Mesh(
-          new THREE.BoxGeometry(winWidth + 0.04, winY1 + 0.02, wallThickness),
-          wallMat
-        );
-        below.position.set(wx, winY1 / 2, wallZ);
-        worldGroup.add(below);
-      }
-      // Narrow pillar at left edge
-      const leftPillar = new THREE.Mesh(new THREE.BoxGeometry(gap, corridorHeight, wallThickness), wallMat);
-      leftPillar.position.set(fromX + gap / 2, corridorHeight / 2, wallZ);
-      worldGroup.add(leftPillar);
-      // Narrow pillar at right edge
-      const rightPillar = leftPillar.clone();
-      rightPillar.position.set(toX - gap / 2, corridorHeight / 2, wallZ);
-      worldGroup.add(rightPillar);
-      // Add collider for this window zone (thin wall)
-      if (inwardDir > 0) {
-        addCollider(colliders, fromX, toX, wallZ - wallThickness / 2, wallZ + wallThickness / 2, "end_wall_win");
-      } else {
-        addCollider(colliders, fromX, toX, wallZ - wallThickness / 2, wallZ + wallThickness / 2, "end_wall_win");
-      }
-    };
-
-    // Left window zone (before door gap)
-    if (doorClearX1 > classroomMinX + 0.5) {
-      buildWindowZone(classroomMinX, doorClearX1);
-    }
-    // Right window zone (after door gap)
-    if (doorClearX2 < classroomMaxX - 0.5) {
-      buildWindowZone(doorClearX2, classroomMaxX);
-    }
-    // Door lintel (solid wall above door opening, full height above door)
-    const lintelY = 2.20; // top of door opening
-    const lintelH = corridorHeight - lintelY;
-    const lintel = new THREE.Mesh(
-      new THREE.BoxGeometry(doorXHalfWidth * 2 + 0.04, lintelH, wallThickness),
-      wallMat
-    );
-    lintel.position.set(doorXCenter, lintelY + lintelH / 2, wallZ);
-    worldGroup.add(lintel);
-    addCollider(colliders, doorXCenter - doorXHalfWidth - 0.02, doorXCenter + doorXHalfWidth + 0.02, wallZ - wallThickness / 2, wallZ + wallThickness / 2, "end_wall_lintel");
+  // ── Helper: add one glass window on end wall (Z-facing) ──
+  const addEndWallWindow = (cx, wz, ww, inward) => {
+    const gp = new THREE.Mesh(new THREE.PlaneGeometry(ww, winH), glassMat);
+    gp.position.set(cx, winCY, wz + inward * 0.04);
+    gp.castShadow = false; gp.receiveShadow = false;
+    worldGroup.add(gp);
+    const hl = createGlowPlane("rgba(255,255,255,1)", ww * 0.6, winH * 0.6, 0.015);
+    hl.position.set(cx, winCY + winH * 0.01, wz + inward * 0.08);
+    worldGroup.add(hl);
+    const fr = new THREE.Mesh(new THREE.BoxGeometry(ww + 0.08, winH + 0.10, 0.06), beamMat);
+    fr.position.set(cx, winCY, wz);
+    worldGroup.add(fr);
+    const tr = new THREE.Mesh(new THREE.BoxGeometry(ww - 0.04, 0.03, 0.04), beamMat);
+    tr.position.set(cx, winCY, wz + inward * 0.02);
+    worldGroup.add(tr);
+    const ml = new THREE.Mesh(new THREE.BoxGeometry(0.025, winH - 0.04, 0.04), beamMat);
+    ml.position.set(cx, winCY, wz + inward * 0.02);
+    worldGroup.add(ml);
   };
 
-  // ── Helper: add an open door mesh (hinged to one jamb, swung inward 90°) ──
-  const addOpenDoor = (hingeX, hingeZ, swingDir, facingZ) => {
-    const doorW = 0.92; // door leaf width
-    const doorH = 2.18;
-    // Door is swung 90° — hinged at the jamb, flat against the wall
-    const door = new THREE.Mesh(new THREE.BoxGeometry(0.04, doorH, doorW), doorMat);
-    door.position.set(hingeX + swingDir * 0.02, doorH / 2, hingeZ + doorW / 2);
-    door.castShadow = true;
-    door.receiveShadow = true;
-    worldGroup.add(door);
+  // ── Helper: solid strip above/below window zone ──
+  const addEndStrip = (x, y, wz, w, h) => {
+    const s = new THREE.Mesh(new THREE.BoxGeometry(w, h, wallThickness), wallMat);
+    s.position.set(x, y, wz);
+    s.castShadow = true; s.receiveShadow = true;
+    worldGroup.add(s);
   };
 
-  // Front door opening: in the corridorWallMat (classroomMinX) at frontDoorZ1..frontDoorZ2
-  // The corridor side wall (classroomMinX) has the door at z ≈ frontDoorZ1..frontDoorZ2
-  // End wall z2 (back of classroom / board wall) — no door on this end wall
-  // End wall z1 — back of classroom (deeper into building) — no door on this end wall either
-  // Doors are on the corridor-side wall (classroomMinX), not the end walls.
+  // ── Helper: build window row on an end wall ──
+  const buildEndWallWindows = (wallZ, inward, fromX, toX, nWin) => {
+    const totalW = toX - fromX;
+    const ww = (totalW - pillarW * (nWin + 1)) / nWin;
+    for (let i = 0; i < nWin; i++) {
+      const wx = fromX + pillarW + (ww + pillarW) * i + ww / 2;
+      addEndWallWindow(wx, wallZ, ww, inward);
+      addEndStrip(wx, winY2 + (corridorHeight - winY2) / 2, wallZ, ww + 0.02, corridorHeight - winY2 + 0.02);
+      addEndStrip(wx, winY1 / 2, wallZ, ww + 0.02, winY1 + 0.01);
+    }
+    for (let i = 0; i <= nWin; i++) {
+      const px = fromX + pillarW / 2 + (ww + pillarW) * i;
+      const p = new THREE.Mesh(new THREE.BoxGeometry(pillarW, corridorHeight, wallThickness), wallMat);
+      p.position.set(px, corridorHeight / 2, wallZ);
+      worldGroup.add(p);
+    }
+    addCollider(colliders, fromX, toX, wallZ - wallThickness / 2, wallZ + wallThickness / 2, "end_wall");
+  };
 
-  // Front/back end walls — both get 4 windows spanning the room width (no door in end walls)
-  buildEndWall(z1, 1, (classroomMinX + classroomMaxX) / 2, 0); // back wall (no door in end wall)
-  buildEndWall(z2, -1, (classroomMinX + classroomMaxX) / 2, 0); // front wall (no door in end wall, board here)
+  // ═══ BACK END WALL (z1) — 4 windows full width ═══
+  buildEndWallWindows(z1, 1, classroomMinX, classroomMaxX, 4);
 
+  // ═══ FRONT END WALL (z2) — board center + 2 windows each side ═══
+  if (boardX1 - classroomMinX > 0.6) {
+    buildEndWallWindows(z2, -1, classroomMinX, boardX1 - 0.06, 2);
+  }
+  if (classroomMaxX - boardX2 > 0.6) {
+    buildEndWallWindows(z2, -1, boardX2 + 0.06, classroomMaxX, 2);
+  }
+
+  // ═══ LEFT (CORRIDOR) WALL — with door + window openings ═══
   const leftWindowOpenings = WORLD.leftWallWindows.map((panel) => openingFromPanel(panel, "left"));
   const rightWindowOpenings = WORLD.rightWallWindows.map((panel) => openingFromPanel(panel, "right"));
   const doorOpenings = openings.map((door) => ({
-    z1: door.z1 - 0.50,
-    z2: door.z2 + 0.50,
-    y1: 0,
-    y2: 2.50,
+    z1: door.z1 - 0.50, z2: door.z2 + 0.50, y1: 0, y2: 2.50,
   }));
 
   buildWallWithOpenings({
-    x: classroomMaxX,
-    zStart: z1,
-    zEnd: z2,
-    openings: rightWindowOpenings,
-    material: wallMat,
-    label: "right_wall",
+    x: classroomMaxX, zStart: z1, zEnd: z2,
+    openings: rightWindowOpenings, material: wallMat, label: "right_wall",
   });
 
   const dividerSegments = [];
-  if (minZ < z1) {
-    dividerSegments.push([minZ, z1]);
-  }
-  if (z2 < maxZ) {
-    dividerSegments.push([z2, maxZ]);
-  }
+  if (minZ < z1) dividerSegments.push([minZ, z1]);
+  if (z2 < maxZ) dividerSegments.push([z2, maxZ]);
   dividerSegments.forEach(([start, end]) => {
-    if (end <= start) {
-      return;
-    }
-    addBox(
-      worldGroup,
-      occluders,
+    if (end <= start) return;
+    addBox(worldGroup, occluders,
       new THREE.BoxGeometry(wallThickness, corridorHeight, end - start),
       corridorWallMat,
       new THREE.Vector3(classroomMinX, corridorHeight / 2, start + (end - start) / 2),
-      null,
-      colliders,
+      null, colliders,
       { minX: classroomMinX - wallThickness / 2, maxX: classroomMinX + wallThickness / 2, minZ: start, maxZ: end, label: "divider_wall" }
     );
   });
 
   buildWallWithOpenings({
-    x: classroomMinX,
-    zStart: z1,
-    zEnd: z2,
+    x: classroomMinX, zStart: z1, zEnd: z2,
     openings: [...doorOpenings, ...leftWindowOpenings],
-    material: corridorWallMat,
-    label: "divider_wall",
+    material: corridorWallMat, label: "divider_wall",
   });
 
-  // ── Physical open doors at front and back door positions ──
-  // Front door: corridor side, door swings into classroom (toward +x)
-  addOpenDoor(classroomMinX, frontDoorZ1 + 0.02, 1, 1);
-  // Back door: corridor side, door swings into classroom (toward +x)
-  addOpenDoor(classroomMinX, backDoorZ1 + 0.02, 1, 1);
+  // ═══ PHYSICAL OPEN DOORS with handles + frame trim ═══
+  const addOpenDoor = (hingeX, hingeZ, swingDir) => {
+    const doorW = 0.88, doorH = 2.16;
+    const leaf = new THREE.Mesh(new THREE.BoxGeometry(0.035, doorH, doorW), doorMat);
+    leaf.position.set(hingeX + swingDir * 0.02, doorH / 2, hingeZ + doorW / 2);
+    leaf.castShadow = true; leaf.receiveShadow = true;
+    worldGroup.add(leaf);
+    // Handle
+    const hMat = new THREE.MeshPhysicalMaterial({ color: "#b8a888", roughness: 0.34, metalness: 0.28, clearcoat: 0.32 });
+    const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.10, 8), hMat);
+    handle.position.set(hingeX + swingDir * 0.04, doorH * 0.46, hingeZ + doorW * 0.85);
+    handle.rotation.x = Math.PI / 2;
+    worldGroup.add(handle);
+    // Frame trim
+    const trimV = new THREE.Mesh(new THREE.BoxGeometry(0.06, doorH + 0.06, 0.06), doorFrameMat);
+    const jL = trimV.clone(); jL.position.set(hingeX, doorH / 2, hingeZ - 0.03); worldGroup.add(jL);
+    const jR = trimV.clone(); jR.position.set(hingeX, doorH / 2, hingeZ + doorW + 0.03); worldGroup.add(jR);
+    const trimH = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, doorW + 0.12), doorFrameMat);
+    trimH.position.set(hingeX, doorH + 0.03, hingeZ + doorW / 2);
+    worldGroup.add(trimH);
+  };
+  addOpenDoor(classroomMinX, frontDoorZ1 + 0.04, 1);
+  addOpenDoor(classroomMinX, backDoorZ1 + 0.04, 1);
+
 
 
   const plaque = buildTextPlane("LM402", 1.72, 0.42, { bg: "#4a5562", fg: "#fff6de" });
