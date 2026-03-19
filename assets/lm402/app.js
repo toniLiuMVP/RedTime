@@ -195,6 +195,7 @@ const dom = {
   endingPerfectBtn: document.getElementById("ending-perfect-btn"),
   debugPanel: document.getElementById("debug-panel"),
   debugText: document.getElementById("debug-text"),
+  introSkipBtn: document.getElementById("intro-skip-btn"),
 };
 
 function clampLookScalar(value) {
@@ -1239,6 +1240,13 @@ function finishIntro() {
   state.cameraMode = "play";
   state.intro.replay = false;
   state.intro.resume = null;
+  // Hide skip button when intro naturally ends or is skipped
+  if (dom.introSkipBtn) {
+    dom.introSkipBtn.hidden = true;
+  }
+  // Ensure transcript panel is visible at play start
+  state.transcriptExpanded = true;
+  syncTranscriptUI();
 
   if (resume) {
     state.phase = resume.phase;
@@ -1915,9 +1923,23 @@ function togglePointerLock() {
   state.pointerLockPending = true;
   updatePointerHint();
   const requestLock = requestLockFn.bind(canvas);
-  Promise.resolve(requestLock()).catch(() => {
+  // Safari requires the call without options; Chrome/Edge accept {unadjustedMovement: true}.
+  // Try with unadjustedMovement first, fall back to plain call for Safari.
+  const tryWithOptions = () => {
+    try {
+      const r = requestLock({ unadjustedMovement: true });
+      if (r && typeof r.then === "function") return r;
+    } catch (_) {/* ignore */}
+    return null;
+  };
+  const plain = () => {
+    try { return Promise.resolve(requestLock()); } catch (_) { return Promise.reject(); }
+  };
+  const p = tryWithOptions() ?? plain();
+  p.catch(() => {
     state.pointerLockPending = false;
-    revealHint("瀏覽器沒有成功鎖定視角。");
+    // Safari may silently deny — fall back to drag-look mode silently.
+    revealHint("視角鎖定不可用，改用按住左鍵拖曳看四周。");
     updatePointerHint();
   });
   window.setTimeout(() => {
@@ -1964,6 +1986,19 @@ function bindPointerLook() {
       event.stopPropagation();
       canvas.focus({ preventScroll: true });
       audioSystem.unlock();
+      // Safari fix: also trigger pointer lock here on right mousedown
+      // (contextmenu event alone is insufficient in Safari)
+      if (
+        state.mode === "play" && !state.dialogue && !state.endingSequence && !state.ending
+      ) {
+        const now = Date.now();
+        if (now - lastRightLockAt >= 180) {
+          lastRightLockAt = now;
+          state.lastContextMenu = now;
+          logDebug("contextmenu", document.pointerLockElement === canvas ? "exit" : "enter");
+          togglePointerLock();
+        }
+      }
     },
     true
   );
@@ -2125,6 +2160,15 @@ function bindUI() {
   dom.perfectEndingSideBtn.addEventListener("click", startPerfectEnding);
   dom.objectivePrompt.addEventListener("click", toggleObjectivePrompt);
   dom.transcriptToggle?.addEventListener("click", () => toggleTranscript());
+  // Intro skip button
+  if (dom.introSkipBtn) {
+    dom.introSkipBtn.hidden = state.mode !== "intro";
+    dom.introSkipBtn.addEventListener("click", () => {
+      audioSystem.unlock();
+      dom.introSkipBtn.hidden = true;
+      finishIntro();
+    });
+  }
   dom.interactBtn.addEventListener("click", openActiveInteraction);
   dom.inspectBtn.addEventListener("click", () => {
     if (state.activeHotspot) {

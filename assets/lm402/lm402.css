@@ -354,6 +354,7 @@ a{text-decoration:none}
   display:-webkit-box;
   -webkit-box-orient:vertical;
   -webkit-line-clamp:2;
+  line-clamp:2;
   overflow:hidden;
 }
 .music-prompt-button{
@@ -1324,3 +1325,30 @@ body.landscape-prompt .debug-panel{
     width:min(240px,34vw);
   }
 }
+
+/* ── Intro skip button ── */
+.intro-skip-btn{
+  position:fixed;
+  bottom:calc(28px + var(--bottom-gap));
+  right:calc(28px + var(--side-gap-right));
+  z-index:200;
+  padding:10px 20px;
+  font:500 10px "DM Mono",monospace;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:rgba(238,232,222,.72);
+  background:rgba(8,10,16,.72);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:40px;
+  cursor:pointer;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  transition:opacity .3s,background .2s,border-color .2s,color .2s;
+  animation:skipFadeIn 1.2s 3s both;
+}
+.intro-skip-btn:hover{
+  background:rgba(14,18,26,.88);
+  border-color:rgba(255,255,255,.32);
+  color:rgba(238,232,222,1);
+}
+@keyframes skipFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
