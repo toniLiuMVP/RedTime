@@ -1270,8 +1270,8 @@ body.landscape-prompt .debug-panel{
     left:50%;
     right:auto;
     transform:translateX(-50%);
-    top:calc(var(--top-gap) + 6px);
-    bottom:auto;
+    bottom:calc(var(--controls-clearance) + 2px + var(--bottom-gap));
+    top:auto;
     width:min(420px,calc(min(var(--stage-width),100dvw) - var(--mobile-left-safe) - var(--mobile-right-safe) - 12px));
     max-width:calc(min(var(--stage-width),100dvw) - var(--mobile-left-safe) - var(--mobile-right-safe) - 12px);
     gap:6px;

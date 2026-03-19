@@ -1604,18 +1604,21 @@ function updateEndingSequence(dt) {
   }
   state.endingSequence.time += dt;
   if (state.ending === "perfect") {
-    if (state.endingSequence.time < (CINEMATIC_TIMELINE.perfectOrbitStart ?? 8)) {
-      state.endingSequence.shotPhase = "walk-in";
-    } else if (state.endingSequence.time < (CINEMATIC_TIMELINE.perfectOrbitEnd ?? 24)) {
-      state.endingSequence.shotPhase = "orbit";
-    } else if (state.endingSequence.time < (CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 32)) {
+    // No orbit — direct senior POV for 10 seconds
+    if (state.endingSequence.time < (CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 10)) {
       state.endingSequence.shotPhase = "senior_pov_hold";
     } else {
       state.endingSequence.shotPhase = "eyes";
     }
-    if (!state.flags.perfectLinePlayed && state.endingSequence.time >= (CINEMATIC_TIMELINE.perfectLineAt ?? 32)) {
-      state.flags.perfectLinePlayed = true;
-      setSubtitle("學長", "這一次,依然再次遇見妳.", 10.6);
+    // Line 1: t=1~5 「也太像徐若瑄了吧！」
+    if (!state.flags.perfectLine1Played && state.endingSequence.time >= (CINEMATIC_TIMELINE.perfectLine1At ?? 1)) {
+      state.flags.perfectLine1Played = true;
+      setSubtitle("學長", "也太像徐若瑄了吧！", 5.0);
+    }
+    // Line 2: t=6~10 「這一次，依然再次遇見妳。」
+    if (!state.flags.perfectLine2Played && state.endingSequence.time >= (CINEMATIC_TIMELINE.perfectLine2At ?? 6)) {
+      state.flags.perfectLine2Played = true;
+      setSubtitle("學長", "這一次，依然再次遇見妳。", 5.0);
     }
     if (state.endingSequence.time > (CINEMATIC_TIMELINE.perfectDuration + 0.35) && dom.endingOverlay.hidden) {
       finishEndingSequence();
