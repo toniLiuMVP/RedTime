@@ -1289,15 +1289,7 @@ export function createLm402Scene(canvas) {
   const beamMat = new THREE.MeshStandardMaterial({ color: "#f0e9de", map: wallTex, roughness: 0.9, metalness: 0.02 });
   const lawnMat = new THREE.MeshStandardMaterial({ color: "#708e5d", map: lawnTex, roughness: 1, metalness: 0.01 });
   const plazaMat = new THREE.MeshStandardMaterial({ color: "#c7cdd3", map: plazaTex, roughness: 0.96, metalness: 0.02 });
-  const glassMat = new THREE.MeshStandardMaterial({
-    color: "#e8f4ff",
-    roughness: 0.05,
-    metalness: 0.02,
-    transparent: true,
-    opacity: 0.06,
-    side: THREE.DoubleSide,
-    depthWrite: false,
-  });
+
 
   const campusDepth = scaled(WORLD.corridor.campusDepth);
   addBox(
@@ -1554,25 +1546,7 @@ export function createLm402Scene(canvas) {
   const winCY = (winY1 + winY2) / 2;
   const pillarW = 0.10;
 
-  // ── Helper: add one glass window on end wall (Z-facing) ──
-  const addEndWallWindow = (cx, wz, ww, inward) => {
-    const gp = new THREE.Mesh(new THREE.PlaneGeometry(ww, winH), glassMat);
-    gp.position.set(cx, winCY, wz + inward * 0.04);
-    gp.castShadow = false; gp.receiveShadow = false;
-    worldGroup.add(gp);
-    const hl = createGlowPlane("rgba(255,255,255,1)", ww * 0.6, winH * 0.6, 0.015);
-    hl.position.set(cx, winCY + winH * 0.01, wz + inward * 0.08);
-    worldGroup.add(hl);
-    const fr = new THREE.Mesh(new THREE.BoxGeometry(ww + 0.08, winH + 0.10, 0.06), beamMat);
-    fr.position.set(cx, winCY, wz);
-    worldGroup.add(fr);
-    const tr = new THREE.Mesh(new THREE.BoxGeometry(ww - 0.04, 0.03, 0.04), beamMat);
-    tr.position.set(cx, winCY, wz + inward * 0.02);
-    worldGroup.add(tr);
-    const ml = new THREE.Mesh(new THREE.BoxGeometry(0.025, winH - 0.04, 0.04), beamMat);
-    ml.position.set(cx, winCY, wz + inward * 0.02);
-    worldGroup.add(ml);
-  };
+
 
   // ── Helper: solid strip above/below window zone ──
   const addEndStrip = (x, y, wz, w, h) => {
@@ -1588,7 +1562,7 @@ export function createLm402Scene(canvas) {
     const ww = (totalW - pillarW * (nWin + 1)) / nWin;
     for (let i = 0; i < nWin; i++) {
       const wx = fromX + pillarW + (ww + pillarW) * i + ww / 2;
-      addEndWallWindow(wx, wallZ, ww, inward);
+      // Window objects removed — open wall openings only
       addEndStrip(wx, winY2 + (corridorHeight - winY2) / 2, wallZ, ww + 0.02, corridorHeight - winY2 + 0.02);
       addEndStrip(wx, winY1 / 2, wallZ, ww + 0.02, winY1 + 0.01);
     }
@@ -1698,61 +1672,7 @@ export function createLm402Scene(canvas) {
     worldGroup.add(labelNode);
   });
 
-  WORLD.rightWallWindows.forEach((panel) => {
-    const centerPanelZ = scaled(panel.z);
-    const height = scaled(panel.y2 - panel.y1);
-    const centerY = scaled((panel.y1 + panel.y2) / 2);
-    const width = scaled(panel.width);
-    const glass = new THREE.Mesh(new THREE.PlaneGeometry(width, height), glassMat);
-    glass.position.set(classroomMaxX - 0.045, centerY, centerPanelZ);
-    glass.rotation.y = -Math.PI / 2;
-    glass.castShadow = false;
-    glass.receiveShadow = false;
-    worldGroup.add(glass);
-    const highlight = createGlowPlane("rgba(255,255,255,1)", width * 0.72, height * 0.78, 0.02);
-    highlight.position.set(classroomMaxX - 0.08, centerY + height * 0.02, centerPanelZ - 0.02);
-    highlight.rotation.y = -Math.PI / 2;
-    highlight.rotation.z = -0.06;
-    worldGroup.add(highlight);
-    const frame = new THREE.Mesh(new THREE.BoxGeometry(0.12, height + 0.18, width + 0.16), beamMat);
-    frame.position.set(classroomMaxX - 0.06, centerY, centerPanelZ);
-    frame.scale.x = 0.78;
-    worldGroup.add(frame);
-    const mullion = new THREE.Mesh(new THREE.BoxGeometry(0.06, height + 0.08, 0.028), beamMat);
-    mullion.position.set(classroomMaxX - 0.022, centerY, centerPanelZ);
-    worldGroup.add(mullion);
-    const transom = new THREE.Mesh(new THREE.BoxGeometry(0.048, 0.06, width - 0.06), beamMat);
-    transom.position.set(classroomMaxX - 0.022, centerY + height * 0.08, centerPanelZ);
-    worldGroup.add(transom);
-  });
-
-  WORLD.leftWallWindows.forEach((panel) => {
-    const centerPanelZ = scaled(panel.z);
-    const height = scaled(panel.y2 - panel.y1);
-    const centerY = scaled((panel.y1 + panel.y2) / 2);
-    const width = scaled(panel.width);
-    const glass = new THREE.Mesh(new THREE.PlaneGeometry(width, height), glassMat);
-    glass.position.set(classroomMinX + 0.04, centerY, centerPanelZ);
-    glass.rotation.y = Math.PI / 2;
-    glass.castShadow = false;
-    glass.receiveShadow = false;
-    worldGroup.add(glass);
-    const highlight = createGlowPlane("rgba(255,255,255,1)", width * 0.72, height * 0.78, 0.02);
-    highlight.position.set(classroomMinX + 0.08, centerY + height * 0.02, centerPanelZ + 0.02);
-    highlight.rotation.y = Math.PI / 2;
-    highlight.rotation.z = 0.06;
-    worldGroup.add(highlight);
-    const frame = new THREE.Mesh(new THREE.BoxGeometry(0.12, height + 0.18, width + 0.16), beamMat);
-    frame.position.set(classroomMinX + 0.06, centerY, centerPanelZ);
-    frame.scale.x = 0.78;
-    worldGroup.add(frame);
-    const mullion = new THREE.Mesh(new THREE.BoxGeometry(0.06, height + 0.08, 0.028), beamMat);
-    mullion.position.set(classroomMinX + 0.022, centerY, centerPanelZ);
-    worldGroup.add(mullion);
-    const transom = new THREE.Mesh(new THREE.BoxGeometry(0.048, 0.06, width - 0.06), beamMat);
-    transom.position.set(classroomMinX + 0.022, centerY + height * 0.08, centerPanelZ);
-    worldGroup.add(transom);
-  });
+  // All window objects removed — wall openings remain for light and visibility
 
   addBox(
     worldGroup,
