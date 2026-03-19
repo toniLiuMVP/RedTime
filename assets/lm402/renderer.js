@@ -176,21 +176,24 @@ function createPerson(spec) {
   });
   const skinMat = new THREE.MeshPhysicalMaterial({
     color: spec.skin,
-    roughness: realisticJunior ? 0.22 : 0.32,
+    roughness: realisticJunior ? 0.19 : 0.32,
     metalness: 0,
-    clearcoat: realisticJunior ? 0.44 : 0.28,
-    clearcoatRoughness: realisticJunior ? 0.34 : 0.52,
-    sheen: realisticJunior ? 0.28 : 0.12,
-    sheenRoughness: realisticJunior ? 0.38 : 0.72,
-    sheenColor: new THREE.Color(spec.female ? '#f8c8b8' : '#e8b8a4'),
+    clearcoat: realisticJunior ? 0.52 : 0.28,
+    clearcoatRoughness: realisticJunior ? 0.28 : 0.52,
+    sheen: realisticJunior ? 0.44 : 0.12,
+    sheenRoughness: realisticJunior ? 0.32 : 0.72,
+    sheenColor: new THREE.Color(spec.female ? '#ffcfb8' : '#e8b8a4'),
   });
   const blushMat = new THREE.MeshPhysicalMaterial({ color: spec.female ? "#f3c3bc" : "#d7a18f", roughness: 0.56, metalness: 0, transparent: true, opacity: spec.female ? 0.26 : 0.14, sheen: 0.1 });
   const hairMat = new THREE.MeshPhysicalMaterial({
     color: spec.hair,
-    roughness: realisticJunior ? 0.16 : 0.34,
-    metalness: 0.08,
-    clearcoat: realisticJunior ? 0.42 : 0.12,
-    clearcoatRoughness: realisticJunior ? 0.18 : 0.3,
+    roughness: realisticJunior ? 0.12 : 0.34,
+    metalness: realisticJunior ? 0.06 : 0.08,
+    clearcoat: realisticJunior ? 0.58 : 0.12,
+    clearcoatRoughness: realisticJunior ? 0.14 : 0.3,
+    sheen: realisticJunior ? 0.32 : 0,
+    sheenRoughness: realisticJunior ? 0.28 : 1,
+    sheenColor: new THREE.Color(realisticJunior ? '#a07060' : '#000'),
   });
   const shoeMat = new THREE.MeshPhysicalMaterial({ color: spec.shoes, roughness: 0.56, metalness: 0.1, clearcoat: 0.12, clearcoatRoughness: 0.4 });
   const buttonMat = new THREE.MeshPhysicalMaterial({ color: "#f6ede3", roughness: 0.42, metalness: 0.06, clearcoat: 0.16, clearcoatRoughness: 0.28 });
@@ -1661,6 +1664,49 @@ export function createLm402Scene(canvas) {
     worldGroup.add(transom);
   });
 
+  // ── Front wall (z2) and back wall (z1) transparent windows ──
+  // These are the short end-walls of the classroom (perpendicular to the corridor).
+  // We add two windows per wall (left half and right half), skipping the board area.
+  const endWallWindowData = [
+    // Back wall at z1 – two windows spanning the right half of the room
+    { z: z1, facing: 1,  xSets: [
+      { cx: classroomMinX + (roomDepth * 0.22), w: roomDepth * 0.34 },
+      { cx: classroomMinX + (roomDepth * 0.74), w: roomDepth * 0.34 },
+    ]},
+    // Front wall at z2 – windows flanking the blackboard
+    { z: z2, facing: -1, xSets: [
+      { cx: classroomMinX + (roomDepth * 0.14), w: roomDepth * 0.22 },
+      { cx: classroomMinX + (roomDepth * 0.86), w: roomDepth * 0.22 },
+    ]},
+  ];
+  const glassWinY1 = scaled(84);
+  const glassWinY2 = scaled(258);
+  const glassWinH = glassWinY2 - glassWinY1;
+  const glassWinCY = (glassWinY1 + glassWinY2) / 2;
+  endWallWindowData.forEach(({ z: wallZ, facing, xSets }) => {
+    xSets.forEach(({ cx, w }) => {
+      // Glass plane
+      const gp = new THREE.Mesh(new THREE.PlaneGeometry(w, glassWinH), glassMat);
+      gp.position.set(cx, glassWinCY, wallZ + facing * 0.045);
+      gp.castShadow = false;
+      gp.receiveShadow = false;
+      worldGroup.add(gp);
+      // Highlight shimmer
+      const hl = createGlowPlane("rgba(255,255,255,1)", w * 0.72, glassWinH * 0.78, 0.07);
+      hl.position.set(cx, glassWinCY + glassWinH * 0.02, wallZ + facing * 0.09);
+      worldGroup.add(hl);
+      // Window frame
+      const fr = new THREE.Mesh(new THREE.BoxGeometry(w + 0.16, glassWinH + 0.18, 0.12), beamMat);
+      fr.position.set(cx, glassWinCY, wallZ + facing * 0.04);
+      fr.scale.z = 0.78;
+      worldGroup.add(fr);
+      // Vertical mullion
+      const ml = new THREE.Mesh(new THREE.BoxGeometry(0.028, glassWinH + 0.08, 0.06), beamMat);
+      ml.position.set(cx, glassWinCY, wallZ + facing * 0.022);
+      worldGroup.add(ml);
+    });
+  });
+
   addBox(
     worldGroup,
     occluders,
@@ -1903,10 +1949,10 @@ export function createLm402Scene(canvas) {
     torso: "#fffdfa",
     torsoAccent: "#ffffff",
     legs: "#2f5b84",
-    skin: "#f6ddd0",
-    hair: "#5b4438",
+    skin: "#f8e2d2",
+    hair: "#4a3330",
     shoes: "#fffefb",
-    iris: "#6d5039",
+    iris: "#604434",
     female: true,
     highlight: true,
     referenceJunior: true,
