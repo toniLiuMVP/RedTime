@@ -1562,13 +1562,6 @@ export function createLm402Scene(canvas) {
   const winCY = (winY1 + winY2) / 2;
   const pillarW = 0.10;
 
-  // ── Door materials ──
-  const doorMat = new THREE.MeshPhysicalMaterial({
-    color: "#c8b898", roughness: 0.58, metalness: 0.04,
-    clearcoat: 0.16, clearcoatRoughness: 0.40,
-  });
-  const doorFrameMat = new THREE.MeshStandardMaterial({ color: "#a09078", roughness: 0.72, metalness: 0.03 });
-
   // ── Helper: add one glass window on end wall (Z-facing) ──
   const addEndWallWindow = (cx, wz, ww, inward) => {
     const gp = new THREE.Mesh(new THREE.PlaneGeometry(ww, winH), glassMat);
@@ -1627,7 +1620,7 @@ export function createLm402Scene(canvas) {
     buildEndWallWindows(z2, -1, boardX2 + 0.06, classroomMaxX, 2);
   }
 
-  // ═══ LEFT (CORRIDOR) WALL — with door + window openings ═══
+  // ═══ LEFT (CORRIDOR) WALL — with door openings + windows ═══
   const leftWindowOpenings = WORLD.leftWallWindows.map((panel) => openingFromPanel(panel, "left"));
   const rightWindowOpenings = WORLD.rightWallWindows.map((panel) => openingFromPanel(panel, "right"));
   const doorOpenings = openings.map((door) => ({
@@ -1659,31 +1652,7 @@ export function createLm402Scene(canvas) {
     material: corridorWallMat, label: "divider_wall",
   });
 
-  // ═══ PHYSICAL OPEN DOORS with handles + frame trim ═══
-  const addOpenDoor = (hingeX, hingeZ, swingDir) => {
-    const doorW = 0.88, doorH = 2.16;
-    const leaf = new THREE.Mesh(new THREE.BoxGeometry(0.035, doorH, doorW), doorMat);
-    leaf.position.set(hingeX + swingDir * 0.02, doorH / 2, hingeZ + doorW / 2);
-    leaf.castShadow = true; leaf.receiveShadow = true;
-    worldGroup.add(leaf);
-    // Handle
-    const hMat = new THREE.MeshPhysicalMaterial({ color: "#b8a888", roughness: 0.34, metalness: 0.28, clearcoat: 0.32 });
-    const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.10, 8), hMat);
-    handle.position.set(hingeX + swingDir * 0.04, doorH * 0.46, hingeZ + doorW * 0.85);
-    handle.rotation.x = Math.PI / 2;
-    worldGroup.add(handle);
-    // Frame trim
-    const trimV = new THREE.Mesh(new THREE.BoxGeometry(0.06, doorH + 0.06, 0.06), doorFrameMat);
-    const jL = trimV.clone(); jL.position.set(hingeX, doorH / 2, hingeZ - 0.03); worldGroup.add(jL);
-    const jR = trimV.clone(); jR.position.set(hingeX, doorH / 2, hingeZ + doorW + 0.03); worldGroup.add(jR);
-    const trimH = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, doorW + 0.12), doorFrameMat);
-    trimH.position.set(hingeX, doorH + 0.03, hingeZ + doorW / 2);
-    worldGroup.add(trimH);
-  };
-  addOpenDoor(classroomMinX, frontDoorZ1 + 0.04, 1);
-  addOpenDoor(classroomMinX, backDoorZ1 + 0.04, 1);
-
-
+  // No door meshes — doorways are completely open for free entry/exit
 
   const plaque = buildTextPlane("LM402", 1.72, 0.42, { bg: "#4a5562", fg: "#fff6de" });
   plaque.position.set(scaled(WORLD.plaque.x), scaled(WORLD.plaque.y), scaled(WORLD.plaque.z));
