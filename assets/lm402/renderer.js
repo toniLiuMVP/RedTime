@@ -1239,28 +1239,28 @@ export function createLm402Scene(canvas) {
   corridorSun.position.set(minX - 1.72, 6.42, scaled(WORLD.frontDoor.center.z - 8));
   scene.add(corridorSun);
 
-  const classroomAccent = new THREE.PointLight(0xffd9ab, 1.58, 46, 2);
+  const classroomAccent = new THREE.PointLight(0xffd9ab, 2.2, 46, 2);
   classroomAccent.position.set(classroomMaxX - 1.46, 2.78, scaled(WORLD.classroom.lightWellZ + 64));
   scene.add(classroomAccent);
 
-  const backdoorAccent = new THREE.PointLight(0xffefcf, 1.42, 36, 2);
+  const backdoorAccent = new THREE.PointLight(0xffefcf, 1.9, 36, 2);
   backdoorAccent.position.set(classroomMinX + 1.56, 2.44, scaled(WORLD.backDoor.center.z + 28));
   scene.add(backdoorAccent);
 
-  const windowBounce = new THREE.PointLight(0xffeacc, 0.62, 28, 2);
+  const windowBounce = new THREE.PointLight(0xffeacc, 0.9, 28, 2);
   windowBounce.position.set(classroomMaxX - 3.8, 0.22, scaled(WORLD.classroom.lightWellZ));
   scene.add(windowBounce);
 
   // Extra lights for new end-wall glass windows (z1 back and z2 front)
-  const backEndWindowLight = new THREE.PointLight(0xfff4e0, 1.44, 38, 2);
+  const backEndWindowLight = new THREE.PointLight(0xfff4e0, 1.8, 38, 2);
   backEndWindowLight.position.set((classroomMinX + classroomMaxX) / 2, 1.82, lm402Z1 + 1.6);
   scene.add(backEndWindowLight);
 
-  const frontEndWindowLight = new THREE.PointLight(0xfffaeb, 1.22, 34, 2);
+  const frontEndWindowLight = new THREE.PointLight(0xfffaeb, 1.6, 34, 2);
   frontEndWindowLight.position.set((classroomMinX + classroomMaxX) / 2, 1.82, lm402Z2 - 1.6);
   scene.add(frontEndWindowLight);
 
-  const midClassLight = new THREE.PointLight(0xffecc4, 0.72, 32, 2);
+  const midClassLight = new THREE.PointLight(0xffecc4, 1.1, 32, 2);
   midClassLight.position.set((classroomMinX + classroomMaxX) / 2, 2.6, (lm402Z1 + lm402Z2) / 2);
   scene.add(midClassLight);
 
@@ -1278,17 +1278,17 @@ export function createLm402Scene(canvas) {
   const lawnTex = makeConcreteTexture({ base: "#6e8d5a", accent: "rgba(255,255,255,.02)", line: "rgba(84,112,70,.16)", warm: true });
   const plazaTex = makeTileTexture({ base: "#cbd1d7", line: "rgba(244,246,249,.72)", speck: "rgba(124,136,148," });
 
-  const classroomFloorMat = new THREE.MeshStandardMaterial({ color: "#856649", map: classroomFloorTex, roughness: 0.92, metalness: 0.02 });
-  const corridorFloorMat = new THREE.MeshStandardMaterial({ color: "#b9c2cc", map: corridorFloorTex, roughness: 0.9, metalness: 0.02 });
-  const wallMat = new THREE.MeshStandardMaterial({ color: "#e8e0d5", map: wallTex, roughness: 0.95, metalness: 0.01 });
-  const corridorWallMat = new THREE.MeshStandardMaterial({ color: "#cbd6df", map: corridorWallTex, roughness: 0.92, metalness: 0.02 });
-  const woodMat = new THREE.MeshStandardMaterial({ color: "#916740", map: woodTex, roughness: 0.84, metalness: 0.04 });
-  const metalMat = new THREE.MeshStandardMaterial({ color: "#7a7f87", roughness: 0.6, metalness: 0.32 });
-  const boardMat = new THREE.MeshStandardMaterial({ color: "#264339", map: boardTex, roughness: 0.9, metalness: 0.02 });
-  const stoneMat = new THREE.MeshStandardMaterial({ color: "#dcd6cd", map: stoneTex, roughness: 0.93, metalness: 0.03 });
-  const beamMat = new THREE.MeshStandardMaterial({ color: "#f0e9de", map: wallTex, roughness: 0.9, metalness: 0.02 });
-  const lawnMat = new THREE.MeshStandardMaterial({ color: "#708e5d", map: lawnTex, roughness: 1, metalness: 0.01 });
-  const plazaMat = new THREE.MeshStandardMaterial({ color: "#c7cdd3", map: plazaTex, roughness: 0.96, metalness: 0.02 });
+  const classroomFloorMat = new THREE.MeshStandardMaterial({ color: "#9a7252", map: classroomFloorTex, roughness: 0.78, metalness: 0.04 });
+  const corridorFloorMat = new THREE.MeshStandardMaterial({ color: "#c2c9d2", map: corridorFloorTex, roughness: 0.82, metalness: 0.03 });
+  const wallMat = new THREE.MeshStandardMaterial({ color: "#f0e8dc", map: wallTex, roughness: 0.88, metalness: 0.01 });
+  const corridorWallMat = new THREE.MeshStandardMaterial({ color: "#d4dce6", map: corridorWallTex, roughness: 0.86, metalness: 0.02 });
+  const woodMat = new THREE.MeshStandardMaterial({ color: "#a07248", map: woodTex, roughness: 0.72, metalness: 0.06 });
+  const metalMat = new THREE.MeshStandardMaterial({ color: "#8a9098", roughness: 0.48, metalness: 0.44 });
+  const boardMat = new THREE.MeshStandardMaterial({ color: "#1e3b30", map: boardTex, roughness: 0.82, metalness: 0.03 });
+  const stoneMat = new THREE.MeshStandardMaterial({ color: "#e2dcd2", map: stoneTex, roughness: 0.88, metalness: 0.03 });
+  const beamMat = new THREE.MeshStandardMaterial({ color: "#f5ede0", map: wallTex, roughness: 0.84, metalness: 0.02 });
+  const lawnMat = new THREE.MeshStandardMaterial({ color: "#7a9a64", map: lawnTex, roughness: 0.96, metalness: 0.01 });
+  const plazaMat = new THREE.MeshStandardMaterial({ color: "#cdd3d9", map: plazaTex, roughness: 0.90, metalness: 0.02 });
 
 
   const campusDepth = scaled(WORLD.corridor.campusDepth);
@@ -1743,13 +1743,13 @@ export function createLm402Scene(canvas) {
     worldGroup.add(plane);
   });
 
-  const corridorSunPatch = createGlowPlane("rgba(255,232,178,1)", 8.4, 3.8, 0.4);
+  const corridorSunPatch = createGlowPlane("rgba(255,228,168,1)", 9.2, 4.4, 0.56);
   corridorSunPatch.position.set(minX + 1.96, 0.018, scaled(WORLD.frontDoor.center.z - 28));
   corridorSunPatch.rotation.x = -Math.PI / 2;
   corridorSunPatch.rotation.z = 0.12;
   worldGroup.add(corridorSunPatch);
 
-  const parapetSunPatch = createGlowPlane("rgba(255,240,205,1)", 8.8, 4.2, 0.34);
+  const parapetSunPatch = createGlowPlane("rgba(255,236,195,1)", 9.6, 4.8, 0.48);
   parapetSunPatch.position.set(minX + 0.72, 1.56, scaled(WORLD.frontDoor.center.z + 44));
   parapetSunPatch.rotation.y = Math.PI / 2;
   parapetSunPatch.rotation.z = 0.04;
@@ -1765,13 +1765,13 @@ export function createLm402Scene(canvas) {
   doorwayGlow.rotation.y = Math.PI / 2;
   worldGroup.add(doorwayGlow);
 
-  const classroomSunPatch = createGlowPlane("rgba(255,226,174,1)", 8.6, 3.4, 0.34);
+  const classroomSunPatch = createGlowPlane("rgba(255,220,162,1)", 9.4, 4.0, 0.48);
   classroomSunPatch.position.set(classroomMaxX - 3.18, 0.019, scaled(WORLD.classroom.lightWellZ + 84));
   classroomSunPatch.rotation.x = -Math.PI / 2;
   classroomSunPatch.rotation.z = -0.16;
   worldGroup.add(classroomSunPatch);
 
-  const leftClassroomSunPatch = createGlowPlane("rgba(255,236,196,1)", 6.2, 2.8, 0.22);
+  const leftClassroomSunPatch = createGlowPlane("rgba(255,232,186,1)", 7.0, 3.4, 0.32);
   leftClassroomSunPatch.position.set(classroomMinX + 2.16, 0.018, scaled(WORLD.classroom.lightWellZ - 104));
   leftClassroomSunPatch.rotation.x = -Math.PI / 2;
   leftClassroomSunPatch.rotation.z = 0.14;
@@ -1783,7 +1783,7 @@ export function createLm402Scene(canvas) {
   backdoorSunPatch.rotation.z = 0.08;
   worldGroup.add(backdoorSunPatch);
 
-  const seatSunPatch = createGlowPlane("rgba(255,226,184,1)", 4.4, 2.2, 0.24);
+  const seatSunPatch = createGlowPlane("rgba(255,220,172,1)", 5.2, 2.8, 0.36);
   seatSunPatch.position.set(scaled(1896), 0.02, scaled(2058));
   seatSunPatch.rotation.x = -Math.PI / 2;
   seatSunPatch.rotation.z = -0.22;
