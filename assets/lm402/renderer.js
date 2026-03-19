@@ -1594,7 +1594,7 @@ export function createLm402Scene(canvas) {
         gp.castShadow = false; gp.receiveShadow = false;
         worldGroup.add(gp);
         // Highlight shimmer
-        const hl = createGlowPlane("rgba(255,255,255,1)", winWidth * 0.72, winH * 0.78, 0.07);
+        const hl = createGlowPlane("rgba(255,255,255,1)", winWidth * 0.72, winH * 0.78, 0.02);
         hl.position.set(wx, winCY + winH * 0.02, wallZ + inwardDir * 0.09);
         worldGroup.add(hl);
         // Frame
@@ -1794,7 +1794,7 @@ export function createLm402Scene(canvas) {
     glass.castShadow = false;
     glass.receiveShadow = false;
     worldGroup.add(glass);
-    const highlight = createGlowPlane("rgba(255,255,255,1)", width * 0.72, height * 0.78, 0.08);
+    const highlight = createGlowPlane("rgba(255,255,255,1)", width * 0.72, height * 0.78, 0.02);
     highlight.position.set(classroomMaxX - 0.08, centerY + height * 0.02, centerPanelZ - 0.02);
     highlight.rotation.y = -Math.PI / 2;
     highlight.rotation.z = -0.06;
@@ -1822,7 +1822,7 @@ export function createLm402Scene(canvas) {
     glass.castShadow = false;
     glass.receiveShadow = false;
     worldGroup.add(glass);
-    const highlight = createGlowPlane("rgba(255,255,255,1)", width * 0.72, height * 0.78, 0.07);
+    const highlight = createGlowPlane("rgba(255,255,255,1)", width * 0.72, height * 0.78, 0.02);
     highlight.position.set(classroomMinX + 0.08, centerY + height * 0.02, centerPanelZ + 0.02);
     highlight.rotation.y = Math.PI / 2;
     highlight.rotation.z = 0.06;
@@ -2340,15 +2340,15 @@ export function createLm402Scene(canvas) {
     if (isIntro) {
       applyIdlePose(junior, game.time * 0.4, 0.4);
     } else if (game.endingSequence?.type === "perfect") {
-      const seniorWalkT = THREE.MathUtils.smoothstep(game.endingSequence.time, 0.12, 8.2);
-      const juniorWalkT = THREE.MathUtils.smoothstep(game.endingSequence.time, 0.24, 5.4);
-      if (game.endingSequence.time < 8.2) {
-        applyWalkingPose(senior, Math.sin(game.endingSequence.time * 7.2) * 0.9, 0.9);
+      const seniorWalkT = THREE.MathUtils.smoothstep(game.endingSequence.time, 0.12, 11.7);
+      const juniorWalkT = THREE.MathUtils.smoothstep(game.endingSequence.time, 0.24, 7.7);
+      if (game.endingSequence.time < 11.7) {
+        applyWalkingPose(senior, Math.sin(game.endingSequence.time * 5.04) * 0.9, 0.9);
       } else {
         applyIdlePose(senior, game.time, 0.8);
       }
-      if (game.endingSequence.time < 5.4) {
-        applyWalkingPose(junior, Math.sin(game.endingSequence.time * 6.6 + 0.8) * 0.84, 0.7);
+      if (game.endingSequence.time < 7.7) {
+        applyWalkingPose(junior, Math.sin(game.endingSequence.time * 4.62 + 0.8) * 0.84, 0.7);
       } else {
         applyIdlePose(junior, game.time * 0.84, 0.92);
       }
