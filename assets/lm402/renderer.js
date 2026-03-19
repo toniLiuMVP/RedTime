@@ -1289,21 +1289,13 @@ export function createLm402Scene(canvas) {
   const beamMat = new THREE.MeshStandardMaterial({ color: "#f0e9de", map: wallTex, roughness: 0.9, metalness: 0.02 });
   const lawnMat = new THREE.MeshStandardMaterial({ color: "#708e5d", map: lawnTex, roughness: 1, metalness: 0.01 });
   const plazaMat = new THREE.MeshStandardMaterial({ color: "#c7cdd3", map: plazaTex, roughness: 0.96, metalness: 0.02 });
-  const glassMat = new THREE.MeshPhysicalMaterial({
-    color: "#ffffff",
-    roughness: 0.001,
-    transmission: 1,
+  const glassMat = new THREE.MeshStandardMaterial({
+    color: "#e8f4ff",
+    roughness: 0.05,
+    metalness: 0.02,
     transparent: true,
-    opacity: 0,
-    thickness: 0.02,
-    ior: 1.05,
-    clearcoat: 0,
-    clearcoatRoughness: 0,
-    reflectivity: 0,
-    envMapIntensity: 0,
+    opacity: 0.06,
     side: THREE.DoubleSide,
-    attenuationColor: new THREE.Color("#ffffff"),
-    attenuationDistance: 100,
     depthWrite: false,
   });
 
