@@ -1839,49 +1839,6 @@ export function createLm402Scene(canvas) {
     worldGroup.add(transom);
   });
 
-  // ── Front wall (z2) and back wall (z1) transparent windows ──
-  // These are the short end-walls of the classroom (perpendicular to the corridor).
-  // We add two windows per wall (left half and right half), skipping the board area.
-  const endWallWindowData = [
-    // Back wall at z1 – two windows spanning the right half of the room
-    { z: z1, facing: 1,  xSets: [
-      { cx: classroomMinX + (roomDepth * 0.22), w: roomDepth * 0.34 },
-      { cx: classroomMinX + (roomDepth * 0.74), w: roomDepth * 0.34 },
-    ]},
-    // Front wall at z2 – windows flanking the blackboard
-    { z: z2, facing: -1, xSets: [
-      { cx: classroomMinX + (roomDepth * 0.14), w: roomDepth * 0.22 },
-      { cx: classroomMinX + (roomDepth * 0.86), w: roomDepth * 0.22 },
-    ]},
-  ];
-  const glassWinY1 = scaled(84);
-  const glassWinY2 = scaled(258);
-  const glassWinH = glassWinY2 - glassWinY1;
-  const glassWinCY = (glassWinY1 + glassWinY2) / 2;
-  endWallWindowData.forEach(({ z: wallZ, facing, xSets }) => {
-    xSets.forEach(({ cx, w }) => {
-      // Glass plane
-      const gp = new THREE.Mesh(new THREE.PlaneGeometry(w, glassWinH), glassMat);
-      gp.position.set(cx, glassWinCY, wallZ + facing * 0.045);
-      gp.castShadow = false;
-      gp.receiveShadow = false;
-      worldGroup.add(gp);
-      // Highlight shimmer
-      const hl = createGlowPlane("rgba(255,255,255,1)", w * 0.72, glassWinH * 0.78, 0.07);
-      hl.position.set(cx, glassWinCY + glassWinH * 0.02, wallZ + facing * 0.09);
-      worldGroup.add(hl);
-      // Window frame
-      const fr = new THREE.Mesh(new THREE.BoxGeometry(w + 0.16, glassWinH + 0.18, 0.12), beamMat);
-      fr.position.set(cx, glassWinCY, wallZ + facing * 0.04);
-      fr.scale.z = 0.78;
-      worldGroup.add(fr);
-      // Vertical mullion
-      const ml = new THREE.Mesh(new THREE.BoxGeometry(0.028, glassWinH + 0.08, 0.06), beamMat);
-      ml.position.set(cx, glassWinCY, wallZ + facing * 0.022);
-      worldGroup.add(ml);
-    });
-  });
-
   addBox(
     worldGroup,
     occluders,
@@ -2502,13 +2459,8 @@ function applyIntroCamera(intro) {
   }
 
 function perfectEndingPhase(time) {
-  if (time < (CINEMATIC_TIMELINE.perfectOrbitStart ?? 8)) {
-    return "walk-in";
-  }
-  if (time < (CINEMATIC_TIMELINE.perfectOrbitEnd ?? 24)) {
-    return "orbit";
-  }
-  if (time < (CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 32)) {
+  const seniorPovEnd = CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 10;
+  if (time < seniorPovEnd) {
     return "senior_pov_hold";
   }
   return "eyes";
@@ -2516,88 +2468,47 @@ function perfectEndingPhase(time) {
 
 function applyPerfectEndingCamera(game) {
   const totalTime = game.endingSequence?.time ?? 0;
-  const orbitStart = CINEMATIC_TIMELINE.perfectOrbitStart ?? 8;
-  const orbitEnd = CINEMATIC_TIMELINE.perfectOrbitEnd ?? 24;
-  const seniorPovEnd = CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 32;
+  const seniorPovEnd = CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 10;
   const center = junior.position.clone().add(new THREE.Vector3(0, 1.5, 0));
   const faceForward = new THREE.Vector3(Math.sin(junior.rotation.y), 0, Math.cos(junior.rotation.y));
   const eyeTarget = center.clone().add(faceForward.clone().multiplyScalar(0.138)).add(new THREE.Vector3(0.004, 0.018, 0));
   const seniorEye = senior.position.clone().add(new THREE.Vector3(0.03, 1.57, 0.04));
-  const orbitStartAngle = -1.48;
-  const orbitRadiusStart = 7.2;
-  const orbitRadiusEnd = 3.84;
 
-  const breatheSway = Math.sin(totalTime * 0.42) * 0.0008;
-  const breatheRise = Math.sin(totalTime * 0.38) * 0.0006;
-
-  if (totalTime < orbitStart) {
-    const walkT = THREE.MathUtils.clamp(totalTime / orbitStart, 0, 1);
-    const eased = THREE.MathUtils.smoothstep(walkT, 0, 1);
-    const sideOffset = new THREE.Vector3(-3.1, 0.26, 2.8);
-    const startPos = center.clone().add(sideOffset);
-    const settlePos = center.clone().add(new THREE.Vector3(-4.8, 0.38, 3.48));
-    camera.position.lerpVectors(startPos, settlePos, eased);
-    camera.position.y += breatheRise;
-    camera.position.x += breatheSway;
-    camera.fov = THREE.MathUtils.lerp(52, 36, eased);
-    camera.updateProjectionMatrix();
-    camera.lookAt(center.x + 0.1, center.y - 0.03, center.z - 0.02);
-    camera.rotateZ(Math.sin(totalTime * 0.8) * 0.003);
-    return;
-  }
-
-  if (totalTime < orbitEnd) {
-    const orbitT = THREE.MathUtils.clamp((totalTime - orbitStart) / (orbitEnd - orbitStart), 0, 1);
-    // Slow in the first quarter, uniform in the middle, hold at the end
-    const slowT = orbitT < 0.12 ? orbitT * 0.5 : 0.06 + (orbitT - 0.12) * (0.94 / 0.88);
-    const eased = THREE.MathUtils.smoothstep(THREE.MathUtils.clamp(slowT, 0, 1), 0.02, 0.98);
-    // Tight radius so junior is always in frame — start close, pull back slightly for mid-orbit, return close
-    const radiusPulse = 1.0 + Math.sin(eased * Math.PI) * 0.8; // 1.0 → 1.8 → 1.0
-    const radius = 2.0 + radiusPulse;
-    const angle = orbitStartAngle + eased * Math.PI * 2;
-    // Camera height: stays at junior mid-body level and gently rises
-    const camY = THREE.MathUtils.lerp(1.52, 1.82, THREE.MathUtils.smoothstep(orbitT, 0.15, 0.85)) + breatheRise;
-    camera.position.set(
-      center.x + Math.cos(angle) * radius + breatheSway,
-      camY,
-      center.z + Math.sin(angle) * radius
-    );
-    // Always look at junior's head — zoom in toward face by the end of orbit
-    const lookTarget = center.clone().lerp(eyeTarget, THREE.MathUtils.smoothstep(orbitT, 0.6, 1.0));
-    camera.fov = THREE.MathUtils.lerp(42, 20, THREE.MathUtils.smoothstep(orbitT, 0.2, 1));
-    camera.updateProjectionMatrix();
-    camera.lookAt(lookTarget.x, lookTarget.y, lookTarget.z);
-    // Gentle cinematic roll
-    const orbitRoll = Math.sin(eased * Math.PI * 2) * 0.008 * (1 - orbitT * 0.7);
-    camera.rotateZ(orbitRoll);
-    return;
-  }
-
+  // ── 10-second senior POV slow-motion zoom ──
+  // The entire ending is just the senior looking at the junior, getting closer
   if (totalTime < seniorPovEnd) {
-    const holdT = THREE.MathUtils.clamp((totalTime - orbitEnd) / (seniorPovEnd - orbitEnd), 0, 1);
+    const holdT = THREE.MathUtils.clamp(totalTime / seniorPovEnd, 0, 1);
+    const eased = THREE.MathUtils.smoothstep(holdT, 0, 1);
+    // Subtle breathing / heartbeat sway
+    const heartSway = Math.sin(totalTime * 1.1) * 0.0016 * (1 + holdT * 0.5);
+    const heartRise = Math.cos(totalTime * 0.82) * 0.0012;
+    // Camera starts at senior's eye, slowly creeps toward junior
     const seniorHoldPos = seniorEye.clone().add(new THREE.Vector3(0.022, 0.014, 0.004));
-    const heartSway = Math.sin(totalTime * 1.1) * 0.0014 * (1 + holdT * 0.5);
-    const heartRise = Math.cos(totalTime * 0.82) * 0.001;
-    seniorHoldPos.y += heartRise;
-    seniorHoldPos.x += heartSway;
-    camera.position.copy(seniorHoldPos);
-    camera.fov = THREE.MathUtils.lerp(14, 11.8, THREE.MathUtils.smoothstep(holdT, 0.2, 0.9));
+    // Slowly move closer to junior (lerp between senior's eye position and 70% toward junior)
+    const closePos = seniorHoldPos.clone().lerp(eyeTarget, eased * 0.38);
+    closePos.y += heartRise;
+    closePos.x += heartSway;
+    camera.position.copy(closePos);
+    // FOV zooms in slowly → cinematic slow-motion getting-closer effect
+    camera.fov = THREE.MathUtils.lerp(18, 10.4, THREE.MathUtils.smoothstep(holdT, 0.05, 0.95));
     camera.updateProjectionMatrix();
-    camera.lookAt(eyeTarget.x, eyeTarget.y + 0.0012, eyeTarget.z);
-    camera.rotateZ(Math.sin(totalTime * 0.6) * 0.002);
+    camera.lookAt(eyeTarget.x, eyeTarget.y + 0.001, eyeTarget.z);
+    // Gentle cinematic roll
+    camera.rotateZ(Math.sin(totalTime * 0.6) * 0.002 * (1 - holdT * 0.3));
     return;
   }
 
+  // After 10s — hold on eyes
   const eyesElapsed = totalTime - seniorPovEnd;
-  const eyeHoldPos = seniorEye.clone().add(new THREE.Vector3(0.022, 0.014, 0.004));
-  const tremble = Math.min(1, eyesElapsed * 0.12);
-  eyeHoldPos.y += Math.sin(totalTime * 0.3) * 0.0014 + Math.sin(totalTime * 2.2) * 0.0004 * tremble;
-  eyeHoldPos.x += Math.cos(totalTime * 0.16) * 0.001 + Math.cos(totalTime * 1.8) * 0.0003 * tremble;
+  const eyeHoldPos = seniorEye.clone().lerp(eyeTarget, 0.38).add(new THREE.Vector3(0.01, 0.008, 0));
+  const tremble = Math.min(1, eyesElapsed * 0.1);
+  eyeHoldPos.y += Math.sin(totalTime * 0.3) * 0.001 + Math.sin(totalTime * 2.2) * 0.0003 * tremble;
+  eyeHoldPos.x += Math.cos(totalTime * 0.16) * 0.0008;
   camera.position.copy(eyeHoldPos);
-  camera.fov = THREE.MathUtils.lerp(12.8, 10.4, THREE.MathUtils.smoothstep(eyesElapsed, 0, 8));
+  camera.fov = THREE.MathUtils.lerp(10.4, 9.2, THREE.MathUtils.smoothstep(eyesElapsed, 0, 3));
   camera.updateProjectionMatrix();
-  camera.lookAt(eyeTarget.x, eyeTarget.y + 0.0015, eyeTarget.z);
-  camera.rotateZ(Math.sin(totalTime * 0.4) * 0.0015 * tremble);
+  camera.lookAt(eyeTarget.x, eyeTarget.y + 0.001, eyeTarget.z);
+  camera.rotateZ(Math.sin(totalTime * 0.4) * 0.001 * tremble);
 }
 
   function pickHotspot(candidates, player, activeId) {
