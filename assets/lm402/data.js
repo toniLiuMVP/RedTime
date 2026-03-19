@@ -530,9 +530,9 @@ export const CINEMATIC_TIMELINE = {
   lockWindow: 4.1,
   successWindow: [3.2, 4.4],
   introDuration: 18.2,
-  perfectDuration: 42,
+  perfectDuration: 47,
   perfectOrbitStart: 8,
   perfectOrbitEnd: 22,
-  perfectSeniorPovEnd: 32,
-  perfectLineAt: 32,
+  perfectSeniorPovEnd: 37,
+  perfectLineAt: 37,
 };

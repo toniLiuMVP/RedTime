@@ -725,23 +725,37 @@ function applyWalkingPose(person, stride, sway = 1) {
   if (!pose) {
     return;
   }
-  const legAmp = pose.female ? 0.44 : 0.38;
-  const armAmp = pose.hasPhone ? 0.16 : 0.36;
-  const armDelay = stride * 0.92;
+  // Leg swing — larger amplitude for more natural, full-stride look
+  const legAmp = pose.female ? 0.58 : 0.48;
+  // Arm counter-swing — delayed quarter-cycle for realism
+  const armDelay = Math.sin(Math.asin(Math.max(-1, Math.min(1, stride))) - 0.18);
+  const armAmp = pose.hasPhone ? 0.14 : 0.42;
   pose.leftLeg.rotation.x = stride * legAmp;
   pose.rightLeg.rotation.x = -stride * legAmp;
+  // Slightly bent knees (positive rotation) when leg is behind
+  pose.leftLeg.rotation.z = 0.02 + Math.max(0, stride) * 0.04;
+  pose.rightLeg.rotation.z = -0.02 - Math.max(0, -stride) * 0.04;
+  // Arm swing
   pose.leftArm.rotation.x = -armDelay * armAmp;
-  pose.rightArm.rotation.x = pose.hasPhone ? -0.56 + stride * 0.08 : armDelay * armAmp;
-  pose.torso.rotation.z = stride * 0.06 * sway;
-  pose.torso.rotation.x = Math.abs(stride) * 0.03;
-  pose.waist.rotation.z = stride * 0.04 * sway;
-  pose.waist.rotation.y = -stride * 0.03 * sway;
-  pose.chest.rotation.y = stride * 0.1 * sway;
-  pose.head.rotation.z = -stride * 0.05 * sway;
-  pose.head.rotation.y = stride * 0.07 * sway;
-  pose.shoulderL.rotation.z = stride * 0.04;
-  pose.shoulderR.rotation.z = -stride * 0.04;
-  person.position.y = Math.abs(stride) * 0.035 + Math.abs(Math.sin(stride * 2)) * 0.008;
+  pose.rightArm.rotation.x = pose.hasPhone ? -0.56 + stride * 0.06 : armDelay * armAmp;
+  // Body rotation and sway — torso counter-rotates to hips for realism
+  pose.torso.rotation.z = -stride * 0.04 * sway;
+  pose.torso.rotation.x = Math.abs(stride) * 0.025;
+  pose.torso.rotation.y = stride * 0.06 * sway;
+  pose.waist.rotation.z = stride * 0.06 * sway;
+  pose.waist.rotation.y = -stride * 0.05 * sway;
+  // Chest follows hips in opposite rotation
+  pose.chest.rotation.y = -stride * 0.08 * sway;
+  // Head stays level but follows gaze direction gently
+  pose.head.rotation.z = stride * 0.028 * sway;
+  pose.head.rotation.y = stride * 0.05 * sway;
+  // Shoulder roll
+  pose.shoulderL.rotation.z = -stride * 0.06;
+  pose.shoulderR.rotation.z = stride * 0.06;
+  // Realistic vertical bob: body rises on push-off, falls on landing (2x per stride cycle)
+  const bob = Math.abs(Math.cos(Math.asin(Math.max(-1, Math.min(1, stride))))) * 0.024;
+  const lateral = stride * 0.016 * sway;
+  person.position.y = bob + Math.abs(stride) * 0.018;
 }
 
 function applyIdlePose(person, time, emphasis = 1) {
@@ -1237,6 +1251,19 @@ export function createLm402Scene(canvas) {
   windowBounce.position.set(classroomMaxX - 3.8, 0.22, scaled(WORLD.classroom.lightWellZ));
   scene.add(windowBounce);
 
+  // Extra lights for new end-wall glass windows (z1 back and z2 front)
+  const backEndWindowLight = new THREE.PointLight(0xfff4e0, 1.44, 38, 2);
+  backEndWindowLight.position.set((classroomMinX + classroomMaxX) / 2, 1.82, lm402Z1 + 1.6);
+  scene.add(backEndWindowLight);
+
+  const frontEndWindowLight = new THREE.PointLight(0xfffaeb, 1.22, 34, 2);
+  frontEndWindowLight.position.set((classroomMinX + classroomMaxX) / 2, 1.82, lm402Z2 - 1.6);
+  scene.add(frontEndWindowLight);
+
+  const midClassLight = new THREE.PointLight(0xffecc4, 0.72, 32, 2);
+  midClassLight.position.set((classroomMinX + classroomMaxX) / 2, 2.6, (lm402Z1 + lm402Z2) / 2);
+  scene.add(midClassLight);
+
   const corridorBounce = new THREE.PointLight(0xf0e8dd, 0.48, 22, 2);
   corridorBounce.position.set(corridorCenterX, 0.18, scaled(WORLD.frontDoor.center.z - 60));
   scene.add(corridorBounce);
@@ -1422,41 +1449,86 @@ export function createLm402Scene(canvas) {
   parapetShadow.rotation.x = -Math.PI / 2;
   worldGroup.add(parapetShadow);
 
-  const stairWoodMat = new THREE.MeshStandardMaterial({ color: "#b08d67", map: woodTex, roughness: 0.82, metalness: 0.03 });
-  const stairRailMat = new THREE.MeshStandardMaterial({ color: "#f1ece3", map: wallTex, roughness: 0.84, metalness: 0.02 });
+  const stairWoodMat = new THREE.MeshStandardMaterial({ color: "#b08d67", map: woodTex, roughness: 0.78, metalness: 0.04 });
+  const stairRailMat = new THREE.MeshPhysicalMaterial({ color: "#ded4c2", roughness: 0.56, metalness: 0.06, clearcoat: 0.14 });
+  const stairRiserMat = new THREE.MeshStandardMaterial({ color: "#d8cfc2", roughness: 0.88, metalness: 0.01 });
+  const balusterMat = new THREE.MeshPhysicalMaterial({ color: "#c8bfaf", roughness: 0.48, metalness: 0.08, clearcoat: 0.18 });
+
   const stairZones = [
     { id: "back_stair", z1: backStairZ1, z2: backStairZ2, direction: -1 },
     { id: "front_stair", z1: frontStairZ1, z2: frontStairZ2, direction: 1 },
   ];
   stairZones.forEach((zone) => {
     const zoneCenter = (zone.z1 + zone.z2) / 2;
-    const landing = new THREE.Mesh(new THREE.BoxGeometry(corridorWidth - 0.28, 0.08, zone.z2 - zone.z1), corridorFloorMat);
-    landing.position.set(corridorCenterX, FLOOR_Y - 0.035, zoneCenter);
+    const zoneLen = zone.z2 - zone.z1;
+
+    // Landing platform
+    const landing = new THREE.Mesh(new THREE.BoxGeometry(corridorWidth - 0.28, 0.06, zoneLen), stairRiserMat);
+    landing.position.set(corridorCenterX, FLOOR_Y - 0.03, zoneCenter);
     landing.receiveShadow = true;
     worldGroup.add(landing);
 
-    const stairCount = 7;
+    const stairCount = 9;
+    const stepW = corridorWidth * 0.86;
+    const stepH = 0.14;
+    const stepD = (zoneLen - 0.24) / stairCount;
+
     for (let index = 0; index < stairCount; index += 1) {
-      const t = index / stairCount;
-      const treadZ =
-        zone.direction > 0
-          ? THREE.MathUtils.lerp(zone.z1 + 0.12, zone.z2 - 0.18, t)
-          : THREE.MathUtils.lerp(zone.z2 - 0.12, zone.z1 + 0.18, t);
-      const step = new THREE.Mesh(
-        new THREE.BoxGeometry(corridorWidth * 0.74, 0.09, 0.18),
-        stairWoodMat
-      );
-      step.position.set(corridorCenterX - 0.08, FLOOR_Y - 0.08 - index * 0.064, treadZ);
-      step.receiveShadow = true;
-      step.castShadow = false;
-      worldGroup.add(step);
+      const zOffset = zone.direction > 0
+        ? THREE.MathUtils.lerp(zone.z1 + 0.12, zone.z2 - 0.24, index / stairCount)
+        : THREE.MathUtils.lerp(zone.z2 - 0.12, zone.z1 + 0.24, index / stairCount);
+      const stepY = FLOOR_Y - stepH * 0.5 - index * stepH;
+
+      // Tread (horizontal surface)
+      const tread = new THREE.Mesh(new THREE.BoxGeometry(stepW, 0.04, stepD + 0.02), stairWoodMat);
+      tread.position.set(corridorCenterX, stepY, zOffset + zone.direction * stepD * 0.5);
+      tread.receiveShadow = true;
+      tread.castShadow = false;
+      worldGroup.add(tread);
+
+      // Riser (vertical face)
+      const riser = new THREE.Mesh(new THREE.BoxGeometry(stepW, stepH, 0.02), stairRiserMat);
+      riser.position.set(corridorCenterX, stepY - stepH * 0.5, zOffset + zone.direction * 0.01);
+      worldGroup.add(riser);
     }
 
-    const stairRail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.96, zone.z2 - zone.z1 - 0.22), stairRailMat);
-    stairRail.position.set(corridorMinX + 1.18, 0.44, zoneCenter);
-    worldGroup.add(stairRail);
+    // Handrail system — top rail
+    const railH = 0.9;
+    const topRail = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, zoneLen - 0.18), stairRailMat);
+    topRail.position.set(corridorMinX + 0.9, FLOOR_Y + railH - stepH * stairCount * 0.5, zoneCenter);
+    worldGroup.add(topRail);
 
-    const stairWall = new THREE.Mesh(new THREE.BoxGeometry(0.22, corridorHeight, zone.z2 - zone.z1), corridorWallMat);
+    const bottomRail = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, zoneLen - 0.18), balusterMat);
+    bottomRail.position.set(corridorMinX + 0.9, FLOOR_Y + railH * 0.3 - stepH * stairCount * 0.5, zoneCenter);
+    worldGroup.add(bottomRail);
+
+    // Balusters (vertical posts every ~0.22m)
+    const balusterSpacing = 0.22;
+    const balusterCount = Math.floor((zoneLen - 0.3) / balusterSpacing);
+    for (let bi = 0; bi <= balusterCount; bi++) {
+      const bz = zone.z1 + 0.15 + (bi / balusterCount) * (zoneLen - 0.3);
+      const bHeight = railH * 0.9;
+      const baluster = new THREE.Mesh(new THREE.BoxGeometry(0.03, bHeight, 0.03), balusterMat);
+      baluster.position.set(corridorMinX + 0.9, FLOOR_Y - stepH * stairCount * 0.5 + bHeight / 2, bz);
+      worldGroup.add(baluster);
+    }
+
+    // Newel posts at each end
+    const newelGeo = new THREE.BoxGeometry(0.08, railH + 0.04, 0.08);
+    const newelStart = new THREE.Mesh(newelGeo, stairRailMat);
+    newelStart.position.set(corridorMinX + 0.9, FLOOR_Y + (railH + 0.04) / 2, zone.z1 + 0.08);
+    worldGroup.add(newelStart);
+    const newelEnd = new THREE.Mesh(newelGeo, stairRailMat);
+    newelEnd.position.set(corridorMinX + 0.9, FLOOR_Y + (railH + 0.04) / 2, zone.z2 - 0.08);
+    worldGroup.add(newelEnd);
+
+    // Wall grab rail on corridor wall side
+    const wallRail = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, zoneLen - 0.22), stairRailMat);
+    wallRail.position.set(minX + 0.06, FLOOR_Y + 0.88, zoneCenter);
+    worldGroup.add(wallRail);
+
+    // Stair wall (back wall of stairwell)
+    const stairWall = new THREE.Mesh(new THREE.BoxGeometry(0.22, corridorHeight, zoneLen), corridorWallMat);
     stairWall.position.set(classroomMinX, corridorHeight / 2, zoneCenter);
     stairWall.castShadow = true;
     stairWall.receiveShadow = true;
@@ -1483,26 +1555,124 @@ export function createLm402Scene(canvas) {
     { ...WORLD.backDoor, kind: "back", z1: backDoorZ1, z2: backDoorZ2 },
   ].sort((a, b) => a.z1 - b.z1);
 
-  addBox(
-    worldGroup,
-    occluders,
-    new THREE.BoxGeometry(roomDepth, corridorHeight, wallThickness),
-    wallMat,
-    new THREE.Vector3((classroomMinX + classroomMaxX) / 2, corridorHeight / 2, z1),
-    null,
-    colliders,
-    { minX: classroomMinX, maxX: classroomMaxX, minZ: z1 - wallThickness / 2, maxZ: z1 + wallThickness / 2, label: `${room.id}_back_wall` }
-  );
-  addBox(
-    worldGroup,
-    occluders,
-    new THREE.BoxGeometry(roomDepth, corridorHeight, wallThickness),
-    wallMat,
-    new THREE.Vector3((classroomMinX + classroomMaxX) / 2, corridorHeight / 2, z2),
-    null,
-    colliders,
-    { minX: classroomMinX, maxX: classroomMaxX, minZ: z2 - wallThickness / 2, maxZ: z2 + wallThickness / 2, label: `${room.id}_front_wall` }
-  );
+  // ── Helper: build an end-wall (running along X axis) with 4 large window openings ──
+  // winGap: glass window height range [y1, y2]
+  // doorOpening: { x1, x2 } in scene units (where the door gap is, no wall placed here)
+  const doorMat = new THREE.MeshPhysicalMaterial({
+    color: "#d4c8b4",
+    roughness: 0.62,
+    metalness: 0.04,
+    clearcoat: 0.12,
+    clearcoatRoughness: 0.44,
+  });
+
+  const buildEndWall = (wallZ, inwardDir, doorXCenter, doorXHalfWidth) => {
+    const winY1 = scaled(84);
+    const winY2 = scaled(256);
+    const winH = winY2 - winY1;
+    const winCY = (winY1 + winY2) / 2;
+    const totalX = roomDepth; // classroomMaxX - classroomMinX
+    // 4 windows evenly spaced across the room, with door gap excluded
+    const margins = 0.22;
+    const gap = 0.14; // gap between window frames
+    const doorClearX1 = doorXCenter - doorXHalfWidth - 0.14;
+    const doorClearX2 = doorXCenter + doorXHalfWidth + 0.14;
+
+    // Create window segments across the full wall (skipping over door gap if any)
+    // We create: [classroomMinX..doorClearX1] window zone + [doorClearX2..classroomMaxX] window zone
+    // Then add solid wall above/below window height and at narrow pillars
+    const buildWindowZone = (fromX, toX) => {
+      const zoneWidth = toX - fromX;
+      if (zoneWidth < 0.5) return;
+      const numWin = zoneWidth > 2.0 ? 2 : 1;
+      const winWidth = (zoneWidth - (numWin + 1) * gap) / numWin;
+      for (let wi = 0; wi < numWin; wi++) {
+        const wx = fromX + gap + (winWidth + gap) * wi + winWidth / 2;
+        // Glass
+        const gp = new THREE.Mesh(new THREE.PlaneGeometry(winWidth, winH), glassMat);
+        gp.position.set(wx, winCY, wallZ + inwardDir * 0.045);
+        gp.castShadow = false; gp.receiveShadow = false;
+        worldGroup.add(gp);
+        // Highlight shimmer
+        const hl = createGlowPlane("rgba(255,255,255,1)", winWidth * 0.72, winH * 0.78, 0.07);
+        hl.position.set(wx, winCY + winH * 0.02, wallZ + inwardDir * 0.09);
+        worldGroup.add(hl);
+        // Frame
+        const fr = new THREE.Mesh(new THREE.BoxGeometry(winWidth + 0.12, winH + 0.14, 0.10), beamMat);
+        fr.position.set(wx, winCY, wallZ);
+        worldGroup.add(fr);
+        // Solid wall above window (transom strip)
+        const above = new THREE.Mesh(
+          new THREE.BoxGeometry(winWidth + 0.04, corridorHeight - winY2 + 0.04, wallThickness),
+          wallMat
+        );
+        above.position.set(wx, winY2 + (corridorHeight - winY2) / 2, wallZ);
+        worldGroup.add(above);
+        // Solid wall below window (sill strip)
+        const below = new THREE.Mesh(
+          new THREE.BoxGeometry(winWidth + 0.04, winY1 + 0.02, wallThickness),
+          wallMat
+        );
+        below.position.set(wx, winY1 / 2, wallZ);
+        worldGroup.add(below);
+      }
+      // Narrow pillar at left edge
+      const leftPillar = new THREE.Mesh(new THREE.BoxGeometry(gap, corridorHeight, wallThickness), wallMat);
+      leftPillar.position.set(fromX + gap / 2, corridorHeight / 2, wallZ);
+      worldGroup.add(leftPillar);
+      // Narrow pillar at right edge
+      const rightPillar = leftPillar.clone();
+      rightPillar.position.set(toX - gap / 2, corridorHeight / 2, wallZ);
+      worldGroup.add(rightPillar);
+      // Add collider for this window zone (thin wall)
+      if (inwardDir > 0) {
+        addCollider(colliders, fromX, toX, wallZ - wallThickness / 2, wallZ + wallThickness / 2, "end_wall_win");
+      } else {
+        addCollider(colliders, fromX, toX, wallZ - wallThickness / 2, wallZ + wallThickness / 2, "end_wall_win");
+      }
+    };
+
+    // Left window zone (before door gap)
+    if (doorClearX1 > classroomMinX + 0.5) {
+      buildWindowZone(classroomMinX, doorClearX1);
+    }
+    // Right window zone (after door gap)
+    if (doorClearX2 < classroomMaxX - 0.5) {
+      buildWindowZone(doorClearX2, classroomMaxX);
+    }
+    // Door lintel (solid wall above door opening, full height above door)
+    const lintelY = 2.20; // top of door opening
+    const lintelH = corridorHeight - lintelY;
+    const lintel = new THREE.Mesh(
+      new THREE.BoxGeometry(doorXHalfWidth * 2 + 0.04, lintelH, wallThickness),
+      wallMat
+    );
+    lintel.position.set(doorXCenter, lintelY + lintelH / 2, wallZ);
+    worldGroup.add(lintel);
+    addCollider(colliders, doorXCenter - doorXHalfWidth - 0.02, doorXCenter + doorXHalfWidth + 0.02, wallZ - wallThickness / 2, wallZ + wallThickness / 2, "end_wall_lintel");
+  };
+
+  // ── Helper: add an open door mesh (hinged to one jamb, swung inward 90°) ──
+  const addOpenDoor = (hingeX, hingeZ, swingDir, facingZ) => {
+    const doorW = 0.92; // door leaf width
+    const doorH = 2.18;
+    // Door is swung 90° — hinged at the jamb, flat against the wall
+    const door = new THREE.Mesh(new THREE.BoxGeometry(0.04, doorH, doorW), doorMat);
+    door.position.set(hingeX + swingDir * 0.02, doorH / 2, hingeZ + doorW / 2);
+    door.castShadow = true;
+    door.receiveShadow = true;
+    worldGroup.add(door);
+  };
+
+  // Front door opening: in the corridorWallMat (classroomMinX) at frontDoorZ1..frontDoorZ2
+  // The corridor side wall (classroomMinX) has the door at z ≈ frontDoorZ1..frontDoorZ2
+  // End wall z2 (back of classroom / board wall) — no door on this end wall
+  // End wall z1 — back of classroom (deeper into building) — no door on this end wall either
+  // Doors are on the corridor-side wall (classroomMinX), not the end walls.
+
+  // Front/back end walls — both get 4 windows spanning the room width (no door in end walls)
+  buildEndWall(z1, 1, (classroomMinX + classroomMaxX) / 2, 0); // back wall (no door in end wall)
+  buildEndWall(z2, -1, (classroomMinX + classroomMaxX) / 2, 0); // front wall (no door in end wall, board here)
 
   const leftWindowOpenings = WORLD.leftWallWindows.map((panel) => openingFromPanel(panel, "left"));
   const rightWindowOpenings = WORLD.rightWallWindows.map((panel) => openingFromPanel(panel, "right"));
@@ -1554,7 +1724,12 @@ export function createLm402Scene(canvas) {
     label: "divider_wall",
   });
 
-  /* Door frame meshes removed — doorways are completely open */
+  // ── Physical open doors at front and back door positions ──
+  // Front door: corridor side, door swings into classroom (toward +x)
+  addOpenDoor(classroomMinX, frontDoorZ1 + 0.02, 1, 1);
+  // Back door: corridor side, door swings into classroom (toward +x)
+  addOpenDoor(classroomMinX, backDoorZ1 + 0.02, 1, 1);
+
 
   const plaque = buildTextPlane("LM402", 1.72, 0.42, { bg: "#4a5562", fg: "#fff6de" });
   plaque.position.set(scaled(WORLD.plaque.x), scaled(WORLD.plaque.y), scaled(WORLD.plaque.z));
@@ -2373,20 +2548,27 @@ function applyPerfectEndingCamera(game) {
 
   if (totalTime < orbitEnd) {
     const orbitT = THREE.MathUtils.clamp((totalTime - orbitStart) / (orbitEnd - orbitStart), 0, 1);
-    const slowMidT = orbitT < 0.5 ? orbitT * 0.8 : 0.4 + (orbitT - 0.5) * 1.2;
-    const eased = THREE.MathUtils.smoothstep(THREE.MathUtils.clamp(slowMidT, 0, 1), 0.03, 0.97);
-    const radius = THREE.MathUtils.lerp(orbitRadiusStart, orbitRadiusEnd, eased);
-    const angle = THREE.MathUtils.lerp(orbitStartAngle, orbitStartAngle + Math.PI * 2, eased);
+    // Slow in the first quarter, uniform in the middle, hold at the end
+    const slowT = orbitT < 0.12 ? orbitT * 0.5 : 0.06 + (orbitT - 0.12) * (0.94 / 0.88);
+    const eased = THREE.MathUtils.smoothstep(THREE.MathUtils.clamp(slowT, 0, 1), 0.02, 0.98);
+    // Tight radius so junior is always in frame — start close, pull back slightly for mid-orbit, return close
+    const radiusPulse = 1.0 + Math.sin(eased * Math.PI) * 0.8; // 1.0 → 1.8 → 1.0
+    const radius = 2.0 + radiusPulse;
+    const angle = orbitStartAngle + eased * Math.PI * 2;
+    // Camera height: stays at junior mid-body level and gently rises
+    const camY = THREE.MathUtils.lerp(1.52, 1.82, THREE.MathUtils.smoothstep(orbitT, 0.15, 0.85)) + breatheRise;
     camera.position.set(
       center.x + Math.cos(angle) * radius + breatheSway,
-      THREE.MathUtils.lerp(1.48, 1.74, orbitT) + breatheRise,
+      camY,
       center.z + Math.sin(angle) * radius
     );
-    const lookTarget = center.clone().lerp(eyeTarget, THREE.MathUtils.smoothstep(orbitT, 0.52, 1));
-    camera.fov = THREE.MathUtils.lerp(40, 18, THREE.MathUtils.smoothstep(orbitT, 0.18, 1));
+    // Always look at junior's head — zoom in toward face by the end of orbit
+    const lookTarget = center.clone().lerp(eyeTarget, THREE.MathUtils.smoothstep(orbitT, 0.6, 1.0));
+    camera.fov = THREE.MathUtils.lerp(42, 20, THREE.MathUtils.smoothstep(orbitT, 0.2, 1));
     camera.updateProjectionMatrix();
     camera.lookAt(lookTarget.x, lookTarget.y, lookTarget.z);
-    const orbitRoll = Math.sin(orbitT * Math.PI * 2) * 0.012 * (1 - orbitT);
+    // Gentle cinematic roll
+    const orbitRoll = Math.sin(eased * Math.PI * 2) * 0.008 * (1 - orbitT * 0.7);
     camera.rotateZ(orbitRoll);
     return;
   }

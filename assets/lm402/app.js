@@ -196,6 +196,7 @@ const dom = {
   debugPanel: document.getElementById("debug-panel"),
   debugText: document.getElementById("debug-text"),
   introSkipBtn: document.getElementById("intro-skip-btn"),
+  introFx: document.getElementById("intro-fx"),
 };
 
 function clampLookScalar(value) {
@@ -1243,6 +1244,11 @@ function finishIntro() {
   // Hide skip button when intro naturally ends or is skipped
   if (dom.introSkipBtn) {
     dom.introSkipBtn.hidden = true;
+  }
+  // Deactivate time-travel intro FX overlay
+  if (dom.introFx) {
+    dom.introFx.classList.remove("intro-fx-active");
+    dom.introFx.classList.add("intro-fx-done");
   }
   // Ensure transcript panel is visible at play start
   state.transcriptExpanded = true;
