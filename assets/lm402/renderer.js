@@ -1546,34 +1546,7 @@ export function createLm402Scene(canvas) {
   const winCY = (winY1 + winY2) / 2;
   const pillarW = 0.10;
 
-  // ── Lightweight transparent glass material (alpha-blend, mobile-friendly) ──
-  const glassMat = new THREE.MeshStandardMaterial({
-    color: "#dceeff", roughness: 0.08, metalness: 0.01,
-    transparent: true, opacity: 0.08,
-    side: THREE.DoubleSide, depthWrite: false,
-  });
-  const frameMat = new THREE.MeshStandardMaterial({
-    color: "#e8e0d4", roughness: 0.82, metalness: 0.02,
-  });
 
-  // ── Helper: add glass + frame to an end wall window ──
-  const addEndWallGlass = (cx, wz, ww, inward) => {
-    // Glass pane
-    const glass = new THREE.Mesh(new THREE.PlaneGeometry(ww - 0.06, winH - 0.06), glassMat);
-    glass.position.set(cx, winCY, wz + inward * 0.03);
-    glass.castShadow = false; glass.receiveShadow = false;
-    worldGroup.add(glass);
-    // Slim frame (single box outline, very lightweight)
-    const frame = new THREE.Mesh(new THREE.BoxGeometry(ww + 0.04, winH + 0.04, 0.03), frameMat);
-    frame.position.set(cx, winCY, wz);
-    worldGroup.add(frame);
-    // Sunlight shaft through window (golden glow angled inward)
-    const shaft = createGlowPlane("rgba(255,228,168,1)", ww * 0.7, winH * 1.6, 0.18);
-    shaft.position.set(cx + inward * 1.2, winCY * 0.6, wz + inward * 1.8);
-    shaft.rotation.x = -Math.PI / 3.2;
-    shaft.rotation.z = inward * 0.08;
-    worldGroup.add(shaft);
-  };
 
   // ── Helper: solid strip above/below window zone ──
   const addEndStrip = (x, y, wz, w, h) => {
@@ -1589,7 +1562,7 @@ export function createLm402Scene(canvas) {
     const ww = (totalW - pillarW * (nWin + 1)) / nWin;
     for (let i = 0; i < nWin; i++) {
       const wx = fromX + pillarW + (ww + pillarW) * i + ww / 2;
-      addEndWallGlass(wx, wallZ, ww, inward);
+
       addEndStrip(wx, winY2 + (corridorHeight - winY2) / 2, wallZ, ww + 0.02, corridorHeight - winY2 + 0.02);
       addEndStrip(wx, winY1 / 2, wallZ, ww + 0.02, winY1 + 0.01);
     }
@@ -1617,7 +1590,7 @@ export function createLm402Scene(canvas) {
   const leftWindowOpenings = WORLD.leftWallWindows.map((panel) => openingFromPanel(panel, "left"));
   const rightWindowOpenings = WORLD.rightWallWindows.map((panel) => openingFromPanel(panel, "right"));
   const doorOpenings = openings.map((door) => ({
-    z1: door.z1 - 0.50, z2: door.z2 + 0.50, y1: 0, y2: 2.50,
+    z1: door.z1 - 0.50, z2: door.z2 + 0.50, y1: 0, y2: corridorHeight,
   }));
 
   buildWallWithOpenings({
@@ -1645,44 +1618,7 @@ export function createLm402Scene(canvas) {
     material: corridorWallMat, label: "divider_wall",
   });
 
-  // ═══ SIDE WALL GLASS WINDOWS (right + left walls) ═══
-  WORLD.rightWallWindows.forEach((panel) => {
-    const cz = scaled(panel.z);
-    const h = scaled(panel.y2 - panel.y1);
-    const cy = scaled((panel.y1 + panel.y2) / 2);
-    const w = scaled(panel.width);
-    const glass = new THREE.Mesh(new THREE.PlaneGeometry(w - 0.06, h - 0.06), glassMat);
-    glass.position.set(classroomMaxX - 0.04, cy, cz);
-    glass.rotation.y = -Math.PI / 2;
-    glass.castShadow = false; glass.receiveShadow = false;
-    worldGroup.add(glass);
-    const frame = new THREE.Mesh(new THREE.BoxGeometry(0.03, h + 0.04, w + 0.04), frameMat);
-    frame.position.set(classroomMaxX - 0.02, cy, cz);
-    worldGroup.add(frame);
-    // Sun shaft through right-wall window
-    const shaft = createGlowPlane("rgba(255,224,160,1)", w * 0.8, h * 1.8, 0.14);
-    shaft.position.set(classroomMaxX - 2.4, cy * 0.5, cz);
-    shaft.rotation.x = -Math.PI / 3.4;
-    shaft.rotation.z = -0.22;
-    worldGroup.add(shaft);
-  });
 
-  WORLD.leftWallWindows.forEach((panel) => {
-    const cz = scaled(panel.z);
-    const h = scaled(panel.y2 - panel.y1);
-    const cy = scaled((panel.y1 + panel.y2) / 2);
-    const w = scaled(panel.width);
-    const glass = new THREE.Mesh(new THREE.PlaneGeometry(w - 0.06, h - 0.06), glassMat);
-    glass.position.set(classroomMinX + 0.04, cy, cz);
-    glass.rotation.y = Math.PI / 2;
-    glass.castShadow = false; glass.receiveShadow = false;
-    worldGroup.add(glass);
-    const frame = new THREE.Mesh(new THREE.BoxGeometry(0.03, h + 0.04, w + 0.04), frameMat);
-    frame.position.set(classroomMinX + 0.02, cy, cz);
-    worldGroup.add(frame);
-  });
-
-  // Doorways completely open — no door meshes
 
 
   const plaque = buildTextPlane("LM402", 1.72, 0.42, { bg: "#4a5562", fg: "#fff6de" });
@@ -2077,18 +2013,7 @@ export function createLm402Scene(canvas) {
   });
   introGroup.add(introDaughter);
 
-  const introSenior = createPerson({
-    torso: "#f5f7fb",
-    torsoAccent: "#dde4ee",
-    legs: "#28313e",
-    skin: "#ecd0c1",
-    hair: "#20181b",
-    shoes: "#f3f5f8",
-    female: false,
-    phone: false,
-    scale: 1.07,
-  });
-  introGroup.add(introSenior);
+
 
   const introAura = createGlowPlane("rgba(255,116,142,1)", 1.8, 2.4, 0.44);
   const introBloom = createGlowPlane("rgba(255,223,176,1)", 5.8, 4.6, 0.28);
@@ -2208,7 +2133,7 @@ export function createLm402Scene(canvas) {
     junior.visible = !isIntro;
     fatherEcho.visible = !isIntro && game.characters.fatherEcho.alpha > 0.02;
     auntEcho.visible = !isIntro && game.characters.auntEcho.alpha > 0.02;
-    introSenior.visible = isIntro;
+
     introDaughter.visible = isIntro;
     introAura.visible = isIntro;
     introBloom.visible = isIntro;
@@ -2234,7 +2159,7 @@ export function createLm402Scene(canvas) {
 
     resetCharacterPose(senior);
     resetCharacterPose(junior);
-    resetCharacterPose(introSenior);
+
     resetCharacterPose(introDaughter);
 
     if (isIntro) {
@@ -2243,12 +2168,12 @@ export function createLm402Scene(canvas) {
       const seniorWalkT = THREE.MathUtils.smoothstep(game.endingSequence.time, 0.12, 11.7);
       const juniorWalkT = THREE.MathUtils.smoothstep(game.endingSequence.time, 0.24, 7.7);
       if (game.endingSequence.time < 11.7) {
-        applyWalkingPose(senior, Math.sin(game.endingSequence.time * 5.04) * 0.9, 0.9);
+        applyWalkingPose(senior, Math.sin(game.endingSequence.time * 3.53) * 0.9, 0.9);
       } else {
         applyIdlePose(senior, game.time, 0.8);
       }
       if (game.endingSequence.time < 7.7) {
-        applyWalkingPose(junior, Math.sin(game.endingSequence.time * 4.62 + 0.8) * 0.84, 0.7);
+        applyWalkingPose(junior, Math.sin(game.endingSequence.time * 3.23 + 0.8) * 0.84, 0.7);
       } else {
         applyIdlePose(junior, game.time * 0.84, 0.92);
       }
@@ -2347,15 +2272,6 @@ function applyIntroCamera(intro) {
     introWake.lookAt(camera.position);
     introWake.material.opacity = THREE.MathUtils.lerp(0.42, 0.08, progress);
 
-    const seniorWalkT = THREE.MathUtils.smoothstep(progress, 0.56, 0.96);
-    const seniorStart = new THREE.Vector3(scaled(-474), 0, scaled(WORLD.stairs.front.landingZ + 8));
-    const seniorEnd = new THREE.Vector3(scaled(-520), 0, scaled(WORLD.frontDoor.center.z - 286));
-    introSenior.position.lerpVectors(seniorStart, seniorEnd, seniorWalkT);
-    introSenior.rotation.y = Math.atan2(
-      -(scaled(WORLD.frontDoor.center.x) - introSenior.position.x),
-      -(scaled(WORLD.frontDoor.center.z) - introSenior.position.z)
-    );
-    applyWalkingPose(introSenior, Math.sin(progress * Math.PI * 10.4) * 0.84, 0.92);
   }
 
 function perfectEndingPhase(time) {

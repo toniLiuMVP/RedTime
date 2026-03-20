@@ -1036,6 +1036,11 @@ function applyEffect(effect) {
     resetView();
     audioSystem.playCue("phone");
     setSubtitle("學妹", "「你走到後門。」", 3.6);
+    setTimeout(() => {
+      if (state.mode === "play") {
+        setSubtitle("女兒", "把拔的聲音聽起來好年輕。如果我沿著這條紅線走到後門，我是不是就能看見他們的一眼瞬間？", 5.0);
+      }
+    }, 4000);
     setAmbience("鐘聲剛落，前門那邊傳來探頭和腳步的動靜，風把教室裡的紙邊輕輕掀起。");
     closeDialogue();
     return;
@@ -1050,11 +1055,19 @@ function applyEffect(effect) {
   }
   if (effect === "memory_seat") {
     collectMemory("seat");
+    setSubtitle("女兒", "原來阿姨當時就是站在這格光裡。用 29 歲的身體、18 歲的心跳，等著把拔走過來。", 5.0);
     closeDialogue();
     return;
   }
   if (effect === "memory_notes") {
     collectMemory("notes");
+    audioSystem.playCue("thread");
+    setTimeout(() => {
+      if (state.mode === "play") setSubtitle("把拔（心底的聲音）", "「這一次，依然再次遇見妳。」", 3.5);
+    }, 500);
+    setTimeout(() => {
+      if (state.mode === "play") setSubtitle("女兒", "原來阿姨當時在腦海裡開了一場『意識菜市場』會議，才緊張地把那句『你走到後門』練得這麼穩。", 5.0);
+    }, 4200);
     closeDialogue();
     return;
   }
@@ -1068,6 +1081,17 @@ function applyEffect(effect) {
   }
   if (effect === "memory_backdoor") {
     collectMemory("backdoor");
+    closeDialogue();
+    return;
+  }
+  if (effect === "memory_aunt_market") {
+    setSubtitle("女兒", "就像命運阿嬤說的，不同年紀的阿姨都擠在這個菜市場裡，一起保護著這個最重要的時刻。", 4.5);
+    closeDialogue();
+    return;
+  }
+  if (effect === "collect_aunt_market") {
+    collectMemory("aunt_market");
+    setSubtitle("女兒", "我把阿姨在『意識菜市場』裡的溫度，悄悄收進了只有我看得見的時空口袋裡。", 4.5);
     closeDialogue();
     return;
   }
@@ -1089,6 +1113,10 @@ function getInteractionById(id) {
   }
   if (id === "junior" && state.phase !== "eye_contact") {
     return INTERACTIONS.junior;
+  }
+  if (id === "backdoor" && state.phase === "front_call") {
+    // Player chose to find the aunt first — trigger aunt's consciousness market story
+    return INTERACTIONS.aunt_market;
   }
   if (id === "backdoor" && state.phase !== "front_call") {
     return INTERACTIONS.backdoor;
@@ -1272,8 +1300,8 @@ function finishIntro() {
       lookInput: { x: 0, y: 0 },
       isGhostObserver: true,
     };
-    setSubtitle("女兒", "前門來電，要先從那句「妳在哪裡？」開始。", 3.8);
-    setAmbience("十一點的風沿著四樓矮牆和四間教室長度的走廊往後門吹，外面的樹影、前門門洞和教室兩側的陽光一起慢慢亮起來。");
+    setSubtitle("女兒", "把拔站在前門耶，前門不曉得為什麼飛不進去，但好像可以從後門進去找阿姨＾＿＾我要先去找誰勒，好難決定喔:P", 10);
+    setAmbience("十一點的陽光灑在走廊和教室裡，微風輕輕吹過四樓的窗戶，帶著校園裡樹葉的氣味。");
   }
 
   state.subtitleMode = "full";
@@ -1474,8 +1502,8 @@ function setCharacterPose(name, x, z, rotationY, alpha = 1) {
 
 function updateCharacters() {
   if (state.endingSequence?.type === "perfect") {
-    const seniorWalkT = smoothstep(0.18, 8.2, state.endingSequence.time);
-    const juniorWalkT = smoothstep(0.4, 5.6, state.endingSequence.time);
+    const seniorWalkT = smoothstep(0.18, 11.7, state.endingSequence.time);
+    const juniorWalkT = smoothstep(0.4, 7.7, state.endingSequence.time);
     const seniorX = lerp(scale(-334), scale(-318), seniorWalkT * 0.82);
     const seniorZ = lerp(scale(WORLD.frontDoor.center.z - 44), scale(WORLD.backDoor.center.z + 4), seniorWalkT);
     const juniorX = lerp(scale(1896), scale(64), juniorWalkT);
@@ -1618,7 +1646,7 @@ function updateEndingSequence(dt) {
     // Line 2: t=6~10 「這一次，依然再次遇見妳。」
     if (!state.flags.perfectLine2Played && state.endingSequence.time >= (CINEMATIC_TIMELINE.perfectLine2At ?? 6)) {
       state.flags.perfectLine2Played = true;
-      setSubtitle("學長", "這一次，依然再次遇見妳。", 5.0);
+      setSubtitle("把拔（心底的聲音）", "這一次，依然再次遇見妳。", 5.0);
     }
     if (state.endingSequence.time > (CINEMATIC_TIMELINE.perfectDuration + 0.35) && dom.endingOverlay.hidden) {
       finishEndingSequence();
