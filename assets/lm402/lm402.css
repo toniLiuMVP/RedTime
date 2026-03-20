@@ -636,7 +636,8 @@ a{text-decoration:none}
   text-transform:uppercase;
 }
 .transcript-box{
-  display:grid;
+  display:flex;
+  flex-direction:column;
   gap:12px;
   min-height:132px;
   max-height:var(--transcript-height);
@@ -650,6 +651,7 @@ a{text-decoration:none}
 }
 .transcript-head{
   display:flex;
+  flex-shrink:0;
   align-items:flex-start;
   justify-content:space-between;
   gap:12px;
@@ -661,9 +663,11 @@ a{text-decoration:none}
   font-size:12px;
 }
 .transcript-list{
+  flex:1;
   min-height:0;
-  overflow:auto;
-  display:grid;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
   gap:8px;
   padding-right:4px;
   scrollbar-width:thin;
@@ -1299,7 +1303,7 @@ body.landscape-prompt .debug-panel{
   }
   .transcript-box{
     min-height:88px;
-    max-height:124px;
+    max-height:40vh;
     padding:8px 10px 8px;
     border-radius:18px;
   }
