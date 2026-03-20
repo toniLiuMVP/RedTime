@@ -1244,13 +1244,23 @@ body.landscape-prompt .debug-panel{
     display:none !important;
   }
   .subtitle-box{
-    min-height:max(56px,calc(var(--rail-min-height) + 2px));
+    position:fixed !important;
+    top:env(safe-area-inset-top, 8px) !important;
+    left:50% !important;
+    transform:translateX(-50%);
+    width:min(420px,calc(100vw - 24px));
+    min-height:max(48px,calc(var(--rail-min-height) + 2px));
     grid-template-columns:1fr;
-    padding:8px 10px 9px;
+    padding:8px 12px 9px;
     gap:4px;
-    max-width:100%;
-    box-shadow:0 12px 28px rgba(0,0,0,.18);
-    background:linear-gradient(180deg,rgba(8,11,16,.76),rgba(8,10,14,.56));
+    max-width:calc(100vw - 24px);
+    box-shadow:0 8px 24px rgba(0,0,0,.22);
+    background:linear-gradient(180deg,rgba(8,11,16,.78),rgba(8,10,14,.58));
+    -webkit-backdrop-filter:none;
+    backdrop-filter:none;
+    border-radius:14px;
+    z-index:9999;
+    pointer-events:auto;
   }
   .subtitle-box .dock-kicker{font-size:9px}
   .subtitle-box .dock-copy{
@@ -1261,9 +1271,11 @@ body.landscape-prompt .debug-panel{
     max-height:5.8em;
   }
   .bottom-dock.hidden-subtitle .subtitle-box{
-    min-height:8px;
-    width:min(70px,20vw);
-    opacity:.03;
+    min-height:0;
+    width:0;
+    opacity:0;
+    pointer-events:none;
+    overflow:hidden;
   }
   .transcript-dock{
     position:fixed;
