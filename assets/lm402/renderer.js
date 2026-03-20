@@ -147,6 +147,98 @@ function createGlowPlane(color, width, height, opacity = 0.35) {
   return new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
 }
 
+function createRealisticJuniorHologram() {
+  const group = new THREE.Group();
+  group.userData.baseY = 0;
+
+  const holoMat = new THREE.MeshPhysicalMaterial({
+    color: 0xffffff,
+    metalness: 0.1,
+    roughness: 0.2,
+    transmission: 0.8,
+    thickness: 0.5,
+    transparent: true,
+    opacity: 0.9,
+    emissive: 0x4488ff,
+    emissiveIntensity: 0.4,
+    clearcoat: 1.0,
+    side: THREE.DoubleSide
+  });
+
+  holoMat.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <dithering_fragment>',
+      `
+      #include <dithering_fragment>
+      float slice = sin(vWorldPosition.y * 120.0 - cameraPosition.y * 10.0) * 0.5 + 0.5;
+      slice = pow(slice, 8.0);
+      gl_FragColor.rgb += vec3(0.2, 0.5, 1.0) * slice * 0.8;
+      gl_FragColor.a *= (0.7 + slice * 0.3);
+      `
+    );
+    shader.vertexShader = `varying vec3 vWorldPosition;\n` + shader.vertexShader;
+    shader.vertexShader = shader.vertexShader.replace(
+      '#include <worldpos_vertex>',
+      `
+      #include <worldpos_vertex>
+      vWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;
+      `
+    );
+  };
+
+  const hairMat = holoMat.clone(); hairMat.color.setHex(0x221111); hairMat.emissive.setHex(0x112244);
+  const skinMat = holoMat.clone(); skinMat.color.setHex(0xffebe0);
+  const shirtMat = holoMat.clone(); shirtMat.color.setHex(0xffffff); shirtMat.transmission = 0.5;
+  const pantsMat = holoMat.clone(); pantsMat.color.setHex(0x1f344d); pantsMat.transmission = 0.2;
+  const shoesMat = holoMat.clone(); shoesMat.color.setHex(0xeeeeee);
+
+  const headGrp = new THREE.Group(); headGrp.position.set(0, 1.54, 0);
+  const face = new THREE.Mesh(new THREE.SphereGeometry(0.105, 32, 32), skinMat); face.scale.set(1, 1.15, 1.05); headGrp.add(face);
+  const hairBase = new THREE.Mesh(new THREE.SphereGeometry(0.11, 32, 32), hairMat); hairBase.scale.set(1.02, 1.1, 1.05); hairBase.position.set(0, 0.02, -0.01); headGrp.add(hairBase);
+  for(let i=0; i<8; i++) {
+    const bang = new THREE.Mesh(new THREE.CapsuleGeometry(0.015, 0.06, 8, 8), hairMat);
+    bang.position.set(-0.07 + i*0.02, 0.06 - Math.abs(i-3.5)*0.005, 0.1);
+    bang.rotation.z = (i-3.5)*0.1; bang.rotation.x = 0.2; headGrp.add(bang);
+  }
+  const ponytail = new THREE.Mesh(new THREE.CapsuleGeometry(0.035, 0.25, 16, 16), hairMat); ponytail.position.set(0, -0.05, -0.15); ponytail.rotation.x = 0.3;
+  const scrunchie = new THREE.Mesh(new THREE.TorusGeometry(0.04, 0.015, 16, 32), pantsMat); scrunchie.position.set(0, 0.05, -0.12); scrunchie.rotation.x = 1.2;
+  headGrp.add(ponytail, scrunchie); group.add(headGrp); group.userData.head = headGrp;
+
+  const torsoGrp = new THREE.Group(); torsoGrp.position.set(0, 1.15, 0);
+  const chest = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.1, 0.25, 32), shirtMat); chest.position.set(0, 0.15, 0); chest.scale.set(1, 1, 0.7); torsoGrp.add(chest);
+  const abdomen = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.2, 32), shirtMat); abdomen.position.set(0, -0.05, 0); abdomen.scale.set(1, 1, 0.75); torsoGrp.add(abdomen);
+  const collar = new THREE.Mesh(new THREE.TorusGeometry(0.065, 0.015, 16, 32), shirtMat); collar.position.set(0, 0.27, 0.02); collar.rotation.x = 1.3; torsoGrp.add(collar);
+  group.add(torsoGrp);
+
+  const pelvisGrp = new THREE.Group(); pelvisGrp.position.set(0, 0.95, 0);
+  const shorts = new THREE.Mesh(new THREE.CylinderGeometry(0.125, 0.135, 0.18, 32), pantsMat); shorts.scale.set(1, 1, 0.8); pelvisGrp.add(shorts); group.add(pelvisGrp);
+
+  function createLimb(rT, rB, len, mat) {
+    const mesh = new THREE.Mesh(new THREE.CylinderGeometry(rT, rB, len, 32), mat); mesh.position.y = -len/2;
+    const pivot = new THREE.Group(); pivot.add(mesh); return { pivot, mesh };
+  }
+
+  const armL = createLimb(0.035, 0.025, 0.25, shirtMat); armL.pivot.position.set(-0.15, 1.35, 0); armL.pivot.rotation.z = 0.2;
+  const forearmL = createLimb(0.025, 0.02, 0.22, skinMat); forearmL.pivot.position.set(0, -0.25, 0); forearmL.pivot.rotation.x = -0.1;
+  armL.mesh.add(forearmL.pivot); group.add(armL.pivot); group.userData.armL = armL.pivot;
+
+  const armR = createLimb(0.035, 0.025, 0.25, shirtMat); armR.pivot.position.set(0.15, 1.35, 0); armR.pivot.rotation.z = -0.2;
+  const forearmR = createLimb(0.025, 0.02, 0.22, skinMat); forearmR.pivot.position.set(0, -0.25, 0); forearmR.pivot.rotation.x = -0.1;
+  armR.mesh.add(forearmR.pivot); group.add(armR.pivot); group.userData.armR = armR.pivot;
+
+  const legL = createLimb(0.06, 0.045, 0.45, skinMat); legL.pivot.position.set(-0.06, 0.85, 0);
+  const calfL = createLimb(0.04, 0.03, 0.4, skinMat); calfL.pivot.position.set(0, -0.45, 0); legL.mesh.add(calfL.pivot);
+  const shoeL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.05, 0.11), shoesMat); shoeL.position.set(0, -0.4, 0.02); calfL.mesh.add(shoeL);
+  group.add(legL.pivot); group.userData.legL = legL.pivot;
+
+  const legR = createLimb(0.06, 0.045, 0.45, skinMat); legR.pivot.position.set(0.06, 0.85, 0);
+  const calfR = createLimb(0.04, 0.03, 0.4, skinMat); calfR.pivot.position.set(0, -0.45, 0); legR.mesh.add(calfR.pivot);
+  const shoeR = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.05, 0.11), shoesMat); shoeR.position.set(0, -0.4, 0.02); calfR.mesh.add(shoeR);
+  group.add(legR.pivot); group.userData.legR = legR.pivot;
+
+  return group;
+}
+
 function createDoomSprite(frontUrl, sideUrl, backUrl, scaleHeight) {
   const group = new THREE.Group();
   group.userData.isDoomSprite = true;
@@ -2426,10 +2518,7 @@ function applyPerfectEndingCamera(game) {
     }
 
     if (type === "seat" || type === "notes") {
-      activeHologram = createSilhouette({
-        hairColor: "#1a1816", shirtColor: "#f6f4f2", pantsColor: "#283446", shoesColor: "#d8d3cd",
-        echo: true, echoOpacity: 0.8, echoColor: "#88ccff"
-      });
+      activeHologram = createRealisticJuniorHologram();
       if (type === "seat") {
         activeHologram.position.set(23.7, 0, 25.72); // scale(1896), 0, scale(2058)
         activeHologram.rotation.y = 0.03;
