@@ -147,161 +147,6 @@ function createGlowPlane(color, width, height, opacity = 0.35) {
   return new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
 }
 
-function createRealisticJuniorHologram() {
-  const group = new THREE.Group();
-  group.userData.baseY = 0;
-
-  const holoMat = new THREE.MeshPhysicalMaterial({
-    color: 0xffffff,
-    metalness: 0.1,
-    roughness: 0.2,
-    transparent: true,
-    opacity: 0.85,
-    blending: THREE.AdditiveBlending,
-    emissive: 0x2255aa,
-    emissiveIntensity: 0.6,
-    clearcoat: 1.0,
-    side: THREE.DoubleSide
-  });
-
-  holoMat.onBeforeCompile = (shader) => {
-    shader.fragmentShader = shader.fragmentShader.replace(
-      '#include <dithering_fragment>',
-      `
-      #include <dithering_fragment>
-      float slice = sin(vWorldPosition.y * 120.0 - cameraPosition.y * 10.0) * 0.5 + 0.5;
-      slice = pow(slice, 8.0);
-      gl_FragColor.rgb += vec3(0.2, 0.5, 1.0) * slice * 0.8;
-      gl_FragColor.a *= (0.7 + slice * 0.3);
-      `
-    );
-    shader.vertexShader = `varying vec3 vWorldPosition;\n` + shader.vertexShader;
-    shader.vertexShader = shader.vertexShader.replace(
-      '#include <worldpos_vertex>',
-      `
-      #include <worldpos_vertex>
-      vWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;
-      `
-    );
-  };
-
-  const hairMat = holoMat.clone(); hairMat.color.setHex(0x221111); hairMat.emissive.setHex(0x112244);
-  const skinMat = holoMat.clone(); skinMat.color.setHex(0xffebe0); skinMat.emissive.setHex(0x331111);
-  const shirtMat = holoMat.clone(); shirtMat.color.setHex(0xffffff); shirtMat.opacity = 0.9;
-  const pantsMat = holoMat.clone(); pantsMat.color.setHex(0x1f344d); pantsMat.opacity = 0.95;
-  const shoesMat = holoMat.clone(); shoesMat.color.setHex(0xeeeeee);
-
-  const headGrp = new THREE.Group(); headGrp.position.set(0, 1.54, 0);
-  const face = new THREE.Mesh(new THREE.SphereGeometry(0.105, 32, 32), skinMat); face.scale.set(1, 1.15, 1.05); headGrp.add(face);
-  const hairBase = new THREE.Mesh(new THREE.SphereGeometry(0.11, 32, 32), hairMat); hairBase.scale.set(1.02, 1.1, 1.05); hairBase.position.set(0, 0.02, -0.01); headGrp.add(hairBase);
-  for(let i=0; i<8; i++) {
-    const bang = new THREE.Mesh(new THREE.CapsuleGeometry(0.015, 0.06, 8, 8), hairMat);
-    bang.position.set(-0.07 + i*0.02, 0.06 - Math.abs(i-3.5)*0.005, 0.1);
-    bang.rotation.z = (i-3.5)*0.1; bang.rotation.x = 0.2; headGrp.add(bang);
-  }
-  const ponytail = new THREE.Mesh(new THREE.CapsuleGeometry(0.035, 0.25, 16, 16), hairMat); ponytail.position.set(0, -0.05, -0.15); ponytail.rotation.x = 0.3;
-  const scrunchie = new THREE.Mesh(new THREE.TorusGeometry(0.04, 0.015, 16, 32), pantsMat); scrunchie.position.set(0, 0.05, -0.12); scrunchie.rotation.x = 1.2;
-  headGrp.add(ponytail, scrunchie); group.add(headGrp); group.userData.head = headGrp;
-
-  const torsoGrp = new THREE.Group(); torsoGrp.position.set(0, 1.15, 0);
-  const chest = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.1, 0.25, 32), shirtMat); chest.position.set(0, 0.15, 0); chest.scale.set(1, 1, 0.7); torsoGrp.add(chest);
-  const abdomen = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.2, 32), shirtMat); abdomen.position.set(0, -0.05, 0); abdomen.scale.set(1, 1, 0.75); torsoGrp.add(abdomen);
-  const collar = new THREE.Mesh(new THREE.TorusGeometry(0.065, 0.015, 16, 32), shirtMat); collar.position.set(0, 0.27, 0.02); collar.rotation.x = 1.3; torsoGrp.add(collar);
-  group.add(torsoGrp);
-
-  const pelvisGrp = new THREE.Group(); pelvisGrp.position.set(0, 0.95, 0);
-  const shorts = new THREE.Mesh(new THREE.CylinderGeometry(0.125, 0.135, 0.18, 32), pantsMat); shorts.scale.set(1, 1, 0.8); pelvisGrp.add(shorts); group.add(pelvisGrp);
-
-  function createLimb(rT, rB, len, mat) {
-    const mesh = new THREE.Mesh(new THREE.CylinderGeometry(rT, rB, len, 32), mat); mesh.position.y = -len/2;
-    const pivot = new THREE.Group(); pivot.add(mesh); return { pivot, mesh };
-  }
-
-  const armL = createLimb(0.035, 0.025, 0.25, shirtMat); armL.pivot.position.set(-0.15, 1.35, 0); armL.pivot.rotation.z = 0.2;
-  const forearmL = createLimb(0.025, 0.02, 0.22, skinMat); forearmL.pivot.position.set(0, -0.25, 0); forearmL.pivot.rotation.x = -0.1;
-  armL.mesh.add(forearmL.pivot); group.add(armL.pivot); group.userData.armL = armL.pivot;
-
-  const armR = createLimb(0.035, 0.025, 0.25, shirtMat); armR.pivot.position.set(0.15, 1.35, 0); armR.pivot.rotation.z = -0.2;
-  const forearmR = createLimb(0.025, 0.02, 0.22, skinMat); forearmR.pivot.position.set(0, -0.25, 0); forearmR.pivot.rotation.x = -0.1;
-  armR.mesh.add(forearmR.pivot); group.add(armR.pivot); group.userData.armR = armR.pivot;
-
-  const legL = createLimb(0.06, 0.045, 0.45, skinMat); legL.pivot.position.set(-0.06, 0.85, 0);
-  const calfL = createLimb(0.04, 0.03, 0.4, skinMat); calfL.pivot.position.set(0, -0.45, 0); legL.mesh.add(calfL.pivot);
-  const shoeL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.05, 0.11), shoesMat); shoeL.position.set(0, -0.4, 0.02); calfL.mesh.add(shoeL);
-  group.add(legL.pivot); group.userData.legL = legL.pivot;
-
-  const legR = createLimb(0.06, 0.045, 0.45, skinMat); legR.pivot.position.set(0.06, 0.85, 0);
-  const calfR = createLimb(0.04, 0.03, 0.4, skinMat); calfR.pivot.position.set(0, -0.45, 0); legR.mesh.add(calfR.pivot);
-  const shoeR = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.05, 0.11), shoesMat); shoeR.position.set(0, -0.4, 0.02); calfR.mesh.add(shoeR);
-  group.add(legR.pivot); group.userData.legR = legR.pivot;
-
-  return group;
-}
-
-function createDoomSprite(frontUrl, sideUrl, backUrl, scaleHeight) {
-  const group = new THREE.Group();
-  group.userData.isDoomSprite = true;
-  group.userData.baseY = 0;
-  const textures = { front: null, side: null, back: null };
-
-  function processTex(url, key) {
-    const img = new Image();
-    img.src = url;
-    img.crossOrigin = "Anonymous";
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width; canvas.height = img.height;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0);
-      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imgData.data;
-      const w = canvas.width, h = canvas.height;
-      const visited = new Uint8Array(w * h);
-      const stack = [];
-      const pushV = (x, y) => {
-        if(x<0||x>=w||y<0||y>=h) return;
-        const idx = y*w+x; if(visited[idx]) return;
-        const p = idx*4;
-        if(data[p]>220 && data[p+1]>220 && data[p+2]>220) {
-          visited[idx] = 1; data[p+3] = 0; stack.push(x, y);
-        }
-      };
-      for(let x=0; x<w; x++){ pushV(x,0); pushV(x,h-1); }
-      for(let y=0; y<h; y++){ pushV(0,y); pushV(w-1,y); }
-      while(stack.length > 0) {
-        const cy = stack.pop(), cx = stack.pop();
-        pushV(cx+1,cy); pushV(cx-1,cy); pushV(cx,cy+1); pushV(cx,cy-1);
-      }
-      ctx.putImageData(imgData, 0, 0);
-      const tex = new THREE.CanvasTexture(canvas);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      textures[key] = tex;
-      if (key === 'front' && group.userData.material) {
-        group.userData.material.map = tex;
-        group.userData.material.needsUpdate = true;
-      }
-    };
-  }
-
-  processTex(frontUrl, 'front');
-  if(sideUrl) processTex(sideUrl, 'side');
-  if(backUrl) processTex(backUrl, 'back');
-
-  const material = new THREE.MeshBasicMaterial({ transparent: true, side: THREE.DoubleSide, alphaTest: 0.05, depthWrite: false });
-  const plane = new THREE.Mesh(new THREE.PlaneGeometry(scaleHeight * 1.777, scaleHeight), material);
-  plane.position.y = scaleHeight / 2;
-  group.add(plane);
-
-  group.userData.textures = textures;
-  group.userData.plane = plane;
-  group.userData.material = material;
-  return group;
-}
-
-
-
-
-
 function createPerson(spec) {
   const group = new THREE.Group();
   group.userData.baseY = 0;
@@ -1717,7 +1562,7 @@ export function createLm402Scene(canvas) {
     const ww = (totalW - pillarW * (nWin + 1)) / nWin;
     for (let i = 0; i < nWin; i++) {
       const wx = fromX + pillarW + (ww + pillarW) * i + ww / 2;
-
+      // Window objects removed — open wall openings only
       addEndStrip(wx, winY2 + (corridorHeight - winY2) / 2, wallZ, ww + 0.02, corridorHeight - winY2 + 0.02);
       addEndStrip(wx, winY1 / 2, wallZ, ww + 0.02, winY1 + 0.01);
     }
@@ -1730,7 +1575,7 @@ export function createLm402Scene(canvas) {
     addCollider(colliders, fromX, toX, wallZ - wallThickness / 2, wallZ + wallThickness / 2, "end_wall");
   };
 
-  // ═══ BACK END WALL (z1) — 4 windows ═══
+  // ═══ BACK END WALL (z1) — 4 windows full width ═══
   buildEndWallWindows(z1, 1, classroomMinX, classroomMaxX, 4);
 
   // ═══ FRONT END WALL (z2) — board center + 2 windows each side ═══
@@ -1741,11 +1586,11 @@ export function createLm402Scene(canvas) {
     buildEndWallWindows(z2, -1, boardX2 + 0.06, classroomMaxX, 2);
   }
 
-  // ═══ SIDE WALLS — with door openings + windows ═══
+  // ═══ LEFT (CORRIDOR) WALL — with door openings + windows ═══
   const leftWindowOpenings = WORLD.leftWallWindows.map((panel) => openingFromPanel(panel, "left"));
   const rightWindowOpenings = WORLD.rightWallWindows.map((panel) => openingFromPanel(panel, "right"));
   const doorOpenings = openings.map((door) => ({
-    z1: door.z1 - 0.50, z2: door.z2 + 0.50, y1: 0, y2: corridorHeight,
+    z1: door.z1 - 0.50, z2: door.z2 + 0.50, y1: 0, y2: 2.50,
   }));
 
   buildWallWithOpenings({
@@ -1773,8 +1618,7 @@ export function createLm402Scene(canvas) {
     material: corridorWallMat, label: "divider_wall",
   });
 
-
-
+  // No door meshes — doorways are completely open for free entry/exit
 
   const plaque = buildTextPlane("LM402", 1.72, 0.42, { bg: "#4a5562", fg: "#fff6de" });
   plaque.position.set(scaled(WORLD.plaque.x), scaled(WORLD.plaque.y), scaled(WORLD.plaque.z));
@@ -1794,6 +1638,21 @@ export function createLm402Scene(canvas) {
   const plaqueLight = new THREE.PointLight(0xfff1cf, 0.34, 6, 2);
   plaqueLight.position.set(classroomMinX + 0.54, scaled(WORLD.plaque.y) + 0.08, scaled(WORLD.plaque.z));
   worldGroup.add(plaqueLight);
+
+  const noticeBoard = new THREE.Mesh(
+    new THREE.BoxGeometry(0.08, 0.92, 1.12),
+    new THREE.MeshStandardMaterial({ color: "#9b744b", map: woodTex, roughness: 0.82, metalness: 0.02 })
+  );
+  noticeBoard.position.set(classroomMinX + 0.02, 1.42, scaled(660));
+  worldGroup.add(noticeBoard);
+
+  const noticeSheet = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.84, 0.62),
+    new THREE.MeshStandardMaterial({ color: "#f4efe5", roughness: 0.94, metalness: 0.01, side: THREE.DoubleSide })
+  );
+  noticeSheet.position.set(classroomMinX + 0.06, 1.42, scaled(660));
+  noticeSheet.rotation.y = Math.PI / 2;
+  worldGroup.add(noticeSheet);
 
   WORLD.floorRooms
     .filter((room) => !room.interactive)
@@ -2140,9 +1999,31 @@ export function createLm402Scene(canvas) {
   );
   introGroup.add(introTube);
 
+  const introDaughter = createPerson({
+    torso: "#f7ddd6",
+    torsoAccent: "#fff3ee",
+    legs: "#f5e7dc",
+    skin: "#efd3c3",
+    hair: "#2d2324",
+    shoes: "#f7efe6",
+    iris: "#3a241f",
+    female: true,
+    scale: 0.96,
+  });
+  introGroup.add(introDaughter);
 
-
-
+  const introSenior = createPerson({
+    torso: "#f5f7fb",
+    torsoAccent: "#dde4ee",
+    legs: "#28313e",
+    skin: "#ecd0c1",
+    hair: "#20181b",
+    shoes: "#f3f5f8",
+    female: false,
+    phone: false,
+    scale: 1.07,
+  });
+  introGroup.add(introSenior);
 
   const introAura = createGlowPlane("rgba(255,116,142,1)", 1.8, 2.4, 0.44);
   const introBloom = createGlowPlane("rgba(255,223,176,1)", 5.8, 4.6, 0.28);
@@ -2262,8 +2143,8 @@ export function createLm402Scene(canvas) {
     junior.visible = !isIntro;
     fatherEcho.visible = !isIntro && game.characters.fatherEcho.alpha > 0.02;
     auntEcho.visible = !isIntro && game.characters.auntEcho.alpha > 0.02;
-
-
+    introSenior.visible = isIntro;
+    introDaughter.visible = isIntro;
     introAura.visible = isIntro;
     introBloom.visible = isIntro;
     introSpark.visible = isIntro;
@@ -2288,8 +2169,8 @@ export function createLm402Scene(canvas) {
 
     resetCharacterPose(senior);
     resetCharacterPose(junior);
-
-
+    resetCharacterPose(introSenior);
+    resetCharacterPose(introDaughter);
 
     if (isIntro) {
       applyIdlePose(junior, game.time * 0.4, 0.4);
@@ -2297,12 +2178,12 @@ export function createLm402Scene(canvas) {
       const seniorWalkT = THREE.MathUtils.smoothstep(game.endingSequence.time, 0.12, 11.7);
       const juniorWalkT = THREE.MathUtils.smoothstep(game.endingSequence.time, 0.24, 7.7);
       if (game.endingSequence.time < 11.7) {
-        applyWalkingPose(senior, Math.sin(game.endingSequence.time * 3.53) * 0.9, 0.9);
+        applyWalkingPose(senior, Math.sin(game.endingSequence.time * 5.04) * 0.9, 0.9);
       } else {
         applyIdlePose(senior, game.time, 0.8);
       }
       if (game.endingSequence.time < 7.7) {
-        applyWalkingPose(junior, Math.sin(game.endingSequence.time * 3.23 + 0.8) * 0.84, 0.7);
+        applyWalkingPose(junior, Math.sin(game.endingSequence.time * 4.62 + 0.8) * 0.84, 0.7);
       } else {
         applyIdlePose(junior, game.time * 0.84, 0.92);
       }
@@ -2377,6 +2258,15 @@ function applyIntroCamera(intro) {
     introTube.material.emissiveIntensity = THREE.MathUtils.lerp(2.6, 0.62, progress) * (0.8 + threadPulse * 0.2);
     const daughterT = THREE.MathUtils.clamp(progress + 0.03, 0, 1);
     const daughterPos = introCurve.getPoint(daughterT);
+    const daughterNext = introCurve.getPoint(THREE.MathUtils.clamp(daughterT + 0.015, 0, 1));
+    const flyBob = Math.sin(progress * Math.PI * 5.4) * 0.14;
+    const flyDrift = Math.cos(progress * Math.PI * 3.8) * 0.06;
+    introDaughter.position.copy(daughterPos).add(new THREE.Vector3(flyDrift, flyBob, 0));
+    introDaughter.lookAt(daughterNext);
+    introDaughter.rotateY(Math.PI);
+    introDaughter.rotation.z = Math.sin(progress * Math.PI * 4.2) * 0.22;
+    introDaughter.rotation.x = Math.sin(progress * Math.PI * 2.8) * 0.16;
+    applyFlyingPose(introDaughter, progress);
     introAura.position.copy(daughterPos).add(new THREE.Vector3(0, 0.32, -0.18));
     introAura.lookAt(camera.position);
     introAura.material.opacity = THREE.MathUtils.lerp(0.92, 0.24, progress) * (0.8 + threadPulse * 0.2);
@@ -2392,6 +2282,15 @@ function applyIntroCamera(intro) {
     introWake.lookAt(camera.position);
     introWake.material.opacity = THREE.MathUtils.lerp(0.42, 0.08, progress);
 
+    const seniorWalkT = THREE.MathUtils.smoothstep(progress, 0.56, 0.96);
+    const seniorStart = new THREE.Vector3(scaled(-474), 0, scaled(WORLD.stairs.front.landingZ + 8));
+    const seniorEnd = new THREE.Vector3(scaled(-520), 0, scaled(WORLD.frontDoor.center.z - 286));
+    introSenior.position.lerpVectors(seniorStart, seniorEnd, seniorWalkT);
+    introSenior.rotation.y = Math.atan2(
+      -(scaled(WORLD.frontDoor.center.x) - introSenior.position.x),
+      -(scaled(WORLD.frontDoor.center.z) - introSenior.position.z)
+    );
+    applyWalkingPose(introSenior, Math.sin(progress * Math.PI * 10.4) * 0.84, 0.92);
   }
 
 function perfectEndingPhase(time) {
@@ -2518,42 +2417,6 @@ function applyPerfectEndingCamera(game) {
     return result;
   }
 
-  let activeHologram = null;
-  let hologramStartTime = 0;
-
-  function spawnHologram(type, time) {
-    if (activeHologram) {
-      scene.remove(activeHologram);
-      activeHologram = null;
-    }
-
-    if (type === "seat" || type === "notes") {
-      activeHologram = createRealisticJuniorHologram();
-      if (type === "seat") {
-        activeHologram.position.set(23.7, 0, 25.72); // scale(1896), 0, scale(2058)
-        activeHologram.rotation.y = 0.03;
-        applyIdlePose(activeHologram, 0, 1.0);
-      } else if (type === "notes") {
-        activeHologram.position.set(23.7, 0, 25.72);
-        activeHologram.rotation.y = -Math.PI / 2;
-        applyIdlePose(activeHologram, 0, 1.0);
-      }
-    } else if (type === "board") {
-      activeHologram = createSilhouette({
-        phone: true, hairColor: "#11100f", shirtColor: "#323846", pantsColor: "#1d222a", shoesColor: "#383634",
-        echo: true, echoOpacity: 0.8, echoColor: "#88ccff", scale: 1.05
-      });
-      activeHologram.position.set(-4.2, 0, 28.65); // scale(-336), 0, frontDoor.center.z - 42
-      activeHologram.rotation.y = Math.PI / 2;
-      applyIdlePose(activeHologram, 0, 1.0);
-    }
-
-    if (activeHologram) {
-      scene.add(activeHologram);
-      hologramStartTime = time;
-    }
-  }
-
   function render(game) {
     resize();
     const time = game.time ?? 0;
@@ -2597,30 +2460,6 @@ function applyPerfectEndingCamera(game) {
     dust.visible = game.endingSequence?.type !== "perfect";
     dust.rotation.y = time * 0.018;
     dust.position.x = Math.sin(time * 0.12) * 0.08;
-
-    if (activeHologram) {
-      const elapsed = time - hologramStartTime;
-      let targetOpacity = 0;
-      if (elapsed > 5.0 && elapsed <= 6.0) {
-        targetOpacity = (6.0 - elapsed) * 0.8;
-      } else if (elapsed > 1.0 && elapsed <= 5.0) {
-        targetOpacity = 0.8 + Math.sin(time * 4) * 0.12;
-      } else if (elapsed >= 0 && elapsed <= 1.0) {
-        targetOpacity = elapsed * 0.8;
-      } else if (elapsed > 6.0) {
-        scene.remove(activeHologram);
-        activeHologram = null;
-      }
-      
-      if (activeHologram) {
-        activeHologram.position.y = Math.sin(time * 2) * 0.02;
-        activeHologram.traverse((child) => {
-          if (child.material) {
-            child.material.opacity = targetOpacity;
-          }
-        });
-      }
-    }
 
     const stageRect = (canvas.parentElement ?? canvas).getBoundingClientRect();
     const cssRect = canvas.getBoundingClientRect();
@@ -2680,7 +2519,6 @@ function applyPerfectEndingCamera(game) {
     resolveMotion,
     pickHotspot,
     getDebugSnapshot,
-    spawnHologram,
     worldBounds: { minX: minX + 0.26, maxX: maxX - 0.22, minZ: minZ + 0.22, maxZ: maxZ - 0.22 },
   };
 }
