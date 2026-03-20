@@ -1074,7 +1074,7 @@ function applyEffect(effect) {
   if (effect === "advance_rear_wait") {
     state.flags.juniorPrepared = true;
     audioSystem.playCue("thread");
-    setSubtitle("學妹", "「好，那妳等我。」", 3.6);
+    setSubtitle("女兒", "深呼吸，就是這一秒了。", 3.6);
     revealHint("現在去後門，先把自己站穩。");
     closeDialogue();
     return;
@@ -1300,7 +1300,7 @@ function finishIntro() {
       lookInput: { x: 0, y: 0 },
       isGhostObserver: true,
     };
-    setSubtitle("女兒", "把拔站在前門耶，前門不曉得為什麼飛不進去，但好像可以從後門進去找阿姨＾＿＾我要先去找誰勒，好難決定喔:P", 10);
+    setSubtitle("女兒", "把拔站在前門耶，阿姨也在教室裡面，我要飛進誰的心裡呢？", 10);
     setAmbience("十一點的陽光灑在走廊和教室裡，微風輕輕吹過四樓的窗戶，帶著校園裡樹葉的氣味。");
   }
 

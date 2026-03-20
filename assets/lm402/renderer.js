@@ -1640,21 +1640,6 @@ export function createLm402Scene(canvas) {
   plaqueLight.position.set(classroomMinX + 0.54, scaled(WORLD.plaque.y) + 0.08, scaled(WORLD.plaque.z));
   worldGroup.add(plaqueLight);
 
-  const noticeBoard = new THREE.Mesh(
-    new THREE.BoxGeometry(0.08, 0.92, 1.12),
-    new THREE.MeshStandardMaterial({ color: "#9b744b", map: woodTex, roughness: 0.82, metalness: 0.02 })
-  );
-  noticeBoard.position.set(classroomMinX + 0.02, 1.42, scaled(660));
-  worldGroup.add(noticeBoard);
-
-  const noticeSheet = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.84, 0.62),
-    new THREE.MeshStandardMaterial({ color: "#f4efe5", roughness: 0.94, metalness: 0.01, side: THREE.DoubleSide })
-  );
-  noticeSheet.position.set(classroomMinX + 0.06, 1.42, scaled(660));
-  noticeSheet.rotation.y = Math.PI / 2;
-  worldGroup.add(noticeSheet);
-
   WORLD.floorRooms
     .filter((room) => !room.interactive)
     .forEach((room, index) => {
@@ -2000,18 +1985,7 @@ export function createLm402Scene(canvas) {
   );
   introGroup.add(introTube);
 
-  const introDaughter = createPerson({
-    torso: "#f7ddd6",
-    torsoAccent: "#fff3ee",
-    legs: "#f5e7dc",
-    skin: "#efd3c3",
-    hair: "#2d2324",
-    shoes: "#f7efe6",
-    iris: "#3a241f",
-    female: true,
-    scale: 0.96,
-  });
-  introGroup.add(introDaughter);
+
 
 
 
@@ -2134,7 +2108,7 @@ export function createLm402Scene(canvas) {
     fatherEcho.visible = !isIntro && game.characters.fatherEcho.alpha > 0.02;
     auntEcho.visible = !isIntro && game.characters.auntEcho.alpha > 0.02;
 
-    introDaughter.visible = isIntro;
+
     introAura.visible = isIntro;
     introBloom.visible = isIntro;
     introSpark.visible = isIntro;
@@ -2160,7 +2134,7 @@ export function createLm402Scene(canvas) {
     resetCharacterPose(senior);
     resetCharacterPose(junior);
 
-    resetCharacterPose(introDaughter);
+
 
     if (isIntro) {
       applyIdlePose(junior, game.time * 0.4, 0.4);
@@ -2248,15 +2222,6 @@ function applyIntroCamera(intro) {
     introTube.material.emissiveIntensity = THREE.MathUtils.lerp(2.6, 0.62, progress) * (0.8 + threadPulse * 0.2);
     const daughterT = THREE.MathUtils.clamp(progress + 0.03, 0, 1);
     const daughterPos = introCurve.getPoint(daughterT);
-    const daughterNext = introCurve.getPoint(THREE.MathUtils.clamp(daughterT + 0.015, 0, 1));
-    const flyBob = Math.sin(progress * Math.PI * 5.4) * 0.14;
-    const flyDrift = Math.cos(progress * Math.PI * 3.8) * 0.06;
-    introDaughter.position.copy(daughterPos).add(new THREE.Vector3(flyDrift, flyBob, 0));
-    introDaughter.lookAt(daughterNext);
-    introDaughter.rotateY(Math.PI);
-    introDaughter.rotation.z = Math.sin(progress * Math.PI * 4.2) * 0.22;
-    introDaughter.rotation.x = Math.sin(progress * Math.PI * 2.8) * 0.16;
-    applyFlyingPose(introDaughter, progress);
     introAura.position.copy(daughterPos).add(new THREE.Vector3(0, 0.32, -0.18));
     introAura.lookAt(camera.position);
     introAura.material.opacity = THREE.MathUtils.lerp(0.92, 0.24, progress) * (0.8 + threadPulse * 0.2);
