@@ -147,6 +147,66 @@ function createGlowPlane(color, width, height, opacity = 0.35) {
   return new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
 }
 
+function createDoomSprite(frontUrl, sideUrl, backUrl, scaleHeight) {
+  const group = new THREE.Group();
+  group.userData.isDoomSprite = true;
+  group.userData.baseY = 0;
+  const textures = { front: null, side: null, back: null };
+
+  function processTex(url, key) {
+    const img = new Image();
+    img.src = url;
+    img.crossOrigin = "Anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width; canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imgData.data;
+      const w = canvas.width, h = canvas.height;
+      const visited = new Uint8Array(w * h);
+      const stack = [];
+      const pushV = (x, y) => {
+        if(x<0||x>=w||y<0||y>=h) return;
+        const idx = y*w+x; if(visited[idx]) return;
+        const p = idx*4;
+        if(data[p]>220 && data[p+1]>220 && data[p+2]>220) {
+          visited[idx] = 1; data[p+3] = 0; stack.push(x, y);
+        }
+      };
+      for(let x=0; x<w; x++){ pushV(x,0); pushV(x,h-1); }
+      for(let y=0; y<h; y++){ pushV(0,y); pushV(w-1,y); }
+      while(stack.length > 0) {
+        const cy = stack.pop(), cx = stack.pop();
+        pushV(cx+1,cy); pushV(cx-1,cy); pushV(cx,cy+1); pushV(cx,cy-1);
+      }
+      ctx.putImageData(imgData, 0, 0);
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      textures[key] = tex;
+      if (key === 'front' && group.userData.material) {
+        group.userData.material.map = tex;
+        group.userData.material.needsUpdate = true;
+      }
+    };
+  }
+
+  processTex(frontUrl, 'front');
+  if(sideUrl) processTex(sideUrl, 'side');
+  if(backUrl) processTex(backUrl, 'back');
+
+  const material = new THREE.MeshBasicMaterial({ transparent: true, side: THREE.DoubleSide, alphaTest: 0.05, depthWrite: false });
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(scaleHeight * 1.777, scaleHeight), material);
+  plane.position.y = scaleHeight / 2;
+  group.add(plane);
+
+  group.userData.textures = textures;
+  group.userData.plane = plane;
+  group.userData.material = material;
+  return group;
+}
+
 function createPerson(spec) {
   const group = new THREE.Group();
   group.userData.baseY = 0;
@@ -264,7 +324,7 @@ function createPerson(spec) {
   group.add(shoulderL, shoulderR);
 
   const armGeo = new THREE.CapsuleGeometry(spec.female ? 0.048 : 0.056, spec.female ? 0.42 : 0.46, 5, 10);
-  const leftArm = new THREE.Mesh(armGeo, skinMat);
+  const leftArm = new THREE.Mesh(armGeo, referenceJunior ? torsoMat : skinMat);
   leftArm.position.set(spec.female ? -0.228 : -0.266, 1.0, 0.02);
   leftArm.rotation.z = spec.female ? 0.12 : 0.15;
   const rightArm = leftArm.clone();
@@ -1898,19 +1958,12 @@ export function createLm402Scene(canvas) {
     phone: true,
     scale: 1.08,
   });
-  const junior = createPerson({
-    torso: "#fffdfa",
-    torsoAccent: "#ffffff",
-    legs: "#2f5b84",
-    skin: "#f8e2d2",
-    hair: "#4a3330",
-    shoes: "#fffefb",
-    iris: "#604434",
-    female: true,
-    highlight: true,
-    referenceJunior: true,
-    scale: 1.09,
-  });
+  const junior = createDoomSprite(
+    "2005年學妹定稿/2005年學妹正面長袖襯衫定稿特寫.png",
+    "2005年學妹定稿/2005年學妹左側長袖襯衫定稿特寫.png",
+    "2005年學妹定稿/2005年學妹背面長袖襯衫定稿特寫.png",
+    1.62
+  );
   const fatherEcho = createPerson({
     torso: "#f2c49e",
     torsoAccent: "#ffd8b8",
@@ -2363,6 +2416,45 @@ function applyPerfectEndingCamera(game) {
     return result;
   }
 
+  let activeHologram = null;
+  let hologramStartTime = 0;
+
+  function spawnHologram(type, time) {
+    if (activeHologram) {
+      scene.remove(activeHologram);
+      activeHologram = null;
+    }
+
+    if (type === "seat" || type === "notes") {
+      activeHologram = createSilhouette({
+        hairColor: "#1a1816", shirtColor: "#f6f4f2", pantsColor: "#283446", shoesColor: "#d8d3cd",
+        echo: true, echoOpacity: 0.8, echoColor: "#88ccff"
+      });
+      if (type === "seat") {
+        activeHologram.position.set(23.7, 0, 25.72); // scale(1896), 0, scale(2058)
+        activeHologram.rotation.y = 0.03;
+        applyIdlePose(activeHologram, 0, 1.0);
+      } else if (type === "notes") {
+        activeHologram.position.set(23.7, 0, 25.72);
+        activeHologram.rotation.y = -Math.PI / 2;
+        applyIdlePose(activeHologram, 0, 1.0);
+      }
+    } else if (type === "board") {
+      activeHologram = createSilhouette({
+        phone: true, hairColor: "#11100f", shirtColor: "#323846", pantsColor: "#1d222a", shoesColor: "#383634",
+        echo: true, echoOpacity: 0.8, echoColor: "#88ccff", scale: 1.05
+      });
+      activeHologram.position.set(-4.2, 0, 28.65); // scale(-336), 0, frontDoor.center.z - 42
+      activeHologram.rotation.y = Math.PI / 2;
+      applyIdlePose(activeHologram, 0, 1.0);
+    }
+
+    if (activeHologram) {
+      scene.add(activeHologram);
+      hologramStartTime = time;
+    }
+  }
+
   function render(game) {
     resize();
     const time = game.time ?? 0;
@@ -2406,6 +2498,30 @@ function applyPerfectEndingCamera(game) {
     dust.visible = game.endingSequence?.type !== "perfect";
     dust.rotation.y = time * 0.018;
     dust.position.x = Math.sin(time * 0.12) * 0.08;
+
+    if (activeHologram) {
+      const elapsed = time - hologramStartTime;
+      let targetOpacity = 0;
+      if (elapsed > 5.0 && elapsed <= 6.0) {
+        targetOpacity = (6.0 - elapsed) * 0.8;
+      } else if (elapsed > 1.0 && elapsed <= 5.0) {
+        targetOpacity = 0.8 + Math.sin(time * 4) * 0.12;
+      } else if (elapsed >= 0 && elapsed <= 1.0) {
+        targetOpacity = elapsed * 0.8;
+      } else if (elapsed > 6.0) {
+        scene.remove(activeHologram);
+        activeHologram = null;
+      }
+      
+      if (activeHologram) {
+        activeHologram.position.y = Math.sin(time * 2) * 0.02;
+        activeHologram.traverse((child) => {
+          if (child.material) {
+            child.material.opacity = targetOpacity;
+          }
+        });
+      }
+    }
 
     const stageRect = (canvas.parentElement ?? canvas).getBoundingClientRect();
     const cssRect = canvas.getBoundingClientRect();
@@ -2465,6 +2581,7 @@ function applyPerfectEndingCamera(game) {
     resolveMotion,
     pickHotspot,
     getDebugSnapshot,
+    spawnHologram,
     worldBounds: { minX: minX + 0.26, maxX: maxX - 0.22, minZ: minZ + 0.22, maxZ: maxZ - 0.22 },
   };
 }

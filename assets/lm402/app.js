@@ -1047,6 +1047,7 @@ function applyEffect(effect) {
   }
   if (effect === "memory_board" || effect === "memory_board_soft") {
     collectMemory("board");
+    renderer.spawnHologram("board", state.time);
     if (effect === "memory_board") {
       setSubtitle("33 歲的聲音", "十一點整，下課鐘會響。他會先從前門探頭看，可是看不到妳。", 4.2);
     }
@@ -1055,12 +1056,14 @@ function applyEffect(effect) {
   }
   if (effect === "memory_seat") {
     collectMemory("seat");
+    renderer.spawnHologram("seat", state.time);
     setSubtitle("女兒", "原來阿姨當時就是站在這格光裡。用 29 歲的身體、18 歲的心跳，等著把拔走過來。", 5.0);
     closeDialogue();
     return;
   }
   if (effect === "memory_notes") {
     collectMemory("notes");
+    renderer.spawnHologram("notes", state.time);
     audioSystem.playCue("thread");
     setTimeout(() => {
       if (state.mode === "play") setSubtitle("把拔（心底的聲音）", "「這一次，依然再次遇見妳。」", 3.5);
