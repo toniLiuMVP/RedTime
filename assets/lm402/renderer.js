@@ -407,6 +407,7 @@ function createExquisiteJunior(spec) {
   group.add(legR.pivot); group.userData.legR = legR.pivot;
 
   group.traverse((child) => { if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; } });
+  group.scale.setScalar(spec.scale || 0.95);
   return group;
 }
 
@@ -2165,12 +2166,10 @@ export function createLm402Scene(canvas) {
     phone: true,
     scale: 1.08,
   });
-  const junior = createDoomSprite(
-    "2005年學妹定稿/2005年學妹正面長袖襯衫定稿特寫.png",
-    "2005年學妹定稿/2005年學妹左側長袖襯衫定稿特寫.png",
-    "2005年學妹定稿/2005年學妹背面長袖襯衫定稿特寫.png",
-    1.62
-  );
+  const junior = createPerson({
+    referenceJunior: true,
+    female: true
+  });
   const fatherEcho = createPerson({
     torso: "#f2c49e",
     torsoAccent: "#ffd8b8",
