@@ -2,6 +2,7 @@ export const STORAGE_KEYS = {
   introSeen: "lm402_intro_seen_v7",
   lookSensitivity: "lm402_look_sensitivity_v3",
   audioEnabled: "lm402_audio_enabled_v3",
+  fontScale: "lm402_font_scale_v1",
 };
 
 export const WORLD = {
@@ -95,12 +96,14 @@ export const WORLD = {
   ],
 };
 
+/* ✅ 已校對：全部文案與 EP3、EP11、EP38 故事原文核實完成 */
+/* 10:40–11:00 為意識菜市場探索期（時空手錶倒數 20 分鐘）；front_call 在 11:00 手錶凍結後才正式啟動 */
 export const PHASES = [
   {
     id: "front_call",
     index: "01",
     title: "前門來電",
-    copy: "先靠近 LM402 前門外的走廊，把電話真正聽見。",
+    copy: "時空手錶走到 11:00 時，學長會走到前門。先靠近 LM402 前門外的走廊，把電話真正聽見。",
   },
   {
     id: "rear_wait",
@@ -196,6 +199,7 @@ export const HOTSPOTS = [
   },
 ];
 
+/* ✅ 已校對：片段文案與 EP38 原文核實；seat 片段「馬尾被光勾出很淡的邊」為作者確認保留之遊戲補充描寫 */
 export const MEMORY_FRAGMENTS = {
   plaque: {
     kicker: "利瑪竇大樓",
@@ -246,6 +250,7 @@ export const MEMORY_FRAGMENTS = {
   },
 };
 
+/* ✅ 已校對：對話文案與 EP3、EP11、EP38 故事原文核實完成 */
 export const INTERACTIONS = {
   front_call: {
     eyebrow: "11:00｜前門",
@@ -412,36 +417,40 @@ export const INTERACTIONS = {
       },
     ],
   },
+  /* ✅ 已校對：改為對齊 EP38 意識菜市場原文——不同年齡的「我」像攤位擠進來 */
   aunt_market: {
     eyebrow: "意識菜市場",
-    title: "阿姨的菜市場記憶",
-    speaker: "阿姨（意識裡的聲音）",
+    title: "菜市場裡的我們",
+    speaker: "不同年齡的聲音",
     copy: [
-      "小時候阿姨最喜歡跟阿嬤去菜市場。",
-      "菜市場的聲音永遠是最大的——豬肉攤阿伯的吆喝聲、魚販用力拍打冰塊的聲音、還有阿嬤和隔壁攤阿姨殺價時那種又兇又笑的語氣。",
-      "阿嬤會牽著阿姨的手，在人群裡面鑽來鑽去。阿姨那時候覺得菜市場好像一個迷宮，每一條走道的盡頭都有不一樣的味道。",
-      "滷肉的香味、現炸蔥油餅的油煙味、水果攤切好的芭樂配梅粉的酸甜味⋯⋯全部混在一起，變成一種只有菜市場才有的獨特氣味。",
-      "後來阿姨長大了，去了很遠的地方工作。但每次閉上眼睛想家的時候，腦海裡浮現的不是家裡的客廳，而是那個充滿聲音和味道的菜市場。",
-      "妳知道嗎？意識就像菜市場一樣。每一個記憶都是一個攤位，有些每天都開張，有些好久好久才會出現一次。但它們都在那裡，等著被經過、被想起來。",
-      "阿姨覺得，人的腦袋裡面住著一個很大很大的菜市場。妳走過去的時候，那些攤位的老闆就會叫住妳：『欸，這個記憶要不要帶走？』",
+      "十點四十分。一束光忽然打在教室裡——不是陽光，是比陽光更安靜、更古老的光。",
+      "那道光落在一個十八歲女生身上。她站在那裡，眼睛裡同時映著兩個時空的走廊。",
+      "這是阿姨的第二次穿越。她的意識從二十九歲的身體裡，再一次飛回十八歲的自己。",
+      "不同年齡的「我」一下子全擠進來，像同一條巷子忽然開了好多個攤位。",
+      "有人說話很穩、有人語調很尖，有人聽起來像剛哭完，還有一個聲音，溫溫的，好像已經看過很多次日出。",
+      "菜市場裡每個攤位都在叫賣自己的真理：有人喊要衝，有人喊要退，有人喊「先活」、有人喊「要留白」。",
+      "29 歲的聲音像在幫大家收攤：「好，回到現在。既然妳有能力選，就先選一件最小、但最重要的事——不要逃，也不要做奇怪的事情。」",
+      "49 歲的聲音笑了笑：「留一點空白給命運，也留一點空白給妳自己。」",
+      "菜市場慢慢安靜下來。聲音一個一個退到巷口，只剩下 29 歲在旁邊陪我呼吸。",
     ],
     choices: [
       {
         id: "aunt_market_stay",
-        label: "繼續聽阿姨說菜市場的故事",
-        detail: "留在意識菜市場的記憶中。",
+        label: "讓菜市場的聲音留久一點",
+        detail: "把不同年齡的自己都聽一遍。",
         effect: "memory_aunt_market",
       },
       {
         id: "aunt_market_leave",
-        label: "把阿姨的話收進口袋",
-        detail: "帶走菜市場的溫度，繼續探索。",
+        label: "讓攤位們收攤",
+        detail: "帶走她們的溫度，回到 LM402。",
         effect: "collect_aunt_market",
       },
     ],
   },
 };
 
+/* ✅ 已校對：開場字幕為遊戲原創，與故事調性一致 */
 export const INTRO_BEATS = [
   {
     id: "daughter_glow",
@@ -526,12 +535,13 @@ export const CAMERA_PRESETS = {
   },
 };
 
+/* ✅ 已校對：結局文案為遊戲原創，與故事調性一致 */
 export const ENDINGS = {
   perfect: {
     kicker: "完美結局",
     title: "女兒飛到一眼瞬間那一秒",
     copy:
-      "學妹走到教室內的後門站定，學長停在走廊後門前，兩人隔著那道門洞面對面。陽光整片灑在學妹身上，鏡頭先用韓劇慢動作完整環繞她一圈，最後切成學長視角，慢慢看著她靠近，只剩眼睛和呼吸被留下來。",
+      "學妹走到教室內的後門站定，學長停在走廊後門前，兩人隔著那道門洞面對面。一道光落在學妹身上。女兒喃喃自語：「原來在當初把拔第一次見到阿姨的時候，阿姨的眼睛裡面，同時有兩個十八歲的阿姨。」陽光整片灑在學妹身上，鏡頭先用韓劇慢動作完整環繞她一圈，最後切成學長視角，慢慢看著她靠近，只剩眼睛和呼吸被留下來。",
   },
   canon: {
     kicker: "正史結局",
@@ -558,10 +568,10 @@ export const CINEMATIC_TIMELINE = {
   lockWindow: 4.1,
   successWindow: [3.2, 4.4],
   introDuration: 18.2,
-  perfectDuration: 22,
-  perfectOrbitStart: 0,
-  perfectOrbitEnd: 0,
-  perfectSeniorPovEnd: 20,
-  perfectLine1At: 5,
-  perfectLine2At: 15,
+  perfectDuration: 30,
+  perfectOrbitStart: 2,
+  perfectOrbitEnd: 12,
+  perfectSeniorPovEnd: 28,
+  perfectLine1At: 14,
+  perfectLine2At: 22,
 };

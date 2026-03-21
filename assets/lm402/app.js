@@ -20,6 +20,58 @@ const smoothstep = (a, b, x) => {
 };
 const scale = (value) => value * WORLD_SCALE;
 
+/* --- Junior waypoint path (desk-avoidance) --- */
+const JUNIOR_PATH_WAYPOINTS = [
+  { x: scale(1896), z: scale(2058) },                          // seat
+  { x: scale(WORLD.classroom.aisleX), z: scale(2058) },        // slide out to aisle
+  { x: scale(WORLD.classroom.aisleX), z: scale(WORLD.backDoor.center.z) }, // walk down aisle
+  { x: scale(74), z: scale(WORLD.backDoor.center.z - 2) },     // arrive at back door
+];
+
+const JUNIOR_PATH_PERFECT_WAYPOINTS = [
+  { x: scale(1896), z: scale(2058) },
+  { x: scale(WORLD.classroom.aisleX), z: scale(2058) },
+  { x: scale(WORLD.classroom.aisleX), z: scale(WORLD.backDoor.center.z) },
+  { x: scale(64), z: scale(WORLD.backDoor.center.z - 4) },
+];
+
+function waypointPathPosition(waypoints, t) {
+  const clamped = clamp(t, 0, 1);
+  // compute cumulative segment lengths
+  const segLengths = [];
+  let totalLen = 0;
+  for (let i = 1; i < waypoints.length; i++) {
+    const dx = waypoints[i].x - waypoints[i - 1].x;
+    const dz = waypoints[i].z - waypoints[i - 1].z;
+    const len = Math.hypot(dx, dz);
+    segLengths.push(len);
+    totalLen += len;
+  }
+  const targetDist = clamped * totalLen;
+  let accum = 0;
+  for (let i = 0; i < segLengths.length; i++) {
+    if (accum + segLengths[i] >= targetDist || i === segLengths.length - 1) {
+      const segT = segLengths[i] > 0 ? (targetDist - accum) / segLengths[i] : 0;
+      const x = lerp(waypoints[i].x, waypoints[i + 1].x, segT);
+      const z = lerp(waypoints[i].z, waypoints[i + 1].z, segT);
+      const dx = waypoints[i + 1].x - waypoints[i].x;
+      const dz = waypoints[i + 1].z - waypoints[i].z;
+      return { x, z, dx, dz };
+    }
+    accum += segLengths[i];
+  }
+  const last = waypoints[waypoints.length - 1];
+  return { x: last.x, z: last.z, dx: 0, dz: 0 };
+}
+
+function juniorPathPosition(t) {
+  return waypointPathPosition(JUNIOR_PATH_WAYPOINTS, t);
+}
+
+function juniorPerfectPathPosition(t) {
+  return waypointPathPosition(JUNIOR_PATH_PERFECT_WAYPOINTS, t);
+}
+
 const PLAYER_RADIUS = scale(22);
 const PLAYER_EYE_HEIGHT = 1.62;
 const DESKTOP_LOOK_SPEED = 1.9;
@@ -146,6 +198,9 @@ const dom = {
   audioWidget: document.getElementById("audio-widget"),
   audioToggle: document.getElementById("audio-toggle"),
   audioToggleValue: document.getElementById("audio-toggle-value"),
+  fontWidget: document.getElementById("font-widget"),
+  fontToggle: document.getElementById("font-toggle"),
+  fontToggleValue: document.getElementById("font-toggle-value"),
   musicPrompt: document.getElementById("music-prompt"),
   musicPromptButton: document.getElementById("music-prompt-button"),
   perfectEndingBtn: document.getElementById("perfect-ending-btn"),
@@ -197,6 +252,9 @@ const dom = {
   debugText: document.getElementById("debug-text"),
   introSkipBtn: document.getElementById("intro-skip-btn"),
   introFx: document.getElementById("intro-fx"),
+  timeWatch: document.getElementById("time-watch"),
+  timeWatchDisplay: document.getElementById("time-watch-display"),
+  hudTimePill: document.getElementById("hud-time-pill"),
 };
 
 function clampLookScalar(value) {
@@ -458,6 +516,7 @@ const state = {
   memories: new Set(),
   flags: createInitialFlags(),
   characters: createInitialCharacters(),
+  gameTime: { hours: 10, minutes: 40, frozen: false, realElapsed: 0 },
   time: 0,
   phaseClock: 0,
   cinematicGlow: 0,
@@ -798,6 +857,40 @@ function syncAudioUI() {
   dom.audioToggle.setAttribute("aria-pressed", String(state.audioEnabled));
   dom.audioToggleValue.textContent = state.audioEnabled ? "開啟" : "關閉";
   audioSystem.syncPrompt();
+}
+
+/* ── Font Scale ── */
+const FONT_SCALE_OPTIONS = [
+  { key: "small", scale: 0.85, label: "小" },
+  { key: "normal", scale: 1, label: "標準" },
+  { key: "large", scale: 1.15, label: "大" },
+];
+
+function loadFontScaleIndex() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.fontScale);
+    if (saved !== null) {
+      const idx = FONT_SCALE_OPTIONS.findIndex((o) => o.key === saved);
+      if (idx !== -1) return idx;
+    }
+  } catch { /* ignore */ }
+  return 1; // default: normal
+}
+
+let fontScaleIndex = loadFontScaleIndex();
+
+function applyFontScale() {
+  const option = FONT_SCALE_OPTIONS[fontScaleIndex];
+  document.documentElement.style.setProperty("--game-font-scale", String(option.scale));
+  dom.fontToggleValue.textContent = option.label;
+  try {
+    localStorage.setItem(STORAGE_KEYS.fontScale, option.key);
+  } catch { /* ignore */ }
+}
+
+function cycleFontScale() {
+  fontScaleIndex = (fontScaleIndex + 1) % FONT_SCALE_OPTIONS.length;
+  applyFontScale();
 }
 
 function rectSnapshot(node) {
@@ -1509,10 +1602,11 @@ function updateCharacters() {
     const juniorWalkT = smoothstep(0.4, 7.7, state.endingSequence.time);
     const seniorX = lerp(scale(-334), scale(-318), seniorWalkT * 0.82);
     const seniorZ = lerp(scale(WORLD.frontDoor.center.z - 44), scale(WORLD.backDoor.center.z + 4), seniorWalkT);
-    const juniorX = lerp(scale(1896), scale(64), juniorWalkT);
-    const juniorZ = lerp(scale(2058), scale(WORLD.backDoor.center.z - 4), juniorWalkT);
+    const jPos = juniorPerfectPathPosition(juniorWalkT);
+    const juniorX = jPos.x;
+    const juniorZ = jPos.z;
     const seniorFacing = movementRotation(juniorX - seniorX, juniorZ - seniorZ, 0);
-    const juniorFacing = movementRotation(seniorX - juniorX, seniorZ - juniorZ, -Math.PI / 2);
+    const juniorFacing = movementRotation(jPos.dx, jPos.dz, -Math.PI / 2);
     setCharacterPose("senior", seniorX, seniorZ, seniorFacing);
     setCharacterPose("junior", juniorX, juniorZ, juniorFacing);
     setCharacterPose("fatherEcho", scale(-272), scale(WORLD.backDoor.center.z + 2), Math.PI / 2, 0);
@@ -1541,10 +1635,11 @@ function updateCharacters() {
     const juniorT = smoothstep(0.6, 4.8, state.phaseClock);
     const seniorX = lerp(scale(-342), scale(-324), seniorT * 0.84);
     const seniorZ = lerp(scale(WORLD.frontDoor.center.z - 42), scale(WORLD.backDoor.center.z), seniorT);
-    const juniorX = lerp(scale(1896), scale(74), juniorT);
-    const juniorZ = lerp(scale(2058), scale(WORLD.backDoor.center.z - 2), juniorT);
+    const jPos = juniorPathPosition(juniorT);
+    const juniorX = jPos.x;
+    const juniorZ = jPos.z;
     setCharacterPose("senior", seniorX, seniorZ, movementRotation(juniorX - seniorX, juniorZ - seniorZ, -0.12));
-    setCharacterPose("junior", juniorX, juniorZ, movementRotation(seniorX - juniorX, seniorZ - juniorZ, -Math.PI / 2));
+    setCharacterPose("junior", juniorX, juniorZ, movementRotation(jPos.dx, jPos.dz, -Math.PI / 2));
     setCharacterPose("fatherEcho", scale(-272), scale(WORLD.backDoor.center.z + 2), Math.PI / 2, 0);
     setCharacterPose("auntEcho", scale(-116), scale(WORLD.backDoor.center.z + 26), -Math.PI / 2, 0);
     return;
@@ -1840,6 +1935,41 @@ function renderFrame() {
   renderDebugPanel();
 }
 
+function formatGameTime(h, m) {
+  return String(h).padStart(2, "0") + ":" + String(Math.floor(m)).padStart(2, "0");
+}
+
+function updateGameTime(dt) {
+  const gt = state.gameTime;
+  if (gt.frozen) return;
+  if (state.mode !== "play") return;
+
+  gt.realElapsed += dt;
+
+  // 1 real minute = 5 game minutes => 1 real second = 5/60 game minutes
+  const gameMinutesPerRealSecond = 5 / 60;
+  gt.minutes += dt * gameMinutesPerRealSecond;
+
+  // Handle minute overflow
+  while (gt.minutes >= 60) {
+    gt.minutes -= 60;
+    gt.hours += 1;
+  }
+
+  // Freeze at 11:00
+  if (gt.hours > 11 || (gt.hours === 11 && gt.minutes >= 0)) {
+    gt.hours = 11;
+    gt.minutes = 0;
+    gt.frozen = true;
+    if (dom.timeWatch) dom.timeWatch.classList.add("frozen");
+  }
+
+  // Update display
+  const formatted = formatGameTime(gt.hours, gt.minutes);
+  if (dom.timeWatchDisplay) dom.timeWatchDisplay.textContent = formatted;
+  if (dom.hudTimePill) dom.hudTimePill.textContent = formatted + " 陽光";
+}
+
 function tick(now) {
   if (!tick.last) {
     tick.last = now;
@@ -1866,6 +1996,7 @@ function tick(now) {
     updateActiveHotspot();
   }
 
+  updateGameTime(dt);
   audioSystem.update(dt);
   updateCharacterAudio(dt);
   renderFrame();
@@ -2193,6 +2324,8 @@ function bindUI() {
   dom.audioToggle.addEventListener("click", () => {
     audioSystem.setEnabled(!state.audioEnabled);
   });
+  dom.fontToggle.addEventListener("click", cycleFontScale);
+  applyFontScale();
   dom.musicPromptButton.addEventListener("click", () => {
     audioSystem.unlock();
   });
