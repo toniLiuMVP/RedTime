@@ -386,6 +386,32 @@ export const INTERACTIONS = {
       },
     ],
   },
+  junior_prephone: {
+    eyebrow: "10:40 · 意識菜市場",
+    title: "阿姨坐在座位上",
+    speaker: "學妹（內心獨白）",
+    copy: [
+      "她坐在靠窗的座位，馬尾被光勾出很淡的邊。",
+      "白襯衫、牛仔短褲，站得比自己以為的還要穩一點。",
+      "心臟跳好快。外面看起來很鎮定，但裡面所有版本的自己正在七嘴八舌。",
+      "29 歲的聲音說：『坐好。等 11 點鐘響，他會先到前門。然後他會打電話。』",
+      "49 歲的聲音溫溫地說：『不要怕。留一點空白給命運，也留一點空白給妳自己。』",
+    ],
+    choices: [
+      {
+        id: "junior_listen",
+        label: "繼續聽她們說",
+        detail: "讓意識菜市場慢慢開市。",
+        effect: "close_only",
+      },
+      {
+        id: "junior_seat_pre",
+        label: "記住這一格陽光",
+        detail: "把靠窗座位的光收下來。",
+        effect: "memory_seat",
+      },
+    ],
+  },
   junior: {
     eyebrow: "排練過無數次的台詞",
     title: "學妹在教室裡",
