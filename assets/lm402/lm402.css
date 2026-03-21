@@ -1171,14 +1171,18 @@ body.landscape-prompt .debug-panel{
   .objective-prompt{
     position:fixed;
     top:max(8px,env(safe-area-inset-top));
-    width:min(276px,calc(100vw - 16px));
-    padding:10px 12px 11px;
+    left:auto;
+    right:max(8px,env(safe-area-inset-right));
+    transform:none;
+    width:min(246px,calc(100vw * 0.36));
+    padding:8px 12px 10px;
   }
-  .objective-title{font-size:26px}
-  .objective-copy{font-size:13px;line-height:1.48}
+  .objective-title{font-size:22px}
+  .objective-copy{font-size:12px;line-height:1.44}
   .objective-prompt.compact{
     width:auto;
-    left:86px;
+    left:auto;
+    right:max(8px,env(safe-area-inset-right));
     transform:none;
   }
   .speed-widget{
@@ -1225,12 +1229,21 @@ body.landscape-prompt .debug-panel{
     padding:12px;
   }
   .hint-pill{
-    top:82px;
+    top:auto;
+    bottom:calc(var(--controls-clearance) + 56px + var(--bottom-gap));
+    left:50%;
+    transform:translateX(-50%);
   }
   .focus-prompt{
     position:fixed;
-    bottom:calc(var(--controls-clearance) + 74px + var(--bottom-gap));
+    top:max(48px,calc(env(safe-area-inset-top) + 38px));
+    bottom:auto;
+    left:auto;
+    right:max(8px,env(safe-area-inset-right));
+    transform:none;
     padding:8px 12px;
+    max-width:calc(100vw * 0.35);
+    text-align:right;
   }
   .bottom-dock{
     position:fixed;
