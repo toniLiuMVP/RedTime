@@ -13,6 +13,20 @@ const tempBox = new THREE.Box3();
 const tempSize2D = new THREE.Vector2();
 const tempDrawSize2D = new THREE.Vector2();
 
+// Cached vectors/colors to avoid per-frame allocations
+const _introAuraOff = new THREE.Vector3(0, 0.32, -0.18);
+const _introBloomOff = new THREE.Vector3(-0.2, 0.34, -0.48);
+const _introRibbonOff = new THREE.Vector3(-0.14, 0.22, -0.74);
+const _introWakeOff = new THREE.Vector3(0.1, 0.14, -0.56);
+const _sparkCoolColor = new THREE.Color("#e0d8ff");
+const _sparkWarmColor = new THREE.Color("#ffd8a0");
+const _endingCenterOff = new THREE.Vector3(0, 1.5, 0);
+const _endingSeniorEyeOff = new THREE.Vector3(0.03, 1.57, 0.04);
+const _endingShoulderOff = new THREE.Vector3(0.18, 0.08, -0.12);
+const _endingHoldOff = new THREE.Vector3(0.02, 0.012, 0.004);
+const _endingCloseOff = new THREE.Vector3(0.008, 0.006, 0);
+const _endingFaceOff = new THREE.Vector3(0.004, 0.018, 0);
+
 function scaled(value) {
   return value * WORLD_SCALE;
 }
@@ -2600,17 +2614,17 @@ function applyIntroCamera(intro) {
   const daughterT = THREE.MathUtils.clamp(effectiveProgress + 0.03, 0, 1);
   const daughterPos = introCurve.getPoint(daughterT);
 
-  introAura.position.copy(daughterPos).add(new THREE.Vector3(0, 0.32, -0.18));
+  introAura.position.copy(daughterPos).add(_introAuraOff);
   introAura.lookAt(camera.position);
   introAura.material.opacity = THREE.MathUtils.lerp(0.96, 0.22, progress) * (0.8 + threadPulse * 0.2);
 
-  introBloom.position.copy(daughterPos).add(new THREE.Vector3(-0.2, 0.34, -0.48));
+  introBloom.position.copy(daughterPos).add(_introBloomOff);
   introBloom.lookAt(camera.position);
   // Bloom intensifies during barrier crossing
   const bloomBoost = progress > 0.29 && progress < 0.37 ? 1.6 : 1;
   introBloom.material.opacity = THREE.MathUtils.lerp(0.72, 0.16, progress) * bloomBoost;
 
-  introRibbon.position.copy(daughterPos).add(new THREE.Vector3(-0.14, 0.22, -0.74));
+  introRibbon.position.copy(daughterPos).add(_introRibbonOff);
   introRibbon.lookAt(camera.position);
   introRibbon.material.opacity = THREE.MathUtils.lerp(0.48, 0.04, progress);
 
@@ -2619,11 +2633,11 @@ function applyIntroCamera(intro) {
   introSpark.scale.setScalar(1 + Math.sin(progress * Math.PI * 6) * 0.5);
   // Spark color shifts from cool white to warm gold as we arrive
   introSpark.material.color.lerpColors(
-    new THREE.Color("#e0d8ff"), new THREE.Color("#ffd8a0"),
+    _sparkCoolColor, _sparkWarmColor,
     THREE.MathUtils.smoothstep(progress, 0.5, 0.9)
   );
 
-  introWake.position.copy(daughterPos).add(new THREE.Vector3(0.1, 0.14, -0.56));
+  introWake.position.copy(daughterPos).add(_introWakeOff);
   introWake.lookAt(camera.position);
   introWake.material.opacity = THREE.MathUtils.lerp(0.46, 0.06, progress);
 
@@ -2640,10 +2654,10 @@ function perfectEndingPhase(time) {
 function applyPerfectEndingCamera(game) {
   const totalTime = game.endingSequence?.time ?? 0;
   const seniorPovEnd = CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 20;
-  const center = junior.position.clone().add(new THREE.Vector3(0, 1.5, 0));
-  const faceForward = new THREE.Vector3(Math.sin(junior.rotation.y), 0, Math.cos(junior.rotation.y));
-  const eyeTarget = center.clone().add(faceForward.clone().multiplyScalar(0.138)).add(new THREE.Vector3(0.004, 0.018, 0));
-  const seniorEye = senior.position.clone().add(new THREE.Vector3(0.03, 1.57, 0.04));
+  const center = junior.position.clone().add(_endingCenterOff);
+  const faceForward = tempVecA.set(Math.sin(junior.rotation.y), 0, Math.cos(junior.rotation.y));
+  const eyeTarget = center.clone().add(faceForward.clone().multiplyScalar(0.138)).add(_endingFaceOff);
+  const seniorEye = senior.position.clone().add(_endingSeniorEyeOff);
 
   // ── Phase 1 (0–6s): Wide establishing shot — senior sees junior for the first time ──
   // Camera starts slightly behind senior's shoulder, drifting to his eye level
@@ -2652,7 +2666,7 @@ function applyPerfectEndingCamera(game) {
     const phaseT = totalTime / 6;
     const eased = THREE.MathUtils.smoothstep(phaseT, 0, 1);
     // Start from behind senior's right shoulder, slowly orbit to his eye line
-    const shoulderOffset = new THREE.Vector3(0.18, 0.08, -0.12);
+    const shoulderOffset = _endingShoulderOff.clone();
     shoulderOffset.multiplyScalar(1 - eased * 0.85);
     const camPos = seniorEye.clone().add(shoulderOffset);
     // Breathing — slow, heavy, the kind when your heart stops
@@ -2667,8 +2681,8 @@ function applyPerfectEndingCamera(game) {
     // Look target drifts from general direction to precisely junior's face
     const lookBlend = THREE.MathUtils.smoothstep(phaseT, 0.2, 0.8);
     const generalDir = senior.position.clone().add(
-      new THREE.Vector3(Math.sin(senior.rotation.y), 0, Math.cos(senior.rotation.y)).multiplyScalar(3)
-    ).add(new THREE.Vector3(0, 1.4, 0));
+      tempVecA.set(Math.sin(senior.rotation.y), 0, Math.cos(senior.rotation.y)).multiplyScalar(3)
+    ).add(tempVecB.set(0, 1.4, 0));
     const lookTarget = generalDir.clone().lerp(eyeTarget, lookBlend);
     camera.lookAt(lookTarget);
     // Gentle, almost imperceptible roll — the world tilting
@@ -2683,7 +2697,7 @@ function applyPerfectEndingCamera(game) {
     const phaseT = (totalTime - 6) / 8;
     const eased = THREE.MathUtils.smoothstep(phaseT, 0, 1);
     // Camera creeps from senior's eye toward junior
-    const seniorHoldPos = seniorEye.clone().add(new THREE.Vector3(0.02, 0.012, 0.004));
+    const seniorHoldPos = seniorEye.clone().add(_endingHoldOff);
     const closePos = seniorHoldPos.clone().lerp(eyeTarget, eased * 0.52);
     // Heartbeat becomes visible — chest-cavity rhythm
     const heartRate = 1.2 + phaseT * 0.3; // heart speeds up as he gets closer
@@ -2706,7 +2720,7 @@ function applyPerfectEndingCamera(game) {
   // Camera barely moves. Just breathing. Just her eyes. Time stops.
   if (totalTime < seniorPovEnd) {
     const phaseT = (totalTime - 14) / (seniorPovEnd - 14);
-    const eyeHoldPos = seniorEye.clone().lerp(eyeTarget, 0.52).add(new THREE.Vector3(0.008, 0.006, 0));
+    const eyeHoldPos = seniorEye.clone().lerp(eyeTarget, 0.52).add(_endingCloseOff);
     // Trembling — the kind when you realize who you're looking at
     const tremble = THREE.MathUtils.smoothstep(phaseT, 0, 0.5);
     const trembleX = Math.sin(totalTime * 2.8) * 0.0004 * tremble;
@@ -2728,7 +2742,7 @@ function applyPerfectEndingCamera(game) {
   const eyesElapsed = totalTime - seniorPovEnd;
   const fadeBack = THREE.MathUtils.smoothstep(eyesElapsed, 0, 4);
   const eyeHoldPos = seniorEye.clone().lerp(eyeTarget, 0.52 - fadeBack * 0.08);
-  eyeHoldPos.add(new THREE.Vector3(0.01 + fadeBack * 0.02, 0.008 + fadeBack * 0.01, 0));
+  eyeHoldPos.add(tempVecA.set(0.01 + fadeBack * 0.02, 0.008 + fadeBack * 0.01, 0));
   const tremble = Math.min(1, eyesElapsed * 0.08);
   eyeHoldPos.y += Math.sin(totalTime * 0.3) * 0.001 + Math.sin(totalTime * 2.2) * 0.0003 * tremble;
   eyeHoldPos.x += Math.cos(totalTime * 0.16) * 0.0008;
@@ -2814,8 +2828,19 @@ function applyPerfectEndingCamera(game) {
   let activeHologram = null;
   let hologramStartTime = 0;
 
+  function disposeObject3D(obj) {
+    obj.traverse(child => {
+      if (child.geometry) child.geometry.dispose();
+      if (child.material) {
+        const mats = Array.isArray(child.material) ? child.material : [child.material];
+        mats.forEach(m => { if (m.map) m.map.dispose(); m.dispose(); });
+      }
+    });
+  }
+
   function spawnHologram(type, time) {
     if (activeHologram) {
+      disposeObject3D(activeHologram);
       scene.remove(activeHologram);
       activeHologram = null;
     }
