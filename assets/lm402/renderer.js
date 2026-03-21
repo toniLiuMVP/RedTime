@@ -78,6 +78,29 @@ function makeFaceTexture({ female = false, referenceJunior = false } = {}) {
     ctx.moveTo(186, referenceJunior ? 158 : 154);
     ctx.quadraticCurveTo(206, referenceJunior ? 164 : 162, 226, referenceJunior ? 158 : 154);
     ctx.stroke();
+
+    // Eyelash detail — thin curved strokes above the eyes
+    ctx.strokeStyle = referenceJunior ? "rgba(36,22,24,.82)" : "rgba(39,20,18,.68)";
+    ctx.lineWidth = referenceJunior ? 3.6 : 2.4;
+    ctx.lineCap = "round";
+    // Left eye lashes
+    ctx.beginPath();
+    ctx.moveTo(referenceJunior ? 82 : 88, referenceJunior ? 140 : 136);
+    ctx.quadraticCurveTo(referenceJunior ? 100 : 104, referenceJunior ? 130 : 128, referenceJunior ? 120 : 124, referenceJunior ? 136 : 132);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(referenceJunior ? 108 : 112, referenceJunior ? 134 : 130);
+    ctx.quadraticCurveTo(referenceJunior ? 126 : 128, referenceJunior ? 128 : 124, referenceJunior ? 140 : 142, referenceJunior ? 134 : 132);
+    ctx.stroke();
+    // Right eye lashes
+    ctx.beginPath();
+    ctx.moveTo(referenceJunior ? 200 : 196, referenceJunior ? 140 : 136);
+    ctx.quadraticCurveTo(referenceJunior ? 218 : 216, referenceJunior ? 130 : 128, referenceJunior ? 238 : 232, referenceJunior ? 136 : 132);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(referenceJunior ? 180 : 178, referenceJunior ? 134 : 130);
+    ctx.quadraticCurveTo(referenceJunior ? 198 : 196, referenceJunior ? 128 : 124, referenceJunior ? 212 : 210, referenceJunior ? 134 : 132);
+    ctx.stroke();
   }
 
   ctx.fillStyle = "rgba(255,255,255,.94)";
@@ -345,11 +368,11 @@ function createPerson(spec) {
   });
   const skinMat = new THREE.MeshPhysicalMaterial({
     color: spec.skin,
-    roughness: realisticJunior ? 0.19 : 0.32,
+    roughness: realisticJunior ? 0.16 : 0.32,
     metalness: 0,
     clearcoat: realisticJunior ? 0.52 : 0.28,
     clearcoatRoughness: realisticJunior ? 0.28 : 0.52,
-    sheen: realisticJunior ? 0.44 : 0.12,
+    sheen: realisticJunior ? 0.56 : 0.12,
     sheenRoughness: realisticJunior ? 0.32 : 0.72,
     sheenColor: new THREE.Color(spec.female ? '#ffcfb8' : '#e8b8a4'),
   });
@@ -388,6 +411,24 @@ function createPerson(spec) {
   );
   skirtOrHip.position.set(0, spec.female ? 0.71 : 0.74, 0);
   group.add(skirtOrHip);
+
+  // Waistband detail for female characters — subtle band between torso and skirt
+  if (spec.female) {
+    const waistbandMat = new THREE.MeshPhysicalMaterial({
+      color: spec.legs,
+      roughness: 0.38,
+      metalness: 0.03,
+      clearcoat: 0.16,
+      clearcoatRoughness: 0.3,
+    });
+    const waistband = new THREE.Mesh(
+      new THREE.TorusGeometry(0.138, 0.014, 8, 24),
+      waistbandMat
+    );
+    waistband.position.set(0, 0.83, 0);
+    waistband.rotation.x = Math.PI / 2;
+    group.add(waistband);
+  }
 
   const legGeo = new THREE.CapsuleGeometry(spec.female ? 0.064 : 0.072, spec.female ? 0.74 : 0.68, 6, 12);
   const leftLeg = new THREE.Mesh(legGeo, skinMat);
@@ -457,9 +498,20 @@ function createPerson(spec) {
   rightSleeve.rotation.z = -1.06;
   group.add(leftSleeve, rightSleeve);
 
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.08, 0.14, 18), skinMat);
+  const neckSkinMat = skinMat.clone();
+  neckSkinMat.color = new THREE.Color(spec.skin).lerp(new THREE.Color('#e8b89c'), 0.12);
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.08, 0.14, 18), neckSkinMat);
   neck.position.set(0, 1.33, 0.02);
   group.add(neck);
+
+  // Collar detail — small ring-shaped mesh at the neckline
+  const necklineCollar = new THREE.Mesh(
+    new THREE.TorusGeometry(0.082, 0.01, 8, 24),
+    new THREE.MeshPhysicalMaterial({ color: spec.female ? "#fffdf6" : "#e6ebf0", roughness: 0.52, metalness: 0.01, clearcoat: 0.1 })
+  );
+  necklineCollar.position.set(0, 1.26, 0.02);
+  necklineCollar.rotation.x = Math.PI / 2;
+  group.add(necklineCollar);
 
   const head = new THREE.Mesh(new THREE.SphereGeometry(spec.female ? 0.168 : 0.182, 48, 48), skinMat);
   head.position.set(0, 1.56, 0);
@@ -640,6 +692,40 @@ function createPerson(spec) {
   crownShine.position.set(0.02, 1.66, 0.04);
   crownShine.scale.set(0.82, 0.42, 0.5);
   group.add(crownShine);
+
+  // Hair shine highlights for referenceJunior — additional thin mesh layer with high clearcoat
+  if (referenceJunior) {
+    const hairShineMat = new THREE.MeshPhysicalMaterial({
+      color: spec.hair,
+      roughness: 0.06,
+      metalness: 0.04,
+      clearcoat: 0.92,
+      clearcoatRoughness: 0.06,
+      transparent: true,
+      opacity: 0.28,
+      sheen: 0.6,
+      sheenRoughness: 0.18,
+      sheenColor: new THREE.Color('#c09878'),
+    });
+    const hairShineLayer = new THREE.Mesh(
+      new THREE.SphereGeometry(spec.female ? 0.198 : 0.192, 28, 28, 0, Math.PI * 2, 0, Math.PI * 0.72),
+      hairShineMat
+    );
+    hairShineLayer.position.set(0, 1.625, -0.008);
+    hairShineLayer.rotation.x = -0.1;
+    hairShineLayer.scale.set(1.01, 1.01, 1.01);
+    group.add(hairShineLayer);
+
+    // Fuller hair volume — scale up hair geometry slightly and add longer back portion
+    hairCap.scale.set(1.04, 1.03, 1.04);
+    hairBack.scale.set(
+      hairBack.scale.x * 1.06,
+      hairBack.scale.y * 1.08,
+      hairBack.scale.z * 1.06
+    );
+    // Extend the back hair down slightly for a longer back portion
+    hairBack.position.y -= 0.02;
+  }
 
   const face = createFacePlane(
     makeFaceTexture({ female: spec.female, referenceJunior }),
@@ -1478,10 +1564,10 @@ export function createLm402Scene(canvas) {
   const hemiLight = new THREE.HemisphereLight(0xf5f7fc, 0x7a6c52, 1.16);
   scene.add(hemiLight);
 
-  const ambient = new THREE.AmbientLight(0xfff8ee, 0.38);
+  const ambient = new THREE.AmbientLight(0xfff4e0, 0.38);
   scene.add(ambient);
 
-  const sun = new THREE.DirectionalLight(0xffe4b6, 2.28);
+  const sun = new THREE.DirectionalLight(0xffd9a0, 2.48);
   sun.position.set(-11.2, 10.8, 5.4);
   sun.castShadow = true;
   sun.shadow.mapSize.set(quality.shadowMapSize, quality.shadowMapSize);
@@ -1531,6 +1617,11 @@ export function createLm402Scene(canvas) {
   const corridorBounce = new THREE.PointLight(0xf0e8dd, 0.48, 22, 2);
   corridorBounce.position.set(corridorCenterX, 0.18, scaled(WORLD.frontDoor.center.z - 60));
   scene.add(corridorBounce);
+
+  // Rim light — subtle back-light behind classroom for character rim lighting during ending
+  const rimLight = new THREE.PointLight(0xffeedd, 0.8, 12, 2);
+  rimLight.position.set(scaled(200), 2.8, scaled(WORLD.backDoor.center.z + 100));
+  scene.add(rimLight);
 
   const classroomFloorTex = makeWoodTexture({ base: "#856549", dark: "#5c422d", highlight: "#b18a63" });
   const corridorFloorTex = makeTileTexture({ base: "#bcc5d0", line: "rgba(244,246,249,.76)", speck: "rgba(124,136,148," });
@@ -1790,6 +1881,16 @@ export function createLm402Scene(canvas) {
       zone.direction > 0 ? zone.z1 + 0.06 : zone.z1,
       zone.direction > 0 ? zone.z1 + 0.22 : zone.z2 - 0.22,
       `${zone.id}_guard`
+    );
+
+    // Air wall — invisible full-width barrier blocking player from going down stairs
+    addCollider(
+      colliders,
+      corridorMinX,
+      classroomMinX,
+      zone.direction > 0 ? zone.z2 - 0.06 : zone.z1 + 0.06,
+      zone.direction > 0 ? zone.z2 + 0.06 : zone.z1 - 0.06,
+      `${zone.id}_airwall`
     );
   });
 
@@ -2071,7 +2172,7 @@ export function createLm402Scene(canvas) {
     const beamMaterial = new THREE.MeshBasicMaterial({
       color: beam.side === "right" ? "#ffd79f" : "#f7e2be",
       transparent: true,
-      opacity: beam.alpha,
+      opacity: beam.alpha * 1.25,
       depthWrite: false,
       side: THREE.DoubleSide,
     });
@@ -2215,6 +2316,79 @@ export function createLm402Scene(canvas) {
   distantAcademicBlock.position.set(minX - campusDepth * 0.34, 1.12, floorCenterZ + 0.2);
   distantAcademicBlock.receiveShadow = true;
   worldGroup.add(distantAcademicBlock);
+
+  // ── Enhanced campus scenery ──
+
+  // Campus ground plane — large grass surface extending outward from corridor
+  const campusGroundMat = new THREE.MeshStandardMaterial({ color: "#5a7a48", roughness: 0.9, metalness: 0.01 });
+  const campusGround = new THREE.Mesh(
+    new THREE.PlaneGeometry(campusDepth * 2.4, floorLength * 1.6),
+    campusGroundMat
+  );
+  campusGround.rotation.x = -Math.PI / 2;
+  campusGround.position.set(minX - campusDepth * 0.8, FLOOR_Y - 0.12, floorCenterZ);
+  campusGround.receiveShadow = true;
+  worldGroup.add(campusGround);
+
+  // Distant campus buildings
+  const distBuildingMat = new THREE.MeshStandardMaterial({ color: "#c4bfb6", roughness: 0.92, metalness: 0.03 });
+  const distBuildingMat2 = new THREE.MeshStandardMaterial({ color: "#b8c2ca", roughness: 0.88, metalness: 0.04 });
+  const distBuildingMat3 = new THREE.MeshStandardMaterial({ color: "#d2ccc4", roughness: 0.94, metalness: 0.02 });
+
+  // Building A — science block (far left, near front)
+  const buildingA = new THREE.Mesh(
+    new THREE.BoxGeometry(3.6, scaled(420), 8.4),
+    distBuildingMat
+  );
+  buildingA.position.set(minX - campusDepth * 0.72, scaled(420) / 2, scaled(900));
+  buildingA.receiveShadow = true;
+  buildingA.castShadow = true;
+  worldGroup.add(buildingA);
+
+  // Building B — library (far center)
+  const buildingB = new THREE.Mesh(
+    new THREE.BoxGeometry(5.2, scaled(360), 6.8),
+    distBuildingMat2
+  );
+  buildingB.position.set(minX - campusDepth * 0.88, scaled(360) / 2, scaled(1800));
+  buildingB.receiveShadow = true;
+  buildingB.castShadow = true;
+  worldGroup.add(buildingB);
+
+  // Building C — gymnasium (far right, near back)
+  const buildingC = new THREE.Mesh(
+    new THREE.BoxGeometry(4.4, scaled(300), 10.2),
+    distBuildingMat3
+  );
+  buildingC.position.set(minX - campusDepth * 0.64, scaled(300) / 2, scaled(2700));
+  buildingC.receiveShadow = true;
+  buildingC.castShadow = true;
+  worldGroup.add(buildingC);
+
+  // Sky dome — large inverted hemisphere for sky backdrop
+  const skyDomeGeo = new THREE.SphereGeometry(80, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+  const skyCanvas = document.createElement("canvas");
+  skyCanvas.width = 256;
+  skyCanvas.height = 256;
+  const skyCtx = skyCanvas.getContext("2d");
+  const skyGrad = skyCtx.createLinearGradient(0, 0, 0, 256);
+  skyGrad.addColorStop(0, "#87CEEB");
+  skyGrad.addColorStop(0.4, "#b8dcf0");
+  skyGrad.addColorStop(0.7, "#d4e8f4");
+  skyGrad.addColorStop(1.0, "#e8f0f6");
+  skyCtx.fillStyle = skyGrad;
+  skyCtx.fillRect(0, 0, 256, 256);
+  const skyTexture = new THREE.CanvasTexture(skyCanvas);
+  skyTexture.colorSpace = THREE.SRGBColorSpace;
+  const skyDomeMat = new THREE.MeshBasicMaterial({
+    map: skyTexture,
+    side: THREE.BackSide,
+    fog: false,
+    depthWrite: false,
+  });
+  const skyDome = new THREE.Mesh(skyDomeGeo, skyDomeMat);
+  skyDome.position.set(minX - campusDepth * 0.3, FLOOR_Y - 1, floorCenterZ);
+  worldGroup.add(skyDome);
 
   const dustGeometry = new THREE.BufferGeometry();
   const dustPositions = [];
@@ -2644,93 +2818,150 @@ function applyIntroCamera(intro) {
   }
 
 function perfectEndingPhase(time) {
-  const seniorPovEnd = CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 10;
-  if (time < seniorPovEnd) {
-    return "senior_pov_hold";
-  }
+  const seniorPovEnd = CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 28;
+  if (time < 2) return "establishing";
+  if (time < 12) return "orbit";
+  if (time < 14) return "orbit_transition";
+  if (time < seniorPovEnd) return "senior_pov_hold";
   return "eyes";
 }
 
 function applyPerfectEndingCamera(game) {
   const totalTime = game.endingSequence?.time ?? 0;
-  const seniorPovEnd = CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 20;
+  const seniorPovEnd = CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 28;
   const center = junior.position.clone().add(_endingCenterOff);
   const faceForward = tempVecA.set(Math.sin(junior.rotation.y), 0, Math.cos(junior.rotation.y));
   const eyeTarget = center.clone().add(faceForward.clone().multiplyScalar(0.138)).add(_endingFaceOff);
   const seniorEye = senior.position.clone().add(_endingSeniorEyeOff);
 
-  // ── Phase 1 (0–6s): Wide establishing shot — senior sees junior for the first time ──
-  // Camera starts slightly behind senior's shoulder, drifting to his eye level
-  // Korean drama style: the world slows down, everything else fades away
-  if (totalTime < 6) {
-    const phaseT = totalTime / 6;
+  // Orbit center at junior's eye level
+  const orbitCenter = junior.position.clone().add(new THREE.Vector3(0, 1.55, 0));
+
+  // ── Phase 0 (0–2s): Establishing shot — camera behind senior, looking at junior ──
+  if (totalTime < 2) {
+    const phaseT = totalTime / 2;
     const eased = THREE.MathUtils.smoothstep(phaseT, 0, 1);
-    // Start from behind senior's right shoulder, slowly orbit to his eye line
     const shoulderOffset = _endingShoulderOff.clone();
-    shoulderOffset.multiplyScalar(1 - eased * 0.85);
+    shoulderOffset.multiplyScalar(1 - eased * 0.5);
     const camPos = seniorEye.clone().add(shoulderOffset);
-    // Breathing — slow, heavy, the kind when your heart stops
     const breathe = Math.sin(totalTime * 0.9) * 0.003 * (1 - eased * 0.4);
     const heartPound = Math.sin(totalTime * 1.8) * 0.0018;
     camPos.y += breathe + heartPound;
     camPos.x += Math.sin(totalTime * 0.5) * 0.002;
     camera.position.copy(camPos);
-    // FOV starts somewhat wide (seeing context), then slowly narrows — tunnel vision
-    camera.fov = THREE.MathUtils.lerp(28, 16, THREE.MathUtils.smoothstep(phaseT, 0.1, 0.9));
+    camera.fov = THREE.MathUtils.lerp(28, 22, THREE.MathUtils.smoothstep(phaseT, 0.1, 0.9));
     camera.updateProjectionMatrix();
-    // Look target drifts from general direction to precisely junior's face
     const lookBlend = THREE.MathUtils.smoothstep(phaseT, 0.2, 0.8);
     const generalDir = senior.position.clone().add(
       tempVecA.set(Math.sin(senior.rotation.y), 0, Math.cos(senior.rotation.y)).multiplyScalar(3)
     ).add(tempVecB.set(0, 1.4, 0));
     const lookTarget = generalDir.clone().lerp(eyeTarget, lookBlend);
     camera.lookAt(lookTarget);
-    // Gentle, almost imperceptible roll — the world tilting
     camera.rotateZ(Math.sin(totalTime * 0.4) * 0.003 * (1 + eased * 0.5));
     return;
   }
 
-  // ── Phase 2 (6–14s): Slow-motion approach — getting closer to her face ──
-  // The senior is frozen, but the camera slowly, inexorably drifts toward her eyes
-  // Like a Korean drama close-up: every detail of her face becomes the whole world
+  // ── Phase 1 (2–12s): 360° slow-motion orbit around junior's face ──
+  // The key cinematic moment — camera circles her face in a full revolution
+  // before the senior even speaks. Time feels suspended.
+  if (totalTime < 12) {
+    const orbitT = (totalTime - 2) / 10; // 0 to 1 over 10 seconds
+    const easedT = THREE.MathUtils.smoothstep(orbitT, 0, 1);
+    const angle = easedT * Math.PI * 2; // Full 360° with sine easing
+    const orbitRadius = 0.8; // Distance from junior's face
+
+    // Calculate orbit position, anchored to junior's facing direction
+    const baseAngle = angle + junior.rotation.y;
+    const orbitX = orbitCenter.x + Math.sin(baseAngle) * orbitRadius;
+    const orbitZ = orbitCenter.z + Math.cos(baseAngle) * orbitRadius;
+    // Subtle vertical wave — breathing altitude
+    const orbitY = orbitCenter.y + Math.sin(orbitT * Math.PI) * 0.05;
+
+    camera.position.set(orbitX, orbitY, orbitZ);
+
+    // FOV narrows through the orbit for dramatic tension
+    camera.fov = THREE.MathUtils.lerp(22, 18, THREE.MathUtils.smoothstep(orbitT, 0, 1));
+    camera.updateProjectionMatrix();
+
+    // Always look at junior's face center
+    camera.lookAt(orbitCenter);
+
+    // Heartbeat sway — subtle roll oscillation
+    const heartbeat = Math.sin(totalTime * 1.8) * 0.002;
+    camera.rotateZ(heartbeat);
+    return;
+  }
+
+  // ── Phase 2 (12–14s): Transition back to senior's POV ──
+  // Camera smoothly moves from orbit end position back to senior's eye line
   if (totalTime < 14) {
-    const phaseT = (totalTime - 6) / 8;
+    const phaseT = (totalTime - 12) / 2;
     const eased = THREE.MathUtils.smoothstep(phaseT, 0, 1);
-    // Camera creeps from senior's eye toward junior
+
+    // Orbit end position (full circle returns to front)
+    const endAngle = Math.PI * 2 + junior.rotation.y;
+    const orbitEndPos = new THREE.Vector3(
+      orbitCenter.x + Math.sin(endAngle) * 0.8,
+      orbitCenter.y + 0.0,
+      orbitCenter.z + Math.cos(endAngle) * 0.8
+    );
+
+    // Senior hold position
+    const seniorHoldPos = seniorEye.clone().add(_endingHoldOff);
+
+    // Blend from orbit end to senior's eye
+    const camPos = orbitEndPos.clone().lerp(seniorHoldPos, eased);
+    const breathe = Math.sin(totalTime * 0.8) * 0.002;
+    camPos.y += breathe;
+    camera.position.copy(camPos);
+
+    // FOV transitions from orbit narrow to approach FOV
+    camera.fov = THREE.MathUtils.lerp(18, 16, eased);
+    camera.updateProjectionMatrix();
+
+    // Look target blends from orbit center to eye target
+    const lookTarget = orbitCenter.clone().lerp(eyeTarget, eased);
+    camera.lookAt(lookTarget);
+
+    // Gentle roll fade-out
+    const roll = Math.sin(totalTime * 1.8) * 0.002 * (1 - eased);
+    camera.rotateZ(roll);
+    return;
+  }
+
+  // ── Phase 3 (14–22s): Senior's POV approach — slow-motion toward her face ──
+  // "也太像徐若瑄了吧" is triggered here. Senior sees her up close.
+  if (totalTime < 22) {
+    const phaseT = (totalTime - 14) / 8;
+    const eased = THREE.MathUtils.smoothstep(phaseT, 0, 1);
     const seniorHoldPos = seniorEye.clone().add(_endingHoldOff);
     const closePos = seniorHoldPos.clone().lerp(eyeTarget, eased * 0.52);
-    // Heartbeat becomes visible — chest-cavity rhythm
-    const heartRate = 1.2 + phaseT * 0.3; // heart speeds up as he gets closer
+    const heartRate = 1.2 + phaseT * 0.3;
     const heartSway = Math.sin(totalTime * heartRate) * 0.002 * (1 + phaseT * 0.8);
     const heartRise = Math.cos(totalTime * heartRate * 0.7) * 0.0015;
     closePos.y += heartRise;
     closePos.x += heartSway;
     camera.position.copy(closePos);
-    // FOV continues to narrow — "everything else disappears"
     camera.fov = THREE.MathUtils.lerp(16, 10, THREE.MathUtils.smoothstep(phaseT, 0.05, 0.95));
     camera.updateProjectionMatrix();
     camera.lookAt(eyeTarget.x, eyeTarget.y + 0.001, eyeTarget.z);
-    // Roll increases subtly — emotional vertigo
     const emotionalRoll = Math.sin(totalTime * 0.5) * 0.003 * (0.5 + phaseT * 0.5);
     camera.rotateZ(emotionalRoll);
     return;
   }
 
-  // ── Phase 3 (14–seniorPovEnd): Hold on her eyes — the "one glance" moment ──
+  // ── Phase 4 (22–seniorPovEnd): Hold on her eyes — the "one glance" moment ──
   // Camera barely moves. Just breathing. Just her eyes. Time stops.
   if (totalTime < seniorPovEnd) {
-    const phaseT = (totalTime - 14) / (seniorPovEnd - 14);
+    const phaseT = (totalTime - 22) / (seniorPovEnd - 22);
     const eyeHoldPos = seniorEye.clone().lerp(eyeTarget, 0.52).add(_endingCloseOff);
-    // Trembling — the kind when you realize who you're looking at
     const tremble = THREE.MathUtils.smoothstep(phaseT, 0, 0.5);
     const trembleX = Math.sin(totalTime * 2.8) * 0.0004 * tremble;
     const trembleY = Math.sin(totalTime * 3.1 + 1.2) * 0.0003 * tremble;
-    // Deep, slow breathing
     const deepBreath = Math.sin(totalTime * 0.6) * 0.0012;
     eyeHoldPos.y += deepBreath + trembleY;
     eyeHoldPos.x += Math.cos(totalTime * 0.2) * 0.0006 + trembleX;
     camera.position.copy(eyeHoldPos);
-    // FOV holds tight — intimate, inescapable
     camera.fov = THREE.MathUtils.lerp(10, 9, THREE.MathUtils.smoothstep(phaseT, 0, 0.8));
     camera.updateProjectionMatrix();
     camera.lookAt(eyeTarget.x, eyeTarget.y + 0.001, eyeTarget.z);
@@ -2738,7 +2969,7 @@ function applyPerfectEndingCamera(game) {
     return;
   }
 
-  // ── Phase 4 (after seniorPovEnd): Lingering — camera pulls back slightly, world returns ──
+  // ── Phase 5 (after seniorPovEnd): Lingering — camera pulls back slightly, world returns ──
   const eyesElapsed = totalTime - seniorPovEnd;
   const fadeBack = THREE.MathUtils.smoothstep(eyesElapsed, 0, 4);
   const eyeHoldPos = seniorEye.clone().lerp(eyeTarget, 0.52 - fadeBack * 0.08);
@@ -2747,7 +2978,6 @@ function applyPerfectEndingCamera(game) {
   eyeHoldPos.y += Math.sin(totalTime * 0.3) * 0.001 + Math.sin(totalTime * 2.2) * 0.0003 * tremble;
   eyeHoldPos.x += Math.cos(totalTime * 0.16) * 0.0008;
   camera.position.copy(eyeHoldPos);
-  // FOV slowly widens — returning to reality
   camera.fov = THREE.MathUtils.lerp(9, 12, THREE.MathUtils.smoothstep(eyesElapsed, 0, 5));
   camera.updateProjectionMatrix();
   camera.lookAt(eyeTarget.x, eyeTarget.y + 0.001, eyeTarget.z);
