@@ -494,6 +494,8 @@ const state = {
   intro: {
     progress: 0,
     time: 0,
+    startedAt: 0,
+    deadlineAt: 0,
     replay: false,
     resume: null,
   },
@@ -1371,6 +1373,7 @@ function captureReplayState() {
 }
 
 function startIntro(replay = false) {
+  const now = performance.now();
   if (state.dialogue) {
     closeDialogue();
   }
@@ -1382,6 +1385,8 @@ function startIntro(replay = false) {
   state.cameraMode = "intro";
   state.intro.progress = 0;
   state.intro.time = 0;
+  state.intro.startedAt = now;
+  state.intro.deadlineAt = now + CINEMATIC_TIMELINE.introDuration * 1000 + 1400;
   state.intro.replay = replay;
   state.intro.resume = replay ? captureReplayState() : null;
   state.introBeatIndex = 0;
@@ -1391,6 +1396,13 @@ function startIntro(replay = false) {
   state.endingSequence = null;
   dom.endingOverlay.hidden = true;
   dom.body.classList.remove("ending-open");
+  if (dom.introFx) {
+    dom.introFx.classList.remove("intro-fx-done");
+    dom.introFx.classList.add("intro-fx-active");
+  }
+  if (dom.introSkipBtn) {
+    dom.introSkipBtn.hidden = false;
+  }
   setSubtitle(INTRO_BEATS[0].kicker, INTRO_BEATS[0].text, 0.2);
   setAmbience(INTRO_BEATS[0].ambience);
   state.subtitleMode = "full";
@@ -1405,6 +1417,8 @@ function finishIntro() {
   state.cameraMode = "play";
   state.intro.replay = false;
   state.intro.resume = null;
+  state.intro.startedAt = 0;
+  state.intro.deadlineAt = 0;
   // Hide skip button when intro naturally ends or is skipped
   if (dom.introSkipBtn) {
     dom.introSkipBtn.hidden = true;
@@ -1866,7 +1880,13 @@ function updateEndingSequence(dt) {
 }
 
 function updateIntro(dt) {
-  state.intro.time += dt;
+  const now = performance.now();
+  if (!state.intro.startedAt) {
+    state.intro.startedAt = now;
+    state.intro.deadlineAt = now + CINEMATIC_TIMELINE.introDuration * 1000 + 1400;
+  }
+  const wallElapsed = Math.max(0, (now - state.intro.startedAt) / 1000);
+  state.intro.time = Math.max(state.intro.time + dt, wallElapsed);
   state.intro.progress = clamp(state.intro.time / CINEMATIC_TIMELINE.introDuration, 0, 1);
   const nextBeatIndex = INTRO_BEATS.findIndex((beat) => state.intro.time >= beat.start && state.intro.time < beat.end);
   const beatIndex = nextBeatIndex === -1 ? INTRO_BEATS.length - 1 : nextBeatIndex;
@@ -1876,7 +1896,7 @@ function updateIntro(dt) {
     setSubtitle(INTRO_BEATS[beatIndex].kicker, INTRO_BEATS[beatIndex].text, 0.2);
     setAmbience(INTRO_BEATS[beatIndex].ambience);
   }
-  if (state.intro.progress >= 1) {
+  if (state.intro.progress >= 1 || now >= state.intro.deadlineAt) {
     finishIntro();
   }
 }
