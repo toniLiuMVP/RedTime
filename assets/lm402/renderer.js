@@ -48,14 +48,47 @@ function makeFaceTexture({ female = false, referenceJunior = false } = {}) {
   ctx.fillStyle = skinGradient;
   ctx.fillRect(0, 0, 320, 320);
 
-  ctx.strokeStyle = female ? (referenceJunior ? "rgba(112,84,74,.68)" : "rgba(82,48,47,.7)") : "rgba(74,43,40,.72)";
-  ctx.lineWidth = female ? (referenceJunior ? 3.2 : 6) : 7;
-  ctx.beginPath();
-  ctx.moveTo(92, referenceJunior ? 124 : 116);
-  ctx.quadraticCurveTo(118, female ? (referenceJunior ? 112 : 94) : 100, 142, referenceJunior ? 120 : 110);
-  ctx.moveTo(178, referenceJunior ? 120 : 110);
-  ctx.quadraticCurveTo(202, female ? (referenceJunior ? 112 : 94) : 100, 228, referenceJunior ? 124 : 116);
-  ctx.stroke();
+  // --- Eyebrows ---
+  if (referenceJunior) {
+    // More defined eyebrow shape: thick at inner end, tapering thin at outer end
+    ctx.fillStyle = "rgba(112,84,74,.72)";
+    // Left eyebrow
+    ctx.beginPath();
+    ctx.moveTo(88, 128);
+    ctx.quadraticCurveTo(104, 112, 144, 117);
+    ctx.lineTo(144, 123);
+    ctx.quadraticCurveTo(104, 118, 90, 130);
+    ctx.closePath();
+    ctx.fill();
+    // Right eyebrow (mirrored)
+    ctx.beginPath();
+    ctx.moveTo(232, 128);
+    ctx.quadraticCurveTo(216, 112, 176, 117);
+    ctx.lineTo(176, 123);
+    ctx.quadraticCurveTo(216, 118, 230, 130);
+    ctx.closePath();
+    ctx.fill();
+  } else {
+    ctx.strokeStyle = female ? "rgba(82,48,47,.7)" : "rgba(74,43,40,.72)";
+    ctx.lineWidth = female ? 6 : 7;
+    ctx.beginPath();
+    ctx.moveTo(92, 116);
+    ctx.quadraticCurveTo(118, female ? 94 : 100, 142, 110);
+    ctx.moveTo(178, 110);
+    ctx.quadraticCurveTo(202, female ? 94 : 100, 228, 116);
+    ctx.stroke();
+  }
+
+  // Eye whites visible behind dark pupils for referenceJunior
+  if (referenceJunior) {
+    ctx.fillStyle = "rgba(255,255,255,.82)";
+    ctx.beginPath();
+    ctx.ellipse(114, 152, 22, 14, -0.02, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(206, 152, 22, 14, 0.02, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   ctx.fillStyle = "#24191a";
   ctx.beginPath();
@@ -109,6 +142,16 @@ function makeFaceTexture({ female = false, referenceJunior = false } = {}) {
   ctx.ellipse(202, referenceJunior ? 145 : 142, referenceJunior ? 3.9 : 3, referenceJunior ? 3.9 : 3, 0, 0, Math.PI * 2);
   ctx.fill();
 
+  // Subtle nose bridge line for referenceJunior
+  if (referenceJunior) {
+    ctx.strokeStyle = "rgba(180,140,130,.22)";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(160, 130);
+    ctx.bezierCurveTo(161, 152, 159, 172, 157, 192);
+    ctx.stroke();
+  }
+
   ctx.strokeStyle = referenceJunior ? "rgba(152,104,96,.46)" : "rgba(144,97,91,.52)";
   ctx.lineWidth = referenceJunior ? 5 : 6;
   ctx.beginPath();
@@ -121,6 +164,46 @@ function makeFaceTexture({ female = false, referenceJunior = false } = {}) {
   ctx.ellipse(102, referenceJunior ? 190 : 188, referenceJunior ? 20 : 22, referenceJunior ? 12 : 14, 0, 0, Math.PI * 2);
   ctx.ellipse(218, referenceJunior ? 190 : 188, referenceJunior ? 20 : 22, referenceJunior ? 12 : 14, 0, 0, Math.PI * 2);
   ctx.fill();
+
+  // Subtle cheek highlights for referenceJunior
+  if (referenceJunior) {
+    ctx.fillStyle = "rgba(255,255,255,.09)";
+    ctx.beginPath();
+    ctx.ellipse(96, 180, 14, 10, -0.15, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(224, 180, 14, 10, 0.15, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Fuller, more defined lips with bezier curves for referenceJunior
+  if (referenceJunior) {
+    // Upper lip (cupid's bow shape)
+    ctx.fillStyle = "rgba(212,135,122,.6)";
+    ctx.beginPath();
+    ctx.moveTo(130, 226);
+    ctx.bezierCurveTo(140, 218, 155, 216, 160, 220);
+    ctx.bezierCurveTo(165, 216, 180, 218, 190, 226);
+    ctx.bezierCurveTo(178, 230, 165, 232, 160, 230);
+    ctx.bezierCurveTo(155, 232, 142, 230, 130, 226);
+    ctx.closePath();
+    ctx.fill();
+    // Lower lip (fuller)
+    ctx.fillStyle = "rgba(212,135,122,.48)";
+    ctx.beginPath();
+    ctx.moveTo(134, 230);
+    ctx.bezierCurveTo(142, 228, 155, 232, 160, 230);
+    ctx.bezierCurveTo(165, 232, 178, 228, 186, 230);
+    ctx.bezierCurveTo(178, 244, 165, 248, 160, 247);
+    ctx.bezierCurveTo(155, 248, 142, 244, 134, 230);
+    ctx.closePath();
+    ctx.fill();
+    // Lip highlight
+    ctx.fillStyle = "rgba(255,255,255,.14)";
+    ctx.beginPath();
+    ctx.ellipse(160, 237, 16, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   ctx.strokeStyle = female ? (referenceJunior ? "rgba(186,126,132,.7)" : "rgba(176,86,112,.92)") : "rgba(126,82,76,.86)";
   ctx.lineWidth = female ? (referenceJunior ? 4.8 : 7) : 6;
@@ -366,15 +449,18 @@ function createPerson(spec) {
     clearcoat: spec.female ? 0.1 : 0.04,
     clearcoatRoughness: 0.4,
   });
+  const skinBaseColor = realisticJunior
+    ? new THREE.Color(spec.skin).lerp(new THREE.Color('#ffe0c8'), 0.12) // warm undertone
+    : new THREE.Color(spec.skin);
   const skinMat = new THREE.MeshPhysicalMaterial({
-    color: spec.skin,
-    roughness: realisticJunior ? 0.16 : 0.32,
+    color: skinBaseColor,
+    roughness: realisticJunior ? 0.12 : 0.32,
     metalness: 0,
-    clearcoat: realisticJunior ? 0.52 : 0.28,
-    clearcoatRoughness: realisticJunior ? 0.28 : 0.52,
-    sheen: realisticJunior ? 0.56 : 0.12,
-    sheenRoughness: realisticJunior ? 0.32 : 0.72,
-    sheenColor: new THREE.Color(spec.female ? '#ffcfb8' : '#e8b8a4'),
+    clearcoat: realisticJunior ? 0.58 : 0.28,
+    clearcoatRoughness: realisticJunior ? 0.22 : 0.52,
+    sheen: realisticJunior ? 0.72 : 0.12,
+    sheenRoughness: realisticJunior ? 0.24 : 0.72,
+    sheenColor: new THREE.Color(realisticJunior ? '#ffd4b8' : (spec.female ? '#ffcfb8' : '#e8b8a4')),
   });
   const blushMat = new THREE.MeshPhysicalMaterial({ color: spec.female ? "#f3c3bc" : "#d7a18f", roughness: 0.56, metalness: 0, transparent: true, opacity: spec.female ? 0.26 : 0.14, sheen: 0.1 });
   const hairMat = new THREE.MeshPhysicalMaterial({
@@ -390,9 +476,9 @@ function createPerson(spec) {
   const shoeMat = new THREE.MeshPhysicalMaterial({ color: spec.shoes, roughness: 0.56, metalness: 0.1, clearcoat: 0.12, clearcoatRoughness: 0.4 });
   const buttonMat = new THREE.MeshPhysicalMaterial({ color: "#f6ede3", roughness: 0.42, metalness: 0.06, clearcoat: 0.16, clearcoatRoughness: 0.28 });
 
-  const waist = new THREE.Mesh(new THREE.CapsuleGeometry(spec.female ? 0.126 : 0.132, 0.18, 5, 10), torsoMat);
+  const waist = new THREE.Mesh(new THREE.CapsuleGeometry(spec.female ? (realisticJunior ? 0.118 : 0.126) : 0.132, 0.18, 5, 10), torsoMat);
   waist.position.set(0, 0.84, 0);
-  waist.scale.set(spec.female ? 1.04 : 1.14, 1.02, 0.86);
+  waist.scale.set(spec.female ? (realisticJunior ? 0.96 : 1.04) : 1.14, 1.02, realisticJunior ? 0.82 : 0.86);
   group.add(waist);
 
   const torso = new THREE.Mesh(new THREE.CapsuleGeometry(spec.female ? 0.172 : 0.166, spec.female ? 0.62 : 0.6, 8, 18), torsoMat);
@@ -405,10 +491,26 @@ function createPerson(spec) {
   chest.scale.set(1.06, spec.female ? 0.64 : 0.58, spec.female ? 0.52 : 0.58);
   group.add(chest);
 
-  const skirtOrHip = new THREE.Mesh(
-    new THREE.CylinderGeometry(spec.female ? 0.166 : 0.158, spec.female ? 0.208 : 0.174, spec.female ? 0.24 : 0.22, 16),
-    legsMat
-  );
+  let skirtGeo;
+  if (realisticJunior) {
+    // Higher-segment cylinder with modified bottom for pleat suggestion
+    skirtGeo = new THREE.CylinderGeometry(0.166, 0.208, 0.24, 24, 1, false);
+    // Slightly perturb bottom ring vertices for pleat-like uneven hem
+    const posAttr = skirtGeo.getAttribute('position');
+    for (let i = 0; i < posAttr.count; i++) {
+      const y = posAttr.getY(i);
+      if (y < -0.11) { // bottom ring vertices
+        const angle = Math.atan2(posAttr.getZ(i), posAttr.getX(i));
+        const wave = Math.sin(angle * 6) * 0.008 + Math.sin(angle * 12) * 0.003;
+        posAttr.setY(i, y + wave);
+      }
+    }
+    posAttr.needsUpdate = true;
+    skirtGeo.computeVertexNormals();
+  } else {
+    skirtGeo = new THREE.CylinderGeometry(spec.female ? 0.166 : 0.158, spec.female ? 0.208 : 0.174, spec.female ? 0.24 : 0.22, 16);
+  }
+  const skirtOrHip = new THREE.Mesh(skirtGeo, legsMat);
   skirtOrHip.position.set(0, spec.female ? 0.71 : 0.74, 0);
   group.add(skirtOrHip);
 
@@ -473,7 +575,18 @@ function createPerson(spec) {
   shoulderR.position.x = spec.female ? 0.188 : 0.236;
   group.add(shoulderL, shoulderR);
 
-  const armGeo = new THREE.CapsuleGeometry(spec.female ? 0.048 : 0.056, spec.female ? 0.42 : 0.46, 5, 10);
+  // Proper shoulder joint detail for realisticJunior
+  if (realisticJunior) {
+    const shoulderJointMat = skinMat.clone();
+    const shoulderJointL = new THREE.Mesh(new THREE.SphereGeometry(0.036, 14, 14), shoulderJointMat);
+    shoulderJointL.position.set(-0.206, 1.2, 0.01);
+    shoulderJointL.scale.set(1.1, 0.9, 0.85);
+    const shoulderJointR = shoulderJointL.clone();
+    shoulderJointR.position.x = 0.206;
+    group.add(shoulderJointL, shoulderJointR);
+  }
+
+  const armGeo = new THREE.CapsuleGeometry(spec.female ? (realisticJunior ? 0.042 : 0.048) : 0.056, spec.female ? 0.42 : 0.46, 5, 10);
   const leftArm = new THREE.Mesh(armGeo, skinMat);
   leftArm.position.set(spec.female ? -0.228 : -0.266, 1.0, 0.02);
   leftArm.rotation.z = spec.female ? 0.12 : 0.15;
@@ -482,12 +595,41 @@ function createPerson(spec) {
   rightArm.rotation.z = spec.female ? -0.12 : -0.15;
   group.add(leftArm, rightArm);
 
+  // Wrist detail for realisticJunior — small torus rings
+  if (realisticJunior) {
+    const wristMat = new THREE.MeshPhysicalMaterial({ color: skinBaseColor, roughness: 0.18, metalness: 0, clearcoat: 0.4, clearcoatRoughness: 0.2 });
+    const wristL = new THREE.Mesh(new THREE.TorusGeometry(0.034, 0.006, 8, 16), wristMat);
+    wristL.position.set(-0.252, 0.75, 0.035);
+    wristL.rotation.z = 0.12;
+    const wristR = wristL.clone();
+    wristR.position.x = 0.252;
+    wristR.rotation.z = -0.12;
+    group.add(wristL, wristR);
+  }
+
   const handGeo = new THREE.SphereGeometry(spec.female ? 0.048 : 0.054, 18, 18);
   const leftHand = new THREE.Mesh(handGeo, skinMat);
   leftHand.position.set(spec.female ? -0.264 : -0.302, 0.71, 0.04);
   const rightHand = leftHand.clone();
   rightHand.position.x = spec.female ? 0.264 : 0.286;
+  // Elongated feminine hands for realisticJunior
+  if (realisticJunior) {
+    leftHand.scale.set(0.8, 1.0, 1.2);
+    rightHand.scale.set(0.8, 1.0, 1.2);
+  }
   group.add(leftHand, rightHand);
+
+  // Finger suggestion for realisticJunior — thin cylinders extending from hands
+  if (realisticJunior) {
+    const fingerMat = skinMat.clone();
+    const fingerGeo = new THREE.CylinderGeometry(0.008, 0.006, 0.06, 8);
+    const fingerL = new THREE.Mesh(fingerGeo, fingerMat);
+    fingerL.position.set(-0.264, 0.676, 0.06);
+    fingerL.rotation.x = Math.PI * 0.38;
+    const fingerR = fingerL.clone();
+    fingerR.position.x = 0.264;
+    group.add(fingerL, fingerR);
+  }
 
   const sleeveGeo = new THREE.CylinderGeometry(spec.female ? 0.072 : 0.078, spec.female ? 0.078 : 0.084, 0.2, 14);
   const leftSleeve = new THREE.Mesh(sleeveGeo, accentMat);
@@ -653,7 +795,7 @@ function createPerson(spec) {
   group.add(eyeSparkleL, eyeSparkleR);
 
   const hairCap = new THREE.Mesh(
-    new THREE.SphereGeometry(spec.female ? 0.194 : 0.188, 28, 28, 0, Math.PI * 2, 0, Math.PI * 0.72),
+    new THREE.SphereGeometry(spec.female ? (realisticJunior ? 0.202 : 0.194) : 0.188, 28, 28, 0, Math.PI * 2, 0, Math.PI * 0.72),
     hairMat
   );
   hairCap.position.set(0, 1.62, -0.01);
@@ -787,6 +929,22 @@ function createPerson(spec) {
     collar.rotation.x = Math.PI * 0.54;
     group.add(collar);
 
+    // Collar spread detail for realisticJunior — two small angled planes at the neckline
+    if (realisticJunior) {
+      const collarSpreadMat = new THREE.MeshPhysicalMaterial({ color: "#fffdf6", roughness: 0.48, metalness: 0.01, clearcoat: 0.12 });
+      const collarSpreadGeo = new THREE.PlaneGeometry(0.05, 0.04);
+      const collarSpreadL = new THREE.Mesh(collarSpreadGeo, collarSpreadMat);
+      collarSpreadL.position.set(-0.05, 1.22, 0.12);
+      collarSpreadL.rotation.y = 0.35;
+      collarSpreadL.rotation.z = -0.25;
+      collarSpreadL.rotation.x = -0.15;
+      const collarSpreadR = collarSpreadL.clone();
+      collarSpreadR.position.x = 0.05;
+      collarSpreadR.rotation.y = -0.35;
+      collarSpreadR.rotation.z = 0.25;
+      group.add(collarSpreadL, collarSpreadR);
+    }
+
     const blouse = new THREE.Mesh(
       new THREE.CapsuleGeometry(0.164, 0.48, 8, 16),
       new THREE.MeshPhysicalMaterial({ color: "#fffdfa", roughness: 0.3, metalness: 0.01, clearcoat: 0.2, clearcoatRoughness: 0.24 })
@@ -807,8 +965,9 @@ function createPerson(spec) {
     blouseFold.position.set(0, 1.02, 0.2);
     group.add(blouseFold);
 
-    [-0.02, 0.1, 0.22].forEach((offsetY) => {
-      const button = new THREE.Mesh(new THREE.SphereGeometry(0.012, 10, 10), buttonMat);
+    const buttonOffsets = realisticJunior ? [-0.02, 0.08, 0.16, 0.24] : [-0.02, 0.1, 0.22];
+    buttonOffsets.forEach((offsetY) => {
+      const button = new THREE.Mesh(new THREE.SphereGeometry(realisticJunior ? 0.01 : 0.012, 10, 10), buttonMat);
       button.position.set(0, 1.12 - offsetY, 0.2);
       group.add(button);
     });
@@ -853,27 +1012,77 @@ function createPerson(spec) {
     scrunchie.rotation.x = Math.PI / 2;
     group.add(scrunchie);
 
-    const ponytail = new THREE.Mesh(new THREE.CapsuleGeometry(realisticJunior ? 0.044 : 0.05, realisticJunior ? 0.74 : 0.62, 6, 12), hairMat);
-    ponytail.position.set(realisticJunior ? 0.1 : 0.092, realisticJunior ? 1.286 : 1.24, realisticJunior ? -0.246 : -0.24);
-    ponytail.rotation.z = realisticJunior ? -0.02 : -0.18;
-    ponytail.rotation.x = 0.1;
-    ponytail.scale.set(realisticJunior ? 0.8 : 0.86, realisticJunior ? 1.42 : 1.24, realisticJunior ? 0.76 : 0.8);
-    group.add(ponytail);
-
-    const ponytailTail = new THREE.Mesh(new THREE.CapsuleGeometry(realisticJunior ? 0.029 : 0.036, realisticJunior ? 0.56 : 0.42, 6, 10), hairMat);
-    ponytailTail.position.set(realisticJunior ? 0.154 : 0.14, realisticJunior ? 0.98 : 0.92, realisticJunior ? -0.102 : -0.16);
-    ponytailTail.rotation.z = realisticJunior ? -0.03 : -0.22;
-    ponytailTail.rotation.x = -0.04;
-    ponytailTail.scale.set(realisticJunior ? 0.78 : 0.84, realisticJunior ? 1.42 : 1.28, realisticJunior ? 0.76 : 0.82);
-    group.add(ponytailTail);
-
     if (realisticJunior) {
+      // Enhanced multi-segment ponytail with glossy hair material
+      const ponytailSheenMat = new THREE.MeshPhysicalMaterial({
+        color: spec.hair,
+        roughness: 0.08,
+        metalness: 0.05,
+        clearcoat: 0.72,
+        clearcoatRoughness: 0.08,
+        sheen: 0.48,
+        sheenRoughness: 0.2,
+        sheenColor: new THREE.Color('#b08868'),
+      });
+
       ponytailBase.position.set(0.02, 1.692, -0.164);
       scrunchie.position.set(0.02, 1.692, -0.164);
-      ponytail.position.set(0.094, 1.304, -0.234);
-      ponytail.scale.set(0.82, 1.46, 0.8);
-      ponytailTail.position.set(0.144, 1.012, -0.09);
-      ponytailTail.scale.set(0.82, 1.46, 0.8);
+
+      // Hair tie detail — small torus at ponytail base
+      const hairTie = new THREE.Mesh(
+        new THREE.TorusGeometry(0.038, 0.01, 12, 24),
+        new THREE.MeshPhysicalMaterial({ color: "#2a1418", roughness: 0.3, metalness: 0.08, clearcoat: 0.4 })
+      );
+      hairTie.position.set(0.02, 1.62, -0.19);
+      hairTie.rotation.x = Math.PI * 0.35;
+      hairTie.rotation.z = -0.05;
+      group.add(hairTie);
+
+      // Segment 1 — widest, near base
+      const ptSeg1 = new THREE.Mesh(new THREE.CapsuleGeometry(0.042, 0.22, 8, 14), ponytailSheenMat);
+      ptSeg1.position.set(0.04, 1.52, -0.22);
+      ptSeg1.rotation.x = 0.35;
+      ptSeg1.rotation.z = -0.04;
+      ptSeg1.scale.set(0.82, 1.0, 0.72);
+      group.add(ptSeg1);
+
+      // Segment 2 — slightly thinner
+      const ptSeg2 = new THREE.Mesh(new THREE.CapsuleGeometry(0.036, 0.22, 8, 14), ponytailSheenMat);
+      ptSeg2.position.set(0.08, 1.32, -0.2);
+      ptSeg2.rotation.x = 0.15;
+      ptSeg2.rotation.z = -0.06;
+      ptSeg2.scale.set(0.78, 1.0, 0.68);
+      group.add(ptSeg2);
+
+      // Segment 3 — thinner still
+      const ptSeg3 = new THREE.Mesh(new THREE.CapsuleGeometry(0.03, 0.2, 8, 12), ponytailSheenMat);
+      ptSeg3.position.set(0.12, 1.14, -0.14);
+      ptSeg3.rotation.x = -0.12;
+      ptSeg3.rotation.z = -0.04;
+      ptSeg3.scale.set(0.76, 1.0, 0.66);
+      group.add(ptSeg3);
+
+      // Segment 4 — tip, thinnest
+      const ptSeg4 = new THREE.Mesh(new THREE.CapsuleGeometry(0.022, 0.18, 8, 10), ponytailSheenMat);
+      ptSeg4.position.set(0.15, 0.97, -0.08);
+      ptSeg4.rotation.x = -0.28;
+      ptSeg4.rotation.z = -0.03;
+      ptSeg4.scale.set(0.74, 1.0, 0.62);
+      group.add(ptSeg4);
+    } else {
+      const ponytail = new THREE.Mesh(new THREE.CapsuleGeometry(0.05, 0.62, 6, 12), hairMat);
+      ponytail.position.set(0.092, 1.24, -0.24);
+      ponytail.rotation.z = -0.18;
+      ponytail.rotation.x = 0.1;
+      ponytail.scale.set(0.86, 1.24, 0.8);
+      group.add(ponytail);
+
+      const ponytailTail = new THREE.Mesh(new THREE.CapsuleGeometry(0.036, 0.42, 6, 10), hairMat);
+      ponytailTail.position.set(0.14, 0.92, -0.16);
+      ponytailTail.rotation.z = -0.22;
+      ponytailTail.rotation.x = -0.04;
+      ponytailTail.scale.set(0.84, 1.28, 0.82);
+      group.add(ponytailTail);
     }
   }
 
@@ -1149,34 +1358,77 @@ function applyFlyingPose(person, progress) {
   person.position.y = Math.sin(progress * Math.PI * 4.2) * 0.08;
 }
 
-function createTree({ scale: treeScale = 1 }) {
+function createTree({ scale: treeScale = 1, colorVariant = 0 }) {
   const group = new THREE.Group();
+
+  // Trunk with natural taper and bark texture
   const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.08 * treeScale, 0.2 * treeScale, 2.18 * treeScale, 14),
-    new THREE.MeshStandardMaterial({ color: "#6e4b34", roughness: 0.92, metalness: 0.02 })
+    new THREE.CylinderGeometry(0.07 * treeScale, 0.22 * treeScale, 2.4 * treeScale, 14),
+    new THREE.MeshStandardMaterial({ color: "#5e3f28", roughness: 0.94, metalness: 0.02 })
   );
-  trunk.position.y = 1.09 * treeScale;
+  trunk.position.y = 1.2 * treeScale;
   group.add(trunk);
 
+  // Bark highlight strip
   const trunkHighlight = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.056 * treeScale, 0.074 * treeScale, 1.76 * treeScale, 10),
-    new THREE.MeshStandardMaterial({ color: "#8b6445", roughness: 0.84, metalness: 0.02, transparent: true, opacity: 0.36 })
+    new THREE.CylinderGeometry(0.05 * treeScale, 0.08 * treeScale, 1.9 * treeScale, 10),
+    new THREE.MeshStandardMaterial({ color: "#7a5638", roughness: 0.84, metalness: 0.02, transparent: true, opacity: 0.32 })
   );
-  trunkHighlight.position.set(-0.02 * treeScale, 1.18 * treeScale, 0.09 * treeScale);
+  trunkHighlight.position.set(-0.02 * treeScale, 1.24 * treeScale, 0.08 * treeScale);
   group.add(trunkHighlight);
 
-  const leafMat = new THREE.MeshStandardMaterial({ color: "#567a48", roughness: 0.94, metalness: 0.01 });
+  // Low branches for realism
+  const branchMat = new THREE.MeshStandardMaterial({ color: "#5e3f28", roughness: 0.92, metalness: 0.02 });
+  const branch1 = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.02 * treeScale, 0.04 * treeScale, 0.8 * treeScale, 6),
+    branchMat
+  );
+  branch1.position.set(0.2 * treeScale, 1.9 * treeScale, 0.1 * treeScale);
+  branch1.rotation.z = -0.7;
+  group.add(branch1);
+
+  const branch2 = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.018 * treeScale, 0.035 * treeScale, 0.7 * treeScale, 6),
+    branchMat
+  );
+  branch2.position.set(-0.18 * treeScale, 2.1 * treeScale, -0.12 * treeScale);
+  branch2.rotation.z = 0.65;
+  group.add(branch2);
+
+  // Color variants for natural variation between trees
+  const leafColors = ["#4a7040", "#567a48", "#628c4e", "#3e6338", "#5a8244"];
+  const baseColor = leafColors[colorVariant % leafColors.length];
+  const r = parseInt(baseColor.slice(1, 3), 16);
+  const g = parseInt(baseColor.slice(3, 5), 16);
+  const b = parseInt(baseColor.slice(5, 7), 16);
+  const lighterColor = `#${Math.min(255, r + 22).toString(16).padStart(2, "0")}${Math.min(255, g + 18).toString(16).padStart(2, "0")}${Math.min(255, b + 14).toString(16).padStart(2, "0")}`;
+  const darkerColor = `#${Math.max(0, r - 16).toString(16).padStart(2, "0")}${Math.max(0, g - 12).toString(16).padStart(2, "0")}${Math.max(0, b - 10).toString(16).padStart(2, "0")}`;
+
+  const leafMatBase = new THREE.MeshStandardMaterial({ color: baseColor, roughness: 0.94, metalness: 0.01 });
+  const leafMatLight = new THREE.MeshStandardMaterial({ color: lighterColor, roughness: 0.92, metalness: 0.01 });
+  const leafMatDark = new THREE.MeshStandardMaterial({ color: darkerColor, roughness: 0.96, metalness: 0.01 });
+  const leafMats = [leafMatBase, leafMatLight, leafMatDark];
+
+  // Multiple overlapping sphere clusters for organic canopy shape
   [
-    [0, 2.84, 0, 1.04, 1.2, 0.92],
-    [-0.4, 2.46, 0.18, 0.86, 0.92, 0.74],
-    [0.46, 2.52, -0.14, 0.9, 1.02, 0.78],
-    [0.06, 3.28, -0.16, 0.82, 0.84, 0.72],
-    [-0.26, 3.02, -0.26, 0.7, 0.72, 0.62],
-    [0.24, 2.94, 0.32, 0.68, 0.7, 0.6],
-    [-0.52, 2.82, -0.22, 0.78, 0.82, 0.68],
-    [0.58, 2.86, 0.18, 0.74, 0.8, 0.66],
-  ].forEach(([x, y, z, sx, sy, sz]) => {
-    const cluster = new THREE.Mesh(new THREE.SphereGeometry(0.52 * treeScale, 20, 20), leafMat);
+    // Main canopy mass
+    [0, 2.9, 0, 1.1, 1.24, 1.0, 0],
+    [-0.38, 2.5, 0.2, 0.9, 0.96, 0.78, 1],
+    [0.44, 2.56, -0.16, 0.94, 1.06, 0.82, 2],
+    // Upper crown
+    [0.06, 3.42, -0.14, 0.86, 0.88, 0.76, 1],
+    [-0.2, 3.16, -0.28, 0.72, 0.76, 0.66, 0],
+    [0.28, 3.1, 0.3, 0.7, 0.74, 0.64, 2],
+    // Side extensions
+    [-0.56, 2.76, -0.2, 0.8, 0.84, 0.7, 2],
+    [0.6, 2.82, 0.16, 0.76, 0.82, 0.68, 1],
+    // Fill clusters for density
+    [-0.14, 2.68, 0.36, 0.68, 0.72, 0.6, 0],
+    [0.32, 2.44, -0.34, 0.64, 0.68, 0.58, 2],
+    [-0.42, 3.06, 0.12, 0.6, 0.64, 0.56, 1],
+    [0.12, 3.56, 0.08, 0.58, 0.6, 0.52, 0],
+  ].forEach(([x, y, z, sx, sy, sz, matIdx]) => {
+    const cluster = new THREE.Mesh(new THREE.SphereGeometry(0.52 * treeScale, 18, 18), leafMats[matIdx]);
     cluster.position.set(x * treeScale, y * treeScale, z * treeScale);
     cluster.scale.set(sx, sy, sz);
     group.add(cluster);
@@ -2302,7 +2554,7 @@ export function createLm402Scene(canvas) {
   });
 
   WORLD.campusTrees.forEach((tree, index) => {
-    const treeNode = createTree({ scale: tree.scale });
+    const treeNode = createTree({ scale: tree.scale, colorVariant: index });
     treeNode.position.set(scaled(tree.x), 0, scaled(tree.z));
     treeNode.rotation.y = index * 0.6;
     setShadow(treeNode, false, true);
@@ -2319,8 +2571,58 @@ export function createLm402Scene(canvas) {
 
   // ── Enhanced campus scenery ──
 
-  // Campus ground plane — large grass surface extending outward from corridor
-  const campusGroundMat = new THREE.MeshStandardMaterial({ color: "#5a7a48", roughness: 0.9, metalness: 0.01 });
+  // Campus ground plane — textured grass with walking paths and garden beds
+  const campusGroundCanvas = document.createElement("canvas");
+  campusGroundCanvas.width = 512;
+  campusGroundCanvas.height = 512;
+  const cgCtx = campusGroundCanvas.getContext("2d");
+  cgCtx.fillStyle = "#5a7a48";
+  cgCtx.fillRect(0, 0, 512, 512);
+  // Subtle grass colour variation patches
+  for (let gi = 0; gi < 120; gi++) {
+    const gx = Math.random() * 512;
+    const gy = Math.random() * 512;
+    const gr = 8 + Math.random() * 20;
+    cgCtx.beginPath();
+    cgCtx.arc(gx, gy, gr, 0, Math.PI * 2);
+    cgCtx.fillStyle = Math.random() > 0.5 ? "rgba(80,120,60,0.15)" : "rgba(50,90,40,0.12)";
+    cgCtx.fill();
+  }
+  // Walking paths — lighter concrete strips
+  cgCtx.fillStyle = "#b8b0a4";
+  cgCtx.fillRect(80, 0, 18, 512);
+  cgCtx.fillRect(320, 0, 14, 512);
+  cgCtx.fillRect(0, 240, 512, 16);
+  cgCtx.save();
+  cgCtx.translate(256, 256);
+  cgCtx.rotate(0.4);
+  cgCtx.fillRect(-300, -7, 600, 14);
+  cgCtx.restore();
+  cgCtx.strokeStyle = "rgba(100,90,78,0.3)";
+  cgCtx.lineWidth = 1;
+  cgCtx.strokeRect(80, 0, 18, 512);
+  cgCtx.strokeRect(320, 0, 14, 512);
+  cgCtx.strokeRect(0, 240, 512, 16);
+  // Garden / flower bed patches
+  const gardenColors = ["rgba(140,80,60,0.25)", "rgba(120,60,80,0.2)", "rgba(90,110,50,0.22)"];
+  [[140, 100, 30, 22], [380, 340, 26, 18], [200, 420, 24, 20], [440, 140, 20, 28]].forEach(([fx, fy, fw, fh]) => {
+    cgCtx.fillStyle = gardenColors[Math.floor(Math.random() * gardenColors.length)];
+    cgCtx.beginPath();
+    cgCtx.ellipse(fx, fy, fw, fh, 0, 0, Math.PI * 2);
+    cgCtx.fill();
+    for (let fi = 0; fi < 6; fi++) {
+      cgCtx.beginPath();
+      cgCtx.arc(fx + (Math.random() - 0.5) * fw * 1.4, fy + (Math.random() - 0.5) * fh * 1.4, 2 + Math.random() * 2, 0, Math.PI * 2);
+      cgCtx.fillStyle = ["rgba(220,60,80,0.5)", "rgba(240,200,60,0.5)", "rgba(220,120,200,0.4)"][fi % 3];
+      cgCtx.fill();
+    }
+  });
+  const campusGroundTex = new THREE.CanvasTexture(campusGroundCanvas);
+  campusGroundTex.colorSpace = THREE.SRGBColorSpace;
+  campusGroundTex.wrapS = THREE.RepeatWrapping;
+  campusGroundTex.wrapT = THREE.RepeatWrapping;
+  campusGroundTex.repeat.set(3, 3);
+  const campusGroundMat = new THREE.MeshStandardMaterial({ color: "#5a7a48", map: campusGroundTex, roughness: 0.92, metalness: 0.01 });
   const campusGround = new THREE.Mesh(
     new THREE.PlaneGeometry(campusDepth * 2.4, floorLength * 1.6),
     campusGroundMat
@@ -2330,54 +2632,129 @@ export function createLm402Scene(canvas) {
   campusGround.receiveShadow = true;
   worldGroup.add(campusGround);
 
-  // Distant campus buildings
-  const distBuildingMat = new THREE.MeshStandardMaterial({ color: "#c4bfb6", roughness: 0.92, metalness: 0.03 });
-  const distBuildingMat2 = new THREE.MeshStandardMaterial({ color: "#b8c2ca", roughness: 0.88, metalness: 0.04 });
-  const distBuildingMat3 = new THREE.MeshStandardMaterial({ color: "#d2ccc4", roughness: 0.94, metalness: 0.02 });
+  // ── Distant campus buildings with window textures ──
+  function makeBuildingTexture(wallColor, windowRows, windowCols, texW, texH) {
+    const bCanvas = document.createElement("canvas");
+    bCanvas.width = texW || 192;
+    bCanvas.height = texH || 128;
+    const bCtx = bCanvas.getContext("2d");
+    bCtx.fillStyle = wallColor;
+    bCtx.fillRect(0, 0, bCanvas.width, bCanvas.height);
+    for (let wi = 0; wi < 30; wi++) {
+      bCtx.fillStyle = `rgba(${128 + Math.random() * 40},${128 + Math.random() * 40},${128 + Math.random() * 40},0.06)`;
+      bCtx.fillRect(Math.random() * bCanvas.width, Math.random() * bCanvas.height, 4 + Math.random() * 12, 2 + Math.random() * 6);
+    }
+    const wMX = bCanvas.width * 0.08;
+    const wMY = bCanvas.height * 0.06;
+    const wSX = (bCanvas.width - wMX * 2) / windowCols;
+    const wSY = (bCanvas.height - wMY * 2) / windowRows;
+    const wW = wSX * 0.55;
+    const wH = wSY * 0.52;
+    for (let wr = 0; wr < windowRows; wr++) {
+      for (let wc = 0; wc < windowCols; wc++) {
+        const wx = wMX + wc * wSX + (wSX - wW) / 2;
+        const wy = wMY + wr * wSY + (wSY - wH) / 2;
+        bCtx.fillStyle = "rgba(60,70,80,0.4)";
+        bCtx.fillRect(wx - 1, wy - 1, wW + 2, wH + 2);
+        const isLit = Math.random() > 0.4;
+        bCtx.fillStyle = isLit ? "rgba(180,210,230,0.7)" : "rgba(90,110,130,0.6)";
+        bCtx.fillRect(wx, wy, wW, wH);
+        if (isLit) {
+          bCtx.fillStyle = "rgba(255,255,255,0.15)";
+          bCtx.fillRect(wx + 1, wy + 1, wW * 0.3, wH * 0.4);
+        }
+      }
+    }
+    const bTex = new THREE.CanvasTexture(bCanvas);
+    bTex.colorSpace = THREE.SRGBColorSpace;
+    return bTex;
+  }
 
-  // Building A — science block (far left, near front)
-  const buildingA = new THREE.Mesh(
-    new THREE.BoxGeometry(3.6, scaled(420), 8.4),
-    distBuildingMat
-  );
-  buildingA.position.set(minX - campusDepth * 0.72, scaled(420) / 2, scaled(900));
-  buildingA.receiveShadow = true;
-  buildingA.castShadow = true;
-  worldGroup.add(buildingA);
+  // 5 buildings — heights relative to 4th-floor eye level (~scaled(320))
+  const campusBuildings = [
+    { wall: "#c4bfb6", w: 3.6, h: scaled(520), d: 8.4, px: 0.72, pz: 900, wr: 6, wc: 5, roof: "flat" },
+    { wall: "#b8c2ca", w: 5.2, h: scaled(440), d: 6.8, px: 0.88, pz: 1800, wr: 5, wc: 7, roof: "ledge" },
+    { wall: "#d2ccc4", w: 4.4, h: scaled(280), d: 10.2, px: 0.64, pz: 2700, wr: 3, wc: 6, roof: "flat" },
+    { wall: "#c8bfb0", w: 3.0, h: scaled(480), d: 5.6, px: 0.82, pz: 1350, wr: 5, wc: 4, roof: "ledge" },
+    { wall: "#d4c8bc", w: 6.0, h: scaled(240), d: 7.4, px: 0.56, pz: 3200, wr: 2, wc: 8, roof: "flat" },
+  ];
 
-  // Building B — library (far center)
-  const buildingB = new THREE.Mesh(
-    new THREE.BoxGeometry(5.2, scaled(360), 6.8),
-    distBuildingMat2
-  );
-  buildingB.position.set(minX - campusDepth * 0.88, scaled(360) / 2, scaled(1800));
-  buildingB.receiveShadow = true;
-  buildingB.castShadow = true;
-  worldGroup.add(buildingB);
+  campusBuildings.forEach((bDef) => {
+    const bTex = makeBuildingTexture(bDef.wall, bDef.wr, bDef.wc, 192, 128);
+    // Aerial perspective — blue-tint distant buildings
+    const distFactor = bDef.px;
+    const bR = parseInt(bDef.wall.slice(1, 3), 16);
+    const bG = parseInt(bDef.wall.slice(3, 5), 16);
+    const bB = parseInt(bDef.wall.slice(5, 7), 16);
+    const hR = Math.round(bR + (0xd4 - bR) * distFactor * 0.3);
+    const hG = Math.round(bG + (0xe8 - bG) * distFactor * 0.3);
+    const hB = Math.round(bB + (0xf0 - bB) * distFactor * 0.3);
+    const hazedColor = `#${hR.toString(16).padStart(2, "0")}${hG.toString(16).padStart(2, "0")}${hB.toString(16).padStart(2, "0")}`;
 
-  // Building C — gymnasium (far right, near back)
-  const buildingC = new THREE.Mesh(
-    new THREE.BoxGeometry(4.4, scaled(300), 10.2),
-    distBuildingMat3
-  );
-  buildingC.position.set(minX - campusDepth * 0.64, scaled(300) / 2, scaled(2700));
-  buildingC.receiveShadow = true;
-  buildingC.castShadow = true;
-  worldGroup.add(buildingC);
+    const bMat = new THREE.MeshStandardMaterial({ color: hazedColor, map: bTex, roughness: 0.9, metalness: 0.03 });
+    const bMesh = new THREE.Mesh(new THREE.BoxGeometry(bDef.w, bDef.h, bDef.d), bMat);
+    bMesh.position.set(minX - campusDepth * bDef.px, bDef.h / 2, scaled(bDef.pz));
+    bMesh.receiveShadow = true;
+    bMesh.castShadow = true;
+    worldGroup.add(bMesh);
 
-  // Sky dome — large inverted hemisphere for sky backdrop
+    if (bDef.roof === "ledge") {
+      const ledge = new THREE.Mesh(
+        new THREE.BoxGeometry(bDef.w + 0.2, 0.08, bDef.d + 0.2),
+        new THREE.MeshStandardMaterial({ color: "#a0988e", roughness: 0.88, metalness: 0.04 })
+      );
+      ledge.position.set(minX - campusDepth * bDef.px, bDef.h + 0.04, scaled(bDef.pz));
+      worldGroup.add(ledge);
+      const parapet = new THREE.Mesh(
+        new THREE.BoxGeometry(bDef.w + 0.16, 0.18, bDef.d + 0.16),
+        new THREE.MeshStandardMaterial({ color: "#b8b0a6", roughness: 0.9, metalness: 0.02 })
+      );
+      parapet.position.set(minX - campusDepth * bDef.px, bDef.h + 0.12, scaled(bDef.pz));
+      worldGroup.add(parapet);
+    } else {
+      const roofCap = new THREE.Mesh(
+        new THREE.BoxGeometry(bDef.w + 0.1, 0.06, bDef.d + 0.1),
+        new THREE.MeshStandardMaterial({ color: "#8a8480", roughness: 0.92, metalness: 0.03 })
+      );
+      roofCap.position.set(minX - campusDepth * bDef.px, bDef.h + 0.03, scaled(bDef.pz));
+      worldGroup.add(roofCap);
+    }
+  });
+
+  // ── Sky dome with realistic gradient and clouds ──
   const skyDomeGeo = new THREE.SphereGeometry(80, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
   const skyCanvas = document.createElement("canvas");
-  skyCanvas.width = 256;
-  skyCanvas.height = 256;
+  skyCanvas.width = 512;
+  skyCanvas.height = 512;
   const skyCtx = skyCanvas.getContext("2d");
-  const skyGrad = skyCtx.createLinearGradient(0, 0, 0, 256);
-  skyGrad.addColorStop(0, "#87CEEB");
-  skyGrad.addColorStop(0.4, "#b8dcf0");
-  skyGrad.addColorStop(0.7, "#d4e8f4");
-  skyGrad.addColorStop(1.0, "#e8f0f6");
+  const skyGrad = skyCtx.createLinearGradient(0, 0, 0, 512);
+  skyGrad.addColorStop(0, "#4a7ab5");
+  skyGrad.addColorStop(0.25, "#6a9ec8");
+  skyGrad.addColorStop(0.45, "#87CEEB");
+  skyGrad.addColorStop(0.65, "#a8d8f0");
+  skyGrad.addColorStop(0.8, "#d4e8f0");
+  skyGrad.addColorStop(0.92, "#e8f0f4");
+  skyGrad.addColorStop(1.0, "#eef4f7");
   skyCtx.fillStyle = skyGrad;
-  skyCtx.fillRect(0, 0, 256, 256);
+  skyCtx.fillRect(0, 0, 512, 512);
+  // Cloud shapes — soft blurred ellipses
+  [
+    [120, 100, 50, 18, 0.5], [140, 96, 40, 14, 0.4], [100, 104, 35, 12, 0.35],
+    [300, 140, 60, 20, 0.45], [320, 136, 45, 16, 0.4], [280, 145, 38, 14, 0.35],
+    [420, 80, 44, 16, 0.42], [440, 76, 36, 14, 0.38],
+    [200, 200, 55, 18, 0.3], [220, 196, 42, 14, 0.28],
+    [380, 220, 48, 16, 0.32], [60, 180, 40, 14, 0.34],
+    [460, 160, 52, 18, 0.36], [470, 156, 38, 12, 0.3],
+  ].forEach(([cx, cy, rx, ry, op]) => {
+    const cGrad = skyCtx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(rx, ry));
+    cGrad.addColorStop(0, `rgba(255,255,255,${op})`);
+    cGrad.addColorStop(0.5, `rgba(255,255,255,${op * 0.6})`);
+    cGrad.addColorStop(1, "rgba(255,255,255,0)");
+    skyCtx.fillStyle = cGrad;
+    skyCtx.beginPath();
+    skyCtx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    skyCtx.fill();
+  });
   const skyTexture = new THREE.CanvasTexture(skyCanvas);
   skyTexture.colorSpace = THREE.SRGBColorSpace;
   const skyDomeMat = new THREE.MeshBasicMaterial({
@@ -2637,7 +3014,7 @@ export function createLm402Scene(canvas) {
 
   function updateCharacters(game) {
     const isIntro = game.mode === "intro";
-    senior.visible = !isIntro;
+    senior.visible = !isIntro && (game.characters.senior.alpha ?? 1) > 0.02;
     junior.visible = !isIntro;
     fatherEcho.visible = !isIntro && game.characters.fatherEcho.alpha > 0.02;
     auntEcho.visible = !isIntro && game.characters.auntEcho.alpha > 0.02;
@@ -2651,6 +3028,11 @@ export function createLm402Scene(canvas) {
 
     senior.position.set(game.characters.senior.x, 0, game.characters.senior.z);
     senior.rotation.y = game.characters.senior.rotationY ?? 0;
+    if ((game.characters.senior.alpha ?? 1) < 1) {
+      senior.traverse((child) => {
+        if (child.material) child.material.opacity = game.characters.senior.alpha;
+      });
+    }
     junior.position.set(game.characters.junior.x, 0, game.characters.junior.z);
     junior.rotation.y = game.characters.junior.rotationY ?? 0;
     fatherEcho.position.set(game.characters.fatherEcho.x, 0, game.characters.fatherEcho.z);

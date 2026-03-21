@@ -328,6 +328,7 @@ function createInitialCharacters() {
       y: 0,
       z: WORLD_POINTS.corridorFront.z,
       rotationY: -1.32,
+      alpha: 1,
     },
     junior: {
       x: WORLD_POINTS.juniorSeat.x,
@@ -1216,6 +1217,9 @@ function getInteractionById(id) {
   if (id === "front_call" && state.phase === "front_call") {
     return INTERACTIONS.front_call;
   }
+  if (id === "junior" && state.phase === "consciousness_market") {
+    return INTERACTIONS.junior_prephone;
+  }
   if (id === "junior" && state.phase !== "eye_contact") {
     return INTERACTIONS.junior;
   }
@@ -1681,10 +1685,7 @@ function updateCharacters() {
 
 function updateCharacterAudio(dt) {
   if (state.mode === "intro") {
-    if (state.intro.time > 10.2 && state.intro.time < 17.2 && state.time - state.sound.seniorStepAt > 0.48) {
-      state.sound.seniorStepAt = state.time;
-      audioSystem.playCue("step");
-    }
+    // Senior doesn't exist in the scene before 11:00 — no step sounds during intro
     return;
   }
 
