@@ -100,22 +100,28 @@ export const WORLD = {
 /* 10:40–11:00 為意識菜市場探索期（時空手錶倒數 20 分鐘）；front_call 在 11:00 手錶凍結後才正式啟動 */
 export const PHASES = [
   {
-    id: "front_call",
+    id: "consciousness_market",
     index: "01",
+    title: "意識菜市場",
+    copy: "10:40，一束光打在阿姨身上。教室裡的意識菜市場正在開市，不同年紀的自己正在七嘴八舌。時空手錶走到 11:00 之前，先在教室裡感受這場內心風暴。",
+  },
+  {
+    id: "front_call",
+    index: "02",
     title: "前門來電",
-    copy: "時空手錶走到 11:00 時，學長會走到前門。先靠近 LM402 前門外的走廊，把電話真正聽見。",
+    copy: "時空手錶停在 11:00。鐘響了，學長從樓梯走過來，站在 LM402 前門外，打了那通電話。",
   },
   {
     id: "rear_wait",
-    index: "02",
+    index: "03",
     title: "後門等待",
-    copy: "進教室、站到後門旁，把那條走廊與空白留出來。",
+    copy: "穿過教室，站到後門旁邊，把那一段等待與空白留下來。",
   },
   {
     id: "eye_contact",
-    index: "03",
+    index: "04",
     title: "一眼瞬間",
-    copy: "讓光、站位與視角都到位，看見那秒鐘往旁邊退一步。",
+    copy: "讓光、站位與視角都對位，看見那一秒真正的樣子。",
   },
 ];
 
@@ -140,7 +146,7 @@ export const HOTSPOTS = [
     y: 194,
     z: 2328,
     radius: 132,
-    revealIn: ["front_call", "rear_wait", "eye_contact"],
+    revealIn: ["consciousness_market", "front_call", "rear_wait", "eye_contact"],
   },
   {
     id: "board",
@@ -151,7 +157,7 @@ export const HOTSPOTS = [
     y: 164,
     z: 2418,
     radius: 232,
-    revealIn: ["front_call", "rear_wait", "eye_contact"],
+    revealIn: ["consciousness_market", "front_call", "rear_wait", "eye_contact"],
   },
   {
     id: "seat",
@@ -162,7 +168,7 @@ export const HOTSPOTS = [
     y: 86,
     z: 2058,
     radius: 170,
-    revealIn: ["front_call", "rear_wait", "eye_contact"],
+    revealIn: ["consciousness_market", "front_call", "rear_wait", "eye_contact"],
   },
   {
     id: "notes",
@@ -184,7 +190,7 @@ export const HOTSPOTS = [
     y: 112,
     z: 2058,
     radius: 156,
-    revealIn: ["front_call", "rear_wait"],
+    revealIn: ["consciousness_market", "front_call", "rear_wait"],
   },
   {
     id: "backdoor",
@@ -252,6 +258,25 @@ export const MEMORY_FRAGMENTS = {
 
 /* ✅ 已校對：對話文案與 EP3、EP11、EP38 故事原文核實完成 */
 export const INTERACTIONS = {
+  consciousness_market: {
+    title: "意識菜市場",
+    eyebrow: "10:40 · 教室裡",
+    copy: "不同年紀的自己，正在七嘴八舌。",
+    lines: [
+      { speaker: "29歲的聲音", text: "坐好。保持微笑，看起來鎮定就好。" },
+      { speaker: "18歲的聲音", text: "可是我心臟跳好快……我好怕搞砸。" },
+      { speaker: "29歲的聲音", text: "11 點鐘響的時候，他會先到前門，看不到妳。然後他會打電話。" },
+      { speaker: "29歲的聲音", text: "妳就坐著。等他打來，只要說：『你走到後門。』" },
+      { speaker: "33歲的聲音", text: "喜歡不是佔有。靠近需要對方同意。" },
+      { speaker: "33歲的聲音", text: "讓他自己走過來，填滿那一段距離。" },
+      { speaker: "39歲的聲音", text: "先活著。後來的事後來再說。" },
+      { speaker: "39歲的聲音", text: "把這排桌子當成妳的邊界。不要往前跨。" },
+      { speaker: "49歲的聲音", text: "不要把所有的話在二十分鐘裡說完。讓這二十分鐘好好發生。" },
+      { speaker: "49歲的聲音", text: "所有更晚的心跳，都會從這裡長出來。" },
+      { speaker: "49歲的聲音", text: "不要怕。留一點空白給命運，也留一點空白給妳自己。" },
+      { speaker: "29歲的聲音", text: "選一件最小但最重要的事：不要跑掉，也不要做奇怪的事。" },
+    ],
+  },
   front_call: {
     eyebrow: "11:00｜前門",
     title: "前門來電",
@@ -417,15 +442,15 @@ export const INTERACTIONS = {
       },
     ],
   },
-  /* ✅ 已校對：改為對齊 EP38 意識菜市場原文——不同年齡的「我」像攤位擠進來 */
+  /* ✅ 已校對：改為對齊 EP38 意識菜市場原文——不同年齡的「我」像攤位擠進來；光束打在阿姨身上觸發第二次穿越 */
   aunt_market: {
     eyebrow: "意識菜市場",
     title: "菜市場裡的我們",
     speaker: "不同年齡的聲音",
     copy: [
-      "十點四十分。一束光忽然打在教室裡——不是陽光，是比陽光更安靜、更古老的光。",
+      "10:40，一束光打在阿姨身上——不是陽光，是比陽光更安靜、更古老的光。這是阿姨的第二次穿越。",
       "那道光落在一個十八歲女生身上。她站在那裡，眼睛裡同時映著兩個時空的走廊。",
-      "這是阿姨的第二次穿越。她的意識從二十九歲的身體裡，再一次飛回十八歲的自己。",
+      "18 歲阿姨的意識正式上線。從這一刻起，她是這間教室的主角。",
       "不同年齡的「我」一下子全擠進來，像同一條巷子忽然開了好多個攤位。",
       "有人說話很穩、有人語調很尖，有人聽起來像剛哭完，還有一個聲音，溫溫的，好像已經看過很多次日出。",
       "菜市場裡每個攤位都在叫賣自己的真理：有人喊要衝，有人喊要退，有人喊「先活」、有人喊「要留白」。",

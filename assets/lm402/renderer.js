@@ -2831,11 +2831,14 @@ function applyPerfectEndingCamera(game) {
   const seniorPovEnd = CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 28;
   const center = junior.position.clone().add(_endingCenterOff);
   const faceForward = tempVecA.set(Math.sin(junior.rotation.y), 0, Math.cos(junior.rotation.y));
-  const eyeTarget = center.clone().add(faceForward.clone().multiplyScalar(0.138)).add(_endingFaceOff);
   const seniorEye = senior.position.clone().add(_endingSeniorEyeOff);
 
-  // Orbit center at junior's eye level
-  const orbitCenter = junior.position.clone().add(new THREE.Vector3(0, 1.55, 0));
+  // Center point between junior's two eyes (bridge of nose)
+  const faceDir = new THREE.Vector3(Math.sin(junior.rotation.y), 0, Math.cos(junior.rotation.y));
+  const orbitCenter = junior.position.clone()
+    .add(new THREE.Vector3(0, 1.55, 0))  // eye height
+    .add(faceDir.clone().multiplyScalar(0.12));  // slightly forward from head center to eye plane
+  const eyeTarget = orbitCenter.clone();
 
   // ── Phase 0 (0–2s): Establishing shot — camera behind senior, looking at junior ──
   if (totalTime < 2) {
@@ -2868,7 +2871,7 @@ function applyPerfectEndingCamera(game) {
     const orbitT = (totalTime - 2) / 10; // 0 to 1 over 10 seconds
     const easedT = THREE.MathUtils.smoothstep(orbitT, 0, 1);
     const angle = easedT * Math.PI * 2; // Full 360° with sine easing
-    const orbitRadius = 0.8; // Distance from junior's face
+    const orbitRadius = 0.7; // Distance from junior's face (tighter orbit around between-eyes point)
 
     // Calculate orbit position, anchored to junior's facing direction
     const baseAngle = angle + junior.rotation.y;
@@ -2901,9 +2904,9 @@ function applyPerfectEndingCamera(game) {
     // Orbit end position (full circle returns to front)
     const endAngle = Math.PI * 2 + junior.rotation.y;
     const orbitEndPos = new THREE.Vector3(
-      orbitCenter.x + Math.sin(endAngle) * 0.8,
+      orbitCenter.x + Math.sin(endAngle) * 0.7,
       orbitCenter.y + 0.0,
-      orbitCenter.z + Math.cos(endAngle) * 0.8
+      orbitCenter.z + Math.cos(endAngle) * 0.7
     );
 
     // Senior hold position

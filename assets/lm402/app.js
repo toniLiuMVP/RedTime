@@ -373,6 +373,9 @@ function angleDifference(a, b) {
 }
 
 function phaseLookTarget(phase) {
+  if (phase === "consciousness_market") {
+    return WORLD_POINTS.juniorSeat;
+  }
   if (liveState?.characters) {
     if (phase === "eye_contact") {
       return {
@@ -441,8 +444,8 @@ function createInitialPlayer() {
     lookInput: { x: 0, y: 0 },
     isGhostObserver: true,
   };
-  player.yaw = yawToTarget(player, WORLD_POINTS.frontLook);
-  player.pitch = phaseDefaultPitch("front_call", player);
+  player.yaw = yawToTarget(player, WORLD_POINTS.juniorSeat);
+  player.pitch = phaseDefaultPitch("consciousness_market", player);
   return player;
 }
 
@@ -454,6 +457,7 @@ function createInitialFlags() {
     rearWaitHintPlayed: false,
     eyeCuePlayed: false,
     perfectLinePlayed: false,
+    lastMarketLine: -1,
   };
 }
 
@@ -483,7 +487,7 @@ const state = {
   lookSensitivityPreset: initialLookSetting.preset,
   lookSensitivityScalar: initialLookSetting.scalar,
   audioEnabled: initialAudioEnabled,
-  phase: "front_call",
+  phase: "consciousness_market",
   ending: null,
   endingSequence: null,
   intro: {
@@ -506,8 +510,8 @@ const state = {
   dialogue: null,
   subtitle: {
     source: "女兒",
-    text: "我可以飛翔。沿著紅線，利瑪竇和 LM402 會在光裡慢慢長出來。",
-    ttl: 3.6,
+    text: "現在時空手錶顯示10:40，現在阿姨在教室裡面，怎麼我會這麼緊張^_^",
+    ttl: 5.0,
   },
   subtitleLog: [],
   ambience: {
@@ -517,6 +521,7 @@ const state = {
   flags: createInitialFlags(),
   characters: createInitialCharacters(),
   gameTime: { hours: 10, minutes: 40, frozen: false, realElapsed: 0 },
+  heartbeat: { lastBeatTime: 0, active: false },
   time: 0,
   phaseClock: 0,
   cinematicGlow: 0,
@@ -688,6 +693,8 @@ function createAudioSystem() {
     playCue,
     tryPlay,
     syncPrompt: syncMusicPrompt,
+    ensureContext,
+    playEnvelope,
   };
 }
 
@@ -991,12 +998,14 @@ function toggleObjectivePrompt() {
 
 function updateObjective(expand = false) {
   const phase = PHASES.find((item) => item.id === state.phase);
-  dom.objectiveKicker.textContent = state.phase === "eye_contact" ? "最後一幕" : "目前任務";
+  dom.objectiveKicker.textContent = state.phase === "eye_contact" ? "最後一幕" : state.phase === "consciousness_market" ? "意識菜市場" : "目前任務";
   dom.objectiveTitle.textContent = phase.title;
 
   let copy = phase.copy;
-  if (state.phase === "front_call") {
-    copy = "先靠近剛從樓梯走到 LM402 前門外的學長，把那句「妳在哪裡？」真正聽見，也把門牌、門洞和矮牆外那片十一點日光一起收進來。";
+  if (state.phase === "consciousness_market") {
+    copy = "10:40，一束光打在阿姨身上。意識菜市場正在開市，不同年紀的自己正在七嘴八舌。在教室裡感受這場內心風暴，等時空手錶走到 11:00。";
+  } else if (state.phase === "front_call") {
+    copy = "時空手錶停在 11:00。鐘響了，學長從樓梯走過來，站在 LM402 前門外，打了那通電話。靠近前門把那句話真正聽見。";
   } else if (state.phase === "rear_wait") {
     copy = "進教室、站到另一端的後門旁，把學長會走過來的那段走廊、那道光和一點空白先留出來。";
   } else if (state.phase === "eye_contact") {
@@ -1210,11 +1219,11 @@ function getInteractionById(id) {
   if (id === "junior" && state.phase !== "eye_contact") {
     return INTERACTIONS.junior;
   }
-  if (id === "backdoor" && state.phase === "front_call") {
+  if (id === "backdoor" && (state.phase === "front_call" || state.phase === "consciousness_market")) {
     // Player chose to find the aunt first — trigger aunt's consciousness market story
     return INTERACTIONS.aunt_market;
   }
-  if (id === "backdoor" && state.phase !== "front_call") {
+  if (id === "backdoor" && state.phase !== "front_call" && state.phase !== "consciousness_market") {
     return INTERACTIONS.backdoor;
   }
   return INTERACTIONS[id];
@@ -1396,7 +1405,7 @@ function finishIntro() {
       lookInput: { x: 0, y: 0 },
       isGhostObserver: true,
     };
-    setSubtitle("女兒", "把拔站在前門耶，阿姨也在教室裡面，我要飛進誰的心裡呢？", 10);
+    setSubtitle("女兒", "現在時空手錶顯示10:40，現在阿姨在教室裡面，怎麼我會這麼緊張^_^", 5.0);
     setAmbience("十一點的陽光灑在走廊和教室裡，微風輕輕吹過四樓的窗戶，帶著校園裡樹葉的氣味。");
   }
 
@@ -1462,7 +1471,7 @@ function resetScene() {
   clearTransientInput();
   state.mode = "play";
   state.cameraMode = "play";
-  state.phase = "front_call";
+  state.phase = "consciousness_market";
   state.phaseClock = 0;
   state.time = 0;
   state.ending = null;
@@ -1476,7 +1485,7 @@ function resetScene() {
     isGhostObserver: true,
   };
   state.characters = createInitialCharacters();
-  state.cinematicGlow = 0;
+  state.cinematicGlow = 0.6;
   state.mobileDockExpanded = false;
   state.introBeatIndex = 0;
   state.introCameraTrack = INTRO_BEATS[0].id;
@@ -1485,13 +1494,14 @@ function resetScene() {
   state.activeHotspot = null;
   state.activeHotspotId = null;
   state.boundaryCollisionState = null;
+  state.gameTime = { hours: 10, minutes: 40, frozen: false, realElapsed: 0 };
   dom.endingOverlay.hidden = true;
   dom.body.classList.remove("ending-open");
   dom.dialogueSheet.hidden = true;
   dom.body.classList.remove("dialogue-open");
   updateObjective(true);
   updateMemoryList();
-  setSubtitle("女兒", "先讓前門那句電話響起來。", 3.6);
+  setSubtitle("女兒", "現在時空手錶顯示10:40，現在阿姨在教室裡面，怎麼我會這麼緊張^_^", 5.0);
   setAmbience("粉筆味像一層薄雲，四樓長走廊有風，沒有天花板的日光正沿著矮牆、前門門洞和教室兩側一起往裡推。");
   syncDockState();
   updatePointerHint();
@@ -1614,6 +1624,16 @@ function updateCharacters() {
     return;
   }
 
+  if (state.phase === "consciousness_market") {
+    // Senior is completely hidden during consciousness marketplace
+    setCharacterPose("senior", scale(-520), scale(WORLD.stairs.front.landingZ), 0, 0);
+    // Junior seated at her desk
+    setCharacterPose("junior", scale(1896), scale(2058), 0.03);
+    setCharacterPose("fatherEcho", scale(-272), scale(WORLD.backDoor.center.z + 2), Math.PI / 2, 0);
+    setCharacterPose("auntEcho", scale(-116), scale(WORLD.backDoor.center.z + 26), -Math.PI / 2, 0);
+    return;
+  }
+
   if (state.phase === "front_call") {
     const seniorWalkT = smoothstep(0.08, 3.8, state.phaseClock);
     const seniorX = lerp(scale(-520), scale(-336), seniorWalkT);
@@ -1689,6 +1709,29 @@ function updateCharacterAudio(dt) {
 
 function updatePhaseLogic(dt) {
   state.phaseClock += dt;
+
+  if (state.phase === "consciousness_market") {
+    // Keep cinematic glow on junior during marketplace
+    state.cinematicGlow = 0.6;
+
+    // Auto-play consciousness marketplace lines
+    const lines = INTERACTIONS.consciousness_market.lines;
+    const lineInterval = 9; // seconds between lines
+    const lineIndex = Math.floor(state.phaseClock / lineInterval);
+
+    if (lineIndex < lines.length && lineIndex !== state.flags.lastMarketLine) {
+      state.flags.lastMarketLine = lineIndex;
+      const line = lines[lineIndex];
+      setSubtitle(line.speaker, line.text, lineInterval - 1);
+    }
+
+    // Transition to front_call when time reaches 11:00
+    if (state.gameTime.frozen) {
+      setPhase("front_call");
+      setSubtitle("女兒", "時空手錶停了。鐘響了。有人從樓梯走過來……", 4);
+    }
+    return;
+  }
 
   if (state.phase === "rear_wait" && state.phaseClock > 1.2 && !state.flags.rearWaitHintPlayed) {
     state.flags.rearWaitHintPlayed = true;
@@ -1939,6 +1982,38 @@ function formatGameTime(h, m) {
   return String(h).padStart(2, "0") + ":" + String(Math.floor(m)).padStart(2, "0");
 }
 
+function playHeartbeat() {
+  if (!state.audioEnabled) return;
+  const ctx = audioSystem.ensureContext();
+  if (!ctx || ctx.state !== "running") return;
+  const when = ctx.currentTime + 0.01;
+  // First thump (louder)
+  audioSystem.playEnvelope(ctx, {
+    type: "sine", frequency: 60, duration: 0.08, gain: 0.06,
+    when, attack: 0.006, release: 0.1
+  });
+  audioSystem.playEnvelope(ctx, {
+    type: "sine", frequency: 40, duration: 0.06, gain: 0.03,
+    when, attack: 0.006, release: 0.08
+  });
+  // Second thump (softer, slightly delayed)
+  audioSystem.playEnvelope(ctx, {
+    type: "sine", frequency: 55, duration: 0.06, gain: 0.04,
+    when: when + 0.12, attack: 0.006, release: 0.08
+  });
+  audioSystem.playEnvelope(ctx, {
+    type: "sine", frequency: 35, duration: 0.05, gain: 0.02,
+    when: when + 0.12, attack: 0.006, release: 0.07
+  });
+  // Visual pulse
+  if (dom.timeWatch) {
+    dom.timeWatch.classList.add("pulse");
+    setTimeout(() => {
+      if (dom.timeWatch) dom.timeWatch.classList.remove("pulse");
+    }, 150);
+  }
+}
+
 function updateGameTime(dt) {
   const gt = state.gameTime;
   if (gt.frozen) return;
@@ -1956,11 +2031,33 @@ function updateGameTime(dt) {
     gt.hours += 1;
   }
 
+  // Heartbeat sound: plays from 10:40 to 11:00
+  const totalGameMinutes = gt.hours * 60 + gt.minutes;
+  const heartbeatStart = 10 * 60 + 40; // 10:40
+  const heartbeatEnd = 11 * 60;         // 11:00
+  if (totalGameMinutes >= heartbeatStart && totalGameMinutes < heartbeatEnd) {
+    const hb = state.heartbeat;
+    // Progress from 0.0 (at 10:40) to 1.0 (at 11:00)
+    const progress = (totalGameMinutes - heartbeatStart) / (heartbeatEnd - heartbeatStart);
+    // Lerp beat interval from 2.0s down to 0.33s
+    const interval = 2.0 + (0.33 - 2.0) * progress;
+    const now = performance.now() / 1000;
+    if (!hb.active) {
+      hb.active = true;
+      hb.lastBeatTime = now;
+      playHeartbeat();
+    } else if (now - hb.lastBeatTime >= interval) {
+      hb.lastBeatTime = now;
+      playHeartbeat();
+    }
+  }
+
   // Freeze at 11:00
   if (gt.hours > 11 || (gt.hours === 11 && gt.minutes >= 0)) {
     gt.hours = 11;
     gt.minutes = 0;
     gt.frozen = true;
+    state.heartbeat.active = false;
     if (dom.timeWatch) dom.timeWatch.classList.add("frozen");
   }
 
@@ -2437,7 +2534,7 @@ if (state.mode === "intro") {
   setAmbience(INTRO_BEATS[0].ambience);
 } else {
   state.cameraMode = "play";
-  setSubtitle("女兒", "先讓前門那句電話響起來。", 3.2);
+  setSubtitle("女兒", "現在時空手錶顯示10:40，現在阿姨在教室裡面，怎麼我會這麼緊張^_^", 5.0);
   setAmbience("粉筆味像一層薄雲，樓梯口那邊有風，十一點的光才剛準備進來。");
 }
 
