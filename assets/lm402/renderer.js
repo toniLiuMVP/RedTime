@@ -1899,46 +1899,58 @@ export function createLm402Scene(canvas) {
 
 
   const campusDepth = scaled(WORLD.corridor.campusDepth);
-  addBox(
-    worldGroup,
-    [],
-    new THREE.BoxGeometry(campusDepth, 0.12, floorLength * 1.14),
-    lawnMat,
-    new THREE.Vector3(minX - campusDepth * 0.54, FLOOR_Y - 0.1, floorCenterZ),
-    null,
-    null,
-    null,
-    false,
-    true
+
+  // Campus ground — 4 stories below the 4th floor corridor (~12 m down)
+  const campusGroundY = FLOOR_Y - 12;
+
+  // Building facade below corridor (floors 1–3, visible below parapet)
+  const facadeHeight = 9; // 3 floors × 3m each
+  const facadeMat = new THREE.MeshStandardMaterial({ color: '#d4cfc6', roughness: 0.85, metalness: 0.02 });
+  const facade = new THREE.Mesh(
+    new THREE.BoxGeometry(0.15, facadeHeight, floorLength),
+    facadeMat
   );
-  addBox(
-    worldGroup,
-    [],
+  facade.position.set(minX - 0.08, FLOOR_Y - facadeHeight / 2, floorCenterZ);
+  worldGroup.add(facade);
+
+  // Window rows on the facade (3 floors below corridor)
+  const windowMat = new THREE.MeshStandardMaterial({
+    color: '#8ab4d6',
+    emissive: '#4a6a8a',
+    emissiveIntensity: 0.15,
+    roughness: 0.3,
+  });
+  for (let floor = 0; floor < 3; floor++) {
+    const floorY = FLOOR_Y - (floor + 1) * 3 + 1.5;
+    for (let i = 0; i < 12; i++) {
+      const winZ = minZ + (i + 0.5) * (floorLength / 12);
+      const win = new THREE.Mesh(
+        new THREE.PlaneGeometry(1.2, 1.5),
+        windowMat
+      );
+      win.position.set(minX - 0.16, floorY, winZ);
+      win.rotation.y = -Math.PI / 2;
+      worldGroup.add(win);
+    }
+  }
+
+  // Plaza strip at ground level below the building
+  const groundPlaza = new THREE.Mesh(
     new THREE.BoxGeometry(campusDepth * 0.44, 0.06, floorLength * 0.92),
-    plazaMat,
-    new THREE.Vector3(minX - campusDepth * 0.26, FLOOR_Y - 0.04, floorCenterZ + 0.26),
-    null,
-    null,
-    null,
-    false,
-    true
+    plazaMat
   );
+  groundPlaza.position.set(minX - campusDepth * 0.26, campusGroundY + 0.03, floorCenterZ + 0.26);
+  groundPlaza.receiveShadow = true;
+  worldGroup.add(groundPlaza);
 
-  const skyWall = new THREE.Mesh(
-    new THREE.PlaneGeometry(floorLength * 1.04, 8.2),
-    new THREE.MeshBasicMaterial({ color: "#dce7f2", transparent: true, opacity: 0.95, side: THREE.DoubleSide })
-  );
-  skyWall.position.set(minX - campusDepth * 0.22, 3.5, floorCenterZ);
-  skyWall.rotation.y = Math.PI / 2;
-  worldGroup.add(skyWall);
-
+  // Sun glow — keep but shift slightly
   const sunGlow = createGlowPlane("rgba(255,233,192,1)", 9.6, 6.2, 0.34);
-  sunGlow.position.set(minX - campusDepth * 0.18, 4.2, scaled(720));
+  sunGlow.position.set(minX - campusDepth * 0.5, 4.2, scaled(720));
   sunGlow.rotation.y = Math.PI / 2;
   worldGroup.add(sunGlow);
 
   const canopyGlow = createGlowPlane("rgba(255,240,210,1)", 8.4, 4.8, 0.18);
-  canopyGlow.position.set(minX - campusDepth * 0.16, 2.8, scaled(1740));
+  canopyGlow.position.set(minX - campusDepth * 0.5, -4, scaled(1740));
   canopyGlow.rotation.y = Math.PI / 2;
   worldGroup.add(canopyGlow);
 
@@ -2554,18 +2566,19 @@ export function createLm402Scene(canvas) {
   });
 
   WORLD.campusTrees.forEach((tree, index) => {
-    const treeNode = createTree({ scale: tree.scale, colorVariant: index });
-    treeNode.position.set(scaled(tree.x), 0, scaled(tree.z));
+    // Trees rooted at ground level, scaled up so canopies reach ~floor 2–3 height
+    const treeNode = createTree({ scale: tree.scale * 2.5, colorVariant: index });
+    treeNode.position.set(scaled(tree.x), campusGroundY, scaled(tree.z));
     treeNode.rotation.y = index * 0.6;
     setShadow(treeNode, false, true);
     worldGroup.add(treeNode);
   });
 
   const distantAcademicBlock = new THREE.Mesh(
-    new THREE.BoxGeometry(4.8, 2.2, floorLength * 0.54),
+    new THREE.BoxGeometry(4.8, 6, floorLength * 0.54),
     new THREE.MeshStandardMaterial({ color: "#b7bec7", roughness: 0.95, metalness: 0.02 })
   );
-  distantAcademicBlock.position.set(minX - campusDepth * 0.34, 1.12, floorCenterZ + 0.2);
+  distantAcademicBlock.position.set(minX - campusDepth * 0.34, campusGroundY + 3, floorCenterZ + 0.2);
   distantAcademicBlock.receiveShadow = true;
   worldGroup.add(distantAcademicBlock);
 
@@ -2624,11 +2637,11 @@ export function createLm402Scene(canvas) {
   campusGroundTex.repeat.set(3, 3);
   const campusGroundMat = new THREE.MeshStandardMaterial({ color: "#5a7a48", map: campusGroundTex, roughness: 0.92, metalness: 0.01 });
   const campusGround = new THREE.Mesh(
-    new THREE.PlaneGeometry(campusDepth * 2.4, floorLength * 1.6),
+    new THREE.PlaneGeometry(campusDepth * 4, floorLength * 3),
     campusGroundMat
   );
   campusGround.rotation.x = -Math.PI / 2;
-  campusGround.position.set(minX - campusDepth * 0.8, FLOOR_Y - 0.12, floorCenterZ);
+  campusGround.position.set(minX - campusDepth * 0.8, campusGroundY, floorCenterZ);
   campusGround.receiveShadow = true;
   worldGroup.add(campusGround);
 
@@ -2693,7 +2706,7 @@ export function createLm402Scene(canvas) {
 
     const bMat = new THREE.MeshStandardMaterial({ color: hazedColor, map: bTex, roughness: 0.9, metalness: 0.03 });
     const bMesh = new THREE.Mesh(new THREE.BoxGeometry(bDef.w, bDef.h, bDef.d), bMat);
-    bMesh.position.set(minX - campusDepth * bDef.px, bDef.h / 2, scaled(bDef.pz));
+    bMesh.position.set(minX - campusDepth * bDef.px, campusGroundY + bDef.h / 2, scaled(bDef.pz));
     bMesh.receiveShadow = true;
     bMesh.castShadow = true;
     worldGroup.add(bMesh);
@@ -2703,26 +2716,26 @@ export function createLm402Scene(canvas) {
         new THREE.BoxGeometry(bDef.w + 0.2, 0.08, bDef.d + 0.2),
         new THREE.MeshStandardMaterial({ color: "#a0988e", roughness: 0.88, metalness: 0.04 })
       );
-      ledge.position.set(minX - campusDepth * bDef.px, bDef.h + 0.04, scaled(bDef.pz));
+      ledge.position.set(minX - campusDepth * bDef.px, campusGroundY + bDef.h + 0.04, scaled(bDef.pz));
       worldGroup.add(ledge);
       const parapet = new THREE.Mesh(
         new THREE.BoxGeometry(bDef.w + 0.16, 0.18, bDef.d + 0.16),
         new THREE.MeshStandardMaterial({ color: "#b8b0a6", roughness: 0.9, metalness: 0.02 })
       );
-      parapet.position.set(minX - campusDepth * bDef.px, bDef.h + 0.12, scaled(bDef.pz));
+      parapet.position.set(minX - campusDepth * bDef.px, campusGroundY + bDef.h + 0.12, scaled(bDef.pz));
       worldGroup.add(parapet);
     } else {
       const roofCap = new THREE.Mesh(
         new THREE.BoxGeometry(bDef.w + 0.1, 0.06, bDef.d + 0.1),
         new THREE.MeshStandardMaterial({ color: "#8a8480", roughness: 0.92, metalness: 0.03 })
       );
-      roofCap.position.set(minX - campusDepth * bDef.px, bDef.h + 0.03, scaled(bDef.pz));
+      roofCap.position.set(minX - campusDepth * bDef.px, campusGroundY + bDef.h + 0.03, scaled(bDef.pz));
       worldGroup.add(roofCap);
     }
   });
 
   // ── Sky dome with realistic gradient and clouds ──
-  const skyDomeGeo = new THREE.SphereGeometry(80, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+  const skyDomeGeo = new THREE.SphereGeometry(120, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
   const skyCanvas = document.createElement("canvas");
   skyCanvas.width = 512;
   skyCanvas.height = 512;
@@ -2764,7 +2777,7 @@ export function createLm402Scene(canvas) {
     depthWrite: false,
   });
   const skyDome = new THREE.Mesh(skyDomeGeo, skyDomeMat);
-  skyDome.position.set(minX - campusDepth * 0.3, FLOOR_Y - 1, floorCenterZ);
+  skyDome.position.set(minX - campusDepth * 0.3, campusGroundY, floorCenterZ);
   worldGroup.add(skyDome);
 
   const dustGeometry = new THREE.BufferGeometry();
@@ -3215,12 +3228,16 @@ function applyPerfectEndingCamera(game) {
   const faceForward = tempVecA.set(Math.sin(junior.rotation.y), 0, Math.cos(junior.rotation.y));
   const seniorEye = senior.position.clone().add(_endingSeniorEyeOff);
 
-  // Center point between junior's two eyes (bridge of nose)
+  // Face direction for orbit calculations
   const faceDir = new THREE.Vector3(Math.sin(junior.rotation.y), 0, Math.cos(junior.rotation.y));
+  // Orbit center at body center (waist height) for full-body framing
   const orbitCenter = junior.position.clone()
-    .add(new THREE.Vector3(0, 1.55, 0))  // eye height
-    .add(faceDir.clone().multiplyScalar(0.12));  // slightly forward from head center to eye plane
-  const eyeTarget = orbitCenter.clone();
+    .add(new THREE.Vector3(0, 0.85, 0))  // waist/body center height
+    .add(faceDir.clone().multiplyScalar(0.05));  // less forward offset
+  // Eye target remains at face height for senior POV phases
+  const eyeTarget = junior.position.clone()
+    .add(new THREE.Vector3(0, 1.55, 0))
+    .add(faceDir.clone().multiplyScalar(0.12));
 
   // ── Phase 0 (0–2s): Establishing shot — camera behind senior, looking at junior ──
   if (totalTime < 2) {
@@ -3253,23 +3270,24 @@ function applyPerfectEndingCamera(game) {
     const orbitT = (totalTime - 2) / 10; // 0 to 1 over 10 seconds
     const easedT = THREE.MathUtils.smoothstep(orbitT, 0, 1);
     const angle = easedT * Math.PI * 2; // Full 360° with sine easing
-    const orbitRadius = 0.7; // Distance from junior's face (tighter orbit around between-eyes point)
+    const orbitRadius = 2.2; // Much further back to capture full body
 
     // Calculate orbit position, anchored to junior's facing direction
     const baseAngle = angle + junior.rotation.y;
     const orbitX = orbitCenter.x + Math.sin(baseAngle) * orbitRadius;
     const orbitZ = orbitCenter.z + Math.cos(baseAngle) * orbitRadius;
-    // Subtle vertical wave — breathing altitude
-    const orbitY = orbitCenter.y + Math.sin(orbitT * Math.PI) * 0.05;
+    // Dynamic camera height — starts above eye level, dips during orbit for cinematic feel
+    const orbitY = orbitCenter.y + 0.4 + Math.sin(orbitT * Math.PI) * 0.3;
 
     camera.position.set(orbitX, orbitY, orbitZ);
 
-    // FOV narrows through the orbit for dramatic tension
-    camera.fov = THREE.MathUtils.lerp(22, 18, THREE.MathUtils.smoothstep(orbitT, 0, 1));
+    // Wider FOV to capture full body in frame
+    camera.fov = THREE.MathUtils.lerp(38, 32, THREE.MathUtils.smoothstep(orbitT, 0, 1));
     camera.updateProjectionMatrix();
 
-    // Always look at junior's face center
-    camera.lookAt(orbitCenter);
+    // Look at face area even though orbit center is at body center
+    const lookTarget = junior.position.clone().add(new THREE.Vector3(0, 1.45, 0));
+    camera.lookAt(lookTarget);
 
     // Heartbeat sway — subtle roll oscillation
     const heartbeat = Math.sin(totalTime * 1.8) * 0.002;
@@ -3283,12 +3301,12 @@ function applyPerfectEndingCamera(game) {
     const phaseT = (totalTime - 12) / 2;
     const eased = THREE.MathUtils.smoothstep(phaseT, 0, 1);
 
-    // Orbit end position (full circle returns to front)
+    // Orbit end position (full circle returns to front) — matches new orbit radius
     const endAngle = Math.PI * 2 + junior.rotation.y;
     const orbitEndPos = new THREE.Vector3(
-      orbitCenter.x + Math.sin(endAngle) * 0.7,
-      orbitCenter.y + 0.0,
-      orbitCenter.z + Math.cos(endAngle) * 0.7
+      orbitCenter.x + Math.sin(endAngle) * 2.2,
+      orbitCenter.y + 0.4,  // matches orbit end height
+      orbitCenter.z + Math.cos(endAngle) * 2.2
     );
 
     // Senior hold position
@@ -3300,8 +3318,8 @@ function applyPerfectEndingCamera(game) {
     camPos.y += breathe;
     camera.position.copy(camPos);
 
-    // FOV transitions from orbit narrow to approach FOV
-    camera.fov = THREE.MathUtils.lerp(18, 16, eased);
+    // FOV transitions from orbit end FOV to approach FOV
+    camera.fov = THREE.MathUtils.lerp(32, 16, eased);
     camera.updateProjectionMatrix();
 
     // Look target blends from orbit center to eye target
