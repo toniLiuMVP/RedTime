@@ -2022,8 +2022,8 @@ function updateGameTime(dt) {
 
   gt.realElapsed += dt;
 
-  // 1 real minute = 5 game minutes => 1 real second = 5/60 game minutes
-  const gameMinutesPerRealSecond = 5 / 60;
+  // 1 real minute = 7 game minutes => 1 real second = 7/60 game minutes
+  const gameMinutesPerRealSecond = 7 / 60;
   gt.minutes += dt * gameMinutesPerRealSecond;
 
   // Handle minute overflow
