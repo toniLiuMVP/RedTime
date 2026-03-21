@@ -1,4 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="6" fill="#050508"/>
-  <text x="16" y="23" text-anchor="middle" font-family="serif" font-size="20" fill="#16a864">妳</text>
+  <defs>
+    <linearGradient id="rainbow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff2a2a" />
+      <stop offset="20%" stop-color="#ff7a2a" />
+      <stop offset="40%" stop-color="#e2d822" />
+      <stop offset="60%" stop-color="#22e26b" />
+      <stop offset="80%" stop-color="#2a7aff" />
+      <stop offset="100%" stop-color="#9d2aff" />
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="6" fill="url(#rainbow)"/>
+  <text x="16" y="23" text-anchor="middle" font-family="serif" font-size="20" fill="#ffffff">妳</text>
 </svg>

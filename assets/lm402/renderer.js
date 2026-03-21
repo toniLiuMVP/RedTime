@@ -79,27 +79,27 @@ function makeFaceTexture({ female = false, referenceJunior = false } = {}) {
     ctx.stroke();
   }
 
-  // Eye whites visible behind dark pupils for referenceJunior
+  // Eye whites visible behind dark pupils for referenceJunior — 20% larger for expressive Vivian Hsu-style eyes
   if (referenceJunior) {
-    ctx.fillStyle = "rgba(255,255,255,.82)";
+    ctx.fillStyle = "rgba(255,255,255,.85)";
     ctx.beginPath();
-    ctx.ellipse(114, 152, 22, 14, -0.02, 0, Math.PI * 2);
+    ctx.ellipse(114, 152, 26, 17, -0.02, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(206, 152, 22, 14, 0.02, 0, Math.PI * 2);
+    ctx.ellipse(206, 152, 26, 17, 0.02, 0, Math.PI * 2);
     ctx.fill();
   }
 
   ctx.fillStyle = "#24191a";
   ctx.beginPath();
-  ctx.ellipse(114, referenceJunior ? 152 : 146, referenceJunior ? 17.5 : 15, referenceJunior ? 13.4 : 12, -0.02, 0, Math.PI * 2);
-  ctx.ellipse(206, referenceJunior ? 152 : 146, referenceJunior ? 17.5 : 15, referenceJunior ? 13.4 : 12, 0.02, 0, Math.PI * 2);
+  ctx.ellipse(114, referenceJunior ? 152 : 146, referenceJunior ? 21 : 15, referenceJunior ? 16 : 12, -0.02, 0, Math.PI * 2);
+  ctx.ellipse(206, referenceJunior ? 152 : 146, referenceJunior ? 21 : 15, referenceJunior ? 16 : 12, 0.02, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.fillStyle = female ? (referenceJunior ? "#5b3929" : "#3f231f") : "#35201d";
   ctx.beginPath();
-  ctx.ellipse(114, referenceJunior ? 152 : 146, referenceJunior ? 7.2 : 6, referenceJunior ? 8.8 : 7, 0, 0, Math.PI * 2);
-  ctx.ellipse(206, referenceJunior ? 152 : 146, referenceJunior ? 7.2 : 6, referenceJunior ? 8.8 : 7, 0, 0, Math.PI * 2);
+  ctx.ellipse(114, referenceJunior ? 152 : 146, referenceJunior ? 8.6 : 6, referenceJunior ? 10.6 : 7, 0, 0, Math.PI * 2);
+  ctx.ellipse(206, referenceJunior ? 152 : 146, referenceJunior ? 8.6 : 6, referenceJunior ? 10.6 : 7, 0, 0, Math.PI * 2);
   ctx.fill();
 
   if (female) {
@@ -134,21 +134,72 @@ function makeFaceTexture({ female = false, referenceJunior = false } = {}) {
     ctx.moveTo(referenceJunior ? 180 : 178, referenceJunior ? 134 : 130);
     ctx.quadraticCurveTo(referenceJunior ? 198 : 196, referenceJunior ? 128 : 124, referenceJunior ? 212 : 210, referenceJunior ? 134 : 132);
     ctx.stroke();
+
+    if (referenceJunior) {
+      // Double eyelid crease — subtle curved line above each eye
+      ctx.strokeStyle = "rgba(120,80,70,.35)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(88, 134);
+      ctx.quadraticCurveTo(114, 126, 140, 134);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(180, 134);
+      ctx.quadraticCurveTo(206, 126, 232, 134);
+      ctx.stroke();
+
+      // Longer eyelashes — multiple thin curved lines from outer eye corners
+      ctx.strokeStyle = "rgba(36,22,24,.7)";
+      ctx.lineWidth = 1.4;
+      // Left eye outer lashes
+      ctx.beginPath();
+      ctx.moveTo(78, 144);
+      ctx.quadraticCurveTo(72, 136, 68, 130);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(82, 142);
+      ctx.quadraticCurveTo(74, 132, 72, 126);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(86, 140);
+      ctx.quadraticCurveTo(80, 130, 78, 124);
+      ctx.stroke();
+      // Right eye outer lashes
+      ctx.beginPath();
+      ctx.moveTo(242, 144);
+      ctx.quadraticCurveTo(248, 136, 252, 130);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(238, 142);
+      ctx.quadraticCurveTo(246, 132, 248, 126);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(234, 140);
+      ctx.quadraticCurveTo(240, 130, 242, 124);
+      ctx.stroke();
+    }
   }
 
   ctx.fillStyle = "rgba(255,255,255,.94)";
   ctx.beginPath();
-  ctx.ellipse(110, referenceJunior ? 145 : 142, referenceJunior ? 3.9 : 3, referenceJunior ? 3.9 : 3, 0, 0, Math.PI * 2);
-  ctx.ellipse(202, referenceJunior ? 145 : 142, referenceJunior ? 3.9 : 3, referenceJunior ? 3.9 : 3, 0, 0, Math.PI * 2);
+  ctx.ellipse(110, referenceJunior ? 145 : 142, referenceJunior ? 4.6 : 3, referenceJunior ? 4.6 : 3, 0, 0, Math.PI * 2);
+  ctx.ellipse(202, referenceJunior ? 145 : 142, referenceJunior ? 4.6 : 3, referenceJunior ? 4.6 : 3, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Subtle nose bridge line for referenceJunior
+  // Nose bridge line for referenceJunior — higher, longer, more defined (高鼻梁)
   if (referenceJunior) {
-    ctx.strokeStyle = "rgba(180,140,130,.22)";
-    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = "rgba(180,140,130,.28)";
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(160, 130);
-    ctx.bezierCurveTo(161, 152, 159, 172, 157, 192);
+    ctx.moveTo(160, 122);
+    ctx.bezierCurveTo(161, 148, 159, 174, 157, 198);
+    ctx.stroke();
+    // Subtle nose bridge highlight on left side
+    ctx.strokeStyle = "rgba(255,255,255,.12)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(158, 124);
+    ctx.bezierCurveTo(159, 148, 157, 172, 155, 196);
     ctx.stroke();
   }
 
@@ -173,6 +224,12 @@ function makeFaceTexture({ female = false, referenceJunior = false } = {}) {
     ctx.fill();
     ctx.beginPath();
     ctx.ellipse(224, 180, 14, 10, 0.15, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Beauty mark (美人痣) — small dark dot below left eye, like 徐若瑄
+    ctx.fillStyle = "rgba(62,38,32,.72)";
+    ctx.beginPath();
+    ctx.arc(126, 174, 2.2, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -208,15 +265,29 @@ function makeFaceTexture({ female = false, referenceJunior = false } = {}) {
   ctx.strokeStyle = female ? (referenceJunior ? "rgba(186,126,132,.7)" : "rgba(176,86,112,.92)") : "rgba(126,82,76,.86)";
   ctx.lineWidth = female ? (referenceJunior ? 4.8 : 7) : 6;
   ctx.beginPath();
-  ctx.moveTo(referenceJunior ? 130 : 116, referenceJunior ? 236 : 236);
-  ctx.quadraticCurveTo(160, referenceJunior ? 244 : 258, referenceJunior ? 190 : 208, referenceJunior ? 236 : 236);
+  // referenceJunior: subtle upward-curved smile suggesting slight nervousness
+  ctx.moveTo(referenceJunior ? 132 : 116, referenceJunior ? 238 : 236);
+  ctx.quadraticCurveTo(160, referenceJunior ? 242 : 258, referenceJunior ? 188 : 208, referenceJunior ? 238 : 236);
   ctx.stroke();
+  if (referenceJunior) {
+    // Corner smile lines — slight upward ticks at mouth corners
+    ctx.strokeStyle = "rgba(186,126,132,.4)";
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo(132, 238);
+    ctx.quadraticCurveTo(128, 236, 126, 232);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(188, 238);
+    ctx.quadraticCurveTo(192, 236, 194, 232);
+    ctx.stroke();
+  }
 
   ctx.strokeStyle = "rgba(255,255,255,.18)";
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(referenceJunior ? 136 : 126, referenceJunior ? 232 : 234);
-  ctx.quadraticCurveTo(160, referenceJunior ? 239 : 248, referenceJunior ? 184 : 194, referenceJunior ? 232 : 234);
+  ctx.moveTo(referenceJunior ? 136 : 126, referenceJunior ? 234 : 234);
+  ctx.quadraticCurveTo(160, referenceJunior ? 238 : 248, referenceJunior ? 184 : 194, referenceJunior ? 234 : 234);
   ctx.stroke();
 
   const texture = new THREE.CanvasTexture(canvas);
@@ -444,8 +515,8 @@ function createPerson(spec) {
   });
   const legsMat = new THREE.MeshPhysicalMaterial({
     color: spec.legs,
-    roughness: spec.female ? 0.44 : 0.54,
-    metalness: 0.02,
+    roughness: realisticJunior ? 0.72 : (spec.female ? 0.44 : 0.54),
+    metalness: realisticJunior ? 0.02 : 0.02,
     clearcoat: spec.female ? 0.1 : 0.04,
     clearcoatRoughness: 0.4,
   });
@@ -471,7 +542,7 @@ function createPerson(spec) {
     clearcoatRoughness: realisticJunior ? 0.14 : 0.3,
     sheen: realisticJunior ? 0.32 : 0,
     sheenRoughness: realisticJunior ? 0.28 : 1,
-    sheenColor: new THREE.Color(realisticJunior ? '#a07060' : '#000'),
+    sheenColor: new THREE.Color(realisticJunior ? '#7a5a3a' : '#000'),
   });
   const shoeMat = new THREE.MeshPhysicalMaterial({ color: spec.shoes, roughness: 0.56, metalness: 0.1, clearcoat: 0.12, clearcoatRoughness: 0.4 });
   const buttonMat = new THREE.MeshPhysicalMaterial({ color: "#f6ede3", roughness: 0.42, metalness: 0.06, clearcoat: 0.16, clearcoatRoughness: 0.28 });
@@ -493,15 +564,15 @@ function createPerson(spec) {
 
   let skirtGeo;
   if (realisticJunior) {
-    // Higher-segment cylinder with modified bottom for pleat suggestion
-    skirtGeo = new THREE.CylinderGeometry(0.166, 0.208, 0.24, 24, 1, false);
-    // Slightly perturb bottom ring vertices for pleat-like uneven hem
+    // Shorter denim shorts — height 0.16 for exposed legs
+    skirtGeo = new THREE.CylinderGeometry(0.166, 0.19, 0.16, 24, 1, false);
+    // Slightly perturb bottom ring vertices for denim hem fraying
     const posAttr = skirtGeo.getAttribute('position');
     for (let i = 0; i < posAttr.count; i++) {
       const y = posAttr.getY(i);
-      if (y < -0.11) { // bottom ring vertices
+      if (y < -0.07) { // bottom ring vertices
         const angle = Math.atan2(posAttr.getZ(i), posAttr.getX(i));
-        const wave = Math.sin(angle * 6) * 0.008 + Math.sin(angle * 12) * 0.003;
+        const wave = Math.sin(angle * 6) * 0.005 + Math.sin(angle * 12) * 0.002;
         posAttr.setY(i, y + wave);
       }
     }
@@ -511,7 +582,7 @@ function createPerson(spec) {
     skirtGeo = new THREE.CylinderGeometry(spec.female ? 0.166 : 0.158, spec.female ? 0.208 : 0.174, spec.female ? 0.24 : 0.22, 16);
   }
   const skirtOrHip = new THREE.Mesh(skirtGeo, legsMat);
-  skirtOrHip.position.set(0, spec.female ? 0.71 : 0.74, 0);
+  skirtOrHip.position.set(0, realisticJunior ? 0.75 : (spec.female ? 0.71 : 0.74), 0);
   group.add(skirtOrHip);
 
   // Waistband detail for female characters — subtle band between torso and skirt
@@ -664,7 +735,7 @@ function createPerson(spec) {
   );
   group.add(head);
   if (realisticJunior) {
-    head.scale.set(0.73, 1.18, 0.8);
+    head.scale.set(0.92, 1.0, 0.88);
   }
 
   const jaw = new THREE.Mesh(new THREE.SphereGeometry(spec.female ? 0.14 : 0.154, 36, 36), skinMat);
@@ -847,7 +918,7 @@ function createPerson(spec) {
       opacity: 0.28,
       sheen: 0.6,
       sheenRoughness: 0.18,
-      sheenColor: new THREE.Color('#c09878'),
+      sheenColor: new THREE.Color('#8b6b4a'),
     });
     const hairShineLayer = new THREE.Mesh(
       new THREE.SphereGeometry(spec.female ? 0.198 : 0.192, 28, 28, 0, Math.PI * 2, 0, Math.PI * 0.72),
@@ -929,20 +1000,37 @@ function createPerson(spec) {
     collar.rotation.x = Math.PI * 0.54;
     group.add(collar);
 
-    // Collar spread detail for realisticJunior — two small angled planes at the neckline
+    // Collar spread detail for realisticJunior — V-neck opening with triangular flaps (白襯衫)
     if (realisticJunior) {
-      const collarSpreadMat = new THREE.MeshPhysicalMaterial({ color: "#fffdf6", roughness: 0.48, metalness: 0.01, clearcoat: 0.12 });
-      const collarSpreadGeo = new THREE.PlaneGeometry(0.05, 0.04);
-      const collarSpreadL = new THREE.Mesh(collarSpreadGeo, collarSpreadMat);
-      collarSpreadL.position.set(-0.05, 1.22, 0.12);
-      collarSpreadL.rotation.y = 0.35;
-      collarSpreadL.rotation.z = -0.25;
-      collarSpreadL.rotation.x = -0.15;
-      const collarSpreadR = collarSpreadL.clone();
-      collarSpreadR.position.x = 0.05;
-      collarSpreadR.rotation.y = -0.35;
-      collarSpreadR.rotation.z = 0.25;
-      group.add(collarSpreadL, collarSpreadR);
+      const collarFlapMat = new THREE.MeshPhysicalMaterial({ color: "#ffffff", roughness: 0.42, metalness: 0.01, clearcoat: 0.16, clearcoatRoughness: 0.2 });
+      // Triangular collar flaps — wider and more visible
+      const collarFlapGeo = new THREE.BufferGeometry();
+      const flapVerts = new Float32Array([
+        0, 0, 0,       // tip at center
+        -0.06, 0.04, 0, // upper outer
+        -0.05, -0.02, 0 // lower outer
+      ]);
+      collarFlapGeo.setAttribute('position', new THREE.BufferAttribute(flapVerts, 3));
+      collarFlapGeo.computeVertexNormals();
+      const collarFlapL = new THREE.Mesh(collarFlapGeo, collarFlapMat);
+      collarFlapL.position.set(-0.01, 1.22, 0.14);
+      collarFlapL.rotation.y = 0.3;
+      collarFlapL.rotation.z = -0.1;
+      group.add(collarFlapL);
+      // Right flap (mirrored)
+      const collarFlapGeoR = new THREE.BufferGeometry();
+      const flapVertsR = new Float32Array([
+        0, 0, 0,
+        0.06, 0.04, 0,
+        0.05, -0.02, 0
+      ]);
+      collarFlapGeoR.setAttribute('position', new THREE.BufferAttribute(flapVertsR, 3));
+      collarFlapGeoR.computeVertexNormals();
+      const collarFlapR = new THREE.Mesh(collarFlapGeoR, collarFlapMat);
+      collarFlapR.position.set(0.01, 1.22, 0.14);
+      collarFlapR.rotation.y = -0.3;
+      collarFlapR.rotation.z = 0.1;
+      group.add(collarFlapR);
     }
 
     const blouse = new THREE.Mesh(
@@ -1022,7 +1110,7 @@ function createPerson(spec) {
         clearcoatRoughness: 0.08,
         sheen: 0.48,
         sheenRoughness: 0.2,
-        sheenColor: new THREE.Color('#b08868'),
+        sheenColor: new THREE.Color('#7a5a3a'),
       });
 
       ponytailBase.position.set(0.02, 1.692, -0.164);
@@ -1887,8 +1975,8 @@ export function createLm402Scene(canvas) {
 
   const classroomFloorMat = new THREE.MeshStandardMaterial({ color: "#9a7252", map: classroomFloorTex, roughness: 0.78, metalness: 0.04 });
   const corridorFloorMat = new THREE.MeshStandardMaterial({ color: "#c2c9d2", map: corridorFloorTex, roughness: 0.82, metalness: 0.03 });
-  const wallMat = new THREE.MeshStandardMaterial({ color: "#f0e8dc", map: wallTex, roughness: 0.88, metalness: 0.01 });
-  const corridorWallMat = new THREE.MeshStandardMaterial({ color: "#d4dce6", map: corridorWallTex, roughness: 0.86, metalness: 0.02 });
+  const wallMat = new THREE.MeshStandardMaterial({ color: "#f2f0ec", map: wallTex, roughness: 0.88, metalness: 0.01 });
+  const corridorWallMat = new THREE.MeshStandardMaterial({ color: "#f0eeea", map: corridorWallTex, roughness: 0.86, metalness: 0.02 });
   const woodMat = new THREE.MeshStandardMaterial({ color: "#a07248", map: woodTex, roughness: 0.72, metalness: 0.06 });
   const metalMat = new THREE.MeshStandardMaterial({ color: "#8a9098", roughness: 0.48, metalness: 0.44 });
   const boardMat = new THREE.MeshStandardMaterial({ color: "#1e3b30", map: boardTex, roughness: 0.82, metalness: 0.03 });
@@ -2004,7 +2092,7 @@ export function createLm402Scene(canvas) {
     worldGroup,
     occluders,
     new THREE.BoxGeometry(wallThickness, parapetHeight, floorLength),
-    stoneMat,
+    new THREE.MeshStandardMaterial({ color: "#a8a29e", map: stoneTex, roughness: 0.92, metalness: 0.02 }),
     new THREE.Vector3(minX, parapetHeight / 2, floorCenterZ),
     null,
     colliders,
@@ -2156,6 +2244,82 @@ export function createLm402Scene(canvas) {
       zone.direction > 0 ? zone.z2 + 0.06 : zone.z1 - 0.06,
       `${zone.id}_airwall`
     );
+
+    // ── Stairs going DOWN (floors 3F, 2F, 1F below current 4F) ──
+    for (let floor = 1; floor <= 3; floor++) {
+      const floorBaseY = FLOOR_Y - floor * (stepH * stairCount + 0.06);
+      // Landing for this floor level
+      const downLanding = new THREE.Mesh(
+        new THREE.BoxGeometry(corridorWidth - 0.28, 0.06, zoneLen * 0.4),
+        stairRiserMat
+      );
+      downLanding.position.set(corridorCenterX, floorBaseY, zoneCenter);
+      downLanding.receiveShadow = true;
+      worldGroup.add(downLanding);
+
+      // Steps going down from landing
+      for (let si = 0; si < stairCount; si++) {
+        const sz = zone.direction > 0
+          ? THREE.MathUtils.lerp(zone.z1 + 0.12, zone.z2 - 0.24, si / stairCount)
+          : THREE.MathUtils.lerp(zone.z2 - 0.12, zone.z1 + 0.24, si / stairCount);
+        const sy = floorBaseY - stepH * 0.5 - si * stepH;
+        const downTread = new THREE.Mesh(
+          new THREE.BoxGeometry(stepW, 0.04, stepD + 0.02),
+          stairWoodMat
+        );
+        downTread.position.set(corridorCenterX, sy, sz + zone.direction * stepD * 0.5);
+        downTread.receiveShadow = true;
+        worldGroup.add(downTread);
+        const downRiser = new THREE.Mesh(
+          new THREE.BoxGeometry(stepW, stepH, 0.02),
+          stairRiserMat
+        );
+        downRiser.position.set(corridorCenterX, sy - stepH * 0.5, sz + zone.direction * 0.01);
+        worldGroup.add(downRiser);
+      }
+
+      // Side wall for this floor section
+      const downWall = new THREE.Mesh(
+        new THREE.BoxGeometry(0.22, stepH * stairCount + 0.1, zoneLen),
+        corridorWallMat
+      );
+      downWall.position.set(classroomMinX, floorBaseY - (stepH * stairCount) / 2, zoneCenter);
+      worldGroup.add(downWall);
+    }
+
+    // ── Stairs going UP to 5F ──
+    const upBaseY = FLOOR_Y + 0.06;
+    for (let si = 0; si < stairCount; si++) {
+      const sz = zone.direction > 0
+        ? THREE.MathUtils.lerp(zone.z2 - 0.24, zone.z1 + 0.12, si / stairCount)
+        : THREE.MathUtils.lerp(zone.z1 + 0.24, zone.z2 - 0.12, si / stairCount);
+      const sy = upBaseY + stepH * 0.5 + si * stepH;
+      const upTread = new THREE.Mesh(
+        new THREE.BoxGeometry(stepW, 0.04, stepD + 0.02),
+        stairWoodMat
+      );
+      upTread.position.set(corridorCenterX, sy, sz - zone.direction * stepD * 0.5);
+      upTread.receiveShadow = true;
+      worldGroup.add(upTread);
+      const upRiser = new THREE.Mesh(
+        new THREE.BoxGeometry(stepW, stepH, 0.02),
+        stairRiserMat
+      );
+      upRiser.position.set(corridorCenterX, sy - stepH * 0.5, sz - zone.direction * 0.01);
+      worldGroup.add(upRiser);
+    }
+
+    // Floor number labels on stair walls
+    const floorLabels = [
+      { text: "3F", y: FLOOR_Y - 1 * (stepH * stairCount + 0.06) + 0.6 },
+      { text: "5F", y: FLOOR_Y + stepH * stairCount + 0.3 },
+    ];
+    floorLabels.forEach((fl) => {
+      const labelPlane = buildTextPlane(fl.text, 0.5, 0.2, { bg: "#5c6672", fg: "#f7f0de" });
+      labelPlane.position.set(classroomMinX - 0.01, fl.y, zoneCenter);
+      labelPlane.rotation.y = Math.PI / 2;
+      worldGroup.add(labelPlane);
+    });
   });
 
   const room = lm402Room;
@@ -2269,23 +2433,8 @@ export function createLm402Scene(canvas) {
   plaqueLight.position.set(classroomMinX + 0.54, scaled(WORLD.plaque.y) + 0.08, scaled(WORLD.plaque.z));
   worldGroup.add(plaqueLight);
 
-  WORLD.floorRooms
-    .filter((room) => !room.interactive)
-    .forEach((room, index) => {
-      const roomCenterZ = roomCenter(room);
-      const plaqueText = room.label;
-      const roomPlaque = buildTextPlane(plaqueText, 1.04, 0.26, { bg: "#5c6672", fg: "#f7f0de" });
-      roomPlaque.position.set(classroomMinX - 0.31, 1.92, roomCenterZ + 0.22);
-      roomPlaque.rotation.y = Math.PI / 2;
-      worldGroup.add(roomPlaque);
-    });
-
-  WORLD.wallLabels.forEach((label) => {
-    const labelNode = buildWallLabel(label.id);
-    labelNode.position.set(scaled(label.x), scaled(label.y), scaled(label.z));
-    labelNode.rotation.y = label.rotateY ?? 0;
-    worldGroup.add(labelNode);
-  });
+  // Wall labels removed (LM401/LM403/LM404 plaques and wall labels)
+  // Only the LM402 plaque (interactive element) is kept above
 
   // ═══ TRANSPARENT GLASS WINDOWS ═══
   // Glass material — physically-based transparent glass that lets sunlight through
@@ -2750,6 +2899,26 @@ export function createLm402Scene(canvas) {
   skyGrad.addColorStop(1.0, "#eef4f7");
   skyCtx.fillStyle = skyGrad;
   skyCtx.fillRect(0, 0, 512, 512);
+  // Sun glow — upper-right area
+  const sunCX = 380, sunCY = 60;
+  const sunGrad2 = skyCtx.createRadialGradient(sunCX, sunCY, 0, sunCX, sunCY, 80);
+  sunGrad2.addColorStop(0, "rgba(255,255,240,0.95)");
+  sunGrad2.addColorStop(0.1, "rgba(255,250,220,0.8)");
+  sunGrad2.addColorStop(0.3, "rgba(255,240,180,0.4)");
+  sunGrad2.addColorStop(0.6, "rgba(255,220,150,0.15)");
+  sunGrad2.addColorStop(1, "rgba(255,200,120,0)");
+  skyCtx.fillStyle = sunGrad2;
+  skyCtx.beginPath();
+  skyCtx.arc(sunCX, sunCY, 80, 0, Math.PI * 2);
+  skyCtx.fill();
+  const sunCore = skyCtx.createRadialGradient(sunCX, sunCY, 0, sunCX, sunCY, 18);
+  sunCore.addColorStop(0, "rgba(255,255,255,1)");
+  sunCore.addColorStop(0.5, "rgba(255,255,240,0.9)");
+  sunCore.addColorStop(1, "rgba(255,250,220,0)");
+  skyCtx.fillStyle = sunCore;
+  skyCtx.beginPath();
+  skyCtx.arc(sunCX, sunCY, 18, 0, Math.PI * 2);
+  skyCtx.fill();
   // Cloud shapes — soft blurred ellipses
   [
     [120, 100, 50, 18, 0.5], [140, 96, 40, 14, 0.4], [100, 104, 35, 12, 0.35],
@@ -2780,6 +2949,76 @@ export function createLm402Scene(canvas) {
   skyDome.position.set(minX - campusDepth * 0.3, campusGroundY, floorCenterZ);
   worldGroup.add(skyDome);
 
+  // ── Animated cloud planes ──
+  const skyBaseX = minX - campusDepth * 0.3;
+  const skyBaseZ = floorCenterZ;
+  const animatedClouds = [];
+  const cloudDefs = [
+    { x: -20, y: 38, z: -30, w: 12, h: 4 },
+    { x: 15, y: 42, z: -20, w: 10, h: 3 },
+    { x: -35, y: 35, z: 10, w: 14, h: 5 },
+    { x: 25, y: 40, z: 25, w: 11, h: 3.5 },
+    { x: -10, y: 44, z: -40, w: 9, h: 3 },
+    { x: 40, y: 36, z: 5, w: 13, h: 4.5 },
+  ];
+  cloudDefs.forEach((cd) => {
+    const cc = document.createElement("canvas");
+    cc.width = 256; cc.height = 128;
+    const cctx = cc.getContext("2d");
+    const cg = cctx.createRadialGradient(128, 64, 10, 128, 64, 100);
+    cg.addColorStop(0, "rgba(255,255,255,0.7)");
+    cg.addColorStop(0.4, "rgba(255,255,255,0.35)");
+    cg.addColorStop(1, "rgba(255,255,255,0)");
+    cctx.fillStyle = cg;
+    cctx.fillRect(0, 0, 256, 128);
+    [[90, 58, 60], [166, 58, 55], [128, 48, 50]].forEach(([px, py, r]) => {
+      const pg = cctx.createRadialGradient(px, py, 4, px, py, r);
+      pg.addColorStop(0, "rgba(255,255,255,0.5)");
+      pg.addColorStop(1, "rgba(255,255,255,0)");
+      cctx.fillStyle = pg;
+      cctx.beginPath();
+      cctx.arc(px, py, r, 0, Math.PI * 2);
+      cctx.fill();
+    });
+    const ctex = new THREE.CanvasTexture(cc);
+    ctex.colorSpace = THREE.SRGBColorSpace;
+    const cloudMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(cd.w, cd.h),
+      new THREE.MeshBasicMaterial({ map: ctex, transparent: true, opacity: 0.6, depthWrite: false, side: THREE.DoubleSide, fog: false })
+    );
+    cloudMesh.position.set(skyBaseX + cd.x, campusGroundY + cd.y, skyBaseZ + cd.z);
+    cloudMesh.rotation.x = -0.15;
+    cloudMesh.userData.startX = cloudMesh.position.x;
+    cloudMesh.userData.speed = 0.15 + Math.random() * 0.2;
+    worldGroup.add(cloudMesh);
+    animatedClouds.push(cloudMesh);
+  });
+
+  // ── Animated birds (V-shaped) ──
+  const animatedBirds = [];
+  for (let bi = 0; bi < 4; bi++) {
+    const birdGroup = new THREE.Group();
+    const wingMat = new THREE.MeshBasicMaterial({ color: "#2a2a2a", side: THREE.DoubleSide, fog: false });
+    const wingL = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.08), wingMat);
+    wingL.position.set(-0.18, 0, 0); wingL.rotation.z = 0.3;
+    const wingR = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.08), wingMat);
+    wingR.position.set(0.18, 0, 0); wingR.rotation.z = -0.3;
+    birdGroup.add(wingL, wingR);
+    birdGroup.position.set(
+      skyBaseX - 30 + bi * 18,
+      campusGroundY + 32 + bi * 3,
+      skyBaseZ - 20 + bi * 12
+    );
+    birdGroup.userData.startX = birdGroup.position.x;
+    birdGroup.userData.startZ = birdGroup.position.z;
+    birdGroup.userData.wingL = wingL;
+    birdGroup.userData.wingR = wingR;
+    birdGroup.userData.speed = 0.6 + Math.random() * 0.4;
+    birdGroup.userData.phase = Math.random() * Math.PI * 2;
+    worldGroup.add(birdGroup);
+    animatedBirds.push(birdGroup);
+  }
+
   const dustGeometry = new THREE.BufferGeometry();
   const dustPositions = [];
   for (let index = 0; index < quality.dustCount; index += 1) {
@@ -2799,6 +3038,42 @@ export function createLm402Scene(canvas) {
   });
   const dust = new THREE.Points(dustGeometry, dustMaterial);
   worldGroup.add(dust);
+
+  // ── Classroom ceiling ──
+  const ceiling = new THREE.Mesh(
+    new THREE.BoxGeometry(roomDepth, 0.08, roomLength),
+    new THREE.MeshStandardMaterial({ color: '#f5f3ef', roughness: 0.9 })
+  );
+  ceiling.position.set((classroomMinX + classroomMaxX) / 2, corridorHeight - 0.04, centerZ);
+  ceiling.receiveShadow = true;
+  worldGroup.add(ceiling);
+
+  // ── Corridor ceiling ──
+  const corridorCeiling = new THREE.Mesh(
+    new THREE.BoxGeometry(corridorWidth, 0.08, floorLength),
+    new THREE.MeshStandardMaterial({ color: '#f0eeea', roughness: 0.9 })
+  );
+  corridorCeiling.position.set(corridorCenterX, corridorHeight - 0.04, floorCenterZ);
+  corridorCeiling.receiveShadow = true;
+  worldGroup.add(corridorCeiling);
+
+  // ── Desk lights (every other desk for performance) ──
+  WORLD.desks.forEach((desk, idx) => {
+    if (idx % 2 !== 0) return; // skip alternating desks
+    const dx = scaled(desk.x);
+    const dz = scaled(desk.z);
+    // Light fixture (small white box on ceiling)
+    const fixture = new THREE.Mesh(
+      new THREE.BoxGeometry(0.3, 0.04, 0.3),
+      new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: '#ffffff', emissiveIntensity: 0.5 })
+    );
+    fixture.position.set(dx, corridorHeight - 0.06, dz);
+    worldGroup.add(fixture);
+    // Point light
+    const deskLight = new THREE.PointLight(0xfff8ee, 0.15, 4, 2);
+    deskLight.position.set(dx, corridorHeight - 0.1, dz);
+    scene.add(deskLight);
+  });
 
   const debugAnchors = {
     senior: new THREE.Vector3(),
@@ -2823,17 +3098,17 @@ export function createLm402Scene(canvas) {
     scale: 1.08,
   });
   const junior = createPerson({
-    torso: "#fffdfa",
+    torso: "#ffffff",
     torsoAccent: "#ffffff",
-    legs: "#2f5b84",
+    legs: "#5b7fa6",
     skin: "#f8e2d2",
-    hair: "#4a3330",
+    hair: "#2a1f1a",
     shoes: "#fffefb",
     iris: "#604434",
     female: true,
     highlight: true,
     referenceJunior: true,
-    scale: 1.09,
+    scale: 1.0,
   });
   const fatherEcho = createPerson({
     torso: "#f2c49e",
@@ -3548,6 +3823,25 @@ function applyPerfectEndingCamera(game) {
     dust.visible = game.endingSequence?.type !== "perfect";
     dust.rotation.y = time * 0.018;
     dust.position.x = Math.sin(time * 0.12) * 0.08;
+
+    // Animate clouds — slow horizontal drift
+    animatedClouds.forEach((cloud) => {
+      cloud.position.x = cloud.userData.startX + Math.sin(time * 0.02 * cloud.userData.speed) * 8 + time * cloud.userData.speed * 0.1;
+    });
+    // Animate birds — fly across sky with wing flapping
+    animatedBirds.forEach((bird) => {
+      const bt = time * bird.userData.speed;
+      bird.position.x = bird.userData.startX + bt * 2;
+      bird.position.z = bird.userData.startZ + Math.sin(bt * 0.5 + bird.userData.phase) * 6;
+      bird.position.y += Math.sin(bt + bird.userData.phase) * 0.002;
+      // Wing flap
+      bird.userData.wingL.rotation.z = 0.3 + Math.sin(bt * 6 + bird.userData.phase) * 0.4;
+      bird.userData.wingR.rotation.z = -0.3 - Math.sin(bt * 6 + bird.userData.phase) * 0.4;
+      // Wrap around when too far
+      if (bird.position.x > bird.userData.startX + 120) {
+        bird.position.x = bird.userData.startX - 40;
+      }
+    });
 
     if (activeHologram) {
       const elapsed = time - hologramStartTime;
