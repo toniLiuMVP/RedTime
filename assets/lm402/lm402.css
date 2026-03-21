@@ -118,7 +118,7 @@ a{text-decoration:none}
   pointer-events:none;
 }
 .hud-toggle,
-.hud-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;pointer-events:auto}
+.hud-body{pointer-events:auto}
 .hud-toggle{
   display:inline-flex;
   align-items:center;
@@ -140,7 +140,7 @@ a{text-decoration:none}
   font-size:20px;
   line-height:1;
 }
-.hud-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;
+.hud-body{
   width:min(920px,100%);
   margin-top:12px;
   display:grid;
@@ -155,7 +155,7 @@ a{text-decoration:none}
   box-shadow:var(--shadow);
   transition:opacity .22s ease,transform .22s ease;
 }
-.hud.collapsed .hud-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;
+.hud.collapsed .hud-body{
   opacity:0;
   transform:translateY(-12px);
   pointer-events:none;
@@ -361,7 +361,6 @@ a{text-decoration:none}
   margin-top:8px;
   width:100%;
   min-height:30px;
-  border:none;
   border-radius:999px;
   border:1px solid rgba(115,208,165,.28);
   background:rgba(115,208,165,.12);
@@ -373,7 +372,6 @@ a{text-decoration:none}
   gap:10px;
   min-height:42px;
   padding:10px 14px;
-  border:none;
   border-radius:999px;
   border:1px solid var(--line);
   background:rgba(7,10,16,.78);
@@ -407,7 +405,6 @@ a{text-decoration:none}
 }
 .speed-preset{
   padding:10px 0;
-  border:none;
   border-radius:999px;
   border:1px solid rgba(255,255,255,.08);
   background:rgba(255,255,255,.04);
@@ -436,7 +433,6 @@ a{text-decoration:none}
   gap:10px;
   min-height:40px;
   padding:10px 14px;
-  border:none;
   border-radius:999px;
   border:1px solid var(--line);
   background:rgba(7,10,16,.78);
@@ -622,7 +618,6 @@ a{text-decoration:none}
   gap:12px;
   min-height:48px;
   padding:10px 16px;
-  border:none;
   border-radius:18px;
   border:1px solid rgba(255,255,255,.08);
   background:linear-gradient(180deg,rgba(8,11,16,.84),rgba(8,10,14,.76));
@@ -948,10 +943,10 @@ a{text-decoration:none}
   position:absolute;
   width:var(--action-size);
   height:var(--action-size);
-  border:none;
   border-radius:18px;
   border:1px solid rgba(255,255,255,.1);
   background:linear-gradient(180deg,rgba(12,18,28,.92),rgba(8,12,18,.82));
+  -webkit-backdrop-filter:blur(14px);
   backdrop-filter:blur(14px);
   box-shadow:0 14px 30px rgba(0,0,0,.24);
   color:rgba(255,244,230,.96);
@@ -1086,6 +1081,20 @@ body.landscape-prompt .debug-panel{
   pointer-events:none;
 }
 
+@media (max-width: 1380px){
+  .game-shell{
+    grid-template-columns:minmax(0,1fr) minmax(268px,304px);
+    gap:14px;
+  }
+  .panel-card{
+    padding:16px 16px 18px;
+    border-radius:24px;
+  }
+  .panel-title{
+    font-size:30px;
+  }
+}
+
 @media (max-width: 1080px){
   .game-shell{
     position:fixed;
@@ -1135,20 +1144,6 @@ body.landscape-prompt .debug-panel{
   }
 }
 
-@media (max-width: 1380px){
-  .game-shell{
-    grid-template-columns:minmax(0,1fr) minmax(268px,304px);
-    gap:14px;
-  }
-  .panel-card{
-    padding:16px 16px 18px;
-    border-radius:24px;
-  }
-  .panel-title{
-    font-size:30px;
-  }
-}
-
 @media (max-width: 1080px) and (orientation: portrait){
   .debug-panel{display:none}
 }
@@ -1159,7 +1154,7 @@ body.landscape-prompt .debug-panel{
     left:max(8px,env(safe-area-inset-left));
     right:max(8px,env(safe-area-inset-right));
   }
-  .hud-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;
+  .hud-body{
     width:min(520px,calc(100vw - 16px));
     grid-template-columns:1fr;
     padding:14px 16px 16px;
@@ -1460,4 +1455,10 @@ body.landscape-prompt .debug-panel{
   40%{opacity:.9}
   60%{opacity:.7}
   100%{opacity:.6}
+}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important}
+  .intro-fx,.intro-fx::before,.intro-fx::after{animation:none!important;opacity:0!important}
+  .stage-vignette{animation:none}
 }

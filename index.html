@@ -4,9 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#050508">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="description" content="時間裡的兩個妳——把拔與女兒、學長與學妹的故事。toni 連載故事，EP0–EP40 全集免費閱讀。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="時間裡的兩個妳 · toni">
+<meta property="og:description" content="把拔與女兒、學長與學妹的故事。EP0–EP40 全集免費閱讀。">
+<meta property="og:image" content="https://img.youtube.com/vi/eACPFC4K89o/maxresdefault.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="時間裡的兩個妳 · toni">
+<meta name="twitter:description" content="把拔與女兒、學長與學妹的故事。EP0–EP40 全集免費閱讀。">
+<meta name="twitter:image" content="https://img.youtube.com/vi/eACPFC4K89o/maxresdefault.jpg">
 <title>時間裡的兩個妳 · toni</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@200;300;400&family=Noto+Sans+TC:wght@300;400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,200;1,300;1,400&family=DM+Mono:ital@0;1&display=swap" rel="stylesheet">
 <style>
 /* ─── Reset & Root ─── */
@@ -20,7 +30,7 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;scroll-padding-top:82px}
-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;background:var(--ink);color:var(--parchment);font-family:'Noto Serif TC',serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;cursor:default}
+body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;background:var(--ink);color:var(--parchment);font-family:'Noto Serif TC',serif;overflow-x:hidden;cursor:default}
 a,button,[role="button"]{touch-action:manipulation}
 :focus-visible{outline:2px solid rgba(22,168,100,.78);outline-offset:3px}
 .ui-sprite{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
@@ -94,7 +104,7 @@ section{padding:clamp(72px,12vw,140px) var(--gutter);position:relative}
 
 .about-quote{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(18px,3vw,26px);font-weight:300;line-height:1.7;color:rgba(234,230,222,.8);margin-bottom:16px;letter-spacing:.04em}
 .about-quote-src{font-family:'DM Mono',monospace;font-size:9px;color:var(--mist);letter-spacing:.2em}
-.about-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;font-size:15.5px;font-weight:300;line-height:2.04;color:rgba(234,230,222,.74);letter-spacing:.028em;max-width:33em;text-wrap:pretty}
+.about-body{font-size:15.5px;font-weight:300;line-height:2.04;color:rgba(234,230,222,.74);letter-spacing:.028em;max-width:33em;text-wrap:pretty}
 .about-body p+p{margin-top:1.12em}
 .about-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;border:1px solid var(--seam);border-radius:8px;overflow:hidden;margin-top:40px;background:var(--seam)}
 .stat-box{background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.008));padding:24px 20px;text-align:center}
@@ -182,7 +192,7 @@ section{padding:clamp(72px,12vw,140px) var(--gutter);position:relative}
 /* ─── READ SECTION ─── */
 #read{text-align:center;background:radial-gradient(ellipse 100% 80% at 50% 50%,rgba(8,28,14,.9) 0%,var(--ink) 70%)}
 .read-inner{max-width:600px;margin:0 auto}
-.read-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;font-size:15.6px;font-weight:300;line-height:2.02;color:rgba(234,230,222,.76);letter-spacing:.026em;margin:24px auto 38px;max-width:32em;text-wrap:pretty}
+.read-body{font-size:15.6px;font-weight:300;line-height:2.02;color:rgba(234,230,222,.76);letter-spacing:.026em;margin:24px auto 38px;max-width:32em;text-wrap:pretty}
 .read-epbadges{display:flex;flex-wrap:wrap;justify-content:center;gap:9px 8px;margin-bottom:42px}
 .ep-badge{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.13em;padding:5px 12px;border:1px solid rgba(255,255,255,.09);border-radius:20px;color:rgba(234,230,222,.56);background:rgba(255,255,255,.018)}
 .ep-badge.active{border-color:rgba(22,168,100,.4);color:var(--jade);background:rgba(22,168,100,.06)}
@@ -228,6 +238,12 @@ footer{padding:60px var(--gutter) 40px;border-top:1px solid var(--seam2);backgro
 @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important}
+  #hero-canvas{display:none}
+  .scroll-line{animation:none}
+}
+
 @media(max-width:600px){
   #film [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
 }
@@ -244,7 +260,7 @@ footer{padding:60px var(--gutter) 40px;border-top:1px solid var(--seam2);backgro
   .btn-primary,.btn-ghost{width:100%;justify-content:center;padding:15px 20px;font-size:10px;letter-spacing:.22em}
   .hero-scroll{bottom:24px}
   .about-body,.arcs-intro,.tl-intro,.read-body,.comm-intro{max-width:100%}
-  .read-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;font-size:15.1px;line-height:1.96;margin-bottom:32px}
+  .read-body{font-size:15.1px;line-height:1.96;margin-bottom:32px}
   .read-epbadges{gap:7px 6px;margin-bottom:34px}
   .about-stats{margin-top:30px}
   .stat-box{padding:20px 16px}
@@ -392,14 +408,14 @@ footer{padding:60px var(--gutter) 40px;border-top:1px solid var(--seam2);backgro
       <div class="reveal">
         <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--mist);margin-bottom:12px">微電影</div>
         <div style="position:relative;padding-bottom:56.25%;border-radius:10px;overflow:hidden;border:1px solid var(--seam)">
-          <iframe style="position:absolute;inset:0;width:100%;height:100%" src="https://www.youtube.com/embed/eACPFC4K89o" title="時間裡的兩個妳：一眼瞬間 微電影" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>
+          <iframe style="position:absolute;inset:0;width:100%;height:100%" src="https://www.youtube.com/embed/eACPFC4K89o" title="時間裡的兩個妳：一眼瞬間 微電影" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe>
         </div>
         <div style="margin-top:12px;font-family:'Noto Sans TC',sans-serif;font-size:13px;color:var(--warm);line-height:1.8;font-weight:300">《時間裡的兩個妳：一眼瞬間》微電影</div>
       </div>
       <div class="reveal">
         <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--mist);margin-bottom:12px">原聲帶</div>
         <div style="position:relative;padding-bottom:56.25%;border-radius:10px;overflow:hidden;border:1px solid var(--seam)">
-          <iframe style="position:absolute;inset:0;width:100%;height:100%" src="https://www.youtube.com/embed/Ne3mv-6Ufl8" title="時間裡的兩個妳：一眼瞬間 原聲帶" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>
+          <iframe style="position:absolute;inset:0;width:100%;height:100%" src="https://www.youtube.com/embed/Ne3mv-6Ufl8" title="時間裡的兩個妳：一眼瞬間 原聲帶" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe>
         </div>
         <div style="margin-top:12px;font-family:'Noto Sans TC',sans-serif;font-size:13px;color:var(--warm);line-height:1.8;font-weight:300">《時間裡的兩個妳：一眼瞬間》原聲帶</div>
       </div>

@@ -4,8 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#06060a">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="description" content="時間裡的兩個妳——EP0 至 EP40 全集免費閱讀。支援日間／夜間模式、字體調整與章節跳轉。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="時間裡的兩個妳 · 閱讀器">
+<meta property="og:description" content="EP0 至 EP40 全集免費閱讀。支援日間／夜間模式、字體調整與章節跳轉。">
+<meta property="og:image" content="https://img.youtube.com/vi/eACPFC4K89o/maxresdefault.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="時間裡的兩個妳 · 閱讀器">
+<meta name="twitter:description" content="EP0 至 EP40 全集免費閱讀。支援日間／夜間模式、字體調整與章節跳轉。">
+<meta name="twitter:image" content="https://img.youtube.com/vi/eACPFC4K89o/maxresdefault.jpg">
 <title>時間裡的兩個妳</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=Noto+Sans+TC:wght@300;400;500&family=DM+Mono:ital@0;1&family=Cormorant+Garamond:ital,wght@1,300;1,500;0,300&display=swap" rel="stylesheet">
 <style>
 /* ── Variables ─── */
@@ -23,7 +34,7 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;scroll-padding-top:var(--top-offset)}
-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;background:var(--bg);color:var(--t1);font-family:'Noto Serif TC',serif;font-size:var(--fs);line-height:var(--lh);font-weight:300;overflow-x:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;background:var(--bg);color:var(--t1);font-family:'Noto Serif TC',serif;font-size:var(--fs);line-height:var(--lh);font-weight:300;overflow-x:hidden}
 a,button,[role="button"],input{touch-action:manipulation}
 :focus-visible{outline:2px solid rgba(22,168,100,.78);outline-offset:3px}
 .ui-sprite{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
@@ -75,7 +86,7 @@ a,button,[role="button"],input{touch-action:manipulation}
 
 /* ═══════ DESKTOP LAYOUT ══════════════════ */
 @media(min-width:768px){
-  body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;overflow-x:hidden}
+  body{overflow-x:hidden}
   #topnav-mobile{display:none!important}
   #fab-bar{display:none!important}
   #desktop-layout{display:flex;min-height:100vh}
@@ -421,13 +432,13 @@ a,button,[role="button"],input{touch-action:manipulation}
 .ep-tline-wrap{margin-bottom:12px}
 .ep-tline-toggle{font-family:'Noto Sans TC',sans-serif;font-size:11.5px;color:var(--t2);cursor:pointer;letter-spacing:.06em;padding:3px 0;-webkit-tap-highlight-color:transparent;user-select:none}
 .ep-tline-toggle:active{color:var(--t2)}
-.ep-tline-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;padding:6px 10px 4px;border-left:2px solid var(--line2)}
+.ep-tline-body{padding:6px 10px 4px;border-left:2px solid var(--line2)}
 .ep-tline-body.ep-tline-hidden{display:none}
 .ep-tline-text{font-family:'DM Mono',monospace;font-size:11px;color:var(--t2);letter-spacing:.06em}
 .eih-count{font-family:'DM Mono',monospace;font-size:10px;color:var(--t2)}
 .eih-arrow{font-size:11px;color:var(--t3);transition:transform .2s;margin-left:4px}
 .ep-info-head.open .eih-arrow{transform:rotate(180deg)}
-.ep-info-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;display:none;border-top:1px solid var(--line2)}
+.ep-info-body{display:none;border-top:1px solid var(--line2)}
 .ep-info-body.open{display:block}
 .tl-inline{padding:12px 10px 8px;overflow-x:auto;scrollbar-width:none}
 .tl-inline::-webkit-scrollbar{display:none}
@@ -449,10 +460,10 @@ a,button,[role="button"],input{touch-action:manipulation}
 /* Note */
 .ep-note{margin-bottom:14px;padding:11px 13px;border-left:2px solid var(--line);background:rgba(255,255,255,.015);border-radius:0 4px 4px 0}
 .ep-note-toggle{font-family:'Noto Sans TC',sans-serif;font-size:13.2px;color:rgba(234,230,222,.78);cursor:pointer;letter-spacing:.05em;-webkit-tap-highlight-color:transparent;user-select:none;font-weight:400}
-.ep-note-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;font-family:'Noto Sans TC',sans-serif;font-size:12.8px;color:rgba(234,230,222,.8);line-height:1.84;margin-top:8px}
+.ep-note-body{font-family:'Noto Sans TC',sans-serif;font-size:12.8px;color:rgba(234,230,222,.8);line-height:1.84;margin-top:8px}
 .ep-note-body.hidden{display:none}
 /* Story text */
-.ep-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;max-width:var(--measure);padding-top:2px;text-wrap:pretty;word-break:break-word}
+.ep-body{max-width:var(--measure);padding-top:2px;text-wrap:pretty;word-break:break-word}
 .ep-body p.spacer{height:.92em;margin:0;padding:0;line-height:1}
 .ep-body p{margin:0;color:var(--t1);-webkit-text-fill-color:var(--t1);line-height:1.95;letter-spacing:.012em}
 .ep-body p:not(.spacer)+p:not(.spacer){margin-top:.16em}
@@ -536,7 +547,7 @@ body[data-width="wide"]{--measure:38em}
 #toast.show{opacity:1;pointer-events:auto;transform:none}
 #toast-glyph{width:26px;height:26px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 #toast-glyph .ui-glyph{width:100%;height:100%}
-#toast-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;flex:1;min-width:0}
+#toast-body{flex:1;min-width:0}
 .toast-label{font-family:'DM Mono',monospace;font-size:8.5px;color:var(--amber);letter-spacing:.28em;text-transform:uppercase;margin-bottom:3px}
 #toast-title{font-size:13.5px;color:var(--t1);line-height:1.4;font-weight:400}
 #toast-sub{font-size:11.5px;color:var(--t2);margin-top:2px}
@@ -605,7 +616,7 @@ body[data-width="wide"]{--measure:38em}
 .hnote-head{display:flex;gap:9px;align-items:center;margin-bottom:5px}
 .hnote-icon{font-size:15px;flex-shrink:0}
 .hnote-title{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--amber);letter-spacing:.08em;font-weight:400}
-.hnote-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;font-family:'Noto Sans TC',sans-serif;font-size:12.5px;color:var(--t2);line-height:1.9;font-weight:400}
+.hnote-body{font-family:'Noto Sans TC',sans-serif;font-size:12.5px;color:var(--t2);line-height:1.9;font-weight:400}
 
 /* ═══════ DAY MODE ═════════════════════════ */
 body.day-mode{
@@ -627,7 +638,7 @@ body.day-mode #hero-canvas{opacity:.3}
 .eg-label{font-family:'Noto Sans TC',sans-serif;font-size:12px;color:var(--f6);flex:1;letter-spacing:.06em;font-weight:400}
 .eg-arrow{font-size:10px;color:rgba(144,64,240,.5);transition:transform .2s}
 .ep-granny-toggle.open .eg-arrow{transform:rotate(180deg)}
-.ep-granny-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;display:none;padding:14px 16px 16px;border-top:1px solid rgba(144,64,240,.15)}
+.ep-granny-body{display:none;padding:14px 16px 16px;border-top:1px solid rgba(144,64,240,.15)}
 .ep-granny-body.open{display:block}
 .eg-kicker{font-family:'DM Mono',monospace;font-size:8.1px;color:rgba(200,176,255,.72);letter-spacing:.16em;text-transform:uppercase;margin-bottom:6px}
 .eg-title{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--t1);margin-bottom:8px;font-weight:300;line-height:1.4}
