@@ -1499,24 +1499,14 @@ function createTree({ scale: treeScale = 1, colorVariant = 0 }) {
 
   // Multiple overlapping sphere clusters for organic canopy shape
   [
-    // Main canopy mass
     [0, 2.9, 0, 1.1, 1.24, 1.0, 0],
     [-0.38, 2.5, 0.2, 0.9, 0.96, 0.78, 1],
     [0.44, 2.56, -0.16, 0.94, 1.06, 0.82, 2],
-    // Upper crown
     [0.06, 3.42, -0.14, 0.86, 0.88, 0.76, 1],
-    [-0.2, 3.16, -0.28, 0.72, 0.76, 0.66, 0],
-    [0.28, 3.1, 0.3, 0.7, 0.74, 0.64, 2],
-    // Side extensions
     [-0.56, 2.76, -0.2, 0.8, 0.84, 0.7, 2],
-    [0.6, 2.82, 0.16, 0.76, 0.82, 0.68, 1],
-    // Fill clusters for density
-    [-0.14, 2.68, 0.36, 0.68, 0.72, 0.6, 0],
-    [0.32, 2.44, -0.34, 0.64, 0.68, 0.58, 2],
-    [-0.42, 3.06, 0.12, 0.6, 0.64, 0.56, 1],
     [0.12, 3.56, 0.08, 0.58, 0.6, 0.52, 0],
   ].forEach(([x, y, z, sx, sy, sz, matIdx]) => {
-    const cluster = new THREE.Mesh(new THREE.SphereGeometry(0.52 * treeScale, 18, 18), leafMats[matIdx]);
+    const cluster = new THREE.Mesh(new THREE.SphereGeometry(0.52 * treeScale, 10, 10), leafMats[matIdx]);
     cluster.position.set(x * treeScale, y * treeScale, z * treeScale);
     cluster.scale.set(sx, sy, sz);
     group.add(cluster);
@@ -1937,9 +1927,6 @@ export function createLm402Scene(canvas) {
   backdoorAccent.position.set(classroomMinX + 1.56, 2.44, scaled(WORLD.backDoor.center.z + 28));
   scene.add(backdoorAccent);
 
-  const windowBounce = new THREE.PointLight(0xffeacc, 0.9, 28, 2);
-  windowBounce.position.set(classroomMaxX - 3.8, 0.22, scaled(WORLD.classroom.lightWellZ));
-  scene.add(windowBounce);
 
   // Extra lights for new end-wall glass windows (z1 back and z2 front)
   const backEndWindowLight = new THREE.PointLight(0xfff4e0, 1.8, 38, 2);
@@ -1950,13 +1937,6 @@ export function createLm402Scene(canvas) {
   frontEndWindowLight.position.set((classroomMinX + classroomMaxX) / 2, 1.82, lm402Z2 - 1.6);
   scene.add(frontEndWindowLight);
 
-  const midClassLight = new THREE.PointLight(0xffecc4, 1.1, 32, 2);
-  midClassLight.position.set((classroomMinX + classroomMaxX) / 2, 2.6, (lm402Z1 + lm402Z2) / 2);
-  scene.add(midClassLight);
-
-  const corridorBounce = new THREE.PointLight(0xf0e8dd, 0.48, 22, 2);
-  corridorBounce.position.set(corridorCenterX, 0.18, scaled(WORLD.frontDoor.center.z - 60));
-  scene.add(corridorBounce);
 
   // Rim light — subtle back-light behind classroom for character rim lighting during ending
   const rimLight = new THREE.PointLight(0xffeedd, 0.8, 12, 2);
@@ -2122,15 +2102,6 @@ export function createLm402Scene(canvas) {
     false
   );
 
-  WORLD.corridor.columnZs.forEach((zValue) => {
-    const z = scaled(zValue);
-    const column = new THREE.Mesh(new THREE.BoxGeometry(0.24, corridorHeight, 0.24), beamMat);
-    column.position.set(minX + 0.08, corridorHeight / 2, z);
-    column.castShadow = true;
-    column.receiveShadow = true;
-    worldGroup.add(column);
-    addCollider(colliders, column.position.x - 0.12, column.position.x + 0.12, z - 0.12, z + 0.12, "column");
-  });
 
   const parapetShadow = new THREE.Mesh(
     new THREE.PlaneGeometry(1.96, floorLength * 0.98),
@@ -2235,15 +2206,6 @@ export function createLm402Scene(canvas) {
       `${zone.id}_guard`
     );
 
-    // Air wall — invisible full-width barrier blocking player from going down stairs
-    addCollider(
-      colliders,
-      corridorMinX,
-      classroomMinX,
-      zone.direction > 0 ? zone.z2 - 0.06 : zone.z1 + 0.06,
-      zone.direction > 0 ? zone.z2 + 0.06 : zone.z1 - 0.06,
-      `${zone.id}_airwall`
-    );
 
     // ── Stairs going DOWN (floors 3F, 2F, 1F below current 4F) ──
     for (let floor = 1; floor <= 3; floor++) {
@@ -3048,31 +3010,14 @@ export function createLm402Scene(canvas) {
   ceiling.receiveShadow = true;
   worldGroup.add(ceiling);
 
-  // ── Corridor ceiling ──
-  const corridorCeiling = new THREE.Mesh(
-    new THREE.BoxGeometry(corridorWidth, 0.08, floorLength),
-    new THREE.MeshStandardMaterial({ color: '#f0eeea', roughness: 0.9 })
-  );
-  corridorCeiling.position.set(corridorCenterX, corridorHeight - 0.04, floorCenterZ);
-  corridorCeiling.receiveShadow = true;
-  worldGroup.add(corridorCeiling);
-
-  // ── Desk lights (every other desk for performance) ──
+  // ── Desk light fixtures (visual only, no PointLights for performance) ──
+  const fixtureMat = new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: '#ffffff', emissiveIntensity: 0.5 });
+  const fixtureGeo = new THREE.BoxGeometry(0.3, 0.04, 0.3);
   WORLD.desks.forEach((desk, idx) => {
-    if (idx % 2 !== 0) return; // skip alternating desks
-    const dx = scaled(desk.x);
-    const dz = scaled(desk.z);
-    // Light fixture (small white box on ceiling)
-    const fixture = new THREE.Mesh(
-      new THREE.BoxGeometry(0.3, 0.04, 0.3),
-      new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: '#ffffff', emissiveIntensity: 0.5 })
-    );
-    fixture.position.set(dx, corridorHeight - 0.06, dz);
+    if (idx % 4 !== 0) return;
+    const fixture = new THREE.Mesh(fixtureGeo, fixtureMat);
+    fixture.position.set(scaled(desk.x), corridorHeight - 0.06, scaled(desk.z));
     worldGroup.add(fixture);
-    // Point light
-    const deskLight = new THREE.PointLight(0xfff8ee, 0.15, 4, 2);
-    deskLight.position.set(dx, corridorHeight - 0.1, dz);
-    scene.add(deskLight);
   });
 
   const debugAnchors = {
