@@ -323,8 +323,9 @@ a{text-decoration:none}
 .time-watch{
   position:absolute;
   top:max(8px,env(safe-area-inset-top));
-  left:50%;
-  transform:translateX(-50%);
+  right:18px;
+  left:auto;
+  transform:none;
   z-index:20;
   display:flex;
   flex-direction:column;
@@ -332,12 +333,36 @@ a{text-decoration:none}
   gap:2px;
   padding:6px 16px 8px;
   background:var(--panel);
-  border:1px solid var(--line);
+  border:1px solid rgba(0, 220, 255, 0.25);
   border-radius:12px;
   pointer-events:none;
   user-select:none;
   -webkit-backdrop-filter:blur(18px);
   backdrop-filter:blur(18px);
+  box-shadow:0 0 12px rgba(0, 220, 255, 0.15), inset 0 0 8px rgba(0, 220, 255, 0.05);
+  overflow:hidden;
+  transition:box-shadow 0.15s ease;
+}
+.time-watch::after{
+  content:"";
+  position:absolute;
+  top:0;left:0;right:0;bottom:0;
+  background:repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 220, 255, 0.03) 2px,
+    rgba(0, 220, 255, 0.03) 4px
+  );
+  animation:scanLines 4s linear infinite;
+  pointer-events:none;
+}
+@keyframes scanLines{
+  0%{transform:translateY(0)}
+  100%{transform:translateY(4px)}
+}
+.time-watch.pulse{
+  box-shadow:0 0 20px rgba(0, 220, 255, 0.4), inset 0 0 12px rgba(0, 220, 255, 0.12);
 }
 .time-watch-label{
   font:500 8px "DM Mono",monospace;
@@ -348,8 +373,8 @@ a{text-decoration:none}
 .time-watch-display{
   font:500 22px "DM Mono",monospace;
   letter-spacing:.15em;
-  color:var(--ink);
-  text-shadow:0 0 8px rgba(217,179,106,.3);
+  color:#00e5ff;
+  text-shadow:0 0 8px rgba(0, 229, 255, 0.4);
   animation:watchPulse 3s ease-in-out infinite;
 }
 .time-watch.frozen .time-watch-display{
@@ -358,8 +383,8 @@ a{text-decoration:none}
   animation:none;
 }
 @keyframes watchPulse{
-  0%,100%{text-shadow:0 0 8px rgba(217,179,106,.2)}
-  50%{text-shadow:0 0 14px rgba(217,179,106,.5)}
+  0%,100%{text-shadow:0 0 8px rgba(0, 229, 255, 0.2)}
+  50%{text-shadow:0 0 14px rgba(0, 229, 255, 0.5)}
 }
 
 .music-prompt{
@@ -1283,6 +1308,11 @@ body.landscape-prompt .debug-panel{
   .hud-copy{font-size:14px;line-height:1.55}
   .hud-meta,
   .hud-links{justify-content:flex-start}
+  .time-watch{
+    right:max(8px,env(safe-area-inset-right));
+    left:auto;
+    transform:none;
+  }
   .objective-prompt{
     position:fixed;
     top:max(8px,env(safe-area-inset-top));
@@ -1296,7 +1326,7 @@ body.landscape-prompt .debug-panel{
     word-break:break-word;
   }
   .objective-title{font-size:22px}
-  .objective-copy{font-size:12px;line-height:1.44;word-break:break-word}
+  .objective-copy{font-size:calc(12px * var(--game-font-scale, 1));line-height:1.44;word-break:break-word}
   .objective-prompt.compact{
     width:auto;
     left:auto;
@@ -1317,8 +1347,9 @@ body.landscape-prompt .debug-panel{
   }
   .time-watch{
     top:max(8px,env(safe-area-inset-top));
-    left:50%;
-    transform:translateX(-50%);
+    right:max(8px,env(safe-area-inset-right));
+    left:auto;
+    transform:none;
     padding:4px 12px 6px;
     border-radius:10px;
   }
@@ -1428,7 +1459,7 @@ body.landscape-prompt .debug-panel{
   .subtitle-box .dock-copy{
     display:block;
     overflow:hidden;
-    font-size:10px;
+    font-size:calc(10px * var(--game-font-scale, 1));
     line-height:1.4;
     max-height:5.8em;
     word-break:break-word;
@@ -1482,7 +1513,7 @@ body.landscape-prompt .debug-panel{
   }
   .transcript-text{
     margin-top:5px;
-    font-size:10px;
+    font-size:calc(10px * var(--game-font-scale, 1));
     line-height:1.4;
   }
   .control-cluster{
