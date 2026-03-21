@@ -1746,6 +1746,18 @@ function updatePhaseLogic(dt) {
     setSubtitle("39 歲的聲音", "難的是『站好』。等一下他真的往這裡走的時候，妳全身都會想往前衝。", 4.6);
   }
 
+  // Auto-transition: after characters reach back door, automatically proceed to eye_contact
+  if (state.phase === "rear_wait" && state.phaseClock > 6.5 && !state.flags.autoBackdoorTriggered) {
+    state.flags.autoBackdoorTriggered = true;
+    collectMemory("backdoor");
+    state.flags.backdoorAnchored = true;
+    setPhase("eye_contact");
+    resetView();
+    audioSystem.playCue("ending");
+    setSubtitle("女兒", "我停在後門旁，剛好能看到走廊的一小段。", 4.2);
+    setAmbience("光從窗邊切進來，把地板照得有點過分地亮。所有版本的呼吸都慢慢安靜下來。");
+  }
+
   if (state.phase === "eye_contact") {
     if (state.phaseClock > 0.6 && !state.flags.eyeCuePlayed) {
       state.flags.eyeCuePlayed = true;
@@ -1759,6 +1771,13 @@ function updatePhaseLogic(dt) {
       Math.hypot(state.player.x - WORLD_POINTS.focusMark.x, state.player.z - WORLD_POINTS.focusMark.z) < scale(200);
 
     state.cinematicGlow = smoothstep(CINEMATIC_TIMELINE.successWindow[0], CINEMATIC_TIMELINE.successWindow[1], state.phaseClock);
+
+    // If auto-transitioned, start perfect ending after brief dramatic pause
+    if (state.flags.autoBackdoorTriggered && state.phaseClock > 3.0 && !state.endingSequence) {
+      startPerfectEnding();
+      return;
+    }
+
     if (state.phaseClock >= CINEMATIC_TIMELINE.lockWindow && !state.endingSequence) {
       if (aligned) {
         startEnding(state.memories.size >= 4 ? "memory" : "canon");

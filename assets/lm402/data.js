@@ -71,14 +71,7 @@ export const WORLD = {
     { x: 1922, y: 75, z: 2072, label: "白紙" },
   ],
   campusTrees: [
-    { x: -1228, z: 220, scale: 6.0 },
-    { x: -1404, z: 648, scale: 6.6 },
-    { x: -1268, z: 1088, scale: 6.8 },
-    { x: -1446, z: 1528, scale: 7.2 },
-    { x: -1276, z: 1968, scale: 7.0 },
     { x: -1296, z: 2246, scale: 7.4 },
-    { x: -1452, z: 2408, scale: 6.8 },
-    { x: -1282, z: 2848, scale: 6.6 },
   ],
   wallLabels: [
     { id: "W-A", x: -790, y: 212, z: 154, rotateY: 0 },
