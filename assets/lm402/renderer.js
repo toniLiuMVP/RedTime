@@ -713,11 +713,25 @@ function createPerson(spec) {
       group.add(button);
     });
 
+    // Long sleeves covering the forearms (white button-up shirt per 2005 reference)
+    const forearmSleeveGeo = new THREE.CapsuleGeometry(0.054, 0.34, 5, 10);
+    const forearmSleeveMat = new THREE.MeshPhysicalMaterial({
+      color: "#fffdfa", roughness: 0.32, metalness: 0.01,
+      clearcoat: 0.18, clearcoatRoughness: 0.24
+    });
+    const leftForearmSleeve = new THREE.Mesh(forearmSleeveGeo, forearmSleeveMat);
+    leftForearmSleeve.position.set(-0.246, 0.88, 0.03);
+    leftForearmSleeve.rotation.z = 0.12;
+    const rightForearmSleeve = leftForearmSleeve.clone();
+    rightForearmSleeve.position.x = 0.246;
+    rightForearmSleeve.rotation.z = -0.12;
+    group.add(leftForearmSleeve, rightForearmSleeve);
+
     const cuffLeft = new THREE.Mesh(new THREE.TorusGeometry(0.046, 0.012, 8, 18), buttonMat);
-    cuffLeft.position.set(-0.232, 0.83, 0.03);
+    cuffLeft.position.set(-0.254, 0.74, 0.03);
     cuffLeft.rotation.z = 1.52;
     const cuffRight = cuffLeft.clone();
-    cuffRight.position.x = 0.232;
+    cuffRight.position.x = 0.254;
     group.add(cuffLeft, cuffRight);
 
     const sockMat = new THREE.MeshStandardMaterial({ color: "#faf7f1", roughness: 0.76, metalness: 0.01 });
@@ -764,6 +778,7 @@ function createPerson(spec) {
   }
 
   if (!spec.female) {
+    // Senior's collared shirt — casual university style (2005)
     const shirtPanel = new THREE.Mesh(
       new THREE.BoxGeometry(0.11, 0.52, 0.03),
       new THREE.MeshPhysicalMaterial({ color: "#5f7893", roughness: 0.42, metalness: 0.03, clearcoat: 0.12, clearcoatRoughness: 0.28, transparent: true, opacity: 0.94 })
@@ -771,13 +786,34 @@ function createPerson(spec) {
     shirtPanel.position.set(0, 1.08, 0.19);
     group.add(shirtPanel);
 
+    // Shirt body overlay — adds thickness and shape
+    const shirtBody = new THREE.Mesh(
+      new THREE.CapsuleGeometry(0.162, 0.52, 8, 16),
+      new THREE.MeshPhysicalMaterial({ color: "#eef2f7", roughness: 0.38, metalness: 0.02, clearcoat: 0.1, clearcoatRoughness: 0.22 })
+    );
+    shirtBody.position.set(0, 1.06, 0.02);
+    shirtBody.scale.set(1.08, 0.94, 0.88);
+    group.add(shirtBody);
+
     const shirtCollar = new THREE.Mesh(
-      new THREE.TorusGeometry(0.092, 0.014, 8, 20, Math.PI),
-      new THREE.MeshPhysicalMaterial({ color: "#e4ebf2", roughness: 0.44, metalness: 0.02, clearcoat: 0.08, clearcoatRoughness: 0.2 })
+      new THREE.TorusGeometry(0.092, 0.016, 8, 20, Math.PI),
+      new THREE.MeshPhysicalMaterial({ color: "#e4ebf2", roughness: 0.44, metalness: 0.02, clearcoat: 0.12, clearcoatRoughness: 0.18 })
     );
     shirtCollar.position.set(0, 1.2, 0.08);
     shirtCollar.rotation.x = Math.PI * 0.54;
     group.add(shirtCollar);
+
+    // Collar flaps (folded collar detail)
+    const collarFlapGeo = new THREE.BoxGeometry(0.06, 0.04, 0.03);
+    const collarFlapMat = new THREE.MeshPhysicalMaterial({ color: "#e8edf4", roughness: 0.42, metalness: 0.02, clearcoat: 0.1 });
+    const collarFlapL = new THREE.Mesh(collarFlapGeo, collarFlapMat);
+    collarFlapL.position.set(-0.06, 1.22, 0.12);
+    collarFlapL.rotation.z = -0.3;
+    collarFlapL.rotation.x = -0.2;
+    const collarFlapR = collarFlapL.clone();
+    collarFlapR.position.x = 0.06;
+    collarFlapR.rotation.z = 0.3;
+    group.add(collarFlapL, collarFlapR);
 
     const maleFringe = new THREE.Mesh(new THREE.BoxGeometry(0.136, 0.084, 0.054), hairMat);
     maleFringe.position.set(0, 1.616, 0.122);
@@ -880,37 +916,74 @@ function applyWalkingPose(person, stride, sway = 1) {
   if (!pose) {
     return;
   }
-  // Leg swing — larger amplitude for more natural, full-stride look
+  const clampedStride = Math.max(-1, Math.min(1, stride));
+  const absStride = Math.abs(clampedStride);
+  const stridePhase = Math.asin(clampedStride);
+
+  // Leg swing — larger amplitude for natural, full-stride look
   const legAmp = pose.female ? 0.58 : 0.48;
   // Arm counter-swing — delayed quarter-cycle for realism
-  const armDelay = Math.sin(Math.asin(Math.max(-1, Math.min(1, stride))) - 0.18);
+  const armDelay = Math.sin(stridePhase - 0.22);
   const armAmp = pose.hasPhone ? 0.14 : 0.42;
-  pose.leftLeg.rotation.x = stride * legAmp;
-  pose.rightLeg.rotation.x = -stride * legAmp;
-  // Slightly bent knees (positive rotation) when leg is behind
-  pose.leftLeg.rotation.z = 0.02 + Math.max(0, stride) * 0.04;
-  pose.rightLeg.rotation.z = -0.02 - Math.max(0, -stride) * 0.04;
-  // Arm swing
+
+  // Leg swing with knee bend on trailing leg
+  pose.leftLeg.rotation.x = clampedStride * legAmp;
+  pose.rightLeg.rotation.x = -clampedStride * legAmp;
+  // Bent knee when leg is behind (trailing) — simulates push-off
+  const kneeL = Math.max(0, clampedStride) * 0.08;
+  const kneeR = Math.max(0, -clampedStride) * 0.08;
+  pose.leftLeg.rotation.z = 0.02 + kneeL;
+  pose.rightLeg.rotation.z = -0.02 - kneeR;
+
+  // Arm swing with natural wrist follow-through
   pose.leftArm.rotation.x = -armDelay * armAmp;
-  pose.rightArm.rotation.x = pose.hasPhone ? -0.56 + stride * 0.06 : armDelay * armAmp;
+  pose.rightArm.rotation.x = pose.hasPhone ? -0.56 + clampedStride * 0.06 : armDelay * armAmp;
+  // Elbows bend slightly on backward swing
+  pose.leftArm.rotation.z = (pose.female ? 0.12 : 0.15) + Math.max(0, armDelay) * 0.06;
+  pose.rightArm.rotation.z = -(pose.female ? 0.12 : 0.15) - Math.max(0, -armDelay) * 0.06;
+  // Hand follow-through
+  pose.leftHand.rotation.x = armDelay * 0.12;
+  pose.rightHand.rotation.x = pose.hasPhone ? 0 : -armDelay * 0.12;
+
   // Body rotation and sway — torso counter-rotates to hips for realism
-  pose.torso.rotation.z = -stride * 0.04 * sway;
-  pose.torso.rotation.x = Math.abs(stride) * 0.025;
-  pose.torso.rotation.y = stride * 0.06 * sway;
-  pose.waist.rotation.z = stride * 0.06 * sway;
-  pose.waist.rotation.y = -stride * 0.05 * sway;
+  pose.torso.rotation.z = -clampedStride * 0.04 * sway;
+  pose.torso.rotation.x = absStride * 0.028;
+  pose.torso.rotation.y = clampedStride * 0.07 * sway;
+  // Waist/hip rotation — pelvis leads the walk cycle
+  pose.waist.rotation.z = clampedStride * 0.07 * sway;
+  pose.waist.rotation.y = -clampedStride * 0.06 * sway;
+  // Hip drop on swing leg side (Trendelenburg-like natural gait)
+  pose.waist.rotation.x = absStride * 0.02;
+
   // Chest follows hips in opposite rotation
-  pose.chest.rotation.y = -stride * 0.08 * sway;
-  // Head stays level but follows gaze direction gently
-  pose.head.rotation.z = stride * 0.028 * sway;
-  pose.head.rotation.y = stride * 0.05 * sway;
-  // Shoulder roll
-  pose.shoulderL.rotation.z = -stride * 0.06;
-  pose.shoulderR.rotation.z = stride * 0.06;
-  // Realistic vertical bob: body rises on push-off, falls on landing (2x per stride cycle)
-  const bob = Math.abs(Math.cos(Math.asin(Math.max(-1, Math.min(1, stride))))) * 0.024;
-  const lateral = stride * 0.016 * sway;
-  person.position.y = bob + Math.abs(stride) * 0.018;
+  pose.chest.rotation.y = -clampedStride * 0.09 * sway;
+  // Head stays level — vestibular reflex keeps gaze steady
+  pose.head.rotation.z = clampedStride * 0.022 * sway;
+  pose.head.rotation.y = clampedStride * 0.035 * sway;
+  // Slight forward lean of head when walking
+  pose.head.rotation.x = absStride * 0.012;
+
+  // Shoulder roll — natural arm-shoulder coupling
+  pose.shoulderL.rotation.z = -clampedStride * 0.07;
+  pose.shoulderR.rotation.z = clampedStride * 0.07;
+  // Shoulders also rise/fall slightly with arm swing
+  pose.shoulderL.rotation.x = armDelay * 0.03;
+  pose.shoulderR.rotation.x = -armDelay * 0.03;
+
+  // Hair sway for female characters
+  if (pose.female) {
+    pose.hairBack.rotation.z = clampedStride * 0.04;
+    pose.hairBack.rotation.x = absStride * 0.02;
+    pose.fringe.rotation.z = -clampedStride * 0.015;
+  }
+
+  // Realistic vertical bob: double-sine pattern — body rises on push-off, dips at mid-stance
+  const pushOff = Math.abs(Math.cos(stridePhase));
+  const bob = pushOff * 0.026 + absStride * 0.016;
+  // Lateral weight shift toward stance leg
+  const lateral = clampedStride * 0.014 * sway;
+  person.position.y = bob;
+  person.position.x += lateral;
 }
 
 function applyIdlePose(person, time, emphasis = 1) {
@@ -918,17 +991,39 @@ function applyIdlePose(person, time, emphasis = 1) {
   if (!pose) {
     return;
   }
-  const breathe = Math.sin(time * 1.4) * 0.02 * emphasis;
-  const breathe2 = Math.sin(time * 1.4 + 0.3) * 0.012 * emphasis;
+  // Natural breathing — inhale raises chest, exhale drops it
+  const breathe = Math.sin(time * 1.4) * 0.022 * emphasis;
+  const breathe2 = Math.sin(time * 1.4 + 0.3) * 0.014 * emphasis;
   pose.torso.rotation.x = breathe;
-  pose.chest.rotation.x = breathe * 0.7 + breathe2 * 0.3;
-  pose.waist.rotation.x = breathe * 0.2;
-  pose.head.rotation.y = Math.sin(time * 0.7) * 0.045 * emphasis;
-  pose.head.rotation.x = Math.sin(time * 0.9) * 0.012 * emphasis;
-  pose.hairBack.rotation.z = Math.sin(time * 1.1) * 0.024 * emphasis;
-  pose.shoulderL.rotation.z = Math.sin(time * 1.2 + 0.5) * 0.008 * emphasis;
-  pose.shoulderR.rotation.z = -Math.sin(time * 1.2 + 0.5) * 0.008 * emphasis;
-  person.position.y = Math.abs(Math.sin(time * 1.4)) * 0.014 * emphasis;
+  pose.chest.rotation.x = breathe * 0.8 + breathe2 * 0.4;
+  pose.waist.rotation.x = breathe * 0.18;
+
+  // Subtle weight shift — body sways gently side to side
+  const weightShift = Math.sin(time * 0.42) * 0.008 * emphasis;
+  pose.waist.rotation.z = weightShift;
+  pose.torso.rotation.z = -weightShift * 0.5;
+
+  // Head micro-movements — looking around naturally
+  pose.head.rotation.y = Math.sin(time * 0.7) * 0.048 * emphasis + Math.sin(time * 1.9) * 0.008 * emphasis;
+  pose.head.rotation.x = Math.sin(time * 0.9) * 0.014 * emphasis;
+  pose.head.rotation.z = Math.sin(time * 0.55) * 0.006 * emphasis;
+
+  // Hair sway — responds to breathing and head movement
+  pose.hairBack.rotation.z = Math.sin(time * 1.1) * 0.026 * emphasis;
+  pose.hairBack.rotation.x = Math.sin(time * 0.8) * 0.01 * emphasis;
+  if (pose.female) {
+    pose.fringe.rotation.z = Math.sin(time * 1.3 + 0.4) * 0.008 * emphasis;
+  }
+
+  // Shoulders rise/fall with breath
+  pose.shoulderL.rotation.z = Math.sin(time * 1.4 + 0.5) * 0.01 * emphasis;
+  pose.shoulderR.rotation.z = -Math.sin(time * 1.4 + 0.5) * 0.01 * emphasis;
+  // Arms have micro-sway
+  pose.leftArm.rotation.x = Math.sin(time * 0.6) * 0.01 * emphasis;
+  pose.rightArm.rotation.x = pose.hasPhone ? -0.56 : Math.sin(time * 0.6 + 0.4) * 0.01 * emphasis;
+
+  // Gentle body rise with breathing
+  person.position.y = Math.abs(Math.sin(time * 1.4)) * 0.012 * emphasis;
 }
 
 function applyFlyingPose(person, progress) {
@@ -1813,7 +1908,103 @@ export function createLm402Scene(canvas) {
     worldGroup.add(labelNode);
   });
 
-  // All window objects removed — wall openings remain for light and visibility
+  // ═══ TRANSPARENT GLASS WINDOWS ═══
+  // Glass material — physically-based transparent glass that lets sunlight through
+  // and allows the senior to see the junior from the corridor
+  const glassMat = new THREE.MeshPhysicalMaterial({
+    color: "#e8f0f8",
+    roughness: 0.05,
+    metalness: 0.0,
+    transmission: 0.92,
+    thickness: 0.06,
+    transparent: true,
+    opacity: 0.18,
+    ior: 1.5,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.02,
+    envMapIntensity: 0.3,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+  const glassFrameMat = new THREE.MeshStandardMaterial({
+    color: "#c8bfaf", roughness: 0.56, metalness: 0.12,
+  });
+
+  // Left wall windows (corridor-to-classroom — senior sees junior through these)
+  WORLD.leftWallWindows.forEach((panel) => {
+    const opening = openingFromPanel(panel, "left");
+    const ow = opening.z2 - opening.z1;
+    const oh = opening.y2 - opening.y1;
+    const ocz = (opening.z1 + opening.z2) / 2;
+    const ocy = (opening.y1 + opening.y2) / 2;
+    // Glass pane
+    const pane = new THREE.Mesh(new THREE.PlaneGeometry(ow - 0.04, oh - 0.04), glassMat);
+    pane.position.set(classroomMinX, ocy, ocz);
+    pane.rotation.y = Math.PI / 2;
+    worldGroup.add(pane);
+    // Window frame (thin border around the opening)
+    const frameTop = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.03, ow + 0.02), glassFrameMat);
+    frameTop.position.set(classroomMinX, opening.y2 + 0.01, ocz);
+    const frameBot = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.05, ow + 0.02), glassFrameMat);
+    frameBot.position.set(classroomMinX, opening.y1 - 0.02, ocz);
+    const frameSideL = new THREE.Mesh(new THREE.BoxGeometry(0.04, oh + 0.06, 0.03), glassFrameMat);
+    frameSideL.position.set(classroomMinX, ocy, opening.z1 - 0.01);
+    const frameSideR = frameSideL.clone();
+    frameSideR.position.z = opening.z2 + 0.01;
+    // Cross-bar (horizontal divider halfway up the window)
+    const crossBar = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.025, ow - 0.02), glassFrameMat);
+    crossBar.position.set(classroomMinX, ocy, ocz);
+    worldGroup.add(frameTop, frameBot, frameSideL, frameSideR, crossBar);
+  });
+
+  // Right wall windows (exterior — sunlight comes through these)
+  WORLD.rightWallWindows.forEach((panel) => {
+    const opening = openingFromPanel(panel, "right");
+    const ow = opening.z2 - opening.z1;
+    const oh = opening.y2 - opening.y1;
+    const ocz = (opening.z1 + opening.z2) / 2;
+    const ocy = (opening.y1 + opening.y2) / 2;
+    const pane = new THREE.Mesh(new THREE.PlaneGeometry(ow - 0.04, oh - 0.04), glassMat);
+    pane.position.set(classroomMaxX, ocy, ocz);
+    pane.rotation.y = Math.PI / 2;
+    worldGroup.add(pane);
+    const frameTop = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.03, ow + 0.02), glassFrameMat);
+    frameTop.position.set(classroomMaxX, opening.y2 + 0.01, ocz);
+    const frameBot = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.05, ow + 0.02), glassFrameMat);
+    frameBot.position.set(classroomMaxX, opening.y1 - 0.02, ocz);
+    const frameSideL = new THREE.Mesh(new THREE.BoxGeometry(0.04, oh + 0.06, 0.03), glassFrameMat);
+    frameSideL.position.set(classroomMaxX, ocy, opening.z1 - 0.01);
+    const frameSideR = frameSideL.clone();
+    frameSideR.position.z = opening.z2 + 0.01;
+    const crossBar = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.025, ow - 0.02), glassFrameMat);
+    crossBar.position.set(classroomMaxX, ocy, ocz);
+    worldGroup.add(frameTop, frameBot, frameSideL, frameSideR, crossBar);
+  });
+
+  // End wall window glass (back z1 and front z2 — built by buildEndWallWindows)
+  const addEndWallGlass = (wallZ, fromX, toX, nWin) => {
+    const totalW = toX - fromX;
+    const ww = (totalW - pillarW * (nWin + 1)) / nWin;
+    for (let i = 0; i < nWin; i++) {
+      const wx = fromX + pillarW + (ww + pillarW) * i + ww / 2;
+      const pane = new THREE.Mesh(new THREE.PlaneGeometry(ww - 0.04, winH - 0.04), glassMat);
+      pane.position.set(wx, winCY, wallZ);
+      worldGroup.add(pane);
+      // Frame
+      const fTop = new THREE.Mesh(new THREE.BoxGeometry(ww + 0.02, 0.03, 0.04), glassFrameMat);
+      fTop.position.set(wx, winY2 + 0.01, wallZ);
+      const fBot = new THREE.Mesh(new THREE.BoxGeometry(ww + 0.02, 0.05, 0.04), glassFrameMat);
+      fBot.position.set(wx, winY1 - 0.02, wallZ);
+      worldGroup.add(fTop, fBot);
+    }
+  };
+  addEndWallGlass(z1, classroomMinX, classroomMaxX, 4);
+  if (boardX1 - classroomMinX > 0.6) {
+    addEndWallGlass(z2, classroomMinX, boardX1 - 0.06, 2);
+  }
+  if (classroomMaxX - boardX2 > 0.6) {
+    addEndWallGlass(z2, boardX2 + 0.06, classroomMaxX, 2);
+  }
 
   addBox(
     worldGroup,
@@ -2343,15 +2534,33 @@ export function createLm402Scene(canvas) {
 
 function applyIntroCamera(intro) {
   const progress = THREE.MathUtils.clamp(intro.progress, 0, 1);
+
+  // ── Cinematic speed curve: slow-fast-slow with dramatic acceleration bursts ──
   const speedCurve = 0.5 + 0.5 * Math.sin(progress * Math.PI * 2.6 - Math.PI * 0.5);
-  const cameraT = THREE.MathUtils.smoothstep(THREE.MathUtils.clamp(progress * (0.7 + speedCurve * 0.3), 0, 1), 0.02, 0.98);
+  // Time warp effect — brief "frozen moment" near 30% then burst forward
+  const timeWarp = progress < 0.28 ? progress
+    : progress < 0.32 ? 0.28 + (progress - 0.28) * 0.3  // slow-motion pause
+    : 0.292 + (progress - 0.32) * 1.04;                   // burst forward
+  const effectiveProgress = THREE.MathUtils.clamp(timeWarp, 0, 1);
+
+  const cameraT = THREE.MathUtils.smoothstep(
+    THREE.MathUtils.clamp(effectiveProgress * (0.7 + speedCurve * 0.3), 0, 1), 0.02, 0.98
+  );
   const camPos = introCurve.getPoint(cameraT);
   const target = introCurve.getPoint(THREE.MathUtils.clamp(cameraT + 0.06, 0, 1));
-  const heartbeat = Math.sin(progress * Math.PI * 8.4) * Math.exp(-progress * 1.8) * 4;
-  const baseFov = THREE.MathUtils.lerp(108, 42, THREE.MathUtils.smoothstep(progress, 0.06, 0.92));
-  camera.fov = baseFov + heartbeat;
+
+  // ── Heartbeat FOV — stronger at start (time-travel turbulence), fading to calm ──
+  const heartbeat = Math.sin(progress * Math.PI * 8.4) * Math.exp(-progress * 1.6) * 5;
+  // Dramatic FOV: ultra-wide at start (wormhole), narrowing to intimate
+  const baseFov = THREE.MathUtils.lerp(118, 42, THREE.MathUtils.smoothstep(progress, 0.04, 0.88));
+  // FOV "punch" during the burst — simulates crossing a time barrier
+  const barrierPunch = progress > 0.30 && progress < 0.40
+    ? Math.sin((progress - 0.30) / 0.10 * Math.PI) * 12 : 0;
+  camera.fov = baseFov + heartbeat + barrierPunch;
   camera.updateProjectionMatrix();
   camera.position.copy(camPos);
+
+  // ── Settle phase: camera finds LM402 and the senior ──
   const settleT = THREE.MathUtils.smoothstep(progress, 0.7, 1);
   const settleTarget = new THREE.Vector3(
     THREE.MathUtils.lerp(
@@ -2367,30 +2576,56 @@ function applyIntroCamera(intro) {
     )
   );
   camera.lookAt(settleTarget);
-  const spiralRoll = Math.sin(progress * Math.PI * 3.2) * THREE.MathUtils.lerp(0.56, 0.006, progress);
-  const microShake = Math.sin(progress * Math.PI * 18) * THREE.MathUtils.lerp(0.02, 0, progress) * 0.3;
-  camera.rotateZ(spiralRoll + microShake);
 
-    introGroup.visible = true;
-    const threadPulse = 0.5 + 0.5 * Math.sin(progress * Math.PI * 6.2);
-    introTube.material.opacity = THREE.MathUtils.lerp(0.92, 0.18, progress) * (0.85 + threadPulse * 0.15);
-    introTube.material.emissiveIntensity = THREE.MathUtils.lerp(2.6, 0.62, progress) * (0.8 + threadPulse * 0.2);
-    const daughterT = THREE.MathUtils.clamp(progress + 0.03, 0, 1);
-    const daughterPos = introCurve.getPoint(daughterT);
-    introAura.position.copy(daughterPos).add(new THREE.Vector3(0, 0.32, -0.18));
-    introAura.lookAt(camera.position);
-    introAura.material.opacity = THREE.MathUtils.lerp(0.92, 0.24, progress) * (0.8 + threadPulse * 0.2);
-    introBloom.position.copy(daughterPos).add(new THREE.Vector3(-0.2, 0.34, -0.48));
-    introBloom.lookAt(camera.position);
-    introBloom.material.opacity = THREE.MathUtils.lerp(0.62, 0.18, progress);
-    introRibbon.position.copy(daughterPos).add(new THREE.Vector3(-0.14, 0.22, -0.74));
-    introRibbon.lookAt(camera.position);
-    introRibbon.material.opacity = THREE.MathUtils.lerp(0.42, 0.06, progress);
-    introSpark.position.copy(introCurve.getPoint(THREE.MathUtils.clamp(progress + 0.08, 0, 1)));
-    introSpark.scale.setScalar(1 + Math.sin(progress * Math.PI * 6) * 0.42);
-    introWake.position.copy(daughterPos).add(new THREE.Vector3(0.1, 0.14, -0.56));
-    introWake.lookAt(camera.position);
-    introWake.material.opacity = THREE.MathUtils.lerp(0.42, 0.08, progress);
+  // ── Spiral roll — dramatic barrel roll at start, stabilizing at end ──
+  const spiralRoll = Math.sin(progress * Math.PI * 3.2) * THREE.MathUtils.lerp(0.62, 0.004, progress);
+  // Chromatic-aberration-like micro-shake during time-travel
+  const turbulence = Math.sin(progress * Math.PI * 22) * THREE.MathUtils.lerp(0.025, 0, progress) * 0.4;
+  // Time-barrier crossing shake
+  const barrierShake = progress > 0.30 && progress < 0.38
+    ? Math.sin((progress - 0.30) * 200) * 0.012 * (1 - (progress - 0.30) / 0.08) : 0;
+  camera.rotateZ(spiralRoll + turbulence + barrierShake);
+
+  // ── Intro visual effects ──
+  introGroup.visible = true;
+  const threadPulse = 0.5 + 0.5 * Math.sin(progress * Math.PI * 6.2);
+
+  // Red thread — pulsing with increasing intensity near barriers
+  const threadGlow = progress > 0.28 && progress < 0.36
+    ? 1.4 + Math.sin((progress - 0.28) / 0.08 * Math.PI * 4) * 0.6 : 1;
+  introTube.material.opacity = THREE.MathUtils.lerp(0.96, 0.16, progress) * (0.85 + threadPulse * 0.15) * threadGlow;
+  introTube.material.emissiveIntensity = THREE.MathUtils.lerp(3.2, 0.52, progress) * (0.8 + threadPulse * 0.2) * threadGlow;
+
+  // Daughter's glow — she leads the way through time
+  const daughterT = THREE.MathUtils.clamp(effectiveProgress + 0.03, 0, 1);
+  const daughterPos = introCurve.getPoint(daughterT);
+
+  introAura.position.copy(daughterPos).add(new THREE.Vector3(0, 0.32, -0.18));
+  introAura.lookAt(camera.position);
+  introAura.material.opacity = THREE.MathUtils.lerp(0.96, 0.22, progress) * (0.8 + threadPulse * 0.2);
+
+  introBloom.position.copy(daughterPos).add(new THREE.Vector3(-0.2, 0.34, -0.48));
+  introBloom.lookAt(camera.position);
+  // Bloom intensifies during barrier crossing
+  const bloomBoost = progress > 0.29 && progress < 0.37 ? 1.6 : 1;
+  introBloom.material.opacity = THREE.MathUtils.lerp(0.72, 0.16, progress) * bloomBoost;
+
+  introRibbon.position.copy(daughterPos).add(new THREE.Vector3(-0.14, 0.22, -0.74));
+  introRibbon.lookAt(camera.position);
+  introRibbon.material.opacity = THREE.MathUtils.lerp(0.48, 0.04, progress);
+
+  // Spark races ahead along the thread
+  introSpark.position.copy(introCurve.getPoint(THREE.MathUtils.clamp(effectiveProgress + 0.08, 0, 1)));
+  introSpark.scale.setScalar(1 + Math.sin(progress * Math.PI * 6) * 0.5);
+  // Spark color shifts from cool white to warm gold as we arrive
+  introSpark.material.color.lerpColors(
+    new THREE.Color("#e0d8ff"), new THREE.Color("#ffd8a0"),
+    THREE.MathUtils.smoothstep(progress, 0.5, 0.9)
+  );
+
+  introWake.position.copy(daughterPos).add(new THREE.Vector3(0.1, 0.14, -0.56));
+  introWake.lookAt(camera.position);
+  introWake.material.opacity = THREE.MathUtils.lerp(0.46, 0.06, progress);
 
   }
 
@@ -2404,44 +2639,102 @@ function perfectEndingPhase(time) {
 
 function applyPerfectEndingCamera(game) {
   const totalTime = game.endingSequence?.time ?? 0;
-  const seniorPovEnd = CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 10;
+  const seniorPovEnd = CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 20;
   const center = junior.position.clone().add(new THREE.Vector3(0, 1.5, 0));
   const faceForward = new THREE.Vector3(Math.sin(junior.rotation.y), 0, Math.cos(junior.rotation.y));
   const eyeTarget = center.clone().add(faceForward.clone().multiplyScalar(0.138)).add(new THREE.Vector3(0.004, 0.018, 0));
   const seniorEye = senior.position.clone().add(new THREE.Vector3(0.03, 1.57, 0.04));
 
-  // ── 10-second senior POV slow-motion zoom ──
-  // The entire ending is just the senior looking at the junior, getting closer
-  if (totalTime < seniorPovEnd) {
-    const holdT = THREE.MathUtils.clamp(totalTime / seniorPovEnd, 0, 1);
-    const eased = THREE.MathUtils.smoothstep(holdT, 0, 1);
-    // Subtle breathing / heartbeat sway
-    const heartSway = Math.sin(totalTime * 1.1) * 0.0016 * (1 + holdT * 0.5);
-    const heartRise = Math.cos(totalTime * 0.82) * 0.0012;
-    // Camera starts at senior's eye, slowly creeps toward junior
-    const seniorHoldPos = seniorEye.clone().add(new THREE.Vector3(0.022, 0.014, 0.004));
-    // Slowly move closer to junior (lerp between senior's eye position and 70% toward junior)
-    const closePos = seniorHoldPos.clone().lerp(eyeTarget, eased * 0.38);
-    closePos.y += heartRise;
-    closePos.x += heartSway;
-    camera.position.copy(closePos);
-    // FOV zooms in slowly → cinematic slow-motion getting-closer effect
-    camera.fov = THREE.MathUtils.lerp(18, 10.4, THREE.MathUtils.smoothstep(holdT, 0.05, 0.95));
+  // ── Phase 1 (0–6s): Wide establishing shot — senior sees junior for the first time ──
+  // Camera starts slightly behind senior's shoulder, drifting to his eye level
+  // Korean drama style: the world slows down, everything else fades away
+  if (totalTime < 6) {
+    const phaseT = totalTime / 6;
+    const eased = THREE.MathUtils.smoothstep(phaseT, 0, 1);
+    // Start from behind senior's right shoulder, slowly orbit to his eye line
+    const shoulderOffset = new THREE.Vector3(0.18, 0.08, -0.12);
+    shoulderOffset.multiplyScalar(1 - eased * 0.85);
+    const camPos = seniorEye.clone().add(shoulderOffset);
+    // Breathing — slow, heavy, the kind when your heart stops
+    const breathe = Math.sin(totalTime * 0.9) * 0.003 * (1 - eased * 0.4);
+    const heartPound = Math.sin(totalTime * 1.8) * 0.0018;
+    camPos.y += breathe + heartPound;
+    camPos.x += Math.sin(totalTime * 0.5) * 0.002;
+    camera.position.copy(camPos);
+    // FOV starts somewhat wide (seeing context), then slowly narrows — tunnel vision
+    camera.fov = THREE.MathUtils.lerp(28, 16, THREE.MathUtils.smoothstep(phaseT, 0.1, 0.9));
     camera.updateProjectionMatrix();
-    camera.lookAt(eyeTarget.x, eyeTarget.y + 0.001, eyeTarget.z);
-    // Gentle cinematic roll
-    camera.rotateZ(Math.sin(totalTime * 0.6) * 0.002 * (1 - holdT * 0.3));
+    // Look target drifts from general direction to precisely junior's face
+    const lookBlend = THREE.MathUtils.smoothstep(phaseT, 0.2, 0.8);
+    const generalDir = senior.position.clone().add(
+      new THREE.Vector3(Math.sin(senior.rotation.y), 0, Math.cos(senior.rotation.y)).multiplyScalar(3)
+    ).add(new THREE.Vector3(0, 1.4, 0));
+    const lookTarget = generalDir.clone().lerp(eyeTarget, lookBlend);
+    camera.lookAt(lookTarget);
+    // Gentle, almost imperceptible roll — the world tilting
+    camera.rotateZ(Math.sin(totalTime * 0.4) * 0.003 * (1 + eased * 0.5));
     return;
   }
 
-  // After 10s — hold on eyes
+  // ── Phase 2 (6–14s): Slow-motion approach — getting closer to her face ──
+  // The senior is frozen, but the camera slowly, inexorably drifts toward her eyes
+  // Like a Korean drama close-up: every detail of her face becomes the whole world
+  if (totalTime < 14) {
+    const phaseT = (totalTime - 6) / 8;
+    const eased = THREE.MathUtils.smoothstep(phaseT, 0, 1);
+    // Camera creeps from senior's eye toward junior
+    const seniorHoldPos = seniorEye.clone().add(new THREE.Vector3(0.02, 0.012, 0.004));
+    const closePos = seniorHoldPos.clone().lerp(eyeTarget, eased * 0.52);
+    // Heartbeat becomes visible — chest-cavity rhythm
+    const heartRate = 1.2 + phaseT * 0.3; // heart speeds up as he gets closer
+    const heartSway = Math.sin(totalTime * heartRate) * 0.002 * (1 + phaseT * 0.8);
+    const heartRise = Math.cos(totalTime * heartRate * 0.7) * 0.0015;
+    closePos.y += heartRise;
+    closePos.x += heartSway;
+    camera.position.copy(closePos);
+    // FOV continues to narrow — "everything else disappears"
+    camera.fov = THREE.MathUtils.lerp(16, 10, THREE.MathUtils.smoothstep(phaseT, 0.05, 0.95));
+    camera.updateProjectionMatrix();
+    camera.lookAt(eyeTarget.x, eyeTarget.y + 0.001, eyeTarget.z);
+    // Roll increases subtly — emotional vertigo
+    const emotionalRoll = Math.sin(totalTime * 0.5) * 0.003 * (0.5 + phaseT * 0.5);
+    camera.rotateZ(emotionalRoll);
+    return;
+  }
+
+  // ── Phase 3 (14–seniorPovEnd): Hold on her eyes — the "one glance" moment ──
+  // Camera barely moves. Just breathing. Just her eyes. Time stops.
+  if (totalTime < seniorPovEnd) {
+    const phaseT = (totalTime - 14) / (seniorPovEnd - 14);
+    const eyeHoldPos = seniorEye.clone().lerp(eyeTarget, 0.52).add(new THREE.Vector3(0.008, 0.006, 0));
+    // Trembling — the kind when you realize who you're looking at
+    const tremble = THREE.MathUtils.smoothstep(phaseT, 0, 0.5);
+    const trembleX = Math.sin(totalTime * 2.8) * 0.0004 * tremble;
+    const trembleY = Math.sin(totalTime * 3.1 + 1.2) * 0.0003 * tremble;
+    // Deep, slow breathing
+    const deepBreath = Math.sin(totalTime * 0.6) * 0.0012;
+    eyeHoldPos.y += deepBreath + trembleY;
+    eyeHoldPos.x += Math.cos(totalTime * 0.2) * 0.0006 + trembleX;
+    camera.position.copy(eyeHoldPos);
+    // FOV holds tight — intimate, inescapable
+    camera.fov = THREE.MathUtils.lerp(10, 9, THREE.MathUtils.smoothstep(phaseT, 0, 0.8));
+    camera.updateProjectionMatrix();
+    camera.lookAt(eyeTarget.x, eyeTarget.y + 0.001, eyeTarget.z);
+    camera.rotateZ(Math.sin(totalTime * 0.35) * 0.0012 * tremble);
+    return;
+  }
+
+  // ── Phase 4 (after seniorPovEnd): Lingering — camera pulls back slightly, world returns ──
   const eyesElapsed = totalTime - seniorPovEnd;
-  const eyeHoldPos = seniorEye.clone().lerp(eyeTarget, 0.38).add(new THREE.Vector3(0.01, 0.008, 0));
-  const tremble = Math.min(1, eyesElapsed * 0.1);
+  const fadeBack = THREE.MathUtils.smoothstep(eyesElapsed, 0, 4);
+  const eyeHoldPos = seniorEye.clone().lerp(eyeTarget, 0.52 - fadeBack * 0.08);
+  eyeHoldPos.add(new THREE.Vector3(0.01 + fadeBack * 0.02, 0.008 + fadeBack * 0.01, 0));
+  const tremble = Math.min(1, eyesElapsed * 0.08);
   eyeHoldPos.y += Math.sin(totalTime * 0.3) * 0.001 + Math.sin(totalTime * 2.2) * 0.0003 * tremble;
   eyeHoldPos.x += Math.cos(totalTime * 0.16) * 0.0008;
   camera.position.copy(eyeHoldPos);
-  camera.fov = THREE.MathUtils.lerp(10.4, 9.2, THREE.MathUtils.smoothstep(eyesElapsed, 0, 3));
+  // FOV slowly widens — returning to reality
+  camera.fov = THREE.MathUtils.lerp(9, 12, THREE.MathUtils.smoothstep(eyesElapsed, 0, 5));
   camera.updateProjectionMatrix();
   camera.lookAt(eyeTarget.x, eyeTarget.y + 0.001, eyeTarget.z);
   camera.rotateZ(Math.sin(totalTime * 0.4) * 0.001 * tremble);
