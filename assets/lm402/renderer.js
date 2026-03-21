@@ -1753,6 +1753,93 @@ function buildIntroCurve() {
   ]);
 }
 
+function createRendererWithFallback(canvas, coarse) {
+  const profiles = [
+    {
+      label: "webgl2-hq",
+      contextIds: ["webgl2"],
+      antialias: !coarse,
+      powerPreference: "high-performance",
+    },
+    {
+      label: "webgl2-safe",
+      contextIds: ["webgl2"],
+      antialias: false,
+      powerPreference: "default",
+    },
+    {
+      label: "webgl-safe",
+      contextIds: ["webgl", "experimental-webgl"],
+      antialias: false,
+      powerPreference: "default",
+    },
+  ];
+
+  const baseContextAttributes = {
+    alpha: false,
+    depth: true,
+    stencil: false,
+    premultipliedAlpha: false,
+    preserveDrawingBuffer: false,
+    failIfMajorPerformanceCaveat: false,
+    desynchronized: true,
+  };
+
+  let lastError = null;
+
+  for (const profile of profiles) {
+    const contextAttributes = {
+      ...baseContextAttributes,
+      antialias: profile.antialias,
+      powerPreference: profile.powerPreference,
+    };
+
+    let gl = null;
+    for (const contextId of profile.contextIds) {
+      try {
+        gl = canvas.getContext(contextId, contextAttributes);
+      } catch (error) {
+        lastError = error;
+      }
+      if (gl) break;
+    }
+    if (!gl) continue;
+
+    try {
+      const renderer = new THREE.WebGLRenderer({
+        canvas,
+        context: gl,
+        antialias: profile.antialias,
+        alpha: false,
+        powerPreference: profile.powerPreference,
+      });
+      renderer.__lm402RendererProfile = profile.label;
+      return renderer;
+    } catch (error) {
+      lastError = error;
+      try {
+        const loseContext = gl.getExtension("WEBGL_lose_context");
+        loseContext?.loseContext?.();
+      } catch {}
+    }
+  }
+
+  try {
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: false,
+      alpha: false,
+      powerPreference: "default",
+    });
+    renderer.__lm402RendererProfile = "three-fallback";
+    return renderer;
+  } catch (error) {
+    lastError = error;
+  }
+
+  throw lastError || new Error("Unable to create WebGL renderer.");
+}
+
 export function createLm402Scene(canvas) {
   const coarse = window.matchMedia("(pointer: coarse)").matches;
   const quality = {
@@ -1760,12 +1847,7 @@ export function createLm402Scene(canvas) {
     maxPixelRatio: coarse ? 0.96 : 1,
     dustCount: coarse ? 42 : 64,
   };
-  const renderer = new THREE.WebGLRenderer({
-    canvas,
-    antialias: true,
-    alpha: false,
-    powerPreference: "high-performance",
-  });
+  const renderer = createRendererWithFallback(canvas, coarse);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.14;
@@ -2923,12 +3005,12 @@ export function createLm402Scene(canvas) {
   sunSphere.position.set(-11.2, 10.8, 5.4);
   worldGroup.add(sunSphere);
   // Sun glow halo
-  const sunGlow = new THREE.Mesh(
+  const sunHaloSphere = new THREE.Mesh(
     new THREE.SphereGeometry(6.0, 16, 16),
     new THREE.MeshBasicMaterial({ color: '#fff4d0', transparent: true, opacity: 0.25, fog: false, depthWrite: false })
   );
-  sunGlow.position.copy(sunSphere.position);
-  worldGroup.add(sunGlow);
+  sunHaloSphere.position.copy(sunSphere.position);
+  worldGroup.add(sunHaloSphere);
 
   // ── Animated cloud planes ──
   const skyBaseX = minX - campusDepth * 0.3;
@@ -3369,35 +3451,32 @@ function applyIntroCamera(intro) {
     THREE.MathUtils.clamp(effectiveProgress * (0.7 + speedCurve * 0.3), 0, 1), 0.02, 0.98
   );
   const camPos = introCurve.getPoint(cameraT);
-  const target = introCurve.getPoint(THREE.MathUtils.clamp(cameraT + 0.06, 0, 1));
+  const target = introCurve.getPoint(THREE.MathUtils.clamp(cameraT + 0.12, 0, 1));
 
   // ── Heartbeat FOV — stronger at start (time-travel turbulence), fading to calm ──
   const heartbeat = Math.sin(progress * Math.PI * 8.4) * Math.exp(-progress * 1.6) * 5;
   // Dramatic FOV: ultra-wide at start (wormhole), narrowing to intimate
-  const baseFov = THREE.MathUtils.lerp(118, 42, THREE.MathUtils.smoothstep(progress, 0.04, 0.88));
+  const baseFov = THREE.MathUtils.lerp(98, 42, THREE.MathUtils.smoothstep(progress, 0.04, 0.88));
   // FOV "punch" during the burst — simulates crossing a time barrier
   const barrierPunch = progress > 0.30 && progress < 0.40
     ? Math.sin((progress - 0.30) / 0.10 * Math.PI) * 12 : 0;
   camera.fov = baseFov + heartbeat + barrierPunch;
   camera.updateProjectionMatrix();
-  camera.position.copy(camPos);
+  camera.position.copy(camPos).add(tempVecB.set(0, Math.sin(progress * Math.PI) * 0.14, 0));
 
-  // ── Settle phase: camera finds LM402 and the senior ──
-  const settleT = THREE.MathUtils.smoothstep(progress, 0.7, 1);
-  const settleTarget = new THREE.Vector3(
-    THREE.MathUtils.lerp(
-      target.x + THREE.MathUtils.lerp(3.24, 0.08, progress),
-      debugAnchors.senior.x * 0.28 + debugAnchors.doorPlaque.x * 0.38 + debugAnchors.frontDoor.x * 0.12 + debugAnchors.parapetBand.x * 0.22,
-      settleT
-    ),
-    THREE.MathUtils.lerp(4.18, 1.42, progress),
-    THREE.MathUtils.lerp(
-      target.z + THREE.MathUtils.lerp(-0.86, -0.12, progress),
-      debugAnchors.senior.z * 0.26 + debugAnchors.doorPlaque.z * 0.34 + debugAnchors.frontDoor.z * 0.14 + debugAnchors.parapetBand.z * 0.26,
-      settleT
-    )
+  // ── Keep the intro visibly anchored to the fourth-floor landmark early ──
+  const landmarkTarget = new THREE.Vector3(
+    debugAnchors.senior.x * 0.22 + debugAnchors.doorPlaque.x * 0.38 + debugAnchors.frontDoor.x * 0.18 + debugAnchors.parapetBand.x * 0.22,
+    THREE.MathUtils.lerp(3.8, 1.46, progress),
+    debugAnchors.senior.z * 0.22 + debugAnchors.doorPlaque.z * 0.34 + debugAnchors.frontDoor.z * 0.18 + debugAnchors.parapetBand.z * 0.26
   );
-  camera.lookAt(settleTarget);
+  const lookBlend = THREE.MathUtils.smoothstep(progress, 0.12, 0.78);
+  const introLookTarget = new THREE.Vector3(
+    THREE.MathUtils.lerp(target.x + THREE.MathUtils.lerp(1.8, 0.12, progress), landmarkTarget.x, lookBlend),
+    THREE.MathUtils.lerp(4.02, landmarkTarget.y, lookBlend),
+    THREE.MathUtils.lerp(target.z - THREE.MathUtils.lerp(0.42, 0.1, progress), landmarkTarget.z, lookBlend)
+  );
+  camera.lookAt(introLookTarget);
 
   // ── Spiral roll — dramatic barrel roll at start, stabilizing at end ──
   const spiralRoll = Math.sin(progress * Math.PI * 3.2) * THREE.MathUtils.lerp(0.62, 0.004, progress);
@@ -3415,8 +3494,8 @@ function applyIntroCamera(intro) {
   // Red thread — pulsing with increasing intensity near barriers
   const threadGlow = progress > 0.28 && progress < 0.36
     ? 1.4 + Math.sin((progress - 0.28) / 0.08 * Math.PI * 4) * 0.6 : 1;
-  introTube.material.opacity = THREE.MathUtils.lerp(0.96, 0.16, progress) * (0.85 + threadPulse * 0.15) * threadGlow;
-  introTube.material.emissiveIntensity = THREE.MathUtils.lerp(3.2, 0.52, progress) * (0.8 + threadPulse * 0.2) * threadGlow;
+  introTube.material.opacity = THREE.MathUtils.lerp(1, 0.2, progress) * (0.9 + threadPulse * 0.18) * threadGlow;
+  introTube.material.emissiveIntensity = THREE.MathUtils.lerp(4.2, 0.72, progress) * (0.88 + threadPulse * 0.24) * threadGlow;
 
   // Daughter's glow — she leads the way through time
   const daughterT = THREE.MathUtils.clamp(effectiveProgress + 0.03, 0, 1);
