@@ -286,10 +286,10 @@ export const INTERACTIONS = {
     ],
     choices: [
       {
-        id: "front_listen",
-        label: "把這通電話收進來",
-        detail: "讓十一點的第一句話先成立。",
-        effect: "advance_front_call",
+        id: "front_call_phone",
+        label: "打電話給學妹",
+        detail: "拿起手機，撥給教室裡的她。",
+        effect: "make_phone_call",
       },
       {
         id: "front_plaque",
@@ -421,10 +421,10 @@ export const INTERACTIONS = {
     ],
     choices: [
       {
-        id: "junior_collect",
-        label: "把這句台詞記穩",
-        detail: "讓後門等待真正成立。",
-        effect: "advance_rear_wait",
+        id: "junior_backdoor",
+        label: "跟學長說：你走到後門。",
+        detail: "說出那句排練過無數次的台詞，讓一眼瞬間真正發生。",
+        effect: "trigger_ending_sequence",
       },
       {
         id: "junior_seat",

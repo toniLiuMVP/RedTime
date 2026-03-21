@@ -1135,6 +1135,28 @@ function applyEffect(effect) {
     closeDialogue();
     return;
   }
+  if (effect === "make_phone_call") {
+    state.flags.phoneCallMade = true;
+    audioSystem.playCue("phone");
+    setSubtitle("學長", "「喂？妳在哪裡？」", 3.6);
+    setTimeout(() => {
+      if (state.mode === "play") {
+        revealHint("去找學妹，把那句台詞說出來。");
+      }
+    }, 4000);
+    closeDialogue();
+    return;
+  }
+  if (effect === "trigger_ending_sequence") {
+    state.flags.frontCallHeard = true;
+    setSubtitle("學妹", "「你走到後門。」", 3.6);
+    audioSystem.playCue("thread");
+    setPhase("rear_wait");
+    resetView();
+    setAmbience("鐘聲剛落，前門那邊傳來探頭和腳步的動靜，風把教室裡的紙邊輕輕掀起。");
+    closeDialogue();
+    return;
+  }
   if (effect === "advance_front_call") {
     state.flags.frontCallHeard = true;
     setPhase("rear_wait");
@@ -1220,6 +1242,9 @@ function getInteractionById(id) {
     return INTERACTIONS.front_call;
   }
   if (id === "junior" && state.phase === "consciousness_market") {
+    return INTERACTIONS.junior_prephone;
+  }
+  if (id === "junior" && !state.flags.phoneCallMade) {
     return INTERACTIONS.junior_prephone;
   }
   if (id === "junior" && state.phase !== "eye_contact") {

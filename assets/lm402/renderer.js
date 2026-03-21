@@ -1891,24 +1891,27 @@ export function createLm402Scene(canvas) {
     }
   };
 
-  const hemiLight = new THREE.HemisphereLight(0xf5f7fc, 0x7a6c52, 1.16);
+  const hemiLight = new THREE.HemisphereLight(0x87CEEB, 0x8B7355, 1.0);
   scene.add(hemiLight);
 
-  const ambient = new THREE.AmbientLight(0xfff4e0, 0.38);
+  const ambient = new THREE.AmbientLight(0xfff8f0, 0.22);
   scene.add(ambient);
 
-  const sun = new THREE.DirectionalLight(0xffd9a0, 2.48);
+  const sun = new THREE.DirectionalLight(0xffebc2, 2.8);
   sun.position.set(-11.2, 10.8, 5.4);
+  sun.target.position.set(0, 0, floorCenterZ);
+  scene.add(sun.target);
   sun.castShadow = true;
   sun.shadow.mapSize.set(quality.shadowMapSize, quality.shadowMapSize);
   sun.shadow.camera.near = 0.5;
-  sun.shadow.camera.far = 68;
-  sun.shadow.camera.left = -22;
-  sun.shadow.camera.right = 16;
-  sun.shadow.camera.top = 18;
-  sun.shadow.camera.bottom = -16;
-  sun.shadow.bias = -0.0004;
-  sun.shadow.normalBias = 0.02;
+  sun.shadow.camera.far = 52;
+  sun.shadow.camera.left = -18;
+  sun.shadow.camera.right = 14;
+  sun.shadow.camera.top = 14;
+  sun.shadow.camera.bottom = -14;
+  sun.shadow.bias = -0.0003;
+  sun.shadow.normalBias = 0.018;
+  sun.shadow.radius = 2;
   scene.add(sun);
 
   const corridorFill = new THREE.PointLight(0xd8e7f4, 1.28, 58, 2);
@@ -2910,6 +2913,22 @@ export function createLm402Scene(canvas) {
   const skyDome = new THREE.Mesh(skyDomeGeo, skyDomeMat);
   skyDome.position.set(minX - campusDepth * 0.3, campusGroundY, floorCenterZ);
   worldGroup.add(skyDome);
+
+  // ── Visible 3D sun sphere ──
+  const sunSphere = new THREE.Mesh(
+    new THREE.SphereGeometry(3.6, 24, 24),
+    new THREE.MeshBasicMaterial({ color: '#fffbe8', fog: false })
+  );
+  // Position sun to match the DirectionalLight direction: upper-left relative to corridor
+  sunSphere.position.set(-11.2, 10.8, 5.4);
+  worldGroup.add(sunSphere);
+  // Sun glow halo
+  const sunGlow = new THREE.Mesh(
+    new THREE.SphereGeometry(6.0, 16, 16),
+    new THREE.MeshBasicMaterial({ color: '#fff4d0', transparent: true, opacity: 0.25, fog: false, depthWrite: false })
+  );
+  sunGlow.position.copy(sunSphere.position);
+  worldGroup.add(sunGlow);
 
   // ── Animated cloud planes ──
   const skyBaseX = minX - campusDepth * 0.3;
