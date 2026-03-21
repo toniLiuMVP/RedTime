@@ -322,7 +322,7 @@ a{text-decoration:none}
 
 .time-watch{
   position:absolute;
-  top:18px;
+  top:52px;
   right:18px;
   left:auto;
   transform:none;
@@ -1249,6 +1249,12 @@ body.landscape-prompt .debug-panel{
     left:calc(max(8px,env(safe-area-inset-left)) + 218px);
     z-index:20;
   }
+  .time-watch{
+    top:max(48px,calc(env(safe-area-inset-top) + 40px));
+    right:max(8px,env(safe-area-inset-right));
+    left:auto;
+    transform:none;
+  }
   .music-prompt{
     left:max(8px,env(safe-area-inset-left));
     top:max(54px,calc(env(safe-area-inset-top) + 46px));
@@ -1260,7 +1266,8 @@ body.landscape-prompt .debug-panel{
     bottom:calc(var(--controls-clearance) + 56px + var(--bottom-gap));
     left:50%;
     transform:translateX(-50%);
-    width:min(420px,calc(100vw - 24px));
+    width:min(420px,calc(100vw - var(--mobile-left-safe) - var(--mobile-right-safe) - 16px));
+    max-width:calc(100vw - var(--mobile-left-safe) - var(--mobile-right-safe) - 16px);
     max-height:40vh;
     overflow-y:auto;
     padding:10px 14px 12px;
@@ -1268,6 +1275,7 @@ body.landscape-prompt .debug-panel{
   }
   .objective-prompt.compact{
     width:auto;
+    max-width:calc(100vw - var(--mobile-left-safe) - var(--mobile-right-safe) - 16px);
     top:auto;
     bottom:calc(var(--controls-clearance) + 56px + var(--bottom-gap));
     left:50%;
@@ -1278,7 +1286,7 @@ body.landscape-prompt .debug-panel{
     bottom:calc(var(--controls-clearance) + 56px + var(--bottom-gap));
     left:50%;
     transform:translateX(-50%);
-    max-width:70vw;
+    max-width:calc(100vw - var(--mobile-left-safe) - var(--mobile-right-safe) - 20px);
     text-align:center;
   }
   .focus-prompt{
@@ -1288,7 +1296,7 @@ body.landscape-prompt .debug-panel{
     left:50%;
     transform:translateX(-50%);
     padding:8px 14px;
-    max-width:80vw;
+    max-width:calc(100vw - var(--mobile-left-safe) - var(--mobile-right-safe) - 16px);
     text-align:center;
     overflow-wrap:break-word;
     word-break:break-word;
@@ -1314,14 +1322,14 @@ body.landscape-prompt .debug-panel{
     bottom:calc(var(--controls-clearance) + 102px + var(--bottom-gap) + 6px) !important;
     left:50% !important;
     transform:translateX(-50%);
-    width:min(420px,calc(100vw - 24px));
+    width:min(420px,calc(100vw - var(--mobile-left-safe) - var(--mobile-right-safe) - 16px)) !important;
     min-height:max(48px,calc(var(--rail-min-height) + 2px));
     max-height:30vh;
     overflow-y:auto;
     grid-template-columns:1fr;
     padding:8px max(12px,env(safe-area-inset-right)) 9px max(12px,env(safe-area-inset-left));
     gap:4px;
-    max-width:calc(100vw - 24px);
+    max-width:calc(100vw - var(--mobile-left-safe) - var(--mobile-right-safe) - 16px);
     box-shadow:0 8px 24px rgba(0,0,0,.22);
     background:linear-gradient(180deg,rgba(8,11,16,.78),rgba(8,10,14,.58));
     -webkit-backdrop-filter:none;
@@ -1436,10 +1444,11 @@ body.landscape-prompt .debug-panel{
     word-break:break-word;
   }
   .hint-pill{
-    max-width:80vw;
+    max-width:calc(100vw - var(--mobile-left-safe) - var(--mobile-right-safe) - 20px);
     text-align:center;
   }
   .focus-prompt{
+    max-width:calc(100vw - var(--mobile-left-safe) - var(--mobile-right-safe) - 16px);
     overflow-wrap:break-word;
     word-break:break-word;
   }
@@ -1473,7 +1482,7 @@ body.landscape-prompt .debug-panel{
   .hud-meta,
   .hud-links{justify-content:flex-start}
   .time-watch{
-    top:max(8px,env(safe-area-inset-top));
+    top:max(48px,calc(env(safe-area-inset-top) + 40px));
     right:max(8px,env(safe-area-inset-right));
     left:auto;
     transform:none;
@@ -1483,13 +1492,14 @@ body.landscape-prompt .debug-panel{
   .time-watch-display{
     font-size:16px;
   }
-  /* Landscape: objective-prompt right-aligned at bottom */
+  /* Landscape: objective-prompt right-aligned at bottom, above joystick */
   .objective-prompt{
     left:auto;
     right:max(8px,env(safe-area-inset-right));
     transform:none;
     width:min(246px,calc(100vw * 0.36));
     padding:8px 12px 10px;
+    bottom:calc(var(--controls-clearance) + var(--joystick-size) + 24px + var(--bottom-gap));
   }
   .objective-title{font-size:22px}
   .objective-copy{font-size:calc(12px * var(--game-font-scale, 1));line-height:1.44;word-break:break-word}
@@ -1498,6 +1508,7 @@ body.landscape-prompt .debug-panel{
     left:auto;
     right:max(8px,env(safe-area-inset-right));
     transform:none;
+    bottom:calc(var(--controls-clearance) + var(--joystick-size) + 24px + var(--bottom-gap));
   }
   .speed-widget{
     top:max(8px,env(safe-area-inset-top));
@@ -1551,23 +1562,24 @@ body.landscape-prompt .debug-panel{
     min-width:220px;
     padding:12px;
   }
-  /* Landscape: hint-pill narrower */
+  /* Landscape: hint-pill narrower, between joysticks */
   .hint-pill{
-    max-width:60vw;
+    max-width:calc(100vw - var(--mobile-left-safe) - var(--mobile-right-safe) - 20px);
   }
-  /* Landscape: focus-prompt right-aligned at bottom */
+  /* Landscape: focus-prompt right-aligned at bottom, above joystick */
   .focus-prompt{
     left:auto;
     right:max(8px,env(safe-area-inset-right));
     transform:none;
     max-width:calc(100vw * 0.35);
     text-align:right;
+    bottom:calc(var(--controls-clearance) + var(--joystick-size) + 24px + var(--bottom-gap));
   }
-  /* Landscape: transcript-dock at bottom-left */
+  /* Landscape: transcript-dock centered between joysticks */
   .transcript-dock{
-    left:max(8px,env(safe-area-inset-left));
+    left:50%;
     right:auto;
-    transform:none;
+    transform:translateX(-50%);
     width:min(320px,calc(min(var(--stage-width),100dvw) - var(--mobile-left-safe) - var(--mobile-right-safe) - 12px));
     max-width:calc(min(var(--stage-width),100dvw) - var(--mobile-left-safe) - var(--mobile-right-safe) - 12px);
   }

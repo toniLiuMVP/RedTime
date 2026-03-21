@@ -280,7 +280,7 @@ function loadLookSetting() {
 }
 
 const initialLookSetting = loadLookSetting();
-const initialAudioEnabled = localStorage.getItem(STORAGE_KEYS.audioEnabled) !== "0";
+const initialAudioEnabled = localStorage.getItem(STORAGE_KEYS.audioEnabled) === "1";
 
 function isMobileLayout() {
   return window.matchMedia("(max-width: 1080px)").matches || window.matchMedia("(pointer: coarse)").matches;
@@ -872,6 +872,8 @@ const FONT_SCALE_OPTIONS = [
   { key: "small", scale: 0.85, label: "小" },
   { key: "normal", scale: 1, label: "標準" },
   { key: "large", scale: 1.15, label: "大" },
+  { key: "xlarge", scale: 1.35, label: "超大" },
+  { key: "xxlarge", scale: 1.6, label: "超大大" },
 ];
 
 function loadFontScaleIndex() {
@@ -1417,6 +1419,11 @@ function finishIntro() {
   syncDockState();
   updateObjective(true);
   updatePointerHint();
+
+  // Show music prompt after intro if audio is off
+  if (!state.audioEnabled) {
+    dom.musicPrompt.hidden = false;
+  }
 }
 
 function startEnding(type, options = {}) {
@@ -1747,9 +1754,9 @@ function updatePhaseLogic(dt) {
 
     const target = WORLD_POINTS.eyeLook;
     const aligned =
-      angleDifference(state.player.yaw, yawToTarget(state.player, target)) < 0.3 &&
-      Math.abs(state.player.pitch - pitchToTarget(state.player, target)) < 0.26 &&
-      Math.hypot(state.player.x - WORLD_POINTS.focusMark.x, state.player.z - WORLD_POINTS.focusMark.z) < scale(122);
+      angleDifference(state.player.yaw, yawToTarget(state.player, target)) < 0.5 &&
+      Math.abs(state.player.pitch - pitchToTarget(state.player, target)) < 0.4 &&
+      Math.hypot(state.player.x - WORLD_POINTS.focusMark.x, state.player.z - WORLD_POINTS.focusMark.z) < scale(200);
 
     state.cinematicGlow = smoothstep(CINEMATIC_TIMELINE.successWindow[0], CINEMATIC_TIMELINE.successWindow[1], state.phaseClock);
     if (state.phaseClock >= CINEMATIC_TIMELINE.lockWindow && !state.endingSequence) {
@@ -1758,6 +1765,11 @@ function updatePhaseLogic(dt) {
       } else {
         startEnding("missed");
       }
+    }
+
+    // Fallback: auto-trigger ending if player hasn't aligned after extended time
+    if (state.phaseClock >= CINEMATIC_TIMELINE.lockWindow + 8 && !state.endingSequence && !state.ending) {
+      startEnding("missed");
     }
   } else {
     state.cinematicGlow = 0;

@@ -48,7 +48,7 @@ export const WORLD = {
     { z: 2000, y1: 84, y2: 256, width: 236 },
   ],
   leftWallWindows: [
-    { z: 882, y1: 92, y2: 246, width: 224 },
+    { z: 882, y1: 92, y2: 246, width: 148 },
     { z: 1242, y1: 92, y2: 250, width: 246 },
     { z: 1602, y1: 92, y2: 250, width: 246 },
     { z: 1962, y1: 92, y2: 246, width: 224 },
@@ -58,7 +58,7 @@ export const WORLD = {
     { side: "right", z: 1280, width: 268, reach: 1160, alpha: 0.48 },
     { side: "right", z: 1640, width: 272, reach: 1220, alpha: 0.50 },
     { side: "right", z: 2000, width: 236, reach: 1040, alpha: 0.36 },
-    { side: "left", z: 882, width: 222, reach: 980, alpha: 0.32 },
+    { side: "left", z: 882, width: 148, reach: 980, alpha: 0.32 },
     { side: "left", z: 1242, width: 252, reach: 1120, alpha: 0.42 },
     { side: "left", z: 1602, width: 252, reach: 1140, alpha: 0.44 },
     { side: "left", z: 1962, width: 222, reach: 980, alpha: 0.32 },
