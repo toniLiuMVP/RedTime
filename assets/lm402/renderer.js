@@ -521,17 +521,20 @@ function createPerson(spec) {
     clearcoatRoughness: 0.4,
   });
   const skinBaseColor = realisticJunior
-    ? new THREE.Color(spec.skin).lerp(new THREE.Color('#ffe0c8'), 0.12) // warm undertone
+    ? new THREE.Color(spec.skin).lerp(new THREE.Color('#ffe4d0'), 0.15)
     : new THREE.Color(spec.skin);
   const skinMat = new THREE.MeshPhysicalMaterial({
     color: skinBaseColor,
-    roughness: realisticJunior ? 0.12 : 0.32,
+    roughness: realisticJunior ? 0.18 : 0.36,
     metalness: 0,
-    clearcoat: realisticJunior ? 0.58 : 0.28,
-    clearcoatRoughness: realisticJunior ? 0.22 : 0.52,
-    sheen: realisticJunior ? 0.72 : 0.12,
-    sheenRoughness: realisticJunior ? 0.24 : 0.72,
-    sheenColor: new THREE.Color(realisticJunior ? '#ffd4b8' : (spec.female ? '#ffcfb8' : '#e8b8a4')),
+    clearcoat: realisticJunior ? 0.42 : 0.22,
+    clearcoatRoughness: realisticJunior ? 0.28 : 0.56,
+    sheen: realisticJunior ? 0.85 : 0.18,
+    sheenRoughness: realisticJunior ? 0.2 : 0.65,
+    sheenColor: new THREE.Color(realisticJunior ? '#ffc8a8' : (spec.female ? '#ffcfb8' : '#e8b8a4')),
+    transmission: realisticJunior ? 0.06 : 0,
+    thickness: realisticJunior ? 0.4 : 0,
+    ior: realisticJunior ? 1.4 : 1.5,
   });
   const blushMat = new THREE.MeshPhysicalMaterial({ color: spec.female ? "#f3c3bc" : "#d7a18f", roughness: 0.56, metalness: 0, transparent: true, opacity: spec.female ? 0.26 : 0.14, sheen: 0.1 });
   const hairMat = new THREE.MeshPhysicalMaterial({
@@ -1855,8 +1858,8 @@ export function createLm402Scene(canvas) {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color("#d4dfeb");
-  scene.fog = new THREE.Fog("#d6e1eb", 12, 58);
+  scene.background = new THREE.Color("#c8daea");
+  scene.fog = new THREE.Fog("#d0dfe8", 14, 62);
 
   const camera = new THREE.PerspectiveCamera(74, 1, 0.03, 180);
   camera.rotation.order = "YXZ";
@@ -2029,20 +2032,20 @@ export function createLm402Scene(canvas) {
   scene.add(rimLight);
 
   const classroomFloorTex = makeWoodTexture({ base: "#856549", dark: "#5c422d", highlight: "#b18a63" });
-  const corridorFloorTex = makeTileTexture({ base: "#bcc5d0", line: "rgba(244,246,249,.76)", speck: "rgba(124,136,148," });
+  const corridorFloorTex = makeTileTexture({ base: "#c2c8ce", line: "rgba(248,248,252,.72)", speck: "rgba(134,142,152," });
   const wallTex = makeConcreteTexture({ base: "#e8e1d7", accent: "rgba(255,255,255,.12)", line: "rgba(174,162,145,.22)", warm: true });
   const corridorWallTex = makeConcreteTexture({ base: "#cbd4dd", accent: "rgba(255,255,255,.12)", line: "rgba(132,145,160,.22)" });
   const stoneTex = makeConcreteTexture({ base: "#ddd7cf", accent: "rgba(255,255,255,.12)", line: "rgba(126,118,104,.2)", warm: true });
-  const woodTex = makeWoodTexture({ base: "#8f663f", dark: "#57381f", highlight: "#b08556" });
+  const woodTex = makeWoodTexture({ base: "#96704a", dark: "#5c3e26", highlight: "#b8925e" });
   const boardTex = makeBoardTexture();
   const lawnTex = makeConcreteTexture({ base: "#6e8d5a", accent: "rgba(255,255,255,.02)", line: "rgba(84,112,70,.16)", warm: true });
-  const plazaTex = makeTileTexture({ base: "#cbd1d7", line: "rgba(244,246,249,.72)", speck: "rgba(124,136,148," });
+  const plazaTex = makeTileTexture({ base: "#cfd4d8", line: "rgba(248,248,252,.68)", speck: "rgba(134,142,152," });
 
   const classroomFloorMat = new THREE.MeshStandardMaterial({ color: "#9a7252", map: classroomFloorTex, roughness: 0.78, metalness: 0.04 });
   const corridorFloorMat = new THREE.MeshStandardMaterial({ color: "#c2c9d2", map: corridorFloorTex, roughness: 0.82, metalness: 0.03 });
   const wallMat = new THREE.MeshStandardMaterial({ color: "#f2f0ec", map: wallTex, roughness: 0.88, metalness: 0.01 });
   const corridorWallMat = new THREE.MeshStandardMaterial({ color: "#f0eeea", map: corridorWallTex, roughness: 0.86, metalness: 0.02 });
-  const woodMat = new THREE.MeshStandardMaterial({ color: "#a07248", map: woodTex, roughness: 0.72, metalness: 0.06 });
+  const woodMat = new THREE.MeshStandardMaterial({ color: "#a87a50", map: woodTex, roughness: 0.68, metalness: 0.05 });
   const metalMat = new THREE.MeshStandardMaterial({ color: "#8a9098", roughness: 0.48, metalness: 0.44 });
   const boardMat = new THREE.MeshStandardMaterial({ color: "#1e3b30", map: boardTex, roughness: 0.82, metalness: 0.03 });
   const stoneMat = new THREE.MeshStandardMaterial({ color: "#e2dcd2", map: stoneTex, roughness: 0.88, metalness: 0.03 });
@@ -3132,25 +3135,25 @@ export function createLm402Scene(canvas) {
   };
 
   const senior = createPerson({
-    torso: "#f6f7fb",
-    torsoAccent: "#dde4ee",
-    legs: "#273140",
-    skin: "#f0d5c7",
-    hair: "#23191a",
-    shoes: "#f4f5f6",
-    iris: "#5c463b",
+    torso: "#f0f2f8",
+    torsoAccent: "#c8d4e8",
+    legs: "#1e2a3a",
+    skin: "#f2d8c8",
+    hair: "#1a1214",
+    shoes: "#e8e6e2",
+    iris: "#4a3830",
     female: false,
     phone: true,
     scale: 1.08,
   });
   const junior = createPerson({
-    torso: "#ffffff",
-    torsoAccent: "#ffffff",
-    legs: "#5b7fa6",
-    skin: "#f8e2d2",
-    hair: "#2a1f1a",
-    shoes: "#fffefb",
-    iris: "#604434",
+    torso: "#fefefe",
+    torsoAccent: "#f8f4f0",
+    legs: "#4a6e96",
+    skin: "#fae4d0",
+    hair: "#1e1510",
+    shoes: "#f8f6f2",
+    iris: "#503828",
     female: true,
     highlight: true,
     referenceJunior: true,
@@ -3389,14 +3392,14 @@ export function createLm402Scene(canvas) {
     if (isIntro) {
       applyIdlePose(junior, game.time * 0.4, 0.4);
     } else if (game.endingSequence?.type === "perfect") {
-      const seniorWalkT = THREE.MathUtils.smoothstep(game.endingSequence.time, 0.12, 11.7);
-      const juniorWalkT = THREE.MathUtils.smoothstep(game.endingSequence.time, 0.24, 7.7);
-      if (game.endingSequence.time < 11.7) {
+      const seniorWalkT = THREE.MathUtils.smoothstep(game.endingSequence.time, 0.24, 23.4);
+      const juniorWalkT = THREE.MathUtils.smoothstep(game.endingSequence.time, 0.48, 15.4);
+      if (game.endingSequence.time < 23.4) {
         applyWalkingPose(senior, Math.sin(game.endingSequence.time * 3.53) * 0.9, 0.9);
       } else {
         applyIdlePose(senior, game.time, 0.8);
       }
-      if (game.endingSequence.time < 7.7) {
+      if (game.endingSequence.time < 15.4) {
         applyWalkingPose(junior, Math.sin(game.endingSequence.time * 3.23 + 0.8) * 0.84, 0.7);
       } else {
         applyIdlePose(junior, game.time * 0.84, 0.92);
@@ -3404,7 +3407,7 @@ export function createLm402Scene(canvas) {
       senior.position.y += seniorWalkT * 0.01;
       junior.position.y += juniorWalkT * 0.014;
     } else if (game.phase === "front_call") {
-      if (game.phaseClock < 3.6) {
+      if (game.phaseClock < 7.2) {
         applyWalkingPose(senior, Math.sin(game.time * 7.4) * 0.82, 0.82);
       } else {
         applyIdlePose(senior, game.time * 0.9, 0.76);
@@ -3479,12 +3482,12 @@ function applyIntroCamera(intro) {
   camera.lookAt(introLookTarget);
 
   // ── Spiral roll — dramatic barrel roll at start, stabilizing at end ──
-  const spiralRoll = Math.sin(progress * Math.PI * 3.2) * THREE.MathUtils.lerp(0.62, 0.004, progress);
+  const spiralRoll = Math.sin(progress * Math.PI * 2.4) * THREE.MathUtils.lerp(0.35, 0.002, progress);
   // Chromatic-aberration-like micro-shake during time-travel
-  const turbulence = Math.sin(progress * Math.PI * 22) * THREE.MathUtils.lerp(0.025, 0, progress) * 0.4;
+  const turbulence = Math.sin(progress * Math.PI * 14) * THREE.MathUtils.lerp(0.012, 0, progress) * 0.3;
   // Time-barrier crossing shake
-  const barrierShake = progress > 0.30 && progress < 0.38
-    ? Math.sin((progress - 0.30) * 200) * 0.012 * (1 - (progress - 0.30) / 0.08) : 0;
+  const barrierShake = progress > 0.30 && progress < 0.36
+    ? Math.sin((progress - 0.30) * 140) * 0.006 * (1 - (progress - 0.30) / 0.06) : 0;
   camera.rotateZ(spiralRoll + turbulence + barrierShake);
 
   // ── Intro visual effects ──
@@ -3531,17 +3534,17 @@ function applyIntroCamera(intro) {
   }
 
 function perfectEndingPhase(time) {
-  const seniorPovEnd = CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 28;
+  const seniorPovEnd = CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 38;
   if (time < 2) return "establishing";
-  if (time < 12) return "orbit";
-  if (time < 14) return "orbit_transition";
+  if (time < 16) return "orbit";
+  if (time < 18) return "orbit_transition";
   if (time < seniorPovEnd) return "senior_pov_hold";
   return "eyes";
 }
 
 function applyPerfectEndingCamera(game) {
   const totalTime = game.endingSequence?.time ?? 0;
-  const seniorPovEnd = CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 28;
+  const seniorPovEnd = CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 38;
   const center = junior.position.clone().add(_endingCenterOff);
   const faceForward = tempVecA.set(Math.sin(junior.rotation.y), 0, Math.cos(junior.rotation.y));
   const seniorEye = senior.position.clone().add(_endingSeniorEyeOff);
@@ -3564,8 +3567,8 @@ function applyPerfectEndingCamera(game) {
     const shoulderOffset = _endingShoulderOff.clone();
     shoulderOffset.multiplyScalar(1 - eased * 0.5);
     const camPos = seniorEye.clone().add(shoulderOffset);
-    const breathe = Math.sin(totalTime * 0.9) * 0.003 * (1 - eased * 0.4);
-    const heartPound = Math.sin(totalTime * 1.8) * 0.0018;
+    const breathe = Math.sin(totalTime * 0.7) * 0.004 * (1 - eased * 0.3);
+    const heartPound = Math.sin(totalTime * 1.4) * 0.002;
     camPos.y += breathe + heartPound;
     camPos.x += Math.sin(totalTime * 0.5) * 0.002;
     camera.position.copy(camPos);
@@ -3584,8 +3587,8 @@ function applyPerfectEndingCamera(game) {
   // ── Phase 1 (2–12s): 360° slow-motion orbit around junior's face ──
   // The key cinematic moment — camera circles her face in a full revolution
   // before the senior even speaks. Time feels suspended.
-  if (totalTime < 12) {
-    const orbitT = (totalTime - 2) / 10; // 0 to 1 over 10 seconds
+  if (totalTime < 16) {
+    const orbitT = (totalTime - 2) / 14; // 0 to 1 over 14 seconds — slower, more dramatic
     const easedT = THREE.MathUtils.smoothstep(orbitT, 0, 1);
     const angle = easedT * Math.PI * 2; // Full 360° with sine easing
     const orbitRadius = 2.2; // Much further back to capture full body
@@ -3615,8 +3618,8 @@ function applyPerfectEndingCamera(game) {
 
   // ── Phase 2 (12–14s): Transition back to senior's POV ──
   // Camera smoothly moves from orbit end position back to senior's eye line
-  if (totalTime < 14) {
-    const phaseT = (totalTime - 12) / 2;
+  if (totalTime < 18) {
+    const phaseT = (totalTime - 16) / 2;
     const eased = THREE.MathUtils.smoothstep(phaseT, 0, 1);
 
     // Orbit end position (full circle returns to front) — matches new orbit radius

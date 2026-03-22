@@ -1153,10 +1153,11 @@ function applyEffect(effect) {
     state.flags.frontCallHeard = true;
     setSubtitle("學妹", "「你走到後門。」", 3.6);
     audioSystem.playCue("thread");
-    setPhase("rear_wait");
-    resetView();
-    setAmbience("鐘聲剛落，前門那邊傳來探頭和腳步的動靜，風把教室裡的紙邊輕輕掀起。");
     closeDialogue();
+    // Directly trigger perfect ending — same as "女兒飛到一眼瞬間那一秒" button
+    setTimeout(() => {
+      startPerfectEnding();
+    }, 1200);
     return;
   }
   if (effect === "advance_front_call") {
@@ -1658,8 +1659,8 @@ function setCharacterPose(name, x, z, rotationY, alpha = 1) {
 
 function updateCharacters() {
   if (state.endingSequence?.type === "perfect") {
-    const seniorWalkT = smoothstep(0.18, 11.7, state.endingSequence.time);
-    const juniorWalkT = smoothstep(0.4, 7.7, state.endingSequence.time);
+    const seniorWalkT = smoothstep(0.36, 23.4, state.endingSequence.time);
+    const juniorWalkT = smoothstep(0.8, 15.4, state.endingSequence.time);
     const seniorX = lerp(scale(-334), scale(-318), seniorWalkT * 0.82);
     const seniorZ = lerp(scale(WORLD.frontDoor.center.z - 44), scale(WORLD.backDoor.center.z + 4), seniorWalkT);
     const jPos = juniorPerfectPathPosition(juniorWalkT);
@@ -1685,7 +1686,7 @@ function updateCharacters() {
   }
 
   if (state.phase === "front_call") {
-    const seniorWalkT = smoothstep(0.08, 3.8, state.phaseClock);
+    const seniorWalkT = smoothstep(0.16, 7.6, state.phaseClock);
     const seniorX = lerp(scale(-520), scale(-336), seniorWalkT);
     const seniorZ = lerp(scale(WORLD.frontDoor.center.z - 286), scale(WORLD.frontDoor.center.z - 42), seniorWalkT);
     setCharacterPose(
@@ -1701,8 +1702,8 @@ function updateCharacters() {
   }
 
   if (state.phase === "rear_wait") {
-    const seniorT = smoothstep(0.1, 5.8, state.phaseClock);
-    const juniorT = smoothstep(0.6, 4.8, state.phaseClock);
+    const seniorT = smoothstep(0.2, 11.6, state.phaseClock);
+    const juniorT = smoothstep(1.2, 9.6, state.phaseClock);
     const seniorX = lerp(scale(-342), scale(-324), seniorT * 0.84);
     const seniorZ = lerp(scale(WORLD.frontDoor.center.z - 42), scale(WORLD.backDoor.center.z), seniorT);
     const jPos = juniorPathPosition(juniorT);
@@ -1715,8 +1716,8 @@ function updateCharacters() {
     return;
   }
 
-  const seniorT = smoothstep(0.8, 4.0, state.phaseClock);
-  const juniorT = smoothstep(0.2, 3.4, state.phaseClock);
+  const seniorT = smoothstep(1.6, 8.0, state.phaseClock);
+  const juniorT = smoothstep(0.4, 6.8, state.phaseClock);
   const seniorX = lerp(scale(-356), scale(-332), seniorT * 0.8);
   const seniorZ = lerp(scale(WORLD.backDoor.center.z + 4), scale(WORLD.backDoor.center.z), seniorT);
   const juniorX = lerp(scale(84), scale(58), juniorT);
@@ -1736,13 +1737,13 @@ function updateCharacterAudio(dt) {
   }
 
   const seniorWalking =
-    (state.phase === "front_call" && state.phaseClock < 3.8) ||
-    (state.phase === "rear_wait" && state.phaseClock < 5.8) ||
-    (state.phase === "eye_contact" && state.phaseClock < 2.8) ||
-    (state.endingSequence?.type === "perfect" && state.endingSequence.time < 8.2);
+    (state.phase === "front_call" && state.phaseClock < 7.6) ||
+    (state.phase === "rear_wait" && state.phaseClock < 11.6) ||
+    (state.phase === "eye_contact" && state.phaseClock < 5.6) ||
+    (state.endingSequence?.type === "perfect" && state.endingSequence.time < 16.4);
   const juniorWalking =
-    (state.phase === "rear_wait" && state.phaseClock > 0.5 && state.phaseClock < 4.8) ||
-    (state.endingSequence?.type === "perfect" && state.endingSequence.time > 0.3 && state.endingSequence.time < 5.4);
+    (state.phase === "rear_wait" && state.phaseClock > 1.0 && state.phaseClock < 9.6) ||
+    (state.endingSequence?.type === "perfect" && state.endingSequence.time > 0.6 && state.endingSequence.time < 10.8);
 
   if (seniorWalking && state.time - state.sound.seniorStepAt > 0.48) {
     state.sound.seniorStepAt = state.time;
@@ -1786,7 +1787,7 @@ function updatePhaseLogic(dt) {
   }
 
   // Auto-transition: after characters reach back door, automatically proceed to eye_contact
-  if (state.phase === "rear_wait" && state.phaseClock > 6.5 && !state.flags.autoBackdoorTriggered) {
+  if (state.phase === "rear_wait" && state.phaseClock > 13.0 && !state.flags.autoBackdoorTriggered) {
     state.flags.autoBackdoorTriggered = true;
     collectMemory("backdoor");
     state.flags.backdoorAnchored = true;
