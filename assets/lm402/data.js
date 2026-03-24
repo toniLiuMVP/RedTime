@@ -84,6 +84,31 @@ export const WORLD = {
     { id: "W-L", x: -220, y: 214, z: 2898, rotateY: Math.PI / 2 },
   ],
 };
+export const stairsWarp = {
+  cooldown: 6,
+  effectReturnDelay: 1.05,
+  triggerEdgePadding: 36,
+  returnPoint: { x: -548, y: 0, z: 1978 },
+  subtitle: {
+    source: "女兒",
+    text: "不管怎麼走，都會回到四樓耶。",
+    ttl: 4.6,
+  },
+  front: {
+    id: "front_stair",
+    label: "前樓梯",
+    z1: WORLD.stairs.front.z1,
+    z2: WORLD.stairs.front.z2,
+    landingZ: WORLD.stairs.front.landingZ,
+  },
+  back: {
+    id: "back_stair",
+    label: "後樓梯",
+    z1: WORLD.stairs.back.z1,
+    z2: WORLD.stairs.back.z2,
+    landingZ: WORLD.stairs.back.landingZ,
+  },
+};
 export const PHASES = [
   {
     id: "consciousness_market",
@@ -722,7 +747,7 @@ export const CINEMATIC_TIMELINE = {
   lockWindow: 4.1,
   successWindow: [3.2, 4.4],
   introDuration: 16.2,
-  perfectDuration: 35.6,
+  perfectDuration: 38.2,
   perfectEstablishEnd: 2.2,
   perfectOrbitStart: 2.2,
   perfectOrbitEnd: 14.2,
@@ -730,10 +755,25 @@ export const CINEMATIC_TIMELINE = {
   perfectSeniorPovStart: 17.4,
   perfectSeniorPovEnd: 27.6,
   perfectEyesStart: 27.6,
-  perfectEyesEnd: 35,
-  perfectOverlayAt: 34.8,
-  perfectLine1At: 18.2,
-  perfectLine2At: 27.9,
+  perfectEyesEnd: 37.6,
+  perfectOverlayAt: 37.6,
+  perfectLine1At: 27.6,
+  perfectLine2At: 32.6,
+};
+export const perfectSubtitleTrack = {
+  startAt: CINEMATIC_TIMELINE.perfectLine1At,
+  line1: {
+    source: "學長",
+    text: "也太像徐若瑄了吧！",
+    duration: 5,
+  },
+  line2: {
+    source: "把拔（心底的聲音）",
+    text: "這一次，依然遇見妳。",
+    duration: 5,
+  },
+  overlayAt: CINEMATIC_TIMELINE.perfectOverlayAt,
+  overlayDelay: 10,
 };
 export const AUTHOR_REVIEW_DIALOGUE_DRAFTS = [
   {

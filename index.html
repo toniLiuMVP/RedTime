@@ -254,19 +254,19 @@
       .hero-inner {
         position: relative;
         z-index: 2;
-        max-width: 1120px;
+        max-width: 1240px;
         width: 100%;
         margin: 0 auto;
       }
       .hero-poster {
         display: grid;
-        grid-template-columns: minmax(0, 1.12fr) minmax(280px, 0.72fr);
+        grid-template-columns: minmax(0, 1.02fr) minmax(400px, 0.98fr);
         gap: clamp(28px, 4vw, 54px);
-        align-items: end;
+        align-items: center;
         text-align: left;
       }
       .hero-copy-col {
-        max-width: 720px;
+        max-width: 760px;
       }
       .hero-pre {
         font-family: "DM Mono", monospace;
@@ -364,6 +364,204 @@
         opacity: 0;
         animation: fadeUp 0.9s 1.2s forwards;
       }
+      .hero-side-stack {
+        display: grid;
+        gap: 18px;
+      }
+      .hero-stage-card {
+        position: relative;
+        min-height: 356px;
+        padding: 24px 24px 134px;
+        border: 1px solid rgba(255, 248, 232, 0.12);
+        border-radius: 34px;
+        overflow: hidden;
+        background:
+          radial-gradient(
+            ellipse 58% 64% at 62% 42%,
+            rgba(255, 230, 176, 0.2),
+            transparent 55%
+          ),
+          radial-gradient(
+            ellipse 72% 90% at 18% 18%,
+            rgba(90, 122, 152, 0.22),
+            transparent 62%
+          ),
+          linear-gradient(135deg, rgba(12, 18, 28, 0.98), rgba(8, 10, 16, 0.82));
+        box-shadow:
+          0 28px 72px rgba(0, 0, 0, 0.34),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        opacity: 0;
+        animation: fadeUp 0.95s 0.98s forwards;
+      }
+      .hero-stage-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.04), transparent 36%),
+          linear-gradient(0deg, rgba(255, 255, 255, 0.02), transparent 58%);
+        pointer-events: none;
+      }
+      .hero-stage-kicker {
+        position: relative;
+        z-index: 1;
+        font-family: "DM Mono", monospace;
+        font-size: 9px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: rgba(234, 230, 222, 0.62);
+        margin-bottom: 10px;
+      }
+      .hero-stage-title {
+        position: relative;
+        z-index: 1;
+        font-family: "Cormorant Garamond", serif;
+        font-size: clamp(30px, 4vw, 44px);
+        line-height: 0.98;
+        letter-spacing: 0.045em;
+        color: var(--parchment);
+        max-width: 9ch;
+        margin-bottom: 10px;
+      }
+      .hero-stage-copy {
+        position: relative;
+        z-index: 1;
+        max-width: 24em;
+        font-size: 13px;
+        line-height: 1.8;
+        color: rgba(234, 230, 222, 0.72);
+      }
+      .hero-stage-window {
+        position: absolute;
+        right: 18px;
+        bottom: 18px;
+        width: min(62%, 360px);
+        aspect-ratio: 1.08 / 1;
+        border-radius: 26px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 248, 232, 0.08);
+        background:
+          linear-gradient(180deg, rgba(242, 223, 196, 0.1), transparent 38%),
+          linear-gradient(90deg, rgba(18, 24, 36, 0.94), rgba(8, 12, 18, 0.94));
+        box-shadow:
+          inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+          0 18px 40px rgba(0, 0, 0, 0.28);
+      }
+      .hero-stage-window::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.1), transparent 22%),
+          linear-gradient(0deg, rgba(255, 248, 232, 0.16), transparent 44%);
+        opacity: 0.5;
+      }
+      .hero-stage-door {
+        position: absolute;
+        left: 15%;
+        top: 18%;
+        width: 18%;
+        height: 68%;
+        border-radius: 12px 12px 0 0;
+        background: linear-gradient(180deg, rgba(214, 205, 192, 0.24), rgba(52, 46, 40, 0.32));
+        box-shadow:
+          96px 0 0 0 rgba(235, 228, 219, 0.06),
+          190px 0 0 0 rgba(232, 224, 214, 0.04);
+      }
+      .hero-stage-door::before {
+        content: "";
+        position: absolute;
+        inset: 6% 8%;
+        border-radius: 10px 10px 0 0;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .hero-stage-beam {
+        position: absolute;
+        right: 18%;
+        top: 10%;
+        width: 34%;
+        height: 78%;
+        background:
+          radial-gradient(
+            ellipse 62% 70% at 50% 18%,
+            rgba(255, 240, 209, 0.9),
+            rgba(255, 219, 160, 0.12) 56%,
+            transparent 74%
+          );
+        filter: blur(5px);
+        opacity: 0.95;
+      }
+      .hero-stage-junior {
+        position: absolute;
+        right: 26%;
+        bottom: 10%;
+        width: 18%;
+        height: 52%;
+        border-radius: 50% 50% 18% 18% / 24% 24% 16% 16%;
+        background:
+          radial-gradient(circle at 52% 12%, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.88) 26%, transparent 27%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(250, 250, 248, 0.9) 52%, rgba(48, 82, 118, 0.92) 52%, rgba(50, 84, 118, 0.94) 77%, rgba(249, 246, 238, 0.92) 77%);
+        box-shadow:
+          0 0 38px rgba(255, 226, 168, 0.38),
+          0 12px 20px rgba(0, 0, 0, 0.24);
+        transform: translateX(12px);
+      }
+      .hero-stage-junior::before {
+        content: "";
+        position: absolute;
+        left: 22%;
+        right: 22%;
+        top: -8%;
+        height: 28%;
+        border-radius: 45% 45% 38% 38%;
+        background:
+          radial-gradient(circle at 50% 18%, rgba(47, 31, 24, 0.96), rgba(73, 48, 35, 0.88) 58%, transparent 59%),
+          linear-gradient(180deg, rgba(63, 40, 30, 0.95), rgba(57, 38, 30, 0.85));
+        box-shadow: 20px 28px 0 -10px rgba(75, 52, 39, 0.9);
+      }
+      .hero-stage-junior::after {
+        content: "";
+        position: absolute;
+        left: -72%;
+        bottom: 10%;
+        width: 170%;
+        height: 4px;
+        background: linear-gradient(90deg, rgba(255, 126, 158, 0.1), rgba(255, 96, 136, 0.72), rgba(255, 214, 168, 0.24));
+        filter: blur(1px);
+        opacity: 0.72;
+      }
+      .hero-stage-steps {
+        position: absolute;
+        left: 24px;
+        right: 24px;
+        bottom: 22px;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .hero-stage-step {
+        padding: 10px 12px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(7, 10, 16, 0.54);
+        backdrop-filter: blur(12px);
+      }
+      .hero-stage-step strong {
+        display: block;
+        font-family: "DM Mono", monospace;
+        font-size: 8px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(255, 233, 185, 0.78);
+        margin-bottom: 5px;
+      }
+      .hero-stage-step span {
+        display: block;
+        font-size: 11.6px;
+        line-height: 1.55;
+        color: rgba(234, 230, 222, 0.76);
+      }
       .hero-side-card {
         padding: 26px 24px 24px;
         border: 1px solid rgba(255, 248, 232, 0.12);
@@ -409,6 +607,42 @@
         gap: 10px;
         margin-bottom: 18px;
       }
+      .hero-side-bottom {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(180px, 220px);
+        gap: 14px;
+        align-items: stretch;
+        margin-bottom: 18px;
+      }
+      .hero-mini-quote {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.024);
+      }
+      .hero-mini-quote strong {
+        font-family: "Cormorant Garamond", serif;
+        font-size: 22px;
+        line-height: 1.08;
+        letter-spacing: 0.04em;
+        color: var(--parchment);
+      }
+      .hero-mini-quote span {
+        font-family: "DM Mono", monospace;
+        font-size: 8.5px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(234, 230, 222, 0.56);
+      }
+      .hero-side-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
       .hero-side-stat {
         display: flex;
         flex-direction: column;
@@ -440,7 +674,8 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 100%;
+        flex: 1;
+        min-width: 0;
         padding: 14px 16px;
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 999px;
@@ -468,6 +703,12 @@
           rgba(255, 255, 255, 0.03)
         );
         transform: translateY(-1px);
+      }
+      .hero-side-link.secondary {
+        background: rgba(255, 255, 255, 0.026);
+      }
+      .hero-side-link.secondary:hover {
+        background: rgba(255, 255, 255, 0.06);
       }
       .btn-primary {
         padding: 16px 36px;
@@ -1330,6 +1571,7 @@
         .hero-title {
           font-size: clamp(54px, 18vw, 82px);
           margin-bottom: 28px;
+          white-space: normal;
         }
         .hero-divider {
           height: 44px;
@@ -1348,8 +1590,26 @@
           align-items: stretch;
           gap: 10px;
         }
+        .hero-side-stack {
+          gap: 14px;
+        }
+        .hero-stage-card {
+          min-height: 296px;
+          padding-bottom: 138px;
+        }
+        .hero-stage-window {
+          width: calc(100% - 36px);
+        }
+        .hero-stage-steps {
+          grid-template-columns: 1fr;
+        }
         .hero-side-card {
           text-align: left;
+        }
+        .hero-side-bottom,
+        .hero-side-actions {
+          grid-template-columns: 1fr;
+          flex-direction: column;
         }
         .hero-side-grid {
           grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1448,11 +1708,30 @@
       }
       @media (min-width: 1360px) {
         #hero {
-          padding-top: 92px;
-          padding-bottom: 110px;
+          padding-top: 110px;
+          padding-bottom: 94px;
         }
         .hero-inner {
-          max-width: 820px;
+          max-width: 1320px;
+        }
+        .hero-poster {
+          grid-template-columns: minmax(0, 1.02fr) minmax(460px, 0.98fr);
+          gap: clamp(42px, 4vw, 76px);
+          min-height: min(76vh, 840px);
+        }
+        .hero-copy-col {
+          align-self: center;
+        }
+        .hero-title {
+          font-size: clamp(82px, 7vw, 118px);
+          white-space: nowrap;
+        }
+        .hero-tagline {
+          max-width: 32em;
+          font-size: clamp(15px, 1.45vw, 18px);
+        }
+        .hero-stage-card {
+          min-height: 386px;
         }
         .about-grid,
         .arcs-header,
@@ -1478,6 +1757,9 @@
         }
         #film [style*="grid-template-columns:1fr 1fr"] {
           gap: 32px !important;
+        }
+        .read-inner {
+          max-width: 860px;
         }
       }
     </style>
@@ -1681,26 +1963,66 @@
               <a class="btn-ghost" href="#about">了解這個故事</a>
             </div>
           </div>
-          <aside class="hero-side-card">
-            <div class="hero-side-kicker">2005 · 利瑪竇四樓 · 11:00</div>
-            <div class="hero-side-title">把那一眼，<br />重新走一次</div>
-            <p class="hero-side-copy">
-              網站現在不只可以讀，還能直接進入
-              LM402。沿著女兒視線飛進四樓走廊，先聽見前門那通電話，再在後門等那一秒自己走進光裡。
-            </p>
-            <div class="hero-side-grid">
-              <div class="hero-side-stat">
-                <strong>41</strong><span>章節</span>
+          <div class="hero-side-stack">
+            <aside class="hero-stage-card">
+              <div class="hero-stage-kicker">LM402 · 2005 · 11:00</div>
+              <div class="hero-stage-title">把那一眼，先走一遍</div>
+              <p class="hero-stage-copy">
+                先讓女兒的視線帶你穿過四樓走廊，聽見前門那通電話，再在後門旁停住，等學妹走進那一道光。
+              </p>
+              <div class="hero-stage-window" aria-hidden="true">
+                <div class="hero-stage-door"></div>
+                <div class="hero-stage-beam"></div>
+                <div class="hero-stage-junior"></div>
               </div>
-              <div class="hero-side-stat">
-                <strong>3</strong><span>時間線</span>
+              <div class="hero-stage-steps">
+                <div class="hero-stage-step">
+                  <strong>01</strong>
+                  <span>意識菜市場先在教室裡翻湧起來。</span>
+                </div>
+                <div class="hero-stage-step">
+                  <strong>02</strong>
+                  <span>前門電話把十一點真正拉到眼前。</span>
+                </div>
+                <div class="hero-stage-step">
+                  <strong>03</strong>
+                  <span>後門那一秒終於被你親眼接住。</span>
+                </div>
               </div>
-              <div class="hero-side-stat">
-                <strong>1</strong><span>一眼瞬間</span>
+            </aside>
+            <aside class="hero-side-card">
+              <div class="hero-side-kicker">2005 · 利瑪竇四樓 · 11:00</div>
+              <div class="hero-side-title">桌機先看海報，<br />再走進電影裡</div>
+              <p class="hero-side-copy">
+                首頁現在把閱讀入口、LM402、時間線與關鍵統計都放進同一個首屏。先理解故事重量，再決定你要順讀全集，還是先把那一秒走完。
+              </p>
+              <div class="hero-side-grid">
+                <div class="hero-side-stat">
+                  <strong>41</strong><span>章節</span>
+                </div>
+                <div class="hero-side-stat">
+                  <strong>3</strong><span>時間線</span>
+                </div>
+                <div class="hero-side-stat">
+                  <strong>1</strong><span>一眼瞬間</span>
+                </div>
               </div>
-            </div>
-            <a class="hero-side-link" href="lm402.html">進入 LM402 電影場景</a>
-          </aside>
+              <div class="hero-side-bottom">
+                <div class="hero-mini-quote">
+                  <strong>把一秒鐘，讀成二十年。</strong>
+                  <span>讀者入口 · 影像入口 · 同屏對位</span>
+                </div>
+                <div class="hero-mini-quote">
+                  <strong>先玩 LM402，<br />再回來讀全文。</strong>
+                  <span>桌機電影感優先</span>
+                </div>
+              </div>
+              <div class="hero-side-actions">
+                <a class="hero-side-link" href="lm402.html">進入 LM402 電影場景</a>
+                <a class="hero-side-link secondary" href="reader.html">直接閱讀全集</a>
+              </div>
+            </aside>
+          </div>
         </div>
       </div>
       <div class="hero-scroll">

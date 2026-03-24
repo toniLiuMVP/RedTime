@@ -46,6 +46,341 @@ function b(t, o, a, n = 0.35) {
   });
   return new e.Mesh(new e.PlaneGeometry(o, a), c);
 }
+function buildJuniorHairRibbonAlpha() {
+  const t = document.createElement("canvas");
+  ((t.width = 128), (t.height = 512));
+  const o = t.getContext("2d");
+  (o.clearRect(0, 0, 128, 512), (o.fillStyle = "#000"), o.fillRect(0, 0, 128, 512));
+  const a = o.createLinearGradient(0, 0, 0, 512);
+  (a.addColorStop(0, "rgba(255,255,255,.98)"),
+    a.addColorStop(0.16, "rgba(255,255,255,.95)"),
+    a.addColorStop(0.82, "rgba(255,255,255,.92)"),
+    a.addColorStop(1, "rgba(255,255,255,0)"),
+    (o.globalCompositeOperation = "source-over"),
+    (o.fillStyle = a),
+    o.beginPath(),
+    o.moveTo(62, 0),
+    o.bezierCurveTo(94, 0, 104, 82, 84, 216),
+    o.bezierCurveTo(74, 320, 72, 432, 66, 512),
+    o.lineTo(62, 512),
+    o.bezierCurveTo(54, 432, 50, 320, 38, 214),
+    o.bezierCurveTo(22, 82, 30, 0, 62, 0),
+    o.closePath(),
+    o.fill(),
+    (o.globalCompositeOperation = "destination-out"));
+  for (let t = 0; t < 7; t += 1) {
+    const a = 34 + 10 * t + (t % 2 ? -4 : 4);
+    ((o.strokeStyle = "rgba(0,0,0,.2)"),
+      (o.lineWidth = 1 + 0.18 * t),
+      o.beginPath(),
+      o.moveTo(a, 0),
+      o.bezierCurveTo(a - 6, 86, a + 10, 192, a + (t % 2 ? -8 : 8), 512),
+      o.stroke());
+  }
+  (o.globalCompositeOperation = "source-over");
+  const n = new e.CanvasTexture(t);
+  return ((n.colorSpace = e.SRGBColorSpace), n);
+}
+const juniorHairRibbonAlpha = buildJuniorHairRibbonAlpha();
+function buildJuniorHairRibbon(t, o, a, n = {}) {
+  const s = new e.PlaneGeometry(o, a, 1, n.segments ?? 8),
+    r = s.attributes.position;
+  for (let t = 0; t < r.count; t += 1) {
+    const o = r.getY(t),
+      a = o / Math.max(0.001, 0.5 * s.parameters.height),
+      i = e.MathUtils.mapLinear(a, -1, 1, n.bottomWidth ?? 0.8, n.topWidth ?? 0.46),
+      l = Math.sin((0.5 * (a + 1)) * Math.PI) * (n.curve ?? 0.016);
+    (r.setX(t, r.getX(t) * i), r.setZ(t, l));
+  }
+  (r.needsUpdate = !0, s.computeVertexNormals());
+  const i = new e.Mesh(
+    s,
+    new e.MeshPhysicalMaterial({
+      color: new e.Color(t),
+      alphaMap: juniorHairRibbonAlpha,
+      transparent: !0,
+      opacity: n.opacity ?? 0.96,
+      alphaTest: n.alphaTest ?? 0.18,
+      side: e.DoubleSide,
+      depthWrite: !1,
+      roughness: n.roughness ?? 0.44,
+      metalness: 0.03,
+      clearcoat: n.clearcoat ?? 0.12,
+      clearcoatRoughness: 0.34,
+      sheen: 0.3,
+      sheenRoughness: 0.34,
+      sheenColor: new e.Color("#a77f5d"),
+    }),
+  );
+  return ((i.renderOrder = n.renderOrder ?? 18), i);
+}
+function buildReferenceJuniorHeroHead(t = {}) {
+  const o = new e.Group();
+  (o.position.set(0.01, 1.556, 0.008), o.scale.set(0.66, 0.68, 0.66));
+  o.visible = !1;
+  const a = new e.Color(t.skinColor ?? "#f9e7da"),
+    n = new e.Color(t.hairColor ?? "#3c2a22"),
+    s = new e.Color(t.irisColor ?? "#5d4334"),
+    r = new e.MeshPhysicalMaterial({
+      color: a.clone(),
+      roughness: 0.56,
+      metalness: 0,
+      clearcoat: 0.06,
+      clearcoatRoughness: 0.7,
+      sheen: 0.12,
+      sheenRoughness: 0.5,
+      sheenColor: new e.Color("#ffd5bf"),
+    }),
+    i = new e.MeshPhysicalMaterial({
+      color: a.clone().lerp(new e.Color("#f4cdbd"), 0.18),
+      roughness: 0.62,
+      metalness: 0,
+      clearcoat: 0.04,
+      clearcoatRoughness: 0.74,
+      sheen: 0.08,
+    }),
+    l = new e.MeshPhysicalMaterial({
+      color: n.clone(),
+      roughness: 0.38,
+      metalness: 0.03,
+      clearcoat: 0.08,
+      clearcoatRoughness: 0.46,
+      sheen: 0.26,
+      sheenRoughness: 0.34,
+      sheenColor: new e.Color("#9c7b5e"),
+    }),
+    c = new e.MeshPhysicalMaterial({
+      color: "#fffdfa",
+      roughness: 0.22,
+      metalness: 0,
+      clearcoat: 0.06,
+      clearcoatRoughness: 0.28,
+    }),
+    h = new e.MeshPhysicalMaterial({
+      color: s.clone(),
+      roughness: 0.36,
+      metalness: 0.03,
+      clearcoat: 0.06,
+      clearcoatRoughness: 0.2,
+    }),
+    d = new e.MeshStandardMaterial({
+      color: n.clone().lerp(new e.Color("#120d0d"), 0.35),
+      roughness: 0.74,
+      metalness: 0.02,
+    }),
+    p = new e.MeshPhysicalMaterial({
+      color: "#bf8f8f",
+      roughness: 0.54,
+      metalness: 0,
+      clearcoat: 0.04,
+      clearcoatRoughness: 0.48,
+      transparent: !0,
+      opacity: 0.96,
+    }),
+    m = new e.MeshStandardMaterial({
+      color: "#c79395",
+      roughness: 0.58,
+      metalness: 0,
+      transparent: !0,
+      opacity: 0.72,
+    });
+  const w = new e.Mesh(new e.SphereGeometry(0.124, 48, 48), r);
+  (w.position.set(0, 0.006, -0.018), w.scale.set(0.84, 1, 0.78), o.add(w));
+  const M = new e.Mesh(new e.SphereGeometry(0.104, 44, 44), i);
+  (M.position.set(0, -0.072, 0.02), M.scale.set(0.62, 0.58, 0.6), o.add(M));
+  const f = new e.Mesh(new e.SphereGeometry(0.024, 20, 20), i);
+  (f.position.set(0, -0.144, 0.052), f.scale.set(0.72, 0.56, 0.96), o.add(f));
+  const u = new e.Mesh(new e.SphereGeometry(0.034, 20, 20), i);
+  (u.position.set(-0.054, -0.018, 0.05), u.scale.set(1, 0.74, 0.64), o.add(u));
+  const y = u.clone();
+  ((y.position.x = 0.062), o.add(y));
+  const g = new e.Mesh(
+    new e.CapsuleGeometry(0.0052, 0.042, 4, 10),
+    i,
+  );
+  (g.position.set(0, -0.016, 0.09),
+    g.scale.set(0.58, 0.86, 0.72),
+    o.add(g));
+  const x = new e.Mesh(new e.SphereGeometry(0.017, 24, 24), i);
+  (x.position.set(0, -0.05, 0.108), x.scale.set(0.88, 0.68, 1.02), o.add(x));
+  const b = new e.Mesh(new e.SphereGeometry(0.0065, 18, 18), i);
+  (b.position.set(-0.01, -0.058, 0.104), b.scale.set(0.84, 0.6, 0.9), o.add(b));
+  const S = b.clone();
+  ((S.position.x = 0.011), o.add(S));
+  const P = new e.Mesh(
+    new e.CapsuleGeometry(0.0022, 0.014, 4, 6),
+    new e.MeshStandardMaterial({
+      color: "#c89b95",
+      roughness: 0.62,
+      metalness: 0,
+      transparent: !0,
+      opacity: 0.56,
+    }),
+  );
+  (P.position.set(0, -0.082, 0.1), o.add(P));
+  const v = new e.Mesh(new e.PlaneGeometry(0.046, 0.014), m);
+  (v.position.set(0, -0.102, 0.112), (v.renderOrder = 17), o.add(v));
+  const G = new e.Mesh(new e.CapsuleGeometry(0.0036, 0.038, 4, 10), p);
+  (G.position.set(0, -0.096, 0.114), (G.rotation.z = Math.PI / 2), o.add(G));
+  const z = new e.Mesh(new e.CapsuleGeometry(0.0044, 0.042, 4, 10), p.clone());
+  ((z.material.opacity = 0.88),
+    z.position.set(0, -0.108, 0.112),
+    (z.rotation.z = Math.PI / 2),
+    o.add(z));
+  const eyeGroup = (t) => {
+      const o = new e.Group();
+      o.position.set(0.049 * t, 0.004, 0.094);
+      const a = new e.Mesh(new e.SphereGeometry(0.022, 24, 24), c);
+      (a.scale.set(1.26, 0.74, 0.46), o.add(a));
+      const n = new e.Mesh(new e.SphereGeometry(0.0114, 20, 20), h);
+      (n.position.set(0, 0, 0.016),
+        n.scale.set(0.94, 1, 0.56),
+        o.add(n));
+      const s = new e.Mesh(
+        new e.SphereGeometry(0.0046, 16, 16),
+        new e.MeshBasicMaterial({ color: "#161113" }),
+      );
+      (s.position.set(0, 0, 0.024), s.scale.set(0.92, 0.98, 0.4), o.add(s));
+      const r = new e.Mesh(new e.CapsuleGeometry(0.0032, 0.038, 4, 10), i);
+      (r.position.set(0, 0.01, 0.01), (r.rotation.z = Math.PI / 2), o.add(r));
+      const l = new e.Mesh(new e.CapsuleGeometry(0.002, 0.034, 4, 10), i);
+      (l.position.set(0, -0.013, 0.008),
+        (l.rotation.z = Math.PI / 2),
+        l.scale.set(1, 0.86, 0.84),
+        o.add(l));
+      const p = new e.Mesh(new e.CapsuleGeometry(0.0018, 0.036, 4, 10), d);
+      (p.position.set(0, 0.009, 0.018),
+        (p.rotation.z = Math.PI / 2),
+        p.scale.set(0.96, 0.92, 0.82),
+        o.add(p));
+      const m = new e.Mesh(
+        new e.SphereGeometry(0.0035, 12, 12),
+        new e.MeshBasicMaterial({
+          color: "#ffffff",
+          transparent: !0,
+          opacity: 0.82,
+        }),
+      );
+      return (
+        (m.position.set(-0.004 * t, 0.007, 0.026),
+          m.scale.set(1.24, 1.1, 0.5),
+          o.add(m),
+          (a.userData.baseScale = a.scale.clone()),
+          (n.userData.baseScale = n.scale.clone()),
+          { root: o, eyeWhite: a, iris: n, lash: p })
+      );
+    },
+    eyeL = eyeGroup(-1),
+    eyeR = eyeGroup(1);
+  o.add(eyeL.root, eyeR.root);
+  const T = new e.Mesh(new e.CapsuleGeometry(0.0026, 0.04, 4, 10), d);
+  (T.position.set(-0.052, 0.042, 0.098),
+    T.scale.set(0.78, 0.9, 0.76),
+    T.rotation.set(0.04, 0.08, 0.18),
+    o.add(T));
+  const R = T.clone();
+  ((R.position.x = 0.054), (R.rotation.z = -0.22), (R.rotation.y = -0.08), o.add(R));
+  const I = new e.Mesh(
+    new e.SphereGeometry(0.136, 48, 48, 0, 2 * Math.PI, 0, 0.76 * Math.PI),
+    l,
+  );
+  (I.position.set(0, 0.046, -0.058),
+    I.scale.set(0.92, 0.9, 0.84),
+    (I.rotation.x = -0.2),
+    o.add(I));
+  const A = new e.Mesh(new e.SphereGeometry(0.116, 40, 40), l);
+  (A.position.set(0, -0.004, -0.126), A.scale.set(0.84, 0.98, 0.68), o.add(A));
+  const C = new e.Mesh(new e.SphereGeometry(0.036, 20, 20), l);
+  (C.position.set(0.028, 0.102, -0.148), C.scale.set(1.1, 0.96, 0.92), o.add(C));
+  const E = new e.Mesh(
+    new e.TorusGeometry(0.03, 0.011, 10, 24),
+    new e.MeshStandardMaterial({
+      color: "#19161a",
+      roughness: 0.76,
+      metalness: 0.02,
+    }),
+  );
+  (E.position.set(0.028, 0.102, -0.146), (E.rotation.x = Math.PI / 2), o.add(E));
+  const U = [
+    { x: -0.05, y: 0.052, z: 0.108, w: 0.026, h: 0.148, rx: -0.08, ry: 0.08, rz: 0.16 },
+    { x: -0.032, y: 0.05, z: 0.11, w: 0.024, h: 0.154, rx: -0.06, ry: 0.06, rz: 0.1 },
+    { x: -0.014, y: 0.048, z: 0.112, w: 0.022, h: 0.158, rx: -0.04, ry: 0.02, rz: 0.05 },
+    { x: 0.002, y: 0.046, z: 0.114, w: 0.021, h: 0.16, rx: -0.03, ry: 0, rz: -0.02 },
+    { x: 0.018, y: 0.048, z: 0.112, w: 0.022, h: 0.156, rx: -0.04, ry: -0.02, rz: -0.06 },
+    { x: 0.036, y: 0.05, z: 0.11, w: 0.024, h: 0.15, rx: -0.06, ry: -0.08, rz: -0.12 },
+    { x: 0.052, y: 0.052, z: 0.108, w: 0.026, h: 0.144, rx: -0.08, ry: -0.12, rz: -0.16 },
+  ];
+  U.forEach((t) => {
+    const a = buildJuniorHairRibbon(n, t.w, t.h, {
+      curve: 0.018,
+      topWidth: 0.42,
+      bottomWidth: 0.7,
+      opacity: 0.94,
+    });
+    (a.position.set(t.x, t.y, t.z),
+      a.rotation.set(t.rx, t.ry, t.rz),
+      o.add(a));
+  });
+  [
+    { x: -0.082, y: 0.004, z: 0.076, w: 0.034, h: 0.21, ry: 0.34, rz: 0.14 },
+    { x: -0.062, y: -0.01, z: 0.096, w: 0.018, h: 0.13, ry: 0.16, rz: 0.06, opacity: 0.72 },
+    { x: 0.082, y: 0.004, z: 0.076, w: 0.034, h: 0.21, ry: -0.34, rz: -0.14 },
+    { x: 0.062, y: -0.01, z: 0.096, w: 0.018, h: 0.13, ry: -0.16, rz: -0.06, opacity: 0.72 },
+  ].forEach((t) => {
+    const a = buildJuniorHairRibbon(n, t.w, t.h, {
+      curve: 0.02,
+      topWidth: 0.58,
+      bottomWidth: 0.76,
+      opacity: t.opacity ?? 0.92,
+    });
+    (a.position.set(t.x, t.y, t.z),
+      a.rotation.set(-0.02, t.ry, t.rz),
+      o.add(a));
+  });
+  const W = new e.Group();
+  (W.position.set(0.03, 0.072, -0.15), o.add(W));
+  [
+    { y: -0.02, z: -0.01, r: 0.028, len: 0.1, rotX: -0.18, rotZ: -0.08 },
+    { y: -0.1, z: 0, r: 0.024, len: 0.12, rotX: -0.12, rotZ: -0.12 },
+    { y: -0.195, z: 0.014, r: 0.02, len: 0.1, rotX: -0.08, rotZ: -0.1 },
+  ].forEach((t) => {
+    const o = new e.Mesh(new e.CapsuleGeometry(t.r, t.len, 6, 10), l);
+    (o.position.set(0.01, t.y, t.z),
+      o.rotation.set(t.rotX, 0.08, t.rotZ),
+      o.scale.set(0.92, 1, 0.74),
+      W.add(o));
+  });
+  const D = new e.Mesh(
+    new e.PlaneGeometry(0.16, 0.11),
+    new e.MeshBasicMaterial({
+      color: "#1e1514",
+      transparent: !0,
+      opacity: 0.09,
+      depthWrite: !1,
+    }),
+  );
+  (D.position.set(0, 0.036, 0.102), (D.renderOrder = 16), o.add(D));
+  return (
+    o.traverse((t) => {
+      t.isMesh && ((t.castShadow = !1), (t.receiveShadow = !1));
+    }),
+    {
+      root: o,
+      refs: {
+        headShell: w,
+        jawShell: M,
+        heroEyeWhiteL: eyeL.eyeWhite,
+        heroEyeWhiteR: eyeR.eyeWhite,
+        heroIrisL: eyeL.iris,
+        heroIrisR: eyeR.iris,
+        heroBrowL: T,
+        heroBrowR: R,
+        heroHairCap: I,
+        heroPonytail: W,
+      },
+    }
+  );
+}
 function S(t) {
   const o = new e.Group();
   o.userData.baseY = 0;
@@ -122,10 +457,34 @@ function S(t) {
         t.female ? (n ? 0.118 : 0.126) : 0.132,
         0.18,
         5,
-        10,
+      10,
       ),
       s,
     );
+  if (n) {
+    s.roughness = 0.36;
+    s.clearcoat = 0.18;
+    s.clearcoatRoughness = 0.28;
+    r.roughness = 0.32;
+    r.clearcoat = 0.22;
+    r.clearcoatRoughness = 0.24;
+    i.roughness = 0.4;
+    i.clearcoat = 0.12;
+    i.clearcoatRoughness = 0.28;
+    c.roughness = 0.14;
+    c.clearcoat = 0.52;
+    c.clearcoatRoughness = 0.18;
+    c.sheen = 0.92;
+    c.sheenRoughness = 0.16;
+    d.roughness = 0.08;
+    d.metalness = 0.08;
+    d.clearcoat = 0.82;
+    d.clearcoatRoughness = 0.08;
+    d.sheen = 0.38;
+    d.sheenRoughness = 0.16;
+    p.roughness = 0.5;
+    m.roughness = 0.34;
+  }
   (w.position.set(0, 0.84, 0),
     w.scale.set(t.female ? (n ? 0.96 : 1.04) : 1.14, 1.02, n ? 0.82 : 0.86),
     o.add(w));
@@ -321,7 +680,7 @@ function S(t) {
       t.female ? (a ? 0.82 : 0.91) : 0.9,
     ),
     o.add(L),
-    n && L.scale.set(0.92, 1, 0.88));
+    n && (L.position.set(0, 1.555, 0.01), L.scale.set(0.82, 1.12, 0.8)));
   const X = new e.Mesh(
     new e.SphereGeometry(t.female ? 0.14 : 0.154, 36, 36),
     c,
@@ -333,7 +692,7 @@ function S(t) {
       t.female ? (a ? 0.7 : 0.88) : 0.92,
     ),
     o.add(X),
-    n && (X.position.set(0, 1.474, 0.024), X.scale.set(0.56, 0.5, 0.68)));
+    n && (X.position.set(0, 1.462, 0.032), X.scale.set(0.44, 0.34, 0.52)));
   const j = new e.SphereGeometry(0.032, 16, 16),
     $ = new e.Mesh(j, c);
   ($.position.set(-0.165, 1.55, 0.01), $.scale.set(0.72, 1.02, 0.56));
@@ -341,14 +700,14 @@ function S(t) {
   ((H.position.x = 0.165),
     o.add($, H),
     n &&
-      ($.position.set(-0.142, 1.548, -0.004),
-      H.position.set(0.142, 1.548, -0.004),
-      $.scale.set(0.62, 0.92, 0.5),
+      ($.position.set(-0.128, 1.514, 0.01),
+      H.position.set(0.128, 1.514, 0.01),
+      $.scale.set(0.44, 0.66, 0.42),
       H.scale.copy($.scale)));
   const F = new e.Mesh(
     new e.ConeGeometry(
-      t.female ? (a ? 0.0105 : 0.024) : 0.026,
-      t.female ? (a ? 0.034 : 0.062) : 0.07,
+      t.female ? (a ? 0.007 : 0.024) : 0.026,
+      t.female ? (a ? 0.026 : 0.062) : 0.07,
       12,
     ),
     c,
@@ -357,7 +716,7 @@ function S(t) {
     (F.rotation.x = 0.5 * Math.PI),
     o.add(F));
   const N = new e.Mesh(
-    new e.BoxGeometry(0.022, 0.08, 0.012),
+    new e.CapsuleGeometry(a ? 0.004 : 0.006, a ? 0.04 : 0.08, 4, 10),
     new e.MeshPhysicalMaterial({
       color: "#fff8f2",
       roughness: 0.28,
@@ -368,7 +727,9 @@ function S(t) {
       clearcoatRoughness: 0.16,
     }),
   );
-  (N.position.set(0, a ? 1.578 : 1.57, a ? 0.142 : 0.135), o.add(N));
+  (N.position.set(0, a ? 1.553 : 1.57, a ? 0.145 : 0.135),
+    a && (N.rotation.x = Math.PI / 2),
+    o.add(N));
   const O = new e.Mesh(
     new e.TorusGeometry(
       t.female && a ? 0.038 : 0.045,
@@ -401,26 +762,25 @@ function S(t) {
     );
     (t.position.set(0, 1.433, 0.153), t.scale.set(1.64, 0.42, 0.42), o.add(t));
   }
-  const Y = new e.BoxGeometry(
-      t.female ? (a ? 0.062 : 0.08) : 0.09,
-      0.012,
-      0.02,
-    ),
-    J = new e.MeshStandardMaterial({
+  const J = new e.MeshStandardMaterial({
       color: t.female ? "#3a2422" : "#31201e",
       roughness: 0.7,
       metalness: 0.02,
     }),
-    K = new e.Mesh(Y, J);
-  (K.position.set(a ? -0.067 : -0.074, a ? 1.616 : 1.62, 0.136),
-    (K.rotation.z = a ? -0.02 : -0.08));
+    K = new e.Mesh(
+      a
+        ? new e.CapsuleGeometry(0.0038, 0.045, 4, 8)
+        : new e.BoxGeometry(0.08, 0.012, 0.02),
+      J,
+    );
+  (K.position.set(a ? -0.061 : -0.074, a ? 1.596 : 1.62, a ? 0.148 : 0.136),
+    a ? (K.rotation.z = -1.28) : (K.rotation.z = -0.08));
   const Q = K.clone();
   ((Q.position.x = a ? 0.067 : 0.072),
-    (Q.rotation.z = a ? 0.02 : 0.08),
+    (Q.rotation.z = a ? 1.28 : 0.08),
     o.add(K, Q),
     n &&
-      (K.position.set(-0.064, 1.612, 0.138),
-      Q.position.set(0.064, 1.612, 0.138)));
+      (K.position.set(-0.06, 1.592, 0.152), Q.position.set(0.06, 1.592, 0.152)));
   const ee = new e.TorusGeometry(
       t.female && a ? 0.034 : 0.032,
       0.004,
@@ -472,10 +832,12 @@ function S(t) {
     n &&
       (re.position.set(-0.064, 1.557, 0.16),
       ie.position.set(0.064, 1.557, 0.16),
-      re.scale.set(1.52, 1.06, 0.52),
+      re.scale.set(1.64, 1.08, 0.56),
       ie.scale.copy(re.scale),
-      le.position.set(-0.064, 1.555, 0.177),
-      ce.position.set(0.064, 1.555, 0.177)),
+      le.position.set(-0.062, 1.554, 0.176),
+      ce.position.set(0.062, 1.554, 0.176),
+      le.scale.set(1.1, 1.02, 0.88),
+      ce.scale.copy(le.scale)),
     t.female)
   ) {
     const t = new e.MeshStandardMaterial({
@@ -491,10 +853,14 @@ function S(t) {
       (s.rotation.z = a ? 0.012 : 0.03),
       o.add(n, s));
   }
+  re.userData.baseScale = re.scale.clone();
+  ie.userData.baseScale = ie.scale.clone();
+  le.userData.baseScale = le.scale.clone();
+  ce.userData.baseScale = ce.scale.clone();
   const he = new e.SphereGeometry(0.028, 12, 12),
     de = new e.Mesh(he, h);
-  (de.position.set(a ? -0.084 : -0.094, 1.488, 0.148),
-    de.scale.set(a ? 1.34 : 1.7, a ? 0.84 : 1.2, 0.38));
+  (de.position.set(a ? -0.076 : -0.094, a ? 1.476 : 1.488, 0.146),
+    de.scale.set(a ? 0.92 : 1.7, a ? 0.62 : 1.2, 0.32));
   const pe = de.clone();
   ((pe.position.x = a ? 0.084 : 0.094), o.add(de, pe));
   const me = new e.MeshStandardMaterial({
@@ -528,34 +894,45 @@ function S(t) {
   (ue.position.set(0, t.female ? 1.5 : 1.61, t.female ? -0.08 : -0.1),
     ue.scale.set(0.88, t.female ? 1.42 : 0.42, t.female ? 0.7 : 0.52),
     o.add(ue));
+  if (a) {
+    fe.scale.set(0.88, 0.86, 0.84);
+    fe.position.set(0, 1.604, 0.024);
+    ue.scale.set(0.78, t.female ? 1.08 : 0.42, t.female ? 0.52 : 0.52);
+    ue.position.set(0, t.female ? 1.472 : 1.61, t.female ? -0.116 : -0.1);
+  }
   const ye = new e.Mesh(
-    new e.BoxGeometry(
-      t.female ? (a ? 0.154 : 0.2) : 0.144,
-      a ? 0.162 : 0.08,
-      0.05,
-    ),
+    a
+      ? new e.CapsuleGeometry(0.018, 0.056, 4, 8)
+      : new e.BoxGeometry(0.2, 0.08, 0.05),
     d,
   );
   (ye.position.set(0, a ? 1.622 : 1.612, a ? 0.134 : 0.12),
+    a && ((ye.rotation.z = -0.08), (ye.rotation.x = 0.22)),
     o.add(ye),
-    n && (ye.position.set(0, 1.618, 0.138), ye.scale.set(1.04, 1.08, 1)));
+    n &&
+      (ye.position.set(0, 1.606, 0.132),
+      ye.scale.set(0.84, 0.92, 0.82),
+      (ye.rotation.z = -0.04),
+      (ye.rotation.x = 0.18)));
   const ge = new e.Mesh(
-    new e.BoxGeometry(
-      t.female ? (a ? 0.058 : 0.076) : 0.058,
-      t.female ? (a ? 0.38 : 0.42) : 0.22,
-      0.06,
-    ),
+    a
+      ? new e.CapsuleGeometry(0.012, 0.2, 4, 10)
+      : new e.BoxGeometry(0.076, 0.42, 0.06),
     d,
   );
-  ge.position.set(a ? -0.108 : -0.14, t.female ? 1.458 : 1.49, 0.05);
+  ge.position.set(a ? -0.126 : -0.14, a ? 1.454 : t.female ? 1.458 : 1.49, 0.05);
+  a && ((ge.rotation.z = 0.16), (ge.rotation.x = 0.02));
   const xe = ge.clone();
   ((xe.position.x = a ? 0.108 : 0.15),
     o.add(ge, xe),
     n &&
-      (ge.position.set(-0.102, 1.462, 0.06),
-      xe.position.set(0.102, 1.462, 0.06),
-      ge.scale.set(0.96, 1.04, 1),
+      (ge.position.set(-0.122, 1.452, 0.062),
+      xe.position.set(0.122, 1.452, 0.062),
+      (xe.rotation.z = -0.16),
+      ge.scale.set(0.86, 0.98, 0.82),
       xe.scale.copy(ge.scale)));
+  let closeupRefinement = null,
+    heroCloseupHead = null;
   const be = new e.Mesh(
     new e.SphereGeometry(t.female ? 0.16 : 0.15, 20, 20),
     new e.MeshStandardMaterial({
@@ -574,35 +951,217 @@ function S(t) {
   ) {
     const a = new e.MeshPhysicalMaterial({
         color: t.hair,
-        roughness: 0.06,
+        roughness: 0.12,
         metalness: 0.04,
-        clearcoat: 0.92,
-        clearcoatRoughness: 0.06,
+        clearcoat: 0.42,
+        clearcoatRoughness: 0.18,
         transparent: !0,
-        opacity: 0.28,
-        sheen: 0.6,
-        sheenRoughness: 0.18,
+        opacity: 0.14,
+        sheen: 0.34,
+        sheenRoughness: 0.26,
         sheenColor: new e.Color("#8b6b4a"),
       }),
       n = new e.Mesh(
         new e.SphereGeometry(
-          t.female ? 0.198 : 0.192,
+          t.female ? 0.148 : 0.192,
           28,
           28,
           0,
           2 * Math.PI,
           0,
-          0.72 * Math.PI,
+          0.54 * Math.PI,
         ),
         a,
       );
     (n.position.set(0, 1.625, -0.008),
       (n.rotation.x = -0.1),
-      n.scale.set(1.01, 1.01, 1.01),
+      n.scale.set(0.84, 0.56, 0.74),
       o.add(n),
-      fe.scale.set(1.04, 1.03, 1.04),
-      ue.scale.set(1.06 * ue.scale.x, 1.08 * ue.scale.y, 1.06 * ue.scale.z),
-      (ue.position.y -= 0.02));
+      (o.userData.referenceHairCap = n),
+      fe.scale.set(0.92, 0.88, 0.86),
+      ue.scale.set(0.92 * ue.scale.x, 0.96 * ue.scale.y, 0.9 * ue.scale.z),
+      (ue.position.y -= 0.01),
+      (ue.position.z -= 0.008));
+    closeupRefinement = new e.Group();
+    closeupRefinement.visible = !1;
+    const strandBaseMaterial = new e.MeshPhysicalMaterial({
+      color: t.hair,
+      roughness: 0.22,
+      metalness: 0.03,
+      clearcoat: 0.28,
+      clearcoatRoughness: 0.22,
+      transparent: !0,
+      opacity: 0.92,
+    });
+    const createCloseupStrand = (
+      points,
+      radius = 0.005,
+      opacity = 0.92,
+      tubularSegments = 28,
+    ) => {
+      const material = strandBaseMaterial.clone();
+      material.opacity = opacity;
+      const curve = new e.CatmullRomCurve3(
+        points.map((t) => (t.clone ? t.clone() : new e.Vector3(...t))),
+      );
+      const strand = new e.Mesh(
+        new e.TubeGeometry(curve, tubularSegments, radius, 7, !1),
+        material,
+      );
+      return (
+        (strand.castShadow = !0),
+        (strand.receiveShadow = !0),
+        strand
+      );
+    };
+    const hairlineArc = createCloseupStrand(
+      [
+        new e.Vector3(-0.118, 1.604, 0.07),
+        new e.Vector3(-0.07, 1.624, 0.082),
+        new e.Vector3(0, 1.632, 0.086),
+        new e.Vector3(0.072, 1.622, 0.082),
+        new e.Vector3(0.118, 1.602, 0.07),
+      ],
+      0.0084,
+      0.82,
+      36,
+    );
+    const strandSpecs = [
+      {
+        points: [
+          [-0.086, 1.604, 0.078],
+          [-0.074, 1.574, 0.104],
+          [-0.062, 1.518, 0.132],
+        ],
+        radius: 0.0048,
+        opacity: 0.9,
+      },
+      {
+        points: [
+          [-0.058, 1.61, 0.082],
+          [-0.046, 1.58, 0.11],
+          [-0.034, 1.506, 0.136],
+        ],
+        radius: 0.0046,
+        opacity: 0.9,
+      },
+      {
+        points: [
+          [-0.028, 1.616, 0.082],
+          [-0.02, 1.588, 0.11],
+          [-0.014, 1.5, 0.136],
+        ],
+        radius: 0.0042,
+        opacity: 0.88,
+      },
+      {
+        points: [
+          [0.0, 1.616, 0.082],
+          [0.0, 1.592, 0.11],
+          [0.0, 1.498, 0.136],
+        ],
+        radius: 0.0038,
+        opacity: 0.82,
+      },
+      {
+        points: [
+          [0.028, 1.616, 0.082],
+          [0.018, 1.588, 0.11],
+          [0.012, 1.5, 0.136],
+        ],
+        radius: 0.0042,
+        opacity: 0.88,
+      },
+      {
+        points: [
+          [0.058, 1.61, 0.082],
+          [0.044, 1.58, 0.11],
+          [0.03, 1.506, 0.136],
+        ],
+        radius: 0.0046,
+        opacity: 0.9,
+      },
+      {
+        points: [
+          [0.086, 1.604, 0.078],
+          [0.072, 1.574, 0.104],
+          [0.06, 1.518, 0.132],
+        ],
+        radius: 0.0048,
+        opacity: 0.9,
+      },
+      {
+        points: [
+          [-0.118, 1.582, 0.052],
+          [-0.128, 1.53, 0.072],
+          [-0.116, 1.452, 0.11],
+        ],
+        radius: 0.0052,
+        opacity: 0.76,
+      },
+      {
+        points: [
+          [0.118, 1.582, 0.052],
+          [0.128, 1.53, 0.072],
+          [0.116, 1.452, 0.11],
+        ],
+        radius: 0.0052,
+        opacity: 0.76,
+      },
+      {
+        points: [
+          [-0.134, 1.566, 0.024],
+          [-0.148, 1.498, 0.048],
+          [-0.138, 1.422, 0.086],
+        ],
+        radius: 0.0038,
+        opacity: 0.56,
+        tubularSegments: 24,
+      },
+      {
+        points: [
+          [0.134, 1.566, 0.024],
+          [0.148, 1.498, 0.048],
+          [0.138, 1.422, 0.086],
+        ],
+        radius: 0.0038,
+        opacity: 0.56,
+        tubularSegments: 24,
+      },
+    ];
+    const cheekShadowMaterial = new e.MeshStandardMaterial({
+      color: "#2b1618",
+      roughness: 0.64,
+      metalness: 0.01,
+      transparent: !0,
+      opacity: 0.22,
+    });
+    const leftTemple = new e.Mesh(
+      new e.SphereGeometry(0.024, 12, 12),
+      cheekShadowMaterial,
+    );
+    leftTemple.position.set(-0.09, 1.52, 0.092);
+    leftTemple.scale.set(1.2, 1.7, 0.8);
+    const rightTemple = leftTemple.clone();
+    rightTemple.position.x = 0.09;
+    closeupRefinement.add(hairlineArc, leftTemple, rightTemple);
+    strandSpecs.forEach((t) => {
+      closeupRefinement.add(
+        createCloseupStrand(
+          t.points,
+          t.radius,
+          t.opacity,
+          t.tubularSegments ?? 28,
+        ),
+      );
+    });
+    o.add(closeupRefinement);
+    heroCloseupHead = buildReferenceJuniorHeroHead({
+      skinColor: l.clone(),
+      hairColor: t.hair,
+      irisColor: t.iris ?? "#5b4030",
+    });
+    o.add(heroCloseupHead.root);
   }
   const Se = (function (t, o = 1) {
     const a = new e.MeshBasicMaterial({
@@ -929,6 +1488,12 @@ function S(t) {
       depthWrite: !1,
     }),
   );
+  let frontHairStripL = null,
+    frontHairStripR = null,
+    frontHairInnerL = null,
+    frontHairInnerR = null,
+    hairCurtainL = null,
+    hairCurtainR = null;
   if ((ze.position.set(0, 1.59, 0.17), o.add(ze), t.female)) {
     const s = new e.Mesh(new e.BoxGeometry(0.16, 0.64, 0.08), d);
     (s.position.set(0, 1.22, -0.11), s.scale.set(1, 1.06, 0.82), o.add(s));
@@ -939,18 +1504,28 @@ function S(t) {
     if (
       ((i.position.x = n ? 0.104 : 0.112),
       (i.rotation.z = 0.12),
+      (frontHairStripL = r),
+      (frontHairStripR = i),
       o.add(r, i),
       n)
     ) {
       const t = new e.Mesh(new e.BoxGeometry(0.016, 0.24, 0.018), d);
       (t.position.set(-0.046, 1.512, 0.158), (t.rotation.z = -0.02));
       const a = t.clone();
-      ((a.position.x = 0.05), (a.rotation.z = 0.02), o.add(t, a));
+      ((a.position.x = 0.05),
+        (a.rotation.z = 0.02),
+        (frontHairInnerL = t),
+        (frontHairInnerR = a),
+        o.add(t, a));
     }
     const l = new e.Mesh(new e.BoxGeometry(0.034, 0.34, 0.032), d);
     (l.position.set(-0.152, 1.36, 0.02), (l.rotation.z = -0.08));
     const c = l.clone();
-    ((c.position.x = 0.152), (c.rotation.z = 0.08), o.add(l, c));
+    ((c.position.x = 0.152),
+      (c.rotation.z = 0.08),
+      (hairCurtainL = l),
+      (hairCurtainR = c),
+      o.add(l, c));
     const h = new e.Mesh(
       new e.TorusGeometry(0.1, 0.018, 8, 20, Math.PI),
       new e.MeshStandardMaterial({
@@ -1233,12 +1808,55 @@ function S(t) {
       rightHand: E,
       head: L,
       jaw: X,
+      faceSideL: $,
+      faceSideR: H,
+      eyeWhiteL: re,
+      eyeWhiteR: ie,
+      irisL: le,
+      irisR: ce,
+      eyeContourL: oe,
+      eyeContourR: ae,
+      eyeSparkleL: we,
+      eyeSparkleR: Me,
+      facePlane: Se,
+      faceShell: fe,
+      faceFront: fe,
+      heroHeadRoot: heroCloseupHead?.root ?? null,
+      heroHeadShell: heroCloseupHead?.refs.headShell ?? null,
+      heroJawShell: heroCloseupHead?.refs.jawShell ?? null,
+      heroEyeWhiteL: heroCloseupHead?.refs.heroEyeWhiteL ?? null,
+      heroEyeWhiteR: heroCloseupHead?.refs.heroEyeWhiteR ?? null,
+      heroIrisL: heroCloseupHead?.refs.heroIrisL ?? null,
+      heroIrisR: heroCloseupHead?.refs.heroIrisR ?? null,
+      heroBrowL: heroCloseupHead?.refs.heroBrowL ?? null,
+      heroBrowR: heroCloseupHead?.refs.heroBrowR ?? null,
+      heroHairCap: heroCloseupHead?.refs.heroHairCap ?? null,
+      heroPonytail: heroCloseupHead?.refs.heroPonytail ?? null,
+      mouth: O,
+      noseTip: F,
+      noseBridge: N,
+      lipGloss: ze,
+      headGlow: be,
       hairBack: ue,
       fringe: ye,
+      sideLockL: ge,
+      sideLockR: xe,
+      frontHairStripL: frontHairStripL,
+      frontHairStripR: frontHairStripR,
+      frontHairInnerL: frontHairInnerL,
+      frontHairInnerR: frontHairInnerR,
+      hairCurtainL: hairCurtainL,
+      hairCurtainR: hairCurtainR,
+      browL: K,
+      browR: Q,
+      closeupRefinement: closeupRefinement,
+      blushL: de,
+      blushR: pe,
       shoulderL: B,
       shoulderR: k,
       female: Boolean(t.female),
       hasPhone: Boolean(t.phone),
+      referenceJunior: a,
     }),
     x(o),
     o
@@ -1260,6 +1878,20 @@ function z(e) {
     t.jaw.rotation.set(0, 0, 0),
     t.hairBack.rotation.set(0, 0, 0),
     t.fringe.rotation.set(0, 0, 0),
+    t.heroHeadRoot && t.heroHeadRoot.rotation.set(0, 0, 0),
+    t.heroPonytail && t.heroPonytail.rotation.set(0, 0, 0),
+    t.eyeWhiteL?.userData.baseScale && t.eyeWhiteL.scale.copy(t.eyeWhiteL.userData.baseScale),
+    t.eyeWhiteR?.userData.baseScale && t.eyeWhiteR.scale.copy(t.eyeWhiteR.userData.baseScale),
+    t.irisL?.userData.baseScale && t.irisL.scale.copy(t.irisL.userData.baseScale),
+    t.irisR?.userData.baseScale && t.irisR.scale.copy(t.irisR.userData.baseScale),
+    t.heroEyeWhiteL?.userData.baseScale &&
+      t.heroEyeWhiteL.scale.copy(t.heroEyeWhiteL.userData.baseScale),
+    t.heroEyeWhiteR?.userData.baseScale &&
+      t.heroEyeWhiteR.scale.copy(t.heroEyeWhiteR.userData.baseScale),
+    t.heroIrisL?.userData.baseScale &&
+      t.heroIrisL.scale.copy(t.heroIrisL.userData.baseScale),
+    t.heroIrisR?.userData.baseScale &&
+      t.heroIrisR.scale.copy(t.heroIrisR.userData.baseScale),
     (e.position.y = 0));
 }
 function P(e, t, o = 1) {
@@ -1300,7 +1932,19 @@ function P(e, t, o = 1) {
     a.female &&
       ((a.hairBack.rotation.z = 0.04 * n),
       (a.hairBack.rotation.x = 0.02 * s),
-      (a.fringe.rotation.z = 0.015 * -n)));
+      (a.fringe.rotation.z = 0.015 * -n)),
+    a.referenceJunior &&
+      ((a.head.rotation.y += 0.012 * Math.sin(1.8 * t) * o),
+      (a.head.rotation.x += 0.006 * Math.sin(2.2 * t + 0.3) * o),
+      (a.head.rotation.z += 0.004 * Math.sin(1.5 * t + 0.4) * o),
+      (a.hairBack.rotation.y += 0.008 * Math.sin(1.4 * t + 0.2) * o),
+      (a.hairBack.rotation.z += 0.018 * Math.sin(1.1 * t + 0.6) * o),
+      (a.fringe.rotation.z += 0.006 * Math.sin(1.7 * t + 0.4) * o),
+      a.heroHeadRoot &&
+        (a.heroHeadRoot.rotation.copy(a.head.rotation),
+        a.heroPonytail &&
+          ((a.heroPonytail.rotation.y = 0.4 * a.hairBack.rotation.y),
+          (a.heroPonytail.rotation.z = 0.7 * a.hairBack.rotation.z)))));
   const p = 0.026 * Math.abs(Math.cos(r)) + 0.016 * s,
     m = 0.014 * n * o;
   ((e.position.y = p), (e.position.x += m));
@@ -1323,6 +1967,18 @@ function v(e, t, o = 1) {
     (a.hairBack.rotation.z = 0.026 * Math.sin(1.1 * t) * o),
     (a.hairBack.rotation.x = 0.01 * Math.sin(0.8 * t) * o),
     a.female && (a.fringe.rotation.z = 0.008 * Math.sin(1.3 * t + 0.4) * o),
+    a.referenceJunior &&
+      ((a.head.rotation.y += 0.008 * Math.sin(0.38 * t + 0.15) * o),
+      (a.head.rotation.x += 0.006 * Math.sin(1.12 * t + 0.4) * o),
+      (a.head.rotation.z += 0.004 * Math.sin(0.62 * t + 0.2) * o),
+      (a.hairBack.rotation.y += 0.007 * Math.sin(0.52 * t + 0.25) * o),
+      (a.hairBack.rotation.z += 0.01 * Math.sin(0.74 * t + 0.1) * o),
+      (a.fringe.rotation.z += 0.004 * Math.sin(1.75 * t + 0.32) * o),
+      a.heroHeadRoot &&
+        (a.heroHeadRoot.rotation.copy(a.head.rotation),
+        a.heroPonytail &&
+          ((a.heroPonytail.rotation.y = 0.42 * a.hairBack.rotation.y),
+          (a.heroPonytail.rotation.z = 0.72 * a.hairBack.rotation.z)))),
     (a.shoulderL.rotation.z = 0.01 * Math.sin(1.4 * t + 0.5) * o),
     (a.shoulderR.rotation.z = 0.01 * -Math.sin(1.4 * t + 0.5) * o),
     (a.leftArm.rotation.x = 0.01 * Math.sin(0.6 * t) * o),
@@ -1330,6 +1986,57 @@ function v(e, t, o = 1) {
       ? -0.56
       : 0.01 * Math.sin(0.6 * t + 0.4) * o),
     (e.position.y = 0.012 * Math.abs(Math.sin(1.4 * t)) * o));
+  if (a.referenceJunior) {
+    const blink = 1 - 0.18 * Math.pow(Math.max(0, Math.sin(1.62 * t + 0.58)), 10) * o;
+    a.eyeWhiteL?.userData.baseScale &&
+      a.eyeWhiteL.scale.set(
+        a.eyeWhiteL.userData.baseScale.x,
+        a.eyeWhiteL.userData.baseScale.y * blink,
+        a.eyeWhiteL.userData.baseScale.z,
+      );
+    a.eyeWhiteR?.userData.baseScale &&
+      a.eyeWhiteR.scale.set(
+        a.eyeWhiteR.userData.baseScale.x,
+        a.eyeWhiteR.userData.baseScale.y * blink,
+        a.eyeWhiteR.userData.baseScale.z,
+      );
+    a.irisL?.userData.baseScale &&
+      a.irisL.scale.set(
+        a.irisL.userData.baseScale.x,
+        a.irisL.userData.baseScale.y * blink,
+        a.irisL.userData.baseScale.z,
+      );
+    a.irisR?.userData.baseScale &&
+      a.irisR.scale.set(
+        a.irisR.userData.baseScale.x,
+        a.irisR.userData.baseScale.y * blink,
+        a.irisR.userData.baseScale.z,
+      );
+    a.heroEyeWhiteL?.userData.baseScale &&
+      a.heroEyeWhiteL.scale.set(
+        a.heroEyeWhiteL.userData.baseScale.x,
+        a.heroEyeWhiteL.userData.baseScale.y * blink,
+        a.heroEyeWhiteL.userData.baseScale.z,
+      );
+    a.heroEyeWhiteR?.userData.baseScale &&
+      a.heroEyeWhiteR.scale.set(
+        a.heroEyeWhiteR.userData.baseScale.x,
+        a.heroEyeWhiteR.userData.baseScale.y * blink,
+        a.heroEyeWhiteR.userData.baseScale.z,
+      );
+    a.heroIrisL?.userData.baseScale &&
+      a.heroIrisL.scale.set(
+        a.heroIrisL.userData.baseScale.x,
+        a.heroIrisL.userData.baseScale.y * blink,
+        a.heroIrisL.userData.baseScale.z,
+      );
+    a.heroIrisR?.userData.baseScale &&
+      a.heroIrisR.scale.set(
+        a.heroIrisR.userData.baseScale.x,
+        a.heroIrisR.userData.baseScale.y * blink,
+        a.heroIrisR.userData.baseScale.z,
+      );
+  }
 }
 function G(t, o, a, n = 1, s = 1) {
   const r = document.createElement("canvas");
@@ -1707,7 +2414,10 @@ function updateJuniorPortraitShell(t, o, a, n = 1) {
   s.forEach((t) => {
     if (!t.material) return;
     const o = i > 0.001 ? (t.userData.viewWeight ?? 0) / i : 0,
-      a = Math.min(1, n * (t.userData.baseOpacity ?? 1) * o);
+      a = Math.min(
+        1,
+        n * (t.userData.baseOpacity ?? 1) * Math.pow(Math.max(0, o), 2.8),
+      );
     ((t.material.opacity = a), (t.visible = a > 0.02));
   });
   const l = o.userData.glow;
@@ -1715,7 +2425,7 @@ function updateJuniorPortraitShell(t, o, a, n = 1) {
   const c = juniorPortraitCameraLocal.x - l.position.x,
     h = juniorPortraitCameraLocal.z - l.position.z,
     d = juniorPortraitCameraLocal.y - l.position.y,
-    p = 0.24 * n;
+    p = 0.08 * n;
   ((l.material.opacity = p),
     (l.visible = p > 0.02),
     (l.rotation.y = Math.atan2(c, Math.abs(h) < 0.001 ? 0.001 : h)),
@@ -3641,9 +4351,9 @@ export function createLm402Scene(D, runtimeOptions = {}) {
           Co.position.set(t.characters.junior.x, 0, t.characters.junior.z),
           (Co.rotation.y = t.characters.junior.rotationY ?? 0),
           juniorHeroLight.target.position.set(
-            Co.position.x + 0.04,
-            1.42,
-            Co.position.z + 0.04,
+            Co.position.x + 0.03,
+            1.54,
+            Co.position.z + 0.06,
           ),
           Bo.position.set(
             t.characters.fatherEcho.x,
@@ -3659,18 +4369,230 @@ export function createLm402Scene(D, runtimeOptions = {}) {
           }),
           Co.userData.glow &&
             (Co.userData.glow.material.opacity =
-              "eye_contact" === t.phase || "perfect" === t.ending
-                ? 0.42 + 0.18 * t.cinematicGlow
+              "eye_contact" === t.phase ||
+              "perfect" === (t.endingSequence?.type ?? t.ending)
+                ? 0.5 + 0.2 * t.cinematicGlow
                 : 0.18),
+          Co.userData.pose?.referenceJunior &&
+            (() => {
+              const e = Co.userData.pose;
+              const o = "perfect" === (t.endingSequence?.type ?? t.ending);
+              const s = o || "eye_contact" === t.phase;
+              const a = (e) => (
+                e &&
+                  ((e.userData.baseScale ??= e.scale.clone()),
+                  (e.userData.basePosition ??= e.position.clone()),
+                  (e.userData.baseRotation ??= e.rotation.clone())),
+                e
+              );
+              const n = (e) => {
+                e &&
+                  (e.scale.copy(e.userData.baseScale),
+                  e.position.copy(e.userData.basePosition),
+                  e.rotation.copy(e.userData.baseRotation));
+              };
+              [
+                e.waist,
+                e.torso,
+                e.chest,
+                e.leftArm,
+                e.rightArm,
+                e.leftLeg,
+                e.rightLeg,
+                e.leftHand,
+                e.rightHand,
+                e.shoulderL,
+                e.shoulderR,
+                e.hairBack,
+                e.headGlow,
+              ].forEach((t) => t && (t.visible = !s));
+              e.facePlane && (e.facePlane.visible = !s);
+              e.faceShell && (e.faceShell.visible = !s);
+              e.closeupRefinement && (e.closeupRefinement.visible = s);
+              [
+                e.frontHairStripL,
+                e.frontHairStripR,
+                e.frontHairInnerL,
+                e.frontHairInnerR,
+                e.hairCurtainL,
+                e.hairCurtainR,
+              ].forEach((e) => {
+                e && (e.visible = !s);
+              });
+              if (e.heroHeadRoot) {
+                a(e.heroHeadRoot);
+                e.heroHeadRoot.visible = !1;
+                n(e.heroHeadRoot);
+              }
+              if (e.fringe) {
+                a(e.fringe);
+                if (s) {
+                  e.fringe.visible = !1;
+                } else {
+                  e.fringe.visible = !0;
+                  n(e.fringe);
+                }
+              }
+              e.sideLockL && (e.sideLockL.visible = !s);
+              e.sideLockR && (e.sideLockR.visible = !s);
+              if (Co.userData.referenceHairCap) {
+                const t = Co.userData.referenceHairCap;
+                a(t);
+                if (s) {
+                  t.visible = !0;
+                  n(t);
+                  t.scale.set(0.96, 0.78, 0.84);
+                  t.position.set(0, 1.616, 0.004);
+                } else ((t.visible = !0), n(t));
+              }
+              if (e.head && e.jaw) {
+                [e.head, e.jaw, e.faceSideL, e.faceSideR].forEach((e) => a(e));
+                n(e.head);
+                n(e.jaw);
+                n(e.faceSideL);
+                n(e.faceSideR);
+                e.head.visible = !0;
+                e.jaw.visible = !0;
+                e.faceSideL && (e.faceSideL.visible = !0);
+                e.faceSideR && (e.faceSideR.visible = !0);
+              }
+              if (e.head?.material && e.jaw?.material) {
+                [e.head.material, e.jaw.material].forEach((t) => {
+                  if (!t?.isMaterial) return;
+                  t.userData.baseRoughness ??= t.roughness;
+                  t.userData.baseClearcoat ??= t.clearcoat ?? 0;
+                  t.userData.baseSheen ??= t.sheen ?? 0;
+                  t.userData.baseOpacity ??= t.opacity ?? 1;
+                  t.userData.baseTransparent ??= t.transparent;
+                  t.userData.baseDepthWrite ??= t.depthWrite;
+                  t.roughness = s ? 0.44 : t.userData.baseRoughness;
+                  "clearcoat" in t &&
+                    (t.clearcoat = s ? 0.04 : t.userData.baseClearcoat);
+                  "sheen" in t && (t.sheen = s ? 0.06 : t.userData.baseSheen);
+                  (t.transparent = t.userData.baseTransparent),
+                    (t.opacity = t.userData.baseOpacity),
+                    (t.depthWrite = t.userData.baseDepthWrite);
+                });
+              }
+              [
+                e.eyeWhiteL,
+                e.eyeWhiteR,
+                e.irisL,
+                e.irisR,
+                e.eyeContourL,
+                e.eyeContourR,
+                e.eyeSparkleL,
+                e.eyeSparkleR,
+                e.mouth,
+                e.noseBridge,
+                e.noseTip,
+              ].forEach(
+                (e) => a(e),
+              );
+              [e.blushL, e.blushR].forEach((t) => {
+                a(t);
+                t?.material &&
+                  (t.material.userData.baseOpacity ??= t.material.opacity);
+              });
+              if (s) {
+                n(e.eyeWhiteL);
+                n(e.eyeWhiteR);
+                n(e.irisL);
+                n(e.irisR);
+                n(e.eyeContourL);
+                n(e.eyeContourR);
+                n(e.eyeSparkleL);
+                n(e.eyeSparkleR);
+                n(e.mouth);
+                n(e.noseBridge);
+                n(e.noseTip);
+                e.eyeWhiteL && (e.eyeWhiteL.visible = !0);
+                e.eyeWhiteR && (e.eyeWhiteR.visible = !0);
+                e.irisL && (e.irisL.visible = !0);
+                e.irisR && (e.irisR.visible = !0);
+                e.eyeContourL && (e.eyeContourL.visible = !0);
+                e.eyeContourR && (e.eyeContourR.visible = !0);
+                e.eyeSparkleL && (e.eyeSparkleL.visible = !0);
+                e.eyeSparkleR && (e.eyeSparkleR.visible = !0);
+                e.mouth && (e.mouth.visible = !0);
+                e.noseBridge && (e.noseBridge.visible = !0);
+                e.noseTip && (e.noseTip.visible = !0);
+                n(e.blushL);
+                n(e.blushR);
+                e.blushL && (e.blushL.visible = !0);
+                e.blushR && (e.blushR.visible = !0);
+                e.blushL?.material && (e.blushL.material.opacity = 0.1);
+                e.blushR?.material && (e.blushR.material.opacity = 0.1);
+              } else {
+                n(e.eyeWhiteL);
+                n(e.eyeWhiteR);
+                n(e.irisL);
+                n(e.irisR);
+                n(e.eyeContourL);
+                n(e.eyeContourR);
+                n(e.eyeSparkleL);
+                n(e.eyeSparkleR);
+                n(e.mouth);
+                n(e.noseBridge);
+                n(e.noseTip);
+                e.eyeWhiteL && (e.eyeWhiteL.visible = !0);
+                e.eyeWhiteR && (e.eyeWhiteR.visible = !0);
+                e.irisL && (e.irisL.visible = !0);
+                e.irisR && (e.irisR.visible = !0);
+                e.eyeContourL && (e.eyeContourL.visible = !0);
+                e.eyeContourR && (e.eyeContourR.visible = !0);
+                e.eyeSparkleL && (e.eyeSparkleL.visible = !0);
+                e.eyeSparkleR && (e.eyeSparkleR.visible = !0);
+                e.mouth && (e.mouth.visible = !0);
+                e.noseBridge && (e.noseBridge.visible = !0);
+                e.noseTip && (e.noseTip.visible = !0);
+                n(e.blushL);
+                n(e.blushR);
+                e.blushL && (e.blushL.visible = !0);
+                e.blushR && (e.blushR.visible = !0);
+                e.blushL?.material &&
+                  (e.blushL.material.opacity =
+                    e.blushL.material.userData.baseOpacity);
+                e.blushR?.material &&
+                  (e.blushR.material.opacity =
+                    e.blushR.material.userData.baseOpacity);
+              }
+              if (e.browL && e.browR) {
+                [e.browL, e.browR].forEach((t) => {
+                  t.userData.baseScale ??= t.scale.clone();
+                  t.userData.basePosition ??= t.position.clone();
+                  t.userData.baseRotation ??= t.rotation.clone();
+                });
+                if (s) {
+                  e.browL.visible = !0;
+                  e.browR.visible = !0;
+                  e.browL.scale.copy(e.browL.userData.baseScale);
+                  e.browR.scale.copy(e.browR.userData.baseScale);
+                  e.browL.position.copy(e.browL.userData.basePosition);
+                  e.browR.position.copy(e.browR.userData.basePosition);
+                  e.browL.rotation.copy(e.browL.userData.baseRotation);
+                  e.browR.rotation.copy(e.browR.userData.baseRotation);
+                } else {
+                  e.browL.visible = !0;
+                  e.browR.visible = !0;
+                  e.browL.scale.copy(e.browL.userData.baseScale);
+                  e.browR.scale.copy(e.browR.userData.baseScale);
+                  e.browL.position.copy(e.browL.userData.basePosition);
+                  e.browR.position.copy(e.browR.userData.basePosition);
+                  e.browL.rotation.copy(e.browL.userData.baseRotation);
+                  e.browR.rotation.copy(e.browR.userData.baseRotation);
+                }
+              }
+            })(),
           Co.userData.portraitShell &&
             (() => {
               const a = Co.userData.portraitShell,
                 n = Boolean(a.userData.loaded) && !isIntro,
                 s =
-                  "perfect" === t.ending
+                  "perfect" === (t.endingSequence?.type ?? t.ending)
                     ? e.MathUtils.lerp(
-                        0.6,
-                        0.98,
+                        0.12,
+                        0.28,
                         e.MathUtils.smoothstep(
                           t.endingSequence?.time ?? 0,
                           o.perfectTransitionEnd ?? 17.4,
@@ -3678,39 +4600,18 @@ export function createLm402Scene(D, runtimeOptions = {}) {
                         ),
                       )
                     : "eye_contact" === t.phase
-                      ? 0.68
+                      ? 0.82
                       : "rear_wait" === t.phase
-                        ? 0.18
+                        ? 0.16
                         : 0,
                 r =
                   n &&
+                  "perfect" !== (t.endingSequence?.type ?? t.ending) &&
                   s > 0.02 &&
                   ("rear_wait" === t.phase ||
                     "eye_contact" === t.phase ||
-                    "perfect" === t.ending);
-              ((a.visible = r),
-                r && updateJuniorPortraitShell(Co, a, q, s),
-                Co.traverse((t) => {
-                  if (
-                    !t.isMesh ||
-                    !t.material ||
-                    t === Co.userData.glow ||
-                    hasAncestor(t, a)
-                  )
-                    return;
-                  const o = r && (t.position?.y ?? 0) > 1.34;
-                  t.visible = !o;
-                  (Array.isArray(t.material)
-                    ? t.material
-                    : [t.material]
-                  ).forEach((e) => {
-                    if (!("opacity" in e)) return;
-                    const t = e.userData.baseOpacity ?? e.opacity;
-                    ((e.userData.baseOpacity = t),
-                      (e.transparent = o || e.transparent),
-                      (e.opacity = o ? 0 : t));
-                  });
-                }));
+                    "perfect" === (t.endingSequence?.type ?? t.ending));
+              ((a.visible = r), r && updateJuniorPortraitShell(Co, a, q, s));
             })(),
           z(Go),
           z(Co),
@@ -3744,23 +4645,24 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         else if ("rear_wait" === t.phase) {
           const e = Math.sin(7.1 * t.time);
           (P(Go, 0.76 * e, 0.8),
-            P(Co, 0.68 * Math.sin(6.4 * t.time + 0.7), 0.66));
+            P(Co, 0.68 * Math.sin(6.4 * t.time + 0.7), 0.66),
+            v(Co, t.time, 0.58));
         } else
           (P(Go, 0.34 * Math.sin(6.2 * t.time), 0.5), v(Co, 0.9 * t.time, 1));
         ((juniorHeroLight.intensity =
-          "perfect" === t.ending
-            ? 3.2
+          "perfect" === (t.endingSequence?.type ?? t.ending)
+            ? 3.6
             : "eye_contact" === t.phase
-              ? 2.78
+              ? 3.02
               : "rear_wait" === t.phase
-                ? 2.3
+                ? 2.58
                 : 1.76),
           (juniorRimLight.intensity =
-            "perfect" === t.ending
-              ? 2.1
+            "perfect" === (t.endingSequence?.type ?? t.ending)
+              ? 2.34
               : "eye_contact" === t.phase
-                ? 1.82
-                : 1.18));
+                ? 1.98
+                : 1.32));
         (vo.senior.copy(Go.position).add(new e.Vector3(0, 1.34, 0)),
           vo.junior.copy(Co.position).add(new e.Vector3(0, 1.34, 0)));
       })(s),
@@ -4003,40 +4905,48 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             }
             if (s < h0) {
               const t = (s - c0) / Math.max(0.01, h0 - c0),
-                o = i.clone().lerp(h, 0.52).add(y),
+                closeAnchor = h
+                  .clone()
+                  .add(l.clone().multiplyScalar(1.18))
+                  .add(new e.Vector3(0.032, -0.04, 0.016)),
+                o = closeAnchor.clone(),
                 a = e.MathUtils.smoothstep(t, 0, 0.5),
                 n = 4e-4 * Math.sin(2.8 * s) * a,
-                l = 3e-4 * Math.sin(3.1 * s + 1.2) * a,
-                c = 0.0012 * Math.sin(0.6 * s);
+                driftY = 3e-4 * Math.sin(3.1 * s + 1.2) * a,
+                c = 8e-4 * Math.sin(0.6 * s);
               return (
-                (o.y += c + l),
-                (o.x += 6e-4 * Math.cos(0.2 * s) + n),
+                (o.y += c + driftY),
+                (o.x += 8e-4 * Math.cos(0.2 * s) + n),
                 q.position.copy(o),
                 (q.fov = e.MathUtils.lerp(
-                  14,
-                  13.2,
+                  19.2,
+                  16.8,
                   e.MathUtils.smoothstep(t, 0, 0.8),
                 )),
                 q.updateProjectionMatrix(),
-                q.lookAt(h.x, h.y + 0.001, h.z),
-                void q.rotateZ(0.0012 * Math.sin(0.35 * s) * a)
+                q.lookAt(h.x, h.y - 0.01, h.z + 0.02),
+                void q.rotateZ(8e-4 * Math.sin(0.35 * s) * a)
               );
             }
             const d = s - h0,
               p = e.MathUtils.smoothstep(d, 0, 4),
-              m = i.clone().lerp(h, 0.52 - 0.08 * p);
+              overlayAnchor = h
+                .clone()
+                .add(l.clone().multiplyScalar(1.34 - 0.18 * p))
+                .add(new e.Vector3(0.08, -0.12, 0.02)),
+              m = overlayAnchor.clone();
             m.add(a.set(0.01 + 0.02 * p, 0.008 + 0.01 * p, 0));
             const g = Math.min(1, 0.08 * d);
             ((m.y += 0.001 * Math.sin(0.3 * s) + 3e-4 * Math.sin(2.2 * s) * g),
               (m.x += 8e-4 * Math.cos(0.16 * s)),
               q.position.copy(m),
               (q.fov = e.MathUtils.lerp(
-                13.2,
-                16,
+                21.5,
+                25,
                 e.MathUtils.smoothstep(d, 0, 5),
               )),
               q.updateProjectionMatrix(),
-              q.lookAt(h.x, h.y + 0.001, h.z),
+              q.lookAt(h.x, h.y - 0.04, h.z + 0.028),
               q.rotateZ(0.001 * Math.sin(0.4 * s) * g));
           })(s));
       else {
@@ -4050,7 +4960,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       if (
         ((Te.intensity =
           1.96 * b +
-          ("eye_contact" === s.phase || "perfect" === s.ending
+          ("eye_contact" === s.phase ||
+          "perfect" === (s.endingSequence?.type ?? s.ending)
             ? 0.68
             : "front_call" === s.phase
               ? 0.26
