@@ -102,8 +102,12 @@ function makeResizable(el, id, { minW = 280, minH = 120, maxW = 900, maxH = 700 
   mb.onclick = (e) => {
     e.stopPropagation();
     const cfg = panels.get(id);
+    const tbox = el.querySelector('#transcript-box, .transcript-box');
+    const tlist = el.querySelector('#transcript-list, .transcript-list');
     if (maximized) {
       if (pre) { el.style.width = pre.w + 'px'; el.style.height = pre.h + 'px'; el.style.maxHeight = pre.h + 'px'; if (cfg) cfg.size = pre; }
+      if (tbox) { tbox.style.maxHeight = ''; tbox.style.height = ''; }
+      if (tlist) { tlist.style.maxHeight = ''; }
       mb.innerHTML = '⤢'; maximized = false;
     } else {
       const r = el.getBoundingClientRect();
@@ -112,6 +116,8 @@ function makeResizable(el, id, { minW = 280, minH = 120, maxW = 900, maxH = 700 
       const fh = Math.min(maxH, window.innerHeight - 40);
       el.style.width = fw + 'px'; el.style.height = fh + 'px'; el.style.maxHeight = fh + 'px';
       if (cfg) cfg.size = { w: fw, h: fh };
+      if (tbox) { tbox.hidden = false; tbox.style.maxHeight = (fh - 60) + 'px'; tbox.style.height = (fh - 60) + 'px'; }
+      if (tlist) { tlist.style.maxHeight = (fh - 80) + 'px'; }
       mb.innerHTML = '⤡'; maximized = true;
     }
     save();
@@ -133,6 +139,10 @@ function makeResizable(el, id, { minW = 280, minH = 120, maxW = 900, maxH = 700 
     el.style.width = w + 'px'; el.style.height = ht + 'px'; el.style.maxHeight = ht + 'px';
     const cfg = panels.get(id);
     if (cfg) cfg.size = { w, h: ht };
+    const tbox = el.querySelector('#transcript-box, .transcript-box');
+    const tlist = el.querySelector('#transcript-list, .transcript-list');
+    if (tbox) { tbox.hidden = false; tbox.style.maxHeight = (ht - 60) + 'px'; tbox.style.height = (ht - 60) + 'px'; }
+    if (tlist) { tlist.style.maxHeight = (ht - 80) + 'px'; }
   });
   h.addEventListener('pointerup', () => {
     if (!resizing) return;
