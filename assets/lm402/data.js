@@ -514,7 +514,7 @@ export const INTRO_BEATS = [
   {
     id: "daughter_glow",
     start: 0,
-    end: 3.6,
+    end: 2.6,
     kicker: "女兒",
     text: "我又夢見自己被那條紅線輕輕帶起來，整個人像真的往前飛出去。",
     ambience:
@@ -522,8 +522,8 @@ export const INTRO_BEATS = [
   },
   {
     id: "red_thread",
-    start: 3.6,
-    end: 7.8,
+    start: 2.6,
+    end: 6.1,
     kicker: "紅線",
     text: "只要我沿著那條屬於把拔與阿姨的紅線往前飛，時間就會自己把路讓開。",
     ambience:
@@ -531,8 +531,8 @@ export const INTRO_BEATS = [
   },
   {
     id: "fourth_floor_arrives",
-    start: 7.8,
-    end: 12.2,
+    start: 6.1,
+    end: 10.1,
     kicker: "利瑪竇",
     text: "利瑪竇四樓的風、四間教室長度的走廊，和 LM402 那面門牌一起慢慢浮出來。",
     ambience:
@@ -540,8 +540,8 @@ export const INTRO_BEATS = [
   },
   {
     id: "sunlight_bloom",
-    start: 12.2,
-    end: 15.8,
+    start: 10.1,
+    end: 13.4,
     kicker: "十一點",
     text: "十一點的陽光先灑在矮牆和樹冠上，再沿著前門門洞、黑板那一端和教室兩面一起慢慢推進來。",
     ambience:
@@ -549,8 +549,8 @@ export const INTRO_BEATS = [
   },
   {
     id: "front_door_settle",
-    start: 15.8,
-    end: 18.2,
+    start: 13.4,
+    end: 16.2,
     kicker: "前門走廊",
     text: "我要先把前門那句「妳在哪裡？」真正聽見，這整層樓才會把那一秒交給我。",
     ambience:
@@ -701,7 +701,7 @@ export const CINEMATIC_TIMELINE = {
   duration: 5.8,
   lockWindow: 4.1,
   successWindow: [3.2, 4.4],
-  introDuration: 18.2,
+  introDuration: 16.2,
   perfectDuration: 35.6,
   perfectEstablishEnd: 2.2,
   perfectOrbitStart: 2.2,

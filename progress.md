@@ -29,3 +29,11 @@ Updates:
 - Upgraded LM402 renderer with reference-image portrait shell loading for the 2005 junior, dedicated spotlight/rim lighting around the back-door reveal, tighter perfect-ending phase timing, and canvas sizing that matches the stage more closely to reduce false mobile black-region detection.
 - Removed invalid security meta tags from `index.html`, `reader.html`, and `lm402.html`; the site now expects real security headers to come from hosting instead of pretending via `<meta http-equiv>`.
 - Rebuilt the first-screen shell for `index.html` and `reader.html` so both pages behave more like cinematic posters with clearer CTA hierarchy and faster orientation into LM402 / reading / continue-reading flows.
+- Fixed a browser parse regression in `assets/lm402/app.js` after refactoring the startup loop. `window.__LM402_DEBUG__` and `window.advanceTime` now register correctly again, and LM402 boots back into `intro` instead of silently falling back to a static shell.
+- Changed LM402 intro timing to progress from frame time instead of `performance.now()` catch-up. Fresh desktop snapshots now enter with `mode: intro`, `cameraAnchor: daughter_glow`, `renderErrorCount: 0`, and no startup render error.
+- Reworked the two stair zones in `assets/lm402/renderer.js` so each stairwell now reads as a 90-degree turned landing with split up/down flights instead of a staircase visually running into the wall. Probe captures live in `output/playwright/front-stair-*.png` and `output/playwright/back-stair-*.png`.
+- Centered the reader hero stat cells (`41 集 / 3 線 / 20 年 / 5 彩蛋`) by making `.hero-stat` a flex-centered column container; confirmed in `output/playwright/reader-hero-check.png`.
+
+TODO:
+- Keep pushing the junior from "reference-shell + strong lighting" toward a more convincing hero asset. Current result is improved, but still not a bespoke full 3D human model.
+- Replace the temporary `window.advanceTime` stepping with a fully verified deterministic test harness once the intro/ending flows stop changing so quickly.

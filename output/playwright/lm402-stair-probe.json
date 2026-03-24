@@ -1,0 +1,58 @@
+[
+  {
+    "name": "front-stair-east",
+    "playerX": -6.45,
+    "playerZ": 2.45,
+    "cameraAnchor": "consciousness_market",
+    "renderErrorCount": 0
+  },
+  {
+    "name": "front-stair-north",
+    "playerX": -6.45,
+    "playerZ": 2.45,
+    "cameraAnchor": "consciousness_market",
+    "renderErrorCount": 0
+  },
+  {
+    "name": "front-stair-south",
+    "playerX": -6.45,
+    "playerZ": 2.45,
+    "cameraAnchor": "consciousness_market",
+    "renderErrorCount": 0
+  },
+  {
+    "name": "front-stair-west",
+    "playerX": -6.45,
+    "playerZ": 2.45,
+    "cameraAnchor": "consciousness_market",
+    "renderErrorCount": 0
+  },
+  {
+    "name": "back-stair-east",
+    "playerX": -6.45,
+    "playerZ": 39.95,
+    "cameraAnchor": "consciousness_market",
+    "renderErrorCount": 0
+  },
+  {
+    "name": "back-stair-north",
+    "playerX": -6.45,
+    "playerZ": 39.95,
+    "cameraAnchor": "consciousness_market",
+    "renderErrorCount": 0
+  },
+  {
+    "name": "back-stair-south",
+    "playerX": -6.45,
+    "playerZ": 39.95,
+    "cameraAnchor": "consciousness_market",
+    "renderErrorCount": 0
+  },
+  {
+    "name": "back-stair-west",
+    "playerX": -6.45,
+    "playerZ": 39.95,
+    "cameraAnchor": "consciousness_market",
+    "renderErrorCount": 0
+  }
+]

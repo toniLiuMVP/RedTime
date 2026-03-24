@@ -1702,6 +1702,8 @@ function Re() {
       phase: Y.phase,
       phaseClock: Number(Y.phaseClock.toFixed(3)),
       clockTime: Number(Y.time.toFixed(3)),
+      introTime: Number(Y.intro.time.toFixed(3)),
+      introProgress: Number(Y.intro.progress.toFixed(3)),
       cameraMode: Y.cameraMode,
       cameraAnchor:
         "intro" === Y.mode
@@ -2049,7 +2051,7 @@ function Ue() {
     Re(),
     U("resize", `${window.innerWidth}x${window.innerHeight}`));
 }
-((window.__LM402_DEBUG__ = {
+window.__LM402_DEBUG__ = {
   snapshot: function () {
     Y.endingSequence && syncEndingSequenceClock();
     const e = We(),
@@ -2143,462 +2145,469 @@ function Ue() {
       void 0 !== n && (Y.player.yaw = n),
       void 0 !== o && (Y.player.pitch = o));
   },
-}),
-  ve(!0),
-  xe(),
-  window.addEventListener("keydown", (e) => {
-    if (
-      (X.unlock(),
-      (Y.keyboard[e.code] = !0),
-      "KeyF" === e.code || "Enter" === e.code)
-    )
-      return (e.preventDefault(), void Ce());
-    if ("KeyR" === e.code) return (e.preventDefault(), void Ie());
-    if ("KeyG" === e.code) return (e.preventDefault(), void Te(!0));
-    if (Y.dialogue && /^Digit[1-9]$/.test(e.code)) {
-      const t = Number(e.code.replace("Digit", "")) - 1,
-        n = P.dialogueChoices.querySelectorAll("button")[t];
-      return void n?.click();
-    }
-    if ("Escape" === e.code && Y.dialogue)
-      return (e.preventDefault(), void Le());
-    "Escape" === e.code &&
-      document.pointerLockElement === z &&
-      (e.preventDefault(), document.exitPointerLock?.());
+};
+ve(!0);
+xe();
+window.addEventListener("keydown", (e) => {
+  if (
+    (X.unlock(),
+    (Y.keyboard[e.code] = !0),
+    "KeyF" === e.code || "Enter" === e.code)
+  )
+    return (e.preventDefault(), void Ce());
+  if ("KeyR" === e.code) return (e.preventDefault(), void Ie());
+  if ("KeyG" === e.code) return (e.preventDefault(), void Te(!0));
+  if (Y.dialogue && /^Digit[1-9]$/.test(e.code)) {
+    const t = Number(e.code.replace("Digit", "")) - 1,
+      n = P.dialogueChoices.querySelectorAll("button")[t];
+    return void n?.click();
+  }
+  if ("Escape" === e.code && Y.dialogue) return (e.preventDefault(), void Le());
+  "Escape" === e.code &&
+    document.pointerLockElement === z &&
+    (e.preventDefault(), document.exitPointerLock?.());
+});
+window.addEventListener("keyup", (e) => {
+  Y.keyboard[e.code] = !1;
+});
+window.addEventListener("blur", () => {
+  ((Y.keyboard = Object.create(null)), N());
+});
+(function () {
+  let e = 0;
+  (z.addEventListener("click", () => {
+    (Ye(), X.unlock(), z.focus({ preventScroll: !0 }));
   }),
-  window.addEventListener("keyup", (e) => {
-    Y.keyboard[e.code] = !1;
-  }),
-  window.addEventListener("blur", () => {
-    ((Y.keyboard = Object.create(null)), N());
-  }),
-  (function () {
-    let e = 0;
-    (z.addEventListener("click", () => {
-      (Ye(), X.unlock(), z.focus({ preventScroll: !0 }));
-    }),
-      P.stage.addEventListener(
-        "mousedown",
-        (t) => {
-          if (
-            !(
-              2 !== t.button ||
-              Xe(t.target) ||
-              (t.preventDefault(),
-              t.stopPropagation(),
-              z.focus({ preventScroll: !0 }),
-              X.unlock(),
-              "play" !== Y.mode || Y.dialogue || Y.endingSequence || Y.ending)
-            )
-          ) {
-            const t = Date.now();
-            t - e >= 180 &&
-              ((e = t),
-              (Y.lastContextMenu = t),
-              U(
-                "contextmenu",
-                document.pointerLockElement === z ? "exit" : "enter",
-              ),
-              Ge());
-          }
-        },
-        !0,
-      ),
-      P.stage.addEventListener(
-        "contextmenu",
-        (t) => {
-          Xe(t.target) ||
+    P.stage.addEventListener(
+      "mousedown",
+      (t) => {
+        if (
+          !(
+            2 !== t.button ||
+            Xe(t.target) ||
             (t.preventDefault(),
             t.stopPropagation(),
-            (document.pointerLockElement !== z &&
-              ("play" !== Y.mode ||
-                Y.dialogue ||
-                Y.endingSequence ||
-                Y.ending)) ||
-              ((t) => {
-                if ((t.preventDefault(), t.stopPropagation(), _())) return;
-                const n = Date.now();
-                n - e < 180 ||
-                  ((e = n),
-                  (Y.lastContextMenu = n),
-                  U(
-                    "contextmenu",
-                    document.pointerLockElement === z ? "exit" : "enter",
-                  ),
-                  X.unlock(),
-                  z.focus({ preventScroll: !0 }),
-                  Ge());
-              })(t));
-        },
-        !0,
-      ),
-      P.stage.addEventListener(
-        "auxclick",
-        (e) => {
-          2 !== e.button ||
-            Xe(e.target) ||
-            (e.preventDefault(), e.stopPropagation());
-        },
-        !0,
-      ),
-      z.addEventListener("mousedown", (e) => {
-        0 !== e.button ||
-          _() ||
-          document.pointerLockElement === z ||
-          (X.unlock(),
-          z.focus({ preventScroll: !0 }),
-          (Y.dragLook = { x: e.clientX, y: e.clientY }));
-      }),
-      z.addEventListener("pointermove", (e) => {
-        if (
-          !Y.dragLook ||
-          document.pointerLockElement === z ||
-          Y.dialogue ||
-          "play" !== Y.mode ||
-          _()
-        )
-          return;
-        const t = e.clientX - Y.dragLook.x,
-          n = e.clientY - Y.dragLook.y;
-        ((Y.dragLook = { x: e.clientX, y: e.clientY }),
-          (Y.player.yaw -= 0.0034 * t * re()),
-          (Y.player.pitch = p(Y.player.pitch - 0.0026 * n * re(), v, x)));
-      }),
-      document.addEventListener("mousemove", (e) => {
-        document.pointerLockElement !== z ||
-          Y.dialogue ||
-          "play" !== Y.mode ||
-          ((Y.player.yaw -= 0.00165 * e.movementX * re()),
-          (Y.player.pitch = p(
-            Y.player.pitch - 0.00152 * e.movementY * re(),
-            v,
-            x,
-          )));
-      }),
-      window.addEventListener("pointerup", () => {
-        Y.dragLook = null;
-      }));
-    const t = () => {
-        ((Y.pointerLockPending = !1), ye());
-        U(
-          "pointerlock",
-          (document.pointerLockElement ||
-            document.webkitPointerLockElement ||
-            document.mozPointerLockElement) === z
-            ? "locked"
-            : "free",
-        );
+            z.focus({ preventScroll: !0 }),
+            X.unlock(),
+            "play" !== Y.mode || Y.dialogue || Y.endingSequence || Y.ending)
+          )
+        ) {
+          const t = Date.now();
+          t - e >= 180 &&
+            ((e = t),
+            (Y.lastContextMenu = t),
+            U(
+              "contextmenu",
+              document.pointerLockElement === z ? "exit" : "enter",
+            ),
+            Ge());
+        }
       },
-      n = () => {
-        ((Y.pointerLockPending = !1),
-          Ee("瀏覽器沒有成功鎖定視角。"),
-          U("pointerlock", "error"),
-          ye());
-      };
-    (document.addEventListener("pointerlockchange", t),
-      document.addEventListener("webkitpointerlockchange", t),
-      document.addEventListener("mozpointerlockchange", t),
-      document.addEventListener("pointerlockerror", n),
-      document.addEventListener("webkitpointerlockerror", n),
-      document.addEventListener("mozpointerlockerror", n));
+      !0,
+    ),
+    P.stage.addEventListener(
+      "contextmenu",
+      (t) => {
+        Xe(t.target) ||
+          (t.preventDefault(),
+          t.stopPropagation(),
+          (document.pointerLockElement !== z &&
+            ("play" !== Y.mode ||
+              Y.dialogue ||
+              Y.endingSequence ||
+              Y.ending)) ||
+            ((t) => {
+              if ((t.preventDefault(), t.stopPropagation(), _())) return;
+              const n = Date.now();
+              n - e < 180 ||
+                ((e = n),
+                (Y.lastContextMenu = n),
+                U(
+                  "contextmenu",
+                  document.pointerLockElement === z ? "exit" : "enter",
+                ),
+                X.unlock(),
+                z.focus({ preventScroll: !0 }),
+                Ge());
+            })(t));
+      },
+      !0,
+    ),
+    P.stage.addEventListener(
+      "auxclick",
+      (e) => {
+        2 !== e.button ||
+          Xe(e.target) ||
+          (e.preventDefault(), e.stopPropagation());
+      },
+      !0,
+    ),
+    z.addEventListener("mousedown", (e) => {
+      0 !== e.button ||
+        _() ||
+        document.pointerLockElement === z ||
+        (X.unlock(),
+        z.focus({ preventScroll: !0 }),
+        (Y.dragLook = { x: e.clientX, y: e.clientY }));
+    }),
+    z.addEventListener("pointermove", (e) => {
+      if (
+        !Y.dragLook ||
+        document.pointerLockElement === z ||
+        Y.dialogue ||
+        "play" !== Y.mode ||
+        _()
+      )
+        return;
+      const t = e.clientX - Y.dragLook.x,
+        n = e.clientY - Y.dragLook.y;
+      ((Y.dragLook = { x: e.clientX, y: e.clientY }),
+        (Y.player.yaw -= 0.0034 * t * re()),
+        (Y.player.pitch = p(Y.player.pitch - 0.0026 * n * re(), v, x)));
+    }),
+    document.addEventListener("mousemove", (e) => {
+      document.pointerLockElement !== z ||
+        Y.dialogue ||
+        "play" !== Y.mode ||
+        ((Y.player.yaw -= 0.00165 * e.movementX * re()),
+        (Y.player.pitch = p(
+          Y.player.pitch - 0.00152 * e.movementY * re(),
+          v,
+          x,
+        )));
+    }),
+    window.addEventListener("pointerup", () => {
+      Y.dragLook = null;
+    }));
+  const t = () => {
+      ((Y.pointerLockPending = !1), ye());
+      U(
+        "pointerlock",
+        (document.pointerLockElement ||
+          document.webkitPointerLockElement ||
+          document.mozPointerLockElement) === z
+          ? "locked"
+          : "free",
+      );
+    },
+    n = () => {
+      ((Y.pointerLockPending = !1),
+        Ee("瀏覽器沒有成功鎖定視角。"),
+        U("pointerlock", "error"),
+        ye());
+    };
+  (document.addEventListener("pointerlockchange", t),
+    document.addEventListener("webkitpointerlockchange", t),
+    document.addEventListener("mozpointerlockchange", t),
+    document.addEventListener("pointerlockerror", n),
+    document.addEventListener("webkitpointerlockerror", n),
+    document.addEventListener("mozpointerlockerror", n));
+})();
+he(!0);
+ce();
+P.hudToggle.addEventListener("click", () => {
+  he(!P.hud.classList.contains("collapsed"));
+});
+P.speedToggle.addEventListener("click", () => {
+  ae();
+});
+P.speedPresets.querySelectorAll("[data-speed-preset]").forEach((e) => {
+  e.addEventListener("click", () => {
+    ie({ preset: e.dataset.speedPreset, scalar: E[e.dataset.speedPreset] });
+  });
+});
+P.speedRange.addEventListener("input", () => {
+  ie({ preset: null, scalar: Number(P.speedRange.value) / 100 });
+});
+P.audioToggle.addEventListener("click", () => {
+  X.setEnabled(!Y.audioEnabled);
+});
+P.fontToggle.addEventListener("click", ue);
+de();
+P.musicPromptButton.addEventListener("click", () => {
+  X.unlock();
+});
+P.perfectEndingBtn.addEventListener("click", qe);
+P.perfectEndingSideBtn.addEventListener("click", qe);
+P.objectivePrompt.addEventListener("click", fe);
+P.transcriptToggle?.addEventListener("click", () =>
+  (function (e = null) {
+    ((Y.transcriptExpanded = e ?? !Y.transcriptExpanded), ee());
   })(),
-  he(!0),
-  ce(),
-  P.hudToggle.addEventListener("click", () => {
-    he(!P.hud.classList.contains("collapsed"));
-  }),
-  P.speedToggle.addEventListener("click", () => {
-    ae();
-  }),
-  P.speedPresets.querySelectorAll("[data-speed-preset]").forEach((e) => {
-    e.addEventListener("click", () => {
-      ie({ preset: e.dataset.speedPreset, scalar: E[e.dataset.speedPreset] });
-    });
-  }),
-  P.speedRange.addEventListener("input", () => {
-    ie({ preset: null, scalar: Number(P.speedRange.value) / 100 });
-  }),
-  P.audioToggle.addEventListener("click", () => {
-    X.setEnabled(!Y.audioEnabled);
-  }),
-  P.fontToggle.addEventListener("click", ue),
-  de(),
-  P.musicPromptButton.addEventListener("click", () => {
-    X.unlock();
-  }),
-  P.perfectEndingBtn.addEventListener("click", qe),
-  P.perfectEndingSideBtn.addEventListener("click", qe),
-  P.objectivePrompt.addEventListener("click", fe),
-  P.transcriptToggle?.addEventListener("click", () =>
-    (function (e = null) {
-      ((Y.transcriptExpanded = e ?? !Y.transcriptExpanded), ee());
-    })(),
-  ),
-  P.introSkipBtn &&
-    ((P.introSkipBtn.hidden = "intro" !== Y.mode),
-    P.introSkipBtn.addEventListener("click", () => {
-      (X.unlock(), (P.introSkipBtn.hidden = !0), De());
-    })),
-  P.interactBtn.addEventListener("click", Ce),
-  P.inspectBtn.addEventListener("click", () => {
-    Y.activeHotspot
-      ? ((function (e, t = 0.42) {
-          const n = $(Y.player, e),
-            o = O(Y.player, e);
-          ((Y.player.yaw = m(Y.player.yaw, n, t)),
-            (Y.player.pitch = m(Y.player.pitch, o, t)));
-        })(Y.activeHotspot, 0.56),
-        Ee(`視線帶向：${Y.activeHotspot.label}`))
-      : Ee("附近還沒有可看的目標。");
-  }),
-  P.centerBtn.addEventListener("click", Ie),
-  P.replayBtn.addEventListener("click", () => Te(!0)),
-  P.dialogueClose.addEventListener("click", Le),
-  P.dialogueScrim.addEventListener("click", Le),
-  P.endingRetry.addEventListener("click", Ae),
-  P.endingPerfectBtn.addEventListener("click", qe),
-  Ke(P.moveStick, (e, t) => {
-    ((Y.input.moveX = e), (Y.input.moveY = -t));
-  }),
-  Ke(P.lookStick, (e, t) => {
-    ((Y.input.lookX = e), (Y.input.lookY = t));
-  }),
-  document.addEventListener("click", (e) => {
-    P.speedWidget.contains(e.target) || ae(!1);
-  }),
-  oe(),
-  Ue(),
-  window.addEventListener("resize", Ue),
-  window.visualViewport?.addEventListener("resize", Ue),
-  "intro" === Y.mode
-    ? (te(r[0].kicker, r[0].text, 0.2), ne(r[0].ambience))
-    : ((Y.cameraMode = "play"),
-      te(
-        "女兒",
-        "現在時空手錶顯示10:40，現在阿姨在教室裡面，怎麼我會這麼緊張^_^",
-        5,
-      ),
-      ne("粉筆味像一層薄雲，樓梯口那邊有風，十一點的光才剛準備進來。")),
-  ge(),
-  ee(),
-  ke(),
-  ye(),
-  Pe(),
-  X.tryPlay("startup"),
-  requestAnimationFrame(function e(t) {
-    e.last || (e.last = t);
-    const n = Math.min((t - e.last) / 1e3, 0.033);
-    ((e.last = t),
-      (Y.time += n),
-      (P.rotateLock.hidden = !q()),
-      P.body.classList.toggle("landscape-prompt", q()),
-      "intro" === Y.mode
-        ? (function (e) {
-            const t = performance.now();
-            Y.intro.startedAt ||
-              ((Y.intro.startedAt = t),
-              (Y.intro.deadlineAt = t + 1e3 * l.introDuration + 1400));
-            const n = Math.max(0, (t - Y.intro.startedAt) / 1e3);
-            ((Y.intro.time = Math.max(Y.intro.time + e, n)),
-              (Y.intro.progress = p(Y.intro.time / l.introDuration, 0, 1)));
-            const o = r.findIndex(
-                (e) => Y.intro.time >= e.start && Y.intro.time < e.end,
-              ),
-              i = -1 === o ? r.length - 1 : o;
-            (i !== Y.introBeatIndex &&
-              ((Y.introBeatIndex = i),
-              (Y.introCameraTrack = r[i].id),
-              te(r[i].kicker, r[i].text, 0.2),
-              ne(r[i].ambience)),
-              (Y.intro.progress >= 1 || t >= Y.intro.deadlineAt) && De());
-          })(n)
-        : (Y.subtitle.ttl > 0 &&
-            (Y.subtitle.ttl = Math.max(0, Y.subtitle.ttl - n)),
-          (function (e) {
-            if ("play" !== Y.mode || Y.dialogue || Y.endingSequence || q()) {
-              const t = 1 - Math.min(1, 6.4 * e);
-              return (
-                (Y.player.velocity.x *= t),
-                (Y.player.velocity.z *= t),
-                Math.abs(Y.player.velocity.x) < 1e-4 &&
-                  (Y.player.velocity.x = 0),
-                Math.abs(Y.player.velocity.z) < 1e-4 &&
-                  (Y.player.velocity.z = 0),
-                (Y.subtitleMode =
-                  Y.subtitle.ttl > 0.12 ? "full" : q() ? "hidden" : "compact"),
-                void ge()
-              );
-            }
-            const t =
-                (Y.keyboard.KeyD || Y.keyboard.ArrowRight ? 1 : 0) -
-                (Y.keyboard.KeyA || Y.keyboard.ArrowLeft ? 1 : 0),
-              n =
-                (Y.keyboard.KeyW || Y.keyboard.ArrowUp ? 1 : 0) -
-                (Y.keyboard.KeyS || Y.keyboard.ArrowDown ? 1 : 0),
-              o = (Y.keyboard.KeyE ? 1 : 0) - (Y.keyboard.KeyQ ? 1 : 0),
-              i = (Y.keyboard.PageUp ? 1 : 0) - (Y.keyboard.PageDown ? 1 : 0),
-              a = p(Y.input.moveX + t, -1, 1),
-              r = p(Y.input.moveY + n, -1, 1),
-              c = p(Y.input.lookX + 0.85 * o, -1, 1),
-              l = p(Y.input.lookY + 0.85 * i, -1, 1);
-            ((Y.player.lookInput.x = c), (Y.player.lookInput.y = l));
-            const s = (_() ? 1.68 : 1.9) * re();
-            (Math.exp(-14 * e),
-              (Y.player.yaw -= c * e * s),
-              (Y.player.pitch = p(Y.player.pitch - l * e * 1.34 * re(), v, x)));
-            const d = -Math.sin(Y.player.yaw),
-              u = -Math.cos(Y.player.yaw),
-              y = Math.cos(Y.player.yaw),
-              h = -Math.sin(Y.player.yaw),
-              k = "eye_contact" === Y.phase ? g(168) : g(264),
-              b = (d * r + y * a) * k,
-              E = (u * r + h * a) * k,
-              L = Math.min(1, Math.hypot(a, r)) > 0.05,
-              S = L ? 1 - Math.exp(-5.8 * e) : 0,
-              w = L ? 0 : 1 - Math.exp(-4.2 * e),
-              B = L ? S : w;
-            if (L)
-              ((Y.player.velocity.x = m(Y.player.velocity.x, b, B)),
-                (Y.player.velocity.z = m(Y.player.velocity.z, E, B)));
-            else {
-              const t = 1 - Math.min(1, 4.2 * e);
-              ((Y.player.velocity.x *= t),
-                (Y.player.velocity.z *= t),
-                Math.abs(Y.player.velocity.x) < 2e-4 &&
-                  (Y.player.velocity.x = 0),
-                Math.abs(Y.player.velocity.z) < 2e-4 &&
-                  (Y.player.velocity.z = 0));
-            }
-            const z = {
-                x: Y.player.x + Y.player.velocity.x * e,
-                z: Y.player.z + Y.player.velocity.z * e,
-              },
-              P = M.resolveMotion({ x: Y.player.x, z: Y.player.z }, z, f);
-            (P.collided &&
-              ((Y.player.velocity.x *= 0.3), (Y.player.velocity.z *= 0.3)),
-              (Y.player.x = P.x),
-              (Y.player.z = P.z),
-              (Y.boundaryCollisionState = P.collided ? P.label : null));
-            if (M.getStairY) {
-              Y.player.stairY = M.getStairY(Y.player.x, Y.player.z);
-            }
-            const _sFL = g(196),
-              _sFE = g(72),
-              _sBL = g(3196),
-              _sBE = g(3328),
-              Q_ = g(-860) + 0.3,
-              ee_ = g(-210) - 0.3;
-            if (
-              Y.player.z <= _sFE + 0.35 &&
-              Y.player.x > Q_ &&
-              Y.player.x < ee_
-            ) {
-              Y.player.z = _sFL;
-              Y.player.stairY = 0;
-              _stairLoop();
-            } else if (
-              Y.player.z >= _sBE - 0.35 &&
-              Y.player.x > Q_ &&
-              Y.player.x < ee_
-            ) {
-              Y.player.z = _sBL;
-              Y.player.stairY = 0;
-              _stairLoop();
-            }
-            const C = Math.hypot(Y.player.velocity.x, Y.player.velocity.z),
-              I = C > g(26);
-            (Math.abs(c) > 0.18 ||
-              Math.abs(l) > 0.18 ||
-              Boolean(Y.dragLook) ||
-              document.pointerLockElement,
-              Y.subtitle.ttl > 0.12
-                ? (Y.subtitleMode = "full")
-                : j()
-                  ? (Y.subtitleMode = "hidden")
-                  : (Y.subtitleMode = "compact"),
-              ge());
-            const T = I ? Math.max(0.28, 0.52 - 0.6 * C) : 0.42;
-            I &&
-              Y.time - Y.sound.playerStepAt > T &&
-              ((Y.sound.playerStepAt = Y.time), X.playCue("step"));
-          })(n),
-          $e(),
-          Y.ending || Oe(n),
-          (function (e) {
-            if (!Y.endingSequence) return;
-            if (!Number.isFinite(syncEndingSequenceClock())) return void je();
-            if ("perfect" === Y.ending)
-              return (
-                !Y.flags.perfectLine1Played &&
-                  Y.endingSequence.time >= (l.perfectLine1At ?? 1) &&
-                  ((Y.flags.perfectLine1Played = !0),
-                  te("學長", "也太像徐若瑄了吧！", 5)),
-                !Y.flags.perfectLine2Played &&
-                  Y.endingSequence.time >= (l.perfectLine2At ?? 6) &&
-                  ((Y.flags.perfectLine2Played = !0),
-                  te("把拔（心底的聲音）", "這一次，依然再次遇見妳。", 5)),
-                void (
-                  Y.endingSequence.time >
-                    (l.perfectOverlayAt ?? l.perfectDuration) &&
-                  P.endingOverlay.hidden &&
-                  je()
-                )
-              );
-            const t =
-              "missed" === Y.ending
-                ? { x: g(-368), y: 1.34, z: g(756), pitch: -0.04 }
-                : { x: S.eyeLook.x, y: 1.38, z: S.eyeLook.z, pitch: -0.06 };
-            ((Y.player.yaw = m(Y.player.yaw, $(Y.player, t), 0.04)),
-              (Y.player.pitch = m(Y.player.pitch, t.pitch, 0.05)),
-              Y.endingSequence.time > l.duration &&
-                P.endingOverlay.hidden &&
-                je());
-          })(n),
-          (function () {
-            if ("play" !== Y.mode || Y.dialogue || Y.ending)
-              return (
-                (Y.activeHotspot = null),
-                (Y.activeHotspotId = null),
-                P.focusPrompt.classList.remove("show"),
-                void Pe()
-              );
-            const e = Me(),
-              t = M.pickHotspot(e, Y.player, Y.activeHotspotId);
-            ((Y.activeHotspotId = t?.id ?? null),
-              (Y.activeHotspot = t ? e.find((e) => e.id === t.id) : null),
-              Y.activeHotspot
-                ? ((P.focusPrompt.textContent = `${Y.activeHotspot.prompt} · F / 點一下互動`),
-                  P.focusPrompt.classList.add("show"))
-                : P.focusPrompt.classList.remove("show"),
-              Pe());
-          })()),
-      Ne(n),
-      X.update(n),
-      (function () {
-        if ("intro" === Y.mode) return;
-        const e =
-            ("front_call" === Y.phase && Y.phaseClock < 7.6) ||
-            ("rear_wait" === Y.phase && Y.phaseClock < 11.6) ||
-            ("eye_contact" === Y.phase && Y.phaseClock < 5.6) ||
-            ("perfect" === Y.endingSequence?.type &&
-              Y.endingSequence.time < 16.4),
-          t =
-            ("rear_wait" === Y.phase &&
-              Y.phaseClock > 1 &&
-              Y.phaseClock < 9.6) ||
-            ("perfect" === Y.endingSequence?.type &&
-              Y.endingSequence.time > 0.6 &&
-              Y.endingSequence.time < 10.8);
-        (e &&
-          Y.time - Y.sound.seniorStepAt > 0.48 &&
-          ((Y.sound.seniorStepAt = Y.time), X.playCue("step")),
-          t &&
-            Y.time - Y.sound.juniorStepAt > 0.56 &&
-            ((Y.sound.juniorStepAt = Y.time), X.playCue("step")));
-      })(),
-      Ve(),
-      requestAnimationFrame(e));
+);
+P.introSkipBtn &&
+  ((P.introSkipBtn.hidden = "intro" !== Y.mode),
+  P.introSkipBtn.addEventListener("click", () => {
+    (X.unlock(), (P.introSkipBtn.hidden = !0), De());
   }));
+P.interactBtn.addEventListener("click", Ce);
+P.inspectBtn.addEventListener("click", () => {
+  Y.activeHotspot
+    ? ((function (e, t = 0.42) {
+        const n = $(Y.player, e),
+          o = O(Y.player, e);
+        ((Y.player.yaw = m(Y.player.yaw, n, t)),
+          (Y.player.pitch = m(Y.player.pitch, o, t)));
+      })(Y.activeHotspot, 0.56),
+      Ee(`視線帶向：${Y.activeHotspot.label}`))
+    : Ee("附近還沒有可看的目標。");
+});
+P.centerBtn.addEventListener("click", Ie);
+P.replayBtn.addEventListener("click", () => Te(!0));
+P.dialogueClose.addEventListener("click", Le);
+P.dialogueScrim.addEventListener("click", Le);
+P.endingRetry.addEventListener("click", Ae);
+P.endingPerfectBtn.addEventListener("click", qe);
+Ke(P.moveStick, (e, t) => {
+  ((Y.input.moveX = e), (Y.input.moveY = -t));
+});
+Ke(P.lookStick, (e, t) => {
+  ((Y.input.lookX = e), (Y.input.lookY = t));
+});
+document.addEventListener("click", (e) => {
+  P.speedWidget.contains(e.target) || ae(!1);
+});
+oe();
+Ue();
+window.addEventListener("resize", Ue);
+window.visualViewport?.addEventListener("resize", Ue);
+"intro" === Y.mode
+  ? (te(r[0].kicker, r[0].text, 0.2), ne(r[0].ambience))
+  : ((Y.cameraMode = "play"),
+    te(
+      "女兒",
+      "現在時空手錶顯示10:40，現在阿姨在教室裡面，怎麼我會這麼緊張^_^",
+      5,
+    ),
+    ne("粉筆味像一層薄雲，樓梯口那邊有風，十一點的光才剛準備進來。"));
+ge();
+ee();
+ke();
+ye();
+Pe();
+X.tryPlay("startup");
+function stepLm402Frame(e, t = performance.now()) {
+  const n = Math.min(Math.max(e || 0, 0), 0.033);
+  ((Y.time += n),
+    (P.rotateLock.hidden = !q()),
+    P.body.classList.toggle("landscape-prompt", q()),
+    "intro" === Y.mode
+      ? (function (e, t) {
+          Y.intro.startedAt || (Y.intro.startedAt = t);
+          const n = Math.max(e || 0, 1 / 60);
+          ((Y.intro.time = Math.min(l.introDuration, Y.intro.time + n)),
+            (Y.intro.progress = p(Y.intro.time / l.introDuration, 0, 1)));
+          const o = r.findIndex(
+              (e) => Y.intro.time >= e.start && Y.intro.time < e.end,
+            ),
+            i = -1 === o ? r.length - 1 : o;
+          (i !== Y.introBeatIndex &&
+            ((Y.introBeatIndex = i),
+            (Y.introCameraTrack = r[i].id),
+            te(r[i].kicker, r[i].text, 0.2),
+            ne(r[i].ambience)),
+            Y.intro.progress >= 1 && De());
+        })(n, t)
+      : (Y.subtitle.ttl > 0 &&
+          (Y.subtitle.ttl = Math.max(0, Y.subtitle.ttl - n)),
+        (function (e) {
+          if ("play" !== Y.mode || Y.dialogue || Y.endingSequence || q()) {
+            const t = 1 - Math.min(1, 6.4 * e);
+            return (
+              (Y.player.velocity.x *= t),
+              (Y.player.velocity.z *= t),
+              Math.abs(Y.player.velocity.x) < 1e-4 && (Y.player.velocity.x = 0),
+              Math.abs(Y.player.velocity.z) < 1e-4 && (Y.player.velocity.z = 0),
+              (Y.subtitleMode =
+                Y.subtitle.ttl > 0.12 ? "full" : q() ? "hidden" : "compact"),
+              void ge()
+            );
+          }
+          const t =
+              (Y.keyboard.KeyD || Y.keyboard.ArrowRight ? 1 : 0) -
+              (Y.keyboard.KeyA || Y.keyboard.ArrowLeft ? 1 : 0),
+            n =
+              (Y.keyboard.KeyW || Y.keyboard.ArrowUp ? 1 : 0) -
+              (Y.keyboard.KeyS || Y.keyboard.ArrowDown ? 1 : 0),
+            o = (Y.keyboard.KeyE ? 1 : 0) - (Y.keyboard.KeyQ ? 1 : 0),
+            i = (Y.keyboard.PageUp ? 1 : 0) - (Y.keyboard.PageDown ? 1 : 0),
+            a = p(Y.input.moveX + t, -1, 1),
+            r = p(Y.input.moveY + n, -1, 1),
+            c = p(Y.input.lookX + 0.85 * o, -1, 1),
+            l = p(Y.input.lookY + 0.85 * i, -1, 1);
+          ((Y.player.lookInput.x = c), (Y.player.lookInput.y = l));
+          const s = (_() ? 1.68 : 1.9) * re();
+          (Math.exp(-14 * e),
+            (Y.player.yaw -= c * e * s),
+            (Y.player.pitch = p(Y.player.pitch - l * e * 1.34 * re(), v, x)));
+          const d = -Math.sin(Y.player.yaw),
+            u = -Math.cos(Y.player.yaw),
+            y = Math.cos(Y.player.yaw),
+            h = -Math.sin(Y.player.yaw),
+            k = "eye_contact" === Y.phase ? g(168) : g(264),
+            b = (d * r + y * a) * k,
+            E = (u * r + h * a) * k,
+            L = Math.min(1, Math.hypot(a, r)) > 0.05,
+            S = L ? 1 - Math.exp(-5.8 * e) : 0,
+            w = L ? 0 : 1 - Math.exp(-4.2 * e),
+            B = L ? S : w;
+          if (L)
+            ((Y.player.velocity.x = m(Y.player.velocity.x, b, B)),
+              (Y.player.velocity.z = m(Y.player.velocity.z, E, B)));
+          else {
+            const t = 1 - Math.min(1, 4.2 * e);
+            ((Y.player.velocity.x *= t),
+              (Y.player.velocity.z *= t),
+              Math.abs(Y.player.velocity.x) < 2e-4 && (Y.player.velocity.x = 0),
+              Math.abs(Y.player.velocity.z) < 2e-4 &&
+                (Y.player.velocity.z = 0));
+          }
+          const z = {
+              x: Y.player.x + Y.player.velocity.x * e,
+              z: Y.player.z + Y.player.velocity.z * e,
+            },
+            P = M.resolveMotion({ x: Y.player.x, z: Y.player.z }, z, f);
+          (P.collided &&
+            ((Y.player.velocity.x *= 0.3), (Y.player.velocity.z *= 0.3)),
+            (Y.player.x = P.x),
+            (Y.player.z = P.z),
+            (Y.boundaryCollisionState = P.collided ? P.label : null));
+          if (M.getStairY) {
+            Y.player.stairY = M.getStairY(Y.player.x, Y.player.z);
+          }
+          const _sFL = g(196),
+            _sFE = g(72),
+            _sBL = g(3196),
+            _sBE = g(3328),
+            Q_ = g(-860) + 0.3,
+            ee_ = g(-210) - 0.3;
+          if (
+            Y.player.z <= _sFE + 0.35 &&
+            Y.player.x > Q_ &&
+            Y.player.x < ee_
+          ) {
+            Y.player.z = _sFL;
+            Y.player.stairY = 0;
+            _stairLoop();
+          } else if (
+            Y.player.z >= _sBE - 0.35 &&
+            Y.player.x > Q_ &&
+            Y.player.x < ee_
+          ) {
+            Y.player.z = _sBL;
+            Y.player.stairY = 0;
+            _stairLoop();
+          }
+          const C = Math.hypot(Y.player.velocity.x, Y.player.velocity.z),
+            I = C > g(26);
+          (Math.abs(c) > 0.18 ||
+            Math.abs(l) > 0.18 ||
+            Boolean(Y.dragLook) ||
+            document.pointerLockElement,
+            Y.subtitle.ttl > 0.12
+              ? (Y.subtitleMode = "full")
+              : j()
+                ? (Y.subtitleMode = "hidden")
+                : (Y.subtitleMode = "compact"),
+            ge());
+          const T = I ? Math.max(0.28, 0.52 - 0.6 * C) : 0.42;
+          I &&
+            Y.time - Y.sound.playerStepAt > T &&
+            ((Y.sound.playerStepAt = Y.time), X.playCue("step"));
+        })(n),
+        $e(),
+        Y.ending || Oe(n),
+        (function (e) {
+          if (!Y.endingSequence) return;
+          if (!Number.isFinite(syncEndingSequenceClock())) return void je();
+          if ("perfect" === Y.ending)
+            return (
+              !Y.flags.perfectLine1Played &&
+                Y.endingSequence.time >= (l.perfectLine1At ?? 1) &&
+                ((Y.flags.perfectLine1Played = !0),
+                te("學長", "也太像徐若瑄了吧！", 5)),
+              !Y.flags.perfectLine2Played &&
+                Y.endingSequence.time >= (l.perfectLine2At ?? 6) &&
+                ((Y.flags.perfectLine2Played = !0),
+                te("把拔（心底的聲音）", "這一次，依然再次遇見妳。", 5)),
+              void (
+                Y.endingSequence.time >
+                  (l.perfectOverlayAt ?? l.perfectDuration) &&
+                P.endingOverlay.hidden &&
+                je()
+              )
+            );
+          const t =
+            "missed" === Y.ending
+              ? { x: g(-368), y: 1.34, z: g(756), pitch: -0.04 }
+              : { x: S.eyeLook.x, y: 1.38, z: S.eyeLook.z, pitch: -0.06 };
+          ((Y.player.yaw = m(Y.player.yaw, $(Y.player, t), 0.04)),
+            (Y.player.pitch = m(Y.player.pitch, t.pitch, 0.05)),
+            Y.endingSequence.time > l.duration &&
+              P.endingOverlay.hidden &&
+              je());
+        })(n),
+        (function () {
+          if ("play" !== Y.mode || Y.dialogue || Y.ending)
+            return (
+              (Y.activeHotspot = null),
+              (Y.activeHotspotId = null),
+              P.focusPrompt.classList.remove("show"),
+              void Pe()
+            );
+          const e = Me(),
+            t = M.pickHotspot(e, Y.player, Y.activeHotspotId);
+          ((Y.activeHotspotId = t?.id ?? null),
+            (Y.activeHotspot = t ? e.find((e) => e.id === t.id) : null),
+            Y.activeHotspot
+              ? ((P.focusPrompt.textContent = `${Y.activeHotspot.prompt} · F / 點一下互動`),
+                P.focusPrompt.classList.add("show"))
+              : P.focusPrompt.classList.remove("show"),
+            Pe());
+        })()),
+    Ne(n),
+    X.update(n),
+    (function () {
+      if ("intro" === Y.mode) return;
+      const e =
+          ("front_call" === Y.phase && Y.phaseClock < 7.6) ||
+          ("rear_wait" === Y.phase && Y.phaseClock < 11.6) ||
+          ("eye_contact" === Y.phase && Y.phaseClock < 5.6) ||
+          ("perfect" === Y.endingSequence?.type &&
+            Y.endingSequence.time < 16.4),
+        t =
+          ("rear_wait" === Y.phase && Y.phaseClock > 1 && Y.phaseClock < 9.6) ||
+          ("perfect" === Y.endingSequence?.type &&
+            Y.endingSequence.time > 0.6 &&
+            Y.endingSequence.time < 10.8);
+      (e &&
+        Y.time - Y.sound.seniorStepAt > 0.48 &&
+        ((Y.sound.seniorStepAt = Y.time), X.playCue("step")),
+        t &&
+          Y.time - Y.sound.juniorStepAt > 0.56 &&
+          ((Y.sound.juniorStepAt = Y.time), X.playCue("step")));
+    })(),
+    Ve());
+}
+let animationLoopLast = 0;
+function animationLoop(e) {
+  animationLoopLast || (animationLoopLast = e);
+  const t = Math.min((e - animationLoopLast) / 1e3, 0.033);
+  ((animationLoopLast = e),
+    stepLm402Frame(t, e),
+    requestAnimationFrame(animationLoop));
+}
+window.advanceTime = (e = 1e3 / 60) => {
+  const t = 1e3 / 60,
+    n = Math.max(1, Math.round((Number(e) || t) / t));
+  let o = animationLoopLast || performance.now();
+  for (let e = 0; e < n; e += 1) ((o += t), stepLm402Frame(t / 1e3, o));
+  return (
+    (animationLoopLast = o),
+    window.__LM402_DEBUG__?.snapshot?.() ?? null
+  );
+};
+requestAnimationFrame(animationLoop);
 try {
   window._dbg = {
     get p() {

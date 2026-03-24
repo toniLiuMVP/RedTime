@@ -1508,8 +1508,17 @@ function buildCurvedPortraitPlane(t, o = {}) {
     r.setZ(e, -(l * o * o));
   }
   ((r.needsUpdate = !0), s.computeVertexNormals());
+  const c0 = t.clone();
+  ((c0.needsUpdate = !0),
+    o.mapRepeat &&
+      c0.repeat.set(o.mapRepeat.x ?? c0.repeat.x, o.mapRepeat.y ?? c0.repeat.y),
+    o.mapOffset &&
+      c0.offset.set(
+        o.mapOffset.x ?? c0.offset.x,
+        o.mapOffset.y ?? c0.offset.y,
+      ));
   const c = new e.MeshStandardMaterial({
-      map: t,
+      map: c0,
       transparent: !0,
       alphaTest: o.alphaTest ?? 0.18,
       side: e.DoubleSide,
@@ -2081,90 +2090,66 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       a = t.z2 - t.z1,
       n = new e.Mesh(new e.BoxGeometry(oe - 0.28, 0.06, a), mt);
     (n.position.set(ae, -0.03, o), (n.receiveShadow = !0), j.add(n));
-    const s = 0.86 * oe,
-      r = 0.14,
-      i = (a - 0.24) / 9;
-    for (let o = 0; o < 9; o += 1) {
-      const a =
-          t.direction > 0
-            ? e.MathUtils.lerp(t.z1 + 0.12, t.z2 - 0.24, o / 9)
-            : e.MathUtils.lerp(t.z2 - 0.12, t.z1 + 0.24, o / 9),
-        n = -0.07 - o * r,
-        l = new e.Mesh(new e.BoxGeometry(s, 0.04, i + 0.02), dt);
-      (l.position.set(ae, n, a + t.direction * i * 0.5),
-        (l.receiveShadow = !0),
-        (l.castShadow = !1),
-        j.add(l));
-      const c = new e.Mesh(new e.BoxGeometry(s, r, 0.02), mt);
-      (c.position.set(ae, n - 0.07, a + 0.01 * t.direction), j.add(c));
-    }
-    const l = 0.9,
-      c = new e.Mesh(new e.BoxGeometry(0.06, 0.06, a - 0.18), pt);
-    (c.position.set(Q + 0.9, 0.9 - 9 * r * 0.5, o), j.add(c));
-    const h = new e.Mesh(new e.BoxGeometry(0.04, 0.04, a - 0.18), wt);
-    (h.position.set(Q + 0.9, 0.27 - 9 * r * 0.5, o), j.add(h));
-    const d = Math.floor((a - 0.3) / 0.22);
-    for (let o = 0; o <= d; o++) {
-      const n = t.z1 + 0.15 + (o / d) * (a - 0.3),
-        s = 0.81,
-        i = new e.Mesh(new e.BoxGeometry(0.03, s, 0.03), wt);
-      (i.position.set(Q + 0.9, 0 - 9 * r * 0.5 + s / 2, n), j.add(i));
-    }
-    const p = new e.BoxGeometry(0.08, l + 0.04, 0.08),
-      m = new e.Mesh(p, pt);
-    (m.position.set(Q + 0.9, 0 + (l + 0.04) / 2, t.z1 + 0.08), j.add(m));
-    const w = new e.Mesh(p, pt);
-    (w.position.set(Q + 0.9, 0 + (l + 0.04) / 2, t.z2 - 0.08), j.add(w));
-    const M = new e.Mesh(new e.BoxGeometry(0.04, 0.04, a - 0.22), pt);
-    (M.position.set(N + 0.06, 0.88, o), j.add(M));
-    const f = new e.Mesh(new e.BoxGeometry(0.22, ie, a), Ye);
-    (f.position.set(ee, 1.46, o),
-      (f.castShadow = !0),
-      (f.receiveShadow = !0),
-      j.add(f),
-      I(Z, ee - 0.11, ee + 0.11, t.z1, t.z2, `${t.id}_wall`),
-      0) /*guard removed for stair access*/;
-    for (let n = 1; n <= 3; n++) {
-      const l = 0 - n * (9 * r + 0.06),
-        c = new e.Mesh(new e.BoxGeometry(oe - 0.28, 0.06, 0.4 * a), mt);
-      (c.position.set(ae, l, o), (c.receiveShadow = !0), j.add(c));
-      for (let o = 0; o < 9; o++) {
-        const a =
-            t.direction > 0
-              ? e.MathUtils.lerp(t.z1 + 0.12, t.z2 - 0.24, o / 9)
-              : e.MathUtils.lerp(t.z2 - 0.12, t.z1 + 0.24, o / 9),
-          n = l - 0.07 - o * r,
-          c = new e.Mesh(new e.BoxGeometry(s, 0.04, i + 0.02), dt);
-        (c.position.set(ae, n, a + t.direction * i * 0.5),
-          (c.receiveShadow = !0),
-          j.add(c));
-        const h = new e.Mesh(new e.BoxGeometry(s, r, 0.02), mt);
-        (h.position.set(ae, n - 0.07, a + 0.01 * t.direction), j.add(h));
+    const s = ee - 1.08,
+      r = Q + 0.92,
+      i = s - r,
+      l = 10,
+      c = 0.14,
+      h = i / l,
+      d = 0.12,
+      p = Math.min(0.28, 0.18 * a),
+      m = Math.max(0.44, (a - p - 3 * d) / 2),
+      w = o - (p / 2 + d + m / 2),
+      M = o + (p / 2 + d + m / 2),
+      f = Math.max(0.78, Math.min(1.08, 0.26 * i)),
+      u = s - f / 2 + 0.08,
+      y = (s + r) / 2 - 0.12,
+      g = new e.Mesh(new e.BoxGeometry(f, 0.08, p), mt);
+    (g.position.set(u, 0, o), (g.receiveShadow = !0), j.add(g));
+    const x = new e.Mesh(new e.BoxGeometry(0.22, ie, a), Ye);
+    (x.position.set(ee, 1.46, o),
+      (x.castShadow = !0),
+      (x.receiveShadow = !0),
+      j.add(x),
+      I(Z, ee - 0.11, ee + 0.11, t.z1, t.z2, `${t.id}_wall`));
+    const b = (o, a, n) => {
+      for (let g = 0; g < l; g += 1) {
+        const x = (g + 0.5) / l,
+          b = s - x * i,
+          S = n * (g + 0.5) * c,
+          z = new e.Mesh(new e.BoxGeometry(h + 0.04, 0.06, o), dt);
+        (z.position.set(b, S, a), (z.receiveShadow = !0), j.add(z));
+        const P = new e.Mesh(new e.BoxGeometry(h + 0.02, c, o - 0.06), mt);
+        (P.position.set(b + 0.02, n * (g + 0.5) * c - 0.07 * n, a), j.add(P));
       }
-      const h = new e.Mesh(new e.BoxGeometry(0.22, 9 * r + 0.1, a), Ye);
-      (h.position.set(ee, l - (9 * r) / 2, o), j.add(h));
-    }
-    for (let o = 0; o < 9; o++) {
-      const a =
-          t.direction > 0
-            ? e.MathUtils.lerp(t.z2 - 0.24, t.z1 + 0.12, o / 9)
-            : e.MathUtils.lerp(t.z1 + 0.24, t.z2 - 0.12, o / 9),
-        n = 0.13 + o * r,
-        l = new e.Mesh(new e.BoxGeometry(s, 0.04, i + 0.02), dt);
-      (l.position.set(ae, n, a - t.direction * i * 0.5),
-        (l.receiveShadow = !0),
-        j.add(l));
-      const c = new e.Mesh(new e.BoxGeometry(s, r, 0.02), mt);
-      (c.position.set(ae, n - 0.07, a - 0.01 * t.direction), j.add(c));
-    }
+      const g = new e.Mesh(new e.BoxGeometry(0.92, 0.08, o + 0.04), mt);
+      (g.position.set(r + 0.38, n * (l * c + 0.02), a),
+        (g.receiveShadow = !0),
+        j.add(g));
+      const x = new e.Mesh(new e.BoxGeometry(i + 0.32, 0.04, 0.04), wt);
+      x.position.set(y, 0.9, a - o / 2 - 0.06);
+      const b = x.clone();
+      b.position.z = a + o / 2 + 0.06;
+      j.add(x, b);
+      const S = Math.max(3, Math.floor(i / 0.42));
+      for (let o = 0; o <= S; o += 1) {
+        const l = r + 0.16 + (o / S) * (i - 0.16),
+          d = new e.Mesh(new e.BoxGeometry(0.03, 0.86, 0.03), wt),
+          p0 = d.clone();
+        (d.position.set(l, 0.43, a - m / 2 - 0.06),
+          p0.position.set(l, 0.43, a + m / 2 + 0.06),
+          j.add(d, p0));
+      }
+    };
+    (b(m, w, 1), b(m, M, -1));
     [
-      { text: "3F", y: -0.7200000000000003 },
-      { text: "5F", y: 0 + 9 * r + 0.3 },
-    ].forEach((e) => {
-      const t = T(e.text, 0.5, 0.2, { bg: "#5c6672", fg: "#f7f0de" });
-      (t.position.set(ee - 0.01, e.y, o),
-        (t.rotation.y = Math.PI / 2),
-        j.add(t));
+      { text: "5F", y: l * c + 0.28, z: w },
+      { text: "3F", y: -(l * c + 0.22), z: M },
+    ].forEach((a) => {
+      const n = T(a.text, 0.5, 0.2, { bg: "#5c6672", fg: "#f7f0de" });
+      (n.position.set(r + 0.74, a.y, a.z),
+        (n.rotation.y = Math.PI / 2),
+        j.add(n));
     });
   });
   const Mt = ge,
@@ -3634,11 +3619,11 @@ export function createLm402Scene(D, runtimeOptions = {}) {
           const o = e.MathUtils.clamp(t.progress, 0, 1),
             a = 0.5 + 0.5 * Math.sin(o * Math.PI * 2.6 - 0.5 * Math.PI),
             s =
-              o < 0.28
-                ? o
-                : o < 0.32
-                  ? 0.28 + 0.3 * (o - 0.28)
-                  : 0.292 + 1.04 * (o - 0.32),
+              o < 0.18
+                ? 1.22 * o
+                : o < 0.46
+                  ? 0.2196 + 0.96 * (o - 0.18)
+                  : 0.4884 + 0.9 * (o - 0.46),
             r = e.MathUtils.clamp(s, 0, 1),
             i = e.MathUtils.smoothstep(
               e.MathUtils.clamp(r * (0.7 + 0.3 * a), 0, 1),
@@ -3648,14 +3633,27 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             w = Io.getPoint(i),
             M = Io.getPoint(e.MathUtils.clamp(i + 0.12, 0, 1)),
             f = Math.sin(o * Math.PI * 8.4) * Math.exp(1.6 * -o) * 5,
-            u = e.MathUtils.lerp(98, 42, e.MathUtils.smoothstep(o, 0.04, 0.88)),
+            u = e.MathUtils.lerp(
+              104,
+              42,
+              e.MathUtils.smoothstep(o, 0.02, 0.88),
+            ),
             y =
               o > 0.3 && o < 0.4
                 ? 12 * Math.sin(((o - 0.3) / 0.1) * Math.PI)
                 : 0;
           ((q.fov = u + f + y),
             q.updateProjectionMatrix(),
-            q.position.copy(w).add(n.set(0, 0.14 * Math.sin(o * Math.PI), 0)));
+            q.position
+              .copy(w)
+              .add(
+                n.set(
+                  0.28 * (1 - o) * Math.sin(0.8 + o * Math.PI * 2.8),
+                  0.22 * Math.sin(o * Math.PI * 1.16) +
+                    0.08 * Math.sin(o * Math.PI * 5.2) * (1 - 0.45 * o),
+                  -0.64 * (1 - o) * (0.3 + 0.7 * o),
+                ),
+              ));
           const g = new e.Vector3(
               0.22 * vo.senior.x +
                 0.38 * vo.doorPlaque.x +
@@ -3675,12 +3673,12 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             );
           q.lookAt(b);
           const S =
-              Math.sin(o * Math.PI * 2.4) * e.MathUtils.lerp(0.35, 0.002, o),
+              Math.sin(o * Math.PI * 2.7) * e.MathUtils.lerp(0.46, 0.004, o),
             z =
-              Math.sin(o * Math.PI * 14) * e.MathUtils.lerp(0.012, 0, o) * 0.3,
+              Math.sin(o * Math.PI * 16) * e.MathUtils.lerp(0.02, 0, o) * 0.34,
             P =
-              o > 0.3 && o < 0.36
-                ? 0.006 * Math.sin(140 * (o - 0.3)) * (1 - (o - 0.3) / 0.06)
+              o > 0.24 && o < 0.34
+                ? 0.009 * Math.sin(148 * (o - 0.24)) * (1 - (o - 0.24) / 0.1)
                 : 0;
           (q.rotateZ(S + z + P), (H.visible = !0));
           const v = 0.5 + 0.5 * Math.sin(o * Math.PI * 6.2),
