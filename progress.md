@@ -33,7 +33,19 @@ Updates:
 - Changed LM402 intro timing to progress from frame time instead of `performance.now()` catch-up. Fresh desktop snapshots now enter with `mode: intro`, `cameraAnchor: daughter_glow`, `renderErrorCount: 0`, and no startup render error.
 - Reworked the two stair zones in `assets/lm402/renderer.js` so each stairwell now reads as a 90-degree turned landing with split up/down flights instead of a staircase visually running into the wall. Probe captures live in `output/playwright/front-stair-*.png` and `output/playwright/back-stair-*.png`.
 - Centered the reader hero stat cells (`41 集 / 3 線 / 20 年 / 5 彩蛋`) by making `.hero-stat` a flex-centered column container; confirmed in `output/playwright/reader-hero-check.png`.
+- Centered the homepage hero stat cells (`41 章節 / 3 時間線 / 1 一眼瞬間`) in `index.html` and updated the non-reader landing copy to the exact line `這一次，依然遇見妳。`
+- Removed the LM402 stair teleport loop from `assets/lm402/app.js`; stair motion now comes from `renderer.getStairY()` instead of silently warping the player between front/back stair endpoints.
+- Added more 2005 junior close-up references to the asset manifest (`frontClose`, `leftFrontClose`, `rightFrontClose`, `sideClose`, `backClose`) and rebuilt the LM402 portrait shell as a multi-view, camera-facing hero layer in `assets/lm402/renderer.js`.
+- Hid the procedural head meshes during hero close-ups so the new portrait shell no longer fights with the old 3D head blob in `eyes` / `senior_pov` shots.
+- Perfect ending now guarantees the exact two key lines outside the reader text as well:
+  - `也太像徐若瑄了吧！`
+  - `這一次，依然遇見妳。`
+- Validation artifacts added:
+  - `output/playwright/index-top-latest.png` for the homepage stat centering check.
+  - `output/playwright/lm402-perfect-eyes-latest.png` and `output/playwright/lm402-perfect-senior-pov-latest.png` for updated junior hero shots.
+  - `output/playwright/lm402-endings-smoke-latest.json` confirms `perfect/canon/memory/missed` all open overlays with `renderErrorCount: 0`, and the perfect ending captures both mandatory subtitles.
+  - `output/playwright/lm402-stair-grid-check.json` confirms the front stair now produces different camera heights across the upper flight, landing, and lower flight instead of teleporting.
 
 TODO:
-- Keep pushing the junior from "reference-shell + strong lighting" toward a more convincing hero asset. Current result is improved, but still not a bespoke full 3D human model.
+- Keep pushing the junior from "multi-view portrait shell + procedural body" toward a more convincing hero asset. Current result is improved, but still not a bespoke full 3D hand-built human model.
 - Replace the temporary `window.advanceTime` stepping with a fully verified deterministic test harness once the intro/ending flows stop changing so quickly.

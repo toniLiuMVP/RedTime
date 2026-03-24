@@ -1509,6 +1509,7 @@ function buildCurvedPortraitPlane(t, o = {}) {
   }
   ((r.needsUpdate = !0), s.computeVertexNormals());
   const c0 = t.clone();
+  const h0 = o.featherMask ? buildPortraitFeatherMap(o.featherMask) : null;
   ((c0.needsUpdate = !0),
     o.mapRepeat &&
       c0.repeat.set(o.mapRepeat.x ?? c0.repeat.x, o.mapRepeat.y ?? c0.repeat.y),
@@ -1519,8 +1520,9 @@ function buildCurvedPortraitPlane(t, o = {}) {
       ));
   const c = new e.MeshStandardMaterial({
       map: c0,
+      alphaMap: h0,
       transparent: !0,
-      alphaTest: o.alphaTest ?? 0.18,
+      alphaTest: h0 ? 0.02 : (o.alphaTest ?? 0.18),
       side: e.DoubleSide,
       depthWrite: !1,
       roughness: o.roughness ?? 0.72,
@@ -1535,6 +1537,189 @@ function buildCurvedPortraitPlane(t, o = {}) {
     o.scale && h.scale.copy(o.scale),
     h
   );
+}
+function buildPortraitFeatherMap(t = {}) {
+  const o = document.createElement("canvas");
+  ((o.width = 512), (o.height = 512));
+  const a = o.getContext("2d"),
+    n = 512 * (t.centerX ?? 0.5),
+    s = 512 * (t.centerY ?? 0.54),
+    r = 512 * (t.radiusX ?? 0.3),
+    i = 512 * (t.radiusY ?? 0.42),
+    l = 512 * (t.inner ?? 0.12),
+    c = 512 * (t.outer ?? 0.34);
+  (a.clearRect(0, 0, 512, 512),
+    a.save(),
+    a.translate(n, s),
+    a.scale(1, i / Math.max(1, r)));
+  const h = a.createRadialGradient(0, 0, l, 0, 0, c);
+  return (
+    (h.addColorStop(0, "rgba(255,255,255,1)"),
+    h.addColorStop(0.68, "rgba(255,255,255,1)"),
+    h.addColorStop(1, "rgba(0,0,0,0)"),
+    (a.fillStyle = h),
+    a.beginPath(),
+    a.arc(0, 0, c, 0, 2 * Math.PI),
+    a.fill(),
+    a.restore()),
+    new e.CanvasTexture(o)
+  );
+}
+const juniorPortraitCameraWorld = new e.Vector3(),
+  juniorPortraitCameraLocal = new e.Vector3();
+function angularDistance(t, o) {
+  return Math.abs(Math.atan2(Math.sin(t - o), Math.cos(t - o)));
+}
+function buildJuniorPortraitShell(t, o = {}) {
+  const a = new e.Group(),
+    n = [
+      {
+        texture: t.frontClose ?? t.front ?? null,
+        center: 0,
+        blendWidth: 0.92,
+        width: 0.88,
+        height: 1.08,
+        position: new e.Vector3(0.015, 1.57, 0.19),
+        opacity: 1,
+        emissiveIntensity: 0.06,
+      },
+      {
+        texture: t.leftFrontClose ?? t.frontClose ?? t.front ?? null,
+        center: 0.62,
+        blendWidth: 0.76,
+        width: 0.86,
+        height: 1.06,
+        position: new e.Vector3(0.02, 1.57, 0.17),
+        opacity: 0.96,
+        emissiveIntensity: 0.052,
+      },
+      {
+        texture:
+          t.rightFrontClose ??
+          t.leftFrontClose ??
+          t.frontClose ??
+          t.front ??
+          null,
+        center: -0.62,
+        blendWidth: 0.76,
+        width: 0.86,
+        height: 1.06,
+        position: new e.Vector3(0.02, 1.57, 0.17),
+        opacity: 0.96,
+        emissiveIntensity: 0.052,
+        mirror: !t.rightFrontClose && Boolean(t.leftFrontClose),
+      },
+      {
+        texture: t.sideClose ?? t.side ?? null,
+        center: 1.16,
+        blendWidth: 0.58,
+        width: 0.8,
+        height: 1.04,
+        position: new e.Vector3(0.02, 1.56, 0.1),
+        opacity: 0.8,
+        emissiveIntensity: 0.04,
+      },
+      {
+        texture: t.sideClose ?? t.side ?? null,
+        center: -1.16,
+        blendWidth: 0.58,
+        width: 0.8,
+        height: 1.04,
+        position: new e.Vector3(0.02, 1.56, 0.1),
+        opacity: 0.8,
+        emissiveIntensity: 0.04,
+        mirror: !0,
+      },
+      {
+        texture: t.backClose ?? null,
+        center: Math.PI,
+        blendWidth: 0.7,
+        width: 0.84,
+        height: 1.08,
+        position: new e.Vector3(0.01, 1.58, -0.02),
+        opacity: 0.86,
+        emissiveIntensity: 0.03,
+      },
+    ],
+    s = [];
+  n.forEach((n) => {
+    if (!n.texture) return;
+    const r = buildCurvedPortraitPlane(n.texture, {
+      width: n.width,
+      height: n.height,
+      curveDepth: 0.06,
+      alphaTest: 0.16,
+      featherMask: { centerX: 0.5, centerY: 0.54, inner: 0.12, outer: 0.34 },
+      roughness: 0.84,
+      emissive: "#fff4eb",
+      emissiveIntensity: n.emissiveIntensity,
+      position: n.position.clone(),
+      scale: new e.Vector3(
+        (n.mirror ? -1 : 1) * (o.scaleX ?? 1),
+        o.scaleY ?? 1,
+        1,
+      ),
+    });
+    ((r.renderOrder = 14),
+      (r.userData.viewCenter = n.center),
+      (r.userData.blendWidth = n.blendWidth),
+      (r.userData.baseOpacity = n.opacity),
+      s.push(r),
+      a.add(r));
+  });
+  const r = b("rgba(255,244,218,1)", 1.04, 1.18, 0.12);
+  return (
+    (r.position.set(0.02, 1.58, 0.1), (r.renderOrder = 13)),
+    a.add(r),
+    (a.userData.planes = s),
+    (a.userData.glow = r),
+    a
+  );
+}
+function updateJuniorPortraitShell(t, o, a, n = 1) {
+  const s = o?.userData?.planes;
+  if (!s?.length) return;
+  (a.getWorldPosition(juniorPortraitCameraWorld),
+    juniorPortraitCameraLocal.copy(juniorPortraitCameraWorld),
+    t.worldToLocal(juniorPortraitCameraLocal));
+  const r = Math.atan2(
+    juniorPortraitCameraLocal.x,
+    Math.abs(juniorPortraitCameraLocal.z) < 0.001
+      ? 0.001
+      : juniorPortraitCameraLocal.z,
+  );
+  let i = 0;
+  s.forEach((t) => {
+    const o = Math.max(
+      0,
+      1 -
+        angularDistance(r, t.userData.viewCenter ?? 0) /
+          (t.userData.blendWidth ?? 0.7),
+    );
+    ((t.userData.viewWeight = o * o * (3 - 2 * o)),
+      (i = Math.max(i, t.userData.viewWeight)));
+    const a = juniorPortraitCameraLocal.x - t.position.x,
+      n = juniorPortraitCameraLocal.z - t.position.z,
+      s = juniorPortraitCameraLocal.y - t.position.y;
+    ((t.rotation.y = Math.atan2(a, Math.abs(n) < 0.001 ? 0.001 : n)),
+      (t.rotation.x = 0.14 * Math.atan2(s, Math.max(0.22, Math.hypot(a, n)))));
+  });
+  s.forEach((t) => {
+    if (!t.material) return;
+    const o = i > 0.001 ? (t.userData.viewWeight ?? 0) / i : 0,
+      a = Math.min(1, n * (t.userData.baseOpacity ?? 1) * o);
+    ((t.material.opacity = a), (t.visible = a > 0.02));
+  });
+  const l = o.userData.glow;
+  if (!l?.material) return;
+  const c = juniorPortraitCameraLocal.x - l.position.x,
+    h = juniorPortraitCameraLocal.z - l.position.z,
+    d = juniorPortraitCameraLocal.y - l.position.y,
+    p = 0.24 * n;
+  ((l.material.opacity = p),
+    (l.visible = p > 0.02),
+    (l.rotation.y = Math.atan2(c, Math.abs(h) < 0.001 ? 0.001 : h)),
+    (l.rotation.x = 0.08 * Math.atan2(d, Math.max(0.22, Math.hypot(c, h)))));
 }
 function hasAncestor(e, t) {
   for (let o = e; o; o = o.parent) if (o === t) return !0;
@@ -1661,7 +1846,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
   const _ = new e.Raycaster(),
     A = [],
     Z = [],
-    L = new Map();
+    L = new Map(),
+    stairLayouts = [];
   let X = {
     camera: { x: 0, y: 0, z: 0, yaw: 0, pitch: 0 },
     viewport: { width: 0, height: 0 },
@@ -2105,6 +2291,19 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       u = s - f / 2 + 0.08,
       y = (s + r) / 2 - 0.12,
       g = new e.Mesh(new e.BoxGeometry(f, 0.08, p), mt);
+    stairLayouts.push({
+      id: t.id,
+      z1: t.z1,
+      z2: t.z2,
+      xInner: s + 0.06,
+      xEntry: s + 0.02,
+      xExit: r + 0.08,
+      xOuter: r - 0.08,
+      totalRise: l * c,
+      upperFlight: { z1: w - m / 2 - 0.08, z2: w + m / 2 + 0.04 },
+      landing: { z1: o - p / 2 - 0.08, z2: o + p / 2 + 0.08 },
+      lowerFlight: { z1: M - m / 2 - 0.04, z2: M + m / 2 + 0.08 },
+    });
     (g.position.set(u, 0, o), (g.receiveShadow = !0), j.add(g));
     const x = new e.Mesh(new e.BoxGeometry(0.22, ie, a), Ye);
     (x.position.set(ee, 1.46, o),
@@ -3148,55 +3347,35 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     (Co.userData.portraitShell = juniorPortraitShell));
   (function () {
     const t = runtimeState.characterAssets?.junior2005;
-    if (!t?.textures?.front) return;
+    if (!t?.textures?.front && !t?.textures?.frontClose) return;
     const o = new e.TextureLoader();
     assetState.status = "loading";
-    Promise.all([
-      loadLm402Texture(o, t.textures.front),
-      t.textures.side
-        ? loadLm402Texture(o, t.textures.side).catch(() => null)
-        : Promise.resolve(null),
-    ])
-      .then(([o, a]) => {
-        const n = buildCurvedPortraitPlane(o, {
-            width: 0.74,
-            height: 1.86,
-            curveDepth: 0.05,
-            alphaTest: 0.28,
-            roughness: 0.9,
-            emissiveIntensity: 0.03,
-            position: new e.Vector3(0.02, 1.11, 0.14),
-            scale: new e.Vector3(
-              renderTuning.portraitBoost,
-              renderTuning.portraitBoost,
-              1,
-            ),
-          }),
-          s = b("rgba(255,242,210,1)", 0.84, 1.68, 0.12);
-        ((n.userData.opacityMul = 1),
-          (s.userData.opacityMul = 0.26),
-          s.position.set(0.03, 1.16, 0.08),
-          juniorPortraitShell.add(s, n),
-          a &&
-            (() => {
-              const t = buildCurvedPortraitPlane(a, {
-                width: 0.88,
-                height: 1.76,
-                curveDepth: 0.04,
-                alphaTest: 0.32,
-                emissive: "#fff0df",
-                emissiveIntensity: 0.02,
-                position: new e.Vector3(-0.1, 1.08, 0.04),
-                rotation: { x: 0, y: 0.7, z: 0 },
-                scale: new e.Vector3(0.62, 0.62, 1),
-              });
-              ((t.userData.opacityMul = 0.42), juniorPortraitShell.add(t));
-            })(),
+    Promise.all(
+      Object.entries(t.textures ?? {})
+        .filter(([, e]) => Boolean(e))
+        .map(([t, a]) =>
+          loadLm402Texture(o, a)
+            .then((e) => [t, e])
+            .catch((o) => {
+              if ("front" === t || "frontClose" === t) throw o;
+              return [t, null];
+            }),
+        ),
+    )
+      .then((t) => {
+        const o = Object.fromEntries(t.filter(([, e]) => e)),
+          a = buildJuniorPortraitShell(o, {
+            scaleX: renderTuning.portraitBoost,
+            scaleY: renderTuning.portraitBoost,
+          });
+        (juniorPortraitShell.add(...a.children),
+          (juniorPortraitShell.userData.planes = a.userData.planes),
+          (juniorPortraitShell.userData.glow = a.userData.glow),
           (juniorPortraitShell.visible = !0),
           (juniorPortraitShell.userData.loaded = !0),
           (assetState.status = "ready"),
           (assetState.fallback = !1),
-          (assetState.loadedTextures = a ? ["front", "side"] : ["front"]));
+          (assetState.loadedTextures = Object.keys(o)));
       })
       .catch((e) => {
         ((assetState.status = "fallback"),
@@ -3418,21 +3597,18 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       c.rotation.z = t * 3 + i * 0.4;
     });
   }
-  function getStairY(e, a) {
-    if (e < Q + 0.28 || e > ee - 0.28) return 0;
-    const f = [
-      { z1: be, z2: Se, dir: 1 },
-      { z1: ze, z2: Pe, dir: -1 },
-    ];
-    for (const s of f) {
-      if (a >= s.z1 && a <= s.z2) {
-        const t = s.z2 - s.z1,
-          n = 9,
-          o = 0.14;
-        let r = s.dir === 1 ? (a - s.z1) / t : 1 - (a - s.z1) / t;
-        const i = Math.min(Math.floor(r * n), n - 1);
-        return -i * o;
-      }
+  function getStairY(t, o) {
+    for (const stair of stairLayouts) {
+      if (t < stair.xOuter || t > stair.xInner || o < stair.z1 || o > stair.z2)
+        continue;
+      if (o >= stair.landing.z1 && o <= stair.landing.z2) return 0;
+      const a = e.MathUtils.clamp(
+          (stair.xEntry - t) / Math.max(0.001, stair.xEntry - stair.xExit),
+          0,
+          1,
+        ),
+        n = e.MathUtils.smoothstep(a, 0, 1);
+      return o < stair.landing.z1 ? stair.totalRise * n : -stair.totalRise * n;
     }
     return 0;
   }
@@ -3493,8 +3669,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
                 s =
                   "perfect" === t.ending
                     ? e.MathUtils.lerp(
-                        0.52,
-                        0.92,
+                        0.6,
+                        0.98,
                         e.MathUtils.smoothstep(
                           t.endingSequence?.time ?? 0,
                           o.perfectTransitionEnd ?? 17.4,
@@ -3502,32 +3678,18 @@ export function createLm402Scene(D, runtimeOptions = {}) {
                         ),
                       )
                     : "eye_contact" === t.phase
-                      ? 0.58
+                      ? 0.68
                       : "rear_wait" === t.phase
-                        ? 0.34
+                        ? 0.18
                         : 0,
-                r = !(
+                r =
                   n &&
                   s > 0.02 &&
-                  ("eye_contact" === t.phase || "perfect" === t.ending)
-                ),
-                i =
-                  n && s > 0.02
-                    ? "perfect" === t.ending
-                      ? 0.02
-                      : "eye_contact" === t.phase
-                        ? 0.08
-                        : 0.64
-                    : 1;
-              ((a.visible = n && s > 0.02),
-                a.traverse((t) => {
-                  if (!t.material || !("opacity" in t.material)) return;
-                  const o =
-                      t.material.userData.baseOpacity ?? t.material.opacity,
-                    a = t.userData.opacityMul ?? 1;
-                  ((t.material.userData.baseOpacity = o),
-                    (t.material.opacity = o * s * a));
-                }),
+                  ("rear_wait" === t.phase ||
+                    "eye_contact" === t.phase ||
+                    "perfect" === t.ending);
+              ((a.visible = r),
+                r && updateJuniorPortraitShell(Co, a, q, s),
                 Co.traverse((t) => {
                   if (
                     !t.isMesh ||
@@ -3536,7 +3698,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
                     hasAncestor(t, a)
                   )
                     return;
-                  t.visible = r;
+                  const o = r && (t.position?.y ?? 0) > 1.34;
+                  t.visible = !o;
                   (Array.isArray(t.material)
                     ? t.material
                     : [t.material]
@@ -3544,8 +3707,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
                     if (!("opacity" in e)) return;
                     const t = e.userData.baseOpacity ?? e.opacity;
                     ((e.userData.baseOpacity = t),
-                      (e.transparent = i < 0.999 || e.transparent),
-                      (e.opacity = t * i));
+                      (e.transparent = o || e.transparent),
+                      (e.opacity = o ? 0 : t));
                   });
                 }));
             })(),

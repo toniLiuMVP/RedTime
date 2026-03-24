@@ -1,0 +1,62 @@
+[
+  {
+    "label": "upper_inner",
+    "x": -3.7,
+    "z": 1.8,
+    "playerX": -3.7,
+    "playerZ": 1.8,
+    "cameraY": 1.608,
+    "renderErrorCount": 0,
+    "subtitle": "坐好。保持微笑，看起來鎮定就好。"
+  },
+  {
+    "label": "upper_mid",
+    "x": -6.45,
+    "z": 1.8,
+    "playerX": -6.45,
+    "playerZ": 1.8,
+    "cameraY": 1.61,
+    "renderErrorCount": 0,
+    "subtitle": "坐好。保持微笑，看起來鎮定就好。"
+  },
+  {
+    "label": "upper_outer",
+    "x": -9.45,
+    "z": 1.8,
+    "playerX": -9.45,
+    "playerZ": 1.8,
+    "cameraY": 1.611,
+    "renderErrorCount": 0,
+    "subtitle": "坐好。保持微笑，看起來鎮定就好。"
+  },
+  {
+    "label": "landing",
+    "x": -6.45,
+    "z": 2.45,
+    "playerX": -6.45,
+    "playerZ": 2.45,
+    "cameraY": 1.005,
+    "renderErrorCount": 0,
+    "subtitle": "坐好。保持微笑，看起來鎮定就好。"
+  },
+  {
+    "label": "lower_mid",
+    "x": -6.45,
+    "z": 2.95,
+    "playerX": -6.45,
+    "playerZ": 2.95,
+    "cameraY": 1.006,
+    "renderErrorCount": 0,
+    "subtitle": "坐好。保持微笑，看起來鎮定就好。"
+  },
+  {
+    "label": "lower_outer",
+    "x": -9.45,
+    "z": 2.95,
+    "playerX": -9.45,
+    "playerZ": 2.95,
+    "cameraY": 0.225,
+    "renderErrorCount": 0,
+    "subtitle": "坐好。保持微笑，看起來鎮定就好。"
+  }
+]
