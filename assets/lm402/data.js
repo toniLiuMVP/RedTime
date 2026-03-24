@@ -615,6 +615,26 @@ export const CHARACTER_ASSET_MANIFEST = {
         "../../2005年學妹定稿/2005年學妹左側長袖襯衫定稿.png",
         import.meta.url,
       ).href,
+      frontClose: new URL(
+        "../../2005年學妹定稿/2005年學妹正面長袖襯衫定稿特寫.png",
+        import.meta.url,
+      ).href,
+      leftFrontClose: new URL(
+        "../../2005年學妹定稿/2005年學妹左前長袖襯衫定稿特寫.png",
+        import.meta.url,
+      ).href,
+      rightFrontClose: new URL(
+        "../../2005年學妹定稿/2005年學妹右前長袖襯衫定稿特寫.png",
+        import.meta.url,
+      ).href,
+      sideClose: new URL(
+        "../../2005年學妹定稿/2005年學妹左側長袖襯衫定稿特寫.png",
+        import.meta.url,
+      ).href,
+      backClose: new URL(
+        "../../2005年學妹定稿/2005年學妹背面長袖襯衫定稿特寫.png",
+        import.meta.url,
+      ).href,
     },
     notes: [
       "白襯衫、牛仔短褲、中高馬尾、整體比例偏纖細。",
@@ -679,7 +699,7 @@ export const ENDINGS = {
   perfect: {
     kicker: "完美結局",
     title: "女兒飛到一眼瞬間那一秒",
-    copy: "學妹走到教室內的後門站定，學長停在走廊後門前，兩人隔著那道門洞面對面。一道光落在學妹身上。女兒喃喃自語：「原來在當初把拔第一次見到阿姨的時候，阿姨的眼睛裡面，同時有兩個十八歲的阿姨。」陽光整片灑在學妹身上，鏡頭先用韓劇慢動作完整環繞她一圈，最後切成學長視角，慢慢看著她靠近，只剩眼睛和呼吸被留下來。",
+    copy: "學妹走到教室內的後門站定，學長停在走廊後門前，兩人隔著那道門洞面對面。一道光落在學妹身上，學長心裡先被那句「也太像徐若瑄了吧！」狠狠撞了一下；等鏡頭慢慢收進眼睛與呼吸，剩下的就只是一句更深的確認：「這一次，依然遇見妳。」",
   },
   canon: {
     kicker: "正史結局",
@@ -740,7 +760,7 @@ export const AUTHOR_REVIEW_DIALOGUE_DRAFTS = [
     status: "needs_author_review",
     lines: [
       "我明明只抬頭看了一眼，心裡卻像已經把她記了很久。",
-      "也太像徐若瑄了吧。",
+      "也太像徐若瑄了吧！",
     ],
   },
   {

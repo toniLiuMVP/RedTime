@@ -2,7 +2,7 @@
   "mode": "play",
   "phase": "eye_contact",
   "phaseClock": 0,
-  "clockTime": 0.32,
+  "clockTime": 0.248,
   "cameraMode": "ending",
   "cameraAnchor": "eye_contact",
   "hudMode": "chip",
@@ -40,10 +40,10 @@
     "lastError": null
   },
   "objectiveCompact": true,
-  "subtitleLogCount": 5,
+  "subtitleLogCount": 4,
   "transcriptExpanded": true,
   "mobileDensityTier": "regular",
-  "subtitle": "這一次，依然遇見妳。",
+  "subtitle": "也太像徐若瑄了吧！",
   "stageViewport": {
     "left": 16,
     "top": 20,
@@ -73,63 +73,63 @@
     "senior": {
       "name": "senior",
       "visible": false,
-      "ndcX": 0.1129,
-      "ndcY": 0.8,
-      "screenX": 586,
-      "screenY": 86
+      "ndcX": 0.5241,
+      "ndcY": 2.8915,
+      "screenX": 803,
+      "screenY": -813
     },
     "junior": {
       "name": "junior",
       "visible": true,
-      "ndcX": 0.0118,
-      "ndcY": -0.7369,
-      "screenX": 533,
-      "screenY": 747
+      "ndcX": 0.0335,
+      "ndcY": -0.3157,
+      "screenX": 545,
+      "screenY": 566
     },
     "frontDoor": {
       "name": "frontDoor",
       "visible": false,
-      "ndcX": -80.1627,
-      "ndcY": 0.5235,
-      "screenX": -41719,
-      "screenY": 205
+      "ndcX": -29.5982,
+      "ndcY": 0.2911,
+      "screenX": -15071,
+      "screenY": 305
     },
     "backDoor": {
       "name": "backDoor",
       "visible": false,
-      "ndcX": 0.3092,
-      "ndcY": 0.8513,
-      "screenX": 690,
-      "screenY": 64
+      "ndcX": -3.6164,
+      "ndcY": -0.8431,
+      "screenX": -1379,
+      "screenY": 793
     },
     "doorPlaque": {
       "name": "doorPlaque",
       "visible": false,
-      "ndcX": -56.4666,
-      "ndcY": -3.1153,
-      "screenX": -29231,
-      "screenY": 1770
+      "ndcX": -25.7686,
+      "ndcY": -1.4349,
+      "screenX": -13053,
+      "screenY": 1047
     },
     "parapetBand": {
       "name": "parapetBand",
       "visible": false,
-      "ndcX": -13.8502,
-      "ndcY": 0.2388,
-      "screenX": -6772,
-      "screenY": 327
+      "ndcX": -8.2657,
+      "ndcY": 0.2188,
+      "screenX": -3829,
+      "screenY": 336
     },
     "boardWall": {
       "name": "boardWall",
       "visible": false,
-      "ndcX": 8.9095,
-      "ndcY": 0.2821,
-      "screenX": 5222,
-      "screenY": 309
+      "ndcX": 9.2391,
+      "ndcY": 0.2932,
+      "screenX": 5396,
+      "screenY": 304
     }
   },
   "hotspotLOS": {
     "front_call": false,
-    "plaque": false,
+    "plaque": true,
     "board": true,
     "seat": true,
     "notes": true,
@@ -142,16 +142,16 @@
     "LM403",
     "LM404"
   ],
-  "endingShotPhase": "eyes",
-  "endingSequenceTime": 29.2,
-  "endingSequenceStartedAt": 9264.79999999702,
+  "endingShotPhase": "senior_pov",
+  "endingSequenceTime": 20.4,
+  "endingSequenceStartedAt": 9312.70000000298,
   "renderer": {
     "camera": {
-      "x": -1.549,
-      "y": 1.581,
-      "z": 9.042,
-      "yaw": -1.541,
-      "pitch": -0.005
+      "x": -3.46,
+      "y": 1.615,
+      "z": 9.913,
+      "yaw": -1.348,
+      "pitch": -0.011
     },
     "viewport": {
       "width": 1054,
@@ -173,63 +173,63 @@
       "senior": {
         "name": "senior",
         "visible": false,
-        "ndcX": 0.1129,
-        "ndcY": 0.8,
-        "screenX": 586,
-        "screenY": 86
+        "ndcX": 0.5241,
+        "ndcY": 2.8915,
+        "screenX": 803,
+        "screenY": -813
       },
       "junior": {
         "name": "junior",
         "visible": true,
-        "ndcX": 0.0118,
-        "ndcY": -0.7369,
-        "screenX": 533,
-        "screenY": 747
+        "ndcX": 0.0335,
+        "ndcY": -0.3157,
+        "screenX": 545,
+        "screenY": 566
       },
       "frontDoor": {
         "name": "frontDoor",
         "visible": false,
-        "ndcX": -80.1627,
-        "ndcY": 0.5235,
-        "screenX": -41719,
-        "screenY": 205
+        "ndcX": -29.5982,
+        "ndcY": 0.2911,
+        "screenX": -15071,
+        "screenY": 305
       },
       "backDoor": {
         "name": "backDoor",
         "visible": false,
-        "ndcX": 0.3092,
-        "ndcY": 0.8513,
-        "screenX": 690,
-        "screenY": 64
+        "ndcX": -3.6164,
+        "ndcY": -0.8431,
+        "screenX": -1379,
+        "screenY": 793
       },
       "doorPlaque": {
         "name": "doorPlaque",
         "visible": false,
-        "ndcX": -56.4666,
-        "ndcY": -3.1153,
-        "screenX": -29231,
-        "screenY": 1770
+        "ndcX": -25.7686,
+        "ndcY": -1.4349,
+        "screenX": -13053,
+        "screenY": 1047
       },
       "parapetBand": {
         "name": "parapetBand",
         "visible": false,
-        "ndcX": -13.8502,
-        "ndcY": 0.2388,
-        "screenX": -6772,
-        "screenY": 327
+        "ndcX": -8.2657,
+        "ndcY": 0.2188,
+        "screenX": -3829,
+        "screenY": 336
       },
       "boardWall": {
         "name": "boardWall",
         "visible": false,
-        "ndcX": 8.9095,
-        "ndcY": 0.2821,
-        "screenX": 5222,
-        "screenY": 309
+        "ndcX": 9.2391,
+        "ndcY": 0.2932,
+        "screenX": 5396,
+        "screenY": 304
       }
     },
     "hotspotLOS": {
       "front_call": false,
-      "plaque": false,
+      "plaque": true,
       "board": true,
       "seat": true,
       "notes": true,
@@ -242,7 +242,7 @@
       "LM403",
       "LM404"
     ],
-    "endingShotPhase": "eyes",
+    "endingShotPhase": "senior_pov",
     "colliders": 87,
     "mobileBlackRegionDetected": false,
     "qualityTier": "desktop",

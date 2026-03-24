@@ -1124,7 +1124,7 @@ function Be(e) {
                         !Y.ending &&
                         te(
                           "把拔（心底的聲音）",
-                          "「這一次，依然再次遇見妳。」",
+                          "「這一次，依然遇見妳。」",
                           3.5,
                         );
                     }),
@@ -1409,7 +1409,7 @@ function _e(e, t = {}) {
             "perfect" === Y.ending &&
             !Y.flags.perfectLine2Played &&
             ((Y.flags.perfectLine2Played = !0),
-            te("把拔（心底的聲音）", "這一次，依然再次遇見妳。", 5));
+            te("把拔（心底的聲音）", "這一次，依然遇見妳。", 5));
         }),
         scheduleManagedTimeout(
           "ending",
@@ -1742,32 +1742,6 @@ function Re() {
       events: Y.debugEvents,
     };
   P.debugText.textContent = JSON.stringify(n, null, 2);
-}
-let _lastStairLoop = 0;
-function _stairLoop() {
-  if (M.triggerWormhole)
-    M.triggerWormhole(Y.player.x, Y.player.stairY || 0, Y.player.z);
-  const now = performance.now();
-  if (now - _lastStairLoop < 8e3) return;
-  _lastStairLoop = now;
-  const lines = [
-    "不管怎麼走都會回到四樓耶。",
-    "欸⋯⋯又是四樓。",
-    "樓梯好像只連到這一層。",
-    "上去也是四樓，下去也是四樓⋯⋯",
-    "這裡的時間只有四樓。",
-  ];
-  const line = lines[Math.floor(Math.random() * lines.length)];
-  te("女兒", line, 3.5);
-  const _flash = document.getElementById("stage");
-  if (_flash) {
-    _flash.style.transition = "filter .15s";
-    _flash.style.filter = "brightness(3) saturate(0.2)";
-    setTimeout(() => {
-      _flash.style.transition = "filter 1.2s";
-      _flash.style.filter = "";
-    }, 150);
-  }
 }
 function updateEndingTracker() {
   try {
@@ -2475,29 +2449,6 @@ function stepLm402Frame(e, t = performance.now()) {
           if (M.getStairY) {
             Y.player.stairY = M.getStairY(Y.player.x, Y.player.z);
           }
-          const _sFL = g(196),
-            _sFE = g(72),
-            _sBL = g(3196),
-            _sBE = g(3328),
-            Q_ = g(-860) + 0.3,
-            ee_ = g(-210) - 0.3;
-          if (
-            Y.player.z <= _sFE + 0.35 &&
-            Y.player.x > Q_ &&
-            Y.player.x < ee_
-          ) {
-            Y.player.z = _sFL;
-            Y.player.stairY = 0;
-            _stairLoop();
-          } else if (
-            Y.player.z >= _sBE - 0.35 &&
-            Y.player.x > Q_ &&
-            Y.player.x < ee_
-          ) {
-            Y.player.z = _sBL;
-            Y.player.stairY = 0;
-            _stairLoop();
-          }
           const C = Math.hypot(Y.player.velocity.x, Y.player.velocity.z),
             I = C > g(26);
           (Math.abs(c) > 0.18 ||
@@ -2529,7 +2480,7 @@ function stepLm402Frame(e, t = performance.now()) {
               !Y.flags.perfectLine2Played &&
                 Y.endingSequence.time >= (l.perfectLine2At ?? 6) &&
                 ((Y.flags.perfectLine2Played = !0),
-                te("把拔（心底的聲音）", "這一次，依然再次遇見妳。", 5)),
+                te("把拔（心底的聲音）", "這一次，依然遇見妳。", 5)),
               void (
                 Y.endingSequence.time >
                   (l.perfectOverlayAt ?? l.perfectDuration) &&
