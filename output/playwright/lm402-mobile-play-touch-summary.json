@@ -1,0 +1,59 @@
+{
+  "screenshot": "/Users/toni/Downloads/時間裡的兩個妳/output/playwright/lm402-mobile-play-touch.png",
+  "cameraMode": "play",
+  "phase": "rear_wait",
+  "phaseClock": 6.281,
+  "mobileBlackRegionDetected": false,
+  "qualityTier": "mobile",
+  "controlBounds": {
+    "leftStick": {
+      "left": 10,
+      "top": 240,
+      "right": 134,
+      "bottom": 364,
+      "width": 124,
+      "height": 124
+    },
+    "rightStick": {
+      "left": 710,
+      "top": 240,
+      "right": 834,
+      "bottom": 364,
+      "width": 124,
+      "height": 124
+    },
+    "interact": {
+      "left": 804,
+      "top": 281,
+      "right": 846,
+      "bottom": 323,
+      "width": 42,
+      "height": 42
+    },
+    "inspect": {
+      "left": 751,
+      "top": 225,
+      "right": 793,
+      "bottom": 267,
+      "width": 42,
+      "height": 42
+    },
+    "center": {
+      "left": 698,
+      "top": 281,
+      "right": 740,
+      "bottom": 323,
+      "width": 42,
+      "height": 42
+    },
+    "replay": {
+      "left": 751,
+      "top": 334,
+      "right": 793,
+      "bottom": 376,
+      "width": 42,
+      "height": 42
+    }
+  },
+  "errors": []
+}

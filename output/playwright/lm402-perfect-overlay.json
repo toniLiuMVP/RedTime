@@ -1,0 +1,269 @@
+{
+  "overlayReached": false,
+  "snapshot": {
+    "mode": "play",
+    "phase": "eye_contact",
+    "cameraMode": "ending",
+    "cameraAnchor": "eye_contact",
+    "hudMode": "chip",
+    "subtitleMode": "full",
+    "pointerLockState": "free",
+    "lastContextMenu": 0,
+    "boundaryCollisionState": null,
+    "collisionLabel": null,
+    "activeHotspot": null,
+    "playerX": -9.200000000000001,
+    "playerZ": 21.525000000000002,
+    "cameraYaw": -1.6977691164089757,
+    "cameraPitch": -0.07880494093580107,
+    "lookSensitivityPreset": "standard",
+    "lookSensitivityScalar": 1,
+    "audioEnabled": false,
+    "qualityTier": "desktop",
+    "uiVisibilityPreset": "ending",
+    "renderErrorCount": 0,
+    "renderErrors": [],
+    "assetState": {
+      "manifestId": "junior2005",
+      "qualityTier": "desktop",
+      "status": "ready",
+      "fallback": false,
+      "loadedTextures": [
+        "front",
+        "side"
+      ],
+      "lastError": null
+    },
+    "objectiveCompact": true,
+    "subtitleLogCount": 3,
+    "transcriptExpanded": true,
+    "mobileDensityTier": "regular",
+    "subtitle": "光先落在她身上，像整條四樓走廊和整間教室都往後慢慢退開，只剩她一個人被時間輕輕托住。",
+    "stageViewport": {
+      "left": 16,
+      "top": 20,
+      "right": 1070,
+      "bottom": 940,
+      "width": 1054,
+      "height": 920
+    },
+    "canvasViewport": {
+      "left": 17,
+      "top": 21,
+      "right": 1069,
+      "bottom": 939,
+      "width": 1052,
+      "height": 918
+    },
+    "subtitleBounds": null,
+    "controlBounds": null,
+    "ambienceBounds": null,
+    "objectiveBounds": null,
+    "webglViewport": {
+      "width": 1054,
+      "height": 920
+    },
+    "mobileBlackRegionDetected": false,
+    "projectedNodes": {
+      "senior": {
+        "name": "senior",
+        "visible": false,
+        "ndcX": -0.022,
+        "ndcY": -0.0037,
+        "screenX": 515,
+        "screenY": 462
+      },
+      "junior": {
+        "name": "junior",
+        "visible": true,
+        "ndcX": 0.2567,
+        "ndcY": 0.1285,
+        "screenX": 662,
+        "screenY": 401
+      },
+      "frontDoor": {
+        "name": "frontDoor",
+        "visible": false,
+        "ndcX": -0.143,
+        "ndcY": -0.0183,
+        "screenX": 452,
+        "screenY": 468
+      },
+      "backDoor": {
+        "name": "backDoor",
+        "visible": false,
+        "ndcX": 2.3621,
+        "ndcY": -0.0305,
+        "screenX": 1772,
+        "screenY": 474
+      },
+      "doorPlaque": {
+        "name": "doorPlaque",
+        "visible": false,
+        "ndcX": 0.0876,
+        "ndcY": -0.1392,
+        "screenX": 573,
+        "screenY": 524
+      },
+      "parapetBand": {
+        "name": "parapetBand",
+        "visible": false,
+        "ndcX": -0.0336,
+        "ndcY": 0.0007,
+        "screenX": 509,
+        "screenY": 460
+      },
+      "boardWall": {
+        "name": "boardWall",
+        "visible": false,
+        "ndcX": -2.0304,
+        "ndcY": -0.4261,
+        "screenX": -543,
+        "screenY": 656
+      }
+    },
+    "hotspotLOS": {
+      "front_call": false,
+      "plaque": true,
+      "board": true,
+      "seat": true,
+      "notes": true,
+      "junior": false,
+      "backdoor": true
+    },
+    "currentRoomIds": [
+      "LM401",
+      "LM402",
+      "LM403",
+      "LM404"
+    ],
+    "endingShotPhase": "orbit",
+    "renderer": {
+      "camera": {
+        "x": 20.466,
+        "y": 1.279,
+        "z": 25.725,
+        "yaw": -1.571,
+        "pitch": 0.088
+      },
+      "viewport": {
+        "width": 1054,
+        "height": 920
+      },
+      "cssViewport": {
+        "width": 1052,
+        "height": 918
+      },
+      "stageViewport": {
+        "width": 1054,
+        "height": 920
+      },
+      "webglViewport": {
+        "width": 1054,
+        "height": 920
+      },
+      "projectedNodes": {
+        "senior": {
+          "name": "senior",
+          "visible": false,
+          "ndcX": -0.022,
+          "ndcY": -0.0037,
+          "screenX": 515,
+          "screenY": 462
+        },
+        "junior": {
+          "name": "junior",
+          "visible": true,
+          "ndcX": 0.2567,
+          "ndcY": 0.1285,
+          "screenX": 662,
+          "screenY": 401
+        },
+        "frontDoor": {
+          "name": "frontDoor",
+          "visible": false,
+          "ndcX": -0.143,
+          "ndcY": -0.0183,
+          "screenX": 452,
+          "screenY": 468
+        },
+        "backDoor": {
+          "name": "backDoor",
+          "visible": false,
+          "ndcX": 2.3621,
+          "ndcY": -0.0305,
+          "screenX": 1772,
+          "screenY": 474
+        },
+        "doorPlaque": {
+          "name": "doorPlaque",
+          "visible": false,
+          "ndcX": 0.0876,
+          "ndcY": -0.1392,
+          "screenX": 573,
+          "screenY": 524
+        },
+        "parapetBand": {
+          "name": "parapetBand",
+          "visible": false,
+          "ndcX": -0.0336,
+          "ndcY": 0.0007,
+          "screenX": 509,
+          "screenY": 460
+        },
+        "boardWall": {
+          "name": "boardWall",
+          "visible": false,
+          "ndcX": -2.0304,
+          "ndcY": -0.4261,
+          "screenX": -543,
+          "screenY": 656
+        }
+      },
+      "hotspotLOS": {
+        "front_call": false,
+        "plaque": true,
+        "board": true,
+        "seat": true,
+        "notes": true,
+        "junior": false,
+        "backdoor": true
+      },
+      "currentRoomIds": [
+        "LM401",
+        "LM402",
+        "LM403",
+        "LM404"
+      ],
+      "endingShotPhase": "orbit",
+      "colliders": 87,
+      "mobileBlackRegionDetected": false,
+      "qualityTier": "desktop",
+      "rendererProfile": "webgl2-hq",
+      "assetState": {
+        "manifestId": "junior2005",
+        "qualityTier": "desktop",
+        "status": "ready",
+        "fallback": false,
+        "loadedTextures": [
+          "front",
+          "side"
+        ],
+        "lastError": null
+      }
+    },
+    "events": [
+      {
+        "time": "17:02:58",
+        "type": "resize",
+        "detail": "1440x960"
+      },
+      {
+        "time": "17:03:07",
+        "type": "ending",
+        "detail": "perfect"
+      }
+    ]
+  },
+  "errors": []
+}

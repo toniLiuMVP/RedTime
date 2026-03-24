@@ -1,0 +1,17 @@
+{
+  "screenshot": "/Users/toni/Downloads/時間裡的兩個妳/output/playwright/lm402-mobile-eyes-touch.png",
+  "cameraMode": "ending",
+  "endingShotPhase": "eyes",
+  "endingSequenceTime": 31.5,
+  "mobileBlackRegionDetected": false,
+  "qualityTier": "mobile",
+  "controlBounds": {
+    "leftStick": null,
+    "rightStick": null,
+    "interact": null,
+    "inspect": null,
+    "center": null,
+    "replay": null
+  },
+  "errors": []
+}

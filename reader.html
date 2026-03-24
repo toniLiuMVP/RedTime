@@ -4,9 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#06060a">
-<meta http-equiv="X-Content-Type-Options" content="nosniff">
-<meta http-equiv="X-Frame-Options" content="DENY">
 <meta name="referrer" content="strict-origin-when-cross-origin">
+<!-- Security headers such as CSP / X-Frame-Options should be sent by the host, not meta tags. -->
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="description" content="時間裡的兩個妳——EP0 至 EP40 全集免費閱讀。支援日間／夜間模式、字體調整與章節跳轉。">
 <meta property="og:type" content="website">
@@ -53,12 +52,17 @@ a,button,[role="button"],input{touch-action:manipulation}
 /* ═══════ HERO ══════════════════════════════ */
 #hero{min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:72px 28px 88px;position:relative;overflow:hidden;background:radial-gradient(ellipse 120% 60% at 50% 18%,#091808 0%,transparent 58%),radial-gradient(ellipse 80% 80% at 82% 82%,#08060f 0%,transparent 52%),var(--bg)}
 #hero-canvas{position:absolute;inset:0;pointer-events:none;opacity:.65}
-.hero-inner{position:relative;z-index:2;max-width:460px;width:100%;margin:0 auto}
+.hero-inner{position:relative;z-index:2;max-width:1080px;width:100%;margin:0 auto}
+.hero-poster{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(320px,.78fr);gap:clamp(24px,4vw,44px);align-items:end;text-align:left}
+.hero-copy-col{max-width:520px}
 .hero-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:var(--t3);margin-bottom:26px}
 .hero-sub-en{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;letter-spacing:.18em;color:var(--t3);margin-bottom:16px}
 .hero-title{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(54px,13vw,88px);line-height:1.04;letter-spacing:.08em;color:var(--t1);margin-bottom:26px;text-shadow:0 0 60px rgba(22,168,100,.14),0 0 120px rgba(22,168,100,.06)}
-.hero-tagline{font-size:14.8px;font-weight:300;color:rgba(234,230,222,.78);line-height:1.95;letter-spacing:.038em;max-width:20em;margin:0 auto 32px;text-wrap:pretty}
-.hero-divider{width:36px;height:1px;margin:0 auto 32px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent)}
+.hero-tagline{font-size:14.8px;font-weight:300;color:rgba(234,230,222,.78);line-height:1.95;letter-spacing:.038em;max-width:20em;margin:0 0 24px;text-wrap:pretty}
+.hero-divider{width:36px;height:1px;margin:0 0 28px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent)}
+.hero-proof{display:flex;flex-wrap:wrap;gap:8px 10px;margin:0 0 28px}
+.hero-proof-pill{display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border:1px solid rgba(255,255,255,.1);border-radius:999px;background:rgba(255,255,255,.022);font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(234,230,222,.7)}
+.hero-proof-pill::before{content:'';width:7px;height:7px;border-radius:999px;background:linear-gradient(90deg,var(--jade),var(--amber))}
 .hero-stats{display:grid;grid-template-columns:repeat(4,1fr);margin-bottom:36px;border:1px solid rgba(255,255,255,.1);border-radius:6px;overflow:hidden;background:rgba(255,255,255,.012)}
 .hero-stat{border-right:1px solid rgba(255,255,255,.07);padding:12px 0;background:rgba(255,255,255,.018)}
 .hero-stat:last-child{border-right:none}
@@ -81,6 +85,14 @@ a,button,[role="button"],input{touch-action:manipulation}
 .hero-resume{display:none;margin:18px auto 0;max-width:320px;padding:14px 16px;border:1px solid rgba(255,255,255,.1);border-radius:10px;background:rgba(255,255,255,.04);text-align:left;cursor:pointer;transition:border-color .15s,background .15s}
 .hero-resume.show{display:block}
 .hero-resume:hover,.hero-resume:active{border-color:rgba(22,168,100,.42);background:rgba(255,255,255,.06)}
+.hero-guide-card{padding:24px 22px;border:1px solid rgba(255,255,255,.1);border-radius:28px;background:linear-gradient(180deg,rgba(13,17,25,.82),rgba(10,12,18,.72));box-shadow:0 26px 70px rgba(0,0,0,.28);backdrop-filter:blur(18px)}
+.hero-guide-kicker{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--t3);margin-bottom:14px}
+.hero-guide-title{font-family:'Cormorant Garamond',serif;font-size:clamp(30px,4vw,42px);line-height:1.04;letter-spacing:.04em;color:var(--t1);margin-bottom:14px}
+.hero-guide-copy{font-family:'Noto Sans TC',sans-serif;font-size:13px;line-height:1.82;color:rgba(234,230,222,.72);margin-bottom:16px}
+.hero-guide-list{display:grid;gap:10px;margin-bottom:16px}
+.hero-guide-item{padding:12px 13px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.02)}
+.hero-guide-item strong{display:block;font-family:'DM Mono',monospace;font-size:8.6px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin-bottom:5px}
+.hero-guide-item span{display:block;font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.65;color:var(--t2)}
 .resume-eyebrow{display:block;font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--amber);margin-bottom:5px}
 .resume-title{display:block;font-family:'Noto Sans TC',sans-serif;font-size:13.3px;line-height:1.62;color:var(--t1)}
 .resume-sub{display:block;font-family:'Noto Sans TC',sans-serif;font-size:11.6px;line-height:1.58;color:rgba(234,230,222,.68);margin-top:4px}
@@ -174,6 +186,11 @@ a,button,[role="button"],input{touch-action:manipulation}
   #ip-content{padding:20px 22px}
 }
 @media(max-width:767px){
+  .hero-poster{grid-template-columns:1fr;text-align:center}
+  .hero-copy-col{max-width:none}
+  .hero-tagline,.hero-divider{margin-left:auto;margin-right:auto}
+  .hero-proof{justify-content:center}
+  .hero-guide-card{text-align:left}
   #desktop-layout{display:block}
   #sidebar{display:none}
   #desktop-topbar{display:none}
@@ -1055,31 +1072,50 @@ input[type=range].ap-slider::-moz-range-thumb{width:14px;height:14px;border-radi
 <section id="hero">
   <canvas id="hero-canvas"></canvas>
   <div class="hero-inner">
-    <div class="hero-label">EP0 — EP40 · 全集閱讀版</div>
-    <div class="hero-sub-en">The Two Yous in Time</div>
-    <h1 class="hero-title">時間裡的<br>兩個妳</h1>
-    <p class="hero-tagline">把拔與女兒的故事<br>學長與學妹的故事</p>
-    <div class="hero-divider"></div>
-    <div class="hero-stats">
-      <div class="hero-stat"><span class="stat-n">41</span><span class="stat-l">集</span></div>
-      <div class="hero-stat"><span class="stat-n">3</span><span class="stat-l">線</span></div>
-      <div class="hero-stat"><span class="stat-n">20</span><span class="stat-l">年</span></div>
-      <div class="hero-stat"><span class="stat-n">5</span><span class="stat-l">彩蛋</span></div>
+    <div class="hero-poster">
+      <div class="hero-copy-col">
+        <div class="hero-label">EP0 — EP40 · 全集閱讀版</div>
+        <div class="hero-sub-en">The Two Yous in Time</div>
+        <h1 class="hero-title">時間裡的<br>兩個妳</h1>
+        <p class="hero-tagline">把拔與女兒的故事<br>學長與學妹的故事</p>
+        <div class="hero-divider"></div>
+        <div class="hero-proof">
+          <span class="hero-proof-pill">章節跳轉</span>
+          <span class="hero-proof-pill">續讀定位</span>
+          <span class="hero-proof-pill">彩蛋收納</span>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat"><span class="stat-n">41</span><span class="stat-l">集</span></div>
+          <div class="hero-stat"><span class="stat-n">3</span><span class="stat-l">線</span></div>
+          <div class="hero-stat"><span class="stat-n">20</span><span class="stat-l">年</span></div>
+          <div class="hero-stat"><span class="stat-n">5</span><span class="stat-l">彩蛋</span></div>
+        </div>
+        <div class="hero-arcs">
+          <div class="arc-pill"><div class="a-dot" style="background:var(--jade)"></div>把拔視角</div>
+          <div class="arc-pill"><div class="a-dot" style="background:var(--silver)"></div>學長視角</div>
+          <div class="arc-pill"><div class="a-dot rainbow"></div>學妹視角</div>
+          <div class="arc-pill"><div class="a-dot" style="background:var(--amber)"></div>女兒視角</div>
+          <div class="arc-pill"><div class="a-dot" style="background:var(--ember)"></div>複合視角</div>
+        </div>
+        <button class="hero-cta" onclick="goToEp(0)">↓ &nbsp; 開始閱讀</button>
+        <a class="hero-scene-link" href="lm402.html">↗ &nbsp; LM402 一眼瞬間</a>
+        <button class="hero-resume" id="resume-card" onclick="resumeReading()" aria-label="繼續上次閱讀進度">
+          <span class="resume-eyebrow">繼續閱讀</span>
+          <span class="resume-title" id="resume-title">繼續上次閱讀</span>
+          <span class="resume-sub" id="resume-sub">系統會帶你回到上次讀到的章節。</span>
+        </button>
+      </div>
+      <aside class="hero-guide-card">
+        <div class="hero-guide-kicker">閱讀導引</div>
+        <div class="hero-guide-title">先讀進來，<br>再慢慢對位</div>
+        <p class="hero-guide-copy">這個版本保留全集閱讀的沉浸感，同時把跳章、續讀與故事導覽放到更順手的位置，讓你可以一口氣讀，也可以沿著角色視角慢慢拼回那一眼。</p>
+        <div class="hero-guide-list">
+          <div class="hero-guide-item"><strong>開始方式</strong><span>從 EP0 順讀，或用左側／底部跳章直接進入你想看的角色線。</span></div>
+          <div class="hero-guide-item"><strong>續讀定位</strong><span>如果你上次讀到一半，首頁下方的「繼續閱讀」會直接把你帶回原來的位置。</span></div>
+          <div class="hero-guide-item"><strong>LM402 對位</strong><span>想先把 2005 年利瑪竇四樓那一秒走過一遍，可以直接切到 LM402 互動場景。</span></div>
+        </div>
+      </aside>
     </div>
-    <div class="hero-arcs">
-      <div class="arc-pill"><div class="a-dot" style="background:var(--jade)"></div>把拔視角</div>
-      <div class="arc-pill"><div class="a-dot" style="background:var(--silver)"></div>學長視角</div>
-      <div class="arc-pill"><div class="a-dot rainbow"></div>學妹視角</div>
-      <div class="arc-pill"><div class="a-dot" style="background:var(--amber)"></div>女兒視角</div>
-      <div class="arc-pill"><div class="a-dot" style="background:var(--ember)"></div>複合視角</div>
-    </div>
-    <button class="hero-cta" onclick="goToEp(0)">↓ &nbsp; 開始閱讀</button>
-    <a class="hero-scene-link" href="lm402.html">↗ &nbsp; LM402 一眼瞬間</a>
-    <button class="hero-resume" id="resume-card" onclick="resumeReading()" aria-label="繼續上次閱讀進度">
-      <span class="resume-eyebrow">繼續閱讀</span>
-      <span class="resume-title" id="resume-title">繼續上次閱讀</span>
-      <span class="resume-sub" id="resume-sub">系統會帶你回到上次讀到的章節。</span>
-    </button>
   </div>
   <div class="hero-scroll-hint">向下捲動</div>
 </section>
@@ -1108,7 +1144,7 @@ input[type=range].ap-slider::-moz-range-thumb{width:14px;height:14px;border-radi
     <!-- Desktop top bar -->
     <div id="desktop-topbar">
       <div id="desktop-ep-title">時間裡的兩個妳</div>
-      <a class="dsk-btn dsk-home-btn" href="https://toniliumvp.github.io/RedTime/"><span class="ui-glyph btn-icon" data-ui-icon="home"></span><span>首頁</span></a>
+      <a class="dsk-btn dsk-home-btn" href="index.html"><span class="ui-glyph btn-icon" data-ui-icon="home"></span><span>首頁</span></a>
       <button class="dsk-btn" onclick="toggleInfoPanel()"><span class="ui-glyph btn-icon" data-ui-icon="guide"></span><span>故事導覽</span></button>
       <button class="dsk-btn dsk-btn-toggle" onclick="toggleAllSections()" id="dsk-toggle-all"><span class="ui-glyph btn-icon" data-ui-icon="grid-plus"></span><span>一鍵展開</span></button>
       <button class="dsk-btn dsk-auto-btn" onclick="toggleAutoMode()" id="dsk-auto-btn"><span class="ui-glyph btn-icon" data-ui-icon="play"></span><span>自動模式</span></button>
@@ -1121,7 +1157,7 @@ input[type=range].ap-slider::-moz-range-thumb{width:14px;height:14px;border-radi
     <div id="topnav-mobile">
       <div class="nav-title" id="nav-ep-title">時間裡的兩個妳</div>
       <div class="nav-actions">
-        <a class="nav-btn nav-home-btn" href="https://toniliumvp.github.io/RedTime/"><span class="ui-glyph nav-icon" data-ui-icon="home"></span></a>
+        <a class="nav-btn nav-home-btn" href="index.html"><span class="ui-glyph nav-icon" data-ui-icon="home"></span></a>
         <button class="nav-btn" onclick="cycleFont()" id="mob-font-btn">A</button>
         <button class="nav-btn" onclick="toggleDay()"><span class="ui-glyph nav-icon" data-ui-icon="sun"></span></button>
         <button class="nav-btn" onclick="openJump()"><span class="ui-glyph nav-icon" data-ui-icon="menu"></span></button>
