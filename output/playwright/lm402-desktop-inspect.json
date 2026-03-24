@@ -1,0 +1,68 @@
+[
+  {
+    "name": "desktop-intro-0s",
+    "mode": "play",
+    "phase": "consciousness_market",
+    "phaseClock": 0.033,
+    "cameraAnchor": "consciousness_market",
+    "renderErrorCount": 0,
+    "endingShotPhase": null,
+    "playerX": -9.200000000000001,
+    "playerZ": 21.525000000000002
+  },
+  {
+    "name": "desktop-intro-2_5s",
+    "mode": "play",
+    "phase": "consciousness_market",
+    "phaseClock": 0.264,
+    "cameraAnchor": "consciousness_market",
+    "renderErrorCount": 0,
+    "endingShotPhase": null,
+    "playerX": -9.200000000000001,
+    "playerZ": 21.525000000000002
+  },
+  {
+    "name": "desktop-intro-6s",
+    "mode": "play",
+    "phase": "consciousness_market",
+    "phaseClock": 0.594,
+    "cameraAnchor": "consciousness_market",
+    "renderErrorCount": 0,
+    "endingShotPhase": null,
+    "playerX": -9.200000000000001,
+    "playerZ": 21.525000000000002
+  },
+  {
+    "name": "desktop-intro-10s",
+    "mode": "play",
+    "phase": "consciousness_market",
+    "phaseClock": 0.924,
+    "cameraAnchor": "consciousness_market",
+    "renderErrorCount": 0,
+    "endingShotPhase": null,
+    "playerX": -9.200000000000001,
+    "playerZ": 21.525000000000002
+  },
+  {
+    "name": "stairs-front",
+    "mode": "play",
+    "phase": "consciousness_market",
+    "phaseClock": 1.089,
+    "cameraAnchor": "consciousness_market",
+    "renderErrorCount": 0,
+    "endingShotPhase": null,
+    "playerX": 0.2,
+    "playerZ": 1.236
+  },
+  {
+    "name": "stairs-back",
+    "mode": "play",
+    "phase": "consciousness_market",
+    "phaseClock": 1.386,
+    "cameraAnchor": "consciousness_market",
+    "renderErrorCount": 0,
+    "endingShotPhase": null,
+    "playerX": 0.2,
+    "playerZ": 1.236
+  }
+]

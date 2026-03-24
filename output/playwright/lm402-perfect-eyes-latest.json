@@ -1,0 +1,269 @@
+{
+  "mode": "play",
+  "phase": "eye_contact",
+  "phaseClock": 0,
+  "clockTime": 0.275,
+  "cameraMode": "ending",
+  "cameraAnchor": "eye_contact",
+  "hudMode": "chip",
+  "subtitleMode": "full",
+  "pointerLockState": "free",
+  "lastContextMenu": 0,
+  "boundaryCollisionState": null,
+  "collisionLabel": null,
+  "activeHotspot": null,
+  "playerX": -9.200000000000001,
+  "playerZ": 21.525000000000002,
+  "cameraYaw": -1.6977691164089757,
+  "cameraPitch": -0.07880494093580107,
+  "lookSensitivityPreset": "standard",
+  "lookSensitivityScalar": 1,
+  "audioEnabled": false,
+  "qualityTier": "desktop",
+  "uiVisibilityPreset": "ending",
+  "renderErrorCount": 0,
+  "renderErrors": [],
+  "assetState": {
+    "manifestId": "junior2005",
+    "qualityTier": "desktop",
+    "status": "ready",
+    "fallback": false,
+    "loadedTextures": [
+      "front",
+      "side"
+    ],
+    "lastError": null
+  },
+  "objectiveCompact": true,
+  "subtitleLogCount": 5,
+  "transcriptExpanded": true,
+  "mobileDensityTier": "regular",
+  "subtitle": "這一次，依然再次遇見妳。",
+  "stageViewport": {
+    "left": 16,
+    "top": 20,
+    "right": 1070,
+    "bottom": 880,
+    "width": 1054,
+    "height": 860
+  },
+  "canvasViewport": {
+    "left": 17,
+    "top": 21,
+    "right": 1069,
+    "bottom": 879,
+    "width": 1052,
+    "height": 858
+  },
+  "subtitleBounds": null,
+  "controlBounds": null,
+  "ambienceBounds": null,
+  "objectiveBounds": null,
+  "webglViewport": {
+    "width": 1054,
+    "height": 860
+  },
+  "mobileBlackRegionDetected": false,
+  "projectedNodes": {
+    "senior": {
+      "name": "senior",
+      "visible": false,
+      "ndcX": 0.1129,
+      "ndcY": 0.8,
+      "screenX": 586,
+      "screenY": 86
+    },
+    "junior": {
+      "name": "junior",
+      "visible": true,
+      "ndcX": 0.0118,
+      "ndcY": -0.7369,
+      "screenX": 533,
+      "screenY": 747
+    },
+    "frontDoor": {
+      "name": "frontDoor",
+      "visible": false,
+      "ndcX": -80.1625,
+      "ndcY": 0.5207,
+      "screenX": -41719,
+      "screenY": 206
+    },
+    "backDoor": {
+      "name": "backDoor",
+      "visible": false,
+      "ndcX": 0.3092,
+      "ndcY": 0.847,
+      "screenX": 690,
+      "screenY": 66
+    },
+    "doorPlaque": {
+      "name": "doorPlaque",
+      "visible": false,
+      "ndcX": -56.4666,
+      "ndcY": -3.1174,
+      "screenX": -29231,
+      "screenY": 1770
+    },
+    "parapetBand": {
+      "name": "parapetBand",
+      "visible": false,
+      "ndcX": -13.8502,
+      "ndcY": 0.2383,
+      "screenX": -6772,
+      "screenY": 328
+    },
+    "boardWall": {
+      "name": "boardWall",
+      "visible": false,
+      "ndcX": 8.9095,
+      "ndcY": 0.2824,
+      "screenX": 5222,
+      "screenY": 309
+    }
+  },
+  "hotspotLOS": {
+    "front_call": false,
+    "plaque": false,
+    "board": true,
+    "seat": true,
+    "notes": true,
+    "junior": false,
+    "backdoor": true
+  },
+  "currentRoomIds": [
+    "LM401",
+    "LM402",
+    "LM403",
+    "LM404"
+  ],
+  "endingShotPhase": "eyes",
+  "endingSequenceTime": 29.2,
+  "endingSequenceStartedAt": 12100.60000000894,
+  "renderer": {
+    "camera": {
+      "x": -1.549,
+      "y": 1.58,
+      "z": 9.042,
+      "yaw": -1.541,
+      "pitch": -0.005
+    },
+    "viewport": {
+      "width": 1054,
+      "height": 860
+    },
+    "cssViewport": {
+      "width": 1052,
+      "height": 858
+    },
+    "stageViewport": {
+      "width": 1054,
+      "height": 860
+    },
+    "webglViewport": {
+      "width": 1054,
+      "height": 860
+    },
+    "projectedNodes": {
+      "senior": {
+        "name": "senior",
+        "visible": false,
+        "ndcX": 0.1129,
+        "ndcY": 0.8,
+        "screenX": 586,
+        "screenY": 86
+      },
+      "junior": {
+        "name": "junior",
+        "visible": true,
+        "ndcX": 0.0118,
+        "ndcY": -0.7369,
+        "screenX": 533,
+        "screenY": 747
+      },
+      "frontDoor": {
+        "name": "frontDoor",
+        "visible": false,
+        "ndcX": -80.1625,
+        "ndcY": 0.5207,
+        "screenX": -41719,
+        "screenY": 206
+      },
+      "backDoor": {
+        "name": "backDoor",
+        "visible": false,
+        "ndcX": 0.3092,
+        "ndcY": 0.847,
+        "screenX": 690,
+        "screenY": 66
+      },
+      "doorPlaque": {
+        "name": "doorPlaque",
+        "visible": false,
+        "ndcX": -56.4666,
+        "ndcY": -3.1174,
+        "screenX": -29231,
+        "screenY": 1770
+      },
+      "parapetBand": {
+        "name": "parapetBand",
+        "visible": false,
+        "ndcX": -13.8502,
+        "ndcY": 0.2383,
+        "screenX": -6772,
+        "screenY": 328
+      },
+      "boardWall": {
+        "name": "boardWall",
+        "visible": false,
+        "ndcX": 8.9095,
+        "ndcY": 0.2824,
+        "screenX": 5222,
+        "screenY": 309
+      }
+    },
+    "hotspotLOS": {
+      "front_call": false,
+      "plaque": false,
+      "board": true,
+      "seat": true,
+      "notes": true,
+      "junior": false,
+      "backdoor": true
+    },
+    "currentRoomIds": [
+      "LM401",
+      "LM402",
+      "LM403",
+      "LM404"
+    ],
+    "endingShotPhase": "eyes",
+    "colliders": 87,
+    "mobileBlackRegionDetected": false,
+    "qualityTier": "desktop",
+    "rendererProfile": "webgl2-hq",
+    "assetState": {
+      "manifestId": "junior2005",
+      "qualityTier": "desktop",
+      "status": "ready",
+      "fallback": false,
+      "loadedTextures": [
+        "front",
+        "side"
+      ],
+      "lastError": null
+    }
+  },
+  "events": [
+    {
+      "time": "18:56:58",
+      "type": "resize",
+      "detail": "1440x900"
+    },
+    {
+      "time": "18:57:10",
+      "type": "ending",
+      "detail": "perfect"
+    }
+  ]
+}

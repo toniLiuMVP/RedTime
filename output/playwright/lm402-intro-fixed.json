@@ -1,0 +1,26 @@
+[
+  {
+    "name": "desktop-intro-fixed-0s",
+    "mode": "intro",
+    "cameraAnchor": "daughter_glow",
+    "renderErrorCount": 0
+  },
+  {
+    "name": "desktop-intro-fixed-2_5s",
+    "mode": "intro",
+    "cameraAnchor": "daughter_glow",
+    "renderErrorCount": 0
+  },
+  {
+    "name": "desktop-intro-fixed-6s",
+    "mode": "intro",
+    "cameraAnchor": "daughter_glow",
+    "renderErrorCount": 0
+  },
+  {
+    "name": "desktop-intro-fixed-10s",
+    "mode": "intro",
+    "cameraAnchor": "daughter_glow",
+    "renderErrorCount": 0
+  }
+]
