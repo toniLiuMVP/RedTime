@@ -8,6 +8,8 @@ import {
   INTRO_BEATS as r,
   ENDINGS as c,
   CINEMATIC_TIMELINE as l,
+  stairsWarp as stairWarpConfig,
+  perfectSubtitleTrack as perfectSubtitleTrackConfig,
   MOBILE_DENSITY_PRESETS as s,
   RENDER_QUALITY_TIERS as renderQualityTiers,
   CHARACTER_ASSET_MANIFEST as characterAssetManifest,
@@ -150,6 +152,9 @@ const z = document.getElementById("scene-canvas"),
     subtitleBox: document.getElementById("subtitle-box"),
     subtitleSource: document.getElementById("subtitle-source"),
     subtitleText: document.getElementById("subtitle-text"),
+    cinematicSubtitleLayer: document.getElementById("cinematic-subtitle-layer"),
+    cinematicSubtitleSource: document.getElementById("cinematic-subtitle-source"),
+    cinematicSubtitleText: document.getElementById("cinematic-subtitle-text"),
     transcriptDock: document.getElementById("transcript-dock"),
     transcriptToggle: document.getElementById("transcript-toggle"),
     transcriptStatus: document.getElementById("transcript-status"),
@@ -384,6 +389,25 @@ const Y = {
     text: "現在時空手錶顯示10:40，現在阿姨在教室裡面，怎麼我會這麼緊張^_^",
     ttl: 5,
   },
+  cinematicSubtitle: {
+    visible: !1,
+    cue: null,
+    source: "",
+    text: "",
+    ttl: 0,
+    startedAt: 0,
+    expiresAt: 0,
+  },
+  stairWarp: {
+    active: !1,
+    stage: "idle",
+    source: null,
+    startedAt: 0,
+    returnAt: 0,
+    cooldownUntil: 0,
+    lastTriggeredAt: 0,
+    lastCompletedAt: 0,
+  },
   subtitleLog: [],
   ambience: {
     text: "粉筆味像一層薄雲，十一點的光正慢慢沿著百葉窗往教室裡推。",
@@ -464,7 +488,8 @@ function scrubEndingSequence(e, t = !0) {
 }
 function forceSceneRender() {
   return (
-    Y.endingSequence && syncEndingSequenceClock(),
+    Y.endingSequence &&
+      (syncEndingSequenceClock(), "perfect" === Y.ending && syncPerfectCinematicSubtitle()),
     $e(),
     Ve(),
     window.__LM402_DEBUG__?.snapshot?.() ?? null
@@ -777,6 +802,189 @@ function te(e, t, n = 5) {
     J(e, t),
     (Y.subtitleMode = "full"),
     ge());
+}
+function hideCinematicSubtitle() {
+  ((Y.cinematicSubtitle = {
+    visible: !1,
+    cue: null,
+    source: "",
+    text: "",
+    ttl: 0,
+    startedAt: 0,
+    expiresAt: 0,
+  }),
+    P.cinematicSubtitleLayer &&
+      ((P.cinematicSubtitleLayer.hidden = !0),
+      P.cinematicSubtitleLayer.classList.remove("visible")),
+    P.cinematicSubtitleSource &&
+      (P.cinematicSubtitleSource.textContent = "學長"),
+    P.cinematicSubtitleText &&
+      (P.cinematicSubtitleText.textContent = ""));
+}
+function showCinematicSubtitle(e, t, n = 5, o = "cinematic") {
+  if (!P.cinematicSubtitleLayer) return;
+  const i = Math.max(0.1, Number(n) || 5),
+    a = Y.endingSequence?.time ?? Y.time;
+  ((Y.cinematicSubtitle = {
+    visible: !0,
+    cue: o,
+    source: e,
+    text: t,
+    ttl: i,
+    startedAt: a,
+    expiresAt: a + i,
+  }),
+    (P.cinematicSubtitleSource.textContent = e),
+    (P.cinematicSubtitleText.textContent = t),
+    (P.cinematicSubtitleLayer.hidden = !1),
+    P.cinematicSubtitleLayer.classList.add("visible"),
+    J(e, t, "cinematic"));
+}
+function clearStairWarpState() {
+  (clearManagedTimeouts(["stairWarp"]),
+    (Y.stairWarp.active = !1),
+    (Y.stairWarp.stage = "idle"),
+    (Y.stairWarp.source = null),
+    (Y.stairWarp.startedAt = 0),
+    (Y.stairWarp.returnAt = 0),
+    (Y.stairWarp.cooldownUntil = 0),
+    (Y.stairWarp.lastTriggeredAt = 0),
+    (Y.stairWarp.lastCompletedAt = 0));
+}
+function resetCinematicLayers() {
+  (hideCinematicSubtitle(), clearStairWarpState());
+}
+function syncPerfectCinematicSubtitle() {
+  if (!Y.endingSequence || "perfect" !== Y.ending) return;
+  const e = Y.endingSequence.time,
+    t = perfectSubtitleTrackConfig.startAt ?? l.perfectLine1At ?? 0,
+    n = perfectSubtitleTrackConfig.line1?.duration ?? 5,
+    o = l.perfectLine2At ?? t + n,
+    i = perfectSubtitleTrackConfig.line2?.duration ?? 5,
+    a = perfectSubtitleTrackConfig.overlayAt ?? l.perfectOverlayAt ?? o + i,
+    r = e < t ? null : e < o ? "line1" : e < a ? "line2" : "overlay";
+  if ("overlay" === r)
+    return (
+      hideCinematicSubtitle(),
+      P.endingOverlay.hidden && je(),
+      void 0
+    );
+  if (!r) return void hideCinematicSubtitle();
+  if (Y.cinematicSubtitle.cue !== r || !Y.cinematicSubtitle.visible) {
+    const e = "line1" === r ? perfectSubtitleTrackConfig.line1 : perfectSubtitleTrackConfig.line2;
+    showCinematicSubtitle(e.source, e.text, e.duration, r);
+  }
+}
+function getStairWarpTarget(e) {
+  const t = stairWarpConfig.returnPoint ?? { x: S.corridorFront.x, y: 0, z: S.corridorFront.z };
+  return {
+    x: g(t.x),
+    y: g(t.y ?? 0),
+    z: g(t.z),
+    yaw: $(e ?? Y.player, S.frontLook),
+    pitch: O(e ?? Y.player, S.frontLook),
+  };
+}
+function isOnStairEnd() {
+  if (!Y.player || Y.stairWarp.active || Y.time < Y.stairWarp.cooldownUntil)
+    return null;
+  const t = g(stairWarpConfig.triggerEdgePadding ?? 12),
+    n = Y.player.z,
+    o = [
+      { ...stairWarpConfig.front, id: "front_stair" },
+      { ...stairWarpConfig.back, id: "back_stair" },
+    ];
+  for (const i of o) {
+    const o = g(i.z1),
+      a = g(i.z2);
+    if (n < o || n > a) continue;
+    if (Math.abs(Y.player.stairY ?? 0) < 0.03) continue;
+    const r = Math.min(Math.abs(n - o), Math.abs(a - n));
+    if (r <= t) return i;
+  }
+  return null;
+}
+function startStairWarp(e) {
+  if (!e || Y.stairWarp.active || Y.time < Y.stairWarp.cooldownUntil) return !1;
+  const t = Y.player;
+  (clearManagedTimeouts(["stairWarp"]),
+    (Y.stairWarp.active = !0),
+    (Y.stairWarp.stage = "warp"),
+    (Y.stairWarp.source = e.id),
+    (Y.stairWarp.startedAt = Y.time),
+    (Y.stairWarp.returnAt = Y.time + stairWarpConfig.effectReturnDelay),
+    (Y.stairWarp.cooldownUntil =
+      Y.time + Math.max(stairWarpConfig.cooldown ?? 6, stairWarpConfig.effectReturnDelay + 0.25)),
+    N(),
+    M.triggerWormhole?.(t.x, t.y, t.z),
+    X.playCue("thread"),
+    scheduleManagedTimeout(
+      "stairWarp",
+      1e3 * Math.max(0.15, stairWarpConfig.effectReturnDelay ?? 1),
+      () => {
+        if (!Y.stairWarp.active || Y.stairWarp.source !== e.id) return;
+        const t = getStairWarpTarget({
+            x: stairWarpConfig.returnPoint?.x ?? S.corridorFront.x / u,
+            y: stairWarpConfig.returnPoint?.y ?? 0,
+            z: stairWarpConfig.returnPoint?.z ?? S.corridorFront.z / u,
+          }),
+          n = stairWarpConfig.subtitle ?? {
+            source: "女兒",
+            text: "不管怎麼走，都會回到四樓耶。",
+            ttl: 4.6,
+          };
+        ((Y.player.x = t.x),
+          (Y.player.y = t.y),
+          (Y.player.z = t.z),
+          (Y.player.velocity.x = 0),
+          (Y.player.velocity.z = 0),
+          (Y.player.lookInput.x = 0),
+          (Y.player.lookInput.y = 0),
+          (Y.player.yaw = t.yaw),
+          (Y.player.pitch = t.pitch),
+          (Y.stairWarp.active = !1),
+          (Y.stairWarp.stage = "cooldown"),
+          (Y.stairWarp.lastTriggeredAt = Y.time),
+          (Y.stairWarp.lastCompletedAt = Y.time),
+          te(n.source, n.text, n.ttl),
+          U("stair-warp", e.id));
+      },
+    ),
+    !0);
+}
+function syncStairWarp() {
+  if (!Y.stairWarp.active) return;
+  if (Y.time < Y.stairWarp.returnAt) return;
+  const e = Y.stairWarp.source ? { id: Y.stairWarp.source } : null;
+  if (e) {
+    const t = stairWarpConfig.subtitle ?? {
+      source: "女兒",
+      text: "不管怎麼走，都會回到四樓耶。",
+      ttl: 4.6,
+    };
+    if (Y.stairWarp.active && Y.player) {
+      const n = getStairWarpTarget({
+        x: stairWarpConfig.returnPoint?.x ?? S.corridorFront.x / u,
+        y: stairWarpConfig.returnPoint?.y ?? 0,
+        z: stairWarpConfig.returnPoint?.z ?? S.corridorFront.z / u,
+      });
+      ((Y.player.x = n.x),
+        (Y.player.y = n.y),
+        (Y.player.z = n.z),
+        (Y.player.velocity.x = 0),
+        (Y.player.velocity.z = 0),
+        (Y.player.lookInput.x = 0),
+        (Y.player.lookInput.y = 0),
+        (Y.player.yaw = n.yaw),
+        (Y.player.pitch = n.pitch),
+        (Y.stairWarp.active = !1),
+        (Y.stairWarp.stage = "cooldown"),
+        (Y.stairWarp.lastTriggeredAt = Y.time),
+        (Y.stairWarp.lastCompletedAt = Y.time),
+        te(t.source, t.text, t.ttl),
+        U("stair-warp", e.id));
+    }
+  }
 }
 function ne(e) {
   ((Y.ambience.text = e),
@@ -1275,6 +1483,7 @@ function Te(e = !1) {
   const t = performance.now();
   (Y.dialogue && Le(),
     clearManagedTimeouts(["narrative", "ending"]),
+    resetCinematicLayers(),
     document.pointerLockElement === z && document.exitPointerLock?.(),
     N(),
     (Y.mode = "intro"),
@@ -1322,6 +1531,7 @@ function Te(e = !1) {
 function De() {
   const e = Y.intro.replay ? Y.intro.resume : null;
   (N(),
+    resetCinematicLayers(),
     (Y.mode = "play"),
     (Y.cameraMode = "play"),
     (Y.intro.replay = !1),
@@ -1371,6 +1581,7 @@ function _e(e, t = {}) {
   const { manual: n = !1 } = t,
     o = performance.now();
   clearManagedTimeouts(["narrative", "ending"]);
+  resetCinematicLayers();
   ((Y.ending = e),
     (Y.endingSequence = {
       type: e,
@@ -1397,33 +1608,10 @@ function _e(e, t = {}) {
           "光先落在她身上，像整條四樓走廊和整間教室都往後慢慢退開，只剩她一個人被時間輕輕托住。",
           6.2,
         ),
-        scheduleManagedTimeout("ending", 1e3 * (l.perfectLine1At ?? 1), () => {
-          Y.endingSequence &&
-            "perfect" === Y.ending &&
-            !Y.flags.perfectLine1Played &&
-            ((Y.flags.perfectLine1Played = !0),
-            te("學長", "也太像徐若瑄了吧！", 5));
-        }),
-        scheduleManagedTimeout("ending", 1e3 * (l.perfectLine2At ?? 6), () => {
-          Y.endingSequence &&
-            "perfect" === Y.ending &&
-            !Y.flags.perfectLine2Played &&
-            ((Y.flags.perfectLine2Played = !0),
-            te("把拔（心底的聲音）", "這一次，依然遇見妳。", 5));
-        }),
-        scheduleManagedTimeout(
-          "ending",
-          1e3 * (l.perfectOverlayAt ?? l.perfectDuration),
-          () => {
-            Y.endingSequence &&
-              "perfect" === Y.ending &&
-              P.endingOverlay.hidden &&
-              je();
-          },
-        ),
         ne(
           "四樓後門那一側忽然靜下來，只剩陽光沿著無天花板的走廊、玻璃和地面慢慢推進來，把她留在最亮的那一格。",
-        ))
+        ),
+        syncPerfectCinematicSubtitle())
       : (te("女兒", "missed" === e ? "紅線先回彈了。" : "他出現在光裡。", 4.4),
         scheduleManagedTimeout("ending", 1e3 * l.duration, () => {
           Y.endingSequence && P.endingOverlay.hidden && je();
@@ -1434,6 +1622,7 @@ function _e(e, t = {}) {
 function qe() {
   (Y.dialogue && Le(),
     clearManagedTimeouts(["narrative", "ending"]),
+    resetCinematicLayers(),
     document.pointerLockElement === z && document.exitPointerLock?.(),
     N(),
     (Y.mode = "play"),
@@ -1450,6 +1639,7 @@ function je() {
     (P.endingTitle.textContent = e.title),
     (P.endingCopy.textContent = e.copy),
     clearManagedTimeouts(["ending"]),
+    hideCinematicSubtitle(),
     (Y.endingSequence = null),
     (Y.cameraMode = "ending_overlay"),
     (P.endingOverlay.hidden = !1),
@@ -1469,6 +1659,7 @@ function je() {
 function Ae() {
   (N(),
     clearManagedTimeouts(["narrative", "ending"]),
+    resetCinematicLayers(),
     (Y.mode = "play"),
     (Y.cameraMode = "play"),
     (Y.phase = "consciousness_market"),
@@ -1686,6 +1877,7 @@ function We() {
     stageBounds: pe(document.getElementById("stage")),
     canvasBounds: pe(z),
     subtitleBounds: pe(P.subtitleBox),
+    cinematicSubtitleBounds: pe(P.cinematicSubtitleLayer),
     ambienceBounds: pe(P.ambienceBox.hidden ? P.ambienceChip : P.ambienceBox),
     objectiveBounds: pe(P.objectivePrompt),
     controlBounds: me(),
@@ -1693,7 +1885,9 @@ function We() {
 }
 function Re() {
   if (!G || !uiAllows("debugPanel")) return void (P.debugPanel.hidden = !0);
-  Y.endingSequence && syncEndingSequenceClock();
+  Y.endingSequence &&
+    (syncEndingSequenceClock(),
+    "perfect" === Y.ending && syncPerfectCinematicSubtitle());
   P.debugPanel.hidden = !1;
   const e = M.getDebugSnapshot(),
     t = We(),
@@ -1730,6 +1924,7 @@ function Re() {
       stageViewport: t.stageBounds,
       canvasViewport: t.canvasBounds,
       subtitleBounds: t.subtitleBounds,
+      cinematicSubtitleBounds: t.cinematicSubtitleBounds,
       controlBounds: t.controlBounds,
       webglViewport: e.webglViewport,
       mobileBlackRegionDetected: e.mobileBlackRegionDetected,
@@ -1738,6 +1933,33 @@ function Re() {
       currentRoomIds: e.currentRoomIds,
       endingShotPhase: e.endingShotPhase,
       endingSequenceTime: Number((Y.endingSequence?.time ?? 0).toFixed(3)),
+      cinematicSubtitleCue: Y.cinematicSubtitle.cue,
+      cinematicSubtitle: {
+        visible: Y.cinematicSubtitle.visible,
+        source: Y.cinematicSubtitle.source,
+        text: Y.cinematicSubtitle.text,
+        ttl: Number((Y.cinematicSubtitle.ttl ?? 0).toFixed(3)),
+        remaining: Number(
+          Math.max(
+            0,
+            (Y.cinematicSubtitle.expiresAt ?? 0) -
+              (Y.endingSequence?.time ?? Y.time),
+          ).toFixed(3),
+        ),
+      },
+      stairWarp: {
+        active: Y.stairWarp.active,
+        stage: Y.stairWarp.stage,
+        source: Y.stairWarp.source,
+        startedAt: Number((Y.stairWarp.startedAt ?? 0).toFixed(3)),
+        returnAt: Number((Y.stairWarp.returnAt ?? 0).toFixed(3)),
+        cooldownUntil: Number((Y.stairWarp.cooldownUntil ?? 0).toFixed(3)),
+        lastTriggeredAt: Number((Y.stairWarp.lastTriggeredAt ?? 0).toFixed(3)),
+        lastCompletedAt: Number((Y.stairWarp.lastCompletedAt ?? 0).toFixed(3)),
+      },
+      warpCooldown: Number(
+        Math.max(0, (Y.stairWarp.cooldownUntil ?? 0) - Y.time).toFixed(3),
+      ),
       renderer: e,
       events: Y.debugEvents,
     };
@@ -2027,7 +2249,9 @@ function Ue() {
 }
 window.__LM402_DEBUG__ = {
   snapshot: function () {
-    Y.endingSequence && syncEndingSequenceClock();
+    Y.endingSequence &&
+      (syncEndingSequenceClock(),
+      "perfect" === Y.ending && syncPerfectCinematicSubtitle());
     const e = We(),
       t = M.getDebugSnapshot();
     return {
@@ -2069,6 +2293,7 @@ window.__LM402_DEBUG__ = {
       stageViewport: e.stageBounds,
       canvasViewport: e.canvasBounds,
       subtitleBounds: e.subtitleBounds,
+      cinematicSubtitleBounds: e.cinematicSubtitleBounds,
       controlBounds: e.controlBounds,
       ambienceBounds: e.ambienceBounds,
       objectiveBounds: e.objectiveBounds,
@@ -2079,6 +2304,33 @@ window.__LM402_DEBUG__ = {
       currentRoomIds: t.currentRoomIds,
       endingShotPhase: t.endingShotPhase,
       endingSequenceTime: Number((Y.endingSequence?.time ?? 0).toFixed(3)),
+      cinematicSubtitleCue: Y.cinematicSubtitle.cue,
+      cinematicSubtitle: {
+        visible: Y.cinematicSubtitle.visible,
+        source: Y.cinematicSubtitle.source,
+        text: Y.cinematicSubtitle.text,
+        ttl: Number((Y.cinematicSubtitle.ttl ?? 0).toFixed(3)),
+        remaining: Number(
+          Math.max(
+            0,
+            (Y.cinematicSubtitle.expiresAt ?? 0) -
+              (Y.endingSequence?.time ?? Y.time),
+          ).toFixed(3),
+        ),
+      },
+      stairWarp: {
+        active: Y.stairWarp.active,
+        stage: Y.stairWarp.stage,
+        source: Y.stairWarp.source,
+        startedAt: Number((Y.stairWarp.startedAt ?? 0).toFixed(3)),
+        returnAt: Number((Y.stairWarp.returnAt ?? 0).toFixed(3)),
+        cooldownUntil: Number((Y.stairWarp.cooldownUntil ?? 0).toFixed(3)),
+        lastTriggeredAt: Number((Y.stairWarp.lastTriggeredAt ?? 0).toFixed(3)),
+        lastCompletedAt: Number((Y.stairWarp.lastCompletedAt ?? 0).toFixed(3)),
+      },
+      warpCooldown: Number(
+        Math.max(0, (Y.stairWarp.cooldownUntil ?? 0) - Y.time).toFixed(3),
+      ),
       endingSequenceStartedAt: Y.endingSequence?.startedAt ?? null,
       renderer: t,
       events: [...Y.debugEvents],
@@ -2384,8 +2636,10 @@ function stepLm402Frame(e, t = performance.now()) {
         })(n, t)
       : (Y.subtitle.ttl > 0 &&
           (Y.subtitle.ttl = Math.max(0, Y.subtitle.ttl - n)),
+        syncStairWarp(),
         (function (e) {
-          if ("play" !== Y.mode || Y.dialogue || Y.endingSequence || q()) {
+          if ("play" !== Y.mode || Y.dialogue || Y.endingSequence || Y.stairWarp.active || q()) {
+            Y.stairWarp.active && N();
             const t = 1 - Math.min(1, 6.4 * e);
             return (
               (Y.player.velocity.x *= t),
@@ -2449,6 +2703,8 @@ function stepLm402Frame(e, t = performance.now()) {
           if (M.getStairY) {
             Y.player.stairY = M.getStairY(Y.player.x, Y.player.z);
           }
+          const stairWarpHit = isOnStairEnd();
+          stairWarpHit && startStairWarp(stairWarpHit);
           const C = Math.hypot(Y.player.velocity.x, Y.player.velocity.z),
             I = C > g(26);
           (Math.abs(c) > 0.18 ||
@@ -2472,22 +2728,7 @@ function stepLm402Frame(e, t = performance.now()) {
           if (!Y.endingSequence) return;
           if (!Number.isFinite(syncEndingSequenceClock())) return void je();
           if ("perfect" === Y.ending)
-            return (
-              !Y.flags.perfectLine1Played &&
-                Y.endingSequence.time >= (l.perfectLine1At ?? 1) &&
-                ((Y.flags.perfectLine1Played = !0),
-                te("學長", "也太像徐若瑄了吧！", 5)),
-              !Y.flags.perfectLine2Played &&
-                Y.endingSequence.time >= (l.perfectLine2At ?? 6) &&
-                ((Y.flags.perfectLine2Played = !0),
-                te("把拔（心底的聲音）", "這一次，依然遇見妳。", 5)),
-              void (
-                Y.endingSequence.time >
-                  (l.perfectOverlayAt ?? l.perfectDuration) &&
-                P.endingOverlay.hidden &&
-                je()
-              )
-            );
+            return void syncPerfectCinematicSubtitle();
           const t =
             "missed" === Y.ending
               ? { x: g(-368), y: 1.34, z: g(756), pitch: -0.04 }
