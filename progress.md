@@ -340,3 +340,20 @@ Updates:
 TODO:
 - The junior is now consistent and grounded, but the art quality is still far from the requested “完美版 3D 精緻超美學妹”. The remaining gap is primarily asset quality, not runtime stability.
 - `reader.html` is safer than before, but a strict deployment CSP is still blocked by the large inline script / inline handler architecture. The eventual fix is to move reader logic into external JS and replace inline event attributes with event listeners.
+
+Updates:
+- Fixed a desktop-reader regression introduced by the layout refactor:
+  - desktop auto mode was reading `#main-col` for current scroll position, but still using `document.documentElement.scrollHeight` as its end-of-scroll limit
+  - this caused desktop autoplay to stop too early or behave as if it were already at the bottom
+- `reader.html` now uses shared desktop/mobile scroll helpers:
+  - `getScrollMetrics()`
+  - `scrollToReaderTop()`
+  - `scrollToReaderBottom()`
+  - desktop autoplay, top, and bottom controls all now target the real desktop scroll host (`#main-col`) instead of the window/document root
+- Expanded verification in `tools/lm402-ui-verify.spec.js`:
+  - added a dedicated desktop reader autoplay test
+  - it verifies that autoplay advances `#main-col.scrollTop`
+  - it also verifies the desktop top/bottom controls now act on the same desktop reading host
+- Latest reader-specific validation:
+  - `npx playwright test tools/lm402-ui-verify.spec.js --reporter=line --workers=1 --grep "reader desktop auto mode scrolls the desktop reading host|reader desktop keeps guidance in overlay instead of a persistent right rail|homepage desktop hero stays readable"` => `3 passed`
+  - latest artifact: `output/playwright/reader-auto-desktop-verify.png`

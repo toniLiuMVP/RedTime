@@ -6481,6 +6481,50 @@
           ? document.getElementById("main-col")
           : null;
       }
+      function getActiveScrollHost() {
+        return getDesktopScrollHost() || window;
+      }
+      function getScrollMetrics() {
+        const desktopHost = getDesktopScrollHost();
+        if (desktopHost) {
+          return {
+            top: desktopHost.scrollTop || 0,
+            max: Math.max(
+              0,
+              desktopHost.scrollHeight - desktopHost.clientHeight,
+            ),
+            host: desktopHost,
+          };
+        }
+        const root = document.documentElement;
+        const top =
+          window.scrollY ||
+          window.pageYOffset ||
+          root.scrollTop ||
+          document.body.scrollTop ||
+          0;
+        return {
+          top,
+          max: Math.max(0, root.scrollHeight - window.innerHeight),
+          host: window,
+        };
+      }
+      function scrollToReaderTop(behavior = "smooth") {
+        const desktopHost = getDesktopScrollHost();
+        if (desktopHost) {
+          desktopHost.scrollTo({ top: 0, behavior });
+          return;
+        }
+        window.scrollTo({ top: 0, behavior });
+      }
+      function scrollToReaderBottom(behavior = "smooth") {
+        const { max, host } = getScrollMetrics();
+        if (host && host !== window) {
+          host.scrollTo({ top: max, behavior });
+          return;
+        }
+        window.scrollTo({ top: max, behavior });
+      }
       function goToEp(n) {
         const el = document.getElementById("ep-" + n);
         if (!el) return;
@@ -7058,23 +7102,16 @@
       }
 
       function getScrollY() {
-        const desktopHost = getDesktopScrollHost();
-        if (desktopHost) return desktopHost.scrollTop || 0;
-        return (
-          window.scrollY ||
-          window.pageYOffset ||
-          document.documentElement.scrollTop ||
-          document.body.scrollTop ||
-          0
-        );
+        return getScrollMetrics().top;
       }
       function setScrollY(y) {
-        const desktopHost = getDesktopScrollHost();
-        if (desktopHost) {
-          desktopHost.scrollTo(0, y);
+        const { host, max } = getScrollMetrics();
+        const clamped = Math.max(0, Math.min(max, y));
+        if (host && host !== window) {
+          host.scrollTo(0, clamped);
           return;
         }
-        window.scrollTo(0, y);
+        window.scrollTo(0, clamped);
       }
       function startAutoScroll() {
         autoActive = true;
@@ -7089,9 +7126,8 @@
             setScrollY(pos);
           }
           last = ts;
-          const maxScroll =
-            document.documentElement.scrollHeight - window.innerHeight;
-          if (getScrollY() >= maxScroll - 8 || pos >= maxScroll) {
+          const { max } = getScrollMetrics();
+          if (getScrollY() >= max - 8 || pos >= max) {
             stopAutoScroll();
             return;
           }
@@ -7176,7 +7212,7 @@
       <button
         class="tb-btn"
         id="tb-top"
-        onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
+        onclick="scrollToReaderTop()"
         title="回到頂端"
       >
         ↑
@@ -7184,12 +7220,7 @@
       <button
         class="tb-btn"
         id="tb-bottom"
-        onclick="
-          window.scrollTo({
-            top: document.documentElement.scrollHeight,
-            behavior: 'smooth',
-          })
-        "
+        onclick="scrollToReaderBottom()"
         title="前往底部"
       >
         ↓

@@ -94,6 +94,65 @@ test("reader desktop keeps guidance in overlay instead of a persistent right rai
   });
 });
 
+test("reader desktop auto mode scrolls the desktop reading host", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`${BASE_URL}/reader.html`, { waitUntil: "domcontentloaded" });
+  await page.waitForTimeout(1500);
+
+  const mainCol = page.locator("#main-col");
+  await expect(mainCol).toBeVisible();
+
+  const initial = await page.evaluate(() => {
+    const host = document.getElementById("main-col");
+    return {
+      top: host?.scrollTop ?? 0,
+      max: Math.max(0, (host?.scrollHeight ?? 0) - (host?.clientHeight ?? 0)),
+    };
+  });
+  expect(initial.max).toBeGreaterThan(200);
+
+  await page.locator("#dsk-auto-btn").click();
+  await page.locator("#ap-play-btn").click();
+  await page.waitForTimeout(1800);
+
+  const afterPlay = await page.evaluate(() => {
+    const host = document.getElementById("main-col");
+    return host?.scrollTop ?? 0;
+  });
+  expect(afterPlay).toBeGreaterThan(initial.top + 20);
+
+  await page.locator("#ap-play-btn").click();
+  await page.locator("#tb-bottom").click();
+  await page.waitForFunction(() => {
+    const host = document.getElementById("main-col");
+    if (!host) return false;
+    const max = Math.max(0, host.scrollHeight - host.clientHeight);
+    return host.scrollTop >= max * 0.75;
+  });
+  const nearBottom = await page.evaluate(() => {
+    const host = document.getElementById("main-col");
+    const top = host?.scrollTop ?? 0;
+    const max = Math.max(0, (host?.scrollHeight ?? 0) - (host?.clientHeight ?? 0));
+    return { top, max };
+  });
+  expect(nearBottom.top).toBeGreaterThan(nearBottom.max * 0.75);
+
+  await page.locator("#tb-top").click();
+  await page.waitForFunction(() => {
+    const host = document.getElementById("main-col");
+    return (host?.scrollTop ?? 9999) < 40;
+  });
+  const backTop = await page.evaluate(() => document.getElementById("main-col")?.scrollTop ?? 0);
+  expect(backTop).toBeLessThan(40);
+
+  await page.screenshot({
+    path: "output/playwright/reader-auto-desktop-verify.png",
+    fullPage: false,
+  });
+});
+
 test("LM402 desktop perfect ending keeps hero close-up active", async ({ page }) => {
   test.setTimeout(60000);
   await page.setViewportSize({ width: 1440, height: 900 });
