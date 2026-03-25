@@ -73,6 +73,10 @@ test("LM402 keeps the same junior model in gameplay and all endings", async ({ p
   await page.waitForTimeout(150);
   let snap = await page.evaluate(() => window.__LM402_DEBUG__.snapshot());
   assertUnifiedJuniorModel(snap, "rear_wait");
+  await page.screenshot({
+    path: "output/playwright/lm402-rear-wait-runtime.png",
+    fullPage: false,
+  });
   summary.rear_wait = {
     variant: snap.assetState.currentVariant,
     runtimeVisible: snap.renderer?.heroCloseupRoots?.runtime?.visible ?? null,
@@ -85,6 +89,10 @@ test("LM402 keeps the same junior model in gameplay and all endings", async ({ p
   await page.waitForTimeout(150);
   snap = await page.evaluate(() => window.__LM402_DEBUG__.snapshot());
   assertUnifiedJuniorModel(snap, "eye_contact");
+  await page.screenshot({
+    path: "output/playwright/lm402-eye-contact-runtime.png",
+    fullPage: false,
+  });
   summary.eye_contact = {
     variant: snap.assetState.currentVariant,
     runtimeVisible: snap.renderer?.heroCloseupRoots?.runtime?.visible ?? null,
@@ -107,6 +115,10 @@ test("LM402 keeps the same junior model in gameplay and all endings", async ({ p
     }
     snap = await page.evaluate(() => window.__LM402_DEBUG__.snapshot());
     assertUnifiedJuniorModel(snap, ending, { requireVisible: ending === "perfect" });
+    await page.screenshot({
+      path: `output/playwright/lm402-ending-${ending}-runtime.png`,
+      fullPage: false,
+    });
     summary[ending] = {
       ending: snap.ending,
       variant: snap.assetState.currentVariant,

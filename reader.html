@@ -201,13 +201,13 @@
       }
       .hero-poster {
         display: grid;
-        grid-template-columns: minmax(0, 1.02fr) minmax(360px, 0.98fr);
-        gap: clamp(24px, 4vw, 44px);
+        grid-template-columns: minmax(0, 1.12fr) minmax(320px, 0.88fr);
+        gap: clamp(22px, 4vw, 46px);
         align-items: center;
         text-align: left;
       }
       .hero-copy-col {
-        max-width: 680px;
+        max-width: 720px;
       }
       .hero-label {
         font-family: "DM Mono", monospace;
@@ -438,6 +438,7 @@
         background: rgba(255, 255, 255, 0.06);
       }
       .hero-guide-card {
+        max-width: 408px;
         padding: 24px 22px;
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 28px;
@@ -676,8 +677,7 @@
         }
         #desktop-layout {
           display: grid;
-          grid-template-columns: var(--sidebar) minmax(0, 1fr)
-            minmax(280px, var(--reader-rail));
+          grid-template-columns: var(--sidebar) minmax(0, 1fr);
           min-height: 100vh;
           align-items: start;
         }
@@ -701,30 +701,22 @@
           height: 100vh;
           overflow-y: auto;
           overscroll-behavior: contain;
-        }
-        #reader-rail {
-          position: sticky;
-          top: 0;
-          align-self: start;
-          height: 100vh;
-          overflow-y: auto;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          padding: 76px 18px 26px;
-          border-left: 1px solid var(--line);
+          padding: 0 clamp(18px, 3vw, 42px);
           background:
             linear-gradient(
               180deg,
-              rgba(7, 10, 16, 0.98),
-              rgba(8, 10, 16, 0.94) 24%,
-              rgba(7, 9, 14, 0.9)
+              rgba(8, 10, 16, 0.96),
+              rgba(8, 10, 16, 0.88) 12%,
+              rgba(7, 9, 14, 0.84)
             ),
             radial-gradient(
-              ellipse 78% 62% at 50% 0%,
-              rgba(22, 168, 100, 0.08),
-              transparent 62%
+              ellipse 72% 44% at 50% 0%,
+              rgba(22, 168, 100, 0.06),
+              transparent 64%
             );
+        }
+        #reader-rail {
+          display: none !important;
         }
         #desktop-topbar {
           position: sticky;
@@ -975,18 +967,25 @@
           display: none;
         }
         .episode {
-          padding: 56px 48px 52px;
+          padding: 58px clamp(46px, 5vw, 62px) 54px;
         }
         #main {
-          width: min(100%, 840px);
+          width: min(100%, 920px);
           padding-bottom: calc(var(--page-bottom-space) - 20px);
           margin: 0 auto;
+          border-left: 1px solid var(--line2);
+          border-right: 1px solid var(--line2);
+          background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.012),
+            rgba(255, 255, 255, 0.008)
+          );
         }
         body[data-width="default"] {
-          --measure: 38em;
+          --measure: 39em;
         }
         body[data-width="wide"] {
-          --measure: 42em;
+          --measure: 43em;
         }
       }
       @media (min-width: 1280px) {
@@ -3734,7 +3733,7 @@
           max-width: 1320px;
         }
         .hero-poster {
-          grid-template-columns: minmax(0, 1.08fr) minmax(400px, 0.92fr);
+          grid-template-columns: minmax(0, 1.18fr) minmax(340px, 0.82fr);
           gap: clamp(38px, 4vw, 72px);
         }
         .hero-copy-col {
@@ -3752,26 +3751,14 @@
           max-width: 620px;
         }
         .hero-guide-card {
-          max-width: 430px;
+          max-width: 388px;
           justify-self: end;
         }
         #desktop-topbar {
           padding: 0 clamp(22px, 2vw, 34px);
         }
         #main {
-          width: min(100%, 860px);
-          border-left: 1px solid var(--line2);
-          border-right: 1px solid var(--line2);
-          background: linear-gradient(
-            180deg,
-            rgba(255, 255, 255, 0.012),
-            rgba(255, 255, 255, 0.008)
-          );
-        }
-        #reader-rail {
-          padding-top: 84px;
-          padding-left: 22px;
-          padding-right: 22px;
+          width: min(100%, 960px);
         }
         .episode {
           padding: 60px clamp(44px, 4.2vw, 58px) 56px;
@@ -4336,15 +4323,16 @@
       <div class="hero-inner">
         <div class="hero-poster">
           <div class="hero-copy-col">
-            <div class="hero-label">EP0 — EP40 · 全集閱讀版</div>
+            <div class="hero-label">電影導引版 · EP0 — EP40</div>
             <div class="hero-sub-en">The Two Yous in Time</div>
             <h1 class="hero-title">時間裡的<br />兩個妳</h1>
             <p class="hero-tagline">把拔與女兒的故事<br />學長與學妹的故事</p>
             <div class="hero-divider"></div>
             <div class="hero-proof">
+              <span class="hero-proof-pill">故事正文原樣</span>
               <span class="hero-proof-pill">章節跳轉</span>
               <span class="hero-proof-pill">續讀定位</span>
-              <span class="hero-proof-pill">彩蛋收納</span>
+              <span class="hero-proof-pill">故事導覽</span>
             </div>
             <div class="hero-stats">
               <div class="hero-stat">
@@ -4385,9 +4373,6 @@
             <button class="hero-cta" onclick="goToEp(0)">
               ↓ &nbsp; 開始閱讀
             </button>
-            <a class="hero-scene-link" href="lm402.html"
-              >↗ &nbsp; LM402 一眼瞬間</a
-            >
             <button
               class="hero-resume"
               id="resume-card"
@@ -4400,12 +4385,15 @@
                 >系統會帶你回到上次讀到的章節。</span
               >
             </button>
+            <a class="hero-scene-link" href="lm402.html"
+              >↗ &nbsp; 需要時再去 LM402 對位</a
+            >
           </div>
           <aside class="hero-guide-card">
-            <div class="hero-guide-kicker">閱讀導引</div>
-            <div class="hero-guide-title">先讀進來，<br />再慢慢對位</div>
+            <div class="hero-guide-kicker">電影導引版</div>
+            <div class="hero-guide-title">先讀正文，<br />再打開導覽</div>
             <p class="hero-guide-copy">
-              這個版本保留全集閱讀的沉浸感，同時把跳章、續讀與故事導覽放到更順手的位置，讓你可以一口氣讀，也可以沿著角色視角慢慢拼回那一眼。
+              桌機版把固定右側資訊拿掉，讓閱讀重心回到正文本身。導引改交給首屏、跳章抽屜與故事導覽面板，你要方向時再打開，不讓它一直壓在視線旁邊。
             </p>
             <div class="hero-guide-list">
               <div class="hero-guide-item">
@@ -4415,16 +4403,15 @@
                 >
               </div>
               <div class="hero-guide-item">
-                <strong>續讀定位</strong
+                <strong>桌機閱讀</strong
                 ><span
-                  >如果你上次讀到一半，首頁下方的「繼續閱讀」會直接把你帶回原來的位置。</span
+                  >左側只保留章節與角色線，中間留給正文，欄寬維持長篇閱讀舒服的節奏。</span
                 >
               </div>
               <div class="hero-guide-item">
-                <strong>LM402 對位</strong
+                <strong>導覽與對位</strong
                 ><span
-                  >想先把 2005 年利瑪竇四樓那一秒走過一遍，可以直接切到 LM402
-                  互動場景。</span
+                  >需要時間線、彩蛋或 LM402 對位時，再打開故事導覽或切去互動場景。</span
                 >
               </div>
             </div>
@@ -4540,73 +4527,6 @@
         <!-- Episodes -->
         <div id="main"><div id="episodes"></div></div>
       </div>
-      <aside id="reader-rail" aria-label="桌機閱讀導引">
-        <button
-          class="rail-card rail-resume"
-          id="resume-rail-card"
-          onclick="resumeReading()"
-          aria-label="從上次閱讀進度繼續"
-        >
-          <span class="resume-eyebrow">繼續閱讀</span>
-          <span class="rail-resume-title" id="resume-rail-title"
-            >繼續上次閱讀</span
-          >
-          <span class="rail-resume-sub" id="resume-rail-sub"
-            >系統會把你帶回上次停下來的那一集。</span
-          >
-        </button>
-        <section class="rail-card">
-          <div class="rail-kicker">目前讀到</div>
-          <div class="rail-title" id="rail-current-title">EP0 · 序</div>
-          <p class="rail-copy" id="rail-current-copy">
-            桌機版會把目前章節、閱讀方向與 LM402 對位資訊固定在右側，讓你一邊沉進正文，一邊保留清楚的定位感。
-          </p>
-          <div class="rail-list">
-            <div class="rail-item">
-              <strong>角色線</strong>
-              <span id="rail-current-arc">把拔視角</span>
-            </div>
-            <div class="rail-item">
-              <strong>時間定位</strong>
-              <span id="rail-current-time">沿著當前章節逐步對位時間線。</span>
-            </div>
-            <div class="rail-item">
-              <strong>閱讀焦點</strong>
-              <span id="rail-current-focus"
-                >正文保持原樣，右側只幫你收束方向，不打斷沉浸。</span
-              >
-            </div>
-          </div>
-        </section>
-        <a class="rail-link-card" href="lm402.html">
-          <div class="rail-kicker">Scene</div>
-          <div class="rail-title">LM402 一眼瞬間</div>
-          <p class="rail-copy">
-            想先把 2005 年利瑪竇四樓那一秒親眼走過一遍，就從這裡直接切進互動場景。
-          </p>
-          <div class="rail-link-arrow">Enter LM402</div>
-        </a>
-        <section class="rail-card">
-          <div class="rail-kicker">桌機閱讀方式</div>
-          <p class="rail-copy">
-            左邊負責跳章與角色線，中間只留給故事，右邊保留續讀、定位與場景入口。你可以順讀，也可以沿著某條線慢慢拼回那一眼。
-          </p>
-          <div class="rail-list">
-            <div class="rail-item">
-              <strong>快速跳章</strong>
-              <span>左側可直接切到把拔、學長、學妹、女兒與複合視角。</span>
-            </div>
-            <div class="rail-item">
-              <strong>續讀定位</strong>
-              <span>系統會記住你停下來的位置，回來時不用重新找。</span>
-            </div>
-            <div class="rail-item">
-              <strong>情緒節奏</strong>
-              <span>正文區維持舒適欄寬，不讓桌機大螢幕把閱讀節奏拉散。</span>
-            </div>
-          </div>
-        </section>
-      </aside>
     </div>
 
     <!-- INFO PANEL (timeline + traversal) -->
@@ -4720,7 +4640,7 @@
           class="ft-link"
           href="https://www.youtube.com/c/toniMVP"
           target="_blank"
-          rel="noopener"
+          rel="noopener noreferrer"
         >
           <div class="ft-link-icon yt">
             <span class="ui-glyph" data-ui-icon="youtube"></span>
@@ -4735,7 +4655,7 @@
           class="ft-link"
           href="https://www.facebook.com/share/16aMnThEBX/?mibextid=wwXIfr"
           target="_blank"
-          rel="noopener"
+          rel="noopener noreferrer"
         >
           <div class="ft-link-icon fb">
             <span class="ui-glyph" data-ui-icon="facebook"></span>
@@ -4750,7 +4670,7 @@
           class="ft-link"
           href="https://lin.ee/VNdWUvr"
           target="_blank"
-          rel="noopener"
+          rel="noopener noreferrer"
         >
           <div class="ft-link-icon ln">
             <span class="ui-glyph" data-ui-icon="line"></span>
@@ -4765,7 +4685,7 @@
           class="ft-link"
           href="https://www.threads.com/@toniliumvp"
           target="_blank"
-          rel="noopener"
+          rel="noopener noreferrer"
         >
           <div class="ft-link-icon th">
             <span class="ui-glyph" data-ui-icon="threads"></span>
@@ -4782,7 +4702,7 @@
           class="ft-action-btn"
           href="https://toniliumvp.github.io/RedTime/"
           target="_blank"
-          rel="noopener"
+          rel="noopener noreferrer"
           >← 回到首頁</a
         >
         <a class="ft-action-btn ft-email" href="mailto:toniLiuMVP@gmail.com"
@@ -5987,20 +5907,62 @@
       function normalizeEpText(text) {
         return String(text).replace(/\bEP0([1-9])\b/g, "EP$1");
       }
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+      function safeCssColor(value, fallback = "rgba(255,255,255,.6)") {
+        const raw = String(value ?? "").trim();
+        return /^rgba?\([\d\s.,%]+\)$|^#[\da-fA-F]{3,8}$|^var\(--[\w-]+\)$|^url\(#[-\w]+\)$/.test(
+          raw,
+        )
+          ? raw
+          : fallback;
+      }
+      function sanitizeClassToken(value) {
+        return String(value ?? "")
+          .trim()
+          .replace(/[^\w-]/g, "");
+      }
+      function makeIconSvg(name) {
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("class", "ui-icon-svg");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+        use.setAttribute("href", `#ic-${name}`);
+        svg.appendChild(use);
+        return svg;
+      }
       function renderIcon(name, cls = "icon-md") {
         return `<span class="ui-glyph ${cls}"><svg class="ui-icon-svg" viewBox="0 0 24 24"><use href="#ic-${name}"></use></svg></span>`;
       }
       function setIconHolder(el, name) {
         if (!el) return;
-        el.innerHTML = `<svg class="ui-icon-svg" viewBox="0 0 24 24"><use href="#ic-${name}"></use></svg>`;
+        el.replaceChildren(makeIconSvg(name));
       }
       function setLabeledButton(el, icon, label) {
         if (!el) return;
-        el.innerHTML = `${renderIcon(icon, "btn-icon")}<span>${label}</span>`;
+        const iconWrap = document.createElement("span");
+        iconWrap.className = "ui-glyph btn-icon";
+        iconWrap.appendChild(makeIconSvg(icon));
+        const text = document.createElement("span");
+        text.textContent = label;
+        el.replaceChildren(iconWrap, text);
       }
       function setFabIcon(el, icon, count = 0) {
         if (!el) return;
-        el.innerHTML = `<svg class="ui-icon-svg" viewBox="0 0 24 24"><use href="#ic-${icon}"></use></svg>${count ? `<span class="fab-count">${count}</span>` : ""}`;
+        const children = [makeIconSvg(icon)];
+        if (count) {
+          const badge = document.createElement("span");
+          badge.className = "fab-count";
+          badge.textContent = String(count);
+          children.push(badge);
+        }
+        el.replaceChildren(...children);
       }
       function timelineIcon(token) {
         return renderIcon(TL_ICON_MAP[token] || "orbit");
@@ -6172,7 +6134,7 @@
       // ── Sidebar (desktop) ──
       function buildSidebar(arc) {
         const list = document.getElementById("sb-ep-list");
-        list.innerHTML = "";
+        list.replaceChildren();
         EPISODES.forEach((ep) => {
           if (arc !== "all" && ep.arc !== arc) return;
           const isF = ep.arc === "female";
@@ -6187,7 +6149,19 @@
               .replace(/[|｜]/g, "")
               .replace(/\s*x\s*/gi, " · ")
               .trim() || "番外";
-          item.innerHTML = `<div class="sb-ep-dot${isF ? " rainbow" : ""}"${isF ? "" : ' style="background:' + dotC + '"'}></div><span class="sb-ep-num">${fmtEp(ep.ep).replace("EP", "")}</span><span class="sb-ep-name">${nm}</span><span class="sb-ep-star">✦</span>`;
+          const dot = document.createElement("div");
+          dot.className = `sb-ep-dot${isF ? " rainbow" : ""}`;
+          if (!isF) dot.style.background = safeCssColor(dotC, "rgba(255,255,255,.45)");
+          const num = document.createElement("span");
+          num.className = "sb-ep-num";
+          num.textContent = fmtEp(ep.ep).replace("EP", "");
+          const name = document.createElement("span");
+          name.className = "sb-ep-name";
+          name.textContent = nm;
+          const star = document.createElement("span");
+          star.className = "sb-ep-star";
+          star.textContent = "✦";
+          item.append(dot, num, name, star);
           item.onclick = () => goToEp(ep.ep);
           list.appendChild(item);
         });
@@ -6206,7 +6180,7 @@
       // ── Jump grid (mobile drawer + desktop dropdown) ──
       const jpList = document.getElementById("jp-list");
       function buildJumpGrid(arc) {
-        jpList.innerHTML = "";
+        jpList.replaceChildren();
         EPISODES.forEach((ep) => {
           if (arc !== "all" && ep.arc !== arc) return;
           const isF = ep.arc === "female";
@@ -6221,7 +6195,19 @@
               .replace(/[|｜]/g, "")
               .replace(/\s*x\s*/gi, " · ")
               .trim() || "番外";
-          btn.innerHTML = `<div class="jp-ep-dot${isF ? " rainbow" : ""}"${isF ? "" : ' style="background:' + dotC + '"'}></div><div class="jp-ep-num">${fmtEp(ep.ep).replace("EP", "")}</div><div class="jp-ep-name">${nm}</div><span class="jp-ep-star">✦</span>`;
+          const dot = document.createElement("div");
+          dot.className = `jp-ep-dot${isF ? " rainbow" : ""}`;
+          if (!isF) dot.style.background = safeCssColor(dotC, "rgba(255,255,255,.45)");
+          const num = document.createElement("div");
+          num.className = "jp-ep-num";
+          num.textContent = fmtEp(ep.ep).replace("EP", "");
+          const name = document.createElement("div");
+          name.className = "jp-ep-name";
+          name.textContent = nm;
+          const star = document.createElement("span");
+          star.className = "jp-ep-star";
+          star.textContent = "✦";
+          btn.append(dot, num, name, star);
           btn.onclick = () => {
             goToEp(ep.ep);
             closeJump();
@@ -6249,7 +6235,7 @@
             "<p style=\"color:var(--t3);font-family:'Noto Sans TC',sans-serif;font-size:13px\">閱讀更多章節，時間線將逐步揭示…</p>";
           return;
         }
-        p.innerHTML = `<div class="ip-section-note">以下節點會隨閱讀進度逐步出現，適合拿來快速確認目前讀到哪一段時間。</div>${vis.map((e, i) => `<div class="tl-entry"><div class="tl-dot-col"><div class="tl-circle" style="${ARC_DS[e.arc] || ARC_DS.mixed}">${timelineIcon(e.icon)}</div>${i < vis.length - 1 ? '<div class="tl-line-seg"></div>' : ""}</div><div class="tl-info"><div class="tl-ep-badge">${fmtEp(e.ep)}</div><div class="tl-ev-label">${e.label}</div><div class="tl-ev-desc">${e.desc}</div></div></div>`).join("")}`;
+        p.innerHTML = `<div class="ip-section-note">以下節點會隨閱讀進度逐步出現，適合拿來快速確認目前讀到哪一段時間。</div>${vis.map((e, i) => `<div class="tl-entry"><div class="tl-dot-col"><div class="tl-circle" style="${ARC_DS[e.arc] || ARC_DS.mixed}">${timelineIcon(e.icon)}</div>${i < vis.length - 1 ? '<div class="tl-line-seg"></div>' : ""}</div><div class="tl-info"><div class="tl-ep-badge">${fmtEp(e.ep)}</div><div class="tl-ev-label">${escapeHtml(e.label)}</div><div class="tl-ev-desc">${escapeHtml(e.desc)}</div></div></div>`).join("")}`;
       }
       function buildTraversePanel(maxEp) {
         const vis = TRAVERSALS.filter((t) => t.revealAfterEp <= maxEp);
@@ -6312,10 +6298,10 @@
         const stats = `<div class="tv-overview"><div class="tv-stat"><span class="tv-stat-num">${vis.length}</span><span class="tv-stat-label">先陪你看見的</span><span class="tv-stat-sub">目前先浮上來的幾段穿越</span></div><div class="tv-stat"><span class="tv-stat-num">${femaleCount}</span><span class="tv-stat-label">學妹那條線</span><span class="tv-stat-sub">從她那邊開始回頭的時間</span></div><div class="tv-stat"><span class="tv-stat-num">${daughterCount}</span><span class="tv-stat-label">女兒那條線</span><span class="tv-stat-sub">她在夢裡一路飛去的時間</span></div></div>`;
         const evts = vis
           .map((t, i) => {
-            const color = TRAVERSE_COLOR_MAP[t.type] || "var(--t2)";
-            const typeLabel = TRAVERSE_LABEL_MAP[t.type] || t.type;
-            const whoLabel = t.who === "daughter" ? "女兒那條線" : "學妹那條線";
-            return `<div class="tv-event type-${t.type}"><div class="tv-event-head"><div class="tv-step" style="color:${color}"><div class="tv-step-count">${String(i + 1).padStart(2, "0")}</div><div class="tv-step-copy"><div class="tv-step-title" style="color:${color}">${typeLabel}</div><div class="tv-step-sub">這一段先在 ${fmtEp(t.revealAfterEp)} 遇見</div></div></div><div class="tv-badges"><span class="tv-badge" style="border-color:${color};color:${color}">${fmtEp(t.revealAfterEp)} 先遇見</span><span class="tv-badge">${whoLabel}</span></div></div><div class="tv-route"><div class="tv-node"><div class="tv-node-kicker">從這一端</div><div class="tv-node-label">${t.from_label}</div><div class="tv-node-year">${formatYearLabel(t.from_year)}</div></div><div class="tv-route-arrow" style="color:${color}">${renderIcon("arrow-right")}</div><div class="tv-node"><div class="tv-node-kicker">走向那一端</div><div class="tv-node-label">${t.to_label}</div><div class="tv-node-year">${formatYearLabel(t.to_year)}</div></div></div><div class="tv-event-desc">${t.desc}</div></div>`;
+            const color = safeCssColor(TRAVERSE_COLOR_MAP[t.type] || "var(--t2)", "var(--t2)");
+            const typeLabel = escapeHtml(TRAVERSE_LABEL_MAP[t.type] || t.type);
+            const whoLabel = escapeHtml(t.who === "daughter" ? "女兒那條線" : "學妹那條線");
+            return `<div class="tv-event type-${escapeHtml(t.type)}"><div class="tv-event-head"><div class="tv-step" style="color:${color}"><div class="tv-step-count">${String(i + 1).padStart(2, "0")}</div><div class="tv-step-copy"><div class="tv-step-title" style="color:${color}">${typeLabel}</div><div class="tv-step-sub">這一段先在 ${fmtEp(t.revealAfterEp)} 遇見</div></div></div><div class="tv-badges"><span class="tv-badge" style="border-color:${color};color:${color}">${fmtEp(t.revealAfterEp)} 先遇見</span><span class="tv-badge">${whoLabel}</span></div></div><div class="tv-route"><div class="tv-node"><div class="tv-node-kicker">從這一端</div><div class="tv-node-label">${escapeHtml(t.from_label)}</div><div class="tv-node-year">${escapeHtml(formatYearLabel(t.from_year))}</div></div><div class="tv-route-arrow" style="color:${color}">${renderIcon("arrow-right")}</div><div class="tv-node"><div class="tv-node-kicker">走向那一端</div><div class="tv-node-label">${escapeHtml(t.to_label)}</div><div class="tv-node-year">${escapeHtml(formatYearLabel(t.to_year))}</div></div></div><div class="tv-event-desc">${escapeHtml(t.desc)}</div></div>`;
           })
           .join("");
         p.innerHTML = `<div class="tv-container"><div class="tv-title">時空穿越圖（截至目前章節）</div><div class="ip-section-note">命運阿嬤不會一下子把全部攤開，她會一段一段陪你看。你先看見哪一段，故事就先陪你走到哪一段。先看看線怎麼走，再往下對照每一段從哪裡來，往哪裡去。</div>${stats}<div class="tv-legend"><div class="tv-legend-item"><span class="tv-legend-dot" style="background:rgba(255,72,88,.85)"></span><span>學妹線</span></div><div class="tv-legend-item"><span class="tv-legend-dot" style="background:rgba(168,164,156,.72)"></span><span>時間軸</span></div><div class="tv-legend-item"><span class="tv-legend-dot" style="background:rgba(200,144,16,.85)"></span><span>女兒線</span></div></div><div class="tv-svg-wrap">${svg}</div><div class="tv-events">${evts}</div></div>`;
@@ -6333,7 +6319,7 @@
           vis
             .map(
               (e) =>
-                `<div class="tl-evt-inline" onclick="goToEp(${e.ep})"><div class="tli-dot" style="${ARC_DS[e.arc] || ARC_DS.mixed}">${timelineIcon(e.icon)}</div><div class="tli-ep">${fmtEp(e.ep)}</div><div class="tli-label">${e.label}</div></div>`,
+                `<div class="tl-evt-inline" onclick="goToEp(${e.ep})"><div class="tli-dot" style="${ARC_DS[e.arc] || ARC_DS.mixed}">${timelineIcon(e.icon)}</div><div class="tli-ep">${fmtEp(e.ep)}</div><div class="tli-label">${escapeHtml(e.label)}</div></div>`,
             )
             .join("") +
           `<div class="tli-now"><div class="tli-now-dot">${renderIcon("arrow-right")}</div><div class="tli-now-lbl">${fmtEp(ep.ep)}<br>現在</div></div>`;
@@ -6348,7 +6334,7 @@
         if (idx < EPISODES.length - 1) {
           const nx = EPISODES[idx + 1];
           const pv = stripHtml(nx.html).substring(0, 90).trim();
-          tH = `<div class="ep-teaser" onclick="goToEp(${nx.ep})"><div class="et-label">下一集</div><div class="et-num">${fmtEp(nx.ep)} · ${ARC_LBL[nx.arc] || nx.arc}</div><div class="et-text">${pv}…</div><div class="et-arrow">繼續閱讀 →</div></div>`;
+          tH = `<div class="ep-teaser" onclick="goToEp(${nx.ep})"><div class="et-label">下一集</div><div class="et-num">${fmtEp(nx.ep)} · ${escapeHtml(ARC_LBL[nx.arc] || nx.arc)}</div><div class="et-text">${escapeHtml(pv)}…</div><div class="et-arrow">繼續閱讀 →</div></div>`;
         }
         const pvBtn =
           idx > 0
@@ -6363,7 +6349,7 @@
         sec.id = "ep-" + ep.ep;
         const granny = GRANNY.find((g) => g.ep === ep.ep) || null;
         const grannyH = granny ? buildGranny(granny) : "";
-        sec.innerHTML = `<div class="ep-bg-num">${fmtEp(ep.ep).replace("EP", "")}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${ARC_LBL[arc] || arc}</span></div><div class="ep-title">${cT}</div><div class="ep-meta-row"><span>${readMins(ep.html)} 分鐘</span><span class="ep-meta-dot"></span><span>${ep.chars || ""} 字</span></div></div><div class="ep-info-strip"><div class="ep-info-head" onclick="toggleEpInfo(this)"><span class="eih-icon">${renderIcon("guide")}</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>${tline ? `<div class="ep-tline-wrap"><div class="ep-tline-toggle" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${tline}</span></div></div>` : ""}${note ? `<div class="ep-note"><div class="ep-note-toggle" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${note}</div></div>` : ""}${grannyH}<div class="ep-body-wrap"></div>${tH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
+        sec.innerHTML = `<div class="ep-bg-num">${fmtEp(ep.ep).replace("EP", "")}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${escapeHtml(ARC_LBL[arc] || arc)}</span></div><div class="ep-title">${escapeHtml(cT)}</div><div class="ep-meta-row"><span>${readMins(ep.html)} 分鐘</span><span class="ep-meta-dot"></span><span>${escapeHtml(ep.chars || "")} 字</span></div></div><div class="ep-info-strip"><div class="ep-info-head" onclick="toggleEpInfo(this)"><span class="eih-icon">${renderIcon("guide")}</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>${tline ? `<div class="ep-tline-wrap"><div class="ep-tline-toggle" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${escapeHtml(tline)}</span></div></div>` : ""}${note ? `<div class="ep-note"><div class="ep-note-toggle" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${escapeHtml(note)}</div></div>` : ""}${grannyH}<div class="ep-body-wrap"></div>${tH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
         const bd = document.createElement("div");
         bd.className = "ep-body";
         bd.innerHTML = ep.html;
@@ -6667,7 +6653,7 @@
         p.innerHTML = eggShelfList
           .map(
             (e) =>
-              `<div style="display:flex;align-items:center;gap:14px;padding:13px 15px;border:1px solid var(--line);border-radius:8px;margin-bottom:9px;cursor:pointer;background:rgba(255,255,255,.012)" onclick="openModal(EGGS.find(x=>x.id===${e.id}))"><span style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--amber)">${eggGlyphMarkup(e.glyph)}</span><div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:.2em;text-transform:uppercase;margin-bottom:3px">${e.eyebrow}</div><div style="font-size:14px;color:var(--t1)">${e.title}</div></div><span style="margin-left:auto;color:var(--t3);font-size:12px">→</span></div>`,
+              `<div style="display:flex;align-items:center;gap:14px;padding:13px 15px;border:1px solid var(--line);border-radius:8px;margin-bottom:9px;cursor:pointer;background:rgba(255,255,255,.012)" onclick="openModal(EGGS.find(x=>x.id===${Number(e.id)}))"><span style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--amber)">${eggGlyphMarkup(e.glyph)}</span><div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:.2em;text-transform:uppercase;margin-bottom:3px">${escapeHtml(e.eyebrow)}</div><div style="font-size:14px;color:var(--t1)">${escapeHtml(e.title)}</div></div><span style="margin-left:auto;color:var(--t3);font-size:12px">→</span></div>`,
           )
           .join("");
         c.appendChild(p);
@@ -6684,7 +6670,7 @@
         document.getElementById("modal-tabs").innerHTML = tabs
           .map(
             (t, i) =>
-              `<div class="mtab${i === 0 ? " active" : ""}" onclick="switchModalTab(this,${i})">${t}</div>`,
+              `<div class="mtab${i === 0 ? " active" : ""}" onclick="switchModalTab(this,${i})">${escapeHtml(t)}</div>`,
           )
           .join("");
         const c = document.getElementById("modal-content");
@@ -6698,7 +6684,7 @@
             const dc = isF
               ? "conic-gradient(var(--f1),var(--f3),var(--f5))"
               : ARC_C[q.arc] || "var(--ember)";
-            return `<div class="qcard arc-${q.arc}"><div class="qcard-text${isF ? " rainbow-txt" : ""}">${q.text}</div><div class="qcard-meta"><div class="qcard-dot" style="background:${dc}"></div><span>${normalizeEpText(q.ep)}</span></div></div>`;
+            return `<div class="qcard arc-${sanitizeClassToken(q.arc)}"><div class="qcard-text${isF ? " rainbow-txt" : ""}">${escapeHtml(q.text)}</div><div class="qcard-meta"><div class="qcard-dot" style="background:${safeCssColor(dc, "var(--ember)")}"></div><span>${escapeHtml(normalizeEpText(q.ep))}</span></div></div>`;
           })
           .join("")}</div>`;
         c.appendChild(p0);
@@ -6710,11 +6696,13 @@
             const traits = (egg.charTraits || [])
               .map(
                 (t) =>
-                  `<div class="char-trait"><span class="char-trait-icon">${t.icon}</span><span>${t.text}</span></div>`,
+                  `<div class="char-trait"><span class="char-trait-icon">${escapeHtml(t.icon)}</span><span>${escapeHtml(t.text)}</span></div>`,
               )
               .join("");
-            const cqS = egg.charQuoteColor ? "color:" + egg.charQuoteColor : "";
-            p1.innerHTML = `<div class="char-wrap"><div class="char-top"><div class="char-portrait">${buildPortrait(egg.charColorClass)}</div><div class="char-info"><div class="char-name ${egg.charColorClass}">${egg.charName}</div><div class="char-sub">${egg.charSubtitle || ""}</div></div></div><div class="char-traits">${traits}</div>${egg.charQuote ? `<div class="char-cq" style="${cqS}">${egg.charQuote}</div>` : ""}</div>`;
+            const cqS = egg.charQuoteColor
+              ? "color:" + safeCssColor(egg.charQuoteColor, "var(--t1)")
+              : "";
+            p1.innerHTML = `<div class="char-wrap"><div class="char-top"><div class="char-portrait">${buildPortrait(egg.charColorClass)}</div><div class="char-info"><div class="char-name ${sanitizeClassToken(egg.charColorClass)}">${escapeHtml(egg.charName)}</div><div class="char-sub">${escapeHtml(egg.charSubtitle || "")}</div></div></div><div class="char-traits">${traits}</div>${egg.charQuote ? `<div class="char-cq" style="${cqS}">${escapeHtml(egg.charQuote)}</div>` : ""}</div>`;
           } else if (egg.hasRelMap) {
             p1.innerHTML = `<div style="overflow-x:auto">${buildRelMap()}</div>`;
           }
@@ -6727,7 +6715,7 @@
           p2.innerHTML = (egg.hiddenNotes || [])
             .map(
               (n) =>
-                `<div class="hnote"><div class="hnote-head"><span class="hnote-icon">${n.icon}</span><span class="hnote-title">${n.title}</span></div><div class="hnote-body">${n.body}</div></div>`,
+                `<div class="hnote"><div class="hnote-head"><span class="hnote-icon">${escapeHtml(n.icon)}</span><span class="hnote-title">${escapeHtml(n.title)}</span></div><div class="hnote-body">${escapeHtml(n.body)}</div></div>`,
             )
             .join("");
           c.appendChild(p2);
