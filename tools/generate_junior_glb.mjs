@@ -113,8 +113,8 @@ function createHead(detail = 1, materials = {}) {
     materials.skinFace,
     "head_main",
   );
-  head.position.set(0, hero ? 1.586 : 1.57, hero ? 0.008 : 0.004);
-  head.scale.set(hero ? 0.66 : 0.82, hero ? 0.98 : 1.12, hero ? 0.68 : 0.8);
+  head.position.set(0, hero ? 1.584 : 1.57, hero ? 0.006 : 0.004);
+  head.scale.set(hero ? 0.62 : 0.82, hero ? 0.95 : 1.12, hero ? 0.64 : 0.8);
   group.add(head);
 
   const jaw = makeMesh(
@@ -122,8 +122,8 @@ function createHead(detail = 1, materials = {}) {
     materials.skinFace,
     "head_jaw",
   );
-  jaw.position.set(0, hero ? 1.494 : 1.468, hero ? 0.026 : 0.03);
-  jaw.scale.set(hero ? 0.34 : 0.48, hero ? 0.24 : 0.34, hero ? 0.42 : 0.56);
+  jaw.position.set(0, hero ? 1.5 : 1.468, hero ? 0.022 : 0.03);
+  jaw.scale.set(hero ? 0.3 : 0.48, hero ? 0.22 : 0.34, hero ? 0.38 : 0.56);
   group.add(jaw);
 
   const chin = makeMesh(
@@ -131,8 +131,8 @@ function createHead(detail = 1, materials = {}) {
     materials.skinFace,
     "chin",
   );
-  chin.position.set(0, hero ? 1.462 : 1.438, hero ? 0.126 : 0.146);
-  chin.scale.set(hero ? 1.08 : 1.55, hero ? 0.28 : 0.42, hero ? 0.34 : 0.42);
+  chin.position.set(0, hero ? 1.468 : 1.438, hero ? 0.116 : 0.146);
+  chin.scale.set(hero ? 0.94 : 1.55, hero ? 0.24 : 0.42, hero ? 0.3 : 0.42);
   group.add(chin);
 
   const blushMaterial = cloneMaterial(materials.blush, "skin_face_blush", {
@@ -144,16 +144,16 @@ function createHead(detail = 1, materials = {}) {
     blushMaterial,
     "cheek_blush_l",
   );
-  leftBlush.position.set(hero ? -0.066 : -0.078, hero ? 1.488 : 1.476, hero ? 0.118 : 0.144);
-  leftBlush.scale.set(hero ? 0.72 : 0.9, hero ? 0.48 : 0.64, hero ? 0.26 : 0.34);
+  leftBlush.position.set(hero ? -0.058 : -0.078, hero ? 1.492 : 1.476, hero ? 0.11 : 0.144);
+  leftBlush.scale.set(hero ? 0.62 : 0.9, hero ? 0.42 : 0.64, hero ? 0.22 : 0.34);
   const rightBlush = leftBlush.clone();
   rightBlush.position.x = 0.078;
   group.add(leftBlush, rightBlush);
 
   const earGeometry = new THREE.SphereGeometry(0.028, 18, 18);
   const leftEar = makeMesh(earGeometry, materials.skinFace, "ear_l");
-  leftEar.position.set(-0.112, hero ? 1.528 : 1.514, 0.006);
-  leftEar.scale.set(hero ? 0.34 : 0.44, hero ? 0.54 : 0.66, hero ? 0.34 : 0.42);
+  leftEar.position.set(-0.106, hero ? 1.53 : 1.514, 0.004);
+  leftEar.scale.set(hero ? 0.3 : 0.44, hero ? 0.5 : 0.66, hero ? 0.3 : 0.42);
   const rightEar = leftEar.clone();
   rightEar.position.x = 0.126;
   group.add(leftEar, rightEar);
@@ -163,8 +163,8 @@ function createHead(detail = 1, materials = {}) {
     materials.skinFace,
     "nose_bridge",
   );
-  noseBridge.position.set(0, hero ? 1.54 : 1.535, hero ? 0.084 : 0.094);
-  noseBridge.scale.set(hero ? 0.42 : 0.56, hero ? 0.66 : 0.84, hero ? 0.58 : 0.7);
+  noseBridge.position.set(0, hero ? 1.542 : 1.535, hero ? 0.078 : 0.094);
+  noseBridge.scale.set(hero ? 0.36 : 0.56, hero ? 0.62 : 0.84, hero ? 0.52 : 0.7);
   group.add(noseBridge);
 
   const noseTip = makeMesh(
@@ -172,8 +172,8 @@ function createHead(detail = 1, materials = {}) {
     materials.skinFace,
     "nose_tip",
   );
-  noseTip.position.set(0, hero ? 1.506 : 1.492, hero ? 0.094 : 0.108);
-  noseTip.scale.set(hero ? 0.9 : 1.08, hero ? 0.56 : 0.74, hero ? 0.94 : 1.18);
+  noseTip.position.set(0, hero ? 1.51 : 1.492, hero ? 0.088 : 0.108);
+  noseTip.scale.set(hero ? 0.78 : 1.08, hero ? 0.5 : 0.74, hero ? 0.84 : 1.18);
   group.add(noseTip);
 
   const lip = makeMesh(
@@ -181,22 +181,22 @@ function createHead(detail = 1, materials = {}) {
     materials.lip,
     "lip_arc",
   );
-  lip.position.set(0, hero ? 1.468 : 1.447, hero ? 0.126 : 0.152);
+  lip.position.set(0, hero ? 1.472 : 1.447, hero ? 0.118 : 0.152);
   lip.rotation.x = Math.PI;
   group.add(lip);
 
   const eyeWhiteGeometry = new THREE.SphereGeometry(hero ? 0.022 : 0.026, 18, 18);
   const irisGeometry = new THREE.SphereGeometry(hero ? 0.009 : 0.012, 14, 14);
   const leftEye = makeMesh(eyeWhiteGeometry, materials.eyeWhite, "eye_white_l");
-  leftEye.position.set(hero ? -0.048 : -0.06, hero ? 1.56 : 1.558, hero ? 0.142 : 0.16);
-  leftEye.scale.set(hero ? 1.3 : 1.64, hero ? 0.86 : 1.08, hero ? 0.42 : 0.56);
+  leftEye.position.set(hero ? -0.044 : -0.06, hero ? 1.558 : 1.558, hero ? 0.134 : 0.16);
+  leftEye.scale.set(hero ? 1.14 : 1.64, hero ? 0.8 : 1.08, hero ? 0.38 : 0.56);
   const rightEye = leftEye.clone();
   rightEye.position.x = hero ? 0.05 : 0.064;
   const leftIris = makeMesh(irisGeometry, materials.iris, "eye_iris_l");
-  leftIris.position.set(hero ? -0.048 : -0.06, hero ? 1.558 : 1.554, hero ? 0.154 : 0.176);
-  leftIris.scale.set(hero ? 0.94 : 1.1, hero ? 0.88 : 1.02, hero ? 0.74 : 0.88);
+  leftIris.position.set(hero ? -0.044 : -0.06, hero ? 1.556 : 1.554, hero ? 0.146 : 0.176);
+  leftIris.scale.set(hero ? 0.82 : 1.1, hero ? 0.78 : 1.02, hero ? 0.66 : 0.88);
   const rightIris = leftIris.clone();
-  rightIris.position.x = hero ? 0.048 : 0.062;
+  rightIris.position.x = hero ? 0.044 : 0.062;
   group.add(leftEye, rightEye, leftIris, rightIris);
 
   const browMaterial = materials.brow;
@@ -205,11 +205,11 @@ function createHead(detail = 1, materials = {}) {
     browMaterial,
     "brow_l",
   );
-  leftBrow.position.set(hero ? -0.048 : -0.058, hero ? 1.592 : 1.592, hero ? 0.132 : 0.152);
-  leftBrow.rotation.z = hero ? -1.3 : -1.34;
+  leftBrow.position.set(hero ? -0.044 : -0.058, hero ? 1.586 : 1.592, hero ? 0.124 : 0.152);
+  leftBrow.rotation.z = hero ? -1.24 : -1.34;
   const rightBrow = leftBrow.clone();
-  rightBrow.position.x = hero ? 0.05 : 0.06;
-  rightBrow.rotation.z = hero ? 1.3 : 1.34;
+  rightBrow.position.x = hero ? 0.044 : 0.06;
+  rightBrow.rotation.z = hero ? 1.24 : 1.34;
   group.add(leftBrow, rightBrow);
 
   const eyelashMaterial = cloneMaterial(materials.brow, "hair_cards_lash", {
@@ -220,10 +220,10 @@ function createHead(detail = 1, materials = {}) {
     eyelashMaterial,
     "eyelash_l",
   );
-  leftLash.position.set(hero ? -0.05 : -0.062, hero ? 1.57 : 1.57, hero ? 0.154 : 0.168);
+  leftLash.position.set(hero ? -0.046 : -0.062, hero ? 1.566 : 1.57, hero ? 0.146 : 0.168);
   leftLash.rotation.z = Math.PI;
   const rightLash = leftLash.clone();
-  rightLash.position.x = hero ? 0.052 : 0.064;
+  rightLash.position.x = hero ? 0.046 : 0.064;
   group.add(leftLash, rightLash);
 
   const sparkleMaterial = cloneMaterial(materials.eyeWhite, "eye_glint", {
@@ -235,9 +235,9 @@ function createHead(detail = 1, materials = {}) {
     sparkleMaterial,
     "eye_glint_l",
   );
-  glintL.position.set(hero ? -0.044 : -0.056, hero ? 1.574 : 1.572, hero ? 0.168 : 0.184);
+  glintL.position.set(hero ? -0.041 : -0.056, hero ? 1.57 : 1.572, hero ? 0.158 : 0.184);
   const glintR = glintL.clone();
-  glintR.position.x = hero ? 0.058 : 0.072;
+  glintR.position.x = hero ? 0.049 : 0.072;
   group.add(glintL, glintR);
 
   return group;
@@ -253,8 +253,8 @@ function createHair(detail = 1, materials = {}, options = {}) {
     materials.hair,
     "hair_cap",
   );
-  hairCap.position.set(0, hero ? 1.606 : 1.604, hero ? 0.012 : 0.024);
-  hairCap.scale.set(hero ? 0.62 : 0.88, hero ? 0.61 : 0.86, hero ? 0.62 : 0.84);
+  hairCap.position.set(0, hero ? 1.602 : 1.604, hero ? 0.008 : 0.024);
+  hairCap.scale.set(hero ? 0.56 : 0.88, hero ? 0.58 : 0.86, hero ? 0.58 : 0.84);
   hairCap.rotation.x = hero ? -0.08 : -0.1;
   group.add(hairCap);
 
@@ -263,8 +263,8 @@ function createHair(detail = 1, materials = {}, options = {}) {
     materials.hair,
     "hair_back",
   );
-  backHair.position.set(0, hero ? 1.496 : 1.472, hero ? -0.076 : -0.116);
-  backHair.scale.set(hero ? 0.52 : 0.78, hero ? 0.82 : 1.08, hero ? 0.34 : 0.52);
+  backHair.position.set(0, hero ? 1.502 : 1.472, hero ? -0.068 : -0.116);
+  backHair.scale.set(hero ? 0.46 : 0.78, hero ? 0.74 : 1.08, hero ? 0.3 : 0.52);
   group.add(backHair);
 
   const fringeCore = makeMesh(
@@ -272,8 +272,8 @@ function createHair(detail = 1, materials = {}, options = {}) {
     materials.hair,
     "hair_fringe_core",
   );
-  fringeCore.position.set(0, hero ? 1.598 : 1.606, hero ? 0.086 : 0.132);
-  fringeCore.scale.set(hero ? 0.5 : 0.84, hero ? 0.62 : 0.92, hero ? 0.52 : 0.82);
+  fringeCore.position.set(0, hero ? 1.594 : 1.606, hero ? 0.078 : 0.132);
+  fringeCore.scale.set(hero ? 0.38 : 0.84, hero ? 0.5 : 0.92, hero ? 0.42 : 0.82);
   fringeCore.rotation.set(hero ? 0.08 : 0.18, 0, -0.03);
   group.add(fringeCore);
 
@@ -283,12 +283,12 @@ function createHair(detail = 1, materials = {}, options = {}) {
       materials.hairWarm,
       "hair_fringe_l",
     );
-    fringeLeft.position.set(-0.038, 1.596, 0.098);
-    fringeLeft.scale.set(0.48, 0.58, 0.48);
-    fringeLeft.rotation.set(0.06, 0.06, 0.12);
+    fringeLeft.position.set(-0.032, 1.592, 0.086);
+    fringeLeft.scale.set(0.34, 0.48, 0.34);
+    fringeLeft.rotation.set(0.04, 0.06, 0.1);
     const fringeRight = fringeLeft.clone();
-    fringeRight.position.x = 0.044;
-    fringeRight.rotation.z = -0.16;
+    fringeRight.position.x = 0.036;
+    fringeRight.rotation.z = -0.12;
     group.add(fringeLeft, fringeRight);
   }
 
@@ -297,11 +297,11 @@ function createHair(detail = 1, materials = {}, options = {}) {
     materials.hair,
     "hair_side_l",
   );
-  sideL.position.set(-0.094, hero ? 1.53 : 1.452, hero ? 0.05 : 0.062);
-  sideL.scale.set(hero ? 0.5 : 0.86, hero ? 0.58 : 0.98, hero ? 0.56 : 0.82);
-  sideL.rotation.set(hero ? 0.01 : 0.02, hero ? -0.04 : 0, hero ? 0.05 : 0.16);
+  sideL.position.set(-0.088, hero ? 1.532 : 1.452, hero ? 0.042 : 0.062);
+  sideL.scale.set(hero ? 0.42 : 0.86, hero ? 0.5 : 0.98, hero ? 0.48 : 0.82);
+  sideL.rotation.set(hero ? 0.01 : 0.02, hero ? -0.03 : 0, hero ? 0.04 : 0.16);
   const sideR = sideL.clone();
-  sideR.position.x = hero ? 0.1 : 0.122;
+  sideR.position.x = hero ? 0.092 : 0.122;
   sideR.rotation.z = hero ? -0.05 : -0.16;
   group.add(sideL, sideR);
 
@@ -310,7 +310,7 @@ function createHair(detail = 1, materials = {}, options = {}) {
     materials.hair,
     "hair_pony_base",
   );
-  ponyBase.position.set(hero ? 0.022 : 0.038, hero ? 1.6 : 1.6, hero ? -0.114 : -0.145);
+  ponyBase.position.set(hero ? 0.022 : 0.038, hero ? 1.604 : 1.6, hero ? -0.11 : -0.145);
   ponyBase.rotation.set(hero ? 0.68 : 0.78, -0.18, -0.04);
   group.add(ponyBase);
 
@@ -331,9 +331,9 @@ function createHair(detail = 1, materials = {}, options = {}) {
   (!hero ? ponyStrands : ponyStrands.slice(0, 1)).forEach((points, index) => {
     const strand = createStrand(
       hero
-        ? points.map(([x, y, z]) => [x * 0.72, y + 0.12, z * 0.56])
+        ? points.map(([x, y, z]) => [x * 0.68, y + 0.12, z * 0.5])
         : points,
-      hero ? 0.009 : index === 0 ? 0.018 : 0.014,
+      hero ? 0.0072 : index === 0 ? 0.018 : 0.014,
       materials.hair,
       hero ? 12 + detail * 2 : 16 + detail * 4,
     );
@@ -374,7 +374,7 @@ function createHair(detail = 1, materials = {}, options = {}) {
   bangs.forEach((points, index) => {
     const strand = createStrand(
       points,
-      hero ? 0.0022 : 0.004,
+      hero ? 0.0018 : 0.004,
       materials.hairWarm,
       hero ? 10 : 12,
     );
@@ -505,7 +505,7 @@ function createHeroBust(materials = {}, detail = 1) {
     "hero_bust",
   );
   bust.position.set(0, 1.13, 0.002);
-  bust.scale.set(0.9, 0.8, 0.7);
+  bust.scale.set(0.84, 0.76, 0.64);
   group.add(bust);
 
   const bustFront = makeMesh(
@@ -514,7 +514,7 @@ function createHeroBust(materials = {}, detail = 1) {
     "hero_bust_front",
   );
   bustFront.position.set(0, 1.16, 0.04);
-  bustFront.scale.set(0.96, 0.56, 0.46);
+  bustFront.scale.set(0.88, 0.52, 0.42);
   group.add(bustFront);
 
   const neck = makeMesh(
@@ -523,6 +523,7 @@ function createHeroBust(materials = {}, detail = 1) {
     "hero_neck",
   );
   neck.position.set(0, 1.32, 0.02);
+  neck.scale.set(0.9, 0.94, 0.88);
   group.add(neck);
 
   const collarLeft = makeMesh(
@@ -533,10 +534,10 @@ function createHeroBust(materials = {}, detail = 1) {
     }),
     "hero_collar_l",
   );
-  collarLeft.position.set(-0.048, 1.27, 0.024);
+  collarLeft.position.set(-0.044, 1.27, 0.024);
   collarLeft.rotation.set(0.06, 0.22, 0.12);
   const collarRight = collarLeft.clone();
-  collarRight.position.x = 0.048;
+  collarRight.position.x = 0.044;
   collarRight.rotation.set(0.06, -0.22, -0.12);
   group.add(collarLeft, collarRight);
 
@@ -547,7 +548,7 @@ function createHeroBust(materials = {}, detail = 1) {
     "hero_shoulder_l",
   );
   shoulderLeft.position.set(-0.112, 1.18, 0.008);
-  shoulderLeft.scale.set(1.32, 0.96, 0.84);
+  shoulderLeft.scale.set(1.16, 0.88, 0.74);
   const shoulderRight = shoulderLeft.clone();
   shoulderRight.position.x = 0.112;
   group.add(shoulderLeft, shoulderRight);
@@ -557,11 +558,11 @@ function createHeroBust(materials = {}, detail = 1) {
     materials.shirtShadow,
     "hero_shoulder_slope_l",
   );
-  shoulderSlopeLeft.position.set(-0.122, 1.168, 0.038);
+  shoulderSlopeLeft.position.set(-0.114, 1.17, 0.034);
   shoulderSlopeLeft.rotation.set(0.16, 0.04, 0.42);
-  shoulderSlopeLeft.scale.set(1, 0.84, 0.74);
+  shoulderSlopeLeft.scale.set(0.92, 0.78, 0.68);
   const shoulderSlopeRight = shoulderSlopeLeft.clone();
-  shoulderSlopeRight.position.x = 0.122;
+  shoulderSlopeRight.position.x = 0.114;
   shoulderSlopeRight.rotation.z = -0.42;
   group.add(shoulderSlopeLeft, shoulderSlopeRight);
 
@@ -574,7 +575,7 @@ function createHeroBust(materials = {}, detail = 1) {
     "hero_shirt_fold",
   );
   shirtShadowFold.position.set(0, 1.205, 0.05);
-  shirtShadowFold.scale.set(0.76, 0.72, 0.44);
+  shirtShadowFold.scale.set(0.68, 0.66, 0.38);
   group.add(shirtShadowFold);
 
   return group;

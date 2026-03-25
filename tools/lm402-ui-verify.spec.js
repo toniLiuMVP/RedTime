@@ -102,9 +102,10 @@ test("LM402 desktop perfect ending keeps hero close-up active", async ({ page })
   );
   expect(snap.renderErrorCount).toBe(0);
   expect(snap.cinematicSubtitle.text).toContain("也太像徐若瑄了吧！");
-  expect(["hero_closeup_glb", "runtime_glb", "procedural_fallback"]).toContain(
-    snap.assetState.currentVariant,
-  );
+  expect(snap.assetState.currentVariant).toBe("runtime_glb");
+  expect(snap.renderer?.heroCloseupRoots?.runtime?.visible).toBe(true);
+  expect(snap.renderer?.heroCloseupRoots?.closeup?.visible).toBe(false);
+  expect(snap.renderer?.heroCloseupRoots?.procedural?.visible).toBe(false);
   await page.screenshot({
     path: "output/playwright/lm402-perfect-line1-closeup-desktop.png",
     fullPage: false,
@@ -120,6 +121,10 @@ test("LM402 desktop perfect ending keeps hero close-up active", async ({ page })
   );
   expect(snap.renderErrorCount).toBe(0);
   expect(snap.cinematicSubtitle.text).toContain("這一次，依然再次遇見妳。");
+  expect(snap.assetState.currentVariant).toBe("runtime_glb");
+  expect(snap.renderer?.heroCloseupRoots?.runtime?.visible).toBe(true);
+  expect(snap.renderer?.heroCloseupRoots?.closeup?.visible).toBe(false);
+  expect(snap.renderer?.heroCloseupRoots?.procedural?.visible).toBe(false);
   await page.screenshot({
     path: "output/playwright/lm402-perfect-line2-closeup-desktop.png",
     fullPage: false,
