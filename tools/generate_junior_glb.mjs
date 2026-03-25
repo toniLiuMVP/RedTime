@@ -78,6 +78,13 @@ function makeMesh(geometry, material, name) {
   return mesh;
 }
 
+function makeAnchor(name, x, y, z) {
+  const anchor = new THREE.Object3D();
+  anchor.name = name;
+  anchor.position.set(x, y, z);
+  return anchor;
+}
+
 function cloneMaterial(material, name, overrides = {}) {
   const clone = material.clone();
   clone.name = name;
@@ -99,32 +106,33 @@ function createStrand(points, radius, material, tubularSegments = 18) {
 function createHead(detail = 1, materials = {}) {
   const group = new THREE.Group();
   group.name = "junior_head";
+  const hero = detail >= 3;
 
   const head = makeMesh(
-    new THREE.SphereGeometry(0.162, 30 + detail * 8, 30 + detail * 8),
+    new THREE.SphereGeometry(hero ? 0.142 : 0.162, 30 + detail * 8, 30 + detail * 8),
     materials.skinFace,
     "head_main",
   );
-  head.position.set(0, 1.57, 0.004);
-  head.scale.set(0.82, 1.12, 0.8);
+  head.position.set(0, hero ? 1.586 : 1.57, hero ? 0.008 : 0.004);
+  head.scale.set(hero ? 0.66 : 0.82, hero ? 0.98 : 1.12, hero ? 0.68 : 0.8);
   group.add(head);
 
   const jaw = makeMesh(
-    new THREE.SphereGeometry(0.13, 24 + detail * 6, 24 + detail * 6),
+    new THREE.SphereGeometry(hero ? 0.102 : 0.13, 24 + detail * 6, 24 + detail * 6),
     materials.skinFace,
     "head_jaw",
   );
-  jaw.position.set(0, 1.468, 0.03);
-  jaw.scale.set(0.48, 0.34, 0.56);
+  jaw.position.set(0, hero ? 1.494 : 1.468, hero ? 0.026 : 0.03);
+  jaw.scale.set(hero ? 0.34 : 0.48, hero ? 0.24 : 0.34, hero ? 0.42 : 0.56);
   group.add(jaw);
 
   const chin = makeMesh(
-    new THREE.SphereGeometry(0.025, 18, 18),
+    new THREE.SphereGeometry(hero ? 0.022 : 0.025, 18, 18),
     materials.skinFace,
     "chin",
   );
-  chin.position.set(0, 1.438, 0.146);
-  chin.scale.set(1.55, 0.42, 0.42);
+  chin.position.set(0, hero ? 1.462 : 1.438, hero ? 0.126 : 0.146);
+  chin.scale.set(hero ? 1.08 : 1.55, hero ? 0.28 : 0.42, hero ? 0.34 : 0.42);
   group.add(chin);
 
   const blushMaterial = cloneMaterial(materials.blush, "skin_face_blush", {
@@ -136,86 +144,86 @@ function createHead(detail = 1, materials = {}) {
     blushMaterial,
     "cheek_blush_l",
   );
-  leftBlush.position.set(-0.078, 1.476, 0.144);
-  leftBlush.scale.set(0.9, 0.64, 0.34);
+  leftBlush.position.set(hero ? -0.066 : -0.078, hero ? 1.488 : 1.476, hero ? 0.118 : 0.144);
+  leftBlush.scale.set(hero ? 0.72 : 0.9, hero ? 0.48 : 0.64, hero ? 0.26 : 0.34);
   const rightBlush = leftBlush.clone();
   rightBlush.position.x = 0.078;
   group.add(leftBlush, rightBlush);
 
   const earGeometry = new THREE.SphereGeometry(0.028, 18, 18);
   const leftEar = makeMesh(earGeometry, materials.skinFace, "ear_l");
-  leftEar.position.set(-0.126, 1.514, 0.008);
-  leftEar.scale.set(0.44, 0.66, 0.42);
+  leftEar.position.set(-0.112, hero ? 1.528 : 1.514, 0.006);
+  leftEar.scale.set(hero ? 0.34 : 0.44, hero ? 0.54 : 0.66, hero ? 0.34 : 0.42);
   const rightEar = leftEar.clone();
   rightEar.position.x = 0.126;
   group.add(leftEar, rightEar);
 
   const noseBridge = makeMesh(
-    new THREE.CapsuleGeometry(0.0052, 0.042, 4, 8),
+    new THREE.CapsuleGeometry(hero ? 0.0036 : 0.0052, hero ? 0.03 : 0.042, 4, 8),
     materials.skinFace,
     "nose_bridge",
   );
-  noseBridge.position.set(0, 1.535, 0.094);
-  noseBridge.scale.set(0.56, 0.84, 0.7);
+  noseBridge.position.set(0, hero ? 1.54 : 1.535, hero ? 0.084 : 0.094);
+  noseBridge.scale.set(hero ? 0.42 : 0.56, hero ? 0.66 : 0.84, hero ? 0.58 : 0.7);
   group.add(noseBridge);
 
   const noseTip = makeMesh(
-    new THREE.SphereGeometry(0.014, 18, 18),
+    new THREE.SphereGeometry(hero ? 0.01 : 0.014, 18, 18),
     materials.skinFace,
     "nose_tip",
   );
-  noseTip.position.set(0, 1.492, 0.108);
-  noseTip.scale.set(1.08, 0.74, 1.18);
+  noseTip.position.set(0, hero ? 1.506 : 1.492, hero ? 0.094 : 0.108);
+  noseTip.scale.set(hero ? 0.9 : 1.08, hero ? 0.56 : 0.74, hero ? 0.94 : 1.18);
   group.add(noseTip);
 
   const lip = makeMesh(
-    new THREE.TorusGeometry(0.039, 0.006, 8, 22, Math.PI),
+    new THREE.TorusGeometry(hero ? 0.027 : 0.039, hero ? 0.0038 : 0.006, 8, 22, Math.PI),
     materials.lip,
     "lip_arc",
   );
-  lip.position.set(0, 1.447, 0.152);
+  lip.position.set(0, hero ? 1.468 : 1.447, hero ? 0.126 : 0.152);
   lip.rotation.x = Math.PI;
   group.add(lip);
 
-  const eyeWhiteGeometry = new THREE.SphereGeometry(0.026, 18, 18);
-  const irisGeometry = new THREE.SphereGeometry(0.012, 14, 14);
+  const eyeWhiteGeometry = new THREE.SphereGeometry(hero ? 0.022 : 0.026, 18, 18);
+  const irisGeometry = new THREE.SphereGeometry(hero ? 0.009 : 0.012, 14, 14);
   const leftEye = makeMesh(eyeWhiteGeometry, materials.eyeWhite, "eye_white_l");
-  leftEye.position.set(-0.064, 1.558, 0.16);
-  leftEye.scale.set(1.64, 1.08, 0.56);
+  leftEye.position.set(hero ? -0.048 : -0.06, hero ? 1.56 : 1.558, hero ? 0.142 : 0.16);
+  leftEye.scale.set(hero ? 1.3 : 1.64, hero ? 0.86 : 1.08, hero ? 0.42 : 0.56);
   const rightEye = leftEye.clone();
-  rightEye.position.x = 0.064;
+  rightEye.position.x = hero ? 0.05 : 0.064;
   const leftIris = makeMesh(irisGeometry, materials.iris, "eye_iris_l");
-  leftIris.position.set(-0.062, 1.554, 0.176);
-  leftIris.scale.set(1.1, 1.02, 0.88);
+  leftIris.position.set(hero ? -0.048 : -0.06, hero ? 1.558 : 1.554, hero ? 0.154 : 0.176);
+  leftIris.scale.set(hero ? 0.94 : 1.1, hero ? 0.88 : 1.02, hero ? 0.74 : 0.88);
   const rightIris = leftIris.clone();
-  rightIris.position.x = 0.062;
+  rightIris.position.x = hero ? 0.048 : 0.062;
   group.add(leftEye, rightEye, leftIris, rightIris);
 
   const browMaterial = materials.brow;
   const leftBrow = makeMesh(
-    new THREE.CapsuleGeometry(0.0038, 0.045, 4, 8),
+    new THREE.CapsuleGeometry(hero ? 0.0028 : 0.0038, hero ? 0.03 : 0.045, 4, 8),
     browMaterial,
     "brow_l",
   );
-  leftBrow.position.set(-0.06, 1.592, 0.152);
-  leftBrow.rotation.z = -1.28;
+  leftBrow.position.set(hero ? -0.048 : -0.058, hero ? 1.592 : 1.592, hero ? 0.132 : 0.152);
+  leftBrow.rotation.z = hero ? -1.3 : -1.34;
   const rightBrow = leftBrow.clone();
-  rightBrow.position.x = 0.06;
-  rightBrow.rotation.z = 1.28;
+  rightBrow.position.x = hero ? 0.05 : 0.06;
+  rightBrow.rotation.z = hero ? 1.3 : 1.34;
   group.add(leftBrow, rightBrow);
 
   const eyelashMaterial = cloneMaterial(materials.brow, "hair_cards_lash", {
     roughness: 0.46,
   });
   const leftLash = makeMesh(
-    new THREE.TorusGeometry(0.034, 0.0038, 6, 18, Math.PI),
+    new THREE.TorusGeometry(hero ? 0.026 : 0.034, hero ? 0.0028 : 0.0038, 6, 18, Math.PI),
     eyelashMaterial,
     "eyelash_l",
   );
-  leftLash.position.set(-0.064, 1.57, 0.168);
+  leftLash.position.set(hero ? -0.05 : -0.062, hero ? 1.57 : 1.57, hero ? 0.154 : 0.168);
   leftLash.rotation.z = Math.PI;
   const rightLash = leftLash.clone();
-  rightLash.position.x = 0.064;
+  rightLash.position.x = hero ? 0.052 : 0.064;
   group.add(leftLash, rightLash);
 
   const sparkleMaterial = cloneMaterial(materials.eyeWhite, "eye_glint", {
@@ -223,13 +231,13 @@ function createHead(detail = 1, materials = {}) {
     emissiveIntensity: 0.14,
   });
   const glintL = makeMesh(
-    new THREE.SphereGeometry(0.0052, 10, 10),
+    new THREE.SphereGeometry(hero ? 0.0036 : 0.0052, 10, 10),
     sparkleMaterial,
     "eye_glint_l",
   );
-  glintL.position.set(-0.058, 1.572, 0.184);
+  glintL.position.set(hero ? -0.044 : -0.056, hero ? 1.574 : 1.572, hero ? 0.168 : 0.184);
   const glintR = glintL.clone();
-  glintR.position.x = 0.072;
+  glintR.position.x = hero ? 0.058 : 0.072;
   group.add(glintL, glintR);
 
   return group;
@@ -241,54 +249,69 @@ function createHair(detail = 1, materials = {}, options = {}) {
   group.name = "junior_hair";
 
   const hairCap = makeMesh(
-    new THREE.SphereGeometry(0.206, 24 + detail * 6, 24 + detail * 6, 0, Math.PI * 2, 0, Math.PI * 0.72),
+    new THREE.SphereGeometry(hero ? 0.182 : 0.206, 24 + detail * 6, 24 + detail * 6, 0, Math.PI * 2, 0, Math.PI * 0.72),
     materials.hair,
     "hair_cap",
   );
-  hairCap.position.set(0, 1.604, 0.024);
-  hairCap.scale.set(0.88, 0.86, 0.84);
-  hairCap.rotation.x = -0.1;
+  hairCap.position.set(0, hero ? 1.606 : 1.604, hero ? 0.012 : 0.024);
+  hairCap.scale.set(hero ? 0.62 : 0.88, hero ? 0.61 : 0.86, hero ? 0.62 : 0.84);
+  hairCap.rotation.x = hero ? -0.08 : -0.1;
   group.add(hairCap);
 
   const backHair = makeMesh(
-    new THREE.SphereGeometry(0.214, 24 + detail * 6, 24 + detail * 6),
+    new THREE.SphereGeometry(hero ? 0.176 : 0.214, 24 + detail * 6, 24 + detail * 6),
     materials.hair,
     "hair_back",
   );
-  backHair.position.set(0, 1.472, -0.116);
-  backHair.scale.set(0.78, 1.08, 0.52);
+  backHair.position.set(0, hero ? 1.496 : 1.472, hero ? -0.076 : -0.116);
+  backHair.scale.set(hero ? 0.52 : 0.78, hero ? 0.82 : 1.08, hero ? 0.34 : 0.52);
   group.add(backHair);
 
   const fringeCore = makeMesh(
-    new THREE.CapsuleGeometry(0.018, 0.056, 4, 8),
+    new THREE.CapsuleGeometry(hero ? 0.012 : 0.018, hero ? 0.038 : 0.056, 4, 8),
     materials.hair,
     "hair_fringe_core",
   );
-  fringeCore.position.set(0, 1.606, 0.132);
-  fringeCore.scale.set(0.84, 0.92, 0.82);
-  fringeCore.rotation.set(0.18, 0, -0.04);
+  fringeCore.position.set(0, hero ? 1.598 : 1.606, hero ? 0.086 : 0.132);
+  fringeCore.scale.set(hero ? 0.5 : 0.84, hero ? 0.62 : 0.92, hero ? 0.52 : 0.82);
+  fringeCore.rotation.set(hero ? 0.08 : 0.18, 0, -0.03);
   group.add(fringeCore);
 
+  if (hero) {
+    const fringeLeft = makeMesh(
+      new THREE.CapsuleGeometry(0.0056, 0.038, 4, 8),
+      materials.hairWarm,
+      "hair_fringe_l",
+    );
+    fringeLeft.position.set(-0.038, 1.596, 0.098);
+    fringeLeft.scale.set(0.48, 0.58, 0.48);
+    fringeLeft.rotation.set(0.06, 0.06, 0.12);
+    const fringeRight = fringeLeft.clone();
+    fringeRight.position.x = 0.044;
+    fringeRight.rotation.z = -0.16;
+    group.add(fringeLeft, fringeRight);
+  }
+
   const sideL = makeMesh(
-    new THREE.CapsuleGeometry(0.012, hero ? 0.12 : 0.2, 4, 10),
+    new THREE.CapsuleGeometry(hero ? 0.008 : 0.012, hero ? 0.084 : 0.2, 4, 10),
     materials.hair,
     "hair_side_l",
   );
-  sideL.position.set(-0.118, hero ? 1.506 : 1.452, hero ? 0.07 : 0.062);
-  sideL.scale.set(hero ? 0.72 : 0.86, hero ? 0.82 : 0.98, 0.82);
-  sideL.rotation.set(hero ? 0.08 : 0.02, 0, hero ? 0.1 : 0.16);
+  sideL.position.set(-0.094, hero ? 1.53 : 1.452, hero ? 0.05 : 0.062);
+  sideL.scale.set(hero ? 0.5 : 0.86, hero ? 0.58 : 0.98, hero ? 0.56 : 0.82);
+  sideL.rotation.set(hero ? 0.01 : 0.02, hero ? -0.04 : 0, hero ? 0.05 : 0.16);
   const sideR = sideL.clone();
-  sideR.position.x = 0.122;
-  sideR.rotation.z = hero ? -0.1 : -0.16;
+  sideR.position.x = hero ? 0.1 : 0.122;
+  sideR.rotation.z = hero ? -0.05 : -0.16;
   group.add(sideL, sideR);
 
   const ponyBase = makeMesh(
-    new THREE.CapsuleGeometry(0.03, 0.18, 6, 10),
+    new THREE.CapsuleGeometry(hero ? 0.018 : 0.03, hero ? 0.11 : 0.18, 6, 10),
     materials.hair,
     "hair_pony_base",
   );
-  ponyBase.position.set(0.038, 1.6, -0.145);
-  ponyBase.rotation.set(0.78, -0.2, -0.06);
+  ponyBase.position.set(hero ? 0.022 : 0.038, hero ? 1.6 : 1.6, hero ? -0.114 : -0.145);
+  ponyBase.rotation.set(hero ? 0.68 : 0.78, -0.18, -0.04);
   group.add(ponyBase);
 
   const ponyStrands = [
@@ -308,17 +331,30 @@ function createHair(detail = 1, materials = {}, options = {}) {
   (!hero ? ponyStrands : ponyStrands.slice(0, 1)).forEach((points, index) => {
     const strand = createStrand(
       hero
-        ? points.map(([x, y, z]) => [x * 0.78, y + 0.1, z * 0.62])
+        ? points.map(([x, y, z]) => [x * 0.72, y + 0.12, z * 0.56])
         : points,
-      hero ? 0.01 : index === 0 ? 0.018 : 0.014,
+      hero ? 0.009 : index === 0 ? 0.018 : 0.014,
       materials.hair,
-      hero ? 10 + detail * 2 : 16 + detail * 4,
+      hero ? 12 + detail * 2 : 16 + detail * 4,
     );
     strand.name = `hair_pony_strand_${index + 1}`;
     group.add(strand);
   });
 
-  const bangs = [
+  const bangs = hero
+    ? [
+        [
+          [-0.048, 1.594, 0.094],
+          [-0.04, 1.556, 0.104],
+          [-0.03, 1.514, 0.114],
+        ],
+        [
+          [0.04, 1.594, 0.094],
+          [0.046, 1.556, 0.104],
+          [0.054, 1.514, 0.114],
+        ],
+      ]
+    : [
     [
       [-0.058, 1.606, 0.134],
       [-0.046, 1.566, 0.144],
@@ -336,7 +372,12 @@ function createHair(detail = 1, materials = {}, options = {}) {
     ],
   ];
   bangs.forEach((points, index) => {
-    const strand = createStrand(points, 0.004, materials.hairWarm, 12);
+    const strand = createStrand(
+      points,
+      hero ? 0.0022 : 0.004,
+      materials.hairWarm,
+      hero ? 10 : 12,
+    );
     strand.name = `hair_bang_${index + 1}`;
     group.add(strand);
   });
@@ -454,6 +495,91 @@ function createUpperBody(materials = {}, detail = 1, options = {}) {
   return group;
 }
 
+function createHeroBust(materials = {}, detail = 1) {
+  const group = new THREE.Group();
+  group.name = "junior_hero_bust";
+
+  const bust = makeMesh(
+    new THREE.CapsuleGeometry(0.136, 0.24, 6, 16),
+    materials.shirt,
+    "hero_bust",
+  );
+  bust.position.set(0, 1.13, 0.002);
+  bust.scale.set(0.9, 0.8, 0.7);
+  group.add(bust);
+
+  const bustFront = makeMesh(
+    new THREE.SphereGeometry(0.13, 22 + detail * 4, 22 + detail * 4),
+    materials.shirtShadow,
+    "hero_bust_front",
+  );
+  bustFront.position.set(0, 1.16, 0.04);
+  bustFront.scale.set(0.96, 0.56, 0.46);
+  group.add(bustFront);
+
+  const neck = makeMesh(
+    new THREE.CylinderGeometry(0.058, 0.064, 0.18, 14),
+    materials.skin,
+    "hero_neck",
+  );
+  neck.position.set(0, 1.32, 0.02);
+  group.add(neck);
+
+  const collarLeft = makeMesh(
+    new THREE.BoxGeometry(0.058, 0.074, 0.018),
+    cloneMaterial(materials.shirtShadow, "hero_collar_left", {
+      roughness: 0.42,
+      clearcoat: 0.08,
+    }),
+    "hero_collar_l",
+  );
+  collarLeft.position.set(-0.048, 1.27, 0.024);
+  collarLeft.rotation.set(0.06, 0.22, 0.12);
+  const collarRight = collarLeft.clone();
+  collarRight.position.x = 0.048;
+  collarRight.rotation.set(0.06, -0.22, -0.12);
+  group.add(collarLeft, collarRight);
+
+  const shoulderCapGeo = new THREE.SphereGeometry(0.058, 16, 16);
+  const shoulderLeft = makeMesh(
+    shoulderCapGeo,
+    materials.shirt,
+    "hero_shoulder_l",
+  );
+  shoulderLeft.position.set(-0.112, 1.18, 0.008);
+  shoulderLeft.scale.set(1.32, 0.96, 0.84);
+  const shoulderRight = shoulderLeft.clone();
+  shoulderRight.position.x = 0.112;
+  group.add(shoulderLeft, shoulderRight);
+
+  const shoulderSlopeLeft = makeMesh(
+    new THREE.CapsuleGeometry(0.038, 0.12, 4, 10),
+    materials.shirtShadow,
+    "hero_shoulder_slope_l",
+  );
+  shoulderSlopeLeft.position.set(-0.122, 1.168, 0.038);
+  shoulderSlopeLeft.rotation.set(0.16, 0.04, 0.42);
+  shoulderSlopeLeft.scale.set(1, 0.84, 0.74);
+  const shoulderSlopeRight = shoulderSlopeLeft.clone();
+  shoulderSlopeRight.position.x = 0.122;
+  shoulderSlopeRight.rotation.z = -0.42;
+  group.add(shoulderSlopeLeft, shoulderSlopeRight);
+
+  const shirtShadowFold = makeMesh(
+    new THREE.CapsuleGeometry(0.042, 0.088, 4, 10),
+    cloneMaterial(materials.shirtShadow, "hero_shirt_fold", {
+      roughness: 0.46,
+      clearcoat: 0.12,
+    }),
+    "hero_shirt_fold",
+  );
+  shirtShadowFold.position.set(0, 1.205, 0.05);
+  shirtShadowFold.scale.set(0.76, 0.72, 0.44);
+  group.add(shirtShadowFold);
+
+  return group;
+}
+
 function createLowerBody(materials = {}, mobile = false) {
   const group = new THREE.Group();
   group.name = "junior_lower";
@@ -513,11 +639,11 @@ function buildJunior({ hero = false, mobile = false } = {}) {
       sheenColor: new THREE.Color("#ffc9a8"),
     }),
     skinFace: softPhysicalMaterial("skin_face", COLORS.skinFace, {
-      roughness: 0.16,
-      clearcoat: 0.46,
-      clearcoatRoughness: 0.16,
-      sheen: 0.9,
-      sheenRoughness: 0.14,
+      roughness: hero ? 0.28 : 0.16,
+      clearcoat: hero ? 0.22 : 0.46,
+      clearcoatRoughness: hero ? 0.22 : 0.16,
+      sheen: hero ? 0.44 : 0.9,
+      sheenRoughness: hero ? 0.22 : 0.14,
       sheenColor: new THREE.Color("#ffd1b2"),
     }),
     blush: softPhysicalMaterial("skin_face", COLORS.blush, {
@@ -526,18 +652,18 @@ function buildJunior({ hero = false, mobile = false } = {}) {
       sheen: 0,
     }),
     hair: softPhysicalMaterial("hair_cards", COLORS.hair, {
-      roughness: 0.14,
-      clearcoat: 0.78,
-      clearcoatRoughness: 0.1,
-      sheen: 0.36,
-      sheenRoughness: 0.16,
+      roughness: hero ? 0.3 : 0.14,
+      clearcoat: hero ? 0.24 : 0.78,
+      clearcoatRoughness: hero ? 0.18 : 0.1,
+      sheen: hero ? 0.18 : 0.36,
+      sheenRoughness: hero ? 0.24 : 0.16,
       sheenColor: new THREE.Color("#9b795c"),
     }),
     hairWarm: softPhysicalMaterial("hair_cards", COLORS.hairWarm, {
-      roughness: 0.2,
-      clearcoat: 0.56,
-      clearcoatRoughness: 0.14,
-      sheen: 0.28,
+      roughness: hero ? 0.34 : 0.2,
+      clearcoat: hero ? 0.18 : 0.56,
+      clearcoatRoughness: hero ? 0.2 : 0.14,
+      sheen: hero ? 0.14 : 0.28,
     }),
     shirt: softPhysicalMaterial("shirt_white", COLORS.shirt, {
       roughness: 0.42,
@@ -586,10 +712,36 @@ function buildJunior({ hero = false, mobile = false } = {}) {
     }),
   };
 
-  root.add(createUpperBody(materials, detail, { hero }));
+  root.add(hero ? createHeroBust(materials, detail) : createUpperBody(materials, detail, { hero }));
   if (!hero) root.add(createLowerBody(materials, mobile));
   root.add(createHead(detail, materials));
   root.add(createHair(detail, materials, { hero }));
+  root.add(
+    makeAnchor(
+      "hero_face_anchor",
+      0,
+      hero ? 1.55 : 1.53,
+      hero ? 0.132 : 0.118,
+    ),
+    makeAnchor(
+      "hero_eyes_anchor",
+      0,
+      hero ? 1.57 : 1.552,
+      hero ? 0.164 : 0.148,
+    ),
+    makeAnchor(
+      "hero_bust_anchor",
+      0,
+      hero ? 1.165 : 1.12,
+      hero ? 0.036 : 0.026,
+    ),
+    makeAnchor(
+      "hero_shoulders_anchor",
+      0,
+      hero ? 1.205 : 1.16,
+      hero ? 0.028 : 0.02,
+    ),
+  );
 
   if (hero) {
     root.position.set(0, 0, 0);
@@ -644,10 +796,26 @@ async function main() {
       {
         characterId: "junior2005",
         source: "tools/generate_junior_glb.mjs",
+        sourceBlend:
+          "assets/lm402/characters/junior/work/junior_hero_master.blend",
+        generatedVariantPolicy: {
+          runtime: "full-body runtime bundle",
+          hero_closeup: "head-and-shoulders bust bundle",
+          mobile: "decimated runtime bundle",
+        },
         exports: [
-          "junior_2005_runtime.glb",
-          "junior_2005_hero_closeup.glb",
-          "junior_2005_runtime_mobile.glb",
+          { name: "runtime", file: "junior_2005_runtime.glb" },
+          { name: "hero_closeup", file: "junior_2005_hero_closeup.glb" },
+          { name: "mobile", file: "junior_2005_runtime_mobile.glb" },
+        ],
+        fallbackPolicy: {
+          missingRuntime: "procedural_shell",
+          missingHeroCloseup: "runtime_glb_camera_crop",
+          preserveGameplay: true,
+        },
+        notes: [
+          "The hero closeup is intentionally a bust, not a full-body pose.",
+          "All three exports are generated from the same procedural source script for now.",
         ],
       },
       null,

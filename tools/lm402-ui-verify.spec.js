@@ -1,7 +1,7 @@
 const { test, expect } = require("@playwright/test");
 const fs = require("node:fs");
 
-const BASE_URL = "http://127.0.0.1:4173";
+const BASE_URL = process.env.LM402_BASE_URL || "http://127.0.0.1:8000";
 
 test.use({
   launchOptions: {
@@ -29,6 +29,41 @@ async function waitForDebug(page) {
 
 async function readDebug(page) {
   return page.evaluate(() => window.__LM402_DEBUG__.snapshot());
+}
+
+function diagnoseCloseup(snap, label) {
+  const viewportHeight =
+    snap?.renderer?.webglViewport?.height ?? snap?.webglViewport?.height ?? 0;
+  const junior = snap?.renderer?.projectedNodes?.junior ?? snap?.projectedNodes?.junior;
+  const juniorScreenY = junior?.screenY ?? null;
+  const juniorVisible = junior?.visible ?? false;
+  const juniorIsBelowFrame =
+    Number.isFinite(juniorScreenY) && viewportHeight > 0
+      ? juniorScreenY > viewportHeight * 0.82
+      : false;
+
+  const mostOffendingAxis = juniorVisible && juniorIsBelowFrame ? "camera" : "geometry";
+  const rationale =
+    mostOffendingAxis === "camera"
+      ? "The junior anchor is consistently projected below the frame, so framing is the first thing pulling the close-up out of the scene. Geometry still looks harsh, but the camera is the dominant miss."
+      : "The current frame keeps the face in view, so geometry is the main remaining miss.";
+
+  return {
+    label,
+    mostOffendingAxis,
+    rationale,
+    evidence: {
+      currentVariant: snap?.assetState?.currentVariant ?? null,
+      endingShotPhase: snap?.endingShotPhase ?? null,
+      cameraAnchor: snap?.cameraAnchor ?? null,
+      cameraMode: snap?.cameraMode ?? null,
+      renderErrorCount: snap?.renderErrorCount ?? null,
+      juniorScreenY,
+      viewportHeight,
+      juniorVisible,
+      juniorBelowFrame: juniorIsBelowFrame,
+    },
+  };
 }
 
 test("homepage desktop hero stays readable", async ({ page }) => {
@@ -71,7 +106,7 @@ test("LM402 desktop perfect ending keeps hero close-up active", async ({ page })
     snap.assetState.currentVariant,
   );
   await page.screenshot({
-    path: "output/playwright/lm402-perfect-line1-verify.png",
+    path: "output/playwright/lm402-perfect-line1-closeup-desktop.png",
     fullPage: false,
   });
 
@@ -86,9 +121,24 @@ test("LM402 desktop perfect ending keeps hero close-up active", async ({ page })
   expect(snap.renderErrorCount).toBe(0);
   expect(snap.cinematicSubtitle.text).toContain("這一次，依然再次遇見妳。");
   await page.screenshot({
-    path: "output/playwright/lm402-perfect-line2-verify.png",
+    path: "output/playwright/lm402-perfect-line2-closeup-desktop.png",
     fullPage: false,
   });
+
+  fs.writeFileSync(
+    "output/playwright/lm402-closeup-diagnosis.json",
+    JSON.stringify(
+      {
+        desktopLine1: diagnoseCloseup(
+          JSON.parse(fs.readFileSync("output/playwright/lm402-perfect-line1-verify.json", "utf8")),
+          "perfect-line1",
+        ),
+        desktopLine2: diagnoseCloseup(snap, "perfect-line2"),
+      },
+      null,
+      2,
+    ),
+  );
 });
 
 test("LM402 mobile transcript dock drags/resizes and ending slider appears", async ({
