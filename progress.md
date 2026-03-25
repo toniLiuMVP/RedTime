@@ -159,6 +159,15 @@ TODO:
 - The new bust is much closer to the intended close-up shape, but it is still procedural. The remaining risk is the final face read: whether the brows, eyes, and mouth need one more manual proportion pass in Blender to fully reach the 2005定稿 feeling.
 
 Updates:
+- Tightened `tools/generate_junior_glb.mjs` again for the hero export: smaller head sphere, narrower jaw and chin, reduced eye whites / irises, shorter brows/lashes, less hair-cap volume, thinner side locks, and a more compact ponytail / fringe treatment so the face reads less cartoonish and less column-like.
+- Added explicit hero anchors into the generated GLB scene graph: `hero_face_anchor`, `hero_eyes_anchor`, `hero_bust_anchor`, and `hero_shoulders_anchor`.
+- Re-generated `assets/lm402/characters/junior/exports/junior_2005_hero_closeup.glb` plus the matching runtime and mobile exports after the proportion pass.
+- The hero export now reports a dedicated bust hierarchy in the GLB node list and the file size dropped a little from the previous bust pass, which is consistent with the tighter geometry.
+
+TODO:
+- The remaining risk is still facial likeness at hero distance: if the next renderer pass needs a precise focus anchor, the new anchors are ready, but the geometry is still procedural rather than hand-sculpted.
+
+Updates:
 - Homepage pass:
   - changed the hero-side copy to `你可以決定先讀故事，還是先感受「一眼瞬間」。`
   - removed the `桌機電影感優先` copy
@@ -233,3 +242,51 @@ TODO:
   - clearly using the formal GLB close-up path
   - still stylized / procedural rather than convincingly realistic
 - The cleanest remaining route to the true target quality is still a real Blender-authored head-and-shoulders hero asset that replaces the procedural hero face geometry outright, rather than further proportion tweaks on the generated mesh.
+
+Updates:
+- Continued the junior close-up push with a renderer-first cleanup:
+  - perfect ending now prefers the formal `hero_closeup_glb` path over the temporary procedural hero head whenever the GLB bundle is ready
+  - `resolveJuniorHeroAnchor()` now prefers visible GLB roots before falling back to the procedural hero root, so the perfect `eyes` camera is aligned to the active runtime asset rather than to a hidden fallback node
+  - `setJuniorHeroLeadVisibility()` now supports hiding the procedural hero head while still suppressing the old legacy face geometry, which keeps the runtime state coherent during perfect close-up shots
+- Did another 2005-reference proportion pass in `tools/generate_junior_glb.mjs` and regenerated all junior exports:
+  - smaller hero head, jaw, chin, nose, lips, brows, and irises
+  - reduced hero hair-cap and back-hair volume
+  - thinner / less intrusive hero bangs and side locks
+  - narrower hero bust / shoulder profile so the close-up reads lighter and closer to the white-shirt reference
+- Added `tools/lm402-hero-capture.spec.js` as a dedicated LM402 perfect-ending capture harness so future close-up passes can dump line1 / line2 images and JSON without reusing the general UI verification output names
+
+Lessons from this pass:
+- A temporary experiment that re-enabled a reference-photo face overlay during the perfect close-up was tested and then intentionally rolled back. It produced large residual portrait artifacts / misaligned overlays that were worse than the stable GLB-only result.
+- The current stable close-up is therefore still the GLB-led version in:
+  - `output/playwright/lm402-perfect-line1-closeup-desktop.png`
+  - `output/playwright/lm402-perfect-line2-closeup-desktop.png`
+  - validation remains green: `npx playwright test tools/lm402-ui-verify.spec.js --reporter=line --workers=1 --grep "LM402 desktop perfect ending keeps hero close-up active"` => `1 passed`
+
+Current status:
+- The junior close-up is no longer running through the procedural hero-head path during perfect. Debug snapshots now consistently show:
+  - `assetState.currentVariant = "hero_closeup_glb"`
+  - `renderErrorCount = 0`
+  - perfect line1 / line2 subtitles both present
+- The visual quality is improved versus the earlier floating-head / black-shell failures, but it is still far from the requested "perfect, ultra-beautiful, hand-built 3D junior" target. The remaining gap is now mostly asset quality:
+  - facial likeness
+  - hair silhouette / fringe behavior
+  - neck-to-shoulder transitions
+  - overall realism of the hero bust
+
+Updates:
+- Re-centered the current priority around consistency instead of swapping heads in the ending:
+  - disabled the separate perfect-ending close-up route in `assets/lm402/renderer.js`
+  - the junior now stays on the same runtime GLB path in gameplay and in all four endings
+  - detached procedural head visibility is forced off while the runtime model remains active
+  - the temporary face-card experiment is no longer part of the runtime path
+- Validation now explicitly checks "same model, no face/body split":
+  - `tools/lm402-ui-verify.spec.js` now asserts that the perfect ending uses `runtime_glb`, with `runtimeVisible = true`, `closeupVisible = false`, `proceduralVisible = false`
+  - added `tools/lm402-model-consistency.spec.js` to verify visible gameplay phases plus all four endings (`perfect`, `canon`, `memory`, `missed`) against the same runtime junior model
+- Latest verification results:
+  - `npx playwright test tools/lm402-ui-verify.spec.js --reporter=line --workers=1 --grep "LM402 desktop perfect ending keeps hero close-up active|LM402 mobile transcript dock drags/resizes and ending slider appears"` => `2 passed`
+  - `npx playwright test tools/lm402-model-consistency.spec.js --reporter=line --workers=1` => `1 passed`
+  - `output/playwright/lm402-model-consistency.json` confirms:
+    - `rear_wait.variant = "runtime_glb"`
+    - `eye_contact.variant = "runtime_glb"`
+    - `perfect/canon/memory/missed.variant = "runtime_glb"`
+    - all four endings keep `runtimeVisible = true`, `closeupVisible = false`, `proceduralVisible = false`, `renderErrorCount = 0`

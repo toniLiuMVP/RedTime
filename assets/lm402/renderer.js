@@ -117,14 +117,16 @@ function buildJuniorHairRibbon(t, o, a, n = {}) {
 }
 function buildReferenceJuniorHeroHead(t = {}) {
   const o = new e.Group();
-  (o.position.set(0.01, 1.556, 0.008), o.scale.set(0.66, 0.68, 0.66));
+  (o.position.set(0.01, 1.55, 0.008), o.scale.set(0.62, 0.64, 0.62));
   o.visible = !1;
+  o.userData.kind = "procedural_hero_head";
+  o.userData.ready = !0;
   o.userData.heroAnchor = {
-    center: new e.Vector3(0.01, 1.556, 0.008),
-    face: new e.Vector3(0.01, 1.62, 0.118),
-    chest: new e.Vector3(0.01, 1.48, 0.08),
-    eyes: new e.Vector3(0.01, 1.605, 0.112),
-    shoulder: new e.Vector3(0.01, 1.43, 0.04),
+    center: new e.Vector3(0.01, 1.548, 0.008),
+    face: new e.Vector3(0.01, 1.602, 0.106),
+    chest: new e.Vector3(0.01, 1.468, 0.072),
+    eyes: new e.Vector3(0.01, 1.592, 0.102),
+    shoulder: new e.Vector3(0.01, 1.428, 0.036),
   };
   const a = new e.Color(t.skinColor ?? "#f9e7da"),
     n = new e.Color(t.hairColor ?? "#3c2a22"),
@@ -192,29 +194,29 @@ function buildReferenceJuniorHeroHead(t = {}) {
       transparent: !0,
       opacity: 0.72,
     });
-  const w = new e.Mesh(new e.SphereGeometry(0.124, 48, 48), r);
-  (w.position.set(0, 0.006, -0.018), w.scale.set(0.84, 1, 0.78), o.add(w));
-  const M = new e.Mesh(new e.SphereGeometry(0.104, 44, 44), i);
-  (M.position.set(0, -0.072, 0.02), M.scale.set(0.62, 0.58, 0.6), o.add(M));
-  const f = new e.Mesh(new e.SphereGeometry(0.024, 20, 20), i);
-  (f.position.set(0, -0.144, 0.052), f.scale.set(0.72, 0.56, 0.96), o.add(f));
-  const u = new e.Mesh(new e.SphereGeometry(0.034, 20, 20), i);
-  (u.position.set(-0.054, -0.018, 0.05), u.scale.set(1, 0.74, 0.64), o.add(u));
+  const w = new e.Mesh(new e.SphereGeometry(0.114, 48, 48), r);
+  (w.position.set(0, -0.004, -0.01), w.scale.set(0.72, 0.92, 0.68), o.add(w));
+  const M = new e.Mesh(new e.SphereGeometry(0.086, 44, 44), i);
+  (M.position.set(0, -0.076, 0.012), M.scale.set(0.52, 0.46, 0.5), o.add(M));
+  const f = new e.Mesh(new e.SphereGeometry(0.018, 20, 20), i);
+  (f.position.set(0, -0.132, 0.044), f.scale.set(0.8, 0.42, 0.82), o.add(f));
+  const u = new e.Mesh(new e.SphereGeometry(0.026, 20, 20), i);
+  (u.position.set(-0.046, -0.02, 0.04), u.scale.set(0.82, 0.58, 0.54), o.add(u));
   const y = u.clone();
-  ((y.position.x = 0.062), o.add(y));
+  ((y.position.x = 0.052), o.add(y));
   const g = new e.Mesh(
-    new e.CapsuleGeometry(0.0052, 0.042, 4, 10),
+    new e.CapsuleGeometry(0.0038, 0.032, 4, 10),
     i,
   );
-  (g.position.set(0, -0.016, 0.09),
-    g.scale.set(0.58, 0.86, 0.72),
+  (g.position.set(0, -0.018, 0.078),
+    g.scale.set(0.46, 0.68, 0.56),
     o.add(g));
-  const x = new e.Mesh(new e.SphereGeometry(0.017, 24, 24), i);
-  (x.position.set(0, -0.05, 0.108), x.scale.set(0.88, 0.68, 1.02), o.add(x));
-  const b = new e.Mesh(new e.SphereGeometry(0.0065, 18, 18), i);
-  (b.position.set(-0.01, -0.058, 0.104), b.scale.set(0.84, 0.6, 0.9), o.add(b));
+  const x = new e.Mesh(new e.SphereGeometry(0.013, 24, 24), i);
+  (x.position.set(0, -0.048, 0.088), x.scale.set(0.72, 0.52, 0.84), o.add(x));
+  const b = new e.Mesh(new e.SphereGeometry(0.0048, 18, 18), i);
+  (b.position.set(-0.008, -0.056, 0.088), b.scale.set(0.72, 0.46, 0.7), o.add(b));
   const S = b.clone();
-  ((S.position.x = 0.011), o.add(S));
+  ((S.position.x = 0.009), o.add(S));
   const P = new e.Mesh(
     new e.CapsuleGeometry(0.0022, 0.014, 4, 6),
     new e.MeshStandardMaterial({
@@ -225,44 +227,44 @@ function buildReferenceJuniorHeroHead(t = {}) {
       opacity: 0.56,
     }),
   );
-  (P.position.set(0, -0.082, 0.1), o.add(P));
-  const v = new e.Mesh(new e.PlaneGeometry(0.046, 0.014), m);
-  (v.position.set(0, -0.102, 0.112), (v.renderOrder = 17), o.add(v));
-  const G = new e.Mesh(new e.CapsuleGeometry(0.0036, 0.038, 4, 10), p);
-  (G.position.set(0, -0.096, 0.114), (G.rotation.z = Math.PI / 2), o.add(G));
-  const z = new e.Mesh(new e.CapsuleGeometry(0.0044, 0.042, 4, 10), p.clone());
+  (P.position.set(0, -0.078, 0.088), o.add(P));
+  const v = new e.Mesh(new e.PlaneGeometry(0.036, 0.01), m);
+  (v.position.set(0, -0.094, 0.096), (v.renderOrder = 17), o.add(v));
+  const G = new e.Mesh(new e.CapsuleGeometry(0.0026, 0.026, 4, 10), p);
+  (G.position.set(0, -0.09, 0.098), (G.rotation.z = Math.PI / 2), o.add(G));
+  const z = new e.Mesh(new e.CapsuleGeometry(0.0032, 0.03, 4, 10), p.clone());
   ((z.material.opacity = 0.88),
-    z.position.set(0, -0.108, 0.112),
+    z.position.set(0, -0.1, 0.096),
     (z.rotation.z = Math.PI / 2),
     o.add(z));
   const eyeGroup = (t) => {
       const o = new e.Group();
-      o.position.set(0.049 * t, 0.004, 0.094);
-      const a = new e.Mesh(new e.SphereGeometry(0.022, 24, 24), c);
-      (a.scale.set(1.26, 0.74, 0.46), o.add(a));
-      const n = new e.Mesh(new e.SphereGeometry(0.0114, 20, 20), h);
+      o.position.set(0.041 * t, -0.002, 0.082);
+      const a = new e.Mesh(new e.SphereGeometry(0.017, 24, 24), c);
+      (a.scale.set(1.14, 0.6, 0.34), o.add(a));
+      const n = new e.Mesh(new e.SphereGeometry(0.0086, 20, 20), h);
       (n.position.set(0, 0, 0.016),
-        n.scale.set(0.94, 1, 0.56),
+        n.scale.set(0.76, 0.84, 0.42),
         o.add(n));
       const s = new e.Mesh(
-        new e.SphereGeometry(0.0046, 16, 16),
+        new e.SphereGeometry(0.0036, 16, 16),
         new e.MeshBasicMaterial({ color: "#161113" }),
       );
-      (s.position.set(0, 0, 0.024), s.scale.set(0.92, 0.98, 0.4), o.add(s));
-      const r = new e.Mesh(new e.CapsuleGeometry(0.0032, 0.038, 4, 10), i);
-      (r.position.set(0, 0.01, 0.01), (r.rotation.z = Math.PI / 2), o.add(r));
-      const l = new e.Mesh(new e.CapsuleGeometry(0.002, 0.034, 4, 10), i);
-      (l.position.set(0, -0.013, 0.008),
+      (s.position.set(0, 0, 0.022), s.scale.set(0.76, 0.82, 0.32), o.add(s));
+      const r = new e.Mesh(new e.CapsuleGeometry(0.0026, 0.028, 4, 10), i);
+      (r.position.set(0, 0.008, 0.008), (r.rotation.z = Math.PI / 2), o.add(r));
+      const l = new e.Mesh(new e.CapsuleGeometry(0.0016, 0.026, 4, 10), i);
+      (l.position.set(0, -0.011, 0.006),
         (l.rotation.z = Math.PI / 2),
-        l.scale.set(1, 0.86, 0.84),
+        l.scale.set(0.92, 0.74, 0.72),
         o.add(l));
-      const p = new e.Mesh(new e.CapsuleGeometry(0.0018, 0.036, 4, 10), d);
-      (p.position.set(0, 0.009, 0.018),
+      const p = new e.Mesh(new e.CapsuleGeometry(0.0016, 0.03, 4, 10), d);
+      (p.position.set(0, 0.007, 0.016),
         (p.rotation.z = Math.PI / 2),
-        p.scale.set(0.96, 0.92, 0.82),
+        p.scale.set(0.84, 0.82, 0.68),
         o.add(p));
       const m = new e.Mesh(
-        new e.SphereGeometry(0.0035, 12, 12),
+        new e.SphereGeometry(0.0028, 12, 12),
         new e.MeshBasicMaterial({
           color: "#ffffff",
           transparent: !0,
@@ -270,8 +272,8 @@ function buildReferenceJuniorHeroHead(t = {}) {
         }),
       );
       return (
-        (m.position.set(-0.004 * t, 0.007, 0.026),
-          m.scale.set(1.24, 1.1, 0.5),
+        (m.position.set(-0.003 * t, 0.006, 0.024),
+          m.scale.set(1.08, 0.96, 0.4),
           o.add(m),
           (a.userData.baseScale = a.scale.clone()),
           (n.userData.baseScale = n.scale.clone()),
@@ -281,25 +283,25 @@ function buildReferenceJuniorHeroHead(t = {}) {
     eyeL = eyeGroup(-1),
     eyeR = eyeGroup(1);
   o.add(eyeL.root, eyeR.root);
-  const T = new e.Mesh(new e.CapsuleGeometry(0.0026, 0.04, 4, 10), d);
-  (T.position.set(-0.052, 0.042, 0.098),
-    T.scale.set(0.78, 0.9, 0.76),
-    T.rotation.set(0.04, 0.08, 0.18),
+  const T = new e.Mesh(new e.CapsuleGeometry(0.002, 0.028, 4, 10), d);
+  (T.position.set(-0.046, 0.032, 0.084),
+    T.scale.set(0.72, 0.8, 0.68),
+    T.rotation.set(0.03, 0.05, 0.12),
     o.add(T));
   const R = T.clone();
-  ((R.position.x = 0.054), (R.rotation.z = -0.22), (R.rotation.y = -0.08), o.add(R));
+  ((R.position.x = 0.048), (R.rotation.z = -0.12), (R.rotation.y = -0.05), o.add(R));
   const I = new e.Mesh(
-    new e.SphereGeometry(0.136, 48, 48, 0, 2 * Math.PI, 0, 0.76 * Math.PI),
+    new e.SphereGeometry(0.118, 48, 48, 0, 2 * Math.PI, 0, 0.76 * Math.PI),
     l,
   );
-  (I.position.set(0, 0.046, -0.058),
-    I.scale.set(0.92, 0.9, 0.84),
-    (I.rotation.x = -0.2),
+  (I.position.set(0, 0.036, -0.04),
+    I.scale.set(0.74, 0.74, 0.68),
+    (I.rotation.x = -0.12),
     o.add(I));
-  const A = new e.Mesh(new e.SphereGeometry(0.116, 40, 40), l);
-  (A.position.set(0, -0.004, -0.126), A.scale.set(0.84, 0.98, 0.68), o.add(A));
-  const C = new e.Mesh(new e.SphereGeometry(0.036, 20, 20), l);
-  (C.position.set(0.028, 0.102, -0.148), C.scale.set(1.1, 0.96, 0.92), o.add(C));
+  const A = new e.Mesh(new e.SphereGeometry(0.092, 40, 40), l);
+  (A.position.set(0, -0.012, -0.11), A.scale.set(0.68, 0.84, 0.56), o.add(A));
+  const C = new e.Mesh(new e.SphereGeometry(0.028, 20, 20), l);
+  (C.position.set(0.024, 0.086, -0.13), C.scale.set(0.88, 0.78, 0.76), o.add(C));
   const E = new e.Mesh(
     new e.TorusGeometry(0.03, 0.011, 10, 24),
     new e.MeshStandardMaterial({
@@ -308,54 +310,51 @@ function buildReferenceJuniorHeroHead(t = {}) {
       metalness: 0.02,
     }),
   );
-  (E.position.set(0.028, 0.102, -0.146), (E.rotation.x = Math.PI / 2), o.add(E));
+  (E.position.set(0.024, 0.086, -0.128), (E.rotation.x = Math.PI / 2), o.add(E));
   const U = [
-    { x: -0.05, y: 0.052, z: 0.108, w: 0.026, h: 0.148, rx: -0.08, ry: 0.08, rz: 0.16 },
-    { x: -0.032, y: 0.05, z: 0.11, w: 0.024, h: 0.154, rx: -0.06, ry: 0.06, rz: 0.1 },
-    { x: -0.014, y: 0.048, z: 0.112, w: 0.022, h: 0.158, rx: -0.04, ry: 0.02, rz: 0.05 },
-    { x: 0.002, y: 0.046, z: 0.114, w: 0.021, h: 0.16, rx: -0.03, ry: 0, rz: -0.02 },
-    { x: 0.018, y: 0.048, z: 0.112, w: 0.022, h: 0.156, rx: -0.04, ry: -0.02, rz: -0.06 },
-    { x: 0.036, y: 0.05, z: 0.11, w: 0.024, h: 0.15, rx: -0.06, ry: -0.08, rz: -0.12 },
-    { x: 0.052, y: 0.052, z: 0.108, w: 0.026, h: 0.144, rx: -0.08, ry: -0.12, rz: -0.16 },
+    { x: -0.048, y: 0.064, z: 0.092, w: 0.016, h: 0.094, rx: -0.06, ry: 0.1, rz: 0.12 },
+    { x: -0.024, y: 0.06, z: 0.098, w: 0.012, h: 0.078, rx: -0.04, ry: 0.06, rz: 0.06 },
+    { x: 0.022, y: 0.06, z: 0.098, w: 0.012, h: 0.078, rx: -0.04, ry: -0.06, rz: -0.06 },
+    { x: 0.046, y: 0.064, z: 0.092, w: 0.016, h: 0.094, rx: -0.06, ry: -0.1, rz: -0.12 },
   ];
   U.forEach((t) => {
     const a = buildJuniorHairRibbon(n, t.w, t.h, {
-      curve: 0.018,
-      topWidth: 0.42,
-      bottomWidth: 0.7,
-      opacity: 0.94,
+      curve: 0.012,
+      topWidth: 0.3,
+      bottomWidth: 0.48,
+      opacity: 0.82,
     });
     (a.position.set(t.x, t.y, t.z),
       a.rotation.set(t.rx, t.ry, t.rz),
       o.add(a));
   });
   [
-    { x: -0.082, y: 0.004, z: 0.076, w: 0.034, h: 0.21, ry: 0.34, rz: 0.14 },
-    { x: -0.062, y: -0.01, z: 0.096, w: 0.018, h: 0.13, ry: 0.16, rz: 0.06, opacity: 0.72 },
-    { x: 0.082, y: 0.004, z: 0.076, w: 0.034, h: 0.21, ry: -0.34, rz: -0.14 },
-    { x: 0.062, y: -0.01, z: 0.096, w: 0.018, h: 0.13, ry: -0.16, rz: -0.06, opacity: 0.72 },
+    { x: -0.072, y: 0, z: 0.064, w: 0.022, h: 0.16, ry: 0.28, rz: 0.12 },
+    { x: -0.056, y: -0.008, z: 0.084, w: 0.012, h: 0.084, ry: 0.14, rz: 0.04, opacity: 0.58 },
+    { x: 0.072, y: 0, z: 0.064, w: 0.022, h: 0.16, ry: -0.28, rz: -0.12 },
+    { x: 0.056, y: -0.008, z: 0.084, w: 0.012, h: 0.084, ry: -0.14, rz: -0.04, opacity: 0.58 },
   ].forEach((t) => {
     const a = buildJuniorHairRibbon(n, t.w, t.h, {
-      curve: 0.02,
-      topWidth: 0.58,
-      bottomWidth: 0.76,
-      opacity: t.opacity ?? 0.92,
+      curve: 0.016,
+      topWidth: 0.42,
+      bottomWidth: 0.58,
+      opacity: t.opacity ?? 0.78,
     });
     (a.position.set(t.x, t.y, t.z),
       a.rotation.set(-0.02, t.ry, t.rz),
       o.add(a));
   });
   const W = new e.Group();
-  (W.position.set(0.03, 0.072, -0.15), o.add(W));
+  (W.position.set(0.026, 0.066, -0.134), o.add(W));
   [
-    { y: -0.02, z: -0.01, r: 0.028, len: 0.1, rotX: -0.18, rotZ: -0.08 },
-    { y: -0.1, z: 0, r: 0.024, len: 0.12, rotX: -0.12, rotZ: -0.12 },
-    { y: -0.195, z: 0.014, r: 0.02, len: 0.1, rotX: -0.08, rotZ: -0.1 },
+    { y: -0.018, z: -0.008, r: 0.02, len: 0.074, rotX: -0.16, rotZ: -0.06 },
+    { y: -0.082, z: 0, r: 0.018, len: 0.088, rotX: -0.1, rotZ: -0.08 },
+    { y: -0.152, z: 0.01, r: 0.015, len: 0.072, rotX: -0.06, rotZ: -0.08 },
   ].forEach((t) => {
     const o = new e.Mesh(new e.CapsuleGeometry(t.r, t.len, 6, 10), l);
     (o.position.set(0.01, t.y, t.z),
       o.rotation.set(t.rotX, 0.08, t.rotZ),
-      o.scale.set(0.92, 1, 0.74),
+      o.scale.set(0.84, 0.9, 0.64),
       W.add(o));
   });
   const D = new e.Mesh(
@@ -363,11 +362,11 @@ function buildReferenceJuniorHeroHead(t = {}) {
     new e.MeshBasicMaterial({
       color: "#1e1514",
       transparent: !0,
-      opacity: 0.09,
+      opacity: 0.02,
       depthWrite: !1,
     }),
   );
-  (D.position.set(0, 0.036, 0.102), (D.renderOrder = 16), o.add(D));
+  (D.position.set(0, 0.03, 0.088), (D.renderOrder = 16), o.add(D));
   return (
     o.traverse((t) => {
       t.isMesh && ((t.castShadow = !1), (t.receiveShadow = !1));
@@ -2390,24 +2389,24 @@ function buildJuniorPortraitShell(t, o = {}) {
   const r0 = t.frontClose ?? t.front ?? null;
   if (r0) {
     const t = buildCurvedPortraitPlane(r0, {
-      width: 0.48,
-      height: 0.66,
-      curveDepth: 0.04,
-      alphaTest: 0.08,
+      width: 0.22,
+      height: 0.29,
+      curveDepth: 0.024,
+      alphaTest: 0.04,
       featherMask: {
         centerX: 0.5,
-        centerY: 0.55,
-        radiusX: 0.28,
-        radiusY: 0.34,
-        inner: 0.17,
-        outer: 0.32,
+        centerY: 0.5,
+        radiusX: 0.22,
+        radiusY: 0.26,
+        inner: 0.12,
+        outer: 0.24,
       },
-      roughness: 0.88,
+      roughness: 0.92,
       emissive: "#fff6ef",
-      emissiveIntensity: 0.08,
-      position: new e.Vector3(0.012, 1.575, 0.226),
-      mapRepeat: new e.Vector2(0.46, 0.72),
-      mapOffset: new e.Vector2(0.27, 0.18),
+      emissiveIntensity: 0.04,
+      position: new e.Vector3(0.008, 1.576, 0.164),
+      mapRepeat: new e.Vector2(0.24, 0.4),
+      mapOffset: new e.Vector2(0.38, 0.38),
     });
     ((t.renderOrder = 16),
       (t.visible = !1),
@@ -2437,11 +2436,11 @@ function updateJuniorHeroFaceCard(t, o, a, n = 1) {
     i = r?.userData?.heroAnchor?.face ?? null;
   i &&
     (s.position.set(
-      i.x + 0.008,
-      i.y - 0.006,
-      i.z + 0.034,
+      i.x + 0.002,
+      i.y - 0.01,
+      i.z + 0.028,
     ),
-    s.scale.setScalar(0.9));
+    s.scale.setScalar(0.72));
   (a.getWorldPosition(juniorPortraitCameraWorld),
     juniorPortraitCameraLocal.copy(juniorPortraitCameraWorld),
     t.worldToLocal(juniorPortraitCameraLocal));
@@ -2597,10 +2596,13 @@ function setJuniorHeroLeadVisibility(t, o, a = {}) {
     s = a.heroHeadRoot ?? t.heroHeadRoot ?? null,
     r = a.runtimeModelRoot ?? t.runtimeModelRoot ?? null,
     i = a.runtimeModelReady ?? Boolean(r?.userData?.ready),
-    l = (t, o) => {
+    l = Boolean(a.keepLegacyBody),
+    c = Boolean(a.suppressRuntimeModel),
+    h = a.showHeroHeadRoot ?? !0,
+    d = (t, o) => {
       t && (t.visible = o);
     },
-    c = (t) => {
+    p = (t) => {
       t &&
         (t.userData.baseScale ??= t.scale.clone(),
         t.userData.basePosition ??= t.position.clone(),
@@ -2641,20 +2643,22 @@ function setJuniorHeroLeadVisibility(t, o, a = {}) {
     t.referenceHairCap,
     t.headGlow,
     t.hairBack,
-  ].forEach((t) => l(t, !n));
+  ].forEach((t) => d(t, !n));
+  t.legacyChildren?.forEach((t) => d(t, l || !n));
   if (s) {
-    c(s);
-    (s.visible = n && !i),
-      n
-        ? (s.position.set(0.01, 1.556, 0.008),
-          s.scale.set(0.72, 0.74, 0.72))
+    p(s);
+    const o = n && h;
+    (s.visible = o),
+      o
+        ? (s.position.set(0.01, 1.55, 0.008),
+          s.scale.set(0.68, 0.7, 0.68))
         : (s.position.copy(s.userData.basePosition),
           s.rotation.copy(s.userData.baseRotation),
           s.scale.copy(s.userData.baseScale));
   }
   if (r) {
-    c(r);
-    (r.visible = n && i),
+    p(r);
+    (r.visible = n && i && !c),
       n
         ? (r.position.set(0, 1.556, 0),
           r.scale.set(0.72, 0.74, 0.72))
@@ -2702,6 +2706,27 @@ function setJuniorHeroLeadVisibility(t, o, a = {}) {
     t.closeupRefinement && (t.closeupRefinement.visible = !1);
   }
 }
+function setJuniorGltfFaceVisibility(t, o) {
+  if (!t) return;
+  t.traverse((t) => {
+    if (!t?.isMesh) return;
+    const a = t.name || "";
+    if (
+      a.startsWith("head_") ||
+      "chin" === a ||
+      a.startsWith("cheek_") ||
+      a.startsWith("ear_") ||
+      a.startsWith("nose_") ||
+      a.startsWith("lip_") ||
+      a.startsWith("eye_") ||
+      a.startsWith("brow_") ||
+      a.startsWith("eyelash_") ||
+      a.startsWith("hair_") ||
+      "scrunchie" === a
+    )
+      t.visible = o;
+  });
+}
 function resolveJuniorHeroAnchor(t, o = {}) {
   const a = t?.userData ?? {},
     n = a.heroCloseupModelRoot ?? null,
@@ -2722,7 +2747,9 @@ function resolveJuniorHeroAnchor(t, o = {}) {
       "runtime" === h || "hero_closeup" === h
         ? (i.updateMatrixWorld(!0),
           (t) => (t ? i.localToWorld(t.clone()) : d.clone()))
-        : (t) => (t ? t.clone() : d.clone());
+        : "procedural_hero_head" === h && t
+          ? (o) => (o ? t.localToWorld(o.clone()) : d.clone())
+          : (t) => (t ? t.clone() : d.clone());
   return (
     l
       ? ("runtime" === h || "hero_closeup" === h
@@ -2736,10 +2763,16 @@ function resolveJuniorHeroAnchor(t, o = {}) {
             juniorHeroAnchorEyes.copy(
               p(l.eyes ?? l.face ?? l.center ?? null),
             ))
-          : (juniorHeroAnchorCenter.copy(l.center ?? l.face ?? d),
-            juniorHeroAnchorFace.copy(l.face ?? juniorHeroAnchorCenter),
-            juniorHeroAnchorChest.copy(l.chest ?? juniorHeroAnchorFace),
-            juniorHeroAnchorEyes.copy(l.eyes ?? juniorHeroAnchorFace)))
+          : (juniorHeroAnchorCenter.copy(p(l.center ?? l.face ?? null)),
+            juniorHeroAnchorFace.copy(
+              p(l.face ?? l.center ?? l.eyes ?? l.chest ?? null),
+            ),
+            juniorHeroAnchorChest.copy(
+              p(l.chest ?? l.center ?? l.face ?? null),
+            ),
+            juniorHeroAnchorEyes.copy(
+              p(l.eyes ?? l.face ?? l.center ?? null),
+            )))
       : ((juniorHeroAnchorCenter.copy(d),
         juniorHeroAnchorFace.copy(d).add(o.faceOffset ?? new e.Vector3(0, 0.46, 0.14)),
         juniorHeroAnchorChest.copy(d).add(o.chestOffset ?? new e.Vector3(0, 0.24, 0.08)),
@@ -4864,14 +4897,13 @@ export function createLm402Scene(D, runtimeOptions = {}) {
 	          ko.traverse((e) => {
 	            e.material && (e.material.opacity = t.characters.auntEcho.alpha);
 	          }),
-	          (() => {
-	            const e = Co.userData.runtimeModelRoot ?? null,
-	              o = Co.userData.heroCloseupModelRoot ?? null,
-	              a = Boolean(e?.userData?.ready),
-	              n = Boolean(o?.userData?.ready),
-	              s = juniorHeroLead && n,
-	              r = !s && a,
-	              i = s || r;
+          (() => {
+            const e = Co.userData.runtimeModelRoot ?? null,
+              o = Co.userData.heroCloseupModelRoot ?? null,
+              a = Boolean(e?.userData?.ready),
+              s = !1,
+              r = a,
+              i = r;
 	            e &&
 	              (e.userData.basePosition ??= e.position.clone(),
 	              e.userData.baseScale ??= e.scale.clone(),
@@ -4893,21 +4925,21 @@ export function createLm402Scene(D, runtimeOptions = {}) {
 	                    (e.position.copy(e.userData.basePosition),
 	                    e.scale.copy(e.userData.baseScale),
 	                    e.rotation.copy(e.userData.baseRotation))),
-	              o &&
-	                ((o.visible = s),
-	                s
-	                  ? (o.position.copy(o.userData.basePosition),
-	                    o.scale.copy(o.userData.baseScale),
-	                    o.rotation.copy(o.userData.baseRotation))
-	                  : (o.position.copy(o.userData.basePosition),
-	                    o.scale.copy(o.userData.baseScale),
-	                    o.rotation.copy(o.userData.baseRotation))),
-	              (assetState.currentVariant = s
-	                ? "hero_closeup_glb"
-	                : r
-	                  ? "runtime_glb"
-	                  : "procedural_fallback");
-	          })(),
+              o &&
+                ((o.visible = s),
+                  s
+                    ? (o.position.copy(o.userData.basePosition),
+                      o.scale.copy(o.userData.baseScale),
+                      o.rotation.copy(o.userData.baseRotation),
+                      setJuniorGltfFaceVisibility(o, !0))
+                    : (o.position.copy(o.userData.basePosition),
+                      o.scale.copy(o.userData.baseScale),
+                      o.rotation.copy(o.userData.baseRotation),
+                      setJuniorGltfFaceVisibility(o, !0))),
+              (assetState.currentVariant = r
+                ? "runtime_glb"
+                : "procedural_fallback");
+          })(),
 	          Co.userData.glow &&
 	            (Co.userData.glow.material.opacity =
 	              "eye_contact" === t.phase ||
@@ -4916,19 +4948,22 @@ export function createLm402Scene(D, runtimeOptions = {}) {
 	                : 0.18),
 	          Co.userData.pose?.referenceJunior &&
 	            (() => {
-	              const e = Co.userData.pose,
+              const e = Co.userData.pose,
                 o = "perfect" === (t.endingSequence?.type ?? t.ending),
                 s = o ? Ao(t.endingSequence?.time ?? 0) : null,
                 a =
-	                  "rear_wait" === t.phase ||
-	                  "eye_contact" === t.phase ||
-	                  (o &&
-	                    ("senior_pov" === s ||
-	                      "eyes" === s ||
-	                      "overlay" === s));
-	              setJuniorHeroLeadVisibility(e, a, {
-	                heroHeadRoot: e.heroHeadRoot,
-	              });
+                  "rear_wait" === t.phase ||
+                  "eye_contact" === t.phase ||
+                  (o &&
+                    ("senior_pov" === s ||
+                      "eyes" === s ||
+                      "overlay" === s));
+              setJuniorHeroLeadVisibility(e, a, {
+                heroHeadRoot: e.heroHeadRoot,
+                keepLegacyBody: !1,
+                suppressRuntimeModel: !1,
+                showHeroHeadRoot: !1,
+              });
               if (e.head?.material && e.jaw?.material) {
                 [e.head.material, e.jaw.material].forEach((t) => {
                   if (!t?.isMaterial) return;
@@ -4956,8 +4991,9 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             (() => {
               const a = Co.userData.portraitShell,
                 n = Boolean(a.userData.loaded) && !isIntro,
+                p = "perfect" === (t.endingSequence?.type ?? t.ending),
                 s =
-                  "perfect" === (t.endingSequence?.type ?? t.ending)
+                  p
                     ? e.MathUtils.lerp(
                         0.46,
                         0.94,
@@ -4974,23 +5010,25 @@ export function createLm402Scene(D, runtimeOptions = {}) {
                         : 0,
                 r =
                   n &&
-                  "perfect" !== (t.endingSequence?.type ?? t.ending) &&
+                  !p &&
                   !juniorHeroLead &&
                   s > 0.02 &&
                   ("rear_wait" === t.phase ||
                     "eye_contact" === t.phase ||
                     "perfect" === (t.endingSequence?.type ?? t.ending)),
-                i =
-                  n &&
-                  "perfect" === (t.endingSequence?.type ?? t.ending) &&
-                  s > 0.02;
+                i = !1;
               a.userData.planes?.forEach((e) => {
                 e.visible = !1;
               }),
                 a.userData.glow && (a.userData.glow.visible = r),
                 a.userData.heroFaceCard &&
-                  updateJuniorHeroFaceCard(Co, a, q, i ? Math.min(0.92, s) : 0),
-                (a.visible = r || i),
+                  updateJuniorHeroFaceCard(
+                    Co,
+                    a,
+                    q,
+                    i ? Math.min(0.92, Math.max(0.68, 0.72 * s)) : 0,
+                  ),
+                (a.visible = r && !p),
                 r && updateJuniorPortraitShell(Co, a, q, s);
             })(),
           z(Go),
@@ -5170,11 +5208,13 @@ export function createLm402Scene(D, runtimeOptions = {}) {
               h0 = o.perfectOverlayAt ?? 34.8,
               heroAnchor = resolveJuniorHeroAnchor(Co, {
                 forceRoot:
-                  Co.userData.heroCloseupModelRoot?.visible
+                  (Co.userData.heroCloseupModelRoot?.visible
                     ? Co.userData.heroCloseupModelRoot
                     : Co.userData.runtimeModelRoot?.visible
                       ? Co.userData.runtimeModelRoot
-                      : Co.userData.pose?.heroHeadRoot ?? null,
+                      : Co.userData.pose?.heroHeadRoot?.visible
+                        ? Co.userData.pose.heroHeadRoot
+                        : null),
               }),
               i =
                 (Co.position.clone().add(w),
@@ -5189,6 +5229,10 @@ export function createLm402Scene(D, runtimeOptions = {}) {
               h = heroAnchor.face;
             Co.userData.heroCloseupTarget = {
               kind: heroAnchor.kind,
+              leadMode:
+                "procedural_hero_head" === heroAnchor.kind
+                  ? "hero_head"
+                  : "model_root",
               rootVisible: Boolean(heroAnchor.root?.visible),
               rootKind: heroAnchor.root?.userData?.kind ?? null,
               sourceUrl: heroAnchor.root?.userData?.sourceUrl ?? null,
@@ -5327,26 +5371,27 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             }
             if (s < h0) {
               const t = (s - c0) / Math.max(0.01, h0 - c0),
+                focusMid = c.clone().lerp(h, 0.62),
                 closeAnchor = h
                   .clone()
-                  .add(l.clone().multiplyScalar(1.52))
-                  .add(new e.Vector3(0.044, -0.014, 0.02)),
+                  .add(l.clone().multiplyScalar(1.54))
+                  .add(new e.Vector3(0.046, 0.008, 0.022)),
                 o = closeAnchor.clone(),
                 a = e.MathUtils.smoothstep(t, 0, 0.5),
                 n = 4e-4 * Math.sin(2.8 * s) * a,
                 driftY = 3e-4 * Math.sin(3.1 * s + 1.2) * a,
-                c = 8e-4 * Math.sin(0.6 * s);
+                bobY = 8e-4 * Math.sin(0.6 * s);
               return (
-                (o.y += c + driftY),
+                (o.y += bobY + driftY),
                 (o.x += 8e-4 * Math.cos(0.2 * s) + n),
                 q.position.copy(o),
                 (q.fov = e.MathUtils.lerp(
-                  24.6,
-                  21.4,
+                  25.8,
+                  23.6,
                   e.MathUtils.smoothstep(t, 0, 0.8),
                 )),
                 q.updateProjectionMatrix(),
-                q.lookAt(h.x, h.y - 0.004, h.z + 0.014),
+                q.lookAt(focusMid.x, focusMid.y + 0.006, focusMid.z + 0.016),
                 void q.rotateZ(8e-4 * Math.sin(0.35 * s) * a)
               );
             }
@@ -5354,8 +5399,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
               p = e.MathUtils.smoothstep(d, 0, 4),
               overlayAnchor = h
                 .clone()
-                .add(l.clone().multiplyScalar(1.62 - 0.2 * p))
-                .add(new e.Vector3(0.1, -0.1, 0.028)),
+                .add(l.clone().multiplyScalar(1.68 - 0.14 * p))
+                .add(new e.Vector3(0.108, -0.022, 0.03)),
               m = overlayAnchor.clone();
             m.add(a.set(0.01 + 0.02 * p, 0.008 + 0.01 * p, 0));
             const g = Math.min(1, 0.08 * d);
