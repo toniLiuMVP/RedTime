@@ -630,7 +630,112 @@ export const CHARACTER_ASSET_MANIFEST = {
     id: "junior2005",
     label: "2005 學妹定稿",
     mode: "portrait-shell",
+    deliveryMode: "glb-first",
     fallbackMode: "procedural",
+    sourceBlendUrl: "assets/lm402/characters/junior/work/junior_hero_master.blend",
+    runtimeModelUrl: "assets/lm402/characters/junior/exports/junior_2005_runtime.glb",
+    heroCloseupModelUrl:
+      "assets/lm402/characters/junior/exports/junior_2005_hero_closeup.glb",
+    runtimeTierPolicy: {
+      desktop: {
+        preferred: "junior_2005_runtime.glb",
+        runtimeModelUrl: "assets/lm402/characters/junior/exports/junior_2005_runtime.glb",
+        heroCloseupModelUrl:
+          "assets/lm402/characters/junior/exports/junior_2005_hero_closeup.glb",
+        fallback: "procedural_shell_until_runtime_bundle_exists",
+      },
+      mobile: {
+        preferred: "junior_2005_runtime_mobile.glb",
+        runtimeModelUrl:
+          "assets/lm402/characters/junior/exports/junior_2005_runtime_mobile.glb",
+        heroCloseupModelUrl:
+          "assets/lm402/characters/junior/exports/junior_2005_hero_closeup.glb",
+        fallback: "decimated_glb_or_procedural_shell",
+      },
+      missingAsset: "procedural_fallback",
+    },
+    animationClips: [
+      {
+        id: "idle_breathe",
+        label: "站定呼吸",
+        loop: !0,
+        notes: "日常待機，保持胸口與肩頸的自然起伏。",
+      },
+      {
+        id: "rear_wait",
+        label: "後門等待",
+        loop: !0,
+        notes: "後門站定、微轉身、保持眼神留白。",
+      },
+      {
+        id: "micro_glance",
+        label: "微抬頭",
+        loop: !1,
+        notes: "從低頭到抬眼的瞬間，供 senior POV 轉場。",
+      },
+      {
+        id: "eyes_hold",
+        label: "一眼停留",
+        loop: !1,
+        notes: "學長看見學妹的那一秒，讓停頓與呼吸一起成立。",
+      },
+      {
+        id: "pony_sway",
+        label: "髮束晃動",
+        loop: !0,
+        notes: "馬尾、側髮與髮尾在停步與轉身時的自然擺動。",
+      },
+    ],
+    materialProfiles: {
+      skin_face: {
+        profile: "pbr_subsurface_approx",
+        notes: ["臉部保留柔和高光", "不要塑膠感", "close-up 仍要有膚質層次"],
+      },
+      skin_body: {
+        profile: "soft_pbr",
+        notes: ["身體膚色略淡於臉部", "與長袖襯衫、光影一起成立"],
+      },
+      hair_cards: {
+        profile: "alpha_hair_cards",
+        notes: ["瀏海要分束", "側髮貼臉但不黏成黑牆", "馬尾尾端要有重量感"],
+      },
+      shirt_white: {
+        profile: "cotton_pbr",
+        notes: ["白襯衫要有布料皺摺與柔反射", "不能像純白平面"],
+      },
+      shorts_denim: {
+        profile: "denim_pbr",
+        notes: ["牛仔短褲要有布紋與磨損層次"],
+      },
+      shoes: {
+        profile: "school_shoes_pbr",
+        notes: ["保持校園寫實感", "不要過度亮面"],
+      },
+      scrunchie: {
+        profile: "accent_pbr",
+        notes: ["髮圈作為小亮點", "不搶臉部焦點"],
+      },
+    },
+    fallbackPolicy: {
+      missingRuntime: "procedural_shell",
+      missingHeroCloseup: "runtime_glb_camera_crop",
+      preserveGameplay: !0,
+      preserveFaceSilhouette: !0,
+    },
+    referenceSet: {
+      folder: "assets/lm402/characters/junior/reference",
+      requiredViews: ["front", "left_front", "left_side", "back", "closeup", "outfit"],
+      notes: [
+        "2005 定稿照是唯一主參考，不混用其他年代版本當主臉。",
+        "手工建模時先鎖臉型與髮束，再做服裝和材質。",
+      ],
+    },
+    exportTargets: {
+      runtime: "junior_2005_runtime.glb",
+      heroCloseup: "junior_2005_hero_closeup.glb",
+      mobile: "junior_2005_runtime_mobile.glb",
+      manifest: "junior_2005_export_manifest.json",
+    },
     textures: {
       front: new URL(
         "../../2005年學妹定稿/2005年學妹正面長袖襯衫定稿.png",
@@ -666,6 +771,7 @@ export const CHARACTER_ASSET_MANIFEST = {
       "臉小、眼神清澈、第一眼要讀得出『也太像徐若瑄了吧』的震撼。",
       "站在教室光影裡要自然成為焦點，不能只是靜態貼圖。",
     ],
+    audioBootPolicy: "always_off",
   },
 };
 export const UI_VISIBILITY_PRESETS = {
@@ -724,7 +830,7 @@ export const ENDINGS = {
   perfect: {
     kicker: "完美結局",
     title: "女兒飛到一眼瞬間那一秒",
-    copy: "學妹走到教室內的後門站定，學長停在走廊後門前，兩人隔著那道門洞面對面。一道光落在學妹身上，學長心裡先被那句「也太像徐若瑄了吧！」狠狠撞了一下；等鏡頭慢慢收進眼睛與呼吸，剩下的就只是一句更深的確認：「這一次，依然遇見妳。」",
+    copy: "學妹走到教室內的後門站定，學長停在走廊後門前，兩人隔著那道門洞面對面。一道光落在學妹身上，學長心裡先被那句「也太像徐若瑄了吧！」狠狠撞了一下；等鏡頭慢慢收進眼睛與呼吸，剩下的就只是一句更深的確認：「這一次，依然再次遇見妳。」",
   },
   canon: {
     kicker: "正史結局",
@@ -769,7 +875,7 @@ export const perfectSubtitleTrack = {
   },
   line2: {
     source: "把拔（心底的聲音）",
-    text: "這一次，依然遇見妳。",
+    text: "這一次，依然再次遇見妳。",
     duration: 5,
   },
   overlayAt: CINEMATIC_TIMELINE.perfectOverlayAt,

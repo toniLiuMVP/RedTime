@@ -12,3 +12,15 @@ Recommended contents:
 
 Do not place final delivery bundles here.
 
+Suggested working layout:
+
+- `blockout/`
+- `sculpt/`
+- `retopo/`
+- `rig/`
+- `framing/`
+- `notes/`
+
+The handoff should always converge back to one source file:
+
+- `junior_hero_master.blend`

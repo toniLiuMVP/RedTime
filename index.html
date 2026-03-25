@@ -377,16 +377,16 @@
         overflow: hidden;
         background:
           radial-gradient(
-            ellipse 58% 64% at 62% 42%,
-            rgba(255, 230, 176, 0.2),
-            transparent 55%
+            ellipse 58% 74% at 76% 34%,
+            rgba(255, 229, 180, 0.22),
+            transparent 54%
           ),
           radial-gradient(
-            ellipse 72% 90% at 18% 18%,
-            rgba(90, 122, 152, 0.22),
-            transparent 62%
+            ellipse 80% 92% at 18% 16%,
+            rgba(56, 88, 96, 0.2),
+            transparent 64%
           ),
-          linear-gradient(135deg, rgba(12, 18, 28, 0.98), rgba(8, 10, 16, 0.82));
+          linear-gradient(138deg, rgba(11, 18, 28, 0.98), rgba(7, 10, 16, 0.9));
         box-shadow:
           0 28px 72px rgba(0, 0, 0, 0.34),
           inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -417,32 +417,53 @@
         z-index: 1;
         font-family: "Cormorant Garamond", serif;
         font-size: clamp(30px, 4vw, 44px);
-        line-height: 0.98;
+        line-height: 1.02;
         letter-spacing: 0.045em;
         color: var(--parchment);
-        max-width: 9ch;
+        max-width: 6.6em;
         margin-bottom: 10px;
+        text-wrap: balance;
       }
       .hero-stage-copy {
         position: relative;
         z-index: 1;
-        max-width: 24em;
+        max-width: 22em;
         font-size: 13px;
         line-height: 1.8;
         color: rgba(234, 230, 222, 0.72);
+        text-wrap: pretty;
       }
       .hero-stage-window {
         position: absolute;
         right: 18px;
         bottom: 18px;
-        width: min(62%, 360px);
-        aspect-ratio: 1.08 / 1;
+        width: min(64%, 372px);
+        aspect-ratio: 1.18 / 1;
         border-radius: 26px;
         overflow: hidden;
         border: 1px solid rgba(255, 248, 232, 0.08);
         background:
-          linear-gradient(180deg, rgba(242, 223, 196, 0.1), transparent 38%),
-          linear-gradient(90deg, rgba(18, 24, 36, 0.94), rgba(8, 12, 18, 0.94));
+          radial-gradient(
+            ellipse 72% 84% at 72% 24%,
+            rgba(255, 238, 208, 0.24),
+            transparent 48%
+          ),
+          linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.04) 0 8%,
+            transparent 8% 22%,
+            rgba(255, 255, 255, 0.03) 22% 26%,
+            transparent 26% 52%,
+            rgba(255, 255, 255, 0.02) 52% 55%,
+            transparent 55% 100%
+          ),
+          radial-gradient(
+            ellipse 58% 84% at 70% 18%,
+            rgba(255, 240, 206, 0.16),
+            transparent 52%
+          ),
+          linear-gradient(180deg, rgba(242, 223, 196, 0.08), transparent 28%),
+          linear-gradient(90deg, rgba(14, 18, 29, 0.98), rgba(8, 12, 19, 0.95));
         box-shadow:
           inset 0 0 0 1px rgba(255, 255, 255, 0.03),
           0 18px 40px rgba(0, 0, 0, 0.28);
@@ -452,83 +473,115 @@
         position: absolute;
         inset: 0;
         background:
-          linear-gradient(90deg, rgba(255, 255, 255, 0.1), transparent 22%),
-          linear-gradient(0deg, rgba(255, 248, 232, 0.16), transparent 44%);
-        opacity: 0.5;
+          linear-gradient(90deg, rgba(255, 255, 255, 0.08), transparent 22%),
+          linear-gradient(0deg, rgba(255, 248, 232, 0.12), transparent 44%);
+        opacity: 0.46;
+      }
+      .hero-stage-window::after {
+        content: "";
+        position: absolute;
+        left: 9%;
+        right: 14%;
+        bottom: 16%;
+        height: 2px;
+        border-radius: 999px;
+        background: linear-gradient(
+          90deg,
+          rgba(255, 112, 154, 0.02),
+          rgba(255, 96, 136, 0.7),
+          rgba(255, 227, 182, 0.22)
+        );
+        box-shadow: 0 0 14px rgba(255, 108, 148, 0.24);
+        opacity: 0.82;
       }
       .hero-stage-door {
         position: absolute;
-        left: 15%;
-        top: 18%;
-        width: 18%;
-        height: 68%;
-        border-radius: 12px 12px 0 0;
-        background: linear-gradient(180deg, rgba(214, 205, 192, 0.24), rgba(52, 46, 40, 0.32));
+        left: 12%;
+        top: 14%;
+        width: 20%;
+        height: 72%;
+        border-radius: 18px 18px 4px 4px;
+        background:
+          linear-gradient(180deg, rgba(236, 228, 218, 0.16), rgba(48, 42, 38, 0.28)),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.06), transparent 44%);
         box-shadow:
-          96px 0 0 0 rgba(235, 228, 219, 0.06),
-          190px 0 0 0 rgba(232, 224, 214, 0.04);
+          112px 0 0 0 rgba(235, 228, 219, 0.05),
+          218px 0 0 0 rgba(232, 224, 214, 0.032);
       }
       .hero-stage-door::before {
         content: "";
         position: absolute;
-        inset: 6% 8%;
-        border-radius: 10px 10px 0 0;
+        inset: 6% 9%;
+        border-radius: 14px 14px 3px 3px;
         border: 1px solid rgba(255, 255, 255, 0.06);
+        background:
+          linear-gradient(180deg, rgba(255, 253, 246, 0.04), transparent 38%),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.04), transparent 30%);
       }
       .hero-stage-beam {
         position: absolute;
-        right: 18%;
-        top: 10%;
-        width: 34%;
-        height: 78%;
+        right: 15%;
+        top: 8%;
+        width: 42%;
+        height: 84%;
         background:
           radial-gradient(
-            ellipse 62% 70% at 50% 18%,
-            rgba(255, 240, 209, 0.9),
-            rgba(255, 219, 160, 0.12) 56%,
+            ellipse 62% 72% at 50% 18%,
+            rgba(255, 242, 214, 0.92),
+            rgba(255, 219, 160, 0.18) 56%,
             transparent 74%
           );
-        filter: blur(5px);
-        opacity: 0.95;
+        filter: blur(12px);
+        opacity: 0.94;
       }
       .hero-stage-junior {
         position: absolute;
-        right: 26%;
-        bottom: 10%;
-        width: 18%;
-        height: 52%;
-        border-radius: 50% 50% 18% 18% / 24% 24% 16% 16%;
+        right: 25%;
+        bottom: 11%;
+        width: 12%;
+        height: 49%;
+        border-radius: 46% 46% 18% 18% / 20% 20% 18% 18%;
         background:
-          radial-gradient(circle at 52% 12%, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.88) 26%, transparent 27%),
-          linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(250, 250, 248, 0.9) 52%, rgba(48, 82, 118, 0.92) 52%, rgba(50, 84, 118, 0.94) 77%, rgba(249, 246, 238, 0.92) 77%);
+          linear-gradient(
+            180deg,
+            rgba(255, 252, 247, 0.98),
+            rgba(249, 245, 238, 0.95) 46%,
+            rgba(242, 240, 235, 0.68) 74%,
+            rgba(238, 237, 234, 0.22) 100%
+          );
         box-shadow:
-          0 0 38px rgba(255, 226, 168, 0.38),
-          0 12px 20px rgba(0, 0, 0, 0.24);
-        transform: translateX(12px);
+          0 0 64px rgba(255, 229, 176, 0.42),
+          0 14px 28px rgba(0, 0, 0, 0.22);
+        transform: translateX(8px) translateY(2px);
+        opacity: 0.94;
+        filter: blur(0.6px);
       }
       .hero-stage-junior::before {
         content: "";
         position: absolute;
-        left: 22%;
-        right: 22%;
-        top: -8%;
-        height: 28%;
-        border-radius: 45% 45% 38% 38%;
+        left: 14%;
+        right: 12%;
+        top: -11%;
+        height: 31%;
+        border-radius: 48% 48% 42% 42%;
         background:
-          radial-gradient(circle at 50% 18%, rgba(47, 31, 24, 0.96), rgba(73, 48, 35, 0.88) 58%, transparent 59%),
-          linear-gradient(180deg, rgba(63, 40, 30, 0.95), rgba(57, 38, 30, 0.85));
-        box-shadow: 20px 28px 0 -10px rgba(75, 52, 39, 0.9);
+          radial-gradient(circle at 42% 20%, rgba(44, 31, 26, 0.98), rgba(72, 48, 37, 0.92) 56%, transparent 57%),
+          linear-gradient(180deg, rgba(63, 41, 31, 0.98), rgba(49, 34, 29, 0.9));
+        box-shadow:
+          14px 22px 0 -12px rgba(74, 51, 39, 0.84),
+          0 10px 18px rgba(0, 0, 0, 0.18);
       }
       .hero-stage-junior::after {
         content: "";
         position: absolute;
-        left: -72%;
-        bottom: 10%;
-        width: 170%;
-        height: 4px;
-        background: linear-gradient(90deg, rgba(255, 126, 158, 0.1), rgba(255, 96, 136, 0.72), rgba(255, 214, 168, 0.24));
-        filter: blur(1px);
-        opacity: 0.72;
+        left: -28%;
+        right: -28%;
+        bottom: -7%;
+        height: 24%;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 229, 176, 0.48), transparent 72%);
+        filter: blur(10px);
+        opacity: 0.74;
       }
       .hero-stage-steps {
         position: absolute;
@@ -561,6 +614,7 @@
         font-size: 11.6px;
         line-height: 1.55;
         color: rgba(234, 230, 222, 0.76);
+        overflow-wrap: anywhere;
       }
       .hero-side-card {
         padding: 26px 24px 24px;
@@ -1550,6 +1604,57 @@
         margin-bottom: 4px;
         font-weight: 300;
       }
+      .site-font-widget {
+        position: fixed;
+        right: var(--gutter);
+        bottom: 18px;
+        z-index: 520;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(8, 10, 16, 0.82);
+        box-shadow: 0 18px 36px rgba(0, 0, 0, 0.28);
+        -webkit-backdrop-filter: blur(18px);
+        backdrop-filter: blur(18px);
+      }
+      .site-font-widget-label {
+        font-family: "DM Mono", monospace;
+        font-size: 8.5px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(234, 230, 222, 0.56);
+        white-space: nowrap;
+      }
+      .site-font-options {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .site-font-btn {
+        min-width: 0;
+        padding: 7px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.03);
+        color: rgba(234, 230, 222, 0.72);
+        font-family: "Noto Sans TC", sans-serif;
+        font-size: 11px;
+        line-height: 1;
+        cursor: pointer;
+        transition:
+          border-color 0.18s,
+          background 0.18s,
+          color 0.18s;
+      }
+      .site-font-btn:hover,
+      .site-font-btn.active {
+        border-color: rgba(22, 168, 100, 0.28);
+        background: rgba(22, 168, 100, 0.12);
+        color: #9af0c5;
+      }
       @media (max-width: 520px) {
         #hero {
           padding: 92px var(--gutter) 86px;
@@ -1594,17 +1699,36 @@
           gap: 14px;
         }
         .hero-stage-card {
-          min-height: 296px;
-          padding-bottom: 138px;
+          min-height: 322px;
+          padding-bottom: 146px;
         }
         .hero-stage-window {
-          width: calc(100% - 36px);
+          left: 18px;
+          right: 18px;
+          width: auto;
+          bottom: 18px;
         }
         .hero-stage-steps {
           grid-template-columns: 1fr;
         }
+        .hero-stage-title {
+          max-width: none;
+          font-size: clamp(24px, 7vw, 32px);
+        }
+        .hero-stage-copy {
+          max-width: none;
+          font-size: 12.4px;
+        }
         .hero-side-card {
           text-align: left;
+        }
+        .hero-side-title {
+          font-size: clamp(24px, 7vw, 34px);
+        }
+        .hero-side-copy,
+        .hero-mini-quote strong {
+          word-break: keep-all;
+          overflow-wrap: anywhere;
         }
         .hero-side-bottom,
         .hero-side-actions {
@@ -1624,6 +1748,22 @@
         }
         .hero-scroll {
           bottom: 24px;
+        }
+        .site-font-widget {
+          left: 16px;
+          right: 16px;
+          bottom: 14px;
+          justify-content: space-between;
+          border-radius: 20px;
+        }
+        .site-font-options {
+          width: 100%;
+          justify-content: space-between;
+          gap: 4px;
+        }
+        .site-font-btn {
+          flex: 1;
+          padding: 8px 0;
         }
         .about-body,
         .arcs-intro,
@@ -1926,6 +2066,31 @@
       </div>
     </nav>
 
+    <div class="site-font-widget" aria-label="首頁字體大小">
+      <div class="site-font-widget-label">字體大小</div>
+      <div class="site-font-options" id="site-font-options">
+        <button class="site-font-btn" type="button" data-font-scale="small">
+          小
+        </button>
+        <button
+          class="site-font-btn active"
+          type="button"
+          data-font-scale="medium"
+        >
+          中
+        </button>
+        <button class="site-font-btn" type="button" data-font-scale="large">
+          大
+        </button>
+        <button class="site-font-btn" type="button" data-font-scale="xlarge">
+          特大
+        </button>
+        <button class="site-font-btn" type="button" data-font-scale="xxlarge">
+          超大
+        </button>
+      </div>
+    </div>
+
     <!-- HERO -->
     <section id="hero">
       <div id="hero-bg">
@@ -1966,9 +2131,9 @@
           <div class="hero-side-stack">
             <aside class="hero-stage-card">
               <div class="hero-stage-kicker">LM402 · 2005 · 11:00</div>
-              <div class="hero-stage-title">把那一眼，先走一遍</div>
+              <div class="hero-stage-title">把那一眼，<br />先走一遍</div>
               <p class="hero-stage-copy">
-                先讓女兒的視線帶你穿過四樓走廊，聽見前門那通電話，再在後門旁停住，等學妹走進那一道光。
+                先讓女兒的視線帶你穿過四樓走廊，聽見前門那通電話，最後在後門旁停住，接住學妹走進光裡的那一秒。
               </p>
               <div class="hero-stage-window" aria-hidden="true">
                 <div class="hero-stage-door"></div>
@@ -1992,9 +2157,11 @@
             </aside>
             <aside class="hero-side-card">
               <div class="hero-side-kicker">2005 · 利瑪竇四樓 · 11:00</div>
-              <div class="hero-side-title">桌機先看海報，<br />再走進電影裡</div>
+              <div class="hero-side-title">
+                你可以決定先讀故事，<br />還是先感受「一眼瞬間」。
+              </div>
               <p class="hero-side-copy">
-                首頁現在把閱讀入口、LM402、時間線與關鍵統計都放進同一個首屏。先理解故事重量，再決定你要順讀全集，還是先把那一秒走完。
+                閱讀入口、LM402、時間線與關鍵統計都在同一個首屏。你可以先進閱讀器，也可以先走進 LM402，把那一秒親眼看清楚。
               </p>
               <div class="hero-side-grid">
                 <div class="hero-side-stat">
@@ -2014,7 +2181,7 @@
                 </div>
                 <div class="hero-mini-quote">
                   <strong>先玩 LM402，<br />再回來讀全文。</strong>
-                  <span>桌機電影感優先</span>
+                  <span>故事入口 · 互動畫面 · 自己決定順序</span>
                 </div>
               </div>
               <div class="hero-side-actions">
@@ -2343,7 +2510,7 @@
             <div class="tl-event-year">2005年 · 大學校園</div>
             <div class="tl-event-label">一眼瞬間</div>
             <!-- ✅ 已校對：EP3:279 原文一致 -->
-            <div class="tl-event-desc">這一次，依然遇見妳。</div>
+            <div class="tl-event-desc">這一次，依然再次遇見妳。</div>
           </div>
           <div class="tl-event">
             <div
@@ -2366,7 +2533,7 @@
             <div class="tl-event-label">那通一定要接到的電話</div>
             <!-- ✅ 已校對：EP11 原文 2005年09月22日20:57 一致 -->
             <div class="tl-event-desc">
-              如果那三分鐘沒有接到，後面的二十年就不會發生。
+              如果沒有接到，後面的二十年就不會發生。
             </div>
           </div>
           <div class="tl-event">
@@ -2629,6 +2796,50 @@
         { threshold: 0.12, rootMargin: "0px 0px -60px 0px" },
       );
       document.querySelectorAll(".reveal").forEach((el) => ro.observe(el));
+
+      // Homepage font scale
+      (() => {
+        const KEY = "redtime_home_font_scale_v1";
+        const LEVELS = {
+          small: 0.92,
+          medium: 1,
+          large: 1.08,
+          xlarge: 1.16,
+          xxlarge: 1.24,
+        };
+        const buttons = Array.from(
+          document.querySelectorAll("[data-font-scale]"),
+        );
+        const applyScale = (level) => {
+          const scale = LEVELS[level] || LEVELS.medium;
+          document.body.dataset.fontScale = level;
+          document.documentElement.style.setProperty(
+            "--page-font-scale",
+            String(scale),
+          );
+          document.body.style.zoom = String(scale);
+          buttons.forEach((button) => {
+            button.classList.toggle(
+              "active",
+              button.dataset.fontScale === level,
+            );
+          });
+        };
+        let saved = "medium";
+        try {
+          saved = localStorage.getItem(KEY) || "medium";
+        } catch {}
+        applyScale(saved);
+        buttons.forEach((button) => {
+          button.addEventListener("click", () => {
+            const level = button.dataset.fontScale || "medium";
+            try {
+              localStorage.setItem(KEY, level);
+            } catch {}
+            applyScale(level);
+          });
+        });
+      })();
 
       // Hero particle canvas
       (function () {

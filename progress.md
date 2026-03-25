@@ -122,3 +122,62 @@ TODO:
 - If continuing from here, the safest next move is to choose one of these paths and commit to it:
   - keep only one visual system for the perfect close-up (either pure procedural 3D or pure reference-driven shell), or
   - swap in a real GLB head and stop asking the runtime to reconcile multiple face systems at once.
+
+Updates:
+- LM402 quick-fix work landed for the current pass: perfect-ending line 2 now reads `這一次，依然再次遇見妳。`, the intro/play audio state now boots muted instead of trusting persisted preference, and the opening music prompt now explicitly tells players the experience starts silent.
+- The `music-prompt` button now enables audio directly, while the static HTML toggle now starts as closed so the server-rendered state matches the runtime state before hydration.
+- Next verification target is the intro/audio flow on desktop: fresh load, replay intro, and a manual `開啟音樂` click should all behave consistently without disturbing other endings.
+
+Updates:
+- Began the mobile UI pass for LM402:
+  - added mobile-only transcript dock drag/resize affordances in `lm402.html`
+  - added a freeform mobile panel controller in `assets/lm402/app.js` with saved position/size state
+  - made floating prompts and perfect-ending subtitles transparent, with smoother fade-in/fade-out transitions
+  - made the ending overlay scrollable on mobile so the replay/read-story buttons can be reached
+- `node --check assets/lm402/app.js` and `node --check assets/lm402/data.js` both pass after the mobile UI changes.
+- I attempted a Playwright mobile-emulation verification pass, but the harness stalled while loading/inspecting the mobile state, so full interaction screenshots are still pending. The code path is in place; the next agent should re-run a smaller mobile browser probe if needed.
+
+Updates:
+- Expanded `assets/lm402/data.js` with a formal junior GLB manifest contract for `junior2005`, including `runtimeModelUrl`, `heroCloseupModelUrl`, `animationClips`, `materialProfiles`, `runtimeTierPolicy`, `fallbackPolicy`, `exportTargets`, and `audioBootPolicy: "always_off"`.
+- Reworked `tools/blender_export_junior.py` into a dual-output Blender export skeleton that can dry-run outside Blender and documents the contract for `junior_2005_runtime.glb`, `junior_2005_hero_closeup.glb`, and the optional mobile derivative.
+- Turned `assets/lm402/characters/junior/` into a proper handoff tree with reference, textures, work, and export subfolder READMEs so the next Blender pass can start from a clear structure instead of guesswork.
+- Verified the new contract via `python3 -m py_compile tools/blender_export_junior.py`, a `--dry-run` exporter run, and a Node ESM import of `assets/lm402/data.js`.
+
+TODO:
+- The manifest now points to the future GLB locations, but the actual hero model still needs Blender work before the runtime can switch away from the current procedural/reference shell.
+
+Updates:
+- Homepage pass:
+  - changed the hero-side copy to `你可以決定先讀故事，還是先感受「一眼瞬間」。`
+  - removed the `桌機電影感優先` copy
+  - changed the timeline copy from `如果那三分鐘沒有接到` to `如果沒有接到`
+  - added a homepage font-size control widget (`小 / 中 / 大 / 特大 / 超大`) in `index.html`
+  - reworked the `把那一眼，先走一遍` card toward a cleaner corridor / doorway composition and tightened its mobile text wrapping
+- LM402 mobile/UI pass:
+  - verified the transcript/history window can run in `mobile-freeform` mode with drag + resize handles on mobile landscape
+  - kept floating prompts and perfect-ending subtitles on transparent backgrounds
+  - added / validated the mobile ending scroll range so replay / read-story actions remain reachable
+  - intro audio still boots muted and the explicit `開啟音樂` prompt remains visible on entry
+- LM402 validation tooling:
+  - installed local Playwright test support for validation only (`npm install --no-save @playwright/test`)
+  - added `tools/lm402-ui-verify.spec.js` to capture desktop homepage, desktop perfect-ending subtitles, and mobile landscape transcript/ending overlay behavior
+  - added auto-debug URL params in `assets/lm402/app.js` (`autoskipintro`, `autophase`, `autoending`, `autoendingtime`, `autoendingoverlay`, `autotranscript`) so screenshots and scripted validation can jump to precise LM402 states
+  - fixed a browser boot regression where `urlParams` had been named `H` and collided with the existing `H()` character builder; this had silently prevented `window.__LM402_DEBUG__` from registering in-browser
+- Formal junior GLB pass:
+  - added browser-loadable `assets/lm402/GLTFLoader.js`
+  - added procedural export tooling in `tools/generate_junior_glb.mjs`
+  - generated live runtime assets at:
+    - `assets/lm402/characters/junior/exports/junior_2005_runtime.glb`
+    - `assets/lm402/characters/junior/exports/junior_2005_hero_closeup.glb`
+    - `assets/lm402/characters/junior/exports/junior_2005_runtime_mobile.glb`
+  - confirmed via Playwright + LM402 debug snapshots that the perfect-ending line 1 / line 2 checkpoints now report:
+    - `assetState.loaderAvailable = true`
+    - `loadedModels = ["runtime", "hero_closeup"]`
+    - `currentVariant = "hero_closeup_glb"` during the `eyes` phase after a forced frame advance
+    - `renderErrorCount = 0`
+
+TODO:
+- The formal GLB path is now real and verified, but the hero close-up is still visually wrong. The browser is switching to `hero_closeup_glb`, yet the resulting framing still reads as an empty classroom / ceiling-light composition instead of a believable close-up of the junior. This is now a camera-anchor / hero-asset alignment problem, not a loader problem.
+- Best next move from here:
+  - add a dedicated hero-face anchor to the GLB debug snapshot (or expose the hero node world position), then align the perfect `eyes` camera to that anchor rather than to the generic junior root, or
+  - replace the current generated `junior_2005_hero_closeup.glb` with a true hand-sculpted / hand-placed head-and-shoulders asset from Blender, because the current procedural close-up model still does not produce a usable face shot.

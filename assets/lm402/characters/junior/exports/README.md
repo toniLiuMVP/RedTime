@@ -4,10 +4,16 @@ Final runtime-ready bundles go here.
 
 Typical outputs:
 
-- `jr_bundle_v001.glb`
-- `jr_bundle_v001.gltf`
-- `jr_bundle_v001.bin`
+- `junior_2005_runtime.glb`
+- `junior_2005_hero_closeup.glb`
+- `junior_2005_runtime_mobile.glb`
+- `junior_2005_export_manifest.json`
 - texture packs used by runtime
 
-Keep versioned exports immutable once validated.
+These files should be generated from one source `.blend` and treated as immutable once validated.
 
+Suggested export contract:
+
+- `runtime` = full-body/runtime shot bundle
+- `hero_closeup` = face-dominant close-up bundle from the same source model
+- `mobile` = decimated derivative when the device cannot carry the full runtime bundle

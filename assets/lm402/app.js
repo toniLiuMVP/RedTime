@@ -99,6 +99,25 @@ const f = g(22),
   );
 let B = null;
 const runtimeTimerRegistry = new Map();
+const transientVisibilityTimers = new WeakMap();
+const mobileTranscriptPanelStorageKey = "lm402_mobile_transcript_panel_v1";
+const mobileTranscriptPanelState = {
+  left: null,
+  top: null,
+  width: null,
+  height: null,
+  dragging: !1,
+  resizing: !1,
+  dragPointerId: null,
+  resizePointerId: null,
+  dragOffsetX: 0,
+  dragOffsetY: 0,
+  resizeStartX: 0,
+  resizeStartY: 0,
+  resizeStartWidth: 0,
+  resizeStartHeight: 0,
+  listenersAttached: !1,
+};
 const z = document.getElementById("scene-canvas"),
   initialQualityTier =
     window.matchMedia("(max-width: 1080px)").matches ||
@@ -156,6 +175,9 @@ const z = document.getElementById("scene-canvas"),
     cinematicSubtitleSource: document.getElementById("cinematic-subtitle-source"),
     cinematicSubtitleText: document.getElementById("cinematic-subtitle-text"),
     transcriptDock: document.getElementById("transcript-dock"),
+    transcriptDockBar: document.getElementById("transcript-dock-bar"),
+    transcriptDockReset: document.getElementById("transcript-dock-reset"),
+    transcriptResizeHandle: document.getElementById("transcript-resize-handle"),
     transcriptToggle: document.getElementById("transcript-toggle"),
     transcriptStatus: document.getElementById("transcript-status"),
     transcriptBox: document.getElementById("transcript-box"),
@@ -175,11 +197,14 @@ const z = document.getElementById("scene-canvas"),
     dialogueCopy: document.getElementById("dialogue-copy"),
     dialogueChoices: document.getElementById("dialogue-choices"),
     endingOverlay: document.getElementById("ending-overlay"),
+    endingCard: document.getElementById("ending-card"),
     endingKicker: document.getElementById("ending-kicker"),
     endingTitle: document.getElementById("ending-title"),
     endingCopy: document.getElementById("ending-copy"),
     endingRetry: document.getElementById("ending-retry"),
     endingPerfectBtn: document.getElementById("ending-perfect-btn"),
+    endingScrollControl: document.getElementById("ending-scroll-control"),
+    endingScrollRange: document.getElementById("ending-scroll-range"),
     debugPanel: document.getElementById("debug-panel"),
     debugText: document.getElementById("debug-text"),
     introSkipBtn: document.getElementById("intro-skip-btn"),
@@ -206,12 +231,332 @@ const T = (function () {
       return I(null);
     }
   })(),
-  D = "1" === localStorage.getItem(e.audioEnabled);
+  D = !1;
 function _() {
   return (
     window.matchMedia("(max-width: 1080px)").matches ||
     window.matchMedia("(pointer: coarse)").matches
   );
+}
+function setTransientVisibility(e, t, n = "show", o = 340) {
+  if (!e) return;
+  const i = transientVisibilityTimers.get(e) ?? { timer: 0, visible: null };
+  if (t) {
+    (i.timer && (window.clearTimeout(i.timer), (i.timer = 0)),
+      (e.hidden = !1),
+      window.requestAnimationFrame(() => e.classList.add(n)),
+      (i.visible = !0),
+      transientVisibilityTimers.set(e, i));
+    return;
+  }
+  if ((!e.classList.contains(n) && e.hidden) || (!e.hidden && !e.classList.contains(n) && i.visible === !1 && i.timer))
+    return;
+  (e.classList.remove(n),
+    i.timer && window.clearTimeout(i.timer),
+    (i.visible = !1),
+    (i.timer = window.setTimeout(() => {
+      e.classList.contains(n) || (e.hidden = !0);
+      const t = transientVisibilityTimers.get(e);
+      t && ((t.timer = 0), transientVisibilityTimers.set(e, t));
+    }, o)),
+    transientVisibilityTimers.set(e, i));
+}
+function getMobileTranscriptDefaults() {
+  const e = P.transcriptDock?.getBoundingClientRect?.();
+  if (e && e.width && e.height)
+    return {
+      left: Math.round(e.left),
+      top: Math.round(e.top),
+      width: Math.round(e.width),
+      height: Math.round(e.height),
+    };
+  return getMobileTranscriptViewportDefaults();
+}
+function getMobileTranscriptViewportDefaults() {
+  const t = Math.min(
+      Math.max(Math.round(window.innerWidth * 0.84), 286),
+      Math.max(286, window.innerWidth - 24),
+    ),
+    n = Math.min(
+      Math.max(Math.round(window.innerHeight * 0.34), 186),
+      Math.max(186, window.innerHeight - 24),
+    );
+  return {
+    left: Math.round((window.innerWidth - t) / 2),
+    top: Math.max(12, Math.round(window.innerHeight - n - 148)),
+    width: t,
+    height: n,
+  };
+}
+function loadMobileTranscriptLayout() {
+  try {
+    const e = JSON.parse(
+      localStorage.getItem(mobileTranscriptPanelStorageKey) || "null",
+    );
+    return e && "object" == typeof e ? e : null;
+  } catch {
+    return null;
+  }
+}
+function saveMobileTranscriptLayout() {
+  if (!_() || !P.transcriptDock) return;
+  const e = {
+    left: mobileTranscriptPanelState.left,
+    top: mobileTranscriptPanelState.top,
+    width: mobileTranscriptPanelState.width,
+    height: mobileTranscriptPanelState.height,
+  };
+  try {
+    localStorage.setItem(mobileTranscriptPanelStorageKey, JSON.stringify(e));
+  } catch {}
+}
+function clampMobileTranscriptLayout(e, t, n, o) {
+  const i = 12,
+    a = Math.max(i, window.innerWidth - n - i),
+    r = Math.max(i, window.innerHeight - o - i);
+  return {
+    left: p(Math.round(e), i, a),
+    top: p(Math.round(t), i, r),
+    width: Math.round(n),
+    height: Math.round(o),
+  };
+}
+function applyMobileTranscriptLayout(e = !1) {
+  if (!P.transcriptDock || !_) return;
+  const t = loadMobileTranscriptLayout(),
+    n = getMobileTranscriptDefaults(),
+    o = t
+      ? {
+          left: Number.isFinite(t.left) ? t.left : n.left,
+          top: Number.isFinite(t.top) ? t.top : n.top,
+          width: Number.isFinite(t.width) ? t.width : n.width,
+          height: Number.isFinite(t.height) ? t.height : n.height,
+        }
+      : n,
+    i = Math.min(
+      Math.max(Math.round(window.innerWidth * 0.88), 280),
+      Math.max(280, window.innerWidth - 24),
+    ),
+    a = Math.min(
+      Math.max(Math.round(window.innerHeight * 0.58), 184),
+      Math.max(184, window.innerHeight - 24),
+    ),
+    r = clampMobileTranscriptLayout(o.left, o.top, o.width || i, o.height || a);
+  ((mobileTranscriptPanelState.left = r.left),
+    (mobileTranscriptPanelState.top = r.top),
+    (mobileTranscriptPanelState.width = r.width),
+    (mobileTranscriptPanelState.height = r.height),
+    (P.transcriptDock.dataset.mobileFreeform = "true"),
+    P.transcriptDock.classList.add("mobile-freeform"),
+    (P.transcriptDock.style.position = "fixed"),
+    (P.transcriptDock.style.left = `${r.left}px`),
+    (P.transcriptDock.style.top = `${r.top}px`),
+    (P.transcriptDock.style.right = "auto"),
+    (P.transcriptDock.style.bottom = "auto"),
+    (P.transcriptDock.style.transform = "none"),
+    (P.transcriptDock.style.width = `${r.width}px`),
+    (P.transcriptDock.style.height = `${r.height}px`),
+    (P.transcriptDock.style.maxWidth = "none"),
+    (P.transcriptDock.style.maxHeight = "none"),
+    (P.transcriptDock.style.touchAction = "auto"),
+    P.transcriptBox &&
+      ((P.transcriptBox.style.maxHeight = "none"),
+      (P.transcriptBox.style.height = "auto"),
+      (P.transcriptBox.style.minHeight = "0")),
+    P.transcriptList &&
+      ((P.transcriptList.style.maxHeight = "none"),
+      (P.transcriptList.style.minHeight = "0")),
+    P.transcriptToggle &&
+      (P.transcriptToggle.style.touchAction = "manipulation"),
+    P.transcriptDockBar &&
+      (P.transcriptDockBar.style.touchAction = "none"),
+    P.transcriptResizeHandle &&
+      (P.transcriptResizeHandle.style.touchAction = "none"),
+    e || saveMobileTranscriptLayout());
+}
+function resetMobileTranscriptLayout() {
+  if (!P.transcriptDock || !_) return;
+  const e = getMobileTranscriptViewportDefaults();
+  try {
+    localStorage.setItem(mobileTranscriptPanelStorageKey, JSON.stringify(e));
+  } catch {}
+  ((mobileTranscriptPanelState.left = e.left),
+    (mobileTranscriptPanelState.top = e.top),
+    (mobileTranscriptPanelState.width = e.width),
+    (mobileTranscriptPanelState.height = e.height),
+    applyMobileTranscriptLayout(!0));
+}
+function initMobileTranscriptDock() {
+  if (!P.transcriptDock || !P.transcriptDockBar || !P.transcriptResizeHandle)
+    return;
+  if (!_) {
+    P.transcriptDock.classList.remove("mobile-freeform", "ui-dragging");
+    P.transcriptDock.dataset.mobileFreeform = "false";
+    P.transcriptDock.style.position = "";
+    P.transcriptDock.style.left = "";
+    P.transcriptDock.style.top = "";
+    P.transcriptDock.style.right = "";
+    P.transcriptDock.style.bottom = "";
+    P.transcriptDock.style.transform = "";
+    P.transcriptDock.style.width = "";
+    P.transcriptDock.style.height = "";
+    P.transcriptDock.style.maxWidth = "";
+    P.transcriptDock.style.maxHeight = "";
+    P.transcriptDock.style.touchAction = "";
+    if (P.transcriptBox) {
+      P.transcriptBox.style.maxHeight = "";
+      P.transcriptBox.style.height = "";
+      P.transcriptBox.style.minHeight = "";
+    }
+    if (P.transcriptList) {
+      P.transcriptList.style.maxHeight = "";
+      P.transcriptList.style.minHeight = "";
+    }
+    return;
+  }
+  applyMobileTranscriptLayout(!0);
+  if (mobileTranscriptPanelState.listenersAttached) return;
+  mobileTranscriptPanelState.listenersAttached = !0;
+  const safeSetPointerCapture = (el, pointerId) => {
+    if (!el?.setPointerCapture) return;
+    try {
+      el.setPointerCapture(pointerId);
+    } catch {}
+  };
+  const safeReleasePointerCapture = (el, pointerId) => {
+    if (!el?.releasePointerCapture) return;
+    try {
+      el.releasePointerCapture(pointerId);
+    } catch {}
+  };
+  const onPointerMove = (event) => {
+    if (
+      !mobileTranscriptPanelState.dragging ||
+      event.pointerId !== mobileTranscriptPanelState.dragPointerId
+    )
+      return;
+    const next = clampMobileTranscriptLayout(
+      mobileTranscriptPanelState.dragOffsetX +
+        event.clientX -
+        mobileTranscriptPanelState.resizeStartX,
+      mobileTranscriptPanelState.dragOffsetY +
+        event.clientY -
+        mobileTranscriptPanelState.resizeStartY,
+      mobileTranscriptPanelState.width,
+      mobileTranscriptPanelState.height,
+    );
+    mobileTranscriptPanelState.left = next.left;
+    mobileTranscriptPanelState.top = next.top;
+    P.transcriptDock.style.left = `${next.left}px`;
+    P.transcriptDock.style.top = `${next.top}px`;
+    saveMobileTranscriptLayout();
+  };
+  const onResizeMove = (event) => {
+    if (
+      !mobileTranscriptPanelState.resizing ||
+      event.pointerId !== mobileTranscriptPanelState.resizePointerId
+    )
+      return;
+    const nextWidth = Math.max(
+      280,
+      Math.min(
+        window.innerWidth - 24,
+        mobileTranscriptPanelState.resizeStartWidth +
+          (event.clientX - mobileTranscriptPanelState.resizeStartX),
+      ),
+    );
+    const nextHeight = Math.max(
+      184,
+      Math.min(
+        window.innerHeight - 24,
+        mobileTranscriptPanelState.resizeStartHeight +
+          (event.clientY - mobileTranscriptPanelState.resizeStartY),
+      ),
+    );
+    const next = clampMobileTranscriptLayout(
+      mobileTranscriptPanelState.left,
+      mobileTranscriptPanelState.top,
+      nextWidth,
+      nextHeight,
+    );
+    mobileTranscriptPanelState.left = next.left;
+    mobileTranscriptPanelState.top = next.top;
+    mobileTranscriptPanelState.width = next.width;
+    mobileTranscriptPanelState.height = next.height;
+    P.transcriptDock.style.left = `${next.left}px`;
+    P.transcriptDock.style.top = `${next.top}px`;
+    P.transcriptDock.style.width = `${next.width}px`;
+    P.transcriptDock.style.height = `${next.height}px`;
+    saveMobileTranscriptLayout();
+  };
+  const finishPointerGesture = () => {
+    if (mobileTranscriptPanelState.dragging && mobileTranscriptPanelState.dragPointerId) {
+      safeReleasePointerCapture(
+        P.transcriptDockBar,
+        mobileTranscriptPanelState.dragPointerId,
+      );
+    }
+    if (
+      mobileTranscriptPanelState.resizing &&
+      mobileTranscriptPanelState.resizePointerId
+    ) {
+      safeReleasePointerCapture(
+        P.transcriptResizeHandle,
+        mobileTranscriptPanelState.resizePointerId,
+      );
+    }
+    mobileTranscriptPanelState.dragging = !1;
+    mobileTranscriptPanelState.resizing = !1;
+    mobileTranscriptPanelState.dragPointerId = null;
+    mobileTranscriptPanelState.resizePointerId = null;
+    P.transcriptDock.classList.remove("ui-dragging");
+    saveMobileTranscriptLayout();
+  };
+  P.transcriptDockBar.addEventListener("pointerdown", (event) => {
+    if (event.button && 0 !== event.button) return;
+    if (event.target.closest("button")) return;
+    if (!_) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const rect = P.transcriptDock.getBoundingClientRect();
+    mobileTranscriptPanelState.dragging = !0;
+    mobileTranscriptPanelState.dragPointerId = event.pointerId;
+    mobileTranscriptPanelState.resizeStartX = event.clientX;
+    mobileTranscriptPanelState.resizeStartY = event.clientY;
+    mobileTranscriptPanelState.dragOffsetX = rect.left;
+    mobileTranscriptPanelState.dragOffsetY = rect.top;
+    P.transcriptDock.classList.add("ui-dragging");
+    safeSetPointerCapture(P.transcriptDockBar, event.pointerId);
+  });
+  P.transcriptResizeHandle.addEventListener("pointerdown", (event) => {
+    if (event.button && 0 !== event.button) return;
+    if (!_) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const rect = P.transcriptDock.getBoundingClientRect();
+    mobileTranscriptPanelState.resizing = !0;
+    mobileTranscriptPanelState.resizePointerId = event.pointerId;
+    mobileTranscriptPanelState.resizeStartX = event.clientX;
+    mobileTranscriptPanelState.resizeStartY = event.clientY;
+    mobileTranscriptPanelState.resizeStartWidth = rect.width;
+    mobileTranscriptPanelState.resizeStartHeight = rect.height;
+    mobileTranscriptPanelState.left = rect.left;
+    mobileTranscriptPanelState.top = rect.top;
+    mobileTranscriptPanelState.width = rect.width;
+    mobileTranscriptPanelState.height = rect.height;
+    P.transcriptDock.classList.add("ui-dragging");
+    safeSetPointerCapture(P.transcriptResizeHandle, event.pointerId);
+  });
+  window.addEventListener("pointermove", onPointerMove);
+  window.addEventListener("pointermove", onResizeMove);
+  window.addEventListener("pointerup", finishPointerGesture);
+  window.addEventListener("pointercancel", finishPointerGesture);
+  P.transcriptDockReset &&
+    P.transcriptDockReset.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      resetMobileTranscriptLayout();
+    });
 }
 function q() {
   return _() && window.innerHeight > window.innerWidth;
@@ -495,6 +840,30 @@ function forceSceneRender() {
     window.__LM402_DEBUG__?.snapshot?.() ?? null
   );
 }
+function syncEndingScrollControl() {
+  if (!P.endingScrollControl || !P.endingScrollRange || !P.endingCard) return;
+  if (P.endingOverlay.hidden || !_()) {
+    return (
+      (P.endingScrollControl.hidden = !0),
+      void P.endingScrollControl.classList.remove("show")
+    );
+  }
+  const e = Math.max(
+    0,
+    Math.ceil(P.endingCard.scrollHeight - P.endingCard.clientHeight),
+  );
+  if (e <= 4)
+    return (
+      (P.endingScrollControl.hidden = !0),
+      void P.endingScrollControl.classList.remove("show")
+    );
+  ((P.endingScrollRange.max = String(e)),
+    (P.endingScrollRange.value = String(
+      Math.min(e, Math.round(P.endingCard.scrollTop)),
+    )),
+    (P.endingScrollControl.hidden = !1),
+    P.endingScrollControl.classList.add("show"));
+}
 function syncRendererRuntime() {
   const e = detectQualityTier();
   ((Y.qualityTier = e),
@@ -513,16 +882,15 @@ function applyUiVisibilityPreset(e) {
     [P.audioWidget, t.audioWidget],
     [P.fontWidget, t.fontWidget],
     [P.timeWatch, t.timeWatch],
-    [P.objectivePrompt, t.objectivePrompt],
     [P.bottomDock, t.bottomDock],
     [P.transcriptDock, t.transcriptDock],
   ];
   n.forEach(([e, t]) => {
     e && (e.hidden = !t);
   });
-  ((P.focusPrompt &&
-    ((P.focusPrompt.hidden = !t.focusPrompt), t.focusPrompt)) ||
-    P.focusPrompt?.classList.remove("show"),
+  ((P.objectivePrompt &&
+      setTransientVisibility(P.objectivePrompt, t.objectivePrompt, "show")),
+    (P.focusPrompt && setTransientVisibility(P.focusPrompt, t.focusPrompt, "show")),
     P.debugPanel && !t.debugPanel && (P.debugPanel.hidden = !0),
     P.mobileControls &&
       (P.mobileControls.hidden = !(_() && Boolean(t.mobileControls))),
@@ -533,6 +901,7 @@ function applyUiVisibilityPreset(e) {
     "intro" === e && (Y.hudMode = "chip"),
     ke(),
     ge(),
+    ce(),
     ee(),
     ye());
 }
@@ -581,9 +950,13 @@ const X = (function () {
       );
     }
     function l() {
-      const e = Y.audioEnabled && o;
+      const e =
+        (("intro" === Y.mode || "play" === Y.mode) && !Y.audioEnabled) ||
+        (Y.audioEnabled && o);
+      if (!P.musicPrompt) return;
       (P.musicPrompt.classList.toggle("intro-mode", "intro" === Y.mode),
-        (P.musicPrompt.hidden = !e));
+        setTransientVisibility(P.musicPrompt, e, "show", 420),
+        P.musicPrompt.classList.toggle("is-silent-prompt", e));
     }
     function s(
       e,
@@ -720,7 +1093,16 @@ const X = (function () {
       playEnvelope: s,
     };
   })(),
-  G = "1" === new URLSearchParams(window.location.search).get("debug");
+  urlParams = new URLSearchParams(window.location.search),
+  G = "1" === urlParams.get("debug");
+const AUTO_DEBUG_PARAMS = {
+  skipIntro: "1" === urlParams.get("autoskipintro"),
+  phase: urlParams.get("autophase"),
+  transcript: "1" === urlParams.get("autotranscript"),
+  ending: urlParams.get("autoending"),
+  endingTime: Number(urlParams.get("autoendingtime")),
+  showEndingOverlay: "1" === urlParams.get("autoendingoverlay"),
+};
 let K = 0;
 function U(e, t = "") {
   const n = {
@@ -1130,7 +1512,7 @@ function ge() {
   if (!uiAllows("bottomDock"))
     return (
       P.bottomDock && (P.bottomDock.hidden = !0),
-      P.focusPrompt && (P.focusPrompt.hidden = !0),
+      setTransientVisibility(P.focusPrompt, !1, "show"),
       void P.ambienceChip?.setAttribute("aria-expanded", "false")
     );
   const e = j(),
@@ -1233,12 +1615,15 @@ function xe() {
   });
 }
 function Ee(e) {
-  ((P.hintPill.textContent = e),
+  if (!P.hintPill) return;
+  (P.hintPill.textContent = e,
+    P.hintPill.classList.remove("show"),
+    P.hintPill.getBoundingClientRect(),
     P.hintPill.classList.add("show"),
     window.clearTimeout(Ee.timer),
     (Ee.timer = window.setTimeout(
       () => P.hintPill.classList.remove("show"),
-      2400,
+      3400,
     )));
 }
 function Le() {
@@ -1332,7 +1717,7 @@ function Be(e) {
                         !Y.ending &&
                         te(
                           "把拔（心底的聲音）",
-                          "「這一次，依然遇見妳。」",
+                          "「這一次，依然再次遇見妳。」",
                           3.5,
                         );
                     }),
@@ -1515,6 +1900,7 @@ function Te(e = !1) {
     (Y.cinematicGlow = 0),
     (Y.ending = null),
     (Y.endingSequence = null),
+    X.setEnabled(!1),
     (P.endingOverlay.hidden = !0),
     P.body.classList.remove("ending-open"),
     P.introFx &&
@@ -1573,8 +1959,7 @@ function De() {
     (Y.subtitleMode = "full"),
     ge(),
     ve(!0),
-    ye(),
-    Y.audioEnabled || (P.musicPrompt.hidden = !1));
+    ye());
 }
 function _e(e, t = {}) {
   if (Y.endingSequence) return;
@@ -1645,6 +2030,10 @@ function je() {
     (P.endingOverlay.hidden = !1),
     P.body.classList.add("ending-open"),
     applyUiVisibilityPreset("ending"));
+  P.endingCard && (P.endingCard.scrollTop = 0);
+  window.requestAnimationFrame(() => {
+    syncEndingScrollControl();
+  });
   try {
     const _ek = e.endingsCompleted;
     const _es = JSON.parse(localStorage.getItem(_ek) || "{}");
@@ -1655,6 +2044,9 @@ function je() {
     localStorage.setItem(_ek, JSON.stringify(_es));
     updateEndingTracker();
   } catch (_ex) {}
+  window.requestAnimationFrame(() => {
+    syncEndingScrollControl();
+  });
 }
 function Ae() {
   (N(),
@@ -1697,6 +2089,7 @@ function Ae() {
     (Y.renderErrorCount = 0),
     (Y.renderErrors = []),
     (P.endingOverlay.hidden = !0),
+    P.endingScrollControl && (P.endingScrollControl.hidden = !0),
     P.body.classList.remove("ending-open"),
     (P.dialogueSheet.hidden = !0),
     P.body.classList.remove("dialogue-open"),
@@ -2245,6 +2638,7 @@ function Ue() {
       (M.resize(), Re());
     }),
     Re(),
+    initMobileTranscriptDock(),
     U("resize", `${window.innerWidth}x${window.innerHeight}`));
 }
 window.__LM402_DEBUG__ = {
@@ -2551,7 +2945,14 @@ P.audioToggle.addEventListener("click", () => {
 P.fontToggle.addEventListener("click", ue);
 de();
 P.musicPromptButton.addEventListener("click", () => {
-  X.unlock();
+  X.setEnabled(!0);
+});
+P.endingCard?.addEventListener("scroll", syncEndingScrollControl, {
+  passive: !0,
+});
+P.endingScrollRange?.addEventListener("input", () => {
+  P.endingCard &&
+    (P.endingCard.scrollTop = Number(P.endingScrollRange.value) || 0);
 });
 P.perfectEndingBtn.addEventListener("click", qe);
 P.perfectEndingSideBtn.addEventListener("click", qe);
@@ -2597,6 +2998,10 @@ oe();
 Ue();
 window.addEventListener("resize", Ue);
 window.visualViewport?.addEventListener("resize", Ue);
+window.addEventListener("resize", syncEndingScrollControl, { passive: !0 });
+window.visualViewport?.addEventListener("resize", syncEndingScrollControl, {
+  passive: !0,
+});
 "intro" === Y.mode
   ? (te(r[0].kicker, r[0].text, 0.2), ne(r[0].ambience))
   : ((Y.cameraMode = "play"),
@@ -2612,6 +3017,43 @@ ke();
 ye();
 Pe();
 X.tryPlay("startup");
+function applyAutoDebugScenario() {
+  const e =
+    AUTO_DEBUG_PARAMS.skipIntro ||
+    AUTO_DEBUG_PARAMS.phase ||
+    AUTO_DEBUG_PARAMS.transcript ||
+    AUTO_DEBUG_PARAMS.ending ||
+    Number.isFinite(AUTO_DEBUG_PARAMS.endingTime) ||
+    AUTO_DEBUG_PARAMS.showEndingOverlay;
+  if (!e) return;
+  window.setTimeout(() => {
+    (AUTO_DEBUG_PARAMS.skipIntro && "intro" === Y.mode && De(),
+      AUTO_DEBUG_PARAMS.phase && we(AUTO_DEBUG_PARAMS.phase),
+      AUTO_DEBUG_PARAMS.transcript &&
+        ((Y.transcriptExpanded = !0), ee(), initMobileTranscriptDock()));
+    if (AUTO_DEBUG_PARAMS.ending) {
+      "intro" === Y.mode && De();
+      "perfect" === AUTO_DEBUG_PARAMS.ending
+        ? qe()
+        : _e(AUTO_DEBUG_PARAMS.ending, { manual: !0 });
+    }
+    const e = AUTO_DEBUG_PARAMS.endingTime;
+    Number.isFinite(e) &&
+      window.setTimeout(() => {
+        (Y.endingSequence && scrubEndingSequence(e, !0),
+          AUTO_DEBUG_PARAMS.showEndingOverlay && je(),
+          forceSceneRender(),
+          syncEndingScrollControl());
+      }, 220);
+    AUTO_DEBUG_PARAMS.showEndingOverlay &&
+      !Number.isFinite(e) &&
+      window.setTimeout(() => {
+        (je(), syncEndingScrollControl());
+      }, 220);
+    forceSceneRender();
+  }, 160);
+}
+applyAutoDebugScenario();
 function stepLm402Frame(e, t = performance.now()) {
   const n = Math.min(Math.max(e || 0, 0), 0.033);
   ((Y.time += n),
