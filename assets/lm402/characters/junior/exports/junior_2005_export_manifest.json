@@ -1,9 +1,33 @@
 {
   "characterId": "junior2005",
   "source": "tools/generate_junior_glb.mjs",
+  "sourceBlend": "assets/lm402/characters/junior/work/junior_hero_master.blend",
+  "generatedVariantPolicy": {
+    "runtime": "full-body runtime bundle",
+    "hero_closeup": "head-and-shoulders bust bundle",
+    "mobile": "decimated runtime bundle"
+  },
   "exports": [
-    "junior_2005_runtime.glb",
-    "junior_2005_hero_closeup.glb",
-    "junior_2005_runtime_mobile.glb"
+    {
+      "name": "runtime",
+      "file": "junior_2005_runtime.glb"
+    },
+    {
+      "name": "hero_closeup",
+      "file": "junior_2005_hero_closeup.glb"
+    },
+    {
+      "name": "mobile",
+      "file": "junior_2005_runtime_mobile.glb"
+    }
+  ],
+  "fallbackPolicy": {
+    "missingRuntime": "procedural_shell",
+    "missingHeroCloseup": "runtime_glb_camera_crop",
+    "preserveGameplay": true
+  },
+  "notes": [
+    "The hero closeup is intentionally a bust, not a full-body pose.",
+    "All three exports are generated from the same procedural source script for now."
   ]
 }

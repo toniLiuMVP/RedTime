@@ -147,6 +147,18 @@ TODO:
 - The manifest now points to the future GLB locations, but the actual hero model still needs Blender work before the runtime can switch away from the current procedural/reference shell.
 
 Updates:
+- Reworked `tools/generate_junior_glb.mjs` so the hero close-up is now a dedicated head-and-shoulders bust instead of a stretched full-body close-up. The bust now has its own compact torso, collar, shoulder slope, and hair adjustments aimed at the 2005 reference direction.
+- Re-generated the junior GLB outputs in `assets/lm402/characters/junior/exports/` after the bust refactor:
+  - `junior_2005_runtime.glb`
+  - `junior_2005_hero_closeup.glb`
+  - `junior_2005_runtime_mobile.glb`
+- Upgraded `junior_2005_export_manifest.json` and the generator-side manifest contract so the export roles are explicit: runtime, bust-style hero closeup, and mobile derivative.
+- Verified the generator still passes `node --check`, and the regenerated GLBs now show a dedicated `junior_hero_bust` / `hero_bust_*` hierarchy in the hero close-up export.
+
+TODO:
+- The new bust is much closer to the intended close-up shape, but it is still procedural. The remaining risk is the final face read: whether the brows, eyes, and mouth need one more manual proportion pass in Blender to fully reach the 2005定稿 feeling.
+
+Updates:
 - Homepage pass:
   - changed the hero-side copy to `你可以決定先讀故事，還是先感受「一眼瞬間」。`
   - removed the `桌機電影感優先` copy
@@ -181,3 +193,43 @@ TODO:
 - Best next move from here:
   - add a dedicated hero-face anchor to the GLB debug snapshot (or expose the hero node world position), then align the perfect `eyes` camera to that anchor rather than to the generic junior root, or
   - replace the current generated `junior_2005_hero_closeup.glb` with a true hand-sculpted / hand-placed head-and-shoulders asset from Blender, because the current procedural close-up model still does not produce a usable face shot.
+
+Updates:
+- Added a focused verification pass in `tools/lm402-ui-verify.spec.js` for the current close-up state:
+  - desktop line1 / line2 screenshots now land in `output/playwright/lm402-perfect-line1-closeup-desktop.png` and `output/playwright/lm402-perfect-line2-closeup-desktop.png`
+  - a new `output/playwright/lm402-closeup-diagnosis.json` file records the latest close-up judgment
+  - the mobile ending result image remains `output/playwright/lm402-mobile-ending-verify.png`
+- Current close-up diagnosis from the fresh Playwright + debug pass:
+  - the most out-of-line axis is `geometry`
+  - evidence: in both perfect line checkpoints the GLB loader stays healthy and `currentVariant` remains `hero_closeup_glb`, but the close-up still reads as a heavy black shell / silhouette instead of a face; `renderErrorCount` remains `0`
+  - camera framing is still a secondary concern, but the first-order miss is the close-up geometry rather than lighting
+
+Updates:
+- Fixed a real browser-breaking regression in `assets/lm402/renderer.js`: `attachJuniorGltfModel()` had duplicated the identifier `l`, which prevented `window.__LM402_DEBUG__` from ever registering in-browser even though the page HTML loaded. After the fix, the debug API came back and desktop perfect-ending validation was runnable again.
+- Reworked the hero-anchor path so close-up anchors are now treated in the correct coordinate space:
+  - `attachJuniorGltfModel()` now stores root-local anchor positions after the GLB scene node is attached and transformed
+  - `resolveJuniorHeroAnchor()` now converts GLB anchors through world space instead of pretending the model root local position was already world space
+- Removed the old hard-coded hero-closeup root shove (`y = -0.82`) that had been forcing the bust below the floor plane and pulling the camera toward empty space.
+- Reframed the perfect `eyes` / `overlay` camera into a more honest medium close-up:
+  - the camera now sits farther back and slightly lower
+  - the close-up no longer collapses into ceiling / wall geometry
+  - current debug evidence in `output/playwright/lm402-perfect-line1-verify.json` shows `heroCloseupTarget` populated, `currentVariant = "hero_closeup_glb"`, and `renderErrorCount = 0`
+- Did another proportion pass on `tools/generate_junior_glb.mjs` and regenerated all three junior exports:
+  - reduced the hero hair-cap volume and back-hair mass
+  - narrowed the face, jaw, chin, eyes, brows, nose, and lip geometry toward a less cartoonish read
+  - thinned and moved the hero bangs so they stop cutting directly across the eyes
+  - toned down hero hair / face material gloss so the close-up reads less like a plastic shell
+- Current validation status after the latest pass:
+  - `npx playwright test tools/lm402-ui-verify.spec.js --reporter=line --workers=1` => `3 passed`
+  - latest key images:
+    - `output/playwright/lm402-perfect-line1-closeup-desktop.png`
+    - `output/playwright/lm402-perfect-line2-closeup-desktop.png`
+    - `output/playwright/lm402-mobile-ending-verify.png`
+
+TODO:
+- The perfect-ending junior is materially better than the earlier black-shell / giant-head failures, but it is still not at the requested “hand-built photoreal hero” level. The current state is:
+  - stable
+  - fully validated in-browser
+  - clearly using the formal GLB close-up path
+  - still stylized / procedural rather than convincingly realistic
+- The cleanest remaining route to the true target quality is still a real Blender-authored head-and-shoulders hero asset that replaces the procedural hero face geometry outright, rather than further proportion tweaks on the generated mesh.
