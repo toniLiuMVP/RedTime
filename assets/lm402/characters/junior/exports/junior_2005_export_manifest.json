@@ -1,0 +1,9 @@
+{
+  "characterId": "junior2005",
+  "source": "tools/generate_junior_glb.mjs",
+  "exports": [
+    "junior_2005_runtime.glb",
+    "junior_2005_hero_closeup.glb",
+    "junior_2005_runtime_mobile.glb"
+  ]
+}

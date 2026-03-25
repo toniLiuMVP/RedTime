@@ -1,4 +1,5 @@
 import * as e from "./vendor-three.module.js";
+import { GLTFLoader } from "./GLTFLoader.js";
 import { WORLD as t, CINEMATIC_TIMELINE as o } from "./data.js";
 export const WORLD_SCALE = 1 / 80;
 const a = new e.Vector3(),
@@ -2431,12 +2432,215 @@ function updateJuniorPortraitShell(t, o, a, n = 1) {
     (l.rotation.y = Math.atan2(c, Math.abs(h) < 0.001 ? 0.001 : h)),
     (l.rotation.x = 0.08 * Math.atan2(d, Math.max(0.22, Math.hypot(c, h)))));
 }
+function resolveJuniorRuntimeManifest(t = {}) {
+  const o = t.runtimeModelUrl ?? t.modelUrl ?? t.runtimeUrl ?? null,
+    a = t.heroCloseupModelUrl ?? t.closeupModelUrl ?? o ?? null;
+  return {
+    ...t,
+    runtimeModelUrl: o,
+    heroCloseupModelUrl: a,
+    hasRuntimeModelUrl: Boolean(o),
+    hasHeroCloseupModelUrl: Boolean(a),
+  };
+}
+function resolveJuniorGltfLoaderCtor() {
+  return typeof GLTFLoader < "u"
+    ? GLTFLoader
+    : typeof window > "u"
+      ? null
+      : window.GLTFLoader ?? window.THREE?.GLTFLoader ?? null;
+}
+function loadJuniorGltfModel(t, o = {}) {
+  if (!t) return Promise.resolve(null);
+  const a = resolveJuniorGltfLoaderCtor();
+  if (!a) {
+    const o = new Error("GLTFLoader unavailable for junior runtime asset.");
+    return ((o.code = "gltf_loader_unavailable"), Promise.reject(o));
+  }
+  return new Promise((n, s) => {
+    try {
+      const r = new a(o.manager ?? new e.LoadingManager());
+      o.crossOrigin && (r.crossOrigin = o.crossOrigin);
+      r.load(t, n, void 0, s);
+    } catch (t) {
+      s(t);
+    }
+  });
+}
+function attachJuniorGltfModel(t, o, a = {}) {
+  if (!t) return null;
+  const n = o?.scene ?? o?.scenes?.[0] ?? null;
+  if (!n) return null;
+  return (
+    t.clear(),
+    a.scale && n.scale.setScalar(a.scale),
+    a.position && n.position.copy(a.position),
+    a.rotation && n.rotation.set(a.rotation.x, a.rotation.y, a.rotation.z),
+    (n.visible = !0),
+    t.add(n),
+    x(n, a.castShadow ?? !0, a.receiveShadow ?? !0),
+    n
+  );
+}
+function setJuniorHeroLeadVisibility(t, o, a = {}) {
+  if (!t) return;
+  const n = Boolean(o),
+    s = a.heroHeadRoot ?? t.heroHeadRoot ?? null,
+    r = a.runtimeModelRoot ?? t.runtimeModelRoot ?? null,
+    i = a.runtimeModelReady ?? Boolean(r?.userData?.ready),
+    l = (t, o) => {
+      t && (t.visible = o);
+    },
+    c = (t) => {
+      t &&
+        (t.userData.baseScale ??= t.scale.clone(),
+        t.userData.basePosition ??= t.position.clone(),
+        t.userData.baseRotation ??= t.rotation.clone());
+    };
+  [
+    t.head,
+    t.jaw,
+    t.faceSideL,
+    t.faceSideR,
+    t.facePlane,
+    t.faceShell,
+    t.frontHairStripL,
+    t.frontHairStripR,
+    t.frontHairInnerL,
+    t.frontHairInnerR,
+    t.hairCurtainL,
+    t.hairCurtainR,
+    t.sideLockL,
+    t.sideLockR,
+    t.fringe,
+    t.browL,
+    t.browR,
+    t.eyeWhiteL,
+    t.eyeWhiteR,
+    t.irisL,
+    t.irisR,
+    t.eyeContourL,
+    t.eyeContourR,
+    t.eyeSparkleL,
+    t.eyeSparkleR,
+    t.faceFront,
+    t.mouth,
+    t.noseTip,
+    t.noseBridge,
+    t.lipGloss,
+    t.closeupRefinement,
+    t.referenceHairCap,
+    t.headGlow,
+    t.hairBack,
+  ].forEach((t) => l(t, !n));
+  if (s) {
+    c(s);
+    (s.visible = n && !i),
+      n
+        ? (s.position.set(0.01, 1.556, 0.008),
+          s.scale.set(0.72, 0.74, 0.72))
+        : (s.position.copy(s.userData.basePosition),
+          s.rotation.copy(s.userData.baseRotation),
+          s.scale.copy(s.userData.baseScale));
+  }
+  if (r) {
+    c(r);
+    (r.visible = n && i),
+      n
+        ? (r.position.set(0, 1.556, 0),
+          r.scale.set(0.72, 0.74, 0.72))
+        : (r.position.copy(r.userData.basePosition),
+          r.rotation.copy(r.userData.baseRotation),
+          r.scale.copy(r.userData.baseScale));
+  }
+  if (!n) {
+    [
+      t.head,
+      t.jaw,
+      t.faceSideL,
+      t.faceSideR,
+      t.facePlane,
+      t.faceShell,
+      t.frontHairStripL,
+      t.frontHairStripR,
+      t.frontHairInnerL,
+      t.frontHairInnerR,
+      t.hairCurtainL,
+      t.hairCurtainR,
+      t.sideLockL,
+      t.sideLockR,
+      t.fringe,
+      t.browL,
+      t.browR,
+      t.eyeWhiteL,
+      t.eyeWhiteR,
+      t.irisL,
+      t.irisR,
+      t.eyeContourL,
+      t.eyeContourR,
+      t.eyeSparkleL,
+      t.eyeSparkleR,
+      t.faceFront,
+      t.mouth,
+      t.noseTip,
+      t.noseBridge,
+      t.lipGloss,
+      t.closeupRefinement,
+      t.referenceHairCap,
+      t.headGlow,
+      t.hairBack,
+    ].forEach((t) => t && (t.visible = !0));
+    t.closeupRefinement && (t.closeupRefinement.visible = !1);
+  }
+}
 function hasAncestor(e, t) {
   for (let o = e; o; o = o.parent) if (o === t) return !0;
   return !1;
 }
+function loadGlbAsset(t, o) {
+  return new Promise((a, n) => {
+    t.load(
+      o,
+      (t) => a(t),
+      void 0,
+      (t) => n(t instanceof Error ? t : new Error(String(t))),
+    );
+  });
+}
+function prepareFormalCharacterAsset(t) {
+  t.traverse((t) => {
+    t.isMesh &&
+      ((t.castShadow = !0),
+      (t.receiveShadow = !0),
+      t.material &&
+        (Array.isArray(t.material) ? t.material : [t.material]).forEach((t) => {
+          t.transparent &&
+            void 0 === t.alphaTest &&
+            (t.alphaTest = Math.max(t.alphaTest ?? 0, 0.04));
+        }));
+  });
+  return t;
+}
+function resolveJuniorAssetUrls(e, t = "desktop") {
+  const o = e?.runtimeTierPolicy?.[t] ?? {},
+    a = e?.runtimeTierPolicy?.desktop ?? {},
+    n = o.runtimeModelUrl ?? e?.runtimeModelUrl ?? a.runtimeModelUrl ?? null,
+    s =
+      o.heroCloseupModelUrl ??
+      e?.heroCloseupModelUrl ??
+      a.heroCloseupModelUrl ??
+      null;
+  return {
+    deliveryMode: e?.deliveryMode ?? e?.mode ?? "procedural",
+    runtimeUrl: n,
+    heroCloseupUrl: s,
+  };
+}
 export function createLm402Scene(D, runtimeOptions = {}) {
   const V = window.matchMedia("(pointer: coarse)").matches,
+    juniorRuntimeManifest = resolveJuniorRuntimeManifest(
+      runtimeOptions.characterAssets?.junior2005 ?? {},
+    ),
     runtimeState = {
       qualityTier: runtimeOptions.qualityTier ?? (V ? "mobile" : "desktop"),
       qualityTiers: runtimeOptions.qualityTiers ?? {},
@@ -2460,10 +2664,18 @@ export function createLm402Scene(D, runtimeOptions = {}) {
   };
   const assetState = {
       manifestId: runtimeState.characterAssets?.junior2005?.id ?? null,
+      runtimeModelUrl: juniorRuntimeManifest.runtimeModelUrl ?? null,
+      heroCloseupModelUrl: juniorRuntimeManifest.heroCloseupModelUrl ?? null,
+      loaderAvailable: Boolean(resolveJuniorGltfLoaderCtor()),
       qualityTier: runtimeState.qualityTier,
       status: "procedural_fallback",
       fallback: !0,
+      modelMode: "procedural_fallback",
+      textureStatus: "idle",
+      textureFallback: !1,
+      textureLastError: null,
       loadedTextures: [],
+      loadedModels: [],
       lastError: null,
     },
     U = (function (t, o) {
@@ -4035,8 +4247,25 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       echoOpacity: 0.26,
       echoColor: "#ffc0d6",
       scale: 1,
-    });
+  });
   $.add(Go, Co, Bo, ko);
+  Co.userData.legacyChildren = [...Co.children];
+  const juniorRuntimeModelRoot = new e.Group(),
+    juniorHeroCloseupModelRoot = new e.Group();
+  (juniorRuntimeModelRoot.name = "junior-runtime-model-root",
+    (juniorRuntimeModelRoot.visible = !1),
+    (juniorRuntimeModelRoot.userData.ready = !1),
+    (juniorRuntimeModelRoot.userData.kind = "runtime"),
+    (juniorHeroCloseupModelRoot.name = "junior-hero-closeup-model-root"),
+    (juniorHeroCloseupModelRoot.visible = !1),
+    (juniorHeroCloseupModelRoot.userData.ready = !1),
+    (juniorHeroCloseupModelRoot.userData.kind = "hero_closeup"),
+    Co.add(juniorRuntimeModelRoot, juniorHeroCloseupModelRoot));
+  Co.userData.runtimeModelRoot = juniorRuntimeModelRoot;
+  Co.userData.heroCloseupModelRoot = juniorHeroCloseupModelRoot;
+  Co.userData.pose &&
+    ((Co.userData.pose.runtimeModelRoot = juniorRuntimeModelRoot),
+    (Co.userData.pose.heroCloseupModelRoot = juniorHeroCloseupModelRoot));
   const juniorHeroLight = new e.SpotLight(16772596, 2.6, 18, 0.42, 0.55, 1.1);
   (juniorHeroLight.position.set(ee + 3.8, 4.3, g(t.backDoor.center.z + 96)),
     juniorHeroLight.target.position.set(
@@ -4059,7 +4288,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     const t = runtimeState.characterAssets?.junior2005;
     if (!t?.textures?.front && !t?.textures?.frontClose) return;
     const o = new e.TextureLoader();
-    assetState.status = "loading";
+    assetState.textureStatus = "loading";
     Promise.all(
       Object.entries(t.textures ?? {})
         .filter(([, e]) => Boolean(e))
@@ -4079,19 +4308,113 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             scaleY: renderTuning.portraitBoost,
           });
         (juniorPortraitShell.add(...a.children),
-          (juniorPortraitShell.userData.planes = a.userData.planes),
+        (juniorPortraitShell.userData.planes = a.userData.planes),
           (juniorPortraitShell.userData.glow = a.userData.glow),
           (juniorPortraitShell.visible = !0),
           (juniorPortraitShell.userData.loaded = !0),
-          (assetState.status = "ready"),
-          (assetState.fallback = !1),
+          (assetState.textureStatus = "ready"),
+          (assetState.textureFallback = !1),
           (assetState.loadedTextures = Object.keys(o)));
       })
       .catch((e) => {
+        ((assetState.textureStatus = "fallback"),
+          (assetState.textureFallback = !0),
+          (assetState.textureLastError =
+            e instanceof Error ? e.message : String(e).slice(0, 180)));
+      });
+  })();
+  (function () {
+    const t = juniorRuntimeManifest,
+      o = resolveJuniorGltfLoaderCtor();
+    if (!t.runtimeModelUrl && !t.heroCloseupModelUrl) return;
+    if (!o) {
+      (assetState.loaderAvailable = !1,
+        assetState.status = "procedural_fallback",
+        assetState.modelMode = "procedural_fallback",
+        assetState.lastError ??=
+          "GLTFLoader unavailable for junior runtime asset.");
+      return;
+    }
+    (assetState.loaderAvailable = !0,
+      assetState.status = "loading_model",
+      assetState.modelMode = "loading_model");
+    const a = [];
+    t.runtimeModelUrl &&
+      a.push(
+        loadJuniorGltfModel(t.runtimeModelUrl, {
+          crossOrigin: "anonymous",
+        })
+          .then((t) => ({
+            kind: "runtime",
+            gltf: t,
+            root: juniorRuntimeModelRoot,
+          }))
+          .catch((t) => ({
+            kind: "runtime",
+            error: t,
+            root: juniorRuntimeModelRoot,
+          })),
+      );
+    t.heroCloseupModelUrl &&
+      a.push(
+        loadJuniorGltfModel(t.heroCloseupModelUrl, {
+          crossOrigin: "anonymous",
+        })
+          .then((t) => ({
+            kind: "hero_closeup",
+            gltf: t,
+            root: juniorHeroCloseupModelRoot,
+          }))
+          .catch((t) => ({
+            kind: "hero_closeup",
+            error: t,
+            root: juniorHeroCloseupModelRoot,
+          })),
+      );
+    Promise.all(a)
+      .then((t) => {
+        const o = [];
+        t.forEach((t) => {
+          if (t?.gltf && t.root) {
+            const a = attachJuniorGltfModel(t.root, t.gltf, {
+              scale: "hero_closeup" === t.kind ? 0.74 : 0.72,
+            });
+            a &&
+              ((t.root.userData.ready = !0),
+              (t.root.userData.assetKind = t.kind),
+              (t.root.userData.sourceUrl =
+                "hero_closeup" === t.kind
+                  ? juniorRuntimeManifest.heroCloseupModelUrl
+                  : juniorRuntimeManifest.runtimeModelUrl),
+              o.push(t.kind));
+          } else
+            t?.error &&
+              o.push(
+                `${t.kind}: ${
+                  t.error instanceof Error ? t.error.message : String(t.error)
+                }`,
+              );
+        });
+        const n = t.some((t) => Boolean(t?.gltf));
+        n
+          ? ((assetState.status = "ready"),
+            (assetState.fallback = !1),
+            (assetState.modelMode = "runtime_model"),
+            (assetState.loadedModels = t
+              .filter((t) => Boolean(t?.gltf))
+              .map((t) => t.kind)),
+            (assetState.lastError = null))
+          : ((assetState.status = "fallback"),
+            (assetState.fallback = !0),
+            (assetState.modelMode = "procedural_fallback"),
+            (assetState.lastError = "No junior GLB asset loaded."));
+      })
+      .catch((t) => {
         ((assetState.status = "fallback"),
           (assetState.fallback = !0),
+          (assetState.modelMode = "procedural_fallback"),
           (assetState.lastError =
-            e instanceof Error ? e.message : String(e).slice(0, 180)));
+            t instanceof Error ? t.message : String(t).slice(0, 180)));
       });
   })();
   const To = { scene: 16507832, memory: 10148095 };
@@ -4330,6 +4653,15 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     render: function (s) {
       qo();
       const g = s.time ?? 0;
+      const perfectType = s.endingSequence?.type ?? s.ending,
+        perfectPhase = "perfect" === perfectType ? Ao(s.endingSequence?.time ?? 0) : null,
+        juniorHeroLead =
+          "rear_wait" === s.phase ||
+          "eye_contact" === s.phase ||
+          ("perfect" === perfectType &&
+            ("senior_pov" === perfectPhase ||
+              "eyes" === perfectPhase ||
+              "overlay" === perfectPhase));
       (!(function (t) {
         const isIntro = "intro" === t.mode;
         if (
@@ -4364,98 +4696,74 @@ export function createLm402Scene(D, runtimeOptions = {}) {
           Bo.traverse((e) => {
             e.material && (e.material.opacity = t.characters.fatherEcho.alpha);
           }),
-          ko.traverse((e) => {
-            e.material && (e.material.opacity = t.characters.auntEcho.alpha);
-          }),
-          Co.userData.glow &&
-            (Co.userData.glow.material.opacity =
-              "eye_contact" === t.phase ||
-              "perfect" === (t.endingSequence?.type ?? t.ending)
-                ? 0.5 + 0.2 * t.cinematicGlow
-                : 0.18),
-          Co.userData.pose?.referenceJunior &&
-            (() => {
-              const e = Co.userData.pose;
-              const o = "perfect" === (t.endingSequence?.type ?? t.ending);
-              const s = o || "eye_contact" === t.phase;
-              const a = (e) => (
-                e &&
-                  ((e.userData.baseScale ??= e.scale.clone()),
-                  (e.userData.basePosition ??= e.position.clone()),
-                  (e.userData.baseRotation ??= e.rotation.clone())),
-                e
-              );
-              const n = (e) => {
-                e &&
-                  (e.scale.copy(e.userData.baseScale),
-                  e.position.copy(e.userData.basePosition),
-                  e.rotation.copy(e.userData.baseRotation));
-              };
-              [
-                e.waist,
-                e.torso,
-                e.chest,
-                e.leftArm,
-                e.rightArm,
-                e.leftLeg,
-                e.rightLeg,
-                e.leftHand,
-                e.rightHand,
-                e.shoulderL,
-                e.shoulderR,
-                e.hairBack,
-                e.headGlow,
-              ].forEach((t) => t && (t.visible = !s));
-              e.facePlane && (e.facePlane.visible = !s);
-              e.faceShell && (e.faceShell.visible = !s);
-              e.closeupRefinement && (e.closeupRefinement.visible = s);
-              [
-                e.frontHairStripL,
-                e.frontHairStripR,
-                e.frontHairInnerL,
-                e.frontHairInnerR,
-                e.hairCurtainL,
-                e.hairCurtainR,
-              ].forEach((e) => {
-                e && (e.visible = !s);
-              });
-              if (e.heroHeadRoot) {
-                a(e.heroHeadRoot);
-                e.heroHeadRoot.visible = !1;
-                n(e.heroHeadRoot);
-              }
-              if (e.fringe) {
-                a(e.fringe);
-                if (s) {
-                  e.fringe.visible = !1;
-                } else {
-                  e.fringe.visible = !0;
-                  n(e.fringe);
-                }
-              }
-              e.sideLockL && (e.sideLockL.visible = !s);
-              e.sideLockR && (e.sideLockR.visible = !s);
-              if (Co.userData.referenceHairCap) {
-                const t = Co.userData.referenceHairCap;
-                a(t);
-                if (s) {
-                  t.visible = !0;
-                  n(t);
-                  t.scale.set(0.96, 0.78, 0.84);
-                  t.position.set(0, 1.616, 0.004);
-                } else ((t.visible = !0), n(t));
-              }
-              if (e.head && e.jaw) {
-                [e.head, e.jaw, e.faceSideL, e.faceSideR].forEach((e) => a(e));
-                n(e.head);
-                n(e.jaw);
-                n(e.faceSideL);
-                n(e.faceSideR);
-                e.head.visible = !0;
-                e.jaw.visible = !0;
-                e.faceSideL && (e.faceSideL.visible = !0);
-                e.faceSideR && (e.faceSideR.visible = !0);
-              }
+	          ko.traverse((e) => {
+	            e.material && (e.material.opacity = t.characters.auntEcho.alpha);
+	          }),
+	          (() => {
+	            const e = Co.userData.runtimeModelRoot ?? null,
+	              o = Co.userData.heroCloseupModelRoot ?? null,
+	              a = Boolean(e?.userData?.ready),
+	              n = Boolean(o?.userData?.ready),
+	              s = juniorHeroLead && n,
+	              r = !s && a,
+	              i = s || r;
+	            e &&
+	              (e.userData.basePosition ??= e.position.clone(),
+	              e.userData.baseScale ??= e.scale.clone(),
+	              e.userData.baseRotation ??= e.rotation.clone());
+	            o &&
+	              (o.userData.basePosition ??= o.position.clone(),
+	              o.userData.baseScale ??= o.scale.clone(),
+	              o.userData.baseRotation ??= o.rotation.clone());
+	            Co.userData.legacyChildren?.forEach((e) => {
+	              e.visible = !i;
+	            }),
+	              e &&
+	                ((e.visible = r),
+	                r
+	                  ? (e.position.copy(e.userData.basePosition),
+	                    e.scale.copy(e.userData.baseScale),
+	                    e.rotation.copy(e.userData.baseRotation))
+	                  : e.visible ||
+	                    (e.position.copy(e.userData.basePosition),
+	                    e.scale.copy(e.userData.baseScale),
+	                    e.rotation.copy(e.userData.baseRotation))),
+	              o &&
+	                ((o.visible = s),
+	                s
+	                  ? (o.position.set(0, -0.82, -0.28),
+	                    o.scale.setScalar(0.24),
+	                    o.rotation.set(0, 0, 0))
+	                  : (o.position.copy(o.userData.basePosition),
+	                    o.scale.copy(o.userData.baseScale),
+	                    o.rotation.copy(o.userData.baseRotation))),
+	              (assetState.currentVariant = s
+	                ? "hero_closeup_glb"
+	                : r
+	                  ? "runtime_glb"
+	                  : "procedural_fallback");
+	          })(),
+	          Co.userData.glow &&
+	            (Co.userData.glow.material.opacity =
+	              "eye_contact" === t.phase ||
+	              "perfect" === (t.endingSequence?.type ?? t.ending)
+	                ? 0.5 + 0.2 * t.cinematicGlow
+	                : 0.18),
+	          Co.userData.pose?.referenceJunior &&
+	            (() => {
+	              const e = Co.userData.pose,
+                o = "perfect" === (t.endingSequence?.type ?? t.ending),
+                s = o ? Ao(t.endingSequence?.time ?? 0) : null,
+                a =
+	                  "rear_wait" === t.phase ||
+	                  "eye_contact" === t.phase ||
+	                  (o &&
+	                    ("senior_pov" === s ||
+	                      "eyes" === s ||
+	                      "overlay" === s));
+	              setJuniorHeroLeadVisibility(e, a, {
+	                heroHeadRoot: e.heroHeadRoot,
+	              });
               if (e.head?.material && e.jaw?.material) {
                 [e.head.material, e.jaw.material].forEach((t) => {
                   if (!t?.isMaterial) return;
@@ -4465,124 +4773,19 @@ export function createLm402Scene(D, runtimeOptions = {}) {
                   t.userData.baseOpacity ??= t.opacity ?? 1;
                   t.userData.baseTransparent ??= t.transparent;
                   t.userData.baseDepthWrite ??= t.depthWrite;
-                  t.roughness = s ? 0.44 : t.userData.baseRoughness;
+                  t.roughness = a ? 0.44 : t.userData.baseRoughness;
                   "clearcoat" in t &&
-                    (t.clearcoat = s ? 0.04 : t.userData.baseClearcoat);
-                  "sheen" in t && (t.sheen = s ? 0.06 : t.userData.baseSheen);
+                    (t.clearcoat = a ? 0.04 : t.userData.baseClearcoat);
+                  "sheen" in t && (t.sheen = a ? 0.06 : t.userData.baseSheen);
                   (t.transparent = t.userData.baseTransparent),
                     (t.opacity = t.userData.baseOpacity),
                     (t.depthWrite = t.userData.baseDepthWrite);
                 });
               }
-              [
-                e.eyeWhiteL,
-                e.eyeWhiteR,
-                e.irisL,
-                e.irisR,
-                e.eyeContourL,
-                e.eyeContourR,
-                e.eyeSparkleL,
-                e.eyeSparkleR,
-                e.mouth,
-                e.noseBridge,
-                e.noseTip,
-              ].forEach(
-                (e) => a(e),
-              );
-              [e.blushL, e.blushR].forEach((t) => {
-                a(t);
-                t?.material &&
-                  (t.material.userData.baseOpacity ??= t.material.opacity);
-              });
-              if (s) {
-                n(e.eyeWhiteL);
-                n(e.eyeWhiteR);
-                n(e.irisL);
-                n(e.irisR);
-                n(e.eyeContourL);
-                n(e.eyeContourR);
-                n(e.eyeSparkleL);
-                n(e.eyeSparkleR);
-                n(e.mouth);
-                n(e.noseBridge);
-                n(e.noseTip);
-                e.eyeWhiteL && (e.eyeWhiteL.visible = !0);
-                e.eyeWhiteR && (e.eyeWhiteR.visible = !0);
-                e.irisL && (e.irisL.visible = !0);
-                e.irisR && (e.irisR.visible = !0);
-                e.eyeContourL && (e.eyeContourL.visible = !0);
-                e.eyeContourR && (e.eyeContourR.visible = !0);
-                e.eyeSparkleL && (e.eyeSparkleL.visible = !0);
-                e.eyeSparkleR && (e.eyeSparkleR.visible = !0);
-                e.mouth && (e.mouth.visible = !0);
-                e.noseBridge && (e.noseBridge.visible = !0);
-                e.noseTip && (e.noseTip.visible = !0);
-                n(e.blushL);
-                n(e.blushR);
-                e.blushL && (e.blushL.visible = !0);
-                e.blushR && (e.blushR.visible = !0);
-                e.blushL?.material && (e.blushL.material.opacity = 0.1);
-                e.blushR?.material && (e.blushR.material.opacity = 0.1);
-              } else {
-                n(e.eyeWhiteL);
-                n(e.eyeWhiteR);
-                n(e.irisL);
-                n(e.irisR);
-                n(e.eyeContourL);
-                n(e.eyeContourR);
-                n(e.eyeSparkleL);
-                n(e.eyeSparkleR);
-                n(e.mouth);
-                n(e.noseBridge);
-                n(e.noseTip);
-                e.eyeWhiteL && (e.eyeWhiteL.visible = !0);
-                e.eyeWhiteR && (e.eyeWhiteR.visible = !0);
-                e.irisL && (e.irisL.visible = !0);
-                e.irisR && (e.irisR.visible = !0);
-                e.eyeContourL && (e.eyeContourL.visible = !0);
-                e.eyeContourR && (e.eyeContourR.visible = !0);
-                e.eyeSparkleL && (e.eyeSparkleL.visible = !0);
-                e.eyeSparkleR && (e.eyeSparkleR.visible = !0);
-                e.mouth && (e.mouth.visible = !0);
-                e.noseBridge && (e.noseBridge.visible = !0);
-                e.noseTip && (e.noseTip.visible = !0);
-                n(e.blushL);
-                n(e.blushR);
-                e.blushL && (e.blushL.visible = !0);
-                e.blushR && (e.blushR.visible = !0);
-                e.blushL?.material &&
-                  (e.blushL.material.opacity =
-                    e.blushL.material.userData.baseOpacity);
-                e.blushR?.material &&
-                  (e.blushR.material.opacity =
-                    e.blushR.material.userData.baseOpacity);
-              }
-              if (e.browL && e.browR) {
-                [e.browL, e.browR].forEach((t) => {
-                  t.userData.baseScale ??= t.scale.clone();
-                  t.userData.basePosition ??= t.position.clone();
-                  t.userData.baseRotation ??= t.rotation.clone();
-                });
-                if (s) {
-                  e.browL.visible = !0;
-                  e.browR.visible = !0;
-                  e.browL.scale.copy(e.browL.userData.baseScale);
-                  e.browR.scale.copy(e.browR.userData.baseScale);
-                  e.browL.position.copy(e.browL.userData.basePosition);
-                  e.browR.position.copy(e.browR.userData.basePosition);
-                  e.browL.rotation.copy(e.browL.userData.baseRotation);
-                  e.browR.rotation.copy(e.browR.userData.baseRotation);
-                } else {
-                  e.browL.visible = !0;
-                  e.browR.visible = !0;
-                  e.browL.scale.copy(e.browL.userData.baseScale);
-                  e.browR.scale.copy(e.browR.userData.baseScale);
-                  e.browL.position.copy(e.browL.userData.basePosition);
-                  e.browR.position.copy(e.browR.userData.basePosition);
-                  e.browL.rotation.copy(e.browL.userData.baseRotation);
-                  e.browR.rotation.copy(e.browR.userData.baseRotation);
-                }
-              }
+              e.blushL?.material &&
+                (e.blushL.material.opacity = a ? 0.1 : e.blushL.material.userData.baseOpacity ?? e.blushL.material.opacity);
+              e.blushR?.material &&
+                (e.blushR.material.opacity = a ? 0.1 : e.blushR.material.userData.baseOpacity ?? e.blushR.material.opacity);
             })(),
           Co.userData.portraitShell &&
             (() => {
@@ -4599,7 +4802,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
                           o.perfectEyesEnd ?? 35,
                         ),
                       )
-                    : "eye_contact" === t.phase
+                  : "eye_contact" === t.phase
                       ? 0.82
                       : "rear_wait" === t.phase
                         ? 0.16
@@ -4607,6 +4810,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
                 r =
                   n &&
                   "perfect" !== (t.endingSequence?.type ?? t.ending) &&
+                  !juniorHeroLead &&
                   s > 0.02 &&
                   ("rear_wait" === t.phase ||
                     "eye_contact" === t.phase ||
@@ -5177,6 +5381,9 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       );
     },
     setRuntimeConfig: function (e = {}) {
+      const t = resolveJuniorRuntimeManifest(
+        e.characterAssets?.junior2005 ?? runtimeState.characterAssets?.junior2005 ?? {},
+      );
       ((runtimeState.qualityTier = e.qualityTier ?? runtimeState.qualityTier),
         (runtimeState.qualityTiers =
           e.qualityTiers ?? runtimeState.qualityTiers),
@@ -5200,8 +5407,17 @@ export function createLm402Scene(D, runtimeOptions = {}) {
               ?.portraitBoost ?? renderTuning.portraitBoost,
         }),
         (assetState.qualityTier = runtimeState.qualityTier),
+        (assetState.runtimeModelUrl = t.runtimeModelUrl ?? null),
+        (assetState.heroCloseupModelUrl = t.heroCloseupModelUrl ?? null),
+        (assetState.loaderAvailable = Boolean(resolveJuniorGltfLoaderCtor())),
+        !assetState.loaderAvailable &&
+          (assetState.status = "procedural_fallback"),
         ht.material && (ht.material.opacity = renderTuning.mirrorOpacity),
         Co.userData.portraitShell?.scale.setScalar(renderTuning.portraitBoost),
+        Co.userData.runtimeModelRoot?.scale.setScalar(renderTuning.portraitBoost),
+        Co.userData.heroCloseupModelRoot?.scale.setScalar(
+          renderTuning.portraitBoost,
+        ),
         Te.shadow.mapSize.set(
           renderTuning.shadowMapSize,
           renderTuning.shadowMapSize,

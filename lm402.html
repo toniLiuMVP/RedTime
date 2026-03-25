@@ -184,10 +184,10 @@
             id="audio-toggle"
             class="audio-toggle"
             type="button"
-            aria-pressed="true"
+            aria-pressed="false"
           >
             <span class="audio-toggle-label">背景音樂</span>
-            <span id="audio-toggle-value" class="audio-toggle-value">開啟</span>
+            <span id="audio-toggle-value" class="audio-toggle-value">關閉</span>
           </button>
         </section>
 
@@ -204,9 +204,9 @@
         </section>
 
         <div id="music-prompt" class="music-prompt" hidden>
-          <div class="music-prompt-kicker">飛進你們的心裡.mp3</div>
+          <div class="music-prompt-kicker">音樂預設關閉</div>
           <div class="music-prompt-copy">
-            瀏覽器先把音樂擋住了。點一下，讓這一層樓重新有聲音。
+            LM402 開場預設是靜音。點一下「開啟音樂」，讓這一層樓開始有聲音。
           </div>
           <button
             id="music-prompt-button"
@@ -276,6 +276,18 @@
         </div>
 
         <section id="transcript-dock" class="transcript-dock">
+          <div id="transcript-dock-bar" class="transcript-dock-bar" aria-hidden="true">
+            <span class="transcript-dock-grip"></span>
+            <span class="transcript-dock-hint">拖曳移動 · 拉角縮放</span>
+            <button
+              id="transcript-dock-reset"
+              class="transcript-dock-reset"
+              type="button"
+              aria-label="重設文字視窗"
+            >
+              ↺
+            </button>
+          </div>
           <button
             id="transcript-toggle"
             class="transcript-toggle"
@@ -302,6 +314,7 @@
               aria-live="polite"
             ></div>
           </div>
+          <div id="transcript-resize-handle" class="transcript-resize-handle" aria-hidden="true"></div>
         </section>
 
         <section id="debug-panel" class="debug-panel" hidden aria-live="polite">
@@ -487,7 +500,7 @@
     </section>
 
     <section id="ending-overlay" class="ending-overlay" hidden>
-      <div class="ending-card">
+      <div id="ending-card" class="ending-card">
         <div class="ending-kicker" id="ending-kicker">LM402 結局</div>
         <div class="ending-title" id="ending-title">後門那一眼</div>
         <div class="ending-copy" id="ending-copy"></div>
@@ -565,6 +578,22 @@
           >
         </div>
       </div>
+      <label
+        id="ending-scroll-control"
+        class="ending-scroll-control"
+        hidden
+        aria-label="手機版結局內容滑動控制"
+      >
+        <span>滑動看完整局</span>
+        <input
+          id="ending-scroll-range"
+          type="range"
+          min="0"
+          max="0"
+          value="0"
+          step="1"
+        />
+      </label>
     </section>
 
     <script type="module" src="assets/lm402/app.js"></script>

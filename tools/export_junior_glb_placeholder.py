@@ -1,8 +1,11 @@
 """
-Placeholder Blender export script for the LM402 junior hero asset.
+Legacy single-export placeholder for the LM402 junior hero asset.
 
 Usage inside Blender:
   blender -b junior_hero_master.blend -P tools/export_junior_glb_placeholder.py
+
+Preferred exporter:
+  tools/blender_export_junior.py
 """
 
 import os
