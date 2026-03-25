@@ -70,11 +70,26 @@ test("homepage desktop hero stays readable", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(`${BASE_URL}/index.html`, { waitUntil: "domcontentloaded" });
   await page.waitForTimeout(1400);
-  await expect(page.locator(".hero-side-title")).toContainText(
-    "你可以決定先讀故事，",
-  );
+  const heroSideTitle = page.locator(".hero-side-title");
+  await expect(heroSideTitle).toContainText(/先把故事讀進去|你可以決定先讀故事/u);
   await page.screenshot({
     path: "output/playwright/index-home-verify-desktop.png",
+    fullPage: false,
+  });
+});
+
+test("reader desktop keeps guidance in overlay instead of a persistent right rail", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`${BASE_URL}/reader.html`, { waitUntil: "domcontentloaded" });
+  await page.waitForTimeout(1500);
+  await expect(page.locator(".hero-guide-title")).toContainText("先讀正文");
+  await expect(page.locator("#reader-rail")).toHaveCount(0);
+  await page.getByRole("button", { name: "故事導覽" }).first().click();
+  await expect(page.locator("#info-panel")).toHaveClass(/open/);
+  await page.screenshot({
+    path: "output/playwright/reader-desktop-guide-verify.png",
     fullPage: false,
   });
 });

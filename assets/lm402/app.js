@@ -261,6 +261,48 @@ function setTransientVisibility(e, t, n = "show", o = 340) {
     }, o)),
     transientVisibilityTimers.set(e, i));
 }
+function clearChildren(e) {
+  if (!e) return;
+  for (; e.firstChild; ) e.removeChild(e.firstChild);
+}
+function appendTextWithBreaks(e, t) {
+  const n = String(t ?? "").split("\n");
+  n.forEach((t, o) => {
+    o > 0 && e.appendChild(document.createElement("br"));
+    e.appendChild(document.createTextNode(t));
+  });
+}
+function createTextBlock(e, t, n) {
+  const o = document.createElement(e);
+  return ((o.className = t), n != null && (o.textContent = String(n)), o);
+}
+function buildTranscriptItem(e, t, n) {
+  const o = document.createElement("div");
+  o.className = "transcript-item";
+  const i = document.createElement("div");
+  i.className = "transcript-item-head";
+  const a = createTextBlock("span", "transcript-source", e);
+  const r = createTextBlock("span", "transcript-time", t);
+  i.append(a, r);
+  const c = document.createElement("div");
+  return (
+    (c.className = "transcript-text"),
+    appendTextWithBreaks(c, n),
+    o.append(i, c),
+    o
+  );
+}
+function buildEndingTrackerItem(t, n, o) {
+  const i = c[t];
+  const a = document.createElement("div");
+  a.className = `et-item ${n ? "done" : ""}`.trim();
+  a.title = `${i.title}${o ? ` (×${o})` : ""}`;
+  const r = document.createElement("span");
+  r.className = `et-dot ${t}`;
+  const l = createTextBlock("span", "et-lbl", i.kicker);
+  const s = createTextBlock("span", "et-chk", n ? "✓" : "—");
+  return a.append(r, l, s), a;
+}
 function getMobileTranscriptDefaults() {
   const e = P.transcriptDock?.getBoundingClientRect?.();
   if (e && e.width && e.height)
@@ -1137,19 +1179,20 @@ function J(e, t, n = "subtitle") {
 }
 function Q() {
   if (P.transcriptList) {
-    if (((P.transcriptList.innerHTML = ""), Y.subtitleLog.length))
+    if ((clearChildren(P.transcriptList), Y.subtitleLog.length))
       Y.subtitleLog.forEach((e) => {
-        const t = document.createElement("div");
-        ((t.className = "transcript-item"),
-          (t.innerHTML = `<div class="transcript-item-head"><span class="transcript-source">${e.source}</span><span class="transcript-time">${e.time}</span></div><div class="transcript-text">${e.text.replace(/\n/g, "<br>")}</div>`),
-          P.transcriptList.appendChild(t));
+        P.transcriptList.appendChild(
+          buildTranscriptItem(e.source, e.time, e.text),
+        );
       });
     else {
-      const e = document.createElement("div");
-      ((e.className = "transcript-item"),
-        (e.innerHTML =
-          '<div class="transcript-item-head"><span class="transcript-source">LM402</span><span class="transcript-time">等待字幕</span></div><div class="transcript-text">當文字開始浮上來，它們都會留在這裡。</div>'),
-        P.transcriptList.appendChild(e));
+      P.transcriptList.appendChild(
+        buildTranscriptItem(
+          "LM402",
+          "等待字幕",
+          "當文字開始浮上來，它們都會留在這裡。",
+        ),
+      );
     }
     ((P.transcriptStatus.textContent = Y.transcriptExpanded
       ? `收起對話紀錄 · ${Y.subtitleLog.length} 則`
@@ -1584,34 +1627,51 @@ function ve(e = !1) {
             "留在後門視線點。別多跨一步，也別讓視線早一步撞到她；等十一點那一道光把她整個照亮。"),
     (P.objectiveCopy.textContent = o),
     (P.panelObjective.textContent = o),
-    (P.phaseStrip.innerHTML = ""));
+    clearChildren(P.phaseStrip));
   const i = n.findIndex((e) => e.id === Y.phase);
   (n.forEach((e, t) => {
     const n = document.createElement("div");
-    ((n.className = "phase-row"),
-      e.id === Y.phase && n.classList.add("active"),
-      t < i && n.classList.add("done"),
-      (n.innerHTML = `<div class="phase-index">${e.index}</div><div class="phase-copy"><strong>${e.title}</strong><span>${e.copy}</span></div>`),
-      P.phaseStrip.appendChild(n));
+    n.className = "phase-row";
+    e.id === Y.phase && n.classList.add("active");
+    t < i && n.classList.add("done");
+    const o = createTextBlock("div", "phase-index", e.index);
+    const a = document.createElement("div");
+    a.className = "phase-copy";
+    const r = document.createElement("strong");
+    r.textContent = e.title;
+    const c = document.createElement("span");
+    c.textContent = e.copy;
+    a.append(r, c);
+    n.append(o, a);
+    P.phaseStrip.appendChild(n);
   }),
     e && be());
 }
 function xe() {
-  if (((P.memoryList.innerHTML = ""), !Y.memories.size)) {
+  if ((clearChildren(P.memoryList), !Y.memories.size)) {
     const e = document.createElement("div");
-    return (
-      (e.className = "memory-item"),
-      (e.innerHTML =
-        '<div class="memory-kicker">還沒收進來</div><div class="memory-title">先去看門牌、黑板、靠窗座位、講義邊角或後門，把 LM402 這一層空氣收進來。</div>'),
-      void P.memoryList.appendChild(e)
+    e.className = "memory-item";
+    e.append(
+      createTextBlock("div", "memory-kicker", "還沒收進來"),
+      createTextBlock(
+        "div",
+        "memory-title",
+        "先去看門牌、黑板、靠窗座位、講義邊角或後門，把 LM402 這一層空氣收進來。",
+      ),
     );
+    P.memoryList.appendChild(e);
+    return;
   }
   [...Y.memories].forEach((e) => {
     const t = i[e],
       n = document.createElement("div");
-    ((n.className = "memory-item"),
-      (n.innerHTML = `<div class="memory-kicker">${t.kicker}</div><div class="memory-title">${t.title}</div><div class="memory-copy">${t.copy[0]}</div>`),
-      P.memoryList.appendChild(n));
+    n.className = "memory-item";
+    n.append(
+      createTextBlock("div", "memory-kicker", t.kicker),
+      createTextBlock("div", "memory-title", t.title),
+      createTextBlock("div", "memory-copy", t.copy[0]),
+    );
+    P.memoryList.appendChild(n);
   });
 }
 function Ee(e) {
@@ -1843,16 +1903,25 @@ function Ce() {
     (Y.cameraMode = "dialogue"),
     (P.dialogueEyebrow.textContent = o.eyebrow),
     (P.dialogueTitle.textContent = `${o.speaker} · ${o.title}`),
-    (P.dialogueCopy.innerHTML = o.copy.map((e) => `<p>${e}</p>`).join("")),
+    clearChildren(P.dialogueCopy),
+    o.copy.forEach((e) => {
+      const t = document.createElement("p");
+      t.textContent = e;
+      P.dialogueCopy.appendChild(t);
+    }),
     J(o.speaker, o.copy.join("\n"), "dialogue"),
-    (P.dialogueChoices.innerHTML = ""),
+    clearChildren(P.dialogueChoices),
     o.choices.forEach((e, t) => {
       const n = document.createElement("button");
-      ((n.type = "button"),
-        (n.className = "dialogue-choice"),
-        (n.innerHTML = `<strong>${t + 1}. ${e.label}</strong><span>${e.detail}</span>`),
-        n.addEventListener("click", () => Be(e.effect)),
-        P.dialogueChoices.appendChild(n));
+      n.type = "button";
+      n.className = "dialogue-choice";
+      const o = document.createElement("strong");
+      o.textContent = `${t + 1}. ${e.label}`;
+      const i = document.createElement("span");
+      i.textContent = e.detail;
+      n.append(o, i);
+      n.addEventListener("click", () => Be(e.effect));
+      P.dialogueChoices.appendChild(n);
     }),
     (P.dialogueSheet.hidden = !1),
     P.body.classList.add("dialogue-open"),
@@ -2363,19 +2432,20 @@ function updateEndingTracker() {
     const key = e.endingsCompleted;
     const saved = JSON.parse(localStorage.getItem(key) || "{}");
     const all = ["perfect", "canon", "memory", "missed"];
-    const render = (id) => {
-      const done = !!saved[id];
-      const ending = c[id];
-      const count = saved[id]?.count || 0;
-      return `<div class="et-item ${done ? "done" : ""}" title="${ending.title}${count ? " (×" + count + ")" : ""}"><span class="et-dot ${id}"></span><span class="et-lbl">${ending.kicker}</span><span class="et-chk">${done ? "✓" : "—"}</span></div>`;
-    };
-    const html = all.map(render).join("");
     const completed = all.filter((id) => saved[id]).length;
     const sumText =
       completed === 4 ? "🎉 全結局達成！" : completed + "/4 結局已達成";
     ["ending-tracker", "ending-tracker-side"].forEach((id) => {
       const el = document.getElementById(id);
-      if (el) el.innerHTML = html;
+      if (!el) return;
+      clearChildren(el);
+      const e = document.createDocumentFragment();
+      all.forEach((t) => {
+        e.appendChild(
+          buildEndingTrackerItem(t, Boolean(saved[t]), saved[t]?.count || 0),
+        );
+      });
+      el.appendChild(e);
     });
     ["ending-tracker-summary", "ending-tracker-side-summary"].forEach((id) => {
       const el = document.getElementById(id);

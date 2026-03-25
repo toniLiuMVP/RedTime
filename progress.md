@@ -290,3 +290,53 @@ Updates:
     - `eye_contact.variant = "runtime_glb"`
     - `perfect/canon/memory/missed.variant = "runtime_glb"`
     - all four endings keep `runtimeVisible = true`, `closeupVisible = false`, `proceduralVisible = false`, `renderErrorCount = 0`
+
+Updates:
+- Landed the `LM402 透明 UI + 學妹同模 + reader 閱讀優先` pass:
+  - `assets/lm402/lm402.css` now keeps major LM402 surfaces on transparent or near-transparent fills instead of heavy dark panels:
+    - objective prompt
+    - subtitle / cinematic subtitle
+    - transcript dock / transcript items
+    - dialogue / ending cards
+    - memory / control widgets
+    - music / speed / audio / font widgets
+  - readability is preserved with thin borders, lighter shadows, and reduced scrim weight instead of solid dark blocks
+- Tightened the junior live-render policy:
+  - `assets/lm402/data.js` now marks `junior2005.liveDisplayPolicy = "runtime_only"`
+  - `assets/lm402/renderer.js` now preserves the runtime GLB root's base transform instead of shoving the live model upward during hero-lead states
+  - runtime hero anchor resolution now prefers `runtimeModelRoot` before any close-up or procedural fallback root
+  - result: gameplay + all four endings stay on the same grounded runtime junior path, with no separate live close-up head
+- Hardened LM402 DOM rendering in `assets/lm402/app.js`:
+  - transcript rendering now uses DOM node construction instead of `innerHTML`
+  - phase strip rows now use explicit DOM nodes
+  - memory items now use explicit DOM nodes
+  - dialogue copy / choices now use explicit DOM nodes
+  - ending tracker now uses DOM node construction instead of string-built HTML
+- Reworked `reader.html` toward the selected reading-first desktop mode:
+  - the persistent desktop right rail has been removed from the live layout
+  - desktop reading now keeps the left sidebar + central reading column, with guidance moved into the hero and the existing `故事導覽` overlay
+  - the desktop guide state is now validated via `tools/lm402-ui-verify.spec.js`
+- Added targeted frontend hardening in `reader.html` without touching story body content:
+  - icon/button helpers now build SVG buttons with DOM APIs instead of `innerHTML`
+  - sidebar / jump-grid episode entries now build DOM nodes directly
+  - timeline / traversal / modal string templates now escape dynamic text fields
+  - external `_blank` links now use `rel="noopener noreferrer"`
+- Expanded verification artifacts:
+  - `output/playwright/lm402-rear-wait-runtime.png`
+  - `output/playwright/lm402-eye-contact-runtime.png`
+  - `output/playwright/lm402-ending-perfect-runtime.png`
+  - `output/playwright/lm402-ending-canon-runtime.png`
+  - `output/playwright/lm402-ending-memory-runtime.png`
+  - `output/playwright/lm402-ending-missed-runtime.png`
+  - `output/playwright/reader-desktop-guide-verify.png`
+- Current verification status after this pass:
+  - `npx playwright test tools/lm402-model-consistency.spec.js tools/lm402-ui-verify.spec.js --reporter=line --workers=1` => `5 passed`
+  - `output/playwright/lm402-model-consistency.json` still confirms:
+    - `rear_wait.variant = "runtime_glb"`
+    - `eye_contact.variant = "runtime_glb"`
+    - `perfect/canon/memory/missed.variant = "runtime_glb"`
+    - all endings keep `runtimeVisible = true`, `closeupVisible = false`, `proceduralVisible = false`, `renderErrorCount = 0`
+
+TODO:
+- The junior is now consistent and grounded, but the art quality is still far from the requested “完美版 3D 精緻超美學妹”. The remaining gap is primarily asset quality, not runtime stability.
+- `reader.html` is safer than before, but a strict deployment CSP is still blocked by the large inline script / inline handler architecture. The eventual fix is to move reader logic into external JS and replace inline event attributes with event listeners.

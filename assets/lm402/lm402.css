@@ -2597,3 +2597,303 @@ body.landscape-prompt .debug-panel {
 .ui-has-pos .ui-reset-btn {
   display: flex;
 }
+
+/* Transparent-bottom UI surface pass */
+.hud-toggle,
+.hud-body,
+.time-watch,
+.speed-toggle,
+.speed-panel,
+.audio-toggle,
+.font-toggle,
+.pointer-pill,
+.objective-prompt,
+.hint-pill,
+.focus-prompt,
+.dock-box,
+.subtitle-box,
+.transcript-toggle,
+.transcript-box,
+.debug-panel,
+.panel-card,
+.memory-item,
+.phase-row,
+.tip-key,
+.dialogue-card,
+.dialogue-choice,
+.ending-card,
+.ending-button,
+.ending-scroll-control,
+.ui-maximize-btn,
+.ui-position-reset,
+.ui-max-btn,
+.ui-reset-btn,
+.music-prompt {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(8, 11, 16, 0.24) 0%,
+      rgba(8, 11, 16, 0.12) 64%,
+      rgba(8, 11, 16, 0) 100%
+    );
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+.hud-body,
+.time-watch,
+.speed-panel,
+.audio-toggle,
+.font-toggle,
+.objective-prompt,
+.hint-pill,
+.focus-prompt,
+.dock-box,
+.subtitle-box,
+.transcript-toggle,
+.transcript-box,
+.debug-panel,
+.panel-card,
+.memory-item,
+.phase-row,
+.tip-key,
+.dialogue-card,
+.dialogue-choice,
+.ending-card,
+.ending-button,
+.ending-scroll-control,
+.music-prompt {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.hud-body,
+.speed-panel,
+.transcript-box,
+.panel-card,
+.dialogue-card,
+.ending-card {
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.hud-toggle,
+.hud-body,
+.time-watch,
+.speed-toggle,
+.speed-panel,
+.audio-toggle,
+.font-toggle,
+.pointer-pill,
+.objective-prompt,
+.hint-pill,
+.focus-prompt,
+.music-prompt,
+.transcript-toggle,
+.transcript-box,
+.debug-panel,
+.panel-card,
+.memory-item,
+.phase-row,
+.tip-key,
+.dialogue-card,
+.dialogue-choice,
+.ending-card,
+.ending-button,
+.ending-scroll-control {
+  color: var(--ink);
+}
+
+.hud-copy,
+.hud-link,
+.objective-copy,
+.hint-pill,
+.focus-prompt,
+.music-prompt-copy,
+.dock-copy,
+.transcript-copy,
+.transcript-text,
+.dialogue-copy,
+.dialogue-choice,
+.panel-objective,
+.memory-copy,
+.tip-copy,
+.ending-copy,
+.phase-copy span,
+.et-lbl,
+.et-item,
+.time-watch-label,
+.time-watch-display {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.52);
+}
+
+.dialogue-scrim {
+  background: rgba(3, 5, 8, 0.42);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.ending-overlay {
+  background:
+    radial-gradient(
+      circle at 64% 42%,
+      rgba(255, 229, 172, 0.09),
+      transparent 18%
+    ),
+    radial-gradient(
+      circle at 50% 56%,
+      rgba(255, 255, 255, 0.03),
+      transparent 24%
+    ),
+    rgba(3, 5, 8, 0.58);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.ending-card {
+  background:
+    radial-gradient(
+      circle at 76% 24%,
+      rgba(255, 231, 182, 0.08),
+      transparent 24%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(12, 15, 22, 0.22),
+      rgba(8, 10, 16, 0.12) 70%,
+      rgba(8, 10, 16, 0)
+    );
+}
+
+.dialogue-card {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(9, 13, 20, 0.22),
+      rgba(8, 10, 16, 0.1) 72%,
+      rgba(8, 10, 16, 0)
+    );
+}
+
+.panel-card,
+.transcript-box,
+.speed-panel {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(10, 14, 22, 0.2),
+      rgba(8, 11, 16, 0.1) 68%,
+      rgba(8, 10, 16, 0)
+    );
+}
+
+.dock-box,
+.subtitle-box,
+.objective-prompt,
+.hint-pill,
+.focus-prompt,
+.music-prompt,
+.transcript-toggle,
+.debug-panel {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(8, 11, 16, 0.16),
+      rgba(8, 10, 16, 0.08) 72%,
+      rgba(8, 10, 16, 0)
+    );
+}
+
+.dialogue-choice,
+.ending-button,
+.phase-row,
+.memory-item,
+.tip-key,
+.audio-toggle,
+.font-toggle,
+.speed-toggle,
+.pointer-pill,
+.ui-maximize-btn,
+.ui-position-reset,
+.ui-max-btn,
+.ui-reset-btn {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.05),
+      rgba(255, 255, 255, 0.03) 70%,
+      rgba(255, 255, 255, 0)
+    );
+}
+
+.dialogue-choice:hover,
+.ending-button:hover,
+.audio-toggle:hover,
+.font-toggle:hover,
+.speed-toggle:hover,
+.music-prompt-button:hover,
+.ui-maximize-btn:hover,
+.ui-max-btn:hover {
+  border-color: rgba(115, 208, 165, 0.28);
+  color: #9cf0c9;
+}
+
+.dialogue-choice:focus-visible,
+.ending-button:focus-visible,
+.audio-toggle:focus-visible,
+.font-toggle:focus-visible,
+.speed-toggle:focus-visible,
+.music-prompt-button:focus-visible,
+.transcript-toggle:focus-visible,
+.ui-maximize-btn:focus-visible,
+.ui-position-reset:focus-visible,
+.ui-max-btn:focus-visible,
+.ui-reset-btn:focus-visible,
+.speed-preset:focus-visible,
+.hud-toggle:focus-visible,
+.hud-link:focus-visible,
+.action-glyph:focus-visible,
+.intro-skip-btn:focus-visible,
+.transcript-resize-handle:focus-visible,
+.ending-scroll-control input[type="range"]:focus-visible {
+  outline: 2px solid rgba(115, 208, 165, 0.88);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 3px rgba(115, 208, 165, 0.14);
+}
+
+@media (max-width: 1080px) {
+  .speed-widget,
+  .audio-widget,
+  .font-widget,
+  .objective-prompt,
+  .hint-pill,
+  .focus-prompt,
+  .debug-panel,
+  .music-prompt,
+  .subtitle-box,
+  .transcript-box,
+  .dialogue-card,
+  .ending-card,
+  .ending-scroll-control,
+  .transcript-toggle {
+    background:
+      linear-gradient(
+        180deg,
+        rgba(8, 11, 16, 0.18),
+        rgba(8, 10, 16, 0.08) 72%,
+        rgba(8, 10, 16, 0)
+      );
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .subtitle-box {
+    border-color: rgba(255, 241, 214, 0.16);
+  }
+
+  .dialogue-card,
+  .ending-card {
+    max-width: calc(100vw - 24px);
+  }
+}

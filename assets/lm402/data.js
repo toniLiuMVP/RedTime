@@ -631,6 +631,7 @@ export const CHARACTER_ASSET_MANIFEST = {
     label: "2005 學妹定稿",
     mode: "portrait-shell",
     deliveryMode: "glb-first",
+    liveDisplayPolicy: "runtime_only",
     fallbackMode: "procedural",
     sourceBlendUrl: "assets/lm402/characters/junior/work/junior_hero_master.blend",
     runtimeModelUrl: "assets/lm402/characters/junior/exports/junior_2005_runtime.glb",

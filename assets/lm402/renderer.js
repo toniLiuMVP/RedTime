@@ -2586,6 +2586,9 @@ function attachJuniorGltfModel(t, o, a = {}) {
       size: r.clone(),
       center: d.center.clone(),
     }),
+    (t.userData.basePosition ??= t.position.clone()),
+    (t.userData.baseScale ??= t.scale.clone()),
+    (t.userData.baseRotation ??= t.rotation.clone()),
     x(n, a.castShadow ?? !0, a.receiveShadow ?? !0),
     n
   );
@@ -2650,8 +2653,9 @@ function setJuniorHeroLeadVisibility(t, o, a = {}) {
     const o = n && h;
     (s.visible = o),
       o
-        ? (s.position.set(0.01, 1.55, 0.008),
-          s.scale.set(0.68, 0.7, 0.68))
+        ? (s.position.copy(s.userData.basePosition),
+          s.rotation.copy(s.userData.baseRotation),
+          s.scale.copy(s.userData.baseScale))
         : (s.position.copy(s.userData.basePosition),
           s.rotation.copy(s.userData.baseRotation),
           s.scale.copy(s.userData.baseScale));
@@ -2659,12 +2663,9 @@ function setJuniorHeroLeadVisibility(t, o, a = {}) {
   if (r) {
     p(r);
     (r.visible = n && i && !c),
-      n
-        ? (r.position.set(0, 1.556, 0),
-          r.scale.set(0.72, 0.74, 0.72))
-        : (r.position.copy(r.userData.basePosition),
-          r.rotation.copy(r.userData.baseRotation),
-          r.scale.copy(r.userData.baseScale));
+      (r.position.copy(r.userData.basePosition),
+      r.rotation.copy(r.userData.baseRotation),
+      r.scale.copy(r.userData.baseScale));
   }
   if (!n) {
     [
@@ -2732,11 +2733,11 @@ function resolveJuniorHeroAnchor(t, o = {}) {
     n = a.heroCloseupModelRoot ?? null,
     s = a.runtimeModelRoot ?? null,
     r = a.heroHeadRoot ?? null,
-    i = o.forceRoot ?? (n?.visible ? n : s?.visible ? s : r?.visible ? r : null),
+    i = o.forceRoot ?? (s?.visible ? s : n?.visible ? n : r?.visible ? r : null),
     l = i?.userData?.heroAnchor ?? null,
     c =
       i?.userData?.kind ??
-      (n?.visible ? "hero_closeup_glb" : s?.visible ? "runtime_glb" : r?.visible ? "procedural_hero_head" : "procedural_body");
+      (s?.visible ? "runtime_glb" : n?.visible ? "hero_closeup_glb" : r?.visible ? "procedural_hero_head" : "procedural_body");
   const h = i?.userData?.kind ?? c,
     d = i
       ? i.getWorldPosition(new e.Vector3())
@@ -5208,10 +5209,10 @@ export function createLm402Scene(D, runtimeOptions = {}) {
               h0 = o.perfectOverlayAt ?? 34.8,
               heroAnchor = resolveJuniorHeroAnchor(Co, {
                 forceRoot:
-                  (Co.userData.heroCloseupModelRoot?.visible
-                    ? Co.userData.heroCloseupModelRoot
-                    : Co.userData.runtimeModelRoot?.visible
-                      ? Co.userData.runtimeModelRoot
+                  (Co.userData.runtimeModelRoot?.visible
+                    ? Co.userData.runtimeModelRoot
+                    : Co.userData.heroCloseupModelRoot?.visible
+                      ? Co.userData.heroCloseupModelRoot
                       : Co.userData.pose?.heroHeadRoot?.visible
                         ? Co.userData.pose.heroHeadRoot
                         : null),
