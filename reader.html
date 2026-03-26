@@ -3497,35 +3497,44 @@
       @media (min-width: 768px) {
         #story-progress-slider {
           display: flex;
+          flex-direction: column;
           align-items: center;
-          gap: 8px;
-          width: 100%;
-          max-width: 360px;
-          margin: 0 auto;
-          padding: 0 clamp(18px, 2vw, 28px);
-          position: sticky;
-          bottom: 0;
-          z-index: 200;
-          background: rgba(6, 6, 10, 0.88);
+          gap: 6px;
+          position: fixed;
+          right: 8px;
+          top: 50%;
+          transform: translateY(-50%);
+          z-index: 400;
+          padding: 12px 5px;
+          background: rgba(6, 6, 10, 0.72);
           backdrop-filter: blur(10px);
           -webkit-backdrop-filter: blur(10px);
-          border-top: 1px solid var(--line2);
-          padding: 10px clamp(18px, 2vw, 28px);
+          border: 1px solid var(--line2);
+          border-radius: 20px;
+          opacity: 0.3;
+          transition: opacity 0.22s ease;
+        }
+        #story-progress-slider:hover,
+        #story-progress-slider:focus-within {
+          opacity: 1;
         }
         #story-progress-slider input[type="range"] {
-          flex: 1;
+          writing-mode: vertical-lr;
+          direction: rtl;
+          appearance: slider-vertical;
+          -webkit-appearance: slider-vertical;
+          width: 4px;
+          height: 180px;
           accent-color: var(--jade);
-          height: 4px;
           cursor: pointer;
         }
         #story-progress-label {
           font-family: 'DM Mono', monospace;
-          font-size: 9px;
-          letter-spacing: 0.1em;
+          font-size: 8px;
+          letter-spacing: 0.08em;
           color: var(--t3);
           white-space: nowrap;
-          min-width: 3.5em;
-          text-align: right;
+          text-align: center;
         }
       }
 
@@ -4435,7 +4444,7 @@
               >
             </button>
             <a class="hero-scene-link" href="lm402.html"
-              >↗ &nbsp; 需要時再去 LM402 對位</a
+              >↗ &nbsp; 進入「一眼瞬間」</a
             >
           </div>
 

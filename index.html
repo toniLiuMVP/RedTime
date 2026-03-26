@@ -259,11 +259,10 @@
         margin: 0 auto;
       }
       .hero-poster {
-        display: grid;
-        grid-template-columns: minmax(0, 1.14fr) minmax(360px, 0.86fr);
-        gap: clamp(24px, 4vw, 58px);
+        display: flex;
+        flex-direction: column;
         align-items: center;
-        text-align: left;
+        text-align: center;
       }
       .hero-copy-col {
         max-width: 720px;
@@ -1945,8 +1944,8 @@
           max-width: 1320px;
         }
         .hero-poster {
-          grid-template-columns: minmax(0, 1.16fr) minmax(390px, 0.84fr);
-          gap: clamp(42px, 4vw, 76px);
+          flex-direction: column;
+          align-items: center;
           min-height: min(76vh, 840px);
         }
         .hero-copy-col {
@@ -2215,68 +2214,9 @@
               >
               <a class="btn-ghost" href="#about">了解這個故事</a>
               <a class="btn-ghost" href="lm402.html"
-                >↗ &nbsp; 之後再進 LM402 場景</a
+                >↗ &nbsp; 進入「一眼瞬間」</a
               >
             </div>
-          </div>
-          <div class="hero-side-stack">
-            <aside class="hero-side-card hero-reading-card">
-              <div class="hero-side-kicker">Story First · Reading Guide</div>
-              <div class="hero-side-title">
-                先把故事讀進去，<br />讓那一眼慢慢浮出來。
-              </div>
-              <p class="hero-side-copy hero-reading-lead">
-                這個首頁先把閱讀放在前面。先進全文，跟著章節與角色線往前走；讀到想親眼確認時，再把 LM402 當成對位用的次入口。
-              </p>
-              <div class="hero-reading-list">
-                <div class="hero-reading-step">
-                  <strong>01 · 先讀正文</strong>
-                  <span>從全集入口進去，順著章節與角色視角，把二十年的時間慢慢讀成一條線。</span>
-                </div>
-                <div class="hero-reading-step">
-                  <strong>02 · 再用導引對位</strong>
-                  <span>章節、時間線與閱讀導引會幫你整理方向，但不會先搶走正文的情緒節奏。</span>
-                </div>
-                <div class="hero-reading-step">
-                  <strong>03 · 需要時再進 LM402</strong>
-                  <span>等你想把前門電話、四樓走廊和後門那一秒親眼確認，再切去互動場景。</span>
-                </div>
-              </div>
-              <div class="hero-side-grid">
-                <div class="hero-side-stat">
-                  <strong>41</strong><span>章節</span>
-                </div>
-                <div class="hero-side-stat">
-                  <strong>3</strong><span>時間線</span>
-                </div>
-                <div class="hero-side-stat">
-                  <strong>1</strong><span>一眼瞬間</span>
-                </div>
-              </div>
-              <div class="hero-secondary-scene">
-                <div class="hero-secondary-copy">
-                  <div class="hero-secondary-kicker">LM402 · 次入口</div>
-                  <div class="hero-secondary-title">
-                    讀到想對位時，再走進四樓後門。
-                  </div>
-                  <p class="hero-secondary-text">
-                    那通前門電話、四樓走廊與後門那一秒，都留給 LM402 去補上影像感，再回來接正文。
-                  </p>
-                </div>
-                <div class="hero-secondary-window" aria-hidden="true">
-                  <div class="hero-stage-window">
-                    <div class="hero-stage-door"></div>
-                    <div class="hero-stage-beam"></div>
-                    <div class="hero-stage-junior"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="hero-side-actions">
-                <a class="hero-side-link secondary" href="lm402.html"
-                  >進入 LM402 一眼瞬間</a
-                >
-              </div>
-            </aside>
           </div>
         </div>
       </div>
