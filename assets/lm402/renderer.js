@@ -4419,6 +4419,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       iris: "#4a3830",
       female: !1,
       phone: !0,
+      highlight: !0,
       scale: 1.08,
     }),
     Co = S({
