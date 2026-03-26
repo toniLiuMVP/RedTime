@@ -2644,8 +2644,8 @@ function setJuniorHeroLeadVisibility(t, o, a = {}) {
     t.referenceHairCap,
     t.headGlow,
     t.hairBack,
-  ].forEach((t) => d(t, !n));
-  t.legacyChildren?.forEach((t) => d(t, l || !n));
+  ].forEach((t) => d(t, i ? !1 : !n));
+  t.legacyChildren?.forEach((t) => d(t, i ? !1 : (l || !n)));
   if (s) {
     p(s);
     const o = n && h;
@@ -2663,12 +2663,12 @@ function setJuniorHeroLeadVisibility(t, o, a = {}) {
   }
   if (r) {
     p(r);
-    (r.visible = n && i && !c),
+    (r.visible = i && !c),
       (r.position.copy(r.userData.basePosition),
       r.rotation.copy(r.userData.baseRotation),
       r.scale.copy(r.userData.baseScale));
   }
-  if (!n) {
+  if (!n && !i) {
     [
       t.head,
       t.jaw,
@@ -4432,7 +4432,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       female: !0,
       highlight: !0,
       referenceJunior: !0,
-      scale: 1,
+      scale: 0.9847,
     }),
     Bo = S({
       torso: "#f2c49e",
@@ -4589,7 +4589,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         t.forEach((t) => {
           if (t?.gltf && t.root) {
             const a = attachJuniorGltfModel(t.root, t.gltf, {
-              scale: "hero_closeup" === t.kind ? 0.74 : 0.72,
+              scale: "hero_closeup" === t.kind ? 0.6743 : 0.6563,
             });
             a &&
               ((t.root.userData.ready = !0),
