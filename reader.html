@@ -200,11 +200,10 @@
         margin: 0 auto;
       }
       .hero-poster {
-        display: grid;
-        grid-template-columns: minmax(0, 1.12fr) minmax(320px, 0.88fr);
-        gap: clamp(22px, 4vw, 46px);
+        display: flex;
+        flex-direction: column;
         align-items: center;
-        text-align: left;
+        text-align: center;
       }
       .hero-copy-col {
         max-width: 720px;
@@ -3474,9 +3473,59 @@
       .tb-ep-btn {
         font-size: 12px;
       }
+      .tb-ep-label {
+        display: none;
+      }
       @media (min-width: 768px) {
         .tb-ep-btn {
-          display: none;
+          width: auto;
+          padding: 0 10px;
+          gap: 4px;
+          font-size: 11px;
+        }
+        .tb-ep-label {
+          display: inline;
+          font-family: 'DM Mono', monospace;
+          font-size: 8.5px;
+          letter-spacing: 0.1em;
+        }
+      }
+      /* Desktop story progress slider */
+      #story-progress-slider {
+        display: none;
+      }
+      @media (min-width: 768px) {
+        #story-progress-slider {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          width: 100%;
+          max-width: 360px;
+          margin: 0 auto;
+          padding: 0 clamp(18px, 2vw, 28px);
+          position: sticky;
+          bottom: 0;
+          z-index: 200;
+          background: rgba(6, 6, 10, 0.88);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          border-top: 1px solid var(--line2);
+          padding: 10px clamp(18px, 2vw, 28px);
+        }
+        #story-progress-slider input[type="range"] {
+          flex: 1;
+          accent-color: var(--jade);
+          height: 4px;
+          cursor: pointer;
+        }
+        #story-progress-label {
+          font-family: 'DM Mono', monospace;
+          font-size: 9px;
+          letter-spacing: 0.1em;
+          color: var(--t3);
+          white-space: nowrap;
+          min-width: 3.5em;
+          text-align: right;
         }
       }
 
@@ -4389,33 +4438,7 @@
               >↗ &nbsp; 需要時再去 LM402 對位</a
             >
           </div>
-          <aside class="hero-guide-card">
-            <div class="hero-guide-kicker">電影導引版</div>
-            <div class="hero-guide-title">先讀正文，<br />再打開導覽</div>
-            <p class="hero-guide-copy">
-              桌機版把固定右側資訊拿掉，讓閱讀重心回到正文本身。導引改交給首屏、跳章抽屜與故事導覽面板，你要方向時再打開，不讓它一直壓在視線旁邊。
-            </p>
-            <div class="hero-guide-list">
-              <div class="hero-guide-item">
-                <strong>開始方式</strong
-                ><span
-                  >從 EP0 順讀，或用左側／底部跳章直接進入你想看的角色線。</span
-                >
-              </div>
-              <div class="hero-guide-item">
-                <strong>桌機閱讀</strong
-                ><span
-                  >左側只保留章節與角色線，中間留給正文，欄寬維持長篇閱讀舒服的節奏。</span
-                >
-              </div>
-              <div class="hero-guide-item">
-                <strong>導覽與對位</strong
-                ><span
-                  >需要時間線、彩蛋或 LM402 對位時，再打開故事導覽或切去互動場景。</span
-                >
-              </div>
-            </div>
-          </aside>
+
         </div>
       </div>
       <div class="hero-scroll-hint">向下捲動</div>
@@ -4523,6 +4546,11 @@
               <span class="ui-glyph nav-icon" data-ui-icon="guide"></span>
             </button>
           </div>
+        </div>
+        <!-- Story Progress Slider (desktop only) -->
+        <div id="story-progress-slider">
+          <input type="range" id="story-range" min="0" max="100" value="0" step="0.1" aria-label="故事進度">
+          <span id="story-progress-label">0%</span>
         </div>
         <!-- Episodes -->
         <div id="main"><div id="episodes"></div></div>
@@ -7202,20 +7230,28 @@
     <!-- Navigation cluster (right-side fixed) -->
     <div id="jump-tb">
       <button
-        class="tb-btn tb-ep-btn"
-        id="tb-prev"
-        onclick="navEp(-1)"
-        title="上一集"
-      >
-        ‹
-      </button>
-      <button
         class="tb-btn"
         id="tb-top"
         onclick="scrollToReaderTop()"
         title="回到頂端"
       >
         ↑
+      </button>
+      <button
+        class="tb-btn tb-ep-btn"
+        id="tb-prev"
+        onclick="navEp(-1)"
+        title="上一集"
+      >
+        ‹ <span class="tb-ep-label">上一集</span>
+      </button>
+      <button
+        class="tb-btn tb-ep-btn"
+        id="tb-next"
+        onclick="navEp(1)"
+        title="下一集"
+      >
+        › <span class="tb-ep-label">下一集</span>
       </button>
       <button
         class="tb-btn"
@@ -7225,14 +7261,35 @@
       >
         ↓
       </button>
-      <button
-        class="tb-btn tb-ep-btn"
-        id="tb-next"
-        onclick="navEp(1)"
-        title="下一集"
-      >
-        ›
-      </button>
     </div>
+
+    <script>
+    /* Story progress slider sync */
+    (function() {
+      var slider = document.getElementById('story-range');
+      var label = document.getElementById('story-progress-label');
+      if (!slider || !label) return;
+      var mainCol = document.getElementById('main-col');
+      if (!mainCol) return;
+      var dragging = false;
+      function syncFromScroll() {
+        if (dragging) return;
+        var max = mainCol.scrollHeight - mainCol.clientHeight;
+        if (max <= 0) return;
+        var pct = (mainCol.scrollTop / max) * 100;
+        slider.value = pct.toFixed(1);
+        label.textContent = Math.round(pct) + '%';
+      }
+      mainCol.addEventListener('scroll', syncFromScroll, { passive: true });
+      slider.addEventListener('input', function() {
+        dragging = true;
+        var max = mainCol.scrollHeight - mainCol.clientHeight;
+        mainCol.scrollTop = (parseFloat(slider.value) / 100) * max;
+        label.textContent = Math.round(parseFloat(slider.value)) + '%';
+      });
+      slider.addEventListener('pointerup', function() { dragging = false; });
+      slider.addEventListener('change', function() { dragging = false; });
+    })();
+    </script>
   </body>
 </html>
