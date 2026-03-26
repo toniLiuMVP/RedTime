@@ -4432,7 +4432,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       female: !0,
       highlight: !0,
       referenceJunior: !0,
-      scale: 0.9847,
+      scale: 1.04,
     }),
     Bo = S({
       torso: "#f2c49e",
@@ -4589,7 +4589,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         t.forEach((t) => {
           if (t?.gltf && t.root) {
             const a = attachJuniorGltfModel(t.root, t.gltf, {
-              scale: "hero_closeup" === t.kind ? 0.6743 : 0.6563,
+              scale: "hero_closeup" === t.kind ? 0.7696 : 0.7488,
             });
             a &&
               ((t.root.userData.ready = !0),
