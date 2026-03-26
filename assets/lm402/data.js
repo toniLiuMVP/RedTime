@@ -65,8 +65,8 @@ export const WORLD = {
     [300, 580, 860, 1140, 1420, 1700, 1980].map((t) => ({ x: t, z: e })),
   ),
   notes: [
-    { x: 1896, y: 75, z: 2058, label: "講義" },
-    { x: 1922, y: 75, z: 2072, label: "白紙" },
+    { x: 1990, y: 62, z: 2040, label: "講義" },
+    { x: 1970, y: 62, z: 2060, label: "白紙" },
   ],
   campusTrees: [{ x: -1296, z: 2246, scale: 7.4 }],
   wallLabels: [
