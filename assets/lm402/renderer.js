@@ -2427,12 +2427,9 @@ function buildJuniorPortraitShell(t, o = {}) {
 function updateJuniorHeroFaceCard(t, o, a, n = 1) {
   const s = o?.userData?.heroFaceCard;
   if (!s?.material) return;
-  const r =
-      t.userData.heroCloseupModelRoot?.visible
-        ? t.userData.heroCloseupModelRoot
-        : t.userData.runtimeModelRoot?.visible
-          ? t.userData.runtimeModelRoot
-          : null,
+  const r = t.userData.runtimeModelRoot?.visible
+      ? t.userData.runtimeModelRoot
+      : t.userData.runtimeModelRoot ?? null,
     i = r?.userData?.heroAnchor?.face ?? null;
   i &&
     (s.position.set(
@@ -2597,11 +2594,12 @@ function setJuniorHeroLeadVisibility(t, o, a = {}) {
   if (!t) return;
   const n = Boolean(o),
     s = a.heroHeadRoot ?? t.heroHeadRoot ?? null,
+    u = a.heroCloseupModelRoot ?? t.heroCloseupModelRoot ?? null,
     r = a.runtimeModelRoot ?? t.runtimeModelRoot ?? null,
     i = a.runtimeModelReady ?? Boolean(r?.userData?.ready),
     l = Boolean(a.keepLegacyBody),
     c = Boolean(a.suppressRuntimeModel),
-    h = a.showHeroHeadRoot ?? !0,
+    h = a.showHeroHeadRoot ?? !1,
     d = (t, o) => {
       t && (t.visible = o);
     },
@@ -2659,6 +2657,9 @@ function setJuniorHeroLeadVisibility(t, o, a = {}) {
         : (s.position.copy(s.userData.basePosition),
           s.rotation.copy(s.userData.baseRotation),
           s.scale.copy(s.userData.baseScale));
+  }
+  if (u) {
+    p(u), (u.visible = !1);
   }
   if (r) {
     p(r);
@@ -2733,11 +2734,23 @@ function resolveJuniorHeroAnchor(t, o = {}) {
     n = a.heroCloseupModelRoot ?? null,
     s = a.runtimeModelRoot ?? null,
     r = a.heroHeadRoot ?? null,
-    i = o.forceRoot ?? (s?.visible ? s : n?.visible ? n : r?.visible ? r : null),
-    l = i?.userData?.heroAnchor ?? null,
+    allowLegacyFallback = Boolean(o.allowLegacyFallback),
+    i =
+      o.forceRoot ??
+      (s?.visible ? s : null) ??
+      (allowLegacyFallback ? (n?.visible ? n : r?.visible ? r : null) : null),
+    anchor = i?.userData?.heroAnchor ?? null,
     c =
       i?.userData?.kind ??
-      (s?.visible ? "runtime_glb" : n?.visible ? "hero_closeup_glb" : r?.visible ? "procedural_hero_head" : "procedural_body");
+      (s?.visible
+        ? "runtime_glb"
+        : anchor
+          ? n?.visible
+            ? "hero_closeup_glb"
+            : r?.visible
+              ? "procedural_hero_head"
+              : "procedural_body"
+          : "runtime_glb");
   const h = i?.userData?.kind ?? c,
     d = i
       ? i.getWorldPosition(new e.Vector3())
@@ -2752,27 +2765,27 @@ function resolveJuniorHeroAnchor(t, o = {}) {
           ? (o) => (o ? t.localToWorld(o.clone()) : d.clone())
           : (t) => (t ? t.clone() : d.clone());
   return (
-    l
+    anchor
       ? ("runtime" === h || "hero_closeup" === h
-          ? (juniorHeroAnchorCenter.copy(p(l.center ?? l.face ?? null)),
+          ? (juniorHeroAnchorCenter.copy(p(anchor.center ?? anchor.face ?? null)),
             juniorHeroAnchorFace.copy(
-              p(l.face ?? l.center ?? l.eyes ?? l.chest ?? null),
+              p(anchor.face ?? anchor.center ?? anchor.eyes ?? anchor.chest ?? null),
             ),
             juniorHeroAnchorChest.copy(
-              p(l.chest ?? l.center ?? l.face ?? null),
+              p(anchor.chest ?? anchor.center ?? anchor.face ?? null),
             ),
             juniorHeroAnchorEyes.copy(
-              p(l.eyes ?? l.face ?? l.center ?? null),
+              p(anchor.eyes ?? anchor.face ?? anchor.center ?? null),
             ))
-          : (juniorHeroAnchorCenter.copy(p(l.center ?? l.face ?? null)),
+          : (juniorHeroAnchorCenter.copy(p(anchor.center ?? anchor.face ?? null)),
             juniorHeroAnchorFace.copy(
-              p(l.face ?? l.center ?? l.eyes ?? l.chest ?? null),
+              p(anchor.face ?? anchor.center ?? anchor.eyes ?? anchor.chest ?? null),
             ),
             juniorHeroAnchorChest.copy(
-              p(l.chest ?? l.center ?? l.face ?? null),
+              p(anchor.chest ?? anchor.center ?? anchor.face ?? null),
             ),
             juniorHeroAnchorEyes.copy(
-              p(l.eyes ?? l.face ?? l.center ?? null),
+              p(anchor.eyes ?? anchor.face ?? anchor.center ?? null),
             )))
       : ((juniorHeroAnchorCenter.copy(d),
         juniorHeroAnchorFace.copy(d).add(o.faceOffset ?? new e.Vector3(0, 0.46, 0.14)),
@@ -4509,7 +4522,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         (juniorPortraitShell.add(...a.children),
         (juniorPortraitShell.userData.planes = a.userData.planes),
           (juniorPortraitShell.userData.glow = a.userData.glow),
-          (juniorPortraitShell.visible = !0),
+          (juniorPortraitShell.visible = !juniorRuntimeModelRoot.userData.ready),
           (juniorPortraitShell.userData.loaded = !0),
           (assetState.textureStatus = "ready"),
           (assetState.textureFallback = !1),
@@ -4586,6 +4599,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
                   ? juniorRuntimeManifest.heroCloseupModelUrl
                   : juniorRuntimeManifest.runtimeModelUrl),
               o.push(t.kind));
+            if ("runtime" === t.kind && juniorPortraitShell) juniorPortraitShell.visible = !1;
           } else
             t?.error &&
               o.push(
@@ -4926,6 +4940,14 @@ export function createLm402Scene(D, runtimeOptions = {}) {
 	                    (e.position.copy(e.userData.basePosition),
 	                    e.scale.copy(e.userData.baseScale),
 	                    e.rotation.copy(e.userData.baseRotation))),
+              r && e?.userData?.ready && (() => {
+                e.updateMatrixWorld(!0);
+                juniorHeroAnchorBox.setFromObject(e);
+                const footY = juniorHeroAnchorBox.min.y;
+                if (Number.isFinite(footY) && Math.abs(footY) > 0.001) {
+                  e.position.y -= footY;
+                }
+              })(),
               o &&
                 ((o.visible = s),
                   s
@@ -5012,7 +5034,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
                 r =
                   n &&
                   !p &&
-                  !juniorHeroLead &&
+                  !1 &&
                   s > 0.02 &&
                   ("rear_wait" === t.phase ||
                     "eye_contact" === t.phase ||
@@ -5208,14 +5230,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
               c0 = o.perfectSeniorPovEnd ?? 27.6,
               h0 = o.perfectOverlayAt ?? 34.8,
               heroAnchor = resolveJuniorHeroAnchor(Co, {
-                forceRoot:
-                  (Co.userData.runtimeModelRoot?.visible
-                    ? Co.userData.runtimeModelRoot
-                    : Co.userData.heroCloseupModelRoot?.visible
-                      ? Co.userData.heroCloseupModelRoot
-                      : Co.userData.pose?.heroHeadRoot?.visible
-                        ? Co.userData.pose.heroHeadRoot
-                        : null),
+                forceRoot: Co.userData.runtimeModelRoot ?? null,
+                allowLegacyFallback: !1,
               }),
               i =
                 (Co.position.clone().add(w),
@@ -5566,6 +5582,14 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             ? Ao(s.endingSequence.time)
             : null,
         heroCloseupTarget: Co.userData.heroCloseupTarget ?? null,
+        portraitShellVisible: juniorPortraitShell?.visible ?? null,
+        juniorGrounded: (() => {
+          const rm = Co.userData.runtimeModelRoot;
+          if (!rm?.visible || !rm.userData?.ready) return null;
+          rm.updateMatrixWorld(!0);
+          const bb = new e.Box3().setFromObject(rm);
+          return Number.isFinite(bb.min.y) ? Math.abs(bb.min.y) < 0.05 : null;
+        })(),
         heroCloseupRoots: {
           runtime: Co.userData.runtimeModelRoot
             ? {

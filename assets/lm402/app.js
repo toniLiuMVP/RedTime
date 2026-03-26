@@ -431,6 +431,7 @@ function resetMobileTranscriptLayout() {
 function initMobileTranscriptDock() {
   if (!P.transcriptDock || !P.transcriptDockBar || !P.transcriptResizeHandle)
     return;
+  if (window.__LM402_PANEL_SYSTEM_ACTIVE__) return;
   if (!_) {
     P.transcriptDock.classList.remove("mobile-freeform", "ui-dragging");
     P.transcriptDock.dataset.mobileFreeform = "false";
@@ -2796,6 +2797,15 @@ window.__LM402_DEBUG__ = {
         Math.max(0, (Y.stairWarp.cooldownUntil ?? 0) - Y.time).toFixed(3),
       ),
       endingSequenceStartedAt: Y.endingSequence?.startedAt ?? null,
+      productionJuniorVariant: t?.assetState?.currentVariant ?? null,
+      productionJuniorRootVisible: t?.heroCloseupRoots?.runtime?.visible ?? null,
+      legacyJuniorRootsVisible: Boolean(
+        (t?.heroCloseupRoots?.closeup?.visible) ||
+        (t?.heroCloseupRoots?.procedural?.visible) ||
+        (t?.portraitShellVisible)
+      ),
+      juniorGrounded: t?.juniorGrounded ?? null,
+      activePanelLayouts: window.__LM402_PANEL_SYSTEM__?.getLayouts?.() ?? null,
       renderer: t,
       events: [...Y.debugEvents],
     };

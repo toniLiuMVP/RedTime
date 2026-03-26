@@ -298,3 +298,99 @@ test("LM402 mobile transcript dock drags/resizes and ending slider appears", asy
     fullPage: false,
   });
 });
+
+test("LM402 desktop transcript dock drags, resizes, and maximizes", async ({
+  page,
+}) => {
+  test.setTimeout(60000);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`${BASE_URL}/lm402.html?debug=1`, {
+    waitUntil: "domcontentloaded",
+  });
+  await waitForDebug(page);
+  await page.waitForTimeout(700);
+  await page.evaluate(() => window.__LM402_DEBUG__.skipIntro());
+  await page.waitForTimeout(120);
+  await page.evaluate(() => window.__LM402_DEBUG__.setPhase("front_call"));
+  await page.evaluate(() => window.advanceTime(1000 / 30));
+  await page.waitForTimeout(600);
+
+  const dock = page.locator("#transcript-dock");
+  await expect(dock).toHaveClass(/ui-panel-managed/);
+
+  const before = await dock.boundingBox();
+  expect(before).not.toBeNull();
+  expect(before.x).toBeGreaterThanOrEqual(0);
+  expect(before.y).toBeGreaterThanOrEqual(0);
+  expect(before.x + before.width).toBeLessThanOrEqual(1440 + 2);
+  expect(before.y + before.height).toBeLessThanOrEqual(900 + 2);
+
+  // Drag
+  const bar = page.locator("#transcript-dock-bar");
+  const barBox = await bar.boundingBox();
+  expect(barBox).not.toBeNull();
+  await page.mouse.move(barBox.x + barBox.width / 2, barBox.y + barBox.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(barBox.x + barBox.width / 2 + 60, barBox.y + barBox.height / 2 - 40, {
+    steps: 8,
+  });
+  await page.mouse.up();
+  await page.waitForTimeout(150);
+
+  const moved = await dock.boundingBox();
+  expect(moved).not.toBeNull();
+  expect(Math.abs(moved.x - before.x) + Math.abs(moved.y - before.y)).toBeGreaterThan(8);
+
+  await page.screenshot({
+    path: "output/playwright/lm402-desktop-transcript-dragged.png",
+    fullPage: false,
+  });
+
+  // Resize
+  const handle = page.locator(".transcript-resize-handle");
+  const handleBox = await handle.boundingBox();
+  expect(handleBox).not.toBeNull();
+  await page.mouse.move(handleBox.x + handleBox.width / 2, handleBox.y + handleBox.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(handleBox.x + handleBox.width / 2 + 30, handleBox.y + handleBox.height / 2 + 40, {
+    steps: 8,
+  });
+  await page.mouse.up();
+  await page.waitForTimeout(150);
+
+  const resized = await dock.boundingBox();
+  expect(resized).not.toBeNull();
+  expect((resized.width - moved.width) + (resized.height - moved.height)).toBeGreaterThan(8);
+
+  // Maximize
+  const maxBtn = page.locator(".ui-max-btn");
+  await expect(maxBtn).toBeVisible();
+  await maxBtn.click();
+  await page.waitForTimeout(150);
+  const maximized = await dock.boundingBox();
+  expect(maximized).not.toBeNull();
+  expect(maximized.width).toBeGreaterThan(resized.width + 40);
+  expect(maximized.height).toBeGreaterThan(resized.height + 40);
+
+  // Restore
+  await maxBtn.click();
+  await page.waitForTimeout(150);
+  const restored = await dock.boundingBox();
+  expect(restored).not.toBeNull();
+  expect(restored.width).toBeLessThan(maximized.width - 20);
+
+  await page.screenshot({
+    path: "output/playwright/lm402-desktop-transcript-restored.png",
+    fullPage: false,
+  });
+
+  // Debug snapshot check
+  const snap = await readDebug(page);
+  expect(snap.activePanelLayouts).not.toBeNull();
+  expect(snap.activePanelLayouts.panels.transcript).toBeTruthy();
+
+  fs.writeFileSync(
+    "output/playwright/lm402-desktop-transcript-verify.json",
+    JSON.stringify(snap.activePanelLayouts, null, 2),
+  );
+});

@@ -218,6 +218,18 @@ Updates:
 - Reworked the hero-anchor path so close-up anchors are now treated in the correct coordinate space:
   - `attachJuniorGltfModel()` now stores root-local anchor positions after the GLB scene node is attached and transformed
   - `resolveJuniorHeroAnchor()` now converts GLB anchors through world space instead of pretending the model root local position was already world space
+- Unified the production junior path again in `assets/lm402/renderer.js`:
+  - gameplay and ending anchor resolution now force the runtime junior root instead of selecting closeup/procedural heads
+  - legacy hero closeup roots are hidden inside the renderer visibility logic so they cannot leak into production shots
+  - `updateJuniorHeroFaceCard()` now keys off the runtime root only
+- Regenerated the junior exports via `tools/generate_junior_glb.mjs` so `junior_2005_hero_closeup.glb` mirrors the full-body runtime bundle instead of exporting a bust-only variant.
+- Verified with Playwright after the renderer/export update:
+  - `tools/lm402-model-consistency.spec.js` => `1 passed`
+  - `tools/lm402-hero-capture.spec.js` => `1 passed`
+  - fresh `output/playwright/lm402-model-consistency.json` now confirms `rear_wait`, `eye_contact`, `perfect`, `canon`, `memory`, and `missed` all stay on `runtime_glb` with `runtimeVisible = true`, `closeupVisible = false`, `proceduralVisible = false`, `renderErrorCount = 0`
+- Visual spot-check:
+  - `output/playwright/lm402-rear-wait-runtime.png` now shows a full-body runtime junior in gameplay
+  - `output/playwright/lm402-perfect-facecard-line1.png` shows the perfect close-up still using the same runtime junior path without a detached procedural head or portrait-shell swap
 - Removed the old hard-coded hero-closeup root shove (`y = -0.82`) that had been forcing the bust below the floor plane and pulling the camera toward empty space.
 - Reframed the perfect `eyes` / `overlay` camera into a more honest medium close-up:
   - the camera now sits farther back and slightly lower

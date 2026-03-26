@@ -866,6 +866,7 @@ body[data-ui-preset="ending"] .stage-vignette {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   text-align: center;
+  pointer-events: auto;
 }
 .cinematic-subtitle-source {
   color: rgba(238, 232, 222, 0.72);
@@ -898,6 +899,45 @@ body[data-ui-preset="ending"] .stage-vignette {
 .transcript-dock-bar,
 .transcript-resize-handle {
   display: none;
+}
+.transcript-dock.ui-panel-managed {
+  padding: 0;
+  overflow: visible;
+  gap: 8px;
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+.transcript-dock.ui-panel-managed .transcript-dock-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 10px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  background: transparent;
+  color: var(--muted);
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.transcript-dock.ui-panel-managed.ui-dragging .transcript-dock-bar {
+  cursor: grabbing;
+}
+.transcript-dock.ui-panel-managed .transcript-resize-handle {
+  display: block;
+  pointer-events: auto;
+}
+.transcript-dock.ui-panel-managed .transcript-box {
+  min-height: 0;
+  max-height: none;
+  overflow: hidden;
+}
+.transcript-dock.ui-panel-managed .transcript-list {
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  flex: 1 1 auto;
 }
 .transcript-toggle {
   display: flex;
@@ -1705,6 +1745,7 @@ body.landscape-prompt .debug-panel {
     gap: 6px;
     z-index: 17;
   }
+  .transcript-dock.ui-panel-managed,
   .transcript-dock.mobile-freeform {
     left: 0;
     right: auto;
@@ -1723,21 +1764,11 @@ body.landscape-prompt .debug-panel {
     overflow: visible;
     grid-template-rows: auto auto minmax(0, 1fr);
   }
+  .transcript-dock.ui-panel-managed .transcript-dock-bar,
   .transcript-dock.mobile-freeform .transcript-dock-bar {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 7px 10px 6px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 16px;
-    background: transparent;
-    color: var(--muted);
-    touch-action: none;
-    cursor: grab;
-    user-select: none;
-    -webkit-user-select: none;
   }
+  .transcript-dock.ui-panel-managed.ui-dragging .transcript-dock-bar,
   .transcript-dock.mobile-freeform.ui-dragging .transcript-dock-bar {
     cursor: grabbing;
   }
@@ -1788,11 +1819,13 @@ body.landscape-prompt .debug-panel {
     padding: 8px 10px;
     border-radius: 18px;
   }
+  .transcript-dock.ui-panel-managed .transcript-box,
   .transcript-dock.mobile-freeform .transcript-box {
     min-height: 0;
     max-height: none;
     overflow: hidden;
   }
+  .transcript-dock.ui-panel-managed .transcript-list,
   .transcript-dock.mobile-freeform .transcript-list {
     min-height: 0;
     max-height: none;
@@ -1814,6 +1847,7 @@ body.landscape-prompt .debug-panel {
     cursor: nwse-resize;
     touch-action: none;
   }
+  .transcript-dock.ui-panel-managed .transcript-resize-handle,
   .transcript-dock.mobile-freeform .transcript-resize-handle {
     pointer-events: auto;
   }

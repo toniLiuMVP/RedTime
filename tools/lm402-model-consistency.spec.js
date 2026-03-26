@@ -37,6 +37,14 @@ function assertUnifiedJuniorModel(snap, label, options = {}) {
     snap.assetState.currentVariant,
     `${label} should use the runtime junior model`,
   ).toBe("runtime_glb");
+  expect(
+    snap.productionJuniorVariant,
+    `${label} productionJuniorVariant should be runtime_glb`,
+  ).toBe("runtime_glb");
+  expect(
+    snap.legacyJuniorRootsVisible,
+    `${label} should not show any legacy junior roots`,
+  ).toBe(false);
   if (requireVisible) {
     expect(
       snap.renderer?.heroCloseupRoots?.runtime?.visible,
@@ -50,6 +58,10 @@ function assertUnifiedJuniorModel(snap, label, options = {}) {
   expect(
     snap.renderer?.heroCloseupRoots?.procedural?.visible,
     `${label} should not show a detached procedural head`,
+  ).toBe(false);
+  expect(
+    snap.renderer?.portraitShellVisible,
+    `${label} should not show portrait shell`,
   ).toBe(false);
 }
 
