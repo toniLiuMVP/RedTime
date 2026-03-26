@@ -4433,7 +4433,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       female: !0,
       highlight: !0,
       referenceJunior: !0,
-      scale: 1.04,
+      scale: 1.08,
     }),
     Bo = S({
       torso: "#f2c49e",
