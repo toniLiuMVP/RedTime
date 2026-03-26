@@ -786,7 +786,7 @@ async function exportVariant(fileName, options) {
 async function main() {
   await mkdir(exportDir, { recursive: true });
   await exportVariant("junior_2005_runtime.glb", { hero: false, mobile: false });
-  await exportVariant("junior_2005_hero_closeup.glb", { hero: true, mobile: false });
+  await exportVariant("junior_2005_hero_closeup.glb", { hero: false, mobile: false });
   await exportVariant("junior_2005_runtime_mobile.glb", {
     hero: false,
     mobile: true,
@@ -801,7 +801,7 @@ async function main() {
           "assets/lm402/characters/junior/work/junior_hero_master.blend",
         generatedVariantPolicy: {
           runtime: "full-body runtime bundle",
-          hero_closeup: "head-and-shoulders bust bundle",
+          hero_closeup: "full-body runtime bundle mirrored for close-up framing",
           mobile: "decimated runtime bundle",
         },
         exports: [
@@ -815,7 +815,7 @@ async function main() {
           preserveGameplay: true,
         },
         notes: [
-          "The hero closeup is intentionally a bust, not a full-body pose.",
+          "The hero closeup now mirrors the runtime full-body bundle so gameplay and endings stay on the same character model.",
           "All three exports are generated from the same procedural source script for now.",
         ],
       },

@@ -4,7 +4,7 @@
   "sourceBlend": "assets/lm402/characters/junior/work/junior_hero_master.blend",
   "generatedVariantPolicy": {
     "runtime": "full-body runtime bundle",
-    "hero_closeup": "head-and-shoulders bust bundle",
+    "hero_closeup": "full-body runtime bundle mirrored for close-up framing",
     "mobile": "decimated runtime bundle"
   },
   "exports": [
@@ -27,7 +27,7 @@
     "preserveGameplay": true
   },
   "notes": [
-    "The hero closeup is intentionally a bust, not a full-body pose.",
+    "The hero closeup now mirrors the runtime full-body bundle so gameplay and endings stay on the same character model.",
     "All three exports are generated from the same procedural source script for now."
   ]
 }
