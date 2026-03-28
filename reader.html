@@ -700,6 +700,10 @@
           height: 100vh;
           overflow-y: auto;
           overscroll-behavior: contain;
+          scroll-behavior: smooth;
+          scroll-padding-top: var(--top-offset);
+          scrollbar-width: thin;
+          scrollbar-color: var(--line) transparent;
           padding: 0 clamp(18px, 3vw, 42px);
           background:
             linear-gradient(
@@ -714,6 +718,10 @@
               transparent 64%
             );
         }
+        #main-col::-webkit-scrollbar { width: 8px; }
+        #main-col::-webkit-scrollbar-track { background: transparent; }
+        #main-col::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+        #main-col::-webkit-scrollbar-thumb:hover { background: var(--t3); }
         #reader-rail {
           display: none !important;
         }
@@ -818,7 +826,7 @@
           font-size: 10px;
           color: var(--t3);
           cursor: pointer;
-          transition: all 0.12s;
+          transition: background 0.12s, color 0.12s, border-color 0.12s;
         }
         .sb-filter-btn:hover,
         .sb-filter-btn.active {
@@ -1212,7 +1220,7 @@
         color: var(--t3);
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
-        transition: all 0.12s;
+        transition: background 0.12s, color 0.12s, border-color 0.12s;
       }
       .jp-filter-btn.active {
         border-color: var(--amber);
@@ -1763,6 +1771,8 @@
         opacity: 1;
         transform: none;
         scroll-margin-top: var(--top-offset);
+        content-visibility: auto;
+        contain-intrinsic-size: auto 800px;
       }
       .episode.visible {
         opacity: 1;
@@ -4386,48 +4396,7 @@
             <h1 class="hero-title">時間裡的<br />兩個妳</h1>
             <p class="hero-tagline">把拔與女兒的故事<br />學長與學妹的故事</p>
             <div class="hero-divider"></div>
-            <div class="hero-proof">
-              <span class="hero-proof-pill">故事正文原樣</span>
-              <span class="hero-proof-pill">章節跳轉</span>
-              <span class="hero-proof-pill">續讀定位</span>
-              <span class="hero-proof-pill">故事導覽</span>
-            </div>
-            <div class="hero-stats">
-              <div class="hero-stat">
-                <span class="stat-n">41</span><span class="stat-l">集</span>
-              </div>
-              <div class="hero-stat">
-                <span class="stat-n">3</span><span class="stat-l">線</span>
-              </div>
-              <div class="hero-stat">
-                <span class="stat-n">20</span><span class="stat-l">年</span>
-              </div>
-              <div class="hero-stat">
-                <span class="stat-n">5</span><span class="stat-l">彩蛋</span>
-              </div>
-            </div>
-            <div class="hero-arcs">
-              <div class="arc-pill">
-                <div class="a-dot" style="background: var(--jade)"></div>
-                把拔視角
-              </div>
-              <div class="arc-pill">
-                <div class="a-dot" style="background: var(--silver)"></div>
-                學長視角
-              </div>
-              <div class="arc-pill">
-                <div class="a-dot rainbow"></div>
-                學妹視角
-              </div>
-              <div class="arc-pill">
-                <div class="a-dot" style="background: var(--amber)"></div>
-                女兒視角
-              </div>
-              <div class="arc-pill">
-                <div class="a-dot" style="background: var(--ember)"></div>
-                複合視角
-              </div>
-            </div>
+            <div class="hero-divider"></div>
             <button class="hero-cta" onclick="goToEp(0)">
               ↓ &nbsp; 開始閱讀
             </button>

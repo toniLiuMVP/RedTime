@@ -493,7 +493,7 @@ function S(t) {
     m.roughness = 0.34;
   }
   (w.position.set(0, 0.84, 0),
-    w.scale.set(t.female ? (n ? 0.96 : 1.04) : 1.14, 1.02, n ? 0.82 : 0.86),
+    w.scale.set(t.female ? (n ? 1.0 : 1.04) : 1.14, n ? 1.04 : 1.02, n ? 0.84 : 0.86),
     o.add(w));
   const M = new e.Mesh(
     new e.CapsuleGeometry(
@@ -567,13 +567,19 @@ function S(t) {
     o.add(S, z));
   const P = new e.Mesh(
     new e.BoxGeometry(
-      t.female ? 0.32 : 0.38,
-      t.female ? 0.16 : 0.22,
-      t.female ? 0.25 : 0.27,
+      t.female ? 0.34 : 0.38,
+      t.female ? 0.30 : 0.22,
+      t.female ? 0.26 : 0.27,
     ),
     i,
   );
-  if ((P.position.set(0, t.female ? 0.66 : 0.63, 0.01), o.add(P), !t.female)) {
+  if ((P.position.set(0, t.female ? 0.64 : 0.63, 0.01), o.add(P),
+    t.female && (function(){
+      var wb = new e.MeshPhysicalMaterial({color:"#1e3a56",roughness:0.52,metalness:0.04,clearcoat:0.08,clearcoatRoughness:0.5});
+      var wm = new e.Mesh(new e.BoxGeometry(0.35,0.04,0.27), wb);
+      wm.position.set(0,0.80,0.01); o.add(wm);
+    })(),
+    !t.female)) {
     const t = new e.Mesh(new e.BoxGeometry(0.13, 0.66, 0.18), i);
     t.position.set(-0.095, 0.36, 0.008);
     const a = t.clone();
@@ -1516,14 +1522,21 @@ function S(t) {
       o.add(r, i),
       n)
     ) {
-      const t = new e.Mesh(new e.BoxGeometry(0.016, 0.24, 0.018), d);
-      (t.position.set(-0.046, 1.512, 0.158), (t.rotation.z = -0.02));
+      const t = new e.Mesh(new e.BoxGeometry(0.022, 0.28, 0.02), d);
+      (t.position.set(-0.052, 1.502, 0.16), (t.rotation.z = -0.02));
       const a = t.clone();
-      ((a.position.x = 0.05),
+      ((a.position.x = 0.056),
         (a.rotation.z = 0.02),
         (frontHairInnerL = t),
         (frontHairInnerR = a),
         o.add(t, a));
+      var fringeCenter = new e.Mesh(new e.BoxGeometry(0.08,0.12,0.016), d);
+      fringeCenter.position.set(0.01, 1.56, 0.17);
+      o.add(fringeCenter);
+      var fringeLeft = new e.Mesh(new e.BoxGeometry(0.03,0.2,0.016), d);
+      fringeLeft.position.set(-0.07, 1.52, 0.165);
+      fringeLeft.rotation.z = -0.1;
+      o.add(fringeLeft);
     }
     const l = new e.Mesh(new e.BoxGeometry(0.034, 0.34, 0.032), d);
     (l.position.set(-0.152, 1.36, 0.02), (l.rotation.z = -0.08));
@@ -4433,7 +4446,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       female: !0,
       highlight: !0,
       referenceJunior: !0,
-      scale: 1.08,
+      scale: 1.02,
     }),
     Bo = S({
       torso: "#f2c49e",
