@@ -580,21 +580,21 @@ function S(t) {
   const P = new e.Mesh(
     new e.BoxGeometry(
       t.female ? 0.34 : 0.38,
-      t.female ? 0.30 : 0.22,
+      t.female ? 0.34 : 0.22,
       t.female ? 0.26 : 0.27,
     ),
     i,
   );
-  if ((P.position.set(0, t.female ? 0.69 : 0.63, 0.01), o.add(P),
+  if ((P.position.set(0, t.female ? 0.67 : 0.63, 0.01), o.add(P),
     t.female && (function(){
-      var legL = new e.Mesh(new e.BoxGeometry(0.14, 0.28, 0.19), i);
-      legL.position.set(-0.085, 0.52, 0.008); o.add(legL);
+      var legL = new e.Mesh(new e.BoxGeometry(0.14, 0.40, 0.19), i);
+      legL.position.set(-0.085, 0.44, 0.008); o.add(legL);
       var legR = legL.clone(); legR.position.x = 0.085; o.add(legR);
       var wb = new e.MeshPhysicalMaterial({color:"#1e3a56",roughness:0.46,metalness:0.04,clearcoat:0.14,clearcoatRoughness:0.3});
       var wm = new e.Mesh(new e.BoxGeometry(0.35,0.05,0.27), wb);
       wm.position.set(0,0.80,0.01); o.add(wm);
       var cuff = new e.Mesh(new e.BoxGeometry(0.15,0.03,0.20), wb);
-      cuff.position.set(-0.085,0.40,0.008); o.add(cuff);
+      cuff.position.set(-0.085,0.26,0.008); o.add(cuff);
       var cuffR = cuff.clone(); cuffR.position.x = 0.085; o.add(cuffR);
     })(),
     !t.female)) {

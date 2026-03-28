@@ -22,6 +22,7 @@
   --action-size: 52px;
   --mobile-left-safe: calc(var(--joystick-size) + 36px);
   --mobile-right-safe: calc(var(--joystick-size) + var(--action-size) + 46px);
+  --safe-center: calc(50% + (var(--mobile-left-safe) - var(--mobile-right-safe)) / 2);
   --transcript-height: 152px;
   --transcript-width: min(540px, calc(100% - 48px));
 }
@@ -1602,7 +1603,7 @@ body.landscape-prompt .debug-panel {
     position: fixed;
     top: auto;
     bottom: calc(var(--controls-clearance) + 56px + var(--bottom-gap));
-    left: 50%;
+    left: var(--safe-center);
     transform: translate(-50%);
     width: min(
       420px,
@@ -1623,13 +1624,13 @@ body.landscape-prompt .debug-panel {
     );
     top: auto;
     bottom: calc(var(--controls-clearance) + 56px + var(--bottom-gap));
-    left: 50%;
+    left: var(--safe-center);
     transform: translate(-50%);
   }
   .hint-pill {
     top: auto;
     bottom: calc(var(--controls-clearance) + 56px + var(--bottom-gap));
-    left: 50%;
+    left: var(--safe-center);
     transform: translate(-50%);
     max-width: calc(
       100vw - var(--mobile-left-safe) - var(--mobile-right-safe) - 20px
@@ -1640,7 +1641,7 @@ body.landscape-prompt .debug-panel {
     position: fixed;
     top: auto;
     bottom: calc(var(--controls-clearance) + 160px + var(--bottom-gap));
-    left: 50%;
+    left: var(--safe-center);
     transform: translate(-50%);
     padding: 8px 14px;
     max-width: calc(
@@ -1652,7 +1653,7 @@ body.landscape-prompt .debug-panel {
   }
   .bottom-dock {
     position: fixed;
-    left: 50%;
+    left: var(--safe-center);
     right: auto;
     transform: translate(-50%);
     bottom: calc(var(--controls-clearance) + 102px + var(--bottom-gap));
@@ -1680,7 +1681,7 @@ body.landscape-prompt .debug-panel {
     bottom: calc(
       var(--controls-clearance) + 102px + var(--bottom-gap) + 6px
     ) !important;
-    left: 50% !important;
+    left: var(--safe-center) !important;
     transform: translate(-50%);
     width: min(
       420px,
@@ -1726,10 +1727,10 @@ body.landscape-prompt .debug-panel {
   }
   .transcript-dock {
     position: fixed;
-    left: 50%;
+    left: var(--safe-center);
     right: auto;
     transform: translate(-50%);
-    bottom: calc(var(--controls-clearance) + 2px + var(--bottom-gap));
+    bottom: calc(var(--controls-clearance) + var(--joystick-size) + 8px + var(--bottom-gap));
     top: auto;
     width: min(
       420px,
@@ -1747,7 +1748,7 @@ body.landscape-prompt .debug-panel {
   }
   .transcript-dock.ui-panel-managed,
   .transcript-dock.mobile-freeform {
-    left: 0;
+    left: var(--mobile-left-safe);
     right: auto;
     transform: none;
     width: min(
@@ -2103,7 +2104,7 @@ body.landscape-prompt .debug-panel {
     );
   }
   .transcript-dock {
-    left: 50%;
+    left: var(--safe-center);
     right: auto;
     transform: translate(-50%);
     width: min(
