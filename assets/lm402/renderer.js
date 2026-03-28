@@ -568,16 +568,23 @@ function S(t) {
   const P = new e.Mesh(
     new e.BoxGeometry(
       t.female ? 0.34 : 0.38,
-      t.female ? 0.30 : 0.22,
+      t.female ? 0.06 : 0.22,
       t.female ? 0.26 : 0.27,
     ),
     i,
   );
-  if ((P.position.set(0, t.female ? 0.64 : 0.63, 0.01), o.add(P),
+  if ((P.position.set(0, t.female ? 0.78 : 0.63, 0.01), o.add(P),
     t.female && (function(){
+      var dm = new e.MeshPhysicalMaterial({color:"#3d6a9e",roughness:0.52,metalness:0.04,clearcoat:0.08,clearcoatRoughness:0.5});
+      var legL = new e.Mesh(new e.BoxGeometry(0.12, 0.62, 0.17), dm);
+      legL.position.set(-0.082, 0.44, 0.008); o.add(legL);
+      var legR = legL.clone(); legR.position.x = 0.082; o.add(legR);
       var wb = new e.MeshPhysicalMaterial({color:"#1e3a56",roughness:0.52,metalness:0.04,clearcoat:0.08,clearcoatRoughness:0.5});
       var wm = new e.Mesh(new e.BoxGeometry(0.35,0.04,0.27), wb);
       wm.position.set(0,0.80,0.01); o.add(wm);
+      var cuff = new e.Mesh(new e.BoxGeometry(0.13,0.03,0.18), wb);
+      cuff.position.set(-0.082,0.13,0.008); o.add(cuff);
+      var cuffR = cuff.clone(); cuffR.position.x = 0.082; o.add(cuffR);
     })(),
     !t.female)) {
     const t = new e.Mesh(new e.BoxGeometry(0.13, 0.66, 0.18), i);
@@ -858,13 +865,19 @@ function S(t) {
         roughness: 0.52,
         metalness: 0.02,
       }),
-      n = new e.Mesh(new e.BoxGeometry(0.058, 0.01, 0.014), t);
+      n = new e.Mesh(new e.BoxGeometry(a ? 0.064 : 0.058, a ? 0.012 : 0.01, a ? 0.016 : 0.014), t);
     (n.position.set(a ? -0.068 : -0.062, a ? 1.585 : 1.586, 0.174),
       (n.rotation.z = a ? -0.012 : -0.03));
     const s = n.clone();
     ((s.position.x = a ? 0.068 : 0.062),
       (s.rotation.z = a ? 0.012 : 0.03),
       o.add(n, s));
+    if (a) {
+      var lashTipL = new e.Mesh(new e.BoxGeometry(0.02, 0.008, 0.012), t);
+      lashTipL.position.set(-0.098, 1.582, 0.168); lashTipL.rotation.z = -0.2;
+      var lashTipR = lashTipL.clone(); lashTipR.position.x = 0.098; lashTipR.rotation.z = 0.2;
+      o.add(lashTipL, lashTipR);
+    }
   }
   re.userData.baseScale = re.scale.clone();
   ie.userData.baseScale = ie.scale.clone();
@@ -876,6 +889,13 @@ function S(t) {
     de.scale.set(a ? 0.92 : 1.7, a ? 0.62 : 1.2, 0.32));
   const pe = de.clone();
   ((pe.position.x = a ? 0.084 : 0.094), o.add(de, pe));
+  if (n) {
+    var blushMat = new e.MeshStandardMaterial({color:"#f4a0a8",roughness:0.7,metalness:0,transparent:!0,opacity:0.18});
+    var blushL = new e.Mesh(new e.SphereGeometry(0.022, 10, 10), blushMat);
+    blushL.position.set(-0.082, 1.48, 0.152); blushL.scale.set(1.4, 0.7, 0.3);
+    var blushR = blushL.clone(); blushR.position.x = 0.082;
+    o.add(blushL, blushR);
+  }
   const me = new e.MeshStandardMaterial({
       color: "#ffffff",
       emissive: "#ffffff",
@@ -885,8 +905,15 @@ function S(t) {
     }),
     we = new e.Mesh(new e.SphereGeometry(n ? 0.0055 : 0.004, 8, 8), me);
   we.position.set(a ? -0.058 : -0.055, n ? 1.573 : 1.568, n ? 0.184 : 0.176);
+  n && we.scale.set(1.2, 1.2, 1.0);
   const Me = we.clone();
   ((Me.position.x = a ? 0.072 : 0.069), o.add(we, Me));
+  if (n) {
+    var spark2L = new e.Mesh(new e.SphereGeometry(0.003, 8, 8), me);
+    spark2L.position.set(-0.072, 1.562, 0.182);
+    var spark2R = spark2L.clone(); spark2R.position.x = 0.058;
+    o.add(spark2L, spark2R);
+  }
   const fe = new e.Mesh(
     new e.SphereGeometry(
       t.female ? (n ? 0.202 : 0.194) : 0.188,
@@ -4446,7 +4473,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       female: !0,
       highlight: !0,
       referenceJunior: !0,
-      scale: 1.02,
+      scale: 1.015,
     }),
     Bo = S({
       torso: "#f2c49e",

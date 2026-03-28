@@ -667,6 +667,8 @@
       @media (min-width: 768px) {
         body {
           overflow-x: hidden;
+          --fs: 18px;
+          --lh: 2.08;
         }
         #topnav-mobile {
           display: none !important;
@@ -2161,8 +2163,9 @@
         margin: 0;
         color: var(--t1);
         -webkit-text-fill-color: var(--t1);
-        line-height: 1.95;
-        letter-spacing: 0.012em;
+        line-height: var(--lh);
+        letter-spacing: 0.016em;
+        hanging-punctuation: first allow-end;
       }
       .ep-body p:not(.spacer) + p:not(.spacer) {
         margin-top: 0.16em;
@@ -4391,11 +4394,9 @@
       <div class="hero-inner">
         <div class="hero-poster">
           <div class="hero-copy-col">
-            <div class="hero-label">電影導引版 · EP0 — EP40</div>
             <div class="hero-sub-en">The Two Yous in Time</div>
             <h1 class="hero-title">時間裡的<br />兩個妳</h1>
             <p class="hero-tagline">把拔與女兒的故事<br />學長與學妹的故事</p>
-            <div class="hero-divider"></div>
             <div class="hero-divider"></div>
             <button class="hero-cta" onclick="goToEp(0)">
               ↓ &nbsp; 開始閱讀
