@@ -1,2103 +1,4637 @@
-import * as THREE from "./vendor-three.module.js";
-import { WORLD, CINEMATIC_TIMELINE } from "./data.js";
-
+import * as e from "./vendor-three.module.js";
+import { GLTFLoader } from "./GLTFLoader.js";
+import { WORLD as t, CINEMATIC_TIMELINE as o } from "./data.js";
 export const WORLD_SCALE = 1 / 80;
-
-const FLOOR_Y = 0;
-const PLAYER_EYE = 1.62;
-
-const tempVecA = new THREE.Vector3();
-const tempVecB = new THREE.Vector3();
-const tempVecC = new THREE.Vector3();
-const tempBox = new THREE.Box3();
-const tempSize2D = new THREE.Vector2();
-const tempDrawSize2D = new THREE.Vector2();
-
-function scaled(value) {
-  return value * WORLD_SCALE;
+const a = new e.Vector3(),
+  n = new e.Vector3(),
+  s = new e.Vector3(),
+  r = (new e.Box3(), new e.Vector2()),
+  i = new e.Vector2(),
+  l = new e.Vector3(0, 0.32, -0.18),
+  c = new e.Vector3(-0.2, 0.34, -0.48),
+  h = new e.Vector3(-0.14, 0.22, -0.74),
+  d = new e.Vector3(0.1, 0.14, -0.56),
+  p = new e.Color("#e0d8ff"),
+  m = new e.Color("#ffd8a0"),
+  w = new e.Vector3(0, 1.5, 0),
+  M = new e.Vector3(0.03, 1.57, 0.04),
+  f = new e.Vector3(0.18, 0.08, -0.12),
+  u = new e.Vector3(0.02, 0.012, 0.004),
+  y = new e.Vector3(0.008, 0.006, 0);
+new e.Vector3(0.004, 0.018, 0);
+function g(e) {
+  return 0.0125 * e;
 }
-
-function worldPoint(x, y, z) {
-  return new THREE.Vector3(scaled(x), scaled(y), scaled(z));
+function x(e, t = !0, o = !0) {
+  e.traverse((e) => {
+    e.isMesh && ((e.castShadow = t), (e.receiveShadow = o));
+  });
 }
-
-function makeFaceTexture({ female = false, referenceJunior = false } = {}) {
-  const canvas = document.createElement("canvas");
-  canvas.width = 320;
-  canvas.height = 320;
-  const ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, 320, 320);
-
-  const skinGradient = ctx.createRadialGradient(160, 132, 24, 160, 188, 164);
-  skinGradient.addColorStop(0, female ? "rgba(255,237,230,.3)" : "rgba(255,234,224,.22)");
-  skinGradient.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = skinGradient;
-  ctx.fillRect(0, 0, 320, 320);
-
-  ctx.strokeStyle = female ? (referenceJunior ? "rgba(112,84,74,.68)" : "rgba(82,48,47,.7)") : "rgba(74,43,40,.72)";
-  ctx.lineWidth = female ? (referenceJunior ? 3.2 : 6) : 7;
-  ctx.beginPath();
-  ctx.moveTo(92, referenceJunior ? 124 : 116);
-  ctx.quadraticCurveTo(118, female ? (referenceJunior ? 112 : 94) : 100, 142, referenceJunior ? 120 : 110);
-  ctx.moveTo(178, referenceJunior ? 120 : 110);
-  ctx.quadraticCurveTo(202, female ? (referenceJunior ? 112 : 94) : 100, 228, referenceJunior ? 124 : 116);
-  ctx.stroke();
-
-  ctx.fillStyle = "#24191a";
-  ctx.beginPath();
-  ctx.ellipse(114, referenceJunior ? 152 : 146, referenceJunior ? 17.5 : 15, referenceJunior ? 13.4 : 12, -0.02, 0, Math.PI * 2);
-  ctx.ellipse(206, referenceJunior ? 152 : 146, referenceJunior ? 17.5 : 15, referenceJunior ? 13.4 : 12, 0.02, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = female ? (referenceJunior ? "#5b3929" : "#3f231f") : "#35201d";
-  ctx.beginPath();
-  ctx.ellipse(114, referenceJunior ? 152 : 146, referenceJunior ? 7.2 : 6, referenceJunior ? 8.8 : 7, 0, 0, Math.PI * 2);
-  ctx.ellipse(206, referenceJunior ? 152 : 146, referenceJunior ? 7.2 : 6, referenceJunior ? 8.8 : 7, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  if (female) {
-    ctx.strokeStyle = referenceJunior ? "rgba(64,38,34,.72)" : "rgba(39,20,18,.7)";
-    ctx.lineWidth = referenceJunior ? 2.1 : 2;
-    ctx.beginPath();
-    ctx.moveTo(94, referenceJunior ? 158 : 154);
-    ctx.quadraticCurveTo(114, referenceJunior ? 164 : 162, 134, referenceJunior ? 158 : 154);
-    ctx.moveTo(186, referenceJunior ? 158 : 154);
-    ctx.quadraticCurveTo(206, referenceJunior ? 164 : 162, 226, referenceJunior ? 158 : 154);
-    ctx.stroke();
+function b(t, o, a, n = 0.35) {
+  const s = document.createElement("canvas");
+  ((s.width = 256), (s.height = 256));
+  const r = s.getContext("2d"),
+    i = r.createRadialGradient(128, 128, 12, 128, 128, 120);
+  (i.addColorStop(0, t.replace("1)", `${n})`)),
+    i.addColorStop(0.35, t.replace("1)", 0.4 * n + ")")),
+    i.addColorStop(1, t.replace("1)", "0)")),
+    (r.fillStyle = i),
+    r.fillRect(0, 0, 256, 256));
+  const l = new e.CanvasTexture(s);
+  l.colorSpace = e.SRGBColorSpace;
+  const c = new e.MeshBasicMaterial({
+    map: l,
+    transparent: !0,
+    depthWrite: !1,
+    side: e.DoubleSide,
+  });
+  return new e.Mesh(new e.PlaneGeometry(o, a), c);
+}
+function buildJuniorHairRibbonAlpha() {
+  const t = document.createElement("canvas");
+  ((t.width = 128), (t.height = 512));
+  const o = t.getContext("2d");
+  (o.clearRect(0, 0, 128, 512), (o.fillStyle = "#000"), o.fillRect(0, 0, 128, 512));
+  const a = o.createLinearGradient(0, 0, 0, 512);
+  (a.addColorStop(0, "rgba(255,255,255,.98)"),
+    a.addColorStop(0.16, "rgba(255,255,255,.95)"),
+    a.addColorStop(0.82, "rgba(255,255,255,.92)"),
+    a.addColorStop(1, "rgba(255,255,255,0)"),
+    (o.globalCompositeOperation = "source-over"),
+    (o.fillStyle = a),
+    o.beginPath(),
+    o.moveTo(62, 0),
+    o.bezierCurveTo(94, 0, 104, 82, 84, 216),
+    o.bezierCurveTo(74, 320, 72, 432, 66, 512),
+    o.lineTo(62, 512),
+    o.bezierCurveTo(54, 432, 50, 320, 38, 214),
+    o.bezierCurveTo(22, 82, 30, 0, 62, 0),
+    o.closePath(),
+    o.fill(),
+    (o.globalCompositeOperation = "destination-out"));
+  for (let t = 0; t < 7; t += 1) {
+    const a = 34 + 10 * t + (t % 2 ? -4 : 4);
+    ((o.strokeStyle = "rgba(0,0,0,.2)"),
+      (o.lineWidth = 1 + 0.18 * t),
+      o.beginPath(),
+      o.moveTo(a, 0),
+      o.bezierCurveTo(a - 6, 86, a + 10, 192, a + (t % 2 ? -8 : 8), 512),
+      o.stroke());
   }
-
-  ctx.fillStyle = "rgba(255,255,255,.94)";
-  ctx.beginPath();
-  ctx.ellipse(110, referenceJunior ? 145 : 142, referenceJunior ? 3.9 : 3, referenceJunior ? 3.9 : 3, 0, 0, Math.PI * 2);
-  ctx.ellipse(202, referenceJunior ? 145 : 142, referenceJunior ? 3.9 : 3, referenceJunior ? 3.9 : 3, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.strokeStyle = referenceJunior ? "rgba(152,104,96,.46)" : "rgba(144,97,91,.52)";
-  ctx.lineWidth = referenceJunior ? 5 : 6;
-  ctx.beginPath();
-  ctx.moveTo(160, 146);
-  ctx.quadraticCurveTo(172, 180, 156, 194);
-  ctx.stroke();
-
-  ctx.fillStyle = female ? (referenceJunior ? "rgba(242,178,186,.16)" : "rgba(232,164,174,.2)") : "rgba(196,126,120,.14)";
-  ctx.beginPath();
-  ctx.ellipse(102, referenceJunior ? 190 : 188, referenceJunior ? 20 : 22, referenceJunior ? 12 : 14, 0, 0, Math.PI * 2);
-  ctx.ellipse(218, referenceJunior ? 190 : 188, referenceJunior ? 20 : 22, referenceJunior ? 12 : 14, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.strokeStyle = female ? (referenceJunior ? "rgba(186,126,132,.7)" : "rgba(176,86,112,.92)") : "rgba(126,82,76,.86)";
-  ctx.lineWidth = female ? (referenceJunior ? 4.8 : 7) : 6;
-  ctx.beginPath();
-  ctx.moveTo(referenceJunior ? 130 : 116, referenceJunior ? 236 : 236);
-  ctx.quadraticCurveTo(160, referenceJunior ? 244 : 258, referenceJunior ? 190 : 208, referenceJunior ? 236 : 236);
-  ctx.stroke();
-
-  ctx.strokeStyle = "rgba(255,255,255,.18)";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(referenceJunior ? 136 : 126, referenceJunior ? 232 : 234);
-  ctx.quadraticCurveTo(160, referenceJunior ? 239 : 248, referenceJunior ? 184 : 194, referenceJunior ? 232 : 234);
-  ctx.stroke();
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  return texture;
+  (o.globalCompositeOperation = "source-over");
+  const n = new e.CanvasTexture(t);
+  return ((n.colorSpace = e.SRGBColorSpace), n);
 }
-
-function createFacePlane(texture, opacity = 1) {
-  const material = new THREE.MeshBasicMaterial({
-    map: texture,
-    transparent: true,
-    opacity,
-    depthWrite: false,
-  });
-  const plane = new THREE.Mesh(new THREE.PlaneGeometry(0.27, 0.3), material);
-  plane.position.set(0, 0.01, 0.176);
-  return plane;
+const juniorHairRibbonAlpha = buildJuniorHairRibbonAlpha();
+function buildJuniorHairRibbon(t, o, a, n = {}) {
+  const s = new e.PlaneGeometry(o, a, 1, n.segments ?? 8),
+    r = s.attributes.position;
+  for (let t = 0; t < r.count; t += 1) {
+    const o = r.getY(t),
+      a = o / Math.max(0.001, 0.5 * s.parameters.height),
+      i = e.MathUtils.mapLinear(a, -1, 1, n.bottomWidth ?? 0.8, n.topWidth ?? 0.46),
+      l = Math.sin((0.5 * (a + 1)) * Math.PI) * (n.curve ?? 0.016);
+    (r.setX(t, r.getX(t) * i), r.setZ(t, l));
+  }
+  (r.needsUpdate = !0, s.computeVertexNormals());
+  const i = new e.Mesh(
+    s,
+    new e.MeshPhysicalMaterial({
+      color: new e.Color(t),
+      alphaMap: juniorHairRibbonAlpha,
+      transparent: !0,
+      opacity: n.opacity ?? 0.96,
+      alphaTest: n.alphaTest ?? 0.18,
+      side: e.DoubleSide,
+      depthWrite: !1,
+      roughness: n.roughness ?? 0.44,
+      metalness: 0.03,
+      clearcoat: n.clearcoat ?? 0.12,
+      clearcoatRoughness: 0.34,
+      sheen: 0.3,
+      sheenRoughness: 0.34,
+      sheenColor: new e.Color("#a77f5d"),
+    }),
+  );
+  return ((i.renderOrder = n.renderOrder ?? 18), i);
 }
-
-function setShadow(object, cast = true, receive = true) {
-  object.traverse((child) => {
-    if (child.isMesh) {
-      child.castShadow = cast;
-      child.receiveShadow = receive;
-    }
-  });
-}
-
-function createGlowPlane(color, width, height, opacity = 0.35) {
-  const canvas = document.createElement("canvas");
-  canvas.width = 256;
-  canvas.height = 256;
-  const ctx = canvas.getContext("2d");
-  const gradient = ctx.createRadialGradient(128, 128, 12, 128, 128, 120);
-  gradient.addColorStop(0, color.replace("1)", `${opacity})`));
-  gradient.addColorStop(0.35, color.replace("1)", `${opacity * 0.4})`));
-  gradient.addColorStop(1, color.replace("1)", "0)"));
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 256, 256);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  const material = new THREE.MeshBasicMaterial({
-    map: texture,
-    transparent: true,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-  });
-  return new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
-}
-
-function createRealisticJuniorHologram() {
-  const group = new THREE.Group();
-  group.userData.baseY = 0;
-
-  const holoMat = new THREE.MeshPhysicalMaterial({
-    color: 0xffffff,
-    metalness: 0.1,
-    roughness: 0.2,
-    transparent: true,
-    opacity: 0.85,
-    blending: THREE.AdditiveBlending,
-    emissive: 0x2255aa,
-    emissiveIntensity: 0.6,
-    clearcoat: 1.0,
-    side: THREE.DoubleSide
-  });
-
-  holoMat.onBeforeCompile = (shader) => {
-    shader.fragmentShader = shader.fragmentShader.replace(
-      '#include <dithering_fragment>',
-      `
-      #include <dithering_fragment>
-      float slice = sin(vWorldPosition.y * 120.0 - cameraPosition.y * 10.0) * 0.5 + 0.5;
-      slice = pow(slice, 8.0);
-      gl_FragColor.rgb += vec3(0.2, 0.5, 1.0) * slice * 0.8;
-      gl_FragColor.a *= (0.7 + slice * 0.3);
-      `
-    );
-    shader.vertexShader = `varying vec3 vWorldPosition;\n` + shader.vertexShader;
-    shader.vertexShader = shader.vertexShader.replace(
-      '#include <worldpos_vertex>',
-      `
-      #include <worldpos_vertex>
-      vWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;
-      `
-    );
+function buildReferenceJuniorHeroHead(t = {}) {
+  const o = new e.Group();
+  (o.position.set(0.01, 1.55, 0.008), o.scale.set(0.62, 0.64, 0.62));
+  o.visible = !1;
+  o.userData.kind = "procedural_hero_head";
+  o.userData.ready = !0;
+  o.userData.heroAnchor = {
+    center: new e.Vector3(0.01, 1.548, 0.008),
+    face: new e.Vector3(0.01, 1.602, 0.106),
+    chest: new e.Vector3(0.01, 1.468, 0.072),
+    eyes: new e.Vector3(0.01, 1.592, 0.102),
+    shoulder: new e.Vector3(0.01, 1.428, 0.036),
   };
-
-  const hairMat = holoMat.clone(); hairMat.color.setHex(0x221111); hairMat.emissive.setHex(0x112244);
-  const skinMat = holoMat.clone(); skinMat.color.setHex(0xffebe0); skinMat.emissive.setHex(0x331111);
-  const shirtMat = holoMat.clone(); shirtMat.color.setHex(0xffffff); shirtMat.opacity = 0.9;
-  const pantsMat = holoMat.clone(); pantsMat.color.setHex(0x1f344d); pantsMat.opacity = 0.95;
-  const shoesMat = holoMat.clone(); shoesMat.color.setHex(0xeeeeee);
-
-  const headGrp = new THREE.Group(); headGrp.position.set(0, 1.54, 0);
-  const face = new THREE.Mesh(new THREE.SphereGeometry(0.105, 32, 32), skinMat); face.scale.set(1, 1.15, 1.05); headGrp.add(face);
-  const hairBase = new THREE.Mesh(new THREE.SphereGeometry(0.11, 32, 32), hairMat); hairBase.scale.set(1.02, 1.1, 1.05); hairBase.position.set(0, 0.02, -0.01); headGrp.add(hairBase);
-  for(let i=0; i<8; i++) {
-    const bang = new THREE.Mesh(new THREE.CapsuleGeometry(0.015, 0.06, 8, 8), hairMat);
-    bang.position.set(-0.07 + i*0.02, 0.06 - Math.abs(i-3.5)*0.005, 0.1);
-    bang.rotation.z = (i-3.5)*0.1; bang.rotation.x = 0.2; headGrp.add(bang);
-  }
-  const ponytail = new THREE.Mesh(new THREE.CapsuleGeometry(0.035, 0.25, 16, 16), hairMat); ponytail.position.set(0, -0.05, -0.15); ponytail.rotation.x = 0.3;
-  const scrunchie = new THREE.Mesh(new THREE.TorusGeometry(0.04, 0.015, 16, 32), pantsMat); scrunchie.position.set(0, 0.05, -0.12); scrunchie.rotation.x = 1.2;
-  headGrp.add(ponytail, scrunchie); group.add(headGrp); group.userData.head = headGrp;
-
-  const torsoGrp = new THREE.Group(); torsoGrp.position.set(0, 1.15, 0);
-  const chest = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.1, 0.25, 32), shirtMat); chest.position.set(0, 0.15, 0); chest.scale.set(1, 1, 0.7); torsoGrp.add(chest);
-  const abdomen = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.2, 32), shirtMat); abdomen.position.set(0, -0.05, 0); abdomen.scale.set(1, 1, 0.75); torsoGrp.add(abdomen);
-  const collar = new THREE.Mesh(new THREE.TorusGeometry(0.065, 0.015, 16, 32), shirtMat); collar.position.set(0, 0.27, 0.02); collar.rotation.x = 1.3; torsoGrp.add(collar);
-  group.add(torsoGrp);
-
-  const pelvisGrp = new THREE.Group(); pelvisGrp.position.set(0, 0.95, 0);
-  const shorts = new THREE.Mesh(new THREE.CylinderGeometry(0.125, 0.135, 0.18, 32), pantsMat); shorts.scale.set(1, 1, 0.8); pelvisGrp.add(shorts); group.add(pelvisGrp);
-
-  function createLimb(rT, rB, len, mat) {
-    const mesh = new THREE.Mesh(new THREE.CylinderGeometry(rT, rB, len, 32), mat); mesh.position.y = -len/2;
-    const pivot = new THREE.Group(); pivot.add(mesh); return { pivot, mesh };
-  }
-
-  const armL = createLimb(0.035, 0.025, 0.25, shirtMat); armL.pivot.position.set(-0.15, 1.35, 0); armL.pivot.rotation.z = 0.2;
-  const forearmL = createLimb(0.025, 0.02, 0.22, skinMat); forearmL.pivot.position.set(0, -0.25, 0); forearmL.pivot.rotation.x = -0.1;
-  armL.mesh.add(forearmL.pivot); group.add(armL.pivot); group.userData.armL = armL.pivot;
-
-  const armR = createLimb(0.035, 0.025, 0.25, shirtMat); armR.pivot.position.set(0.15, 1.35, 0); armR.pivot.rotation.z = -0.2;
-  const forearmR = createLimb(0.025, 0.02, 0.22, skinMat); forearmR.pivot.position.set(0, -0.25, 0); forearmR.pivot.rotation.x = -0.1;
-  armR.mesh.add(forearmR.pivot); group.add(armR.pivot); group.userData.armR = armR.pivot;
-
-  const legL = createLimb(0.06, 0.045, 0.45, skinMat); legL.pivot.position.set(-0.06, 0.85, 0);
-  const calfL = createLimb(0.04, 0.03, 0.4, skinMat); calfL.pivot.position.set(0, -0.45, 0); legL.mesh.add(calfL.pivot);
-  const shoeL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.05, 0.11), shoesMat); shoeL.position.set(0, -0.4, 0.02); calfL.mesh.add(shoeL);
-  group.add(legL.pivot); group.userData.legL = legL.pivot;
-
-  const legR = createLimb(0.06, 0.045, 0.45, skinMat); legR.pivot.position.set(0.06, 0.85, 0);
-  const calfR = createLimb(0.04, 0.03, 0.4, skinMat); calfR.pivot.position.set(0, -0.45, 0); legR.mesh.add(calfR.pivot);
-  const shoeR = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.05, 0.11), shoesMat); shoeR.position.set(0, -0.4, 0.02); calfR.mesh.add(shoeR);
-  group.add(legR.pivot); group.userData.legR = legR.pivot;
-
-  return group;
-}
-
-function createDoomSprite(frontUrl, sideUrl, backUrl, scaleHeight) {
-  const group = new THREE.Group();
-  group.userData.isDoomSprite = true;
-  group.userData.baseY = 0;
-  const textures = { front: null, side: null, back: null };
-
-  function processTex(url, key) {
-    const img = new Image();
-    img.src = url;
-    img.crossOrigin = "Anonymous";
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width; canvas.height = img.height;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0);
-      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imgData.data;
-      const w = canvas.width, h = canvas.height;
-      const visited = new Uint8Array(w * h);
-      const stack = [];
-      const pushV = (x, y) => {
-        if(x<0||x>=w||y<0||y>=h) return;
-        const idx = y*w+x; if(visited[idx]) return;
-        const p = idx*4;
-        if(data[p]>220 && data[p+1]>220 && data[p+2]>220) {
-          visited[idx] = 1; data[p+3] = 0; stack.push(x, y);
-        }
-      };
-      for(let x=0; x<w; x++){ pushV(x,0); pushV(x,h-1); }
-      for(let y=0; y<h; y++){ pushV(0,y); pushV(w-1,y); }
-      while(stack.length > 0) {
-        const cy = stack.pop(), cx = stack.pop();
-        pushV(cx+1,cy); pushV(cx-1,cy); pushV(cx,cy+1); pushV(cx,cy-1);
-      }
-      ctx.putImageData(imgData, 0, 0);
-      const tex = new THREE.CanvasTexture(canvas);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      textures[key] = tex;
-      if (key === 'front' && group.userData.material) {
-        group.userData.material.map = tex;
-        group.userData.material.needsUpdate = true;
-      }
-    };
-  }
-
-  processTex(frontUrl, 'front');
-  if(sideUrl) processTex(sideUrl, 'side');
-  if(backUrl) processTex(backUrl, 'back');
-
-  const material = new THREE.MeshBasicMaterial({ transparent: true, side: THREE.DoubleSide, alphaTest: 0.05, depthWrite: false });
-  const plane = new THREE.Mesh(new THREE.PlaneGeometry(scaleHeight * 1.777, scaleHeight), material);
-  plane.position.y = scaleHeight / 2;
-  group.add(plane);
-
-  group.userData.textures = textures;
-  group.userData.plane = plane;
-  group.userData.material = material;
-  return group;
-}
-
-
-
-
-
-function createPerson(spec) {
-  const group = new THREE.Group();
-  group.userData.baseY = 0;
-  const referenceJunior = Boolean(spec.referenceJunior);
-  const realisticJunior = spec.female && referenceJunior;
-
-  const torsoMat = new THREE.MeshPhysicalMaterial({
-    color: spec.torso,
-    roughness: spec.female ? 0.42 : 0.5,
-    metalness: 0.02,
-    clearcoat: spec.female ? 0.14 : 0.06,
-    clearcoatRoughness: 0.52,
-  });
-  const accentMat = new THREE.MeshPhysicalMaterial({
-    color: spec.torsoAccent ?? spec.torso,
-    roughness: spec.female ? 0.36 : 0.42,
-    metalness: 0.03,
-    clearcoat: spec.female ? 0.18 : 0.08,
-    clearcoatRoughness: 0.44,
-  });
-  const legsMat = new THREE.MeshPhysicalMaterial({
-    color: spec.legs,
-    roughness: spec.female ? 0.44 : 0.54,
-    metalness: 0.02,
-    clearcoat: spec.female ? 0.1 : 0.04,
-    clearcoatRoughness: 0.4,
-  });
-  const skinMat = new THREE.MeshPhysicalMaterial({
-    color: spec.skin,
-    roughness: realisticJunior ? 0.19 : 0.32,
-    metalness: 0,
-    clearcoat: realisticJunior ? 0.52 : 0.28,
-    clearcoatRoughness: realisticJunior ? 0.28 : 0.52,
-    sheen: realisticJunior ? 0.44 : 0.12,
-    sheenRoughness: realisticJunior ? 0.32 : 0.72,
-    sheenColor: new THREE.Color(spec.female ? '#ffcfb8' : '#e8b8a4'),
-  });
-  const blushMat = new THREE.MeshPhysicalMaterial({ color: spec.female ? "#f3c3bc" : "#d7a18f", roughness: 0.56, metalness: 0, transparent: true, opacity: spec.female ? 0.26 : 0.14, sheen: 0.1 });
-  const hairMat = new THREE.MeshPhysicalMaterial({
-    color: spec.hair,
-    roughness: realisticJunior ? 0.12 : 0.34,
-    metalness: realisticJunior ? 0.06 : 0.08,
-    clearcoat: realisticJunior ? 0.58 : 0.12,
-    clearcoatRoughness: realisticJunior ? 0.14 : 0.3,
-    sheen: realisticJunior ? 0.32 : 0,
-    sheenRoughness: realisticJunior ? 0.28 : 1,
-    sheenColor: new THREE.Color(realisticJunior ? '#a07060' : '#000'),
-  });
-  const shoeMat = new THREE.MeshPhysicalMaterial({ color: spec.shoes, roughness: 0.56, metalness: 0.1, clearcoat: 0.12, clearcoatRoughness: 0.4 });
-  const buttonMat = new THREE.MeshPhysicalMaterial({ color: "#f6ede3", roughness: 0.42, metalness: 0.06, clearcoat: 0.16, clearcoatRoughness: 0.28 });
-
-  const waist = new THREE.Mesh(new THREE.CapsuleGeometry(spec.female ? 0.126 : 0.132, 0.18, 5, 10), torsoMat);
-  waist.position.set(0, 0.84, 0);
-  waist.scale.set(spec.female ? 1.04 : 1.14, 1.02, 0.86);
-  group.add(waist);
-
-  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(spec.female ? 0.172 : 0.166, spec.female ? 0.62 : 0.6, 8, 18), torsoMat);
-  torso.position.set(0, 1.08, 0);
-  torso.scale.set(spec.female ? 0.98 : 1.1, 1.04, spec.female ? 0.82 : 0.9);
-  group.add(torso);
-
-  const chest = new THREE.Mesh(new THREE.SphereGeometry(spec.female ? 0.172 : 0.158, 22, 22), accentMat);
-  chest.position.set(0, 1.13, 0.038);
-  chest.scale.set(1.06, spec.female ? 0.64 : 0.58, spec.female ? 0.52 : 0.58);
-  group.add(chest);
-
-  const skirtOrHip = new THREE.Mesh(
-    new THREE.CylinderGeometry(spec.female ? 0.166 : 0.158, spec.female ? 0.208 : 0.174, spec.female ? 0.24 : 0.22, 16),
-    legsMat
-  );
-  skirtOrHip.position.set(0, spec.female ? 0.71 : 0.74, 0);
-  group.add(skirtOrHip);
-
-  const legGeo = new THREE.CapsuleGeometry(spec.female ? 0.064 : 0.072, spec.female ? 0.74 : 0.68, 6, 12);
-  const leftLeg = new THREE.Mesh(legGeo, skinMat);
-  leftLeg.position.set(spec.female ? -0.085 : -0.092, spec.female ? 0.36 : 0.34, 0.01);
-  leftLeg.rotation.z = 0.02;
-  const rightLeg = leftLeg.clone();
-  rightLeg.position.x = spec.female ? 0.085 : 0.092;
-  rightLeg.rotation.z = -0.02;
-  group.add(leftLeg, rightLeg);
-
-  const shorts = new THREE.Mesh(
-    new THREE.BoxGeometry(spec.female ? 0.32 : 0.38, spec.female ? 0.16 : 0.22, spec.female ? 0.25 : 0.27),
-    legsMat
-  );
-  shorts.position.set(0, spec.female ? 0.66 : 0.63, 0.01);
-  group.add(shorts);
-
-  if (!spec.female) {
-    const trouserLeft = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.66, 0.18), legsMat);
-    trouserLeft.position.set(-0.095, 0.36, 0.008);
-    const trouserRight = trouserLeft.clone();
-    trouserRight.position.x = 0.095;
-    const belt = new THREE.Mesh(
-      new THREE.BoxGeometry(0.34, 0.05, 0.18),
-      new THREE.MeshStandardMaterial({ color: "#181a20", roughness: 0.58, metalness: 0.06 })
-    );
-    belt.position.set(0, 0.72, 0.016);
-    group.add(trouserLeft, trouserRight, belt);
-  }
-
-  const shoeGeo = new THREE.BoxGeometry(0.13, 0.06, 0.25);
-  const shoeL = new THREE.Mesh(shoeGeo, shoeMat);
-  shoeL.position.set(spec.female ? -0.094 : -0.102, 0.042, 0.055);
-  shoeL.rotation.x = 0.04;
-  const shoeR = shoeL.clone();
-  shoeR.position.x = spec.female ? 0.094 : 0.102;
-  group.add(shoeL, shoeR);
-
-  const shoulderL = new THREE.Mesh(new THREE.SphereGeometry(spec.female ? 0.086 : 0.102, 18, 18), torsoMat);
-  shoulderL.position.set(spec.female ? -0.188 : -0.252, 1.18, 0);
-  const shoulderR = shoulderL.clone();
-  shoulderR.position.x = spec.female ? 0.188 : 0.236;
-  group.add(shoulderL, shoulderR);
-
-  const armGeo = new THREE.CapsuleGeometry(spec.female ? 0.048 : 0.056, spec.female ? 0.42 : 0.46, 5, 10);
-  const leftArm = new THREE.Mesh(armGeo, skinMat);
-  leftArm.position.set(spec.female ? -0.228 : -0.266, 1.0, 0.02);
-  leftArm.rotation.z = spec.female ? 0.12 : 0.15;
-  const rightArm = leftArm.clone();
-  rightArm.position.x = spec.female ? 0.228 : 0.246;
-  rightArm.rotation.z = spec.female ? -0.12 : -0.15;
-  group.add(leftArm, rightArm);
-
-  const handGeo = new THREE.SphereGeometry(spec.female ? 0.048 : 0.054, 18, 18);
-  const leftHand = new THREE.Mesh(handGeo, skinMat);
-  leftHand.position.set(spec.female ? -0.264 : -0.302, 0.71, 0.04);
-  const rightHand = leftHand.clone();
-  rightHand.position.x = spec.female ? 0.264 : 0.286;
-  group.add(leftHand, rightHand);
-
-  const sleeveGeo = new THREE.CylinderGeometry(spec.female ? 0.072 : 0.078, spec.female ? 0.078 : 0.084, 0.2, 14);
-  const leftSleeve = new THREE.Mesh(sleeveGeo, accentMat);
-  leftSleeve.position.set(spec.female ? -0.18 : -0.2, 1.1, 0.02);
-  leftSleeve.rotation.z = 1.06;
-  const rightSleeve = leftSleeve.clone();
-  rightSleeve.position.x = spec.female ? 0.18 : 0.2;
-  rightSleeve.rotation.z = -1.06;
-  group.add(leftSleeve, rightSleeve);
-
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.08, 0.14, 18), skinMat);
-  neck.position.set(0, 1.33, 0.02);
-  group.add(neck);
-
-  const head = new THREE.Mesh(new THREE.SphereGeometry(spec.female ? 0.168 : 0.182, 48, 48), skinMat);
-  head.position.set(0, 1.56, 0);
-  head.scale.set(
-    spec.female ? (referenceJunior ? 0.76 : 0.94) : 0.98,
-    spec.female ? (referenceJunior ? 1.2 : 1.08) : 1.04,
-    spec.female ? (referenceJunior ? 0.82 : 0.91) : 0.9
-  );
-  group.add(head);
-  if (realisticJunior) {
-    head.scale.set(0.73, 1.18, 0.8);
-  }
-
-  const jaw = new THREE.Mesh(new THREE.SphereGeometry(spec.female ? 0.14 : 0.154, 36, 36), skinMat);
-  jaw.position.set(0, spec.female ? 1.47 : 1.48, 0.02);
-  jaw.scale.set(
-    spec.female ? (referenceJunior ? 0.6 : 0.92) : 1.02,
-    spec.female ? (referenceJunior ? 0.52 : 0.78) : 0.84,
-    spec.female ? (referenceJunior ? 0.7 : 0.88) : 0.92
-  );
-  group.add(jaw);
-  if (realisticJunior) {
-    jaw.position.set(0, 1.474, 0.024);
-    jaw.scale.set(0.56, 0.5, 0.68);
-  }
-
-  const earGeo = new THREE.SphereGeometry(0.032, 16, 16);
-  const earL = new THREE.Mesh(earGeo, skinMat);
-  earL.position.set(-0.165, 1.55, 0.01);
-  earL.scale.set(0.72, 1.02, 0.56);
-  const earR = earL.clone();
-  earR.position.x = 0.165;
-  group.add(earL, earR);
-  if (realisticJunior) {
-    earL.position.set(-0.142, 1.548, -0.004);
-    earR.position.set(0.142, 1.548, -0.004);
-    earL.scale.set(0.62, 0.92, 0.5);
-    earR.scale.copy(earL.scale);
-  }
-
-  const nose = new THREE.Mesh(new THREE.ConeGeometry(spec.female ? (referenceJunior ? 0.0105 : 0.024) : 0.026, spec.female ? (referenceJunior ? 0.034 : 0.062) : 0.07, 12), skinMat);
-  nose.position.set(0, referenceJunior ? 1.538 : 1.54, referenceJunior ? 0.149 : 0.154);
-  nose.rotation.x = Math.PI * 0.5;
-  group.add(nose);
-
-  const noseBridge = new THREE.Mesh(
-    new THREE.BoxGeometry(0.022, 0.08, 0.012),
-    new THREE.MeshPhysicalMaterial({ color: "#fff8f2", roughness: 0.28, metalness: 0, transparent: true, opacity: 0.24, clearcoat: 0.22, clearcoatRoughness: 0.16 })
-  );
-  noseBridge.position.set(0, referenceJunior ? 1.578 : 1.57, referenceJunior ? 0.142 : 0.135);
-  group.add(noseBridge);
-
-  const lip = new THREE.Mesh(
-    new THREE.TorusGeometry(spec.female ? (referenceJunior ? 0.038 : 0.045) : 0.045, spec.female ? (referenceJunior ? 0.0065 : 0.009) : 0.009, 8, 18, Math.PI),
-    new THREE.MeshStandardMaterial({ color: spec.female ? "#cc7282" : "#ae7670", roughness: 0.5, metalness: 0.03 })
-  );
-  lip.position.set(0, referenceJunior ? 1.446 : 1.46, referenceJunior ? 0.154 : 0.148);
-  lip.rotation.x = Math.PI;
-  group.add(lip);
-
-  if (realisticJunior) {
-    const lowerLip = new THREE.Mesh(
-      new THREE.SphereGeometry(0.024, 14, 14),
-      new THREE.MeshStandardMaterial({ color: "#f3b6bc", roughness: 0.48, metalness: 0.02, transparent: true, opacity: 0.72 })
-    );
-    lowerLip.position.set(0, 1.433, 0.153);
-    lowerLip.scale.set(1.64, 0.42, 0.42);
-    group.add(lowerLip);
-  }
-
-  const browGeo = new THREE.BoxGeometry(spec.female ? (referenceJunior ? 0.062 : 0.08) : 0.09, 0.012, 0.02);
-  const browMat = new THREE.MeshStandardMaterial({ color: spec.female ? "#3a2422" : "#31201e", roughness: 0.7, metalness: 0.02 });
-  const browL = new THREE.Mesh(browGeo, browMat);
-  browL.position.set(referenceJunior ? -0.067 : -0.074, referenceJunior ? 1.616 : 1.62, 0.136);
-  browL.rotation.z = referenceJunior ? -0.02 : -0.08;
-  const browR = browL.clone();
-  browR.position.x = referenceJunior ? 0.067 : 0.072;
-  browR.rotation.z = referenceJunior ? 0.02 : 0.08;
-  group.add(browL, browR);
-  if (realisticJunior) {
-    browL.position.set(-0.064, 1.612, 0.138);
-    browR.position.set(0.064, 1.612, 0.138);
-  }
-
-  const lidGeo = new THREE.TorusGeometry(spec.female ? (referenceJunior ? 0.034 : 0.032) : 0.032, 0.004, 6, 18, Math.PI);
-  const lidMat = new THREE.MeshStandardMaterial({ color: spec.female ? "#3a1f20" : "#2f1d1e", roughness: 0.54, metalness: 0.02 });
-  const lidL = new THREE.Mesh(lidGeo, lidMat);
-  lidL.position.set(referenceJunior ? -0.068 : -0.062, referenceJunior ? 1.57 : 1.57, 0.168);
-  lidL.rotation.z = Math.PI;
-  const lidR = lidL.clone();
-  lidR.position.x = referenceJunior ? 0.064 : 0.062;
-  group.add(lidL, lidR);
-
-  const eyeWhiteMat = new THREE.MeshPhysicalMaterial({ color: "#fcfcfd", roughness: 0.18, metalness: 0.01, clearcoat: 0.14, clearcoatRoughness: 0.12 });
-  const irisMat = new THREE.MeshPhysicalMaterial({ color: spec.iris ?? (spec.female ? "#3a261f" : "#2b1c18"), roughness: 0.34, metalness: 0.02, clearcoat: 0.12, clearcoatRoughness: 0.2 });
-  const eyeWhiteL = new THREE.Mesh(new THREE.SphereGeometry(spec.female ? (referenceJunior ? 0.025 : 0.022) : 0.022, 12, 12), eyeWhiteMat);
-  eyeWhiteL.position.set(referenceJunior ? -0.068 : -0.062, referenceJunior ? 1.56 : 1.56, referenceJunior ? 0.158 : 0.15);
-  eyeWhiteL.scale.set(spec.female && referenceJunior ? 1.56 : 1.35, spec.female && referenceJunior ? 1.02 : 0.9, 0.5);
-  const eyeWhiteR = eyeWhiteL.clone();
-  eyeWhiteR.position.x = referenceJunior ? 0.068 : 0.062;
-  const irisL = new THREE.Mesh(new THREE.SphereGeometry(spec.female && referenceJunior ? 0.0122 : 0.011, 10, 10), irisMat);
-  irisL.position.set(referenceJunior ? -0.068 : -0.062, referenceJunior ? 1.558 : 1.56, referenceJunior ? 0.175 : 0.166);
-  const irisR = irisL.clone();
-  irisR.position.x = referenceJunior ? 0.068 : 0.062;
-  group.add(eyeWhiteL, eyeWhiteR, irisL, irisR);
-  if (realisticJunior) {
-    eyeWhiteL.position.set(-0.064, 1.557, 0.16);
-    eyeWhiteR.position.set(0.064, 1.557, 0.16);
-    eyeWhiteL.scale.set(1.52, 1.06, 0.52);
-    eyeWhiteR.scale.copy(eyeWhiteL.scale);
-    irisL.position.set(-0.064, 1.555, 0.177);
-    irisR.position.set(0.064, 1.555, 0.177);
-  }
-
-  if (spec.female) {
-    const lashMat = new THREE.MeshStandardMaterial({ color: "#241618", roughness: 0.52, metalness: 0.02 });
-    const lashL = new THREE.Mesh(new THREE.BoxGeometry(0.058, 0.01, 0.014), lashMat);
-  lashL.position.set(referenceJunior ? -0.068 : -0.062, referenceJunior ? 1.585 : 1.586, 0.174);
-  lashL.rotation.z = referenceJunior ? -0.012 : -0.03;
-  const lashR = lashL.clone();
-  lashR.position.x = referenceJunior ? 0.068 : 0.062;
-  lashR.rotation.z = referenceJunior ? 0.012 : 0.03;
-    group.add(lashL, lashR);
-  }
-
-  const cheekGeo = new THREE.SphereGeometry(0.028, 12, 12);
-  const cheekL = new THREE.Mesh(cheekGeo, blushMat);
-  cheekL.position.set(referenceJunior ? -0.084 : -0.094, 1.488, 0.148);
-  cheekL.scale.set(referenceJunior ? 1.34 : 1.7, referenceJunior ? 0.84 : 1.2, 0.38);
-  const cheekR = cheekL.clone();
-  cheekR.position.x = referenceJunior ? 0.084 : 0.094;
-  group.add(cheekL, cheekR);
-
-  const eyeSparkleMat = new THREE.MeshStandardMaterial({ color: "#ffffff", emissive: "#ffffff", emissiveIntensity: 0.12, roughness: 0.2, metalness: 0.02 });
-  const eyeSparkleL = new THREE.Mesh(new THREE.SphereGeometry(realisticJunior ? 0.0055 : 0.004, 8, 8), eyeSparkleMat);
-  eyeSparkleL.position.set(referenceJunior ? -0.058 : -0.055, realisticJunior ? 1.573 : 1.568, realisticJunior ? 0.184 : 0.176);
-  const eyeSparkleR = eyeSparkleL.clone();
-  eyeSparkleR.position.x = referenceJunior ? 0.072 : 0.069;
-  group.add(eyeSparkleL, eyeSparkleR);
-
-  const hairCap = new THREE.Mesh(
-    new THREE.SphereGeometry(spec.female ? 0.194 : 0.188, 28, 28, 0, Math.PI * 2, 0, Math.PI * 0.72),
-    hairMat
-  );
-  hairCap.position.set(0, 1.62, -0.01);
-  hairCap.rotation.x = -0.1;
-  group.add(hairCap);
-
-  const hairBack = new THREE.Mesh(new THREE.SphereGeometry(spec.female ? 0.214 : 0.182, 28, 28), hairMat);
-  hairBack.position.set(0, spec.female ? 1.5 : 1.61, spec.female ? -0.08 : -0.1);
-  hairBack.scale.set(0.88, spec.female ? 1.42 : 0.42, spec.female ? 0.7 : 0.52);
-  group.add(hairBack);
-
-  const fringe = new THREE.Mesh(new THREE.BoxGeometry(spec.female ? (referenceJunior ? 0.154 : 0.2) : 0.144, referenceJunior ? 0.162 : 0.08, 0.05), hairMat);
-  fringe.position.set(0, referenceJunior ? 1.622 : 1.612, referenceJunior ? 0.134 : 0.12);
-  group.add(fringe);
-  if (realisticJunior) {
-    fringe.position.set(0, 1.618, 0.138);
-    fringe.scale.set(1.04, 1.08, 1);
-  }
-
-  const sideHairL = new THREE.Mesh(new THREE.BoxGeometry(spec.female ? (referenceJunior ? 0.058 : 0.076) : 0.058, spec.female ? (referenceJunior ? 0.38 : 0.42) : 0.22, 0.06), hairMat);
-  sideHairL.position.set(referenceJunior ? -0.108 : -0.14, spec.female ? 1.458 : 1.49, 0.05);
-  const sideHairR = sideHairL.clone();
-  sideHairR.position.x = referenceJunior ? 0.108 : 0.15;
-  group.add(sideHairL, sideHairR);
-  if (realisticJunior) {
-    sideHairL.position.set(-0.102, 1.462, 0.06);
-    sideHairR.position.set(0.102, 1.462, 0.06);
-    sideHairL.scale.set(0.96, 1.04, 1);
-    sideHairR.scale.copy(sideHairL.scale);
-  }
-
-  const crownShine = new THREE.Mesh(
-    new THREE.SphereGeometry(spec.female ? 0.16 : 0.15, 20, 20),
-    new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.2, metalness: 0.02, transparent: true, opacity: 0.08 })
-  );
-  crownShine.position.set(0.02, 1.66, 0.04);
-  crownShine.scale.set(0.82, 0.42, 0.5);
-  group.add(crownShine);
-
-  const face = createFacePlane(
-    makeFaceTexture({ female: spec.female, referenceJunior }),
-    realisticJunior ? 0.5 : 0.86
-  );
-  face.position.y = realisticJunior ? 1.556 : 1.55;
-  face.position.z = realisticJunior ? 0.19 : spec.female ? 0.178 : 0.172;
-  face.scale.setScalar(realisticJunior ? 0.84 : spec.female ? 0.95 : 0.92);
-  group.add(face);
-  if (realisticJunior) {
-    face.position.set(0, 1.554, 0.194);
-    face.scale.setScalar(0.87);
-  }
-
-  const browShadow = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.18, 0.06),
-    new THREE.MeshBasicMaterial({ color: "#5a3d3c", transparent: true, opacity: 0.08, depthWrite: false })
-  );
-  browShadow.position.set(0, 1.59, 0.17);
-  group.add(browShadow);
-
-  if (spec.female) {
-    const backStrand = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.64, 0.08), hairMat);
-    backStrand.position.set(0, 1.22, -0.11);
-    backStrand.scale.set(1, 1.06, 0.82);
-    group.add(backStrand);
-
-    const wispL = new THREE.Mesh(new THREE.BoxGeometry(0.028, realisticJunior ? 0.32 : 0.26, 0.028), hairMat);
-    wispL.position.set(realisticJunior ? -0.102 : -0.112, realisticJunior ? 1.44 : 1.46, realisticJunior ? 0.124 : 0.118);
-    wispL.rotation.z = -0.12;
-    const wispR = wispL.clone();
-    wispR.position.x = realisticJunior ? 0.104 : 0.112;
-    wispR.rotation.z = 0.12;
-    group.add(wispL, wispR);
-
-    if (realisticJunior) {
-      const frontWispL = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.24, 0.018), hairMat);
-      frontWispL.position.set(-0.046, 1.512, 0.158);
-      frontWispL.rotation.z = -0.02;
-      const frontWispR = frontWispL.clone();
-      frontWispR.position.x = 0.05;
-      frontWispR.rotation.z = 0.02;
-      group.add(frontWispL, frontWispR);
-    }
-
-    const midStrandL = new THREE.Mesh(new THREE.BoxGeometry(0.034, 0.34, 0.032), hairMat);
-    midStrandL.position.set(-0.152, 1.36, 0.02);
-    midStrandL.rotation.z = -0.08;
-    const midStrandR = midStrandL.clone();
-    midStrandR.position.x = 0.152;
-    midStrandR.rotation.z = 0.08;
-    group.add(midStrandL, midStrandR);
-
-    const collar = new THREE.Mesh(
-      new THREE.TorusGeometry(0.1, 0.018, 8, 20, Math.PI),
-      new THREE.MeshStandardMaterial({ color: "#fffef8", roughness: 0.76, metalness: 0.01 })
-    );
-    collar.position.set(0, 1.2, 0.08);
-    collar.rotation.x = Math.PI * 0.54;
-    group.add(collar);
-
-    const blouse = new THREE.Mesh(
-      new THREE.CapsuleGeometry(0.164, 0.48, 8, 16),
-      new THREE.MeshPhysicalMaterial({ color: "#fffdfa", roughness: 0.3, metalness: 0.01, clearcoat: 0.2, clearcoatRoughness: 0.24 })
-    );
-    blouse.position.set(0, 1.06, 0.02);
-    blouse.scale.set(referenceJunior ? 0.92 : 0.94, referenceJunior ? 1.05 : 0.92, 0.8);
-    group.add(blouse);
-
-    const blouseHem = new THREE.Mesh(new THREE.TorusGeometry(0.146, 0.012, 8, 20), buttonMat);
-    blouseHem.position.set(0, 0.84, 0.02);
-    blouseHem.rotation.x = Math.PI / 2;
-    group.add(blouseHem);
-
-    const blouseFold = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.12, 0.34),
-      new THREE.MeshPhysicalMaterial({ color: "#efe7dc", roughness: 0.54, metalness: 0, transparent: true, opacity: 0.22, clearcoat: 0.08, clearcoatRoughness: 0.22 })
-    );
-    blouseFold.position.set(0, 1.02, 0.2);
-    group.add(blouseFold);
-
-    [-0.02, 0.1, 0.22].forEach((offsetY) => {
-      const button = new THREE.Mesh(new THREE.SphereGeometry(0.012, 10, 10), buttonMat);
-      button.position.set(0, 1.12 - offsetY, 0.2);
-      group.add(button);
+  const a = new e.Color(t.skinColor ?? "#f9e7da"),
+    n = new e.Color(t.hairColor ?? "#3c2a22"),
+    s = new e.Color(t.irisColor ?? "#5d4334"),
+    r = new e.MeshPhysicalMaterial({
+      color: a.clone(),
+      roughness: 0.56,
+      metalness: 0,
+      clearcoat: 0.06,
+      clearcoatRoughness: 0.7,
+      sheen: 0.12,
+      sheenRoughness: 0.5,
+      sheenColor: new e.Color("#ffd5bf"),
+    }),
+    i = new e.MeshPhysicalMaterial({
+      color: a.clone().lerp(new e.Color("#f4cdbd"), 0.18),
+      roughness: 0.62,
+      metalness: 0,
+      clearcoat: 0.04,
+      clearcoatRoughness: 0.74,
+      sheen: 0.08,
+    }),
+    l = new e.MeshPhysicalMaterial({
+      color: n.clone(),
+      roughness: 0.38,
+      metalness: 0.03,
+      clearcoat: 0.08,
+      clearcoatRoughness: 0.46,
+      sheen: 0.26,
+      sheenRoughness: 0.34,
+      sheenColor: new e.Color("#9c7b5e"),
+    }),
+    c = new e.MeshPhysicalMaterial({
+      color: "#fffdfa",
+      roughness: 0.22,
+      metalness: 0,
+      clearcoat: 0.06,
+      clearcoatRoughness: 0.28,
+    }),
+    h = new e.MeshPhysicalMaterial({
+      color: s.clone(),
+      roughness: 0.36,
+      metalness: 0.03,
+      clearcoat: 0.06,
+      clearcoatRoughness: 0.2,
+    }),
+    d = new e.MeshStandardMaterial({
+      color: n.clone().lerp(new e.Color("#120d0d"), 0.35),
+      roughness: 0.74,
+      metalness: 0.02,
+    }),
+    p = new e.MeshPhysicalMaterial({
+      color: "#bf8f8f",
+      roughness: 0.54,
+      metalness: 0,
+      clearcoat: 0.04,
+      clearcoatRoughness: 0.48,
+      transparent: !0,
+      opacity: 0.96,
+    }),
+    m = new e.MeshStandardMaterial({
+      color: "#c79395",
+      roughness: 0.58,
+      metalness: 0,
+      transparent: !0,
+      opacity: 0.72,
     });
-
-    const cuffLeft = new THREE.Mesh(new THREE.TorusGeometry(0.046, 0.012, 8, 18), buttonMat);
-    cuffLeft.position.set(-0.232, 0.83, 0.03);
-    cuffLeft.rotation.z = 1.52;
-    const cuffRight = cuffLeft.clone();
-    cuffRight.position.x = 0.232;
-    group.add(cuffLeft, cuffRight);
-
-    const sockMat = new THREE.MeshStandardMaterial({ color: "#faf7f1", roughness: 0.76, metalness: 0.01 });
-    const leftSock = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.072, 0.14, 14), sockMat);
-    leftSock.position.set(-0.085, 0.11, 0.008);
-    const rightSock = leftSock.clone();
-    rightSock.position.x = 0.085;
-    group.add(leftSock, rightSock);
-
-    const ponytailBase = new THREE.Mesh(new THREE.SphereGeometry(0.056, 18, 18), hairMat);
-    ponytailBase.position.set(0.028, 1.698, -0.17);
-    group.add(ponytailBase);
-
-    const scrunchie = new THREE.Mesh(
-      new THREE.TorusGeometry(0.052, 0.016, 8, 20),
-      new THREE.MeshStandardMaterial({ color: "#1f1a22", roughness: 0.7, metalness: 0.04 })
-    );
-    scrunchie.position.set(0.028, 1.698, -0.17);
-    scrunchie.rotation.x = Math.PI / 2;
-    group.add(scrunchie);
-
-    const ponytail = new THREE.Mesh(new THREE.CapsuleGeometry(realisticJunior ? 0.044 : 0.05, realisticJunior ? 0.74 : 0.62, 6, 12), hairMat);
-    ponytail.position.set(realisticJunior ? 0.1 : 0.092, realisticJunior ? 1.286 : 1.24, realisticJunior ? -0.246 : -0.24);
-    ponytail.rotation.z = realisticJunior ? -0.02 : -0.18;
-    ponytail.rotation.x = 0.1;
-    ponytail.scale.set(realisticJunior ? 0.8 : 0.86, realisticJunior ? 1.42 : 1.24, realisticJunior ? 0.76 : 0.8);
-    group.add(ponytail);
-
-    const ponytailTail = new THREE.Mesh(new THREE.CapsuleGeometry(realisticJunior ? 0.029 : 0.036, realisticJunior ? 0.56 : 0.42, 6, 10), hairMat);
-    ponytailTail.position.set(realisticJunior ? 0.154 : 0.14, realisticJunior ? 0.98 : 0.92, realisticJunior ? -0.102 : -0.16);
-    ponytailTail.rotation.z = realisticJunior ? -0.03 : -0.22;
-    ponytailTail.rotation.x = -0.04;
-    ponytailTail.scale.set(realisticJunior ? 0.78 : 0.84, realisticJunior ? 1.42 : 1.28, realisticJunior ? 0.76 : 0.82);
-    group.add(ponytailTail);
-
-    if (realisticJunior) {
-      ponytailBase.position.set(0.02, 1.692, -0.164);
-      scrunchie.position.set(0.02, 1.692, -0.164);
-      ponytail.position.set(0.094, 1.304, -0.234);
-      ponytail.scale.set(0.82, 1.46, 0.8);
-      ponytailTail.position.set(0.144, 1.012, -0.09);
-      ponytailTail.scale.set(0.82, 1.46, 0.8);
-    }
-  }
-
-  if (!spec.female) {
-    const shirtPanel = new THREE.Mesh(
-      new THREE.BoxGeometry(0.11, 0.52, 0.03),
-      new THREE.MeshPhysicalMaterial({ color: "#5f7893", roughness: 0.42, metalness: 0.03, clearcoat: 0.12, clearcoatRoughness: 0.28, transparent: true, opacity: 0.94 })
-    );
-    shirtPanel.position.set(0, 1.08, 0.19);
-    group.add(shirtPanel);
-
-    const shirtCollar = new THREE.Mesh(
-      new THREE.TorusGeometry(0.092, 0.014, 8, 20, Math.PI),
-      new THREE.MeshPhysicalMaterial({ color: "#e4ebf2", roughness: 0.44, metalness: 0.02, clearcoat: 0.08, clearcoatRoughness: 0.2 })
-    );
-    shirtCollar.position.set(0, 1.2, 0.08);
-    shirtCollar.rotation.x = Math.PI * 0.54;
-    group.add(shirtCollar);
-
-    const maleFringe = new THREE.Mesh(new THREE.BoxGeometry(0.136, 0.084, 0.054), hairMat);
-    maleFringe.position.set(0, 1.616, 0.122);
-    group.add(maleFringe);
-
-    const sideburnL = new THREE.Mesh(new THREE.BoxGeometry(0.032, 0.18, 0.028), hairMat);
-    sideburnL.position.set(-0.132, 1.5, 0.06);
-    sideburnL.rotation.z = -0.06;
-    const sideburnR = sideburnL.clone();
-    sideburnR.position.x = 0.128;
-    sideburnR.rotation.z = 0.06;
-    const nape = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.07, 0.06), hairMat);
-    nape.position.set(0, 1.52, -0.164);
-    group.add(sideburnL, sideburnR, nape);
-  }
-
-  if (spec.phone) {
-    rightArm.position.set(0.18, 1.16, 0.02);
-    rightArm.rotation.z = -0.6;
-    rightArm.rotation.x = -0.52;
-    rightSleeve.position.set(0.164, 1.2, 0.03);
-    rightSleeve.rotation.z = -0.78;
-    rightSleeve.rotation.x = -0.46;
-    rightHand.position.set(0.19, 1.24, 0.08);
-    const phone = new THREE.Mesh(
-      new THREE.BoxGeometry(0.05, 0.12, 0.018),
-      new THREE.MeshStandardMaterial({ color: "#141518", roughness: 0.38, metalness: 0.28 })
-    );
-    phone.position.set(0.16, 1.38, 0.07);
-    phone.rotation.set(-0.24, 0.16, 0.18);
-    group.add(phone);
-  }
-
-  if (spec.highlight) {
-    const glow = createGlowPlane("rgba(255,234,184,1)", 1.2, 1.8, 0.28);
-    glow.position.set(0.12, 1.16, -0.08);
-    group.add(glow);
-    group.userData.glow = glow;
-  }
-
-  if (spec.echo) {
-    group.traverse((child) => {
-      if (child.isMesh) {
-        child.material = child.material.clone();
-        child.material.transparent = true;
-        child.material.opacity = spec.echoOpacity ?? 0.35;
-        child.material.emissive = new THREE.Color(spec.echoColor ?? "#ffcfb1");
-        child.material.emissiveIntensity = 0.16;
-      }
+  const w = new e.Mesh(new e.SphereGeometry(0.114, 48, 48), r);
+  (w.position.set(0, -0.004, -0.01), w.scale.set(0.72, 0.92, 0.68), o.add(w));
+  const M = new e.Mesh(new e.SphereGeometry(0.086, 44, 44), i);
+  (M.position.set(0, -0.076, 0.012), M.scale.set(0.52, 0.46, 0.5), o.add(M));
+  const f = new e.Mesh(new e.SphereGeometry(0.018, 20, 20), i);
+  (f.position.set(0, -0.132, 0.044), f.scale.set(0.8, 0.42, 0.82), o.add(f));
+  const u = new e.Mesh(new e.SphereGeometry(0.026, 20, 20), i);
+  (u.position.set(-0.046, -0.02, 0.04), u.scale.set(0.82, 0.58, 0.54), o.add(u));
+  const y = u.clone();
+  ((y.position.x = 0.052), o.add(y));
+  const g = new e.Mesh(
+    new e.CapsuleGeometry(0.0038, 0.032, 4, 10),
+    i,
+  );
+  (g.position.set(0, -0.018, 0.078),
+    g.scale.set(0.46, 0.68, 0.56),
+    o.add(g));
+  const x = new e.Mesh(new e.SphereGeometry(0.013, 24, 24), i);
+  (x.position.set(0, -0.048, 0.088), x.scale.set(0.72, 0.52, 0.84), o.add(x));
+  const b = new e.Mesh(new e.SphereGeometry(0.0048, 18, 18), i);
+  (b.position.set(-0.008, -0.056, 0.088), b.scale.set(0.72, 0.46, 0.7), o.add(b));
+  const S = b.clone();
+  ((S.position.x = 0.009), o.add(S));
+  const P = new e.Mesh(
+    new e.CapsuleGeometry(0.0022, 0.014, 4, 6),
+    new e.MeshStandardMaterial({
+      color: "#c89b95",
+      roughness: 0.62,
+      metalness: 0,
+      transparent: !0,
+      opacity: 0.56,
+    }),
+  );
+  (P.position.set(0, -0.078, 0.088), o.add(P));
+  const v = new e.Mesh(new e.PlaneGeometry(0.036, 0.01), m);
+  (v.position.set(0, -0.094, 0.096), (v.renderOrder = 17), o.add(v));
+  const G = new e.Mesh(new e.CapsuleGeometry(0.0026, 0.026, 4, 10), p);
+  (G.position.set(0, -0.09, 0.098), (G.rotation.z = Math.PI / 2), o.add(G));
+  const z = new e.Mesh(new e.CapsuleGeometry(0.0032, 0.03, 4, 10), p.clone());
+  ((z.material.opacity = 0.88),
+    z.position.set(0, -0.1, 0.096),
+    (z.rotation.z = Math.PI / 2),
+    o.add(z));
+  const eyeGroup = (t) => {
+      const o = new e.Group();
+      o.position.set(0.041 * t, -0.002, 0.082);
+      const a = new e.Mesh(new e.SphereGeometry(0.017, 24, 24), c);
+      (a.scale.set(1.14, 0.6, 0.34), o.add(a));
+      const n = new e.Mesh(new e.SphereGeometry(0.0086, 20, 20), h);
+      (n.position.set(0, 0, 0.016),
+        n.scale.set(0.76, 0.84, 0.42),
+        o.add(n));
+      const s = new e.Mesh(
+        new e.SphereGeometry(0.0036, 16, 16),
+        new e.MeshBasicMaterial({ color: "#161113" }),
+      );
+      (s.position.set(0, 0, 0.022), s.scale.set(0.76, 0.82, 0.32), o.add(s));
+      const r = new e.Mesh(new e.CapsuleGeometry(0.0026, 0.028, 4, 10), i);
+      (r.position.set(0, 0.008, 0.008), (r.rotation.z = Math.PI / 2), o.add(r));
+      const l = new e.Mesh(new e.CapsuleGeometry(0.0016, 0.026, 4, 10), i);
+      (l.position.set(0, -0.011, 0.006),
+        (l.rotation.z = Math.PI / 2),
+        l.scale.set(0.92, 0.74, 0.72),
+        o.add(l));
+      const p = new e.Mesh(new e.CapsuleGeometry(0.0016, 0.03, 4, 10), d);
+      (p.position.set(0, 0.007, 0.016),
+        (p.rotation.z = Math.PI / 2),
+        p.scale.set(0.84, 0.82, 0.68),
+        o.add(p));
+      const m = new e.Mesh(
+        new e.SphereGeometry(0.0028, 12, 12),
+        new e.MeshBasicMaterial({
+          color: "#ffffff",
+          transparent: !0,
+          opacity: 0.82,
+        }),
+      );
+      return (
+        (m.position.set(-0.003 * t, 0.006, 0.024),
+          m.scale.set(1.08, 0.96, 0.4),
+          o.add(m),
+          (a.userData.baseScale = a.scale.clone()),
+          (n.userData.baseScale = n.scale.clone()),
+          { root: o, eyeWhite: a, iris: n, lash: p })
+      );
+    },
+    eyeL = eyeGroup(-1),
+    eyeR = eyeGroup(1);
+  o.add(eyeL.root, eyeR.root);
+  const T = new e.Mesh(new e.CapsuleGeometry(0.002, 0.028, 4, 10), d);
+  (T.position.set(-0.046, 0.032, 0.084),
+    T.scale.set(0.72, 0.8, 0.68),
+    T.rotation.set(0.03, 0.05, 0.12),
+    o.add(T));
+  const R = T.clone();
+  ((R.position.x = 0.048), (R.rotation.z = -0.12), (R.rotation.y = -0.05), o.add(R));
+  const I = new e.Mesh(
+    new e.SphereGeometry(0.118, 48, 48, 0, 2 * Math.PI, 0, 0.76 * Math.PI),
+    l,
+  );
+  (I.position.set(0, 0.036, -0.04),
+    I.scale.set(0.74, 0.74, 0.68),
+    (I.rotation.x = -0.12),
+    o.add(I));
+  const A = new e.Mesh(new e.SphereGeometry(0.092, 40, 40), l);
+  (A.position.set(0, -0.012, -0.11), A.scale.set(0.68, 0.84, 0.56), o.add(A));
+  const C = new e.Mesh(new e.SphereGeometry(0.028, 20, 20), l);
+  (C.position.set(0.024, 0.086, -0.13), C.scale.set(0.88, 0.78, 0.76), o.add(C));
+  const E = new e.Mesh(
+    new e.TorusGeometry(0.03, 0.011, 10, 24),
+    new e.MeshStandardMaterial({
+      color: "#19161a",
+      roughness: 0.76,
+      metalness: 0.02,
+    }),
+  );
+  (E.position.set(0.024, 0.086, -0.128), (E.rotation.x = Math.PI / 2), o.add(E));
+  const U = [
+    { x: -0.048, y: 0.064, z: 0.092, w: 0.016, h: 0.094, rx: -0.06, ry: 0.1, rz: 0.12 },
+    { x: -0.024, y: 0.06, z: 0.098, w: 0.012, h: 0.078, rx: -0.04, ry: 0.06, rz: 0.06 },
+    { x: 0.022, y: 0.06, z: 0.098, w: 0.012, h: 0.078, rx: -0.04, ry: -0.06, rz: -0.06 },
+    { x: 0.046, y: 0.064, z: 0.092, w: 0.016, h: 0.094, rx: -0.06, ry: -0.1, rz: -0.12 },
+  ];
+  U.forEach((t) => {
+    const a = buildJuniorHairRibbon(n, t.w, t.h, {
+      curve: 0.012,
+      topWidth: 0.3,
+      bottomWidth: 0.48,
+      opacity: 0.82,
     });
-  }
-
-  group.scale.setScalar(spec.scale ?? 0.95);
-  group.userData.pose = {
-    waist,
-    torso,
-    chest,
-    leftArm,
-    rightArm,
-    leftLeg,
-    rightLeg,
-    leftHand,
-    rightHand,
-    head,
-    jaw,
-    hairBack,
-    fringe,
-    shoulderL,
-    shoulderR,
-    female: Boolean(spec.female),
-    hasPhone: Boolean(spec.phone),
-  };
-  setShadow(group);
-  return group;
-}
-
-function resetCharacterPose(person) {
-  const pose = person.userData.pose;
-  if (!pose) {
-    return;
-  }
-  pose.waist.rotation.set(0, 0, 0);
-  pose.torso.rotation.set(0, 0, 0);
-  pose.chest.rotation.set(0, 0, 0);
-  pose.leftArm.rotation.set(0, 0, pose.female ? 0.12 : 0.15);
-  pose.rightArm.rotation.set(0, 0, pose.female ? -0.12 : -0.15);
-  pose.leftLeg.rotation.set(0, 0, 0.02);
-  pose.rightLeg.rotation.set(0, 0, -0.02);
-  pose.leftHand.rotation.set(0, 0, 0);
-  pose.rightHand.rotation.set(0, 0, 0);
-  pose.head.rotation.set(0, 0, 0);
-  pose.jaw.rotation.set(0, 0, 0);
-  pose.hairBack.rotation.set(0, 0, 0);
-  pose.fringe.rotation.set(0, 0, 0);
-  person.position.y = 0;
-}
-
-function applyWalkingPose(person, stride, sway = 1) {
-  const pose = person.userData.pose;
-  if (!pose) {
-    return;
-  }
-  // Leg swing — larger amplitude for more natural, full-stride look
-  const legAmp = pose.female ? 0.58 : 0.48;
-  // Arm counter-swing — delayed quarter-cycle for realism
-  const armDelay = Math.sin(Math.asin(Math.max(-1, Math.min(1, stride))) - 0.18);
-  const armAmp = pose.hasPhone ? 0.14 : 0.42;
-  pose.leftLeg.rotation.x = stride * legAmp;
-  pose.rightLeg.rotation.x = -stride * legAmp;
-  // Slightly bent knees (positive rotation) when leg is behind
-  pose.leftLeg.rotation.z = 0.02 + Math.max(0, stride) * 0.04;
-  pose.rightLeg.rotation.z = -0.02 - Math.max(0, -stride) * 0.04;
-  // Arm swing
-  pose.leftArm.rotation.x = -armDelay * armAmp;
-  pose.rightArm.rotation.x = pose.hasPhone ? -0.56 + stride * 0.06 : armDelay * armAmp;
-  // Body rotation and sway — torso counter-rotates to hips for realism
-  pose.torso.rotation.z = -stride * 0.04 * sway;
-  pose.torso.rotation.x = Math.abs(stride) * 0.025;
-  pose.torso.rotation.y = stride * 0.06 * sway;
-  pose.waist.rotation.z = stride * 0.06 * sway;
-  pose.waist.rotation.y = -stride * 0.05 * sway;
-  // Chest follows hips in opposite rotation
-  pose.chest.rotation.y = -stride * 0.08 * sway;
-  // Head stays level but follows gaze direction gently
-  pose.head.rotation.z = stride * 0.028 * sway;
-  pose.head.rotation.y = stride * 0.05 * sway;
-  // Shoulder roll
-  pose.shoulderL.rotation.z = -stride * 0.06;
-  pose.shoulderR.rotation.z = stride * 0.06;
-  // Realistic vertical bob: body rises on push-off, falls on landing (2x per stride cycle)
-  const bob = Math.abs(Math.cos(Math.asin(Math.max(-1, Math.min(1, stride))))) * 0.024;
-  const lateral = stride * 0.016 * sway;
-  person.position.y = bob + Math.abs(stride) * 0.018;
-}
-
-function applyIdlePose(person, time, emphasis = 1) {
-  const pose = person.userData.pose;
-  if (!pose) {
-    return;
-  }
-  const breathe = Math.sin(time * 1.4) * 0.02 * emphasis;
-  const breathe2 = Math.sin(time * 1.4 + 0.3) * 0.012 * emphasis;
-  pose.torso.rotation.x = breathe;
-  pose.chest.rotation.x = breathe * 0.7 + breathe2 * 0.3;
-  pose.waist.rotation.x = breathe * 0.2;
-  pose.head.rotation.y = Math.sin(time * 0.7) * 0.045 * emphasis;
-  pose.head.rotation.x = Math.sin(time * 0.9) * 0.012 * emphasis;
-  pose.hairBack.rotation.z = Math.sin(time * 1.1) * 0.024 * emphasis;
-  pose.shoulderL.rotation.z = Math.sin(time * 1.2 + 0.5) * 0.008 * emphasis;
-  pose.shoulderR.rotation.z = -Math.sin(time * 1.2 + 0.5) * 0.008 * emphasis;
-  person.position.y = Math.abs(Math.sin(time * 1.4)) * 0.014 * emphasis;
-}
-
-function applyFlyingPose(person, progress) {
-  const pose = person.userData.pose;
-  if (!pose) {
-    return;
-  }
-  const wing = Math.sin(progress * Math.PI * 5.4) * 0.06;
-  pose.torso.rotation.x = -1.02;
-  pose.chest.rotation.x = -0.56;
-  pose.waist.rotation.x = -0.34;
-  pose.leftArm.rotation.x = -1.6 + wing * 0.06;
-  pose.rightArm.rotation.x = -1.64 - wing * 0.04;
-  pose.leftArm.rotation.z = 0.11;
-  pose.rightArm.rotation.z = -0.11;
-  pose.leftHand.rotation.x = -0.3;
-  pose.rightHand.rotation.x = -0.34;
-  pose.leftLeg.rotation.x = 0.1 - wing * 0.04;
-  pose.rightLeg.rotation.x = 0.12 + wing * 0.04;
-  pose.head.rotation.x = 0.16;
-  pose.hairBack.rotation.x = 0.54;
-  pose.fringe.rotation.x = -0.2;
-  person.position.y = Math.sin(progress * Math.PI * 4.2) * 0.08;
-}
-
-function createTree({ scale: treeScale = 1 }) {
-  const group = new THREE.Group();
-  const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.08 * treeScale, 0.2 * treeScale, 2.18 * treeScale, 14),
-    new THREE.MeshStandardMaterial({ color: "#6e4b34", roughness: 0.92, metalness: 0.02 })
-  );
-  trunk.position.y = 1.09 * treeScale;
-  group.add(trunk);
-
-  const trunkHighlight = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.056 * treeScale, 0.074 * treeScale, 1.76 * treeScale, 10),
-    new THREE.MeshStandardMaterial({ color: "#8b6445", roughness: 0.84, metalness: 0.02, transparent: true, opacity: 0.36 })
-  );
-  trunkHighlight.position.set(-0.02 * treeScale, 1.18 * treeScale, 0.09 * treeScale);
-  group.add(trunkHighlight);
-
-  const leafMat = new THREE.MeshStandardMaterial({ color: "#567a48", roughness: 0.94, metalness: 0.01 });
+    (a.position.set(t.x, t.y, t.z),
+      a.rotation.set(t.rx, t.ry, t.rz),
+      o.add(a));
+  });
   [
-    [0, 2.84, 0, 1.04, 1.2, 0.92],
-    [-0.4, 2.46, 0.18, 0.86, 0.92, 0.74],
-    [0.46, 2.52, -0.14, 0.9, 1.02, 0.78],
-    [0.06, 3.28, -0.16, 0.82, 0.84, 0.72],
-    [-0.26, 3.02, -0.26, 0.7, 0.72, 0.62],
-    [0.24, 2.94, 0.32, 0.68, 0.7, 0.6],
-    [-0.52, 2.82, -0.22, 0.78, 0.82, 0.68],
-    [0.58, 2.86, 0.18, 0.74, 0.8, 0.66],
-  ].forEach(([x, y, z, sx, sy, sz]) => {
-    const cluster = new THREE.Mesh(new THREE.SphereGeometry(0.52 * treeScale, 20, 20), leafMat);
-    cluster.position.set(x * treeScale, y * treeScale, z * treeScale);
-    cluster.scale.set(sx, sy, sz);
-    group.add(cluster);
+    { x: -0.072, y: 0, z: 0.064, w: 0.022, h: 0.16, ry: 0.28, rz: 0.12 },
+    { x: -0.056, y: -0.008, z: 0.084, w: 0.012, h: 0.084, ry: 0.14, rz: 0.04, opacity: 0.58 },
+    { x: 0.072, y: 0, z: 0.064, w: 0.022, h: 0.16, ry: -0.28, rz: -0.12 },
+    { x: 0.056, y: -0.008, z: 0.084, w: 0.012, h: 0.084, ry: -0.14, rz: -0.04, opacity: 0.58 },
+  ].forEach((t) => {
+    const a = buildJuniorHairRibbon(n, t.w, t.h, {
+      curve: 0.016,
+      topWidth: 0.42,
+      bottomWidth: 0.58,
+      opacity: t.opacity ?? 0.78,
+    });
+    (a.position.set(t.x, t.y, t.z),
+      a.rotation.set(-0.02, t.ry, t.rz),
+      o.add(a));
   });
-
-  setShadow(group);
-  return group;
+  const W = new e.Group();
+  (W.position.set(0.026, 0.066, -0.134), o.add(W));
+  [
+    { y: -0.018, z: -0.008, r: 0.02, len: 0.074, rotX: -0.16, rotZ: -0.06 },
+    { y: -0.082, z: 0, r: 0.018, len: 0.088, rotX: -0.1, rotZ: -0.08 },
+    { y: -0.152, z: 0.01, r: 0.015, len: 0.072, rotX: -0.06, rotZ: -0.08 },
+  ].forEach((t) => {
+    const o = new e.Mesh(new e.CapsuleGeometry(t.r, t.len, 6, 10), l);
+    (o.position.set(0.01, t.y, t.z),
+      o.rotation.set(t.rotX, 0.08, t.rotZ),
+      o.scale.set(0.84, 0.9, 0.64),
+      W.add(o));
+  });
+  const D = new e.Mesh(
+    new e.PlaneGeometry(0.16, 0.11),
+    new e.MeshBasicMaterial({
+      color: "#1e1514",
+      transparent: !0,
+      opacity: 0.02,
+      depthWrite: !1,
+    }),
+  );
+  (D.position.set(0, 0.03, 0.088), (D.renderOrder = 16), o.add(D));
+  return (
+    o.traverse((t) => {
+      t.isMesh && ((t.castShadow = !1), (t.receiveShadow = !1));
+    }),
+    {
+      root: o,
+      refs: {
+        headShell: w,
+        jawShell: M,
+        heroEyeWhiteL: eyeL.eyeWhite,
+        heroEyeWhiteR: eyeR.eyeWhite,
+        heroIrisL: eyeL.iris,
+        heroIrisR: eyeR.iris,
+        heroBrowL: T,
+        heroBrowR: R,
+        heroHairCap: I,
+        heroPonytail: W,
+      },
+    }
+  );
 }
-
-function buildCanvasTexture(width, height, draw, repeatX = 1, repeatY = 1) {
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  draw(ctx, width, height);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(repeatX, repeatY);
-  return texture;
+function S(t) {
+  const o = new e.Group();
+  o.userData.baseY = 0;
+  const a = Boolean(t.referenceJunior),
+    n = t.female && a,
+    s = new e.MeshPhysicalMaterial({
+      color: t.torso,
+      roughness: t.female ? 0.42 : 0.5,
+      metalness: 0.02,
+      clearcoat: t.female ? 0.14 : 0.06,
+      clearcoatRoughness: 0.52,
+    }),
+    r = new e.MeshPhysicalMaterial({
+      color: t.torsoAccent ?? t.torso,
+      roughness: t.female ? 0.36 : 0.42,
+      metalness: 0.03,
+      clearcoat: t.female ? 0.18 : 0.08,
+      clearcoatRoughness: 0.44,
+    }),
+    i = new e.MeshPhysicalMaterial({
+      color: t.legs,
+      roughness: n ? 0.72 : t.female ? 0.44 : 0.54,
+      metalness: 0.02,
+      clearcoat: t.female ? 0.1 : 0.04,
+      clearcoatRoughness: 0.4,
+    }),
+    l = n
+      ? new e.Color(t.skin).lerp(new e.Color("#ffe4d0"), 0.15)
+      : new e.Color(t.skin),
+    c = new e.MeshPhysicalMaterial({
+      color: l,
+      roughness: n ? 0.18 : 0.36,
+      metalness: 0,
+      clearcoat: n ? 0.42 : 0.22,
+      clearcoatRoughness: n ? 0.28 : 0.56,
+      sheen: n ? 0.85 : 0.18,
+      sheenRoughness: n ? 0.2 : 0.65,
+      sheenColor: new e.Color(n ? "#ffc8a8" : t.female ? "#ffcfb8" : "#e8b8a4"),
+    }),
+    h = new e.MeshPhysicalMaterial({
+      color: t.female ? "#f3c3bc" : "#d7a18f",
+      roughness: 0.56,
+      metalness: 0,
+      transparent: !0,
+      opacity: t.female ? 0.26 : 0.14,
+      sheen: 0.1,
+    }),
+    d = new e.MeshPhysicalMaterial({
+      color: t.hair,
+      roughness: n ? 0.12 : 0.34,
+      metalness: n ? 0.06 : 0.08,
+      clearcoat: n ? 0.58 : 0.12,
+      clearcoatRoughness: n ? 0.14 : 0.3,
+      sheen: n ? 0.32 : 0,
+      sheenRoughness: n ? 0.28 : 1,
+      sheenColor: new e.Color(n ? "#7a5a3a" : "#000"),
+    }),
+    p = new e.MeshPhysicalMaterial({
+      color: t.shoes,
+      roughness: 0.56,
+      metalness: 0.1,
+      clearcoat: 0.12,
+      clearcoatRoughness: 0.4,
+    }),
+    m = new e.MeshPhysicalMaterial({
+      color: "#f6ede3",
+      roughness: 0.42,
+      metalness: 0.06,
+      clearcoat: 0.16,
+      clearcoatRoughness: 0.28,
+    }),
+    w = new e.Mesh(
+      new e.CapsuleGeometry(
+        t.female ? (n ? 0.118 : 0.126) : 0.132,
+        0.18,
+        5,
+      10,
+      ),
+      s,
+    );
+  if (n) {
+    s.roughness = 0.36;
+    s.clearcoat = 0.18;
+    s.clearcoatRoughness = 0.28;
+    r.roughness = 0.32;
+    r.clearcoat = 0.22;
+    r.clearcoatRoughness = 0.24;
+    i.roughness = 0.4;
+    i.clearcoat = 0.12;
+    i.clearcoatRoughness = 0.28;
+    c.roughness = 0.14;
+    c.clearcoat = 0.52;
+    c.clearcoatRoughness = 0.18;
+    c.sheen = 0.92;
+    c.sheenRoughness = 0.16;
+    d.roughness = 0.08;
+    d.metalness = 0.08;
+    d.clearcoat = 0.82;
+    d.clearcoatRoughness = 0.08;
+    d.sheen = 0.38;
+    d.sheenRoughness = 0.16;
+    p.roughness = 0.5;
+    m.roughness = 0.34;
+  }
+  (w.position.set(0, 0.84, 0),
+    w.scale.set(t.female ? (n ? 0.96 : 1.04) : 1.14, 1.02, n ? 0.82 : 0.86),
+    o.add(w));
+  const M = new e.Mesh(
+    new e.CapsuleGeometry(
+      t.female ? 0.172 : 0.166,
+      t.female ? 0.62 : 0.6,
+      8,
+      18,
+    ),
+    s,
+  );
+  (M.position.set(0, 1.08, 0),
+    M.scale.set(t.female ? 0.98 : 1.1, 1.04, t.female ? 0.82 : 0.9),
+    o.add(M));
+  const f = new e.Mesh(
+    new e.SphereGeometry(t.female ? 0.172 : 0.158, 22, 22),
+    r,
+  );
+  let u;
+  if (
+    (f.position.set(0, 1.13, 0.038),
+    f.scale.set(1.06, t.female ? 0.64 : 0.58, t.female ? 0.52 : 0.58),
+    o.add(f),
+    n)
+  ) {
+    u = new e.CylinderGeometry(0.166, 0.19, 0.16, 24, 1, !1);
+    const t = u.getAttribute("position");
+    for (let e = 0; e < t.count; e++) {
+      const o = t.getY(e);
+      if (o < -0.07) {
+        const a = Math.atan2(t.getZ(e), t.getX(e)),
+          n = 0.005 * Math.sin(6 * a) + 0.002 * Math.sin(12 * a);
+        t.setY(e, o + n);
+      }
+    }
+    ((t.needsUpdate = !0), u.computeVertexNormals());
+  } else
+    u = new e.CylinderGeometry(
+      t.female ? 0.166 : 0.158,
+      t.female ? 0.208 : 0.174,
+      t.female ? 0.24 : 0.22,
+      16,
+    );
+  const y = new e.Mesh(u, i);
+  if (
+    (y.position.set(0, n ? 0.75 : t.female ? 0.71 : 0.74, 0),
+    o.add(y),
+    t.female)
+  ) {
+    const a = new e.MeshPhysicalMaterial({
+        color: t.legs,
+        roughness: 0.38,
+        metalness: 0.03,
+        clearcoat: 0.16,
+        clearcoatRoughness: 0.3,
+      }),
+      n = new e.Mesh(new e.TorusGeometry(0.138, 0.014, 8, 24), a);
+    (n.position.set(0, 0.83, 0), (n.rotation.x = Math.PI / 2), o.add(n));
+  }
+  const g = new e.CapsuleGeometry(
+      t.female ? 0.064 : 0.072,
+      t.female ? 0.74 : 0.68,
+      6,
+      12,
+    ),
+    S = new e.Mesh(g, c);
+  (S.position.set(t.female ? -0.085 : -0.092, t.female ? 0.36 : 0.34, 0.01),
+    (S.rotation.z = 0.02));
+  const z = S.clone();
+  ((z.position.x = t.female ? 0.085 : 0.092),
+    (z.rotation.z = -0.02),
+    o.add(S, z));
+  const P = new e.Mesh(
+    new e.BoxGeometry(
+      t.female ? 0.32 : 0.38,
+      t.female ? 0.16 : 0.22,
+      t.female ? 0.25 : 0.27,
+    ),
+    i,
+  );
+  if ((P.position.set(0, t.female ? 0.66 : 0.63, 0.01), o.add(P), !t.female)) {
+    const t = new e.Mesh(new e.BoxGeometry(0.13, 0.66, 0.18), i);
+    t.position.set(-0.095, 0.36, 0.008);
+    const a = t.clone();
+    a.position.x = 0.095;
+    const n = new e.Mesh(
+      new e.BoxGeometry(0.34, 0.05, 0.18),
+      new e.MeshStandardMaterial({
+        color: "#181a20",
+        roughness: 0.58,
+        metalness: 0.06,
+      }),
+    );
+    (n.position.set(0, 0.72, 0.016), o.add(t, a, n));
+  }
+  const v = new e.BoxGeometry(0.13, 0.06, 0.25),
+    G = new e.Mesh(v, p);
+  (G.position.set(t.female ? -0.094 : -0.102, 0.042, 0.055),
+    (G.rotation.x = 0.04));
+  const C = G.clone();
+  ((C.position.x = t.female ? 0.094 : 0.102), o.add(G, C));
+  const B = new e.Mesh(
+    new e.SphereGeometry(t.female ? 0.086 : 0.102, 18, 18),
+    s,
+  );
+  B.position.set(t.female ? -0.188 : -0.252, 1.18, 0);
+  const k = B.clone();
+  if (((k.position.x = t.female ? 0.188 : 0.236), o.add(B, k), n)) {
+    const t = c.clone(),
+      a = new e.Mesh(new e.SphereGeometry(0.036, 14, 14), t);
+    (a.position.set(-0.206, 1.2, 0.01), a.scale.set(1.1, 0.9, 0.85));
+    const n = a.clone();
+    ((n.position.x = 0.206), o.add(a, n));
+  }
+  const T = new e.CapsuleGeometry(
+      t.female ? (n ? 0.042 : 0.048) : 0.056,
+      t.female ? 0.42 : 0.46,
+      5,
+      10,
+    ),
+    I = new e.Mesh(T, c);
+  (I.position.set(t.female ? -0.228 : -0.266, 1, 0.02),
+    (I.rotation.z = t.female ? 0.12 : 0.15));
+  const R = I.clone();
+  if (
+    ((R.position.x = t.female ? 0.228 : 0.246),
+    (R.rotation.z = t.female ? -0.12 : -0.15),
+    o.add(I, R),
+    n)
+  ) {
+    const t = new e.MeshPhysicalMaterial({
+        color: l,
+        roughness: 0.18,
+        metalness: 0,
+        clearcoat: 0.4,
+        clearcoatRoughness: 0.2,
+      }),
+      a = new e.Mesh(new e.TorusGeometry(0.034, 0.006, 8, 16), t);
+    (a.position.set(-0.252, 0.75, 0.035), (a.rotation.z = 0.12));
+    const n = a.clone();
+    ((n.position.x = 0.252), (n.rotation.z = -0.12), o.add(a, n));
+  }
+  const D = new e.SphereGeometry(t.female ? 0.048 : 0.054, 18, 18),
+    V = new e.Mesh(D, c);
+  V.position.set(t.female ? -0.264 : -0.302, 0.71, 0.04);
+  const E = V.clone();
+  if (
+    ((E.position.x = t.female ? 0.264 : 0.286),
+    n && (V.scale.set(0.8, 1, 1.2), E.scale.set(0.8, 1, 1.2)),
+    o.add(V, E),
+    n)
+  ) {
+    const t = c.clone(),
+      a = new e.CylinderGeometry(0.008, 0.006, 0.06, 8),
+      n = new e.Mesh(a, t);
+    (n.position.set(-0.264, 0.676, 0.06), (n.rotation.x = 0.38 * Math.PI));
+    const s = n.clone();
+    ((s.position.x = 0.264), o.add(n, s));
+  }
+  const U = new e.CylinderGeometry(
+      t.female ? 0.072 : 0.078,
+      t.female ? 0.078 : 0.084,
+      0.2,
+      14,
+    ),
+    W = new e.Mesh(U, r);
+  (W.position.set(t.female ? -0.18 : -0.2, 1.1, 0.02), (W.rotation.z = 1.06));
+  const q = W.clone();
+  ((q.position.x = t.female ? 0.18 : 0.2), (q.rotation.z = -1.06), o.add(W, q));
+  const _ = c.clone();
+  _.color = new e.Color(t.skin).lerp(new e.Color("#e8b89c"), 0.12);
+  const A = new e.Mesh(new e.CylinderGeometry(0.065, 0.08, 0.14, 18), _);
+  (A.position.set(0, 1.33, 0.02), o.add(A));
+  const Z = new e.Mesh(
+    new e.TorusGeometry(0.082, 0.01, 8, 24),
+    new e.MeshPhysicalMaterial({
+      color: t.female ? "#fffdf6" : "#e6ebf0",
+      roughness: 0.52,
+      metalness: 0.01,
+      clearcoat: 0.1,
+    }),
+  );
+  (Z.position.set(0, 1.26, 0.02), (Z.rotation.x = Math.PI / 2), o.add(Z));
+  const L = new e.Mesh(
+    new e.SphereGeometry(t.female ? 0.168 : 0.182, 48, 48),
+    c,
+  );
+  (L.position.set(0, 1.56, 0),
+    L.scale.set(
+      t.female ? (a ? 0.76 : 0.94) : 0.98,
+      t.female ? (a ? 1.2 : 1.08) : 1.04,
+      t.female ? (a ? 0.82 : 0.91) : 0.9,
+    ),
+    o.add(L),
+    n && (L.position.set(0, 1.555, 0.01), L.scale.set(0.82, 1.12, 0.8)));
+  const X = new e.Mesh(
+    new e.SphereGeometry(t.female ? 0.14 : 0.154, 36, 36),
+    c,
+  );
+  (X.position.set(0, t.female ? 1.47 : 1.48, 0.02),
+    X.scale.set(
+      t.female ? (a ? 0.6 : 0.92) : 1.02,
+      t.female ? (a ? 0.52 : 0.78) : 0.84,
+      t.female ? (a ? 0.7 : 0.88) : 0.92,
+    ),
+    o.add(X),
+    n && (X.position.set(0, 1.462, 0.032), X.scale.set(0.44, 0.34, 0.52)));
+  const j = new e.SphereGeometry(0.032, 16, 16),
+    $ = new e.Mesh(j, c);
+  ($.position.set(-0.165, 1.55, 0.01), $.scale.set(0.72, 1.02, 0.56));
+  const H = $.clone();
+  ((H.position.x = 0.165),
+    o.add($, H),
+    n &&
+      ($.position.set(-0.128, 1.514, 0.01),
+      H.position.set(0.128, 1.514, 0.01),
+      $.scale.set(0.44, 0.66, 0.42),
+      H.scale.copy($.scale)));
+  const F = new e.Mesh(
+    new e.ConeGeometry(
+      t.female ? (a ? 0.007 : 0.024) : 0.026,
+      t.female ? (a ? 0.026 : 0.062) : 0.07,
+      12,
+    ),
+    c,
+  );
+  (F.position.set(0, a ? 1.538 : 1.54, a ? 0.149 : 0.154),
+    (F.rotation.x = 0.5 * Math.PI),
+    o.add(F));
+  const N = new e.Mesh(
+    new e.CapsuleGeometry(a ? 0.004 : 0.006, a ? 0.04 : 0.08, 4, 10),
+    new e.MeshPhysicalMaterial({
+      color: "#fff8f2",
+      roughness: 0.28,
+      metalness: 0,
+      transparent: !0,
+      opacity: 0.24,
+      clearcoat: 0.22,
+      clearcoatRoughness: 0.16,
+    }),
+  );
+  (N.position.set(0, a ? 1.553 : 1.57, a ? 0.145 : 0.135),
+    a && (N.rotation.x = Math.PI / 2),
+    o.add(N));
+  const O = new e.Mesh(
+    new e.TorusGeometry(
+      t.female && a ? 0.038 : 0.045,
+      t.female && a ? 0.0065 : 0.009,
+      8,
+      18,
+      Math.PI,
+    ),
+    new e.MeshStandardMaterial({
+      color: t.female ? "#cc7282" : "#ae7670",
+      roughness: 0.5,
+      metalness: 0.03,
+    }),
+  );
+  if (
+    (O.position.set(0, a ? 1.446 : 1.46, a ? 0.154 : 0.148),
+    (O.rotation.x = Math.PI),
+    o.add(O),
+    n)
+  ) {
+    const t = new e.Mesh(
+      new e.SphereGeometry(0.024, 14, 14),
+      new e.MeshStandardMaterial({
+        color: "#f3b6bc",
+        roughness: 0.48,
+        metalness: 0.02,
+        transparent: !0,
+        opacity: 0.72,
+      }),
+    );
+    (t.position.set(0, 1.433, 0.153), t.scale.set(1.64, 0.42, 0.42), o.add(t));
+  }
+  const J = new e.MeshStandardMaterial({
+      color: t.female ? "#3a2422" : "#31201e",
+      roughness: 0.7,
+      metalness: 0.02,
+    }),
+    K = new e.Mesh(
+      a
+        ? new e.CapsuleGeometry(0.0038, 0.045, 4, 8)
+        : new e.BoxGeometry(0.08, 0.012, 0.02),
+      J,
+    );
+  (K.position.set(a ? -0.061 : -0.074, a ? 1.596 : 1.62, a ? 0.148 : 0.136),
+    a ? (K.rotation.z = -1.28) : (K.rotation.z = -0.08));
+  const Q = K.clone();
+  ((Q.position.x = a ? 0.067 : 0.072),
+    (Q.rotation.z = a ? 1.28 : 0.08),
+    o.add(K, Q),
+    n &&
+      (K.position.set(-0.06, 1.592, 0.152), Q.position.set(0.06, 1.592, 0.152)));
+  const ee = new e.TorusGeometry(
+      t.female && a ? 0.034 : 0.032,
+      0.004,
+      6,
+      18,
+      Math.PI,
+    ),
+    te = new e.MeshStandardMaterial({
+      color: t.female ? "#3a1f20" : "#2f1d1e",
+      roughness: 0.54,
+      metalness: 0.02,
+    }),
+    oe = new e.Mesh(ee, te);
+  (oe.position.set(a ? -0.068 : -0.062, 1.57, 0.168),
+    (oe.rotation.z = Math.PI));
+  const ae = oe.clone();
+  ((ae.position.x = a ? 0.064 : 0.062), o.add(oe, ae));
+  const ne = new e.MeshPhysicalMaterial({
+      color: "#fcfcfd",
+      roughness: 0.18,
+      metalness: 0.01,
+      clearcoat: 0.14,
+      clearcoatRoughness: 0.12,
+    }),
+    se = new e.MeshPhysicalMaterial({
+      color: t.iris ?? (t.female ? "#3a261f" : "#2b1c18"),
+      roughness: 0.34,
+      metalness: 0.02,
+      clearcoat: 0.12,
+      clearcoatRoughness: 0.2,
+    }),
+    re = new e.Mesh(
+      new e.SphereGeometry(t.female && a ? 0.025 : 0.022, 12, 12),
+      ne,
+    );
+  (re.position.set(a ? -0.068 : -0.062, 1.56, a ? 0.158 : 0.15),
+    re.scale.set(t.female && a ? 1.56 : 1.35, t.female && a ? 1.02 : 0.9, 0.5));
+  const ie = re.clone();
+  ie.position.x = a ? 0.068 : 0.062;
+  const le = new e.Mesh(
+    new e.SphereGeometry(t.female && a ? 0.0122 : 0.011, 10, 10),
+    se,
+  );
+  le.position.set(a ? -0.068 : -0.062, a ? 1.558 : 1.56, a ? 0.175 : 0.166);
+  const ce = le.clone();
+  if (
+    ((ce.position.x = a ? 0.068 : 0.062),
+    o.add(re, ie, le, ce),
+    n &&
+      (re.position.set(-0.064, 1.557, 0.16),
+      ie.position.set(0.064, 1.557, 0.16),
+      re.scale.set(1.64, 1.08, 0.56),
+      ie.scale.copy(re.scale),
+      le.position.set(-0.062, 1.554, 0.176),
+      ce.position.set(0.062, 1.554, 0.176),
+      le.scale.set(1.1, 1.02, 0.88),
+      ce.scale.copy(le.scale)),
+    t.female)
+  ) {
+    const t = new e.MeshStandardMaterial({
+        color: "#241618",
+        roughness: 0.52,
+        metalness: 0.02,
+      }),
+      n = new e.Mesh(new e.BoxGeometry(0.058, 0.01, 0.014), t);
+    (n.position.set(a ? -0.068 : -0.062, a ? 1.585 : 1.586, 0.174),
+      (n.rotation.z = a ? -0.012 : -0.03));
+    const s = n.clone();
+    ((s.position.x = a ? 0.068 : 0.062),
+      (s.rotation.z = a ? 0.012 : 0.03),
+      o.add(n, s));
+  }
+  re.userData.baseScale = re.scale.clone();
+  ie.userData.baseScale = ie.scale.clone();
+  le.userData.baseScale = le.scale.clone();
+  ce.userData.baseScale = ce.scale.clone();
+  const he = new e.SphereGeometry(0.028, 12, 12),
+    de = new e.Mesh(he, h);
+  (de.position.set(a ? -0.076 : -0.094, a ? 1.476 : 1.488, 0.146),
+    de.scale.set(a ? 0.92 : 1.7, a ? 0.62 : 1.2, 0.32));
+  const pe = de.clone();
+  ((pe.position.x = a ? 0.084 : 0.094), o.add(de, pe));
+  const me = new e.MeshStandardMaterial({
+      color: "#ffffff",
+      emissive: "#ffffff",
+      emissiveIntensity: 0.12,
+      roughness: 0.2,
+      metalness: 0.02,
+    }),
+    we = new e.Mesh(new e.SphereGeometry(n ? 0.0055 : 0.004, 8, 8), me);
+  we.position.set(a ? -0.058 : -0.055, n ? 1.573 : 1.568, n ? 0.184 : 0.176);
+  const Me = we.clone();
+  ((Me.position.x = a ? 0.072 : 0.069), o.add(we, Me));
+  const fe = new e.Mesh(
+    new e.SphereGeometry(
+      t.female ? (n ? 0.202 : 0.194) : 0.188,
+      28,
+      28,
+      0,
+      2 * Math.PI,
+      0,
+      0.72 * Math.PI,
+    ),
+    d,
+  );
+  (fe.position.set(0, 1.62, -0.01), (fe.rotation.x = -0.1), o.add(fe));
+  const ue = new e.Mesh(
+    new e.SphereGeometry(t.female ? 0.214 : 0.182, 28, 28),
+    d,
+  );
+  (ue.position.set(0, t.female ? 1.5 : 1.61, t.female ? -0.08 : -0.1),
+    ue.scale.set(0.88, t.female ? 1.42 : 0.42, t.female ? 0.7 : 0.52),
+    o.add(ue));
+  if (a) {
+    fe.scale.set(0.88, 0.86, 0.84);
+    fe.position.set(0, 1.604, 0.024);
+    ue.scale.set(0.78, t.female ? 1.08 : 0.42, t.female ? 0.52 : 0.52);
+    ue.position.set(0, t.female ? 1.472 : 1.61, t.female ? -0.116 : -0.1);
+  }
+  const ye = new e.Mesh(
+    a
+      ? new e.CapsuleGeometry(0.018, 0.056, 4, 8)
+      : new e.BoxGeometry(0.2, 0.08, 0.05),
+    d,
+  );
+  (ye.position.set(0, a ? 1.622 : 1.612, a ? 0.134 : 0.12),
+    a && ((ye.rotation.z = -0.08), (ye.rotation.x = 0.22)),
+    o.add(ye),
+    n &&
+      (ye.position.set(0, 1.606, 0.132),
+      ye.scale.set(0.84, 0.92, 0.82),
+      (ye.rotation.z = -0.04),
+      (ye.rotation.x = 0.18)));
+  const ge = new e.Mesh(
+    a
+      ? new e.CapsuleGeometry(0.012, 0.2, 4, 10)
+      : new e.BoxGeometry(0.076, 0.42, 0.06),
+    d,
+  );
+  ge.position.set(a ? -0.126 : -0.14, a ? 1.454 : t.female ? 1.458 : 1.49, 0.05);
+  a && ((ge.rotation.z = 0.16), (ge.rotation.x = 0.02));
+  const xe = ge.clone();
+  ((xe.position.x = a ? 0.108 : 0.15),
+    o.add(ge, xe),
+    n &&
+      (ge.position.set(-0.122, 1.452, 0.062),
+      xe.position.set(0.122, 1.452, 0.062),
+      (xe.rotation.z = -0.16),
+      ge.scale.set(0.86, 0.98, 0.82),
+      xe.scale.copy(ge.scale)));
+  let closeupRefinement = null,
+    heroCloseupHead = null;
+  const be = new e.Mesh(
+    new e.SphereGeometry(t.female ? 0.16 : 0.15, 20, 20),
+    new e.MeshStandardMaterial({
+      color: "#ffffff",
+      roughness: 0.2,
+      metalness: 0.02,
+      transparent: !0,
+      opacity: 0.08,
+    }),
+  );
+  if (
+    (be.position.set(0.02, 1.66, 0.04),
+    be.scale.set(0.82, 0.42, 0.5),
+    o.add(be),
+    a)
+  ) {
+    const a = new e.MeshPhysicalMaterial({
+        color: t.hair,
+        roughness: 0.12,
+        metalness: 0.04,
+        clearcoat: 0.42,
+        clearcoatRoughness: 0.18,
+        transparent: !0,
+        opacity: 0.14,
+        sheen: 0.34,
+        sheenRoughness: 0.26,
+        sheenColor: new e.Color("#8b6b4a"),
+      }),
+      n = new e.Mesh(
+        new e.SphereGeometry(
+          t.female ? 0.148 : 0.192,
+          28,
+          28,
+          0,
+          2 * Math.PI,
+          0,
+          0.54 * Math.PI,
+        ),
+        a,
+      );
+    (n.position.set(0, 1.625, -0.008),
+      (n.rotation.x = -0.1),
+      n.scale.set(0.84, 0.56, 0.74),
+      o.add(n),
+      (o.userData.referenceHairCap = n),
+      fe.scale.set(0.92, 0.88, 0.86),
+      ue.scale.set(0.92 * ue.scale.x, 0.96 * ue.scale.y, 0.9 * ue.scale.z),
+      (ue.position.y -= 0.01),
+      (ue.position.z -= 0.008));
+    closeupRefinement = new e.Group();
+    closeupRefinement.visible = !1;
+    const strandBaseMaterial = new e.MeshPhysicalMaterial({
+      color: t.hair,
+      roughness: 0.22,
+      metalness: 0.03,
+      clearcoat: 0.28,
+      clearcoatRoughness: 0.22,
+      transparent: !0,
+      opacity: 0.92,
+    });
+    const createCloseupStrand = (
+      points,
+      radius = 0.005,
+      opacity = 0.92,
+      tubularSegments = 28,
+    ) => {
+      const material = strandBaseMaterial.clone();
+      material.opacity = opacity;
+      const curve = new e.CatmullRomCurve3(
+        points.map((t) => (t.clone ? t.clone() : new e.Vector3(...t))),
+      );
+      const strand = new e.Mesh(
+        new e.TubeGeometry(curve, tubularSegments, radius, 7, !1),
+        material,
+      );
+      return (
+        (strand.castShadow = !0),
+        (strand.receiveShadow = !0),
+        strand
+      );
+    };
+    const hairlineArc = createCloseupStrand(
+      [
+        new e.Vector3(-0.118, 1.604, 0.07),
+        new e.Vector3(-0.07, 1.624, 0.082),
+        new e.Vector3(0, 1.632, 0.086),
+        new e.Vector3(0.072, 1.622, 0.082),
+        new e.Vector3(0.118, 1.602, 0.07),
+      ],
+      0.0084,
+      0.82,
+      36,
+    );
+    const strandSpecs = [
+      {
+        points: [
+          [-0.086, 1.604, 0.078],
+          [-0.074, 1.574, 0.104],
+          [-0.062, 1.518, 0.132],
+        ],
+        radius: 0.0048,
+        opacity: 0.9,
+      },
+      {
+        points: [
+          [-0.058, 1.61, 0.082],
+          [-0.046, 1.58, 0.11],
+          [-0.034, 1.506, 0.136],
+        ],
+        radius: 0.0046,
+        opacity: 0.9,
+      },
+      {
+        points: [
+          [-0.028, 1.616, 0.082],
+          [-0.02, 1.588, 0.11],
+          [-0.014, 1.5, 0.136],
+        ],
+        radius: 0.0042,
+        opacity: 0.88,
+      },
+      {
+        points: [
+          [0.0, 1.616, 0.082],
+          [0.0, 1.592, 0.11],
+          [0.0, 1.498, 0.136],
+        ],
+        radius: 0.0038,
+        opacity: 0.82,
+      },
+      {
+        points: [
+          [0.028, 1.616, 0.082],
+          [0.018, 1.588, 0.11],
+          [0.012, 1.5, 0.136],
+        ],
+        radius: 0.0042,
+        opacity: 0.88,
+      },
+      {
+        points: [
+          [0.058, 1.61, 0.082],
+          [0.044, 1.58, 0.11],
+          [0.03, 1.506, 0.136],
+        ],
+        radius: 0.0046,
+        opacity: 0.9,
+      },
+      {
+        points: [
+          [0.086, 1.604, 0.078],
+          [0.072, 1.574, 0.104],
+          [0.06, 1.518, 0.132],
+        ],
+        radius: 0.0048,
+        opacity: 0.9,
+      },
+      {
+        points: [
+          [-0.118, 1.582, 0.052],
+          [-0.128, 1.53, 0.072],
+          [-0.116, 1.452, 0.11],
+        ],
+        radius: 0.0052,
+        opacity: 0.76,
+      },
+      {
+        points: [
+          [0.118, 1.582, 0.052],
+          [0.128, 1.53, 0.072],
+          [0.116, 1.452, 0.11],
+        ],
+        radius: 0.0052,
+        opacity: 0.76,
+      },
+      {
+        points: [
+          [-0.134, 1.566, 0.024],
+          [-0.148, 1.498, 0.048],
+          [-0.138, 1.422, 0.086],
+        ],
+        radius: 0.0038,
+        opacity: 0.56,
+        tubularSegments: 24,
+      },
+      {
+        points: [
+          [0.134, 1.566, 0.024],
+          [0.148, 1.498, 0.048],
+          [0.138, 1.422, 0.086],
+        ],
+        radius: 0.0038,
+        opacity: 0.56,
+        tubularSegments: 24,
+      },
+    ];
+    const cheekShadowMaterial = new e.MeshStandardMaterial({
+      color: "#2b1618",
+      roughness: 0.64,
+      metalness: 0.01,
+      transparent: !0,
+      opacity: 0.22,
+    });
+    const leftTemple = new e.Mesh(
+      new e.SphereGeometry(0.024, 12, 12),
+      cheekShadowMaterial,
+    );
+    leftTemple.position.set(-0.09, 1.52, 0.092);
+    leftTemple.scale.set(1.2, 1.7, 0.8);
+    const rightTemple = leftTemple.clone();
+    rightTemple.position.x = 0.09;
+    closeupRefinement.add(hairlineArc, leftTemple, rightTemple);
+    strandSpecs.forEach((t) => {
+      closeupRefinement.add(
+        createCloseupStrand(
+          t.points,
+          t.radius,
+          t.opacity,
+          t.tubularSegments ?? 28,
+        ),
+      );
+    });
+    o.add(closeupRefinement);
+    heroCloseupHead = buildReferenceJuniorHeroHead({
+      skinColor: l.clone(),
+      hairColor: t.hair,
+      irisColor: t.iris ?? "#5b4030",
+    });
+    o.add(heroCloseupHead.root);
+  }
+  const Se = (function (t, o = 1) {
+    const a = new e.MeshBasicMaterial({
+        map: t,
+        transparent: !0,
+        opacity: o,
+        depthWrite: !1,
+      }),
+      n = new e.Mesh(new e.PlaneGeometry(0.27, 0.3), a);
+    return (n.position.set(0, 0.01, 0.176), n);
+  })(
+    (function ({ female: t = !1, referenceJunior: o = !1 } = {}) {
+      const a = document.createElement("canvas");
+      ((a.width = 320), (a.height = 320));
+      const n = a.getContext("2d");
+      n.clearRect(0, 0, 320, 320);
+      const s = n.createRadialGradient(160, 132, 24, 160, 188, 164);
+      (s.addColorStop(0, t ? "rgba(255,237,230,.3)" : "rgba(255,234,224,.22)"),
+        s.addColorStop(1, "rgba(0,0,0,0)"),
+        (n.fillStyle = s),
+        n.fillRect(0, 0, 320, 320),
+        o
+          ? ((n.fillStyle = "rgba(112,84,74,.72)"),
+            n.beginPath(),
+            n.moveTo(88, 128),
+            n.quadraticCurveTo(104, 112, 144, 117),
+            n.lineTo(144, 123),
+            n.quadraticCurveTo(104, 118, 90, 130),
+            n.closePath(),
+            n.fill(),
+            n.beginPath(),
+            n.moveTo(232, 128),
+            n.quadraticCurveTo(216, 112, 176, 117),
+            n.lineTo(176, 123),
+            n.quadraticCurveTo(216, 118, 230, 130),
+            n.closePath(),
+            n.fill())
+          : ((n.strokeStyle = t ? "rgba(82,48,47,.7)" : "rgba(74,43,40,.72)"),
+            (n.lineWidth = t ? 6 : 7),
+            n.beginPath(),
+            n.moveTo(92, 116),
+            n.quadraticCurveTo(118, t ? 94 : 100, 142, 110),
+            n.moveTo(178, 110),
+            n.quadraticCurveTo(202, t ? 94 : 100, 228, 116),
+            n.stroke()),
+        o &&
+          ((n.fillStyle = "rgba(255,255,255,.85)"),
+          n.beginPath(),
+          n.ellipse(114, 152, 26, 17, -0.02, 0, 2 * Math.PI),
+          n.fill(),
+          n.beginPath(),
+          n.ellipse(206, 152, 26, 17, 0.02, 0, 2 * Math.PI),
+          n.fill()),
+        (n.fillStyle = "#24191a"),
+        n.beginPath(),
+        n.ellipse(
+          114,
+          o ? 152 : 146,
+          o ? 21 : 15,
+          o ? 16 : 12,
+          -0.02,
+          0,
+          2 * Math.PI,
+        ),
+        n.ellipse(
+          206,
+          o ? 152 : 146,
+          o ? 21 : 15,
+          o ? 16 : 12,
+          0.02,
+          0,
+          2 * Math.PI,
+        ),
+        n.fill(),
+        (n.fillStyle = t ? (o ? "#5b3929" : "#3f231f") : "#35201d"),
+        n.beginPath(),
+        n.ellipse(
+          114,
+          o ? 152 : 146,
+          o ? 8.6 : 6,
+          o ? 10.6 : 7,
+          0,
+          0,
+          2 * Math.PI,
+        ),
+        n.ellipse(
+          206,
+          o ? 152 : 146,
+          o ? 8.6 : 6,
+          o ? 10.6 : 7,
+          0,
+          0,
+          2 * Math.PI,
+        ),
+        n.fill(),
+        t &&
+          ((n.strokeStyle = o ? "rgba(64,38,34,.72)" : "rgba(39,20,18,.7)"),
+          (n.lineWidth = o ? 2.1 : 2),
+          n.beginPath(),
+          n.moveTo(94, o ? 158 : 154),
+          n.quadraticCurveTo(114, o ? 164 : 162, 134, o ? 158 : 154),
+          n.moveTo(186, o ? 158 : 154),
+          n.quadraticCurveTo(206, o ? 164 : 162, 226, o ? 158 : 154),
+          n.stroke(),
+          (n.strokeStyle = o ? "rgba(36,22,24,.82)" : "rgba(39,20,18,.68)"),
+          (n.lineWidth = o ? 3.6 : 2.4),
+          (n.lineCap = "round"),
+          n.beginPath(),
+          n.moveTo(o ? 82 : 88, o ? 140 : 136),
+          n.quadraticCurveTo(
+            o ? 100 : 104,
+            o ? 130 : 128,
+            o ? 120 : 124,
+            o ? 136 : 132,
+          ),
+          n.stroke(),
+          n.beginPath(),
+          n.moveTo(o ? 108 : 112, o ? 134 : 130),
+          n.quadraticCurveTo(
+            o ? 126 : 128,
+            o ? 128 : 124,
+            o ? 140 : 142,
+            o ? 134 : 132,
+          ),
+          n.stroke(),
+          n.beginPath(),
+          n.moveTo(o ? 200 : 196, o ? 140 : 136),
+          n.quadraticCurveTo(
+            o ? 218 : 216,
+            o ? 130 : 128,
+            o ? 238 : 232,
+            o ? 136 : 132,
+          ),
+          n.stroke(),
+          n.beginPath(),
+          n.moveTo(o ? 180 : 178, o ? 134 : 130),
+          n.quadraticCurveTo(
+            o ? 198 : 196,
+            o ? 128 : 124,
+            o ? 212 : 210,
+            o ? 134 : 132,
+          ),
+          n.stroke(),
+          o &&
+            ((n.strokeStyle = "rgba(120,80,70,.35)"),
+            (n.lineWidth = 2),
+            n.beginPath(),
+            n.moveTo(88, 134),
+            n.quadraticCurveTo(114, 126, 140, 134),
+            n.stroke(),
+            n.beginPath(),
+            n.moveTo(180, 134),
+            n.quadraticCurveTo(206, 126, 232, 134),
+            n.stroke(),
+            (n.strokeStyle = "rgba(36,22,24,.7)"),
+            (n.lineWidth = 1.4),
+            n.beginPath(),
+            n.moveTo(78, 144),
+            n.quadraticCurveTo(72, 136, 68, 130),
+            n.stroke(),
+            n.beginPath(),
+            n.moveTo(82, 142),
+            n.quadraticCurveTo(74, 132, 72, 126),
+            n.stroke(),
+            n.beginPath(),
+            n.moveTo(86, 140),
+            n.quadraticCurveTo(80, 130, 78, 124),
+            n.stroke(),
+            n.beginPath(),
+            n.moveTo(242, 144),
+            n.quadraticCurveTo(248, 136, 252, 130),
+            n.stroke(),
+            n.beginPath(),
+            n.moveTo(238, 142),
+            n.quadraticCurveTo(246, 132, 248, 126),
+            n.stroke(),
+            n.beginPath(),
+            n.moveTo(234, 140),
+            n.quadraticCurveTo(240, 130, 242, 124),
+            n.stroke())),
+        (n.fillStyle = "rgba(255,255,255,.94)"),
+        n.beginPath(),
+        n.ellipse(
+          110,
+          o ? 145 : 142,
+          o ? 4.6 : 3,
+          o ? 4.6 : 3,
+          0,
+          0,
+          2 * Math.PI,
+        ),
+        n.ellipse(
+          202,
+          o ? 145 : 142,
+          o ? 4.6 : 3,
+          o ? 4.6 : 3,
+          0,
+          0,
+          2 * Math.PI,
+        ),
+        n.fill(),
+        o &&
+          ((n.strokeStyle = "rgba(180,140,130,.28)"),
+          (n.lineWidth = 1.5),
+          n.beginPath(),
+          n.moveTo(160, 122),
+          n.bezierCurveTo(161, 148, 159, 174, 157, 198),
+          n.stroke(),
+          (n.strokeStyle = "rgba(255,255,255,.12)"),
+          (n.lineWidth = 1),
+          n.beginPath(),
+          n.moveTo(158, 124),
+          n.bezierCurveTo(159, 148, 157, 172, 155, 196),
+          n.stroke()),
+        (n.strokeStyle = o ? "rgba(152,104,96,.46)" : "rgba(144,97,91,.52)"),
+        (n.lineWidth = o ? 5 : 6),
+        n.beginPath(),
+        n.moveTo(160, 146),
+        n.quadraticCurveTo(172, 180, 156, 194),
+        n.stroke(),
+        (n.fillStyle = t
+          ? o
+            ? "rgba(242,178,186,.16)"
+            : "rgba(232,164,174,.2)"
+          : "rgba(196,126,120,.14)"),
+        n.beginPath(),
+        n.ellipse(
+          102,
+          o ? 190 : 188,
+          o ? 20 : 22,
+          o ? 12 : 14,
+          0,
+          0,
+          2 * Math.PI,
+        ),
+        n.ellipse(
+          218,
+          o ? 190 : 188,
+          o ? 20 : 22,
+          o ? 12 : 14,
+          0,
+          0,
+          2 * Math.PI,
+        ),
+        n.fill(),
+        o &&
+          ((n.fillStyle = "rgba(255,255,255,.09)"),
+          n.beginPath(),
+          n.ellipse(96, 180, 14, 10, -0.15, 0, 2 * Math.PI),
+          n.fill(),
+          n.beginPath(),
+          n.ellipse(224, 180, 14, 10, 0.15, 0, 2 * Math.PI),
+          n.fill(),
+          (n.fillStyle = "rgba(62,38,32,.72)"),
+          n.beginPath(),
+          n.arc(126, 174, 2.2, 0, 2 * Math.PI),
+          n.fill()),
+        o &&
+          ((n.fillStyle = "rgba(212,135,122,.6)"),
+          n.beginPath(),
+          n.moveTo(130, 226),
+          n.bezierCurveTo(140, 218, 155, 216, 160, 220),
+          n.bezierCurveTo(165, 216, 180, 218, 190, 226),
+          n.bezierCurveTo(178, 230, 165, 232, 160, 230),
+          n.bezierCurveTo(155, 232, 142, 230, 130, 226),
+          n.closePath(),
+          n.fill(),
+          (n.fillStyle = "rgba(212,135,122,.48)"),
+          n.beginPath(),
+          n.moveTo(134, 230),
+          n.bezierCurveTo(142, 228, 155, 232, 160, 230),
+          n.bezierCurveTo(165, 232, 178, 228, 186, 230),
+          n.bezierCurveTo(178, 244, 165, 248, 160, 247),
+          n.bezierCurveTo(155, 248, 142, 244, 134, 230),
+          n.closePath(),
+          n.fill(),
+          (n.fillStyle = "rgba(255,255,255,.14)"),
+          n.beginPath(),
+          n.ellipse(160, 237, 16, 4, 0, 0, 2 * Math.PI),
+          n.fill()),
+        (n.strokeStyle = t
+          ? o
+            ? "rgba(186,126,132,.7)"
+            : "rgba(176,86,112,.92)"
+          : "rgba(126,82,76,.86)"),
+        (n.lineWidth = t ? (o ? 4.8 : 7) : 6),
+        n.beginPath(),
+        n.moveTo(o ? 132 : 116, o ? 238 : 236),
+        n.quadraticCurveTo(160, o ? 242 : 258, o ? 188 : 208, o ? 238 : 236),
+        n.stroke(),
+        o &&
+          ((n.strokeStyle = "rgba(186,126,132,.4)"),
+          (n.lineWidth = 1.8),
+          n.beginPath(),
+          n.moveTo(132, 238),
+          n.quadraticCurveTo(128, 236, 126, 232),
+          n.stroke(),
+          n.beginPath(),
+          n.moveTo(188, 238),
+          n.quadraticCurveTo(192, 236, 194, 232),
+          n.stroke()),
+        (n.strokeStyle = "rgba(255,255,255,.18)"),
+        (n.lineWidth = 3),
+        n.beginPath(),
+        n.moveTo(o ? 136 : 126, 234),
+        n.quadraticCurveTo(160, o ? 238 : 248, o ? 184 : 194, 234),
+        n.stroke());
+      const r = new e.CanvasTexture(a);
+      return ((r.colorSpace = e.SRGBColorSpace), r);
+    })({ female: t.female, referenceJunior: a }),
+    n ? 0.5 : 0.86,
+  );
+  ((Se.position.y = n ? 1.556 : 1.55),
+    (Se.position.z = n ? 0.19 : t.female ? 0.178 : 0.172),
+    Se.scale.setScalar(n ? 0.84 : t.female ? 0.95 : 0.92),
+    o.add(Se),
+    n && (Se.position.set(0, 1.554, 0.194), Se.scale.setScalar(0.87)));
+  const ze = new e.Mesh(
+    new e.PlaneGeometry(0.18, 0.06),
+    new e.MeshBasicMaterial({
+      color: "#5a3d3c",
+      transparent: !0,
+      opacity: 0.08,
+      depthWrite: !1,
+    }),
+  );
+  let frontHairStripL = null,
+    frontHairStripR = null,
+    frontHairInnerL = null,
+    frontHairInnerR = null,
+    hairCurtainL = null,
+    hairCurtainR = null;
+  if ((ze.position.set(0, 1.59, 0.17), o.add(ze), t.female)) {
+    const s = new e.Mesh(new e.BoxGeometry(0.16, 0.64, 0.08), d);
+    (s.position.set(0, 1.22, -0.11), s.scale.set(1, 1.06, 0.82), o.add(s));
+    const r = new e.Mesh(new e.BoxGeometry(0.028, n ? 0.32 : 0.26, 0.028), d);
+    (r.position.set(n ? -0.102 : -0.112, n ? 1.44 : 1.46, n ? 0.124 : 0.118),
+      (r.rotation.z = -0.12));
+    const i = r.clone();
+    if (
+      ((i.position.x = n ? 0.104 : 0.112),
+      (i.rotation.z = 0.12),
+      (frontHairStripL = r),
+      (frontHairStripR = i),
+      o.add(r, i),
+      n)
+    ) {
+      const t = new e.Mesh(new e.BoxGeometry(0.016, 0.24, 0.018), d);
+      (t.position.set(-0.046, 1.512, 0.158), (t.rotation.z = -0.02));
+      const a = t.clone();
+      ((a.position.x = 0.05),
+        (a.rotation.z = 0.02),
+        (frontHairInnerL = t),
+        (frontHairInnerR = a),
+        o.add(t, a));
+    }
+    const l = new e.Mesh(new e.BoxGeometry(0.034, 0.34, 0.032), d);
+    (l.position.set(-0.152, 1.36, 0.02), (l.rotation.z = -0.08));
+    const c = l.clone();
+    ((c.position.x = 0.152),
+      (c.rotation.z = 0.08),
+      (hairCurtainL = l),
+      (hairCurtainR = c),
+      o.add(l, c));
+    const h = new e.Mesh(
+      new e.TorusGeometry(0.1, 0.018, 8, 20, Math.PI),
+      new e.MeshStandardMaterial({
+        color: "#fffef8",
+        roughness: 0.76,
+        metalness: 0.01,
+      }),
+    );
+    if (
+      (h.position.set(0, 1.2, 0.08),
+      (h.rotation.x = 0.54 * Math.PI),
+      o.add(h),
+      n)
+    ) {
+      const t = new e.MeshPhysicalMaterial({
+          color: "#ffffff",
+          roughness: 0.42,
+          metalness: 0.01,
+          clearcoat: 0.16,
+          clearcoatRoughness: 0.2,
+        }),
+        a = new e.BufferGeometry(),
+        n = new Float32Array([0, 0, 0, -0.06, 0.04, 0, -0.05, -0.02, 0]);
+      (a.setAttribute("position", new e.BufferAttribute(n, 3)),
+        a.computeVertexNormals());
+      const s = new e.Mesh(a, t);
+      (s.position.set(-0.01, 1.22, 0.14),
+        (s.rotation.y = 0.3),
+        (s.rotation.z = -0.1),
+        o.add(s));
+      const r = new e.BufferGeometry(),
+        i = new Float32Array([0, 0, 0, 0.06, 0.04, 0, 0.05, -0.02, 0]);
+      (r.setAttribute("position", new e.BufferAttribute(i, 3)),
+        r.computeVertexNormals());
+      const l = new e.Mesh(r, t);
+      (l.position.set(0.01, 1.22, 0.14),
+        (l.rotation.y = -0.3),
+        (l.rotation.z = 0.1),
+        o.add(l));
+    }
+    const p = new e.Mesh(
+      new e.CapsuleGeometry(0.164, 0.48, 8, 16),
+      new e.MeshPhysicalMaterial({
+        color: "#fffdfa",
+        roughness: 0.3,
+        metalness: 0.01,
+        clearcoat: 0.2,
+        clearcoatRoughness: 0.24,
+      }),
+    );
+    (p.position.set(0, 1.06, 0.02),
+      p.scale.set(a ? 0.92 : 0.94, a ? 1.05 : 0.92, 0.8),
+      o.add(p));
+    const w = new e.Mesh(new e.TorusGeometry(0.146, 0.012, 8, 20), m);
+    (w.position.set(0, 0.84, 0.02), (w.rotation.x = Math.PI / 2), o.add(w));
+    const M = new e.Mesh(
+      new e.PlaneGeometry(0.12, 0.34),
+      new e.MeshPhysicalMaterial({
+        color: "#efe7dc",
+        roughness: 0.54,
+        metalness: 0,
+        transparent: !0,
+        opacity: 0.22,
+        clearcoat: 0.08,
+        clearcoatRoughness: 0.22,
+      }),
+    );
+    (M.position.set(0, 1.02, 0.2), o.add(M));
+    (n ? [-0.02, 0.08, 0.16, 0.24] : [-0.02, 0.1, 0.22]).forEach((t) => {
+      const a = new e.Mesh(new e.SphereGeometry(n ? 0.01 : 0.012, 10, 10), m);
+      (a.position.set(0, 1.12 - t, 0.2), o.add(a));
+    });
+    const f = new e.CapsuleGeometry(0.054, 0.34, 5, 10),
+      u = new e.MeshPhysicalMaterial({
+        color: "#fffdfa",
+        roughness: 0.32,
+        metalness: 0.01,
+        clearcoat: 0.18,
+        clearcoatRoughness: 0.24,
+      }),
+      y = new e.Mesh(f, u);
+    (y.position.set(-0.246, 0.88, 0.03), (y.rotation.z = 0.12));
+    const g = y.clone();
+    ((g.position.x = 0.246), (g.rotation.z = -0.12), o.add(y, g));
+    const x = new e.Mesh(new e.TorusGeometry(0.046, 0.012, 8, 18), m);
+    (x.position.set(-0.254, 0.74, 0.03), (x.rotation.z = 1.52));
+    const b = x.clone();
+    ((b.position.x = 0.254), o.add(x, b));
+    const S = new e.MeshStandardMaterial({
+        color: "#faf7f1",
+        roughness: 0.76,
+        metalness: 0.01,
+      }),
+      z = new e.Mesh(new e.CylinderGeometry(0.07, 0.072, 0.14, 14), S);
+    z.position.set(-0.085, 0.11, 0.008);
+    const P = z.clone();
+    ((P.position.x = 0.085), o.add(z, P));
+    const v = new e.Mesh(new e.SphereGeometry(0.056, 18, 18), d);
+    (v.position.set(0.028, 1.698, -0.17), o.add(v));
+    const G = new e.Mesh(
+      new e.TorusGeometry(0.052, 0.016, 8, 20),
+      new e.MeshStandardMaterial({
+        color: "#1f1a22",
+        roughness: 0.7,
+        metalness: 0.04,
+      }),
+    );
+    if (
+      (G.position.set(0.028, 1.698, -0.17),
+      (G.rotation.x = Math.PI / 2),
+      o.add(G),
+      n)
+    ) {
+      const a = new e.MeshPhysicalMaterial({
+        color: t.hair,
+        roughness: 0.08,
+        metalness: 0.05,
+        clearcoat: 0.72,
+        clearcoatRoughness: 0.08,
+        sheen: 0.48,
+        sheenRoughness: 0.2,
+        sheenColor: new e.Color("#7a5a3a"),
+      });
+      (v.position.set(0.02, 1.692, -0.164),
+        G.position.set(0.02, 1.692, -0.164));
+      const n = new e.Mesh(
+        new e.TorusGeometry(0.038, 0.01, 12, 24),
+        new e.MeshPhysicalMaterial({
+          color: "#2a1418",
+          roughness: 0.3,
+          metalness: 0.08,
+          clearcoat: 0.4,
+        }),
+      );
+      (n.position.set(0.02, 1.62, -0.19),
+        (n.rotation.x = 0.35 * Math.PI),
+        (n.rotation.z = -0.05),
+        o.add(n));
+      const s = new e.Mesh(new e.CapsuleGeometry(0.042, 0.22, 8, 14), a);
+      (s.position.set(0.04, 1.52, -0.22),
+        (s.rotation.x = 0.35),
+        (s.rotation.z = -0.04),
+        s.scale.set(0.82, 1, 0.72),
+        o.add(s));
+      const r = new e.Mesh(new e.CapsuleGeometry(0.036, 0.22, 8, 14), a);
+      (r.position.set(0.08, 1.32, -0.2),
+        (r.rotation.x = 0.15),
+        (r.rotation.z = -0.06),
+        r.scale.set(0.78, 1, 0.68),
+        o.add(r));
+      const i = new e.Mesh(new e.CapsuleGeometry(0.03, 0.2, 8, 12), a);
+      (i.position.set(0.12, 1.14, -0.14),
+        (i.rotation.x = -0.12),
+        (i.rotation.z = -0.04),
+        i.scale.set(0.76, 1, 0.66),
+        o.add(i));
+      const l = new e.Mesh(new e.CapsuleGeometry(0.022, 0.18, 8, 10), a);
+      (l.position.set(0.15, 0.97, -0.08),
+        (l.rotation.x = -0.28),
+        (l.rotation.z = -0.03),
+        l.scale.set(0.74, 1, 0.62),
+        o.add(l));
+    } else {
+      const t = new e.Mesh(new e.CapsuleGeometry(0.05, 0.62, 6, 12), d);
+      (t.position.set(0.092, 1.24, -0.24),
+        (t.rotation.z = -0.18),
+        (t.rotation.x = 0.1),
+        t.scale.set(0.86, 1.24, 0.8),
+        o.add(t));
+      const a = new e.Mesh(new e.CapsuleGeometry(0.036, 0.42, 6, 10), d);
+      (a.position.set(0.14, 0.92, -0.16),
+        (a.rotation.z = -0.22),
+        (a.rotation.x = -0.04),
+        a.scale.set(0.84, 1.28, 0.82),
+        o.add(a));
+    }
+  }
+  if (!t.female) {
+    const t = new e.Mesh(
+      new e.BoxGeometry(0.11, 0.52, 0.03),
+      new e.MeshPhysicalMaterial({
+        color: "#5f7893",
+        roughness: 0.42,
+        metalness: 0.03,
+        clearcoat: 0.12,
+        clearcoatRoughness: 0.28,
+        transparent: !0,
+        opacity: 0.94,
+      }),
+    );
+    (t.position.set(0, 1.08, 0.19), o.add(t));
+    const a = new e.Mesh(
+      new e.CapsuleGeometry(0.162, 0.52, 8, 16),
+      new e.MeshPhysicalMaterial({
+        color: "#eef2f7",
+        roughness: 0.38,
+        metalness: 0.02,
+        clearcoat: 0.1,
+        clearcoatRoughness: 0.22,
+      }),
+    );
+    (a.position.set(0, 1.06, 0.02), a.scale.set(1.08, 0.94, 0.88), o.add(a));
+    const n = new e.Mesh(
+      new e.TorusGeometry(0.092, 0.016, 8, 20, Math.PI),
+      new e.MeshPhysicalMaterial({
+        color: "#e4ebf2",
+        roughness: 0.44,
+        metalness: 0.02,
+        clearcoat: 0.12,
+        clearcoatRoughness: 0.18,
+      }),
+    );
+    (n.position.set(0, 1.2, 0.08), (n.rotation.x = 0.54 * Math.PI), o.add(n));
+    const s = new e.BoxGeometry(0.06, 0.04, 0.03),
+      r = new e.MeshPhysicalMaterial({
+        color: "#e8edf4",
+        roughness: 0.42,
+        metalness: 0.02,
+        clearcoat: 0.1,
+      }),
+      i = new e.Mesh(s, r);
+    (i.position.set(-0.06, 1.22, 0.12),
+      (i.rotation.z = -0.3),
+      (i.rotation.x = -0.2));
+    const l = i.clone();
+    ((l.position.x = 0.06), (l.rotation.z = 0.3), o.add(i, l));
+    const c = new e.Mesh(new e.BoxGeometry(0.136, 0.084, 0.054), d);
+    (c.position.set(0, 1.616, 0.122), o.add(c));
+    const h = new e.Mesh(new e.BoxGeometry(0.032, 0.18, 0.028), d);
+    (h.position.set(-0.132, 1.5, 0.06), (h.rotation.z = -0.06));
+    const p = h.clone();
+    ((p.position.x = 0.128), (p.rotation.z = 0.06));
+    const m = new e.Mesh(new e.BoxGeometry(0.18, 0.07, 0.06), d);
+    (m.position.set(0, 1.52, -0.164), o.add(h, p, m));
+  }
+  if (t.phone) {
+    (R.position.set(0.18, 1.16, 0.02),
+      (R.rotation.z = -0.6),
+      (R.rotation.x = -0.52),
+      q.position.set(0.164, 1.2, 0.03),
+      (q.rotation.z = -0.78),
+      (q.rotation.x = -0.46),
+      E.position.set(0.19, 1.24, 0.08));
+    const t = new e.Mesh(
+      new e.BoxGeometry(0.05, 0.12, 0.018),
+      new e.MeshStandardMaterial({
+        color: "#141518",
+        roughness: 0.38,
+        metalness: 0.28,
+      }),
+    );
+    (t.position.set(0.16, 1.38, 0.07),
+      t.rotation.set(-0.24, 0.16, 0.18),
+      o.add(t));
+  }
+  if (t.highlight) {
+    const e = b("rgba(255,234,184,1)", 1.2, 1.8, 0.28);
+    (e.position.set(0.12, 1.16, -0.08), o.add(e), (o.userData.glow = e));
+  }
+  return (
+    t.echo &&
+      o.traverse((o) => {
+        o.isMesh &&
+          ((o.material = o.material.clone()),
+          (o.material.transparent = !0),
+          (o.material.opacity = t.echoOpacity ?? 0.35),
+          (o.material.emissive = new e.Color(t.echoColor ?? "#ffcfb1")),
+          (o.material.emissiveIntensity = 0.16));
+      }),
+    o.scale.setScalar(t.scale ?? 0.95),
+    (o.userData.pose = {
+      waist: w,
+      torso: M,
+      chest: f,
+      leftArm: I,
+      rightArm: R,
+      leftLeg: S,
+      rightLeg: z,
+      leftHand: V,
+      rightHand: E,
+      head: L,
+      jaw: X,
+      faceSideL: $,
+      faceSideR: H,
+      eyeWhiteL: re,
+      eyeWhiteR: ie,
+      irisL: le,
+      irisR: ce,
+      eyeContourL: oe,
+      eyeContourR: ae,
+      eyeSparkleL: we,
+      eyeSparkleR: Me,
+      facePlane: Se,
+      faceShell: fe,
+      faceFront: fe,
+      heroHeadRoot: heroCloseupHead?.root ?? null,
+      heroHeadShell: heroCloseupHead?.refs.headShell ?? null,
+      heroJawShell: heroCloseupHead?.refs.jawShell ?? null,
+      heroEyeWhiteL: heroCloseupHead?.refs.heroEyeWhiteL ?? null,
+      heroEyeWhiteR: heroCloseupHead?.refs.heroEyeWhiteR ?? null,
+      heroIrisL: heroCloseupHead?.refs.heroIrisL ?? null,
+      heroIrisR: heroCloseupHead?.refs.heroIrisR ?? null,
+      heroBrowL: heroCloseupHead?.refs.heroBrowL ?? null,
+      heroBrowR: heroCloseupHead?.refs.heroBrowR ?? null,
+      heroHairCap: heroCloseupHead?.refs.heroHairCap ?? null,
+      heroPonytail: heroCloseupHead?.refs.heroPonytail ?? null,
+      mouth: O,
+      noseTip: F,
+      noseBridge: N,
+      lipGloss: ze,
+      headGlow: be,
+      hairBack: ue,
+      fringe: ye,
+      sideLockL: ge,
+      sideLockR: xe,
+      frontHairStripL: frontHairStripL,
+      frontHairStripR: frontHairStripR,
+      frontHairInnerL: frontHairInnerL,
+      frontHairInnerR: frontHairInnerR,
+      hairCurtainL: hairCurtainL,
+      hairCurtainR: hairCurtainR,
+      browL: K,
+      browR: Q,
+      closeupRefinement: closeupRefinement,
+      blushL: de,
+      blushR: pe,
+      shoulderL: B,
+      shoulderR: k,
+      female: Boolean(t.female),
+      hasPhone: Boolean(t.phone),
+      referenceJunior: a,
+    }),
+    x(o),
+    o
+  );
 }
-
-function makeConcreteTexture({ base, accent, line, warm = false } = {}) {
-  return buildCanvasTexture(
+function z(e) {
+  const t = e.userData.pose;
+  t &&
+    (t.waist.rotation.set(0, 0, 0),
+    t.torso.rotation.set(0, 0, 0),
+    t.chest.rotation.set(0, 0, 0),
+    t.leftArm.rotation.set(0, 0, t.female ? 0.12 : 0.15),
+    t.rightArm.rotation.set(0, 0, t.female ? -0.12 : -0.15),
+    t.leftLeg.rotation.set(0, 0, 0.02),
+    t.rightLeg.rotation.set(0, 0, -0.02),
+    t.leftHand.rotation.set(0, 0, 0),
+    t.rightHand.rotation.set(0, 0, 0),
+    t.head.rotation.set(0, 0, 0),
+    t.jaw.rotation.set(0, 0, 0),
+    t.hairBack.rotation.set(0, 0, 0),
+    t.fringe.rotation.set(0, 0, 0),
+    t.heroHeadRoot && t.heroHeadRoot.rotation.set(0, 0, 0),
+    t.heroPonytail && t.heroPonytail.rotation.set(0, 0, 0),
+    t.eyeWhiteL?.userData.baseScale && t.eyeWhiteL.scale.copy(t.eyeWhiteL.userData.baseScale),
+    t.eyeWhiteR?.userData.baseScale && t.eyeWhiteR.scale.copy(t.eyeWhiteR.userData.baseScale),
+    t.irisL?.userData.baseScale && t.irisL.scale.copy(t.irisL.userData.baseScale),
+    t.irisR?.userData.baseScale && t.irisR.scale.copy(t.irisR.userData.baseScale),
+    t.heroEyeWhiteL?.userData.baseScale &&
+      t.heroEyeWhiteL.scale.copy(t.heroEyeWhiteL.userData.baseScale),
+    t.heroEyeWhiteR?.userData.baseScale &&
+      t.heroEyeWhiteR.scale.copy(t.heroEyeWhiteR.userData.baseScale),
+    t.heroIrisL?.userData.baseScale &&
+      t.heroIrisL.scale.copy(t.heroIrisL.userData.baseScale),
+    t.heroIrisR?.userData.baseScale &&
+      t.heroIrisR.scale.copy(t.heroIrisR.userData.baseScale),
+    (e.position.y = 0));
+}
+function P(e, t, o = 1) {
+  const a = e.userData.pose;
+  if (!a) return;
+  const n = Math.max(-1, Math.min(1, t)),
+    s = Math.abs(n),
+    r = Math.asin(n),
+    i = a.female ? 0.58 : 0.48,
+    l = Math.sin(r - 0.22),
+    c = a.hasPhone ? 0.14 : 0.42;
+  ((a.leftLeg.rotation.x = n * i), (a.rightLeg.rotation.x = -n * i));
+  const h = 0.08 * Math.max(0, n),
+    d = 0.08 * Math.max(0, -n);
+  ((a.leftLeg.rotation.z = 0.02 + h),
+    (a.rightLeg.rotation.z = -0.02 - d),
+    (a.leftArm.rotation.x = -l * c),
+    (a.rightArm.rotation.x = a.hasPhone ? 0.06 * n - 0.56 : l * c),
+    (a.leftArm.rotation.z = (a.female ? 0.12 : 0.15) + 0.06 * Math.max(0, l)),
+    (a.rightArm.rotation.z =
+      -(a.female ? 0.12 : 0.15) - 0.06 * Math.max(0, -l)),
+    (a.leftHand.rotation.x = 0.12 * l),
+    (a.rightHand.rotation.x = a.hasPhone ? 0 : 0.12 * -l),
+    (a.torso.rotation.z = 0.04 * -n * o),
+    (a.torso.rotation.x = 0.028 * s),
+    (a.torso.rotation.y = 0.07 * n * o),
+    (a.waist.rotation.z = 0.07 * n * o),
+    (a.waist.rotation.y = 0.06 * -n * o),
+    (a.waist.rotation.x = 0.02 * s),
+    (a.chest.rotation.y = 0.09 * -n * o),
+    (a.head.rotation.z = 0.022 * n * o),
+    (a.head.rotation.y = 0.035 * n * o),
+    (a.head.rotation.x = 0.012 * s),
+    (a.shoulderL.rotation.z = 0.07 * -n),
+    (a.shoulderR.rotation.z = 0.07 * n),
+    (a.shoulderL.rotation.x = 0.03 * l),
+    (a.shoulderR.rotation.x = 0.03 * -l),
+    a.female &&
+      ((a.hairBack.rotation.z = 0.04 * n),
+      (a.hairBack.rotation.x = 0.02 * s),
+      (a.fringe.rotation.z = 0.015 * -n)),
+    a.referenceJunior &&
+      ((a.head.rotation.y += 0.012 * Math.sin(1.8 * t) * o),
+      (a.head.rotation.x += 0.006 * Math.sin(2.2 * t + 0.3) * o),
+      (a.head.rotation.z += 0.004 * Math.sin(1.5 * t + 0.4) * o),
+      (a.hairBack.rotation.y += 0.008 * Math.sin(1.4 * t + 0.2) * o),
+      (a.hairBack.rotation.z += 0.018 * Math.sin(1.1 * t + 0.6) * o),
+      (a.fringe.rotation.z += 0.006 * Math.sin(1.7 * t + 0.4) * o),
+      a.heroHeadRoot &&
+        (a.heroHeadRoot.rotation.copy(a.head.rotation),
+        a.heroPonytail &&
+          ((a.heroPonytail.rotation.y = 0.4 * a.hairBack.rotation.y),
+          (a.heroPonytail.rotation.z = 0.7 * a.hairBack.rotation.z)))));
+  const p = 0.026 * Math.abs(Math.cos(r)) + 0.016 * s,
+    m = 0.014 * n * o;
+  ((e.position.y = p), (e.position.x += m));
+}
+function v(e, t, o = 1) {
+  const a = e.userData.pose;
+  if (!a) return;
+  const n = 0.022 * Math.sin(1.4 * t) * o,
+    s = 0.014 * Math.sin(1.4 * t + 0.3) * o;
+  ((a.torso.rotation.x = n),
+    (a.chest.rotation.x = 0.8 * n + 0.4 * s),
+    (a.waist.rotation.x = 0.18 * n));
+  const r = 0.008 * Math.sin(0.42 * t) * o;
+  ((a.waist.rotation.z = r),
+    (a.torso.rotation.z = 0.5 * -r),
+    (a.head.rotation.y =
+      0.048 * Math.sin(0.7 * t) * o + 0.008 * Math.sin(1.9 * t) * o),
+    (a.head.rotation.x = 0.014 * Math.sin(0.9 * t) * o),
+    (a.head.rotation.z = 0.006 * Math.sin(0.55 * t) * o),
+    (a.hairBack.rotation.z = 0.026 * Math.sin(1.1 * t) * o),
+    (a.hairBack.rotation.x = 0.01 * Math.sin(0.8 * t) * o),
+    a.female && (a.fringe.rotation.z = 0.008 * Math.sin(1.3 * t + 0.4) * o),
+    a.referenceJunior &&
+      ((a.head.rotation.y += 0.008 * Math.sin(0.38 * t + 0.15) * o),
+      (a.head.rotation.x += 0.006 * Math.sin(1.12 * t + 0.4) * o),
+      (a.head.rotation.z += 0.004 * Math.sin(0.62 * t + 0.2) * o),
+      (a.hairBack.rotation.y += 0.007 * Math.sin(0.52 * t + 0.25) * o),
+      (a.hairBack.rotation.z += 0.01 * Math.sin(0.74 * t + 0.1) * o),
+      (a.fringe.rotation.z += 0.004 * Math.sin(1.75 * t + 0.32) * o),
+      a.heroHeadRoot &&
+        (a.heroHeadRoot.rotation.copy(a.head.rotation),
+        a.heroPonytail &&
+          ((a.heroPonytail.rotation.y = 0.42 * a.hairBack.rotation.y),
+          (a.heroPonytail.rotation.z = 0.72 * a.hairBack.rotation.z)))),
+    (a.shoulderL.rotation.z = 0.01 * Math.sin(1.4 * t + 0.5) * o),
+    (a.shoulderR.rotation.z = 0.01 * -Math.sin(1.4 * t + 0.5) * o),
+    (a.leftArm.rotation.x = 0.01 * Math.sin(0.6 * t) * o),
+    (a.rightArm.rotation.x = a.hasPhone
+      ? -0.56
+      : 0.01 * Math.sin(0.6 * t + 0.4) * o),
+    (e.position.y = 0.012 * Math.abs(Math.sin(1.4 * t)) * o));
+  if (a.referenceJunior) {
+    const blink = 1 - 0.18 * Math.pow(Math.max(0, Math.sin(1.62 * t + 0.58)), 10) * o;
+    a.eyeWhiteL?.userData.baseScale &&
+      a.eyeWhiteL.scale.set(
+        a.eyeWhiteL.userData.baseScale.x,
+        a.eyeWhiteL.userData.baseScale.y * blink,
+        a.eyeWhiteL.userData.baseScale.z,
+      );
+    a.eyeWhiteR?.userData.baseScale &&
+      a.eyeWhiteR.scale.set(
+        a.eyeWhiteR.userData.baseScale.x,
+        a.eyeWhiteR.userData.baseScale.y * blink,
+        a.eyeWhiteR.userData.baseScale.z,
+      );
+    a.irisL?.userData.baseScale &&
+      a.irisL.scale.set(
+        a.irisL.userData.baseScale.x,
+        a.irisL.userData.baseScale.y * blink,
+        a.irisL.userData.baseScale.z,
+      );
+    a.irisR?.userData.baseScale &&
+      a.irisR.scale.set(
+        a.irisR.userData.baseScale.x,
+        a.irisR.userData.baseScale.y * blink,
+        a.irisR.userData.baseScale.z,
+      );
+    a.heroEyeWhiteL?.userData.baseScale &&
+      a.heroEyeWhiteL.scale.set(
+        a.heroEyeWhiteL.userData.baseScale.x,
+        a.heroEyeWhiteL.userData.baseScale.y * blink,
+        a.heroEyeWhiteL.userData.baseScale.z,
+      );
+    a.heroEyeWhiteR?.userData.baseScale &&
+      a.heroEyeWhiteR.scale.set(
+        a.heroEyeWhiteR.userData.baseScale.x,
+        a.heroEyeWhiteR.userData.baseScale.y * blink,
+        a.heroEyeWhiteR.userData.baseScale.z,
+      );
+    a.heroIrisL?.userData.baseScale &&
+      a.heroIrisL.scale.set(
+        a.heroIrisL.userData.baseScale.x,
+        a.heroIrisL.userData.baseScale.y * blink,
+        a.heroIrisL.userData.baseScale.z,
+      );
+    a.heroIrisR?.userData.baseScale &&
+      a.heroIrisR.scale.set(
+        a.heroIrisR.userData.baseScale.x,
+        a.heroIrisR.userData.baseScale.y * blink,
+        a.heroIrisR.userData.baseScale.z,
+      );
+  }
+}
+function G(t, o, a, n = 1, s = 1) {
+  const r = document.createElement("canvas");
+  ((r.width = t), (r.height = o));
+  a(r.getContext("2d"), t, o);
+  const i = new e.CanvasTexture(r);
+  return (
+    (i.colorSpace = e.SRGBColorSpace),
+    (i.wrapS = e.RepeatWrapping),
+    (i.wrapT = e.RepeatWrapping),
+    i.repeat.set(n, s),
+    i
+  );
+}
+function C({ base: e, accent: t, line: o, warm: a = !1 } = {}) {
+  return G(
     512,
     512,
-    (ctx, width, height) => {
-      ctx.fillStyle = base;
-      ctx.fillRect(0, 0, width, height);
-      for (let index = 0; index < 1200; index += 1) {
-        const x = Math.random() * width;
-        const y = Math.random() * height;
-        const alpha = 0.04 + Math.random() * 0.08;
-        ctx.fillStyle = warm ? `rgba(165,142,118,${alpha})` : `rgba(116,128,144,${alpha})`;
-        ctx.fillRect(x, y, 1 + Math.random() * 2, 1 + Math.random() * 2);
+    (n, s, r) => {
+      ((n.fillStyle = e), n.fillRect(0, 0, s, r));
+      for (let e = 0; e < 1200; e += 1) {
+        const e = Math.random() * s,
+          t = Math.random() * r,
+          o = 0.04 + 0.08 * Math.random();
+        ((n.fillStyle = a
+          ? `rgba(165,142,118,${o})`
+          : `rgba(116,128,144,${o})`),
+          n.fillRect(e, t, 1 + 2 * Math.random(), 1 + 2 * Math.random()));
       }
-      ctx.strokeStyle = line;
-      ctx.lineWidth = 1;
-      for (let index = 0; index < 9; index += 1) {
-        const y = (height / 9) * index + 8;
-        ctx.globalAlpha = 0.1;
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(width, y + (Math.random() * 8 - 4));
-        ctx.stroke();
+      ((n.strokeStyle = o), (n.lineWidth = 1));
+      for (let e = 0; e < 9; e += 1) {
+        const t = (r / 9) * e + 8;
+        ((n.globalAlpha = 0.1),
+          n.beginPath(),
+          n.moveTo(0, t),
+          n.lineTo(s, t + (8 * Math.random() - 4)),
+          n.stroke());
       }
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = accent;
-      ctx.fillRect(0, height - 10, width, 10);
+      ((n.globalAlpha = 1), (n.fillStyle = t), n.fillRect(0, r - 10, s, 10));
     },
     3.5,
-    3.5
+    3.5,
   );
 }
-
-function makeTileTexture({ base, line, speck } = {}) {
-  return buildCanvasTexture(
+function B({ base: e, line: t, speck: o } = {}) {
+  return G(
     512,
     512,
-    (ctx, width, height) => {
-      ctx.fillStyle = base;
-      ctx.fillRect(0, 0, width, height);
-      const tile = 84;
-      ctx.strokeStyle = line;
-      ctx.lineWidth = 3;
-      for (let x = 0; x <= width; x += tile) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, height);
-        ctx.stroke();
-      }
-      for (let y = 0; y <= height; y += tile) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(width, y);
-        ctx.stroke();
-      }
-      for (let index = 0; index < 1600; index += 1) {
-        ctx.fillStyle = `${speck}${(0.05 + Math.random() * 0.08).toFixed(2)})`;
-        ctx.fillRect(Math.random() * width, Math.random() * height, 1.5, 1.5);
-      }
+    (a, n, s) => {
+      ((a.fillStyle = e), a.fillRect(0, 0, n, s));
+      ((a.strokeStyle = t), (a.lineWidth = 3));
+      for (let e = 0; e <= n; e += 84)
+        (a.beginPath(), a.moveTo(e, 0), a.lineTo(e, s), a.stroke());
+      for (let e = 0; e <= s; e += 84)
+        (a.beginPath(), a.moveTo(0, e), a.lineTo(n, e), a.stroke());
+      for (let e = 0; e < 1600; e += 1)
+        ((a.fillStyle = `${o}${(0.05 + 0.08 * Math.random()).toFixed(2)})`),
+          a.fillRect(Math.random() * n, Math.random() * s, 1.5, 1.5));
     },
     4,
-    6
+    6,
   );
 }
-
-function makeWoodTexture({ base, dark, highlight } = {}) {
-  return buildCanvasTexture(
+function k({ base: e, dark: t, highlight: o } = {}) {
+  return G(
     512,
     512,
-    (ctx, width, height) => {
-      const gradient = ctx.createLinearGradient(0, 0, 0, height);
-      gradient.addColorStop(0, highlight);
-      gradient.addColorStop(0.42, base);
-      gradient.addColorStop(1, dark);
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, width, height);
-      for (let index = 0; index < 80; index += 1) {
-        const y = Math.random() * height;
-        ctx.strokeStyle = `rgba(74,45,24,${0.08 + Math.random() * 0.1})`;
-        ctx.lineWidth = 1 + Math.random() * 2;
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.bezierCurveTo(width * 0.3, y + Math.random() * 16, width * 0.7, y - Math.random() * 16, width, y + Math.random() * 8);
-        ctx.stroke();
+    (a, n, s) => {
+      const r = a.createLinearGradient(0, 0, 0, s);
+      (r.addColorStop(0, o),
+        r.addColorStop(0.42, e),
+        r.addColorStop(1, t),
+        (a.fillStyle = r),
+        a.fillRect(0, 0, n, s));
+      for (let e = 0; e < 80; e += 1) {
+        const e = Math.random() * s;
+        ((a.strokeStyle = `rgba(74,45,24,${0.08 + 0.1 * Math.random()})`),
+          (a.lineWidth = 1 + 2 * Math.random()),
+          a.beginPath(),
+          a.moveTo(0, e),
+          a.bezierCurveTo(
+            0.3 * n,
+            e + 16 * Math.random(),
+            0.7 * n,
+            e - 16 * Math.random(),
+            n,
+            e + 8 * Math.random(),
+          ),
+          a.stroke());
       }
-      for (let index = 0; index < 14; index += 1) {
-        const x = Math.random() * width;
-        const y = Math.random() * height;
-        ctx.strokeStyle = "rgba(58,33,18,.16)";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.ellipse(x, y, 18 + Math.random() * 16, 10 + Math.random() * 8, Math.random(), 0, Math.PI * 2);
-        ctx.stroke();
+      for (let e = 0; e < 14; e += 1) {
+        const e = Math.random() * n,
+          t = Math.random() * s;
+        ((a.strokeStyle = "rgba(58,33,18,.16)"),
+          (a.lineWidth = 3),
+          a.beginPath(),
+          a.ellipse(
+            e,
+            t,
+            18 + 16 * Math.random(),
+            10 + 8 * Math.random(),
+            Math.random(),
+            0,
+            2 * Math.PI,
+          ),
+          a.stroke());
       }
     },
     3,
-    6
+    6,
   );
 }
-
-function makeBoardTexture() {
-  return buildCanvasTexture(
-    512,
-    512,
-    (ctx, width, height) => {
-      ctx.fillStyle = "#29453a";
-      ctx.fillRect(0, 0, width, height);
-      for (let index = 0; index < 120; index += 1) {
-        ctx.fillStyle = `rgba(255,255,255,${0.01 + Math.random() * 0.02})`;
-        ctx.fillRect(Math.random() * width, Math.random() * height, 12 + Math.random() * 48, 1 + Math.random() * 2);
-      }
-      ctx.strokeStyle = "rgba(214,226,218,.12)";
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(36, 102);
-      ctx.lineTo(196, 114);
-      ctx.moveTo(218, 180);
-      ctx.lineTo(468, 162);
-      ctx.moveTo(128, 322);
-      ctx.lineTo(404, 336);
-      ctx.stroke();
-    },
-    1.4,
-    1.2
-  );
-}
-
-function buildTextPlane(text, width = 0.82, height = 0.26, { bg = "#44505f", fg = "#f7ecd1" } = {}) {
-  const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 160;
-  const ctx = canvas.getContext("2d");
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, 512, 160);
-  ctx.fillStyle = fg;
-  ctx.font = "600 86px DM Mono";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(text, 256, 88);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  const material = new THREE.MeshStandardMaterial({
-    map: texture,
+function T(
+  t,
+  o = 0.82,
+  a = 0.26,
+  { bg: n = "#44505f", fg: s = "#f7ecd1" } = {},
+) {
+  const r = document.createElement("canvas");
+  ((r.width = 512), (r.height = 160));
+  const i = r.getContext("2d");
+  ((i.fillStyle = n),
+    i.fillRect(0, 0, 512, 160),
+    (i.fillStyle = s),
+    (i.font = "600 86px DM Mono"),
+    (i.textAlign = "center"),
+    (i.textBaseline = "middle"),
+    i.fillText(t, 256, 88));
+  const l = new e.CanvasTexture(r);
+  l.colorSpace = e.SRGBColorSpace;
+  const c = new e.MeshStandardMaterial({
+    map: l,
     roughness: 0.7,
     metalness: 0.02,
   });
-  return new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
+  return new e.Mesh(new e.PlaneGeometry(o, a), c);
 }
-
-function buildWallLabel(text, width = 0.92, height = 0.26) {
-  const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 160;
-  const ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, 512, 160);
-  ctx.fillStyle = "rgba(255,255,255,.92)";
-  ctx.font = "600 84px DM Mono";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(text, 256, 80);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  const material = new THREE.MeshBasicMaterial({
-    map: texture,
-    transparent: true,
-    depthWrite: false,
+function I(e, t, o, a, n, s) {
+  e.push({ minX: t, maxX: o, minZ: a, maxZ: n, label: s });
+}
+function R(t, o, a, n, s, r, i, l, c = !0, h = !0) {
+  const d = new e.Mesh(a, n);
+  return (
+    d.position.copy(s),
+    r && d.rotation.set(r.x, r.y, r.z),
+    (d.castShadow = c),
+    (d.receiveShadow = h),
+    t.add(d),
+    l && I(i, l.minX, l.maxX, l.minZ, l.maxZ, l.label),
+    d.material.transparent || o.push(d),
+    d
+  );
+}
+function loadLm402Texture(t, o) {
+  return new Promise((a, n) => {
+    t.load(
+      o,
+      (t) => {
+        ((t.colorSpace = e.SRGBColorSpace), a(t));
+      },
+      void 0,
+      n,
+    );
   });
-  return new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
 }
-
-function addCollider(colliders, minX, maxX, minZ, maxZ, label) {
-  colliders.push({ minX, maxX, minZ, maxZ, label });
-}
-
-function addBox(scene, occluders, geometry, material, position, rotation, colliders, collider, castShadow = true, receiveShadow = true) {
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.position.copy(position);
-  if (rotation) {
-    mesh.rotation.set(rotation.x, rotation.y, rotation.z);
+function buildCurvedPortraitPlane(t, o = {}) {
+  const a = o.width ?? 1,
+    n = o.height ?? 1.8,
+    s = new e.PlaneGeometry(a, n, 28, 40),
+    r = s.getAttribute("position"),
+    i = a / 2,
+    l = o.curveDepth ?? 0.08;
+  for (let e = 0; e < r.count; e += 1) {
+    const t = r.getX(e),
+      o = Math.abs(t / i);
+    r.setZ(e, -(l * o * o));
   }
-  mesh.castShadow = castShadow;
-  mesh.receiveShadow = receiveShadow;
-  scene.add(mesh);
-  if (collider) {
-    addCollider(colliders, collider.minX, collider.maxX, collider.minZ, collider.maxZ, collider.label);
-  }
-  if (!mesh.material.transparent) {
-    occluders.push(mesh);
-  }
-  return mesh;
-}
-
-function createRing(color = 0xfbe3b8) {
-  const group = new THREE.Group();
-  const ring = new THREE.Mesh(
-    new THREE.TorusGeometry(0.18, 0.014, 12, 32),
-    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.14 })
+  ((r.needsUpdate = !0), s.computeVertexNormals());
+  const c0 = t.clone();
+  const h0 = o.featherMask ? buildPortraitFeatherMap(o.featherMask) : null;
+  ((c0.needsUpdate = !0),
+    o.mapRepeat &&
+      c0.repeat.set(o.mapRepeat.x ?? c0.repeat.x, o.mapRepeat.y ?? c0.repeat.y),
+    o.mapOffset &&
+      c0.offset.set(
+        o.mapOffset.x ?? c0.offset.x,
+        o.mapOffset.y ?? c0.offset.y,
+      ));
+  const c = new e.MeshStandardMaterial({
+      map: c0,
+      alphaMap: h0,
+      transparent: !0,
+      alphaTest: h0 ? 0.02 : (o.alphaTest ?? 0.18),
+      side: e.DoubleSide,
+      depthWrite: !1,
+      roughness: o.roughness ?? 0.72,
+      metalness: o.metalness ?? 0.02,
+      emissive: new e.Color(o.emissive ?? "#fff3ea"),
+      emissiveIntensity: o.emissiveIntensity ?? 0.06,
+    }),
+    h = new e.Mesh(s, c);
+  return (
+    h.position.copy(o.position ?? new e.Vector3()),
+    o.rotation && h.rotation.set(o.rotation.x, o.rotation.y, o.rotation.z),
+    o.scale && h.scale.copy(o.scale),
+    h
   );
-  ring.rotation.x = Math.PI / 2;
-  const core = new THREE.Mesh(
-    new THREE.SphereGeometry(0.05, 12, 12),
-    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.18 })
+}
+function buildPortraitFeatherMap(t = {}) {
+  const o = document.createElement("canvas");
+  ((o.width = 512), (o.height = 512));
+  const a = o.getContext("2d"),
+    n = 512 * (t.centerX ?? 0.5),
+    s = 512 * (t.centerY ?? 0.54),
+    r = 512 * (t.radiusX ?? 0.3),
+    i = 512 * (t.radiusY ?? 0.42),
+    l = 512 * (t.inner ?? 0.12),
+    c = 512 * (t.outer ?? 0.34);
+  (a.clearRect(0, 0, 512, 512),
+    a.save(),
+    a.translate(n, s),
+    a.scale(1, i / Math.max(1, r)));
+  const h = a.createRadialGradient(0, 0, l, 0, 0, c);
+  return (
+    (h.addColorStop(0, "rgba(255,255,255,1)"),
+    h.addColorStop(0.68, "rgba(255,255,255,1)"),
+    h.addColorStop(1, "rgba(0,0,0,0)"),
+    (a.fillStyle = h),
+    a.beginPath(),
+    a.arc(0, 0, c, 0, 2 * Math.PI),
+    a.fill(),
+    a.restore()),
+    new e.CanvasTexture(o)
   );
-  group.add(ring, core);
-  group.visible = false;
-  return group;
 }
-
-function buildIntroCurve() {
-  return new THREE.CatmullRomCurve3([
-    new THREE.Vector3(-15.2, 7.8, -13.8),
-    new THREE.Vector3(-14.1, 7.2, -8.2),
-    new THREE.Vector3(-12.6, 6.5, -1.4),
-    new THREE.Vector3(-11.4, 5.2, 5.8),
-    new THREE.Vector3(-10.6, 4.5, 11.4),
-    new THREE.Vector3(-9.4, 3.9, 17.2),
-    new THREE.Vector3(-8.0, 3.2, 21.6),
-    new THREE.Vector3(-6.8, 2.42, 25.6),
-    new THREE.Vector3(-5.8, 1.96, 28.7),
-    new THREE.Vector3(-5.12, 1.78, 31.2),
-  ]);
+const juniorPortraitCameraWorld = new e.Vector3(),
+  juniorPortraitCameraLocal = new e.Vector3(),
+  juniorHeroAnchorBox = new e.Box3(),
+  juniorHeroAnchorCenter = new e.Vector3(),
+  juniorHeroAnchorFace = new e.Vector3(),
+  juniorHeroAnchorChest = new e.Vector3(),
+  juniorHeroAnchorEyes = new e.Vector3();
+function angularDistance(t, o) {
+  return Math.abs(Math.atan2(Math.sin(t - o), Math.cos(t - o)));
 }
-
-export function createLm402Scene(canvas) {
-  const coarse = window.matchMedia("(pointer: coarse)").matches;
-  const quality = {
-    shadowMapSize: coarse ? 640 : 1024,
-    maxPixelRatio: coarse ? 0.96 : 1,
-    dustCount: coarse ? 42 : 64,
+function buildJuniorPortraitShell(t, o = {}) {
+  const a = new e.Group(),
+    n = [
+      {
+        texture: t.frontClose ?? t.front ?? null,
+        center: 0,
+        blendWidth: 0.92,
+        width: 0.88,
+        height: 1.08,
+        position: new e.Vector3(0.015, 1.57, 0.19),
+        opacity: 1,
+        emissiveIntensity: 0.06,
+      },
+      {
+        texture: t.leftFrontClose ?? t.frontClose ?? t.front ?? null,
+        center: 0.62,
+        blendWidth: 0.76,
+        width: 0.86,
+        height: 1.06,
+        position: new e.Vector3(0.02, 1.57, 0.17),
+        opacity: 0.96,
+        emissiveIntensity: 0.052,
+      },
+      {
+        texture:
+          t.rightFrontClose ??
+          t.leftFrontClose ??
+          t.frontClose ??
+          t.front ??
+          null,
+        center: -0.62,
+        blendWidth: 0.76,
+        width: 0.86,
+        height: 1.06,
+        position: new e.Vector3(0.02, 1.57, 0.17),
+        opacity: 0.96,
+        emissiveIntensity: 0.052,
+        mirror: !t.rightFrontClose && Boolean(t.leftFrontClose),
+      },
+      {
+        texture: t.sideClose ?? t.side ?? null,
+        center: 1.16,
+        blendWidth: 0.58,
+        width: 0.8,
+        height: 1.04,
+        position: new e.Vector3(0.02, 1.56, 0.1),
+        opacity: 0.8,
+        emissiveIntensity: 0.04,
+      },
+      {
+        texture: t.sideClose ?? t.side ?? null,
+        center: -1.16,
+        blendWidth: 0.58,
+        width: 0.8,
+        height: 1.04,
+        position: new e.Vector3(0.02, 1.56, 0.1),
+        opacity: 0.8,
+        emissiveIntensity: 0.04,
+        mirror: !0,
+      },
+      {
+        texture: t.backClose ?? null,
+        center: Math.PI,
+        blendWidth: 0.7,
+        width: 0.84,
+        height: 1.08,
+        position: new e.Vector3(0.01, 1.58, -0.02),
+        opacity: 0.86,
+        emissiveIntensity: 0.03,
+      },
+    ],
+    s = [];
+  n.forEach((n) => {
+    if (!n.texture) return;
+    const r = buildCurvedPortraitPlane(n.texture, {
+      width: n.width,
+      height: n.height,
+      curveDepth: 0.06,
+      alphaTest: 0.16,
+      featherMask: { centerX: 0.5, centerY: 0.54, inner: 0.12, outer: 0.34 },
+      roughness: 0.84,
+      emissive: "#fff4eb",
+      emissiveIntensity: n.emissiveIntensity,
+      position: n.position.clone(),
+      scale: new e.Vector3(
+        (n.mirror ? -1 : 1) * (o.scaleX ?? 1),
+        o.scaleY ?? 1,
+        1,
+      ),
+    });
+    ((r.renderOrder = 14),
+      (r.userData.viewCenter = n.center),
+      (r.userData.blendWidth = n.blendWidth),
+      (r.userData.baseOpacity = n.opacity),
+      s.push(r),
+      a.add(r));
+  });
+  const r0 = t.frontClose ?? t.front ?? null;
+  if (r0) {
+    const t = buildCurvedPortraitPlane(r0, {
+      width: 0.22,
+      height: 0.29,
+      curveDepth: 0.024,
+      alphaTest: 0.04,
+      featherMask: {
+        centerX: 0.5,
+        centerY: 0.5,
+        radiusX: 0.22,
+        radiusY: 0.26,
+        inner: 0.12,
+        outer: 0.24,
+      },
+      roughness: 0.92,
+      emissive: "#fff6ef",
+      emissiveIntensity: 0.04,
+      position: new e.Vector3(0.008, 1.576, 0.164),
+      mapRepeat: new e.Vector2(0.24, 0.4),
+      mapOffset: new e.Vector2(0.38, 0.38),
+    });
+    ((t.renderOrder = 16),
+      (t.visible = !1),
+      (t.material.opacity = 0),
+      (t.material.depthTest = !1),
+      a.add(t),
+      (a.userData.heroFaceCard = t));
+  }
+  const r = b("rgba(255,244,218,1)", 1.04, 1.18, 0.12);
+  return (
+    (r.position.set(0.02, 1.58, 0.1), (r.renderOrder = 13)),
+    a.add(r),
+    (a.userData.planes = s),
+    (a.userData.glow = r),
+    a
+  );
+}
+function updateJuniorHeroFaceCard(t, o, a, n = 1) {
+  const s = o?.userData?.heroFaceCard;
+  if (!s?.material) return;
+  const r = t.userData.runtimeModelRoot?.visible
+      ? t.userData.runtimeModelRoot
+      : t.userData.runtimeModelRoot ?? null,
+    i = r?.userData?.heroAnchor?.face ?? null;
+  i &&
+    (s.position.set(
+      i.x + 0.002,
+      i.y - 0.01,
+      i.z + 0.028,
+    ),
+    s.scale.setScalar(0.72));
+  (a.getWorldPosition(juniorPortraitCameraWorld),
+    juniorPortraitCameraLocal.copy(juniorPortraitCameraWorld),
+    t.worldToLocal(juniorPortraitCameraLocal));
+  const l = juniorPortraitCameraLocal.x - s.position.x,
+    c = juniorPortraitCameraLocal.z - s.position.z,
+    h = juniorPortraitCameraLocal.y - s.position.y;
+  ((s.rotation.y = Math.atan2(l, Math.abs(c) < 0.001 ? 0.001 : c)),
+    (s.rotation.x = 0.06 * Math.atan2(h, Math.max(0.24, Math.hypot(l, c)))),
+    (s.material.opacity = n),
+    (s.visible = n > 0.02));
+}
+function updateJuniorPortraitShell(t, o, a, n = 1) {
+  const s = o?.userData?.planes;
+  if (!s?.length) return;
+  (a.getWorldPosition(juniorPortraitCameraWorld),
+    juniorPortraitCameraLocal.copy(juniorPortraitCameraWorld),
+    t.worldToLocal(juniorPortraitCameraLocal));
+  const r = Math.atan2(
+    juniorPortraitCameraLocal.x,
+    Math.abs(juniorPortraitCameraLocal.z) < 0.001
+      ? 0.001
+      : juniorPortraitCameraLocal.z,
+  );
+  let i = 0;
+  s.forEach((t) => {
+    const o = Math.max(
+      0,
+      1 -
+        angularDistance(r, t.userData.viewCenter ?? 0) /
+          (t.userData.blendWidth ?? 0.7),
+    );
+    ((t.userData.viewWeight = o * o * (3 - 2 * o)),
+      (i = Math.max(i, t.userData.viewWeight)));
+    const a = juniorPortraitCameraLocal.x - t.position.x,
+      n = juniorPortraitCameraLocal.z - t.position.z,
+      s = juniorPortraitCameraLocal.y - t.position.y;
+    ((t.rotation.y = Math.atan2(a, Math.abs(n) < 0.001 ? 0.001 : n)),
+      (t.rotation.x = 0.14 * Math.atan2(s, Math.max(0.22, Math.hypot(a, n)))));
+  });
+  s.forEach((t) => {
+    if (!t.material) return;
+    const o = i > 0.001 ? (t.userData.viewWeight ?? 0) / i : 0,
+      a = Math.min(
+        1,
+        n * (t.userData.baseOpacity ?? 1) * Math.pow(Math.max(0, o), 2.8),
+      );
+    ((t.material.opacity = a), (t.visible = a > 0.02));
+  });
+  const l = o.userData.glow;
+  if (!l?.material) return;
+  const c = juniorPortraitCameraLocal.x - l.position.x,
+    h = juniorPortraitCameraLocal.z - l.position.z,
+    d = juniorPortraitCameraLocal.y - l.position.y,
+    p = 0.08 * n;
+  ((l.material.opacity = p),
+    (l.visible = p > 0.02),
+    (l.rotation.y = Math.atan2(c, Math.abs(h) < 0.001 ? 0.001 : h)),
+    (l.rotation.x = 0.08 * Math.atan2(d, Math.max(0.22, Math.hypot(c, h)))));
+}
+function resolveJuniorRuntimeManifest(t = {}) {
+  const o = t.runtimeModelUrl ?? t.modelUrl ?? t.runtimeUrl ?? null,
+    a = t.heroCloseupModelUrl ?? t.closeupModelUrl ?? o ?? null;
+  return {
+    ...t,
+    runtimeModelUrl: o,
+    heroCloseupModelUrl: a,
+    hasRuntimeModelUrl: Boolean(o),
+    hasHeroCloseupModelUrl: Boolean(a),
   };
-  const renderer = new THREE.WebGLRenderer({
-    canvas,
-    antialias: true,
-    alpha: false,
-    powerPreference: "high-performance",
+}
+function resolveJuniorGltfLoaderCtor() {
+  return typeof GLTFLoader < "u"
+    ? GLTFLoader
+    : typeof window > "u"
+      ? null
+      : window.GLTFLoader ?? window.THREE?.GLTFLoader ?? null;
+}
+function loadJuniorGltfModel(t, o = {}) {
+  if (!t) return Promise.resolve(null);
+  const a = resolveJuniorGltfLoaderCtor();
+  if (!a) {
+    const o = new Error("GLTFLoader unavailable for junior runtime asset.");
+    return ((o.code = "gltf_loader_unavailable"), Promise.reject(o));
+  }
+  return new Promise((n, s) => {
+    try {
+      const r = new a(o.manager ?? new e.LoadingManager());
+      o.crossOrigin && (r.crossOrigin = o.crossOrigin);
+      r.load(t, n, void 0, s);
+    } catch (t) {
+      s(t);
+    }
   });
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.14;
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color("#d4dfeb");
-  scene.fog = new THREE.Fog("#d6e1eb", 12, 58);
-
-  const camera = new THREE.PerspectiveCamera(74, 1, 0.03, 180);
-  camera.rotation.order = "YXZ";
-
-  const raycaster = new THREE.Raycaster();
-  const occluders = [];
-  const colliders = [];
-  const hotspotNodes = new Map();
-  let lastDebugSnapshot = {
+}
+function attachJuniorGltfModel(t, o, a = {}) {
+  if (!t) return null;
+  const n = o?.scene ?? o?.scenes?.[0] ?? null;
+  if (!n) return null;
+  t.clear(),
+    a.scale && n.scale.setScalar(a.scale),
+    a.position && n.position.copy(a.position),
+    a.rotation && n.rotation.set(a.rotation.x, a.rotation.y, a.rotation.z),
+    (n.visible = !0),
+    t.add(n),
+    t.updateMatrixWorld(!0),
+    n.updateMatrixWorld(!0);
+  const s = new e.Box3().setFromObject(n),
+    r = s.getSize(new e.Vector3()),
+    i = s.getCenter(new e.Vector3()),
+    l = (o) => t.worldToLocal(o.clone()),
+    c = (o) => {
+      const a = n.getObjectByName(o);
+      if (!a) return null;
+      return t.worldToLocal(a.getWorldPosition(new e.Vector3()));
+    },
+    h = {
+      center: c("hero_center_anchor"),
+      face: c("hero_face_anchor"),
+      chest: c("hero_bust_anchor"),
+      eyes: c("hero_eyes_anchor"),
+      shoulder: c("hero_shoulders_anchor"),
+    },
+    d = {
+      center: h.center ?? l(i.clone()),
+      face:
+        h.face ??
+        l(new e.Vector3(i.x, s.max.y - 0.24 * r.y, i.z + 0.09 * r.z)),
+      chest:
+        h.chest ??
+        l(new e.Vector3(i.x, s.max.y - 0.45 * r.y, i.z + 0.04 * r.z)),
+      eyes:
+        h.eyes ??
+        l(new e.Vector3(i.x, s.max.y - 0.2 * r.y, i.z + 0.11 * r.z)),
+      shoulder:
+        h.shoulder ??
+        l(new e.Vector3(i.x, s.max.y - 0.38 * r.y, i.z + 0.05 * r.z)),
+    };
+  return (
+    (t.userData.heroAnchor = d),
+    (t.userData.heroBounds = {
+      min: l(s.min.clone()),
+      max: l(s.max.clone()),
+      size: r.clone(),
+      center: d.center.clone(),
+    }),
+    (t.userData.basePosition ??= t.position.clone()),
+    (t.userData.baseScale ??= t.scale.clone()),
+    (t.userData.baseRotation ??= t.rotation.clone()),
+    x(n, a.castShadow ?? !0, a.receiveShadow ?? !0),
+    n
+  );
+}
+function setJuniorHeroLeadVisibility(t, o, a = {}) {
+  if (!t) return;
+  const n = Boolean(o),
+    s = a.heroHeadRoot ?? t.heroHeadRoot ?? null,
+    u = a.heroCloseupModelRoot ?? t.heroCloseupModelRoot ?? null,
+    r = a.runtimeModelRoot ?? t.runtimeModelRoot ?? null,
+    i = a.runtimeModelReady ?? Boolean(r?.userData?.ready),
+    l = Boolean(a.keepLegacyBody),
+    c = Boolean(a.suppressRuntimeModel),
+    h = a.showHeroHeadRoot ?? !1,
+    d = (t, o) => {
+      t && (t.visible = o);
+    },
+    p = (t) => {
+      t &&
+        (t.userData.baseScale ??= t.scale.clone(),
+        t.userData.basePosition ??= t.position.clone(),
+        t.userData.baseRotation ??= t.rotation.clone());
+    };
+  [
+    t.head,
+    t.jaw,
+    t.faceSideL,
+    t.faceSideR,
+    t.facePlane,
+    t.faceShell,
+    t.frontHairStripL,
+    t.frontHairStripR,
+    t.frontHairInnerL,
+    t.frontHairInnerR,
+    t.hairCurtainL,
+    t.hairCurtainR,
+    t.sideLockL,
+    t.sideLockR,
+    t.fringe,
+    t.browL,
+    t.browR,
+    t.eyeWhiteL,
+    t.eyeWhiteR,
+    t.irisL,
+    t.irisR,
+    t.eyeContourL,
+    t.eyeContourR,
+    t.eyeSparkleL,
+    t.eyeSparkleR,
+    t.faceFront,
+    t.mouth,
+    t.noseTip,
+    t.noseBridge,
+    t.lipGloss,
+    t.closeupRefinement,
+    t.referenceHairCap,
+    t.headGlow,
+    t.hairBack,
+  ].forEach((t) => d(t, i ? !1 : !n));
+  t.legacyChildren?.forEach((t) => d(t, i ? !1 : (l || !n)));
+  if (s) {
+    p(s);
+    const o = n && h;
+    (s.visible = o),
+      o
+        ? (s.position.copy(s.userData.basePosition),
+          s.rotation.copy(s.userData.baseRotation),
+          s.scale.copy(s.userData.baseScale))
+        : (s.position.copy(s.userData.basePosition),
+          s.rotation.copy(s.userData.baseRotation),
+          s.scale.copy(s.userData.baseScale));
+  }
+  if (u) {
+    p(u), (u.visible = !1);
+  }
+  if (r) {
+    p(r);
+    (r.visible = i && !c),
+      (r.position.copy(r.userData.basePosition),
+      r.rotation.copy(r.userData.baseRotation),
+      r.scale.copy(r.userData.baseScale));
+  }
+  if (!n && !i) {
+    [
+      t.head,
+      t.jaw,
+      t.faceSideL,
+      t.faceSideR,
+      t.facePlane,
+      t.faceShell,
+      t.frontHairStripL,
+      t.frontHairStripR,
+      t.frontHairInnerL,
+      t.frontHairInnerR,
+      t.hairCurtainL,
+      t.hairCurtainR,
+      t.sideLockL,
+      t.sideLockR,
+      t.fringe,
+      t.browL,
+      t.browR,
+      t.eyeWhiteL,
+      t.eyeWhiteR,
+      t.irisL,
+      t.irisR,
+      t.eyeContourL,
+      t.eyeContourR,
+      t.eyeSparkleL,
+      t.eyeSparkleR,
+      t.faceFront,
+      t.mouth,
+      t.noseTip,
+      t.noseBridge,
+      t.lipGloss,
+      t.closeupRefinement,
+      t.referenceHairCap,
+      t.headGlow,
+      t.hairBack,
+    ].forEach((t) => t && (t.visible = !0));
+    t.closeupRefinement && (t.closeupRefinement.visible = !1);
+  }
+}
+function setJuniorGltfFaceVisibility(t, o) {
+  if (!t) return;
+  t.traverse((t) => {
+    if (!t?.isMesh) return;
+    const a = t.name || "";
+    if (
+      a.startsWith("head_") ||
+      "chin" === a ||
+      a.startsWith("cheek_") ||
+      a.startsWith("ear_") ||
+      a.startsWith("nose_") ||
+      a.startsWith("lip_") ||
+      a.startsWith("eye_") ||
+      a.startsWith("brow_") ||
+      a.startsWith("eyelash_") ||
+      a.startsWith("hair_") ||
+      "scrunchie" === a
+    )
+      t.visible = o;
+  });
+}
+function resolveJuniorHeroAnchor(t, o = {}) {
+  const a = t?.userData ?? {},
+    n = a.heroCloseupModelRoot ?? null,
+    s = a.runtimeModelRoot ?? null,
+    r = a.heroHeadRoot ?? null,
+    allowLegacyFallback = Boolean(o.allowLegacyFallback),
+    i =
+      o.forceRoot ??
+      (s?.visible ? s : null) ??
+      (allowLegacyFallback ? (n?.visible ? n : r?.visible ? r : null) : null),
+    anchor = i?.userData?.heroAnchor ?? null,
+    c =
+      i?.userData?.kind ??
+      (s?.visible
+        ? "runtime_glb"
+        : anchor
+          ? n?.visible
+            ? "hero_closeup_glb"
+            : r?.visible
+              ? "procedural_hero_head"
+              : "procedural_body"
+          : "runtime_glb");
+  const h = i?.userData?.kind ?? c,
+    d = i
+      ? i.getWorldPosition(new e.Vector3())
+      : t
+        ? t.getWorldPosition(new e.Vector3())
+        : new e.Vector3(),
+    p =
+      "runtime" === h || "hero_closeup" === h
+        ? (i.updateMatrixWorld(!0),
+          (t) => (t ? i.localToWorld(t.clone()) : d.clone()))
+        : "procedural_hero_head" === h && t
+          ? (o) => (o ? t.localToWorld(o.clone()) : d.clone())
+          : (t) => (t ? t.clone() : d.clone());
+  return (
+    anchor
+      ? ("runtime" === h || "hero_closeup" === h
+          ? (juniorHeroAnchorCenter.copy(p(anchor.center ?? anchor.face ?? null)),
+            juniorHeroAnchorFace.copy(
+              p(anchor.face ?? anchor.center ?? anchor.eyes ?? anchor.chest ?? null),
+            ),
+            juniorHeroAnchorChest.copy(
+              p(anchor.chest ?? anchor.center ?? anchor.face ?? null),
+            ),
+            juniorHeroAnchorEyes.copy(
+              p(anchor.eyes ?? anchor.face ?? anchor.center ?? null),
+            ))
+          : (juniorHeroAnchorCenter.copy(p(anchor.center ?? anchor.face ?? null)),
+            juniorHeroAnchorFace.copy(
+              p(anchor.face ?? anchor.center ?? anchor.eyes ?? anchor.chest ?? null),
+            ),
+            juniorHeroAnchorChest.copy(
+              p(anchor.chest ?? anchor.center ?? anchor.face ?? null),
+            ),
+            juniorHeroAnchorEyes.copy(
+              p(anchor.eyes ?? anchor.face ?? anchor.center ?? null),
+            )))
+      : ((juniorHeroAnchorCenter.copy(d),
+        juniorHeroAnchorFace.copy(d).add(o.faceOffset ?? new e.Vector3(0, 0.46, 0.14)),
+        juniorHeroAnchorChest.copy(d).add(o.chestOffset ?? new e.Vector3(0, 0.24, 0.08)),
+        juniorHeroAnchorEyes.copy(d).add(o.eyeOffset ?? new e.Vector3(0, 0.5, 0.16))),
+        c === "procedural_hero_head" &&
+          (juniorHeroAnchorFace.set(d.x, d.y + 0.02, d.z + 0.1),
+          juniorHeroAnchorChest.set(d.x, d.y - 0.06, d.z + 0.06),
+          juniorHeroAnchorEyes.set(d.x, d.y + 0.04, d.z + 0.1))),
+    {
+      kind: c,
+      root: i,
+      center: juniorHeroAnchorCenter.clone(),
+      face: juniorHeroAnchorFace.clone(),
+      chest: juniorHeroAnchorChest.clone(),
+      eyes: juniorHeroAnchorEyes.clone(),
+    }
+  );
+}
+function hasAncestor(e, t) {
+  for (let o = e; o; o = o.parent) if (o === t) return !0;
+  return !1;
+}
+function loadGlbAsset(t, o) {
+  return new Promise((a, n) => {
+    t.load(
+      o,
+      (t) => a(t),
+      void 0,
+      (t) => n(t instanceof Error ? t : new Error(String(t))),
+    );
+  });
+}
+function prepareFormalCharacterAsset(t) {
+  t.traverse((t) => {
+    t.isMesh &&
+      ((t.castShadow = !0),
+      (t.receiveShadow = !0),
+      t.material &&
+        (Array.isArray(t.material) ? t.material : [t.material]).forEach((t) => {
+          t.transparent &&
+            void 0 === t.alphaTest &&
+            (t.alphaTest = Math.max(t.alphaTest ?? 0, 0.04));
+        }));
+  });
+  return t;
+}
+function resolveJuniorAssetUrls(e, t = "desktop") {
+  const o = e?.runtimeTierPolicy?.[t] ?? {},
+    a = e?.runtimeTierPolicy?.desktop ?? {},
+    n = o.runtimeModelUrl ?? e?.runtimeModelUrl ?? a.runtimeModelUrl ?? null,
+    s =
+      o.heroCloseupModelUrl ??
+      e?.heroCloseupModelUrl ??
+      a.heroCloseupModelUrl ??
+      null;
+  return {
+    deliveryMode: e?.deliveryMode ?? e?.mode ?? "procedural",
+    runtimeUrl: n,
+    heroCloseupUrl: s,
+  };
+}
+export function createLm402Scene(D, runtimeOptions = {}) {
+  const V = window.matchMedia("(pointer: coarse)").matches,
+    juniorRuntimeManifest = resolveJuniorRuntimeManifest(
+      runtimeOptions.characterAssets?.junior2005 ?? {},
+    ),
+    runtimeState = {
+      qualityTier: runtimeOptions.qualityTier ?? (V ? "mobile" : "desktop"),
+      qualityTiers: runtimeOptions.qualityTiers ?? {},
+      characterAssets: runtimeOptions.characterAssets ?? {},
+    };
+  let renderTuning = {
+    shadowMapSize:
+      runtimeState.qualityTiers?.[runtimeState.qualityTier]?.shadowMapSize ??
+      (V ? 896 : 2048),
+    maxPixelRatio:
+      runtimeState.qualityTiers?.[runtimeState.qualityTier]?.maxPixelRatio ??
+      (V ? 1 : 1.5),
+    dustCount:
+      runtimeState.qualityTiers?.[runtimeState.qualityTier]?.dustCount ??
+      (V ? 48 : 96),
+    mirrorOpacity:
+      runtimeState.qualityTiers?.[runtimeState.qualityTier]?.mirrorOpacity ??
+      0.1,
+    portraitBoost:
+      runtimeState.qualityTiers?.[runtimeState.qualityTier]?.portraitBoost ?? 1,
+  };
+  const assetState = {
+      manifestId: runtimeState.characterAssets?.junior2005?.id ?? null,
+      runtimeModelUrl: juniorRuntimeManifest.runtimeModelUrl ?? null,
+      heroCloseupModelUrl: juniorRuntimeManifest.heroCloseupModelUrl ?? null,
+      loaderAvailable: Boolean(resolveJuniorGltfLoaderCtor()),
+      qualityTier: runtimeState.qualityTier,
+      status: "procedural_fallback",
+      fallback: !0,
+      modelMode: "procedural_fallback",
+      textureStatus: "idle",
+      textureFallback: !1,
+      textureLastError: null,
+      loadedTextures: [],
+      loadedModels: [],
+      lastError: null,
+    },
+    U = (function (t, o) {
+      const a = [
+          {
+            label: "webgl2-hq",
+            contextIds: ["webgl2"],
+            antialias: !o,
+            powerPreference: "high-performance",
+          },
+          {
+            label: "webgl2-safe",
+            contextIds: ["webgl2"],
+            antialias: !1,
+            powerPreference: "default",
+          },
+          {
+            label: "webgl-safe",
+            contextIds: ["webgl", "experimental-webgl"],
+            antialias: !1,
+            powerPreference: "default",
+          },
+        ],
+        n = {
+          alpha: !1,
+          depth: !0,
+          stencil: !1,
+          premultipliedAlpha: !1,
+          preserveDrawingBuffer: !1,
+          failIfMajorPerformanceCaveat: !1,
+          desynchronized: !0,
+        };
+      let s = null;
+      for (const o of a) {
+        const a = {
+          ...n,
+          antialias: o.antialias,
+          powerPreference: o.powerPreference,
+        };
+        let r = null;
+        for (const e of o.contextIds) {
+          try {
+            r = t.getContext(e, a);
+          } catch (e) {
+            s = e;
+          }
+          if (r) break;
+        }
+        if (r)
+          try {
+            const a = new e.WebGLRenderer({
+              canvas: t,
+              context: r,
+              antialias: o.antialias,
+              alpha: !1,
+              powerPreference: o.powerPreference,
+            });
+            return ((a.__lm402RendererProfile = o.label), a);
+          } catch (e) {
+            s = e;
+            try {
+              const e = r.getExtension("WEBGL_lose_context");
+              e?.loseContext?.();
+            } catch {}
+          }
+      }
+      try {
+        const o = new e.WebGLRenderer({
+          canvas: t,
+          antialias: !1,
+          alpha: !1,
+          powerPreference: "default",
+        });
+        return ((o.__lm402RendererProfile = "three-fallback"), o);
+      } catch (e) {
+        s = e;
+      }
+      throw s || new Error("Unable to create WebGL renderer.");
+    })(D, V);
+  ((U.outputColorSpace = e.SRGBColorSpace),
+    (U.toneMapping = e.ACESFilmicToneMapping),
+    (U.toneMappingExposure = 1.14),
+    (U.shadowMap.enabled = !0),
+    (U.shadowMap.type = e.PCFSoftShadowMap));
+  const W = new e.Scene();
+  ((W.background = new e.Color("#c8daea")),
+    (W.fog = new e.Fog("#d4e2ec", 16, 72)));
+  const q = new e.PerspectiveCamera(74, 1, 0.03, 180);
+  q.rotation.order = "YXZ";
+  const _ = new e.Raycaster(),
+    A = [],
+    Z = [],
+    L = new Map(),
+    stairLayouts = [];
+  let X = {
     camera: { x: 0, y: 0, z: 0, yaw: 0, pitch: 0 },
     viewport: { width: 0, height: 0 },
     cssViewport: { width: 0, height: 0 },
     projectedNodes: {},
     hotspotLOS: {},
     colliders: 0,
-    mobileBlackRegionDetected: false,
+    mobileBlackRegionDetected: !1,
   };
-
-  const worldGroup = new THREE.Group();
-  const actorGroup = new THREE.Group();
-  const introGroup = new THREE.Group();
-  const glowGroup = new THREE.Group();
-  scene.add(worldGroup, actorGroup, introGroup, glowGroup);
-
-  const minX = scaled(WORLD.minX);
-  const maxX = scaled(WORLD.maxX);
-  const minZ = scaled(WORLD.minZ);
-  const maxZ = scaled(WORLD.maxZ);
-  const dividerX = scaled(WORLD.dividerX);
-  const corridorMinX = minX;
-  const corridorMaxX = dividerX;
-  const classroomMinX = dividerX;
-  const classroomMaxX = maxX;
-  const corridorWidth = corridorMaxX - corridorMinX;
-  const corridorCenterX = (corridorMinX + corridorMaxX) / 2;
-  const roomDepth = classroomMaxX - classroomMinX;
-  const floorLength = maxZ - minZ;
-  const floorCenterZ = (minZ + maxZ) / 2;
-  const corridorHeight = 2.92;
-  const wallThickness = 0.12;
-  const parapetHeight = scaled(WORLD.corridor.parapetHeight);
-  const boardZ = scaled(WORLD.board.z);
-  const boardX1 = scaled(WORLD.board.x1);
-  const boardX2 = scaled(WORLD.board.x2);
-  const boardCenterX = (boardX1 + boardX2) / 2;
-  const frontDoorZ1 = scaled(WORLD.frontDoor.z1);
-  const frontDoorZ2 = scaled(WORLD.frontDoor.z2);
-  const backDoorZ1 = scaled(WORLD.backDoor.z1);
-  const backDoorZ2 = scaled(WORLD.backDoor.z2);
-  const lm402Room = WORLD.floorRooms.find((room) => room.interactive) ?? WORLD.floorRooms[0];
-  const lm402Z1 = scaled(lm402Room.z1);
-  const lm402Z2 = scaled(lm402Room.z2);
-  const frontStairZ1 = scaled(WORLD.stairs.front.z1);
-  const frontStairZ2 = scaled(WORLD.stairs.front.z2);
-  const backStairZ1 = scaled(WORLD.stairs.back.z1);
-  const backStairZ2 = scaled(WORLD.stairs.back.z2);
-
-  const worldPointScaled = (x, y, z) => new THREE.Vector3(scaled(x), scaled(y), scaled(z));
-  const roomCenter = (room) => scaled((room.z1 + room.z2) / 2);
-  const openingFromPanel = (panel, side) => ({
-    side,
-    z1: scaled(panel.z - panel.width / 2 + 18),
-    z2: scaled(panel.z + panel.width / 2 - 18),
-    y1: scaled(panel.y1 + 6),
-    y2: scaled(panel.y2 - 4),
-  });
-
-  const buildWallWithOpenings = ({ x, zStart, zEnd, openings, material, label }) => {
-    const zEdges = [zStart, zEnd];
-    openings.forEach((opening) => {
-      if (opening.z2 <= zStart || opening.z1 >= zEnd) {
-        return;
-      }
-      zEdges.push(Math.max(zStart, opening.z1), Math.min(zEnd, opening.z2));
-    });
-    const sortedZ = [...new Set(zEdges.map((value) => Number(value.toFixed(4))))].sort((a, b) => a - b);
-
-    for (let zIndex = 0; zIndex < sortedZ.length - 1; zIndex += 1) {
-      const segZ1 = sortedZ[zIndex];
-      const segZ2 = sortedZ[zIndex + 1];
-      if (segZ2 - segZ1 <= 0.01) {
-        continue;
-      }
-      const midZ = (segZ1 + segZ2) / 2;
-      const overlapping = openings.filter((opening) => midZ >= opening.z1 && midZ <= opening.z2);
-      const yEdges = [0, corridorHeight];
-      overlapping.forEach((opening) => {
-        yEdges.push(opening.y1, opening.y2);
+  const j = new e.Group(),
+    $ = new e.Group(),
+    H = new e.Group(),
+    F = new e.Group();
+  W.add(j, $, H, F);
+  const N = g(t.minX),
+    O = g(t.maxX),
+    Y = g(t.minZ),
+    J = g(t.maxZ),
+    K = g(t.dividerX),
+    Q = N,
+    ee = K,
+    te = O,
+    oe = K - Q,
+    ae = (Q + K) / 2,
+    ne = te - ee,
+    se = J - Y,
+    re = (Y + J) / 2,
+    ie = 2.92,
+    le = 0.12,
+    ce = g(t.corridor.parapetHeight),
+    he = g(t.board.z),
+    de = g(t.board.x1),
+    pe = g(t.board.x2),
+    me = (de + pe) / 2,
+    we = g(t.frontDoor.z1),
+    Me = g(t.frontDoor.z2),
+    fe = g(t.backDoor.z1),
+    ue = g(t.backDoor.z2),
+    ye = t.floorRooms.find((e) => e.interactive) ?? t.floorRooms[0],
+    ge = g(ye.z1),
+    xe = g(ye.z2),
+    be = g(t.stairs.front.z1),
+    Se = g(t.stairs.front.z2),
+    ze = g(t.stairs.back.z1),
+    Pe = g(t.stairs.back.z2),
+    ve = (t, o, a) => new e.Vector3(g(t), g(o), g(a)),
+    Ge = (e, t) => ({
+      side: t,
+      z1: g(e.z - e.width / 2 + 18),
+      z2: g(e.z + e.width / 2 - 18),
+      y1: g(e.y1 + 6),
+      y2: g(e.y2 - 4),
+    }),
+    Ce = ({ x: t, zStart: o, zEnd: a, openings: n, material: s, label: r }) => {
+      const i = [o, a];
+      n.forEach((e) => {
+        e.z2 <= o || e.z1 >= a || i.push(Math.max(o, e.z1), Math.min(a, e.z2));
       });
-      const sortedY = [...new Set(yEdges.map((value) => Number(value.toFixed(4))))].sort((a, b) => a - b);
-
-      for (let yIndex = 0; yIndex < sortedY.length - 1; yIndex += 1) {
-        const segY1 = sortedY[yIndex];
-        const segY2 = sortedY[yIndex + 1];
-        if (segY2 - segY1 <= 0.01) {
-          continue;
-        }
-        const midY = (segY1 + segY2) / 2;
-        const insideOpening = overlapping.some((opening) => midY > opening.y1 && midY < opening.y2);
-        if (insideOpening) {
-          continue;
-        }
-        addBox(
-          worldGroup,
-          occluders,
-          new THREE.BoxGeometry(wallThickness, segY2 - segY1, segZ2 - segZ1),
-          material,
-          new THREE.Vector3(x, segY1 + (segY2 - segY1) / 2, segZ1 + (segZ2 - segZ1) / 2),
-          null,
-          colliders,
-          { minX: x - wallThickness / 2, maxX: x + wallThickness / 2, minZ: segZ1, maxZ: segZ2, label }
-        );
-      }
-    }
-  };
-
-  const hemiLight = new THREE.HemisphereLight(0xf5f7fc, 0x7a6c52, 1.16);
-  scene.add(hemiLight);
-
-  const ambient = new THREE.AmbientLight(0xfff8ee, 0.38);
-  scene.add(ambient);
-
-  const sun = new THREE.DirectionalLight(0xffe4b6, 2.28);
-  sun.position.set(-11.2, 10.8, 5.4);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(quality.shadowMapSize, quality.shadowMapSize);
-  sun.shadow.camera.near = 0.5;
-  sun.shadow.camera.far = 68;
-  sun.shadow.camera.left = -22;
-  sun.shadow.camera.right = 16;
-  sun.shadow.camera.top = 18;
-  sun.shadow.camera.bottom = -16;
-  sun.shadow.bias = -0.0004;
-  sun.shadow.normalBias = 0.02;
-  scene.add(sun);
-
-  const corridorFill = new THREE.PointLight(0xd8e7f4, 1.28, 58, 2);
-  corridorFill.position.set(corridorMinX + 2.42, 3.64, scaled(WORLD.frontDoor.center.z - 122));
-  scene.add(corridorFill);
-
-  const corridorSun = new THREE.PointLight(0xffe9b8, 1.72, 68, 2);
-  corridorSun.position.set(minX - 1.72, 6.42, scaled(WORLD.frontDoor.center.z - 8));
-  scene.add(corridorSun);
-
-  const classroomAccent = new THREE.PointLight(0xffd9ab, 2.2, 46, 2);
-  classroomAccent.position.set(classroomMaxX - 1.46, 2.78, scaled(WORLD.classroom.lightWellZ + 64));
-  scene.add(classroomAccent);
-
-  const backdoorAccent = new THREE.PointLight(0xffefcf, 1.9, 36, 2);
-  backdoorAccent.position.set(classroomMinX + 1.56, 2.44, scaled(WORLD.backDoor.center.z + 28));
-  scene.add(backdoorAccent);
-
-  const windowBounce = new THREE.PointLight(0xffeacc, 0.9, 28, 2);
-  windowBounce.position.set(classroomMaxX - 3.8, 0.22, scaled(WORLD.classroom.lightWellZ));
-  scene.add(windowBounce);
-
-  // Extra lights for new end-wall glass windows (z1 back and z2 front)
-  const backEndWindowLight = new THREE.PointLight(0xfff4e0, 1.8, 38, 2);
-  backEndWindowLight.position.set((classroomMinX + classroomMaxX) / 2, 1.82, lm402Z1 + 1.6);
-  scene.add(backEndWindowLight);
-
-  const frontEndWindowLight = new THREE.PointLight(0xfffaeb, 1.6, 34, 2);
-  frontEndWindowLight.position.set((classroomMinX + classroomMaxX) / 2, 1.82, lm402Z2 - 1.6);
-  scene.add(frontEndWindowLight);
-
-  const midClassLight = new THREE.PointLight(0xffecc4, 1.1, 32, 2);
-  midClassLight.position.set((classroomMinX + classroomMaxX) / 2, 2.6, (lm402Z1 + lm402Z2) / 2);
-  scene.add(midClassLight);
-
-  const corridorBounce = new THREE.PointLight(0xf0e8dd, 0.48, 22, 2);
-  corridorBounce.position.set(corridorCenterX, 0.18, scaled(WORLD.frontDoor.center.z - 60));
-  scene.add(corridorBounce);
-
-  const classroomFloorTex = makeWoodTexture({ base: "#856549", dark: "#5c422d", highlight: "#b18a63" });
-  const corridorFloorTex = makeTileTexture({ base: "#bcc5d0", line: "rgba(244,246,249,.76)", speck: "rgba(124,136,148," });
-  const wallTex = makeConcreteTexture({ base: "#e8e1d7", accent: "rgba(255,255,255,.12)", line: "rgba(174,162,145,.22)", warm: true });
-  const corridorWallTex = makeConcreteTexture({ base: "#cbd4dd", accent: "rgba(255,255,255,.12)", line: "rgba(132,145,160,.22)" });
-  const stoneTex = makeConcreteTexture({ base: "#ddd7cf", accent: "rgba(255,255,255,.12)", line: "rgba(126,118,104,.2)", warm: true });
-  const woodTex = makeWoodTexture({ base: "#8f663f", dark: "#57381f", highlight: "#b08556" });
-  const boardTex = makeBoardTexture();
-  const lawnTex = makeConcreteTexture({ base: "#6e8d5a", accent: "rgba(255,255,255,.02)", line: "rgba(84,112,70,.16)", warm: true });
-  const plazaTex = makeTileTexture({ base: "#cbd1d7", line: "rgba(244,246,249,.72)", speck: "rgba(124,136,148," });
-
-  const classroomFloorMat = new THREE.MeshStandardMaterial({ color: "#9a7252", map: classroomFloorTex, roughness: 0.78, metalness: 0.04 });
-  const corridorFloorMat = new THREE.MeshStandardMaterial({ color: "#c2c9d2", map: corridorFloorTex, roughness: 0.82, metalness: 0.03 });
-  const wallMat = new THREE.MeshStandardMaterial({ color: "#f0e8dc", map: wallTex, roughness: 0.88, metalness: 0.01 });
-  const corridorWallMat = new THREE.MeshStandardMaterial({ color: "#d4dce6", map: corridorWallTex, roughness: 0.86, metalness: 0.02 });
-  const woodMat = new THREE.MeshStandardMaterial({ color: "#a07248", map: woodTex, roughness: 0.72, metalness: 0.06 });
-  const metalMat = new THREE.MeshStandardMaterial({ color: "#8a9098", roughness: 0.48, metalness: 0.44 });
-  const boardMat = new THREE.MeshStandardMaterial({ color: "#1e3b30", map: boardTex, roughness: 0.82, metalness: 0.03 });
-  const stoneMat = new THREE.MeshStandardMaterial({ color: "#e2dcd2", map: stoneTex, roughness: 0.88, metalness: 0.03 });
-  const beamMat = new THREE.MeshStandardMaterial({ color: "#f5ede0", map: wallTex, roughness: 0.84, metalness: 0.02 });
-  const lawnMat = new THREE.MeshStandardMaterial({ color: "#7a9a64", map: lawnTex, roughness: 0.96, metalness: 0.01 });
-  const plazaMat = new THREE.MeshStandardMaterial({ color: "#cdd3d9", map: plazaTex, roughness: 0.90, metalness: 0.02 });
-
-
-  const campusDepth = scaled(WORLD.corridor.campusDepth);
-  addBox(
-    worldGroup,
-    [],
-    new THREE.BoxGeometry(campusDepth, 0.12, floorLength * 1.14),
-    lawnMat,
-    new THREE.Vector3(minX - campusDepth * 0.54, FLOOR_Y - 0.1, floorCenterZ),
-    null,
-    null,
-    null,
-    false,
-    true
-  );
-  addBox(
-    worldGroup,
-    [],
-    new THREE.BoxGeometry(campusDepth * 0.44, 0.06, floorLength * 0.92),
-    plazaMat,
-    new THREE.Vector3(minX - campusDepth * 0.26, FLOOR_Y - 0.04, floorCenterZ + 0.26),
-    null,
-    null,
-    null,
-    false,
-    true
-  );
-
-  const skyWall = new THREE.Mesh(
-    new THREE.PlaneGeometry(floorLength * 1.04, 8.2),
-    new THREE.MeshBasicMaterial({ color: "#dce7f2", transparent: true, opacity: 0.95, side: THREE.DoubleSide })
-  );
-  skyWall.position.set(minX - campusDepth * 0.22, 3.5, floorCenterZ);
-  skyWall.rotation.y = Math.PI / 2;
-  worldGroup.add(skyWall);
-
-  const sunGlow = createGlowPlane("rgba(255,233,192,1)", 9.6, 6.2, 0.34);
-  sunGlow.position.set(minX - campusDepth * 0.18, 4.2, scaled(720));
-  sunGlow.rotation.y = Math.PI / 2;
-  worldGroup.add(sunGlow);
-
-  const canopyGlow = createGlowPlane("rgba(255,240,210,1)", 8.4, 4.8, 0.18);
-  canopyGlow.position.set(minX - campusDepth * 0.16, 2.8, scaled(1740));
-  canopyGlow.rotation.y = Math.PI / 2;
-  worldGroup.add(canopyGlow);
-
-  addBox(
-    worldGroup,
-    occluders,
-    new THREE.BoxGeometry(corridorWidth, 0.08, floorLength),
-    corridorFloorMat,
-    new THREE.Vector3(corridorCenterX, FLOOR_Y - 0.04, floorCenterZ),
-    null,
-    colliders,
-    null,
-    false,
-    true
-  );
-  addBox(
-    worldGroup,
-    occluders,
-    new THREE.BoxGeometry(roomDepth, 0.08, floorLength),
-    classroomFloorMat,
-    new THREE.Vector3((classroomMinX + classroomMaxX) / 2, FLOOR_Y - 0.04, floorCenterZ),
-    null,
-    colliders,
-    null,
-    false,
-    true
-  );
-
-  addBox(
-    worldGroup,
-    occluders,
-    new THREE.BoxGeometry(maxX - minX, corridorHeight, wallThickness),
-    wallMat,
-    new THREE.Vector3((minX + maxX) / 2, corridorHeight / 2, minZ),
-    null,
-    colliders,
-    { minX, maxX, minZ: minZ - wallThickness / 2, maxZ: minZ + wallThickness / 2, label: "floor_front" }
-  );
-  addBox(
-    worldGroup,
-    occluders,
-    new THREE.BoxGeometry(maxX - minX, corridorHeight, wallThickness),
-    wallMat,
-    new THREE.Vector3((minX + maxX) / 2, corridorHeight / 2, maxZ),
-    null,
-    colliders,
-    { minX, maxX, minZ: maxZ - wallThickness / 2, maxZ: maxZ + wallThickness / 2, label: "floor_back" }
-  );
-
-  addBox(
-    worldGroup,
-    occluders,
-    new THREE.BoxGeometry(wallThickness, parapetHeight, floorLength),
-    stoneMat,
-    new THREE.Vector3(minX, parapetHeight / 2, floorCenterZ),
-    null,
-    colliders,
-    { minX: minX - wallThickness / 2, maxX: minX + wallThickness / 2, minZ, maxZ, label: "parapet" }
-  );
-  addBox(
-    worldGroup,
-    occluders,
-    new THREE.BoxGeometry(0.18, 0.1, floorLength),
-    beamMat,
-    new THREE.Vector3(minX + 0.06, parapetHeight + 0.06, floorCenterZ),
-    null,
-    colliders,
-    null
-  );
-
-  addBox(
-    worldGroup,
-    [],
-    new THREE.BoxGeometry(0.92, 0.012, floorLength * 0.98),
-    new THREE.MeshBasicMaterial({ color: "#fff1cf", transparent: true, opacity: 0.1 }),
-    new THREE.Vector3(minX + 0.48, 0.014, floorCenterZ),
-    { x: -Math.PI / 2, y: 0, z: 0 },
-    null,
-    null,
-    false,
-    false
-  );
-
-  WORLD.corridor.columnZs.forEach((zValue) => {
-    const z = scaled(zValue);
-    const column = new THREE.Mesh(new THREE.BoxGeometry(0.24, corridorHeight, 0.24), beamMat);
-    column.position.set(minX + 0.08, corridorHeight / 2, z);
-    column.castShadow = true;
-    column.receiveShadow = true;
-    worldGroup.add(column);
-    addCollider(colliders, column.position.x - 0.12, column.position.x + 0.12, z - 0.12, z + 0.12, "column");
-  });
-
-  const parapetShadow = new THREE.Mesh(
-    new THREE.PlaneGeometry(1.96, floorLength * 0.98),
-    new THREE.MeshBasicMaterial({ color: "#8694a4", transparent: true, opacity: 0.12, side: THREE.DoubleSide })
-  );
-  parapetShadow.position.set(minX + 1.02, 0.018, floorCenterZ);
-  parapetShadow.rotation.x = -Math.PI / 2;
-  worldGroup.add(parapetShadow);
-
-  const stairWoodMat = new THREE.MeshStandardMaterial({ color: "#b08d67", map: woodTex, roughness: 0.78, metalness: 0.04 });
-  const stairRailMat = new THREE.MeshPhysicalMaterial({ color: "#ded4c2", roughness: 0.56, metalness: 0.06, clearcoat: 0.14 });
-  const stairRiserMat = new THREE.MeshStandardMaterial({ color: "#d8cfc2", roughness: 0.88, metalness: 0.01 });
-  const balusterMat = new THREE.MeshPhysicalMaterial({ color: "#c8bfaf", roughness: 0.48, metalness: 0.08, clearcoat: 0.18 });
-
-  const stairZones = [
-    { id: "back_stair", z1: backStairZ1, z2: backStairZ2, direction: -1 },
-    { id: "front_stair", z1: frontStairZ1, z2: frontStairZ2, direction: 1 },
-  ];
-  stairZones.forEach((zone) => {
-    const zoneCenter = (zone.z1 + zone.z2) / 2;
-    const zoneLen = zone.z2 - zone.z1;
-
-    // Landing platform
-    const landing = new THREE.Mesh(new THREE.BoxGeometry(corridorWidth - 0.28, 0.06, zoneLen), stairRiserMat);
-    landing.position.set(corridorCenterX, FLOOR_Y - 0.03, zoneCenter);
-    landing.receiveShadow = true;
-    worldGroup.add(landing);
-
-    const stairCount = 9;
-    const stepW = corridorWidth * 0.86;
-    const stepH = 0.14;
-    const stepD = (zoneLen - 0.24) / stairCount;
-
-    for (let index = 0; index < stairCount; index += 1) {
-      const zOffset = zone.direction > 0
-        ? THREE.MathUtils.lerp(zone.z1 + 0.12, zone.z2 - 0.24, index / stairCount)
-        : THREE.MathUtils.lerp(zone.z2 - 0.12, zone.z1 + 0.24, index / stairCount);
-      const stepY = FLOOR_Y - stepH * 0.5 - index * stepH;
-
-      // Tread (horizontal surface)
-      const tread = new THREE.Mesh(new THREE.BoxGeometry(stepW, 0.04, stepD + 0.02), stairWoodMat);
-      tread.position.set(corridorCenterX, stepY, zOffset + zone.direction * stepD * 0.5);
-      tread.receiveShadow = true;
-      tread.castShadow = false;
-      worldGroup.add(tread);
-
-      // Riser (vertical face)
-      const riser = new THREE.Mesh(new THREE.BoxGeometry(stepW, stepH, 0.02), stairRiserMat);
-      riser.position.set(corridorCenterX, stepY - stepH * 0.5, zOffset + zone.direction * 0.01);
-      worldGroup.add(riser);
-    }
-
-    // Handrail system — top rail
-    const railH = 0.9;
-    const topRail = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, zoneLen - 0.18), stairRailMat);
-    topRail.position.set(corridorMinX + 0.9, FLOOR_Y + railH - stepH * stairCount * 0.5, zoneCenter);
-    worldGroup.add(topRail);
-
-    const bottomRail = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, zoneLen - 0.18), balusterMat);
-    bottomRail.position.set(corridorMinX + 0.9, FLOOR_Y + railH * 0.3 - stepH * stairCount * 0.5, zoneCenter);
-    worldGroup.add(bottomRail);
-
-    // Balusters (vertical posts every ~0.22m)
-    const balusterSpacing = 0.22;
-    const balusterCount = Math.floor((zoneLen - 0.3) / balusterSpacing);
-    for (let bi = 0; bi <= balusterCount; bi++) {
-      const bz = zone.z1 + 0.15 + (bi / balusterCount) * (zoneLen - 0.3);
-      const bHeight = railH * 0.9;
-      const baluster = new THREE.Mesh(new THREE.BoxGeometry(0.03, bHeight, 0.03), balusterMat);
-      baluster.position.set(corridorMinX + 0.9, FLOOR_Y - stepH * stairCount * 0.5 + bHeight / 2, bz);
-      worldGroup.add(baluster);
-    }
-
-    // Newel posts at each end
-    const newelGeo = new THREE.BoxGeometry(0.08, railH + 0.04, 0.08);
-    const newelStart = new THREE.Mesh(newelGeo, stairRailMat);
-    newelStart.position.set(corridorMinX + 0.9, FLOOR_Y + (railH + 0.04) / 2, zone.z1 + 0.08);
-    worldGroup.add(newelStart);
-    const newelEnd = new THREE.Mesh(newelGeo, stairRailMat);
-    newelEnd.position.set(corridorMinX + 0.9, FLOOR_Y + (railH + 0.04) / 2, zone.z2 - 0.08);
-    worldGroup.add(newelEnd);
-
-    // Wall grab rail on corridor wall side
-    const wallRail = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, zoneLen - 0.22), stairRailMat);
-    wallRail.position.set(minX + 0.06, FLOOR_Y + 0.88, zoneCenter);
-    worldGroup.add(wallRail);
-
-    // Stair wall (back wall of stairwell)
-    const stairWall = new THREE.Mesh(new THREE.BoxGeometry(0.22, corridorHeight, zoneLen), corridorWallMat);
-    stairWall.position.set(classroomMinX, corridorHeight / 2, zoneCenter);
-    stairWall.castShadow = true;
-    stairWall.receiveShadow = true;
-    worldGroup.add(stairWall);
-    addCollider(colliders, classroomMinX - 0.11, classroomMinX + 0.11, zone.z1, zone.z2, `${zone.id}_wall`);
-
-    addCollider(
-      colliders,
-      corridorMinX + 0.36,
-      classroomMinX - 0.2,
-      zone.direction > 0 ? zone.z1 + 0.06 : zone.z1,
-      zone.direction > 0 ? zone.z1 + 0.22 : zone.z2 - 0.22,
-      `${zone.id}_guard`
-    );
-  });
-
-  const room = lm402Room;
-  const z1 = lm402Z1;
-  const z2 = lm402Z2;
-  const roomLength = z2 - z1;
-  const centerZ = (z1 + z2) / 2;
-  const openings = [
-    { ...WORLD.frontDoor, kind: "front", z1: frontDoorZ1, z2: frontDoorZ2 },
-    { ...WORLD.backDoor, kind: "back", z1: backDoorZ1, z2: backDoorZ2 },
-  ].sort((a, b) => a.z1 - b.z1);
-
-  // ── Shared window geometry constants ──
-  const winY1 = scaled(84);
-  const winY2 = scaled(256);
-  const winH = winY2 - winY1;
-  const winCY = (winY1 + winY2) / 2;
-  const pillarW = 0.10;
-
-
-
-  // ── Helper: solid strip above/below window zone ──
-  const addEndStrip = (x, y, wz, w, h) => {
-    const s = new THREE.Mesh(new THREE.BoxGeometry(w, h, wallThickness), wallMat);
-    s.position.set(x, y, wz);
-    s.castShadow = true; s.receiveShadow = true;
-    worldGroup.add(s);
-  };
-
-  // ── Helper: build window row on an end wall ──
-  const buildEndWallWindows = (wallZ, inward, fromX, toX, nWin) => {
-    const totalW = toX - fromX;
-    const ww = (totalW - pillarW * (nWin + 1)) / nWin;
-    for (let i = 0; i < nWin; i++) {
-      const wx = fromX + pillarW + (ww + pillarW) * i + ww / 2;
-
-      addEndStrip(wx, winY2 + (corridorHeight - winY2) / 2, wallZ, ww + 0.02, corridorHeight - winY2 + 0.02);
-      addEndStrip(wx, winY1 / 2, wallZ, ww + 0.02, winY1 + 0.01);
-    }
-    for (let i = 0; i <= nWin; i++) {
-      const px = fromX + pillarW / 2 + (ww + pillarW) * i;
-      const p = new THREE.Mesh(new THREE.BoxGeometry(pillarW, corridorHeight, wallThickness), wallMat);
-      p.position.set(px, corridorHeight / 2, wallZ);
-      worldGroup.add(p);
-    }
-    addCollider(colliders, fromX, toX, wallZ - wallThickness / 2, wallZ + wallThickness / 2, "end_wall");
-  };
-
-  // ═══ BACK END WALL (z1) — 4 windows ═══
-  buildEndWallWindows(z1, 1, classroomMinX, classroomMaxX, 4);
-
-  // ═══ FRONT END WALL (z2) — board center + 2 windows each side ═══
-  if (boardX1 - classroomMinX > 0.6) {
-    buildEndWallWindows(z2, -1, classroomMinX, boardX1 - 0.06, 2);
-  }
-  if (classroomMaxX - boardX2 > 0.6) {
-    buildEndWallWindows(z2, -1, boardX2 + 0.06, classroomMaxX, 2);
-  }
-
-  // ═══ SIDE WALLS — with door openings + windows ═══
-  const leftWindowOpenings = WORLD.leftWallWindows.map((panel) => openingFromPanel(panel, "left"));
-  const rightWindowOpenings = WORLD.rightWallWindows.map((panel) => openingFromPanel(panel, "right"));
-  const doorOpenings = openings.map((door) => ({
-    z1: door.z1 - 0.50, z2: door.z2 + 0.50, y1: 0, y2: corridorHeight,
-  }));
-
-  buildWallWithOpenings({
-    x: classroomMaxX, zStart: z1, zEnd: z2,
-    openings: rightWindowOpenings, material: wallMat, label: "right_wall",
-  });
-
-  const dividerSegments = [];
-  if (minZ < z1) dividerSegments.push([minZ, z1]);
-  if (z2 < maxZ) dividerSegments.push([z2, maxZ]);
-  dividerSegments.forEach(([start, end]) => {
-    if (end <= start) return;
-    addBox(worldGroup, occluders,
-      new THREE.BoxGeometry(wallThickness, corridorHeight, end - start),
-      corridorWallMat,
-      new THREE.Vector3(classroomMinX, corridorHeight / 2, start + (end - start) / 2),
-      null, colliders,
-      { minX: classroomMinX - wallThickness / 2, maxX: classroomMinX + wallThickness / 2, minZ: start, maxZ: end, label: "divider_wall" }
-    );
-  });
-
-  buildWallWithOpenings({
-    x: classroomMinX, zStart: z1, zEnd: z2,
-    openings: [...doorOpenings, ...leftWindowOpenings],
-    material: corridorWallMat, label: "divider_wall",
-  });
-
-
-
-
-  const plaque = buildTextPlane("LM402", 1.72, 0.42, { bg: "#4a5562", fg: "#fff6de" });
-  plaque.position.set(scaled(WORLD.plaque.x), scaled(WORLD.plaque.y), scaled(WORLD.plaque.z));
-  plaque.rotation.y = Math.PI / 2;
-  plaque.material = plaque.material.clone();
-  plaque.material.emissive = new THREE.Color("#8a7959");
-  plaque.material.emissiveIntensity = 0.56;
-  worldGroup.add(plaque);
-
-  const plaqueBacker = new THREE.Mesh(
-    new THREE.BoxGeometry(0.08, 0.58, 1.54),
-    new THREE.MeshStandardMaterial({ color: "#ded6cb", map: wallTex, roughness: 0.9, metalness: 0.01 })
-  );
-  plaqueBacker.position.set(classroomMinX + 0.012, scaled(WORLD.plaque.y) - 0.06, scaled(WORLD.plaque.z));
-  worldGroup.add(plaqueBacker);
-
-  const plaqueLight = new THREE.PointLight(0xfff1cf, 0.34, 6, 2);
-  plaqueLight.position.set(classroomMinX + 0.54, scaled(WORLD.plaque.y) + 0.08, scaled(WORLD.plaque.z));
-  worldGroup.add(plaqueLight);
-
-  WORLD.floorRooms
-    .filter((room) => !room.interactive)
-    .forEach((room, index) => {
-      const roomCenterZ = roomCenter(room);
-      const plaqueText = room.label;
-      const roomPlaque = buildTextPlane(plaqueText, 1.04, 0.26, { bg: "#5c6672", fg: "#f7f0de" });
-      roomPlaque.position.set(classroomMinX - 0.31, 1.92, roomCenterZ + 0.22);
-      roomPlaque.rotation.y = Math.PI / 2;
-      worldGroup.add(roomPlaque);
-    });
-
-  WORLD.wallLabels.forEach((label) => {
-    const labelNode = buildWallLabel(label.id);
-    labelNode.position.set(scaled(label.x), scaled(label.y), scaled(label.z));
-    labelNode.rotation.y = label.rotateY ?? 0;
-    worldGroup.add(labelNode);
-  });
-
-  // All window objects removed — wall openings remain for light and visibility
-
-  addBox(
-    worldGroup,
-    occluders,
-    new THREE.BoxGeometry(boardX2 - boardX1 + 0.22, corridorHeight, wallThickness),
-    wallMat,
-    new THREE.Vector3((boardX1 + boardX2) / 2, corridorHeight / 2, z2),
-    null,
-    colliders,
-    { minX: boardX1 - 0.12, maxX: boardX2 + 0.12, minZ: z2 - wallThickness / 2, maxZ: z2 + wallThickness / 2, label: "board_wall" }
-  );
-
-  addBox(
-    worldGroup,
-    occluders,
-    new THREE.BoxGeometry(boardX2 - boardX1, scaled(WORLD.board.y2 - WORLD.board.y1), 0.06),
-    boardMat,
-    new THREE.Vector3(boardCenterX, scaled((WORLD.board.y1 + WORLD.board.y2) / 2), boardZ - 0.02),
-    null,
-    colliders,
-    null
-  );
-  addBox(
-    worldGroup,
-    occluders,
-    new THREE.BoxGeometry(boardX2 - boardX1 + 0.18, 0.07, 0.16),
-    beamMat,
-    new THREE.Vector3(boardCenterX, scaled(WORLD.board.y1) - 0.12, boardZ - 0.1),
-    null,
-    colliders,
-    null
-  );
-
-  const lectern = new THREE.Mesh(new THREE.BoxGeometry(0.96, 0.98, 0.72), woodMat);
-  lectern.position.set(boardCenterX - 4.2, 0.49, boardZ - 0.86);
-  lectern.castShadow = true;
-  lectern.receiveShadow = true;
-  worldGroup.add(lectern);
-  addCollider(colliders, lectern.position.x - 0.36, lectern.position.x + 0.36, lectern.position.z - 0.31, lectern.position.z + 0.31, "lectern");
-
-  const clock = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.22, 0.22, 0.05, 32),
-    new THREE.MeshStandardMaterial({ color: "#f6efe5", roughness: 0.9, metalness: 0.02 })
-  );
-  clock.rotation.z = Math.PI / 2;
-  clock.position.set(boardCenterX + 6.1, 2.14, boardZ - 0.02);
-  worldGroup.add(clock);
-
-  WORLD.lightBeams.forEach((beam, index) => {
-    const beamMaterial = new THREE.MeshBasicMaterial({
-      color: beam.side === "right" ? "#ffd79f" : "#f7e2be",
-      transparent: true,
-      opacity: beam.alpha,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-    });
-    const plane = new THREE.Mesh(new THREE.PlaneGeometry(scaled(beam.width), scaled(beam.reach)), beamMaterial);
-    if (beam.side === "right") {
-      plane.position.set(classroomMaxX - 0.18, 1.3, scaled(beam.z));
-      plane.rotation.x = -Math.PI / 2.76;
-      plane.rotation.z = 0.12;
-    } else {
-      plane.position.set(classroomMinX + 0.44, 1.24, scaled(beam.z));
-      plane.rotation.x = Math.PI / 2.7;
-      plane.rotation.z = -0.12;
-    }
-    plane.rotation.y = index % 2 ? 0.06 : -0.06;
-    worldGroup.add(plane);
-  });
-
-  const corridorSunPatch = createGlowPlane("rgba(255,228,168,1)", 9.2, 4.4, 0.56);
-  corridorSunPatch.position.set(minX + 1.96, 0.018, scaled(WORLD.frontDoor.center.z - 28));
-  corridorSunPatch.rotation.x = -Math.PI / 2;
-  corridorSunPatch.rotation.z = 0.12;
-  worldGroup.add(corridorSunPatch);
-
-  const parapetSunPatch = createGlowPlane("rgba(255,236,195,1)", 9.6, 4.8, 0.48);
-  parapetSunPatch.position.set(minX + 0.72, 1.56, scaled(WORLD.frontDoor.center.z + 44));
-  parapetSunPatch.rotation.y = Math.PI / 2;
-  parapetSunPatch.rotation.z = 0.04;
-  worldGroup.add(parapetSunPatch);
-
-  const corridorWallLight = createGlowPlane("rgba(255,232,182,1)", 4.8, 3.2, 0.3);
-  corridorWallLight.position.set(classroomMinX + 0.12, 1.74, scaled(WORLD.frontDoor.center.z - 32));
-  corridorWallLight.rotation.y = Math.PI / 2;
-  worldGroup.add(corridorWallLight);
-
-  const doorwayGlow = createGlowPlane("rgba(255,241,210,1)", 3.6, 2.8, 0.32);
-  doorwayGlow.position.set(classroomMinX + 0.48, 1.52, scaled(WORLD.frontDoor.center.z + 8));
-  doorwayGlow.rotation.y = Math.PI / 2;
-  worldGroup.add(doorwayGlow);
-
-  const classroomSunPatch = createGlowPlane("rgba(255,220,162,1)", 9.4, 4.0, 0.48);
-  classroomSunPatch.position.set(classroomMaxX - 3.18, 0.019, scaled(WORLD.classroom.lightWellZ + 84));
-  classroomSunPatch.rotation.x = -Math.PI / 2;
-  classroomSunPatch.rotation.z = -0.16;
-  worldGroup.add(classroomSunPatch);
-
-  const leftClassroomSunPatch = createGlowPlane("rgba(255,232,186,1)", 7.0, 3.4, 0.32);
-  leftClassroomSunPatch.position.set(classroomMinX + 2.16, 0.018, scaled(WORLD.classroom.lightWellZ - 104));
-  leftClassroomSunPatch.rotation.x = -Math.PI / 2;
-  leftClassroomSunPatch.rotation.z = 0.14;
-  worldGroup.add(leftClassroomSunPatch);
-
-  const backdoorSunPatch = createGlowPlane("rgba(255,240,198,1)", 3.8, 2.1, 0.22);
-  backdoorSunPatch.position.set(classroomMinX + 1.12, 0.018, scaled(WORLD.backDoor.center.z));
-  backdoorSunPatch.rotation.x = -Math.PI / 2;
-  backdoorSunPatch.rotation.z = 0.08;
-  worldGroup.add(backdoorSunPatch);
-
-  const seatSunPatch = createGlowPlane("rgba(255,220,172,1)", 5.2, 2.8, 0.36);
-  seatSunPatch.position.set(scaled(1896), 0.02, scaled(2058));
-  seatSunPatch.rotation.x = -Math.PI / 2;
-  seatSunPatch.rotation.z = -0.22;
-  worldGroup.add(seatSunPatch);
-
-  WORLD.desks.forEach((desk, index) => {
-    const x = scaled(desk.x);
-    const z = scaled(desk.z);
-    const deskGroup = new THREE.Group();
-    deskGroup.position.set(x, 0, z);
-
-    const top = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.08, 0.84), woodMat);
-    top.position.set(0, 0.78, 0.08);
-    const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.05, 0.24), woodMat);
-    shelf.position.set(0, 0.48, 0.1);
-    const modesty = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.24, 0.04), woodMat);
-    modesty.position.set(0, 0.64, -0.16);
-    const chairSeat = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.05, 0.3), woodMat);
-    chairSeat.position.set(0, 0.49, -0.42);
-    const chairBack = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.44, 0.05), woodMat);
-    chairBack.position.set(0, 0.78, -0.56);
-    deskGroup.add(top, shelf, modesty, chairSeat, chairBack);
-
-    [
-      [-0.24, -0.2],
-      [0.24, -0.2],
-      [-0.24, 0.28],
-      [0.24, 0.28],
-    ].forEach(([dx, dz]) => {
-      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.78, 0.06), metalMat);
-      leg.position.set(dx, 0.39, dz);
-      deskGroup.add(leg);
-    });
-
-    [
-      [-0.12, -0.54],
-      [0.12, -0.54],
-      [-0.12, -0.3],
-      [0.12, -0.3],
-    ].forEach(([dx, dz]) => {
-      const chairLeg = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.46, 0.04), metalMat);
-      chairLeg.position.set(dx, 0.23, dz);
-      deskGroup.add(chairLeg);
-    });
-
-    if (index % 4 === 2) {
-      const notebook = new THREE.Mesh(
-        new THREE.BoxGeometry(0.19, 0.018, 0.14),
-        new THREE.MeshStandardMaterial({ color: "#f2eee8", roughness: 0.94, metalness: 0.01 })
+      const l = [...new Set(i.map((e) => Number(e.toFixed(4))))].sort(
+        (e, t) => e - t,
       );
-      notebook.position.set(0.1, 0.83, 0.14);
-      notebook.rotation.y = 0.26;
-      deskGroup.add(notebook);
+      for (let o = 0; o < l.length - 1; o += 1) {
+        const a = l[o],
+          i = l[o + 1];
+        if (i - a <= 0.01) continue;
+        const c = (a + i) / 2,
+          h = n.filter((e) => c >= e.z1 && c <= e.z2),
+          d = [0, ie];
+        h.forEach((e) => {
+          d.push(e.y1, e.y2);
+        });
+        const p = [...new Set(d.map((e) => Number(e.toFixed(4))))].sort(
+          (e, t) => e - t,
+        );
+        for (let o = 0; o < p.length - 1; o += 1) {
+          const n = p[o],
+            l = p[o + 1];
+          if (l - n <= 0.01) continue;
+          const c = (n + l) / 2;
+          h.some((e) => c > e.y1 && c < e.y2) ||
+            R(
+              j,
+              A,
+              new e.BoxGeometry(le, l - n, i - a),
+              s,
+              new e.Vector3(t, n + (l - n) / 2, a + (i - a) / 2),
+              null,
+              Z,
+              { minX: t - 0.06, maxX: t + 0.06, minZ: a, maxZ: i, label: r },
+            );
+        }
+      }
+    },
+    Be = new e.HemisphereLight(8900331, 9139029, 1);
+  W.add(Be);
+  const ke = new e.AmbientLight(16775408, 0.22);
+  W.add(ke);
+  const Te = new e.DirectionalLight(16772034, 2.8);
+  (Te.position.set(-11.2, 10.8, 5.4),
+    Te.target.position.set(0, 0, re),
+    W.add(Te.target),
+    (Te.castShadow = !0),
+    Te.shadow.mapSize.set(
+      renderTuning.shadowMapSize,
+      renderTuning.shadowMapSize,
+    ),
+    (Te.shadow.camera.near = 0.5),
+    (Te.shadow.camera.far = 52),
+    (Te.shadow.camera.left = -18),
+    (Te.shadow.camera.right = 14),
+    (Te.shadow.camera.top = 14),
+    (Te.shadow.camera.bottom = -14),
+    (Te.shadow.bias = -3e-4),
+    (Te.shadow.normalBias = 0.018),
+    (Te.shadow.radius = 2),
+    W.add(Te));
+  const Ie = new e.PointLight(14215156, 1.28, 58, 2);
+  (Ie.position.set(Q + 2.42, 3.64, g(t.frontDoor.center.z - 122)), W.add(Ie));
+  const Re = new e.PointLight(16771512, 1.72, 68, 2);
+  (Re.position.set(N - 1.72, 6.42, g(t.frontDoor.center.z - 8)), W.add(Re));
+  const De = new e.PointLight(16767403, 2.2, 46, 2);
+  (De.position.set(te - 1.46, 2.78, g(t.classroom.lightWellZ + 64)), W.add(De));
+  const Ve = new e.PointLight(16773071, 1.9, 36, 2);
+  (Ve.position.set(ee + 1.56, 2.44, g(t.backDoor.center.z + 28)), W.add(Ve));
+  const Ee = new e.PointLight(16774368, 1.8, 38, 2);
+  (Ee.position.set((ee + te) / 2, 1.82, ge + 1.6), W.add(Ee));
+  const Ue = new e.PointLight(16775915, 1.6, 34, 2);
+  (Ue.position.set((ee + te) / 2, 1.82, xe - 1.6), W.add(Ue));
+  const We = new e.PointLight(16772829, 0.8, 12, 2);
+  (We.position.set(g(200), 2.8, g(t.backDoor.center.z + 100)), W.add(We));
+  const qe = k({ base: "#856549", dark: "#5c422d", highlight: "#b18a63" }),
+    _e = B({
+      base: "#c2c8ce",
+      line: "rgba(248,248,252,.72)",
+      speck: "rgba(134,142,152,",
+    }),
+    Ae = C({
+      base: "#e8e1d7",
+      accent: "rgba(255,255,255,.12)",
+      line: "rgba(174,162,145,.22)",
+      warm: !0,
+    }),
+    Ze = C({
+      base: "#cbd4dd",
+      accent: "rgba(255,255,255,.12)",
+      line: "rgba(132,145,160,.22)",
+    }),
+    Le = C({
+      base: "#ddd7cf",
+      accent: "rgba(255,255,255,.12)",
+      line: "rgba(126,118,104,.2)",
+      warm: !0,
+    }),
+    Xe = k({ base: "#96704a", dark: "#5c3e26", highlight: "#b8925e" }),
+    je = G(
+      512,
+      512,
+      (e, t, o) => {
+        ((e.fillStyle = "#29453a"), e.fillRect(0, 0, t, o));
+        for (let a = 0; a < 120; a += 1)
+          ((e.fillStyle = `rgba(255,255,255,${0.01 + 0.02 * Math.random()})`),
+            e.fillRect(
+              Math.random() * t,
+              Math.random() * o,
+              12 + 48 * Math.random(),
+              1 + 2 * Math.random(),
+            ));
+        ((e.strokeStyle = "rgba(214,226,218,.12)"),
+          (e.lineWidth = 4),
+          e.beginPath(),
+          e.moveTo(36, 102),
+          e.lineTo(196, 114),
+          e.moveTo(218, 180),
+          e.lineTo(468, 162),
+          e.moveTo(128, 322),
+          e.lineTo(404, 336),
+          e.stroke());
+      },
+      1.4,
+      1.2,
+    ),
+    $e = C({
+      base: "#6e8d5a",
+      accent: "rgba(255,255,255,.02)",
+      line: "rgba(84,112,70,.16)",
+      warm: !0,
+    }),
+    He = B({
+      base: "#cfd4d8",
+      line: "rgba(248,248,252,.68)",
+      speck: "rgba(134,142,152,",
+    }),
+    Fe = new e.MeshStandardMaterial({
+      color: "#9a7252",
+      map: qe,
+      roughness: 0.78,
+      metalness: 0.04,
+    }),
+    Ne = new e.MeshStandardMaterial({
+      color: "#c2c9d2",
+      map: _e,
+      roughness: 0.82,
+      metalness: 0.03,
+    }),
+    Oe = new e.MeshStandardMaterial({
+      color: "#f2f0ec",
+      map: Ae,
+      roughness: 0.88,
+      metalness: 0.01,
+    }),
+    Ye = new e.MeshStandardMaterial({
+      color: "#f0eeea",
+      map: Ze,
+      roughness: 0.86,
+      metalness: 0.02,
+    }),
+    Je = new e.MeshStandardMaterial({
+      color: "#a87a50",
+      map: Xe,
+      roughness: 0.68,
+      metalness: 0.05,
+    }),
+    Ke = new e.MeshStandardMaterial({
+      color: "#8a9098",
+      roughness: 0.48,
+      metalness: 0.44,
+    }),
+    Qe = new e.MeshStandardMaterial({
+      color: "#1e3b30",
+      map: je,
+      roughness: 0.82,
+      metalness: 0.03,
+    }),
+    et =
+      (new e.MeshStandardMaterial({
+        color: "#e2dcd2",
+        map: Le,
+        roughness: 0.88,
+        metalness: 0.03,
+      }),
+      new e.MeshStandardMaterial({
+        color: "#f5ede0",
+        map: Ae,
+        roughness: 0.84,
+        metalness: 0.02,
+      })),
+    tt =
+      (new e.MeshStandardMaterial({
+        color: "#7a9a64",
+        map: $e,
+        roughness: 0.96,
+        metalness: 0.01,
+      }),
+      new e.MeshStandardMaterial({
+        color: "#cdd3d9",
+        map: He,
+        roughness: 0.9,
+        metalness: 0.02,
+      })),
+    ot = g(t.corridor.campusDepth),
+    at = -12,
+    nt = new e.MeshStandardMaterial({
+      color: "#d4cfc6",
+      roughness: 0.85,
+      metalness: 0.02,
+    }),
+    st = new e.Mesh(new e.BoxGeometry(0.15, 9, se), nt);
+  (st.position.set(N - 0.08, -4.5, re), j.add(st));
+  const rt = new e.MeshStandardMaterial({
+    color: "#8ab4d6",
+    emissive: "#4a6a8a",
+    emissiveIntensity: 0.15,
+    roughness: 0.3,
+  });
+  for (let t = 0; t < 3; t++) {
+    const o = 0 - 3 * (t + 1) + 1.5;
+    for (let t = 0; t < 12; t++) {
+      const a = Y + (t + 0.5) * (se / 12),
+        n = new e.Mesh(new e.PlaneGeometry(1.2, 1.5), rt);
+      (n.position.set(N - 0.16, o, a), (n.rotation.y = -Math.PI / 2), j.add(n));
     }
-
-    setShadow(deskGroup, false, true);
-    worldGroup.add(deskGroup);
-    addCollider(colliders, x - 0.38, x + 0.38, z - 0.66, z + 0.5, `desk_${index}`);
-  });
-
-  WORLD.notes.forEach((note) => {
-    const page = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.22, 0.18),
-      new THREE.MeshStandardMaterial({ color: "#f4efe6", roughness: 0.96, metalness: 0.01, side: THREE.DoubleSide })
-    );
-    page.rotation.x = -Math.PI / 2;
-    page.position.set(scaled(note.x), scaled(note.y) + 0.01, scaled(note.z));
-    worldGroup.add(page);
-  });
-
-  WORLD.campusTrees.forEach((tree, index) => {
-    const treeNode = createTree({ scale: tree.scale });
-    treeNode.position.set(scaled(tree.x), 0, scaled(tree.z));
-    treeNode.rotation.y = index * 0.6;
-    setShadow(treeNode, false, true);
-    worldGroup.add(treeNode);
-  });
-
-  const distantAcademicBlock = new THREE.Mesh(
-    new THREE.BoxGeometry(4.8, 2.2, floorLength * 0.54),
-    new THREE.MeshStandardMaterial({ color: "#b7bec7", roughness: 0.95, metalness: 0.02 })
-  );
-  distantAcademicBlock.position.set(minX - campusDepth * 0.34, 1.12, floorCenterZ + 0.2);
-  distantAcademicBlock.receiveShadow = true;
-  worldGroup.add(distantAcademicBlock);
-
-  const dustGeometry = new THREE.BufferGeometry();
-  const dustPositions = [];
-  for (let index = 0; index < quality.dustCount; index += 1) {
-    dustPositions.push(
-      THREE.MathUtils.lerp(minX + 0.24, maxX - 0.2, Math.random()),
-      THREE.MathUtils.lerp(0.26, 2.84, Math.random()),
-      THREE.MathUtils.lerp(minZ + 0.2, maxZ - 0.2, Math.random())
-    );
   }
-  dustGeometry.setAttribute("position", new THREE.Float32BufferAttribute(dustPositions, 3));
-  const dustMaterial = new THREE.PointsMaterial({
-    color: "#fff0d6",
-    size: 0.035,
-    transparent: true,
-    opacity: 0.22,
-    depthWrite: false,
+  const it = new e.Mesh(new e.BoxGeometry(0.44 * ot, 0.06, 0.92 * se), tt);
+  (it.position.set(N - 0.26 * ot, -11.97, re + 0.26),
+    (it.receiveShadow = !0),
+    j.add(it));
+  const lt = b("rgba(255,233,192,1)", 9.6, 6.2, 0.34);
+  (lt.position.set(N - 0.5 * ot, 4.2, g(720)),
+    (lt.rotation.y = Math.PI / 2),
+    j.add(lt));
+  const ct = b("rgba(255,240,210,1)", 8.4, 4.8, 0.18);
+  (ct.position.set(N - 0.5 * ot, -4, g(1740)),
+    (ct.rotation.y = Math.PI / 2),
+    j.add(ct),
+    R(
+      j,
+      A,
+      new e.BoxGeometry(oe, 0.08, se),
+      Ne,
+      new e.Vector3(ae, -0.04, re),
+      null,
+      Z,
+      null,
+      !1,
+      !0,
+    ),
+    R(
+      j,
+      A,
+      new e.BoxGeometry(ne, 0.08, se),
+      Fe,
+      new e.Vector3((ee + te) / 2, -0.04, re),
+      null,
+      Z,
+      null,
+      !1,
+      !0,
+    ),
+    R(
+      j,
+      A,
+      new e.BoxGeometry(O - N, ie, le),
+      Oe,
+      new e.Vector3((N + O) / 2, 1.46, Y),
+      null,
+      Z,
+      {
+        minX: N,
+        maxX: O,
+        minZ: Y - 0.06,
+        maxZ: Y + 0.06,
+        label: "floor_front",
+      },
+    ),
+    R(
+      j,
+      A,
+      new e.BoxGeometry(O - N, ie, le),
+      Oe,
+      new e.Vector3((N + O) / 2, 1.46, J),
+      null,
+      Z,
+      { minX: N, maxX: O, minZ: J - 0.06, maxZ: J + 0.06, label: "floor_back" },
+    ),
+    R(
+      j,
+      A,
+      new e.BoxGeometry(le, ce, se),
+      new e.MeshStandardMaterial({
+        color: "#a8a29e",
+        map: Le,
+        roughness: 0.92,
+        metalness: 0.02,
+      }),
+      new e.Vector3(N, ce / 2, re),
+      null,
+      Z,
+      { minX: N - 0.06, maxX: N + 0.06, minZ: Y, maxZ: J, label: "parapet" },
+    ),
+    R(
+      j,
+      A,
+      new e.BoxGeometry(0.18, 0.1, se),
+      et,
+      new e.Vector3(N + 0.06, ce + 0.06, re),
+      null,
+      Z,
+      null,
+    ),
+    R(
+      j,
+      [],
+      new e.BoxGeometry(0.92, 0.012, 0.98 * se),
+      new e.MeshBasicMaterial({
+        color: "#fff1cf",
+        transparent: !0,
+        opacity: 0.1,
+      }),
+      new e.Vector3(N + 0.48, 0.014, re),
+      { x: -Math.PI / 2, y: 0, z: 0 },
+      null,
+      null,
+      !1,
+      !1,
+    ));
+  const ht = new e.Mesh(
+    new e.PlaneGeometry(1.96, 0.98 * se),
+    new e.MeshBasicMaterial({
+      color: "#8694a4",
+      transparent: !0,
+      opacity: renderTuning.mirrorOpacity,
+      side: e.DoubleSide,
+    }),
+  );
+  (ht.position.set(N + 1.02, 0.018, re),
+    (ht.rotation.x = -Math.PI / 2),
+    j.add(ht));
+  const dt = new e.MeshStandardMaterial({
+      color: "#b08d67",
+      map: Xe,
+      roughness: 0.78,
+      metalness: 0.04,
+    }),
+    pt = new e.MeshPhysicalMaterial({
+      color: "#ded4c2",
+      roughness: 0.56,
+      metalness: 0.06,
+      clearcoat: 0.14,
+    }),
+    mt = new e.MeshStandardMaterial({
+      color: "#d8cfc2",
+      roughness: 0.88,
+      metalness: 0.01,
+    }),
+    wt = new e.MeshPhysicalMaterial({
+      color: "#c8bfaf",
+      roughness: 0.48,
+      metalness: 0.08,
+      clearcoat: 0.18,
+    });
+  [
+    { id: "back_stair", z1: ze, z2: Pe, direction: -1 },
+    { id: "front_stair", z1: be, z2: Se, direction: 1 },
+  ].forEach((t) => {
+    const o = (t.z1 + t.z2) / 2,
+      a = t.z2 - t.z1,
+      n = new e.Mesh(new e.BoxGeometry(oe - 0.28, 0.06, a), mt);
+    (n.position.set(ae, -0.03, o), (n.receiveShadow = !0), j.add(n));
+    const s = ee - 1.08,
+      r = Q + 0.92,
+      i = s - r,
+      l = 10,
+      c = 0.14,
+      h = i / l,
+      d = 0.12,
+      p = Math.min(0.28, 0.18 * a),
+      m = Math.max(0.44, (a - p - 3 * d) / 2),
+      w = o - (p / 2 + d + m / 2),
+      M = o + (p / 2 + d + m / 2),
+      f = Math.max(0.78, Math.min(1.08, 0.26 * i)),
+      u = s - f / 2 + 0.08,
+      y = (s + r) / 2 - 0.12,
+      g = new e.Mesh(new e.BoxGeometry(f, 0.08, p), mt);
+    stairLayouts.push({
+      id: t.id,
+      z1: t.z1,
+      z2: t.z2,
+      xInner: s + 0.06,
+      xEntry: s + 0.02,
+      xExit: r + 0.08,
+      xOuter: r - 0.08,
+      totalRise: l * c,
+      upperFlight: { z1: w - m / 2 - 0.08, z2: w + m / 2 + 0.04 },
+      landing: { z1: o - p / 2 - 0.08, z2: o + p / 2 + 0.08 },
+      lowerFlight: { z1: M - m / 2 - 0.04, z2: M + m / 2 + 0.08 },
+    });
+    (g.position.set(u, 0, o), (g.receiveShadow = !0), j.add(g));
+    const x = new e.Mesh(new e.BoxGeometry(0.22, ie, a), Ye);
+    (x.position.set(ee, 1.46, o),
+      (x.castShadow = !0),
+      (x.receiveShadow = !0),
+      j.add(x),
+      I(Z, ee - 0.11, ee + 0.11, t.z1, t.z2, `${t.id}_wall`));
+    const b = (o, a, n) => {
+      for (let g = 0; g < l; g += 1) {
+        const x = (g + 0.5) / l,
+          b = s - x * i,
+          S = n * (g + 0.5) * c,
+          z = new e.Mesh(new e.BoxGeometry(h + 0.04, 0.06, o), dt);
+        (z.position.set(b, S, a), (z.receiveShadow = !0), j.add(z));
+        const P = new e.Mesh(new e.BoxGeometry(h + 0.02, c, o - 0.06), mt);
+        (P.position.set(b + 0.02, n * (g + 0.5) * c - 0.07 * n, a), j.add(P));
+      }
+      const g = new e.Mesh(new e.BoxGeometry(0.92, 0.08, o + 0.04), mt);
+      (g.position.set(r + 0.38, n * (l * c + 0.02), a),
+        (g.receiveShadow = !0),
+        j.add(g));
+      const x = new e.Mesh(new e.BoxGeometry(i + 0.32, 0.04, 0.04), wt);
+      x.position.set(y, 0.9, a - o / 2 - 0.06);
+      const b = x.clone();
+      b.position.z = a + o / 2 + 0.06;
+      j.add(x, b);
+      const S = Math.max(3, Math.floor(i / 0.42));
+      for (let o = 0; o <= S; o += 1) {
+        const l = r + 0.16 + (o / S) * (i - 0.16),
+          d = new e.Mesh(new e.BoxGeometry(0.03, 0.86, 0.03), wt),
+          p0 = d.clone();
+        (d.position.set(l, 0.43, a - m / 2 - 0.06),
+          p0.position.set(l, 0.43, a + m / 2 + 0.06),
+          j.add(d, p0));
+      }
+    };
+    (b(m, w, 1), b(m, M, -1));
+    [
+      { text: "5F", y: l * c + 0.28, z: w },
+      { text: "3F", y: -(l * c + 0.22), z: M },
+    ].forEach((a) => {
+      const n = T(a.text, 0.5, 0.2, { bg: "#5c6672", fg: "#f7f0de" });
+      (n.position.set(r + 0.74, a.y, a.z),
+        (n.rotation.y = Math.PI / 2),
+        j.add(n));
+    });
   });
-  const dust = new THREE.Points(dustGeometry, dustMaterial);
-  worldGroup.add(dust);
-
-  const debugAnchors = {
-    senior: new THREE.Vector3(),
-    junior: new THREE.Vector3(),
-    frontDoor: worldPointScaled(WORLD.frontDoor.center.x, WORLD.frontDoor.center.y, WORLD.frontDoor.center.z),
-    backDoor: worldPointScaled(WORLD.backDoor.center.x, WORLD.backDoor.center.y, WORLD.backDoor.center.z),
-    doorPlaque: worldPointScaled(WORLD.plaque.x, WORLD.plaque.y, WORLD.plaque.z),
-    parapetBand: new THREE.Vector3(minX + 0.22, scaled(WORLD.corridor.parapetHeight) + 0.32, scaled(WORLD.frontDoor.center.z - 8)),
-    boardWall: new THREE.Vector3(boardCenterX, scaled((WORLD.board.y1 + WORLD.board.y2) / 2), boardZ - 0.02),
+  const Mt = ge,
+    ft = xe,
+    ut = ft - Mt,
+    yt = (Mt + ft) / 2,
+    gt = [
+      { ...t.frontDoor, kind: "front", z1: we, z2: Me },
+      { ...t.backDoor, kind: "back", z1: fe, z2: ue },
+    ].sort((e, t) => e.z1 - t.z1),
+    xt = g(84),
+    bt = g(256),
+    St = bt - xt,
+    zt = (xt + bt) / 2,
+    Pt = 0.1,
+    vt = (t, o, a, n, s) => {
+      const r = new e.Mesh(new e.BoxGeometry(n, s, le), Oe);
+      (r.position.set(t, o, a),
+        (r.castShadow = !0),
+        (r.receiveShadow = !0),
+        j.add(r));
+    },
+    Gt = (t, o, a, n, s) => {
+      const r = (n - a - Pt * (s + 1)) / s;
+      for (let e = 0; e < s; e++) {
+        const o = a + Pt + (r + Pt) * e + r / 2;
+        (vt(o, bt + (ie - bt) / 2, t, r + 0.02, ie - bt + 0.02),
+          vt(o, xt / 2, t, r + 0.02, xt + 0.01));
+      }
+      for (let o = 0; o <= s; o++) {
+        const n = a + 0.05 + (r + Pt) * o,
+          s = new e.Mesh(new e.BoxGeometry(Pt, ie, le), Oe);
+        (s.position.set(n, 1.46, t), j.add(s));
+      }
+      I(Z, a, n, t - 0.06, t + 0.06, "end_wall");
+    };
+  (Gt(Mt, 0, ee, te, 4),
+    de - ee > 0.6 && Gt(ft, 0, ee, de - 0.06, 2),
+    te - pe > 0.6 && Gt(ft, 0, pe + 0.06, te, 2));
+  const Ct = t.leftWallWindows.map((e) => Ge(e, "left")),
+    Bt = t.rightWallWindows.map((e) => Ge(e, "right")),
+    kt = gt.map((e) => ({ z1: e.z1 - 0.5, z2: e.z2 + 0.5, y1: 0, y2: ie }));
+  Ce({
+    x: te,
+    zStart: Mt,
+    zEnd: ft,
+    openings: Bt,
+    material: Oe,
+    label: "right_wall",
+  });
+  const Tt = [];
+  (Y < Mt && Tt.push([Y, Mt]),
+    ft < J && Tt.push([ft, J]),
+    Tt.forEach(([t, o]) => {
+      o <= t ||
+        R(
+          j,
+          A,
+          new e.BoxGeometry(le, ie, o - t),
+          Ye,
+          new e.Vector3(ee, 1.46, t + (o - t) / 2),
+          null,
+          Z,
+          {
+            minX: ee - 0.06,
+            maxX: ee + 0.06,
+            minZ: t,
+            maxZ: o,
+            label: "divider_wall",
+          },
+        );
+    }),
+    Ce({
+      x: ee,
+      zStart: Mt,
+      zEnd: ft,
+      openings: [...kt, ...Ct],
+      material: Ye,
+      label: "divider_wall",
+    }));
+  const It = T("LM402", 1.72, 0.42, { bg: "#4a5562", fg: "#fff6de" });
+  (It.position.set(g(t.plaque.x), g(t.plaque.y), g(t.plaque.z)),
+    (It.rotation.y = -Math.PI / 2),
+    (It.material = It.material.clone()),
+    (It.material.emissive = new e.Color("#8a7959")),
+    (It.material.emissiveIntensity = 0.56),
+    j.add(It));
+  const Rt = new e.Mesh(
+    new e.BoxGeometry(0.08, 0.58, 1.54),
+    new e.MeshStandardMaterial({
+      color: "#ded6cb",
+      map: Ae,
+      roughness: 0.9,
+      metalness: 0.01,
+    }),
+  );
+  (Rt.position.set(ee + 0.012, g(t.plaque.y) - 0.06, g(t.plaque.z)), j.add(Rt));
+  const Dt = new e.PointLight(16773583, 0.34, 6, 2);
+  (Dt.position.set(ee + 0.54, g(t.plaque.y) + 0.08, g(t.plaque.z)), j.add(Dt));
+  var Rt2 = new e.Mesh(
+    new e.BoxGeometry(0.1, 0.58, 1.54),
+    new e.MeshStandardMaterial({
+      color: "#ded6cb",
+      roughness: 0.9,
+      metalness: 0.01,
+    }),
+  );
+  Rt2.position.set(ee + 0.16, 1.6, g(t.plaque.z));
+  j.add(Rt2);
+  var It2 = T("LM402", 1.72, 0.42, { bg: "#4a5562", fg: "#fff6de" });
+  It2.position.set(ee + 0.12, g(t.plaque.y), g(t.plaque.z));
+  It2.rotation.y = Math.PI / 2;
+  It2.material = It2.material.clone();
+  It2.material.emissive = new e.Color("#8a7959");
+  It2.material.emissiveIntensity = 0.56;
+  j.add(It2);
+  var It2L = new e.PointLight(16773583, 0.5, 6, 2);
+  It2L.position.set(ee + 0.5, g(t.plaque.y) + 0.08, g(t.plaque.z));
+  j.add(It2L);
+  const Vt = new e.MeshPhysicalMaterial({
+      color: "#e8f0f8",
+      roughness: 0.05,
+      metalness: 0,
+      transmission: 0.92,
+      thickness: 0.06,
+      transparent: !0,
+      opacity: 0.18,
+      ior: 1.5,
+      clearcoat: 1,
+      clearcoatRoughness: 0.02,
+      envMapIntensity: 0.3,
+      side: e.DoubleSide,
+      depthWrite: !1,
+    }),
+    Et = new e.MeshStandardMaterial({
+      color: "#c8bfaf",
+      roughness: 0.56,
+      metalness: 0.12,
+    });
+  (t.leftWallWindows.forEach((t) => {
+    const o = Ge(t, "left"),
+      a = o.z2 - o.z1,
+      n = o.y2 - o.y1,
+      s = (o.z1 + o.z2) / 2,
+      r = (o.y1 + o.y2) / 2,
+      i = new e.Mesh(new e.PlaneGeometry(a - 0.04, n - 0.04), Vt);
+    (i.position.set(ee, r, s), (i.rotation.y = Math.PI / 2), j.add(i));
+    const l = new e.Mesh(new e.BoxGeometry(0.04, 0.03, a + 0.02), Et);
+    l.position.set(ee, o.y2 + 0.01, s);
+    const c = new e.Mesh(new e.BoxGeometry(0.04, 0.05, a + 0.02), Et);
+    c.position.set(ee, o.y1 - 0.02, s);
+    const h = new e.Mesh(new e.BoxGeometry(0.04, n + 0.06, 0.03), Et);
+    h.position.set(ee, r, o.z1 - 0.01);
+    const d = h.clone();
+    d.position.z = o.z2 + 0.01;
+    const p = new e.Mesh(new e.BoxGeometry(0.04, 0.025, a - 0.02), Et);
+    (p.position.set(ee, r, s), j.add(l, c, h, d, p));
+  }),
+    t.rightWallWindows.forEach((t) => {
+      const o = Ge(t, "right"),
+        a = o.z2 - o.z1,
+        n = o.y2 - o.y1,
+        s = (o.z1 + o.z2) / 2,
+        r = (o.y1 + o.y2) / 2,
+        i = new e.Mesh(new e.PlaneGeometry(a - 0.04, n - 0.04), Vt);
+      (i.position.set(te, r, s), (i.rotation.y = Math.PI / 2), j.add(i));
+      const l = new e.Mesh(new e.BoxGeometry(0.04, 0.03, a + 0.02), Et);
+      l.position.set(te, o.y2 + 0.01, s);
+      const c = new e.Mesh(new e.BoxGeometry(0.04, 0.05, a + 0.02), Et);
+      c.position.set(te, o.y1 - 0.02, s);
+      const h = new e.Mesh(new e.BoxGeometry(0.04, n + 0.06, 0.03), Et);
+      h.position.set(te, r, o.z1 - 0.01);
+      const d = h.clone();
+      d.position.z = o.z2 + 0.01;
+      const p = new e.Mesh(new e.BoxGeometry(0.04, 0.025, a - 0.02), Et);
+      (p.position.set(te, r, s), j.add(l, c, h, d, p));
+    }));
+  const Ut = (t, o, a, n) => {
+    const s = (a - o - Pt * (n + 1)) / n;
+    for (let a = 0; a < n; a++) {
+      const n = o + Pt + (s + Pt) * a + s / 2,
+        r = new e.Mesh(new e.PlaneGeometry(s - 0.04, St - 0.04), Vt);
+      (r.position.set(n, zt, t), j.add(r));
+      const i = new e.Mesh(new e.BoxGeometry(s + 0.02, 0.03, 0.04), Et);
+      i.position.set(n, bt + 0.01, t);
+      const l = new e.Mesh(new e.BoxGeometry(s + 0.02, 0.05, 0.04), Et);
+      (l.position.set(n, xt - 0.02, t), j.add(i, l));
+    }
   };
-
-  const senior = createPerson({
-    torso: "#f6f7fb",
-    torsoAccent: "#dde4ee",
-    legs: "#273140",
-    skin: "#f0d5c7",
-    hair: "#23191a",
-    shoes: "#f4f5f6",
-    iris: "#5c463b",
-    female: false,
-    phone: true,
-    scale: 1.08,
+  (Ut(Mt, ee, te, 4),
+    de - ee > 0.6 && Ut(ft, ee, de - 0.06, 2),
+    te - pe > 0.6 && Ut(ft, pe + 0.06, te, 2),
+    R(
+      j,
+      A,
+      new e.BoxGeometry(pe - de + 0.22, ie, le),
+      Oe,
+      new e.Vector3((de + pe) / 2, 1.46, ft),
+      null,
+      Z,
+      {
+        minX: de - 0.12,
+        maxX: pe + 0.12,
+        minZ: ft - 0.06,
+        maxZ: ft + 0.06,
+        label: "board_wall",
+      },
+    ),
+    R(
+      j,
+      A,
+      new e.BoxGeometry(pe - de, g(t.board.y2 - t.board.y1), 0.06),
+      Qe,
+      new e.Vector3(me, g((t.board.y1 + t.board.y2) / 2), he - 0.02),
+      null,
+      Z,
+      null,
+    ),
+    R(
+      j,
+      A,
+      new e.BoxGeometry(pe - de + 0.18, 0.07, 0.16),
+      et,
+      new e.Vector3(me, g(t.board.y1) - 0.12, he - 0.1),
+      null,
+      Z,
+      null,
+    ));
+  const Wt = new e.Mesh(new e.BoxGeometry(0.96, 0.98, 0.72), Je);
+  (Wt.position.set(me - 4.2, 0.49, he - 0.86),
+    (Wt.castShadow = !0),
+    (Wt.receiveShadow = !0),
+    j.add(Wt),
+    I(
+      Z,
+      Wt.position.x - 0.36,
+      Wt.position.x + 0.36,
+      Wt.position.z - 0.31,
+      Wt.position.z + 0.31,
+      "lectern",
+    ));
+  const qt = new e.Mesh(
+    new e.CylinderGeometry(0.22, 0.22, 0.05, 32),
+    new e.MeshStandardMaterial({
+      color: "#f6efe5",
+      roughness: 0.9,
+      metalness: 0.02,
+    }),
+  );
+  ((qt.rotation.z = Math.PI / 2),
+    qt.position.set(me + 6.1, 2.14, he - 0.02),
+    j.add(qt),
+    t.lightBeams.forEach((t, o) => {
+      const a = new e.MeshBasicMaterial({
+          color: "right" === t.side ? "#ffd79f" : "#f7e2be",
+          transparent: !0,
+          opacity: 1.25 * t.alpha,
+          depthWrite: !1,
+          side: e.DoubleSide,
+        }),
+        n = new e.Mesh(new e.PlaneGeometry(g(t.width), g(t.reach)), a);
+      ("right" === t.side
+        ? (n.position.set(te - 0.18, 1.3, g(t.z)),
+          (n.rotation.x = -Math.PI / 2.76),
+          (n.rotation.z = 0.12))
+        : (n.position.set(ee + 0.44, 1.24, g(t.z)),
+          (n.rotation.x = Math.PI / 2.7),
+          (n.rotation.z = -0.12)),
+        (n.rotation.y = o % 2 ? 0.06 : -0.06),
+        j.add(n));
+    }));
+  const _t = b("rgba(255,228,168,1)", 9.2, 4.4, 0.56);
+  (_t.position.set(N + 1.96, 0.018, g(t.frontDoor.center.z - 28)),
+    (_t.rotation.x = -Math.PI / 2),
+    (_t.rotation.z = 0.12),
+    j.add(_t));
+  const At = b("rgba(255,236,195,1)", 9.6, 4.8, 0.48);
+  (At.position.set(N + 0.72, 1.56, g(t.frontDoor.center.z + 44)),
+    (At.rotation.y = Math.PI / 2),
+    (At.rotation.z = 0.04),
+    j.add(At));
+  const Zt = b("rgba(255,232,182,1)", 4.8, 3.2, 0.3);
+  (Zt.position.set(ee + 0.12, 1.74, g(t.frontDoor.center.z - 32)),
+    (Zt.rotation.y = Math.PI / 2),
+    j.add(Zt));
+  const Lt = b("rgba(255,241,210,1)", 3.6, 2.8, 0.32);
+  (Lt.position.set(ee + 0.48, 1.52, g(t.frontDoor.center.z + 8)),
+    (Lt.rotation.y = Math.PI / 2),
+    j.add(Lt));
+  const Xt = b("rgba(255,220,162,1)", 9.4, 4, 0.48);
+  (Xt.position.set(te - 3.18, 0.019, g(t.classroom.lightWellZ + 84)),
+    (Xt.rotation.x = -Math.PI / 2),
+    (Xt.rotation.z = -0.16),
+    j.add(Xt));
+  const jt = b("rgba(255,232,186,1)", 7, 3.4, 0.32);
+  (jt.position.set(ee + 2.16, 0.018, g(t.classroom.lightWellZ - 104)),
+    (jt.rotation.x = -Math.PI / 2),
+    (jt.rotation.z = 0.14),
+    j.add(jt));
+  const $t = b("rgba(255,240,198,1)", 3.8, 2.1, 0.22);
+  ($t.position.set(ee + 1.12, 0.018, g(t.backDoor.center.z)),
+    ($t.rotation.x = -Math.PI / 2),
+    ($t.rotation.z = 0.08),
+    j.add($t));
+  const Ht = b("rgba(255,220,172,1)", 5.2, 2.8, 0.36);
+  (Ht.position.set(g(1896), 0.02, g(2058)),
+    (Ht.rotation.x = -Math.PI / 2),
+    (Ht.rotation.z = -0.22),
+    j.add(Ht),
+    t.desks.forEach((t, o) => {
+      const a = g(t.x),
+        n = g(t.z),
+        s = new e.Group();
+      s.position.set(a, 0, n);
+      const r = new e.Mesh(new e.BoxGeometry(0.68, 0.08, 0.84), Je);
+      r.position.set(0, 0.78, 0.08);
+      const i = new e.Mesh(new e.BoxGeometry(0.38, 0.05, 0.24), Je);
+      i.position.set(0, 0.48, 0.1);
+      const l = new e.Mesh(new e.BoxGeometry(0.46, 0.24, 0.04), Je);
+      l.position.set(0, 0.64, -0.16);
+      const c = new e.Mesh(new e.BoxGeometry(0.28, 0.05, 0.3), Je);
+      c.position.set(0, 0.49, -0.42);
+      const h = new e.Mesh(new e.BoxGeometry(0.28, 0.44, 0.05), Je);
+      if (
+        (h.position.set(0, 0.78, -0.56),
+        s.add(r, i, l, c, h),
+        [
+          [-0.24, -0.2],
+          [0.24, -0.2],
+          [-0.24, 0.28],
+          [0.24, 0.28],
+        ].forEach(([t, o]) => {
+          const a = new e.Mesh(new e.BoxGeometry(0.06, 0.78, 0.06), Ke);
+          (a.position.set(t, 0.39, o), s.add(a));
+        }),
+        [
+          [-0.12, -0.54],
+          [0.12, -0.54],
+          [-0.12, -0.3],
+          [0.12, -0.3],
+        ].forEach(([t, o]) => {
+          const a = new e.Mesh(new e.BoxGeometry(0.04, 0.46, 0.04), Ke);
+          (a.position.set(t, 0.23, o), s.add(a));
+        }),
+        o % 4 == 2)
+      ) {
+        const t = new e.Mesh(
+          new e.BoxGeometry(0.19, 0.018, 0.14),
+          new e.MeshStandardMaterial({
+            color: "#f2eee8",
+            roughness: 0.94,
+            metalness: 0.01,
+          }),
+        );
+        (t.position.set(0.1, 0.83, 0.14), (t.rotation.y = 0.26), s.add(t));
+      }
+      (x(s, !1, !0),
+        j.add(s),
+        I(Z, a - 0.38, a + 0.38, n - 0.66, n + 0.5, `desk_${o}`));
+    }),
+    t.notes.forEach((t) => {
+      const o = new e.Mesh(
+        new e.PlaneGeometry(0.22, 0.18),
+        new e.MeshStandardMaterial({
+          color: "#f4efe6",
+          roughness: 0.96,
+          metalness: 0.01,
+          side: e.DoubleSide,
+        }),
+      );
+      ((o.rotation.x = -Math.PI / 2),
+        o.position.set(g(t.x), g(t.y) + 0.01, g(t.z)),
+        j.add(o));
+    }),
+    t.campusTrees.forEach((t, o) => {
+      const a = (function ({ scale: t = 1, colorVariant: o = 0 }) {
+        const a = new e.Group(),
+          n = new e.Mesh(
+            new e.CylinderGeometry(0.07 * t, 0.22 * t, 2.4 * t, 14),
+            new e.MeshStandardMaterial({
+              color: "#5e3f28",
+              roughness: 0.94,
+              metalness: 0.02,
+            }),
+          );
+        ((n.position.y = 1.2 * t), a.add(n));
+        const s = new e.Mesh(
+          new e.CylinderGeometry(0.05 * t, 0.08 * t, 1.9 * t, 10),
+          new e.MeshStandardMaterial({
+            color: "#7a5638",
+            roughness: 0.84,
+            metalness: 0.02,
+            transparent: !0,
+            opacity: 0.32,
+          }),
+        );
+        (s.position.set(-0.02 * t, 1.24 * t, 0.08 * t), a.add(s));
+        const r = new e.MeshStandardMaterial({
+            color: "#5e3f28",
+            roughness: 0.92,
+            metalness: 0.02,
+          }),
+          i = new e.Mesh(
+            new e.CylinderGeometry(0.02 * t, 0.04 * t, 0.8 * t, 6),
+            r,
+          );
+        (i.position.set(0.2 * t, 1.9 * t, 0.1 * t),
+          (i.rotation.z = -0.7),
+          a.add(i));
+        const l = new e.Mesh(
+          new e.CylinderGeometry(0.018 * t, 0.035 * t, 0.7 * t, 6),
+          r,
+        );
+        (l.position.set(-0.18 * t, 2.1 * t, -0.12 * t),
+          (l.rotation.z = 0.65),
+          a.add(l));
+        const c = ["#4a7040", "#567a48", "#628c4e", "#3e6338", "#5a8244"],
+          h = c[o % c.length],
+          d = parseInt(h.slice(1, 3), 16),
+          p = parseInt(h.slice(3, 5), 16),
+          m = parseInt(h.slice(5, 7), 16),
+          w = `#${Math.min(255, d + 22)
+            .toString(16)
+            .padStart(2, "0")}${Math.min(255, p + 18)
+            .toString(16)
+            .padStart(2, "0")}${Math.min(255, m + 14)
+            .toString(16)
+            .padStart(2, "0")}`,
+          M = `#${Math.max(0, d - 16)
+            .toString(16)
+            .padStart(2, "0")}${Math.max(0, p - 12)
+            .toString(16)
+            .padStart(2, "0")}${Math.max(0, m - 10)
+            .toString(16)
+            .padStart(2, "0")}`,
+          f = [
+            new e.MeshStandardMaterial({
+              color: h,
+              roughness: 0.94,
+              metalness: 0.01,
+            }),
+            new e.MeshStandardMaterial({
+              color: w,
+              roughness: 0.92,
+              metalness: 0.01,
+            }),
+            new e.MeshStandardMaterial({
+              color: M,
+              roughness: 0.96,
+              metalness: 0.01,
+            }),
+          ];
+        return (
+          [
+            [0, 2.9, 0, 1.1, 1.24, 1, 0],
+            [-0.38, 2.5, 0.2, 0.9, 0.96, 0.78, 1],
+            [0.44, 2.56, -0.16, 0.94, 1.06, 0.82, 2],
+            [0.06, 3.42, -0.14, 0.86, 0.88, 0.76, 1],
+            [-0.56, 2.76, -0.2, 0.8, 0.84, 0.7, 2],
+            [0.12, 3.56, 0.08, 0.58, 0.6, 0.52, 0],
+          ].forEach(([o, n, s, r, i, l, c]) => {
+            const h = new e.Mesh(new e.SphereGeometry(0.52 * t, 10, 10), f[c]);
+            (h.position.set(o * t, n * t, s * t),
+              h.scale.set(r, i, l),
+              a.add(h));
+          }),
+          x(a),
+          a
+        );
+      })({ scale: 2.5 * t.scale, colorVariant: o });
+      (a.position.set(g(t.x), at, g(t.z)),
+        (a.rotation.y = 0.6 * o),
+        x(a, !1, !0),
+        j.add(a));
+    }));
+  const Ft = new e.Mesh(
+    new e.BoxGeometry(4.8, 6, 0.54 * se),
+    new e.MeshStandardMaterial({
+      color: "#b7bec7",
+      roughness: 0.95,
+      metalness: 0.02,
+    }),
+  );
+  (Ft.position.set(N - 0.34 * ot, -9, re + 0.2),
+    (Ft.receiveShadow = !0),
+    j.add(Ft));
+  const Nt = document.createElement("canvas");
+  ((Nt.width = 512), (Nt.height = 512));
+  const Ot = Nt.getContext("2d");
+  ((Ot.fillStyle = "#5a7a48"), Ot.fillRect(0, 0, 512, 512));
+  for (let e = 0; e < 120; e++) {
+    const e = 512 * Math.random(),
+      t = 512 * Math.random(),
+      o = 8 + 20 * Math.random();
+    (Ot.beginPath(),
+      Ot.arc(e, t, o, 0, 2 * Math.PI),
+      (Ot.fillStyle =
+        Math.random() > 0.5 ? "rgba(80,120,60,0.15)" : "rgba(50,90,40,0.12)"),
+      Ot.fill());
+  }
+  ((Ot.fillStyle = "#b8b0a4"),
+    Ot.fillRect(80, 0, 18, 512),
+    Ot.fillRect(320, 0, 14, 512),
+    Ot.fillRect(0, 240, 512, 16),
+    Ot.save(),
+    Ot.translate(256, 256),
+    Ot.rotate(0.4),
+    Ot.fillRect(-300, -7, 600, 14),
+    Ot.restore(),
+    (Ot.strokeStyle = "rgba(100,90,78,0.3)"),
+    (Ot.lineWidth = 1),
+    Ot.strokeRect(80, 0, 18, 512),
+    Ot.strokeRect(320, 0, 14, 512),
+    Ot.strokeRect(0, 240, 512, 16));
+  const Yt = [
+    "rgba(140,80,60,0.25)",
+    "rgba(120,60,80,0.2)",
+    "rgba(90,110,50,0.22)",
+  ];
+  [
+    [140, 100, 30, 22],
+    [380, 340, 26, 18],
+    [200, 420, 24, 20],
+    [440, 140, 20, 28],
+  ].forEach(([e, t, o, a]) => {
+    ((Ot.fillStyle = Yt[Math.floor(Math.random() * Yt.length)]),
+      Ot.beginPath(),
+      Ot.ellipse(e, t, o, a, 0, 0, 2 * Math.PI),
+      Ot.fill());
+    for (let n = 0; n < 6; n++)
+      (Ot.beginPath(),
+        Ot.arc(
+          e + (Math.random() - 0.5) * o * 1.4,
+          t + (Math.random() - 0.5) * a * 1.4,
+          2 + 2 * Math.random(),
+          0,
+          2 * Math.PI,
+        ),
+        (Ot.fillStyle = [
+          "rgba(220,60,80,0.5)",
+          "rgba(240,200,60,0.5)",
+          "rgba(220,120,200,0.4)",
+        ][n % 3]),
+        Ot.fill());
   });
-  const junior = createPerson({
-    torso: "#fffdfa",
-    torsoAccent: "#ffffff",
-    legs: "#2f5b84",
-    skin: "#f8e2d2",
-    hair: "#4a3330",
-    shoes: "#fffefb",
-    iris: "#604434",
-    female: true,
-    highlight: true,
-    referenceJunior: true,
-    scale: 1.09,
+  const Jt = new e.CanvasTexture(Nt);
+  ((Jt.colorSpace = e.SRGBColorSpace),
+    (Jt.wrapS = e.RepeatWrapping),
+    (Jt.wrapT = e.RepeatWrapping),
+    Jt.repeat.set(3, 3));
+  const Kt = new e.MeshStandardMaterial({
+      color: "#5a7a48",
+      map: Jt,
+      roughness: 0.92,
+      metalness: 0.01,
+    }),
+    Qt = new e.Mesh(new e.PlaneGeometry(4 * ot, 3 * se), Kt);
+  ((Qt.rotation.x = -Math.PI / 2),
+    Qt.position.set(N - 0.8 * ot, at, re),
+    (Qt.receiveShadow = !0),
+    j.add(Qt));
+  [
+    {
+      wall: "#c4bfb6",
+      w: 3.6,
+      h: g(520),
+      d: 8.4,
+      px: 0.72,
+      pz: 900,
+      wr: 6,
+      wc: 5,
+      roof: "flat",
+    },
+    {
+      wall: "#b8c2ca",
+      w: 5.2,
+      h: g(440),
+      d: 6.8,
+      px: 0.88,
+      pz: 1800,
+      wr: 5,
+      wc: 7,
+      roof: "ledge",
+    },
+    {
+      wall: "#d2ccc4",
+      w: 4.4,
+      h: g(280),
+      d: 10.2,
+      px: 0.64,
+      pz: 2700,
+      wr: 3,
+      wc: 6,
+      roof: "flat",
+    },
+    {
+      wall: "#c8bfb0",
+      w: 3,
+      h: g(480),
+      d: 5.6,
+      px: 0.82,
+      pz: 1350,
+      wr: 5,
+      wc: 4,
+      roof: "ledge",
+    },
+    {
+      wall: "#d4c8bc",
+      w: 6,
+      h: g(240),
+      d: 7.4,
+      px: 0.56,
+      pz: 3200,
+      wr: 2,
+      wc: 8,
+      roof: "flat",
+    },
+  ].forEach((t) => {
+    const o = (function (t, o, a, n, s) {
+        const r = document.createElement("canvas");
+        ((r.width = n || 192), (r.height = s || 128));
+        const i = r.getContext("2d");
+        ((i.fillStyle = t), i.fillRect(0, 0, r.width, r.height));
+        for (let e = 0; e < 30; e++)
+          ((i.fillStyle = `rgba(${128 + 40 * Math.random()},${128 + 40 * Math.random()},${128 + 40 * Math.random()},0.06)`),
+            i.fillRect(
+              Math.random() * r.width,
+              Math.random() * r.height,
+              4 + 12 * Math.random(),
+              2 + 6 * Math.random(),
+            ));
+        const l = 0.08 * r.width,
+          c = 0.06 * r.height,
+          h = (r.width - 2 * l) / a,
+          d = (r.height - 2 * c) / o,
+          p = 0.55 * h,
+          m = 0.52 * d;
+        for (let e = 0; e < o; e++)
+          for (let t = 0; t < a; t++) {
+            const o = l + t * h + (h - p) / 2,
+              a = c + e * d + (d - m) / 2;
+            ((i.fillStyle = "rgba(60,70,80,0.4)"),
+              i.fillRect(o - 1, a - 1, p + 2, m + 2));
+            const n = Math.random() > 0.4;
+            ((i.fillStyle = n
+              ? "rgba(180,210,230,0.7)"
+              : "rgba(90,110,130,0.6)"),
+              i.fillRect(o, a, p, m),
+              n &&
+                ((i.fillStyle = "rgba(255,255,255,0.15)"),
+                i.fillRect(o + 1, a + 1, 0.3 * p, 0.4 * m)));
+          }
+        const w = new e.CanvasTexture(r);
+        return ((w.colorSpace = e.SRGBColorSpace), w);
+      })(t.wall, t.wr, t.wc, 192, 128),
+      a = t.px,
+      n = parseInt(t.wall.slice(1, 3), 16),
+      s = parseInt(t.wall.slice(3, 5), 16),
+      r = parseInt(t.wall.slice(5, 7), 16),
+      i = Math.round(n + (212 - n) * a * 0.3),
+      l = Math.round(s + (232 - s) * a * 0.3),
+      c = Math.round(r + (240 - r) * a * 0.3),
+      h = `#${i.toString(16).padStart(2, "0")}${l.toString(16).padStart(2, "0")}${c.toString(16).padStart(2, "0")}`,
+      d = new e.MeshStandardMaterial({
+        color: h,
+        map: o,
+        roughness: 0.9,
+        metalness: 0.03,
+      }),
+      p = new e.Mesh(new e.BoxGeometry(t.w, t.h, t.d), d);
+    if (
+      (p.position.set(N - ot * t.px, at + t.h / 2, g(t.pz)),
+      (p.receiveShadow = !0),
+      (p.castShadow = !0),
+      j.add(p),
+      "ledge" === t.roof)
+    ) {
+      const o = new e.Mesh(
+        new e.BoxGeometry(t.w + 0.2, 0.08, t.d + 0.2),
+        new e.MeshStandardMaterial({
+          color: "#a0988e",
+          roughness: 0.88,
+          metalness: 0.04,
+        }),
+      );
+      (o.position.set(N - ot * t.px, at + t.h + 0.04, g(t.pz)), j.add(o));
+      const a = new e.Mesh(
+        new e.BoxGeometry(t.w + 0.16, 0.18, t.d + 0.16),
+        new e.MeshStandardMaterial({
+          color: "#b8b0a6",
+          roughness: 0.9,
+          metalness: 0.02,
+        }),
+      );
+      (a.position.set(N - ot * t.px, at + t.h + 0.12, g(t.pz)), j.add(a));
+    } else {
+      const o = new e.Mesh(
+        new e.BoxGeometry(t.w + 0.1, 0.06, t.d + 0.1),
+        new e.MeshStandardMaterial({
+          color: "#8a8480",
+          roughness: 0.92,
+          metalness: 0.03,
+        }),
+      );
+      (o.position.set(N - ot * t.px, at + t.h + 0.03, g(t.pz)), j.add(o));
+    }
   });
-  const fatherEcho = createPerson({
-    torso: "#f2c49e",
-    torsoAccent: "#ffd8b8",
-    legs: "#ffe9d5",
-    skin: "#f0c7ab",
-    hair: "#533f3c",
-    shoes: "#4b4040",
-    female: false,
-    echo: true,
-    echoOpacity: 0.28,
-    echoColor: "#ffd5b0",
-    scale: 0.98,
+  const eo = new e.SphereGeometry(120, 32, 16, 0, 2 * Math.PI, 0, Math.PI / 2),
+    to = document.createElement("canvas");
+  ((to.width = 512), (to.height = 512));
+  const oo = to.getContext("2d"),
+    ao = oo.createLinearGradient(0, 0, 0, 512);
+  (ao.addColorStop(0, "#4a7ab5"),
+    ao.addColorStop(0.25, "#6a9ec8"),
+    ao.addColorStop(0.45, "#87CEEB"),
+    ao.addColorStop(0.65, "#a8d8f0"),
+    ao.addColorStop(0.8, "#d4e8f0"),
+    ao.addColorStop(0.92, "#e8f0f4"),
+    ao.addColorStop(1, "#eef4f7"),
+    (oo.fillStyle = ao),
+    oo.fillRect(0, 0, 512, 512));
+  const no = 380,
+    so = 60,
+    ro = oo.createRadialGradient(no, so, 0, no, so, 80);
+  (ro.addColorStop(0, "rgba(255,255,240,0.95)"),
+    ro.addColorStop(0.1, "rgba(255,250,220,0.8)"),
+    ro.addColorStop(0.3, "rgba(255,240,180,0.4)"),
+    ro.addColorStop(0.6, "rgba(255,220,150,0.15)"),
+    ro.addColorStop(1, "rgba(255,200,120,0)"),
+    (oo.fillStyle = ro),
+    oo.beginPath(),
+    oo.arc(no, so, 80, 0, 2 * Math.PI),
+    oo.fill());
+  const io = oo.createRadialGradient(no, so, 0, no, so, 18);
+  (io.addColorStop(0, "rgba(255,255,255,1)"),
+    io.addColorStop(0.5, "rgba(255,255,240,0.9)"),
+    io.addColorStop(1, "rgba(255,250,220,0)"),
+    (oo.fillStyle = io),
+    oo.beginPath(),
+    oo.arc(no, so, 18, 0, 2 * Math.PI),
+    oo.fill(),
+    [
+      [120, 100, 50, 18, 0.5],
+      [140, 96, 40, 14, 0.4],
+      [100, 104, 35, 12, 0.35],
+      [300, 140, 60, 20, 0.45],
+      [320, 136, 45, 16, 0.4],
+      [280, 145, 38, 14, 0.35],
+      [420, 80, 44, 16, 0.42],
+      [440, 76, 36, 14, 0.38],
+      [200, 200, 55, 18, 0.3],
+      [220, 196, 42, 14, 0.28],
+      [380, 220, 48, 16, 0.32],
+      [60, 180, 40, 14, 0.34],
+      [460, 160, 52, 18, 0.36],
+      [470, 156, 38, 12, 0.3],
+    ].forEach(([e, t, o, a, n]) => {
+      const s = oo.createRadialGradient(e, t, 0, e, t, Math.max(o, a));
+      (s.addColorStop(0, `rgba(255,255,255,${n})`),
+        s.addColorStop(0.5, `rgba(255,255,255,${0.6 * n})`),
+        s.addColorStop(1, "rgba(255,255,255,0)"),
+        (oo.fillStyle = s),
+        oo.beginPath(),
+        oo.ellipse(e, t, o, a, 0, 0, 2 * Math.PI),
+        oo.fill());
+    }));
+  const lo = new e.CanvasTexture(to);
+  lo.colorSpace = e.SRGBColorSpace;
+  const co = new e.MeshBasicMaterial({
+      map: lo,
+      side: e.BackSide,
+      fog: !1,
+      depthWrite: !1,
+    }),
+    ho = new e.Mesh(eo, co);
+  (ho.position.set(N - 0.3 * ot, at, re), j.add(ho));
+  const po = new e.Mesh(
+    new e.SphereGeometry(3.6, 24, 24),
+    new e.MeshBasicMaterial({ color: "#fffbe8", fog: !1 }),
+  );
+  (po.position.set(-11.2, 10.8, 5.4), j.add(po));
+  const mo = new e.Mesh(
+    new e.SphereGeometry(6, 16, 16),
+    new e.MeshBasicMaterial({
+      color: "#fff4d0",
+      transparent: !0,
+      opacity: 0.25,
+      fog: !1,
+      depthWrite: !1,
+    }),
+  );
+  (mo.position.copy(po.position), j.add(mo));
+  const wo = N - 0.3 * ot,
+    Mo = re,
+    fo = [];
+  [
+    { x: -20, y: 38, z: -30, w: 12, h: 4 },
+    { x: 15, y: 42, z: -20, w: 10, h: 3 },
+    { x: -35, y: 35, z: 10, w: 14, h: 5 },
+    { x: 25, y: 40, z: 25, w: 11, h: 3.5 },
+    { x: -10, y: 44, z: -40, w: 9, h: 3 },
+    { x: 40, y: 36, z: 5, w: 13, h: 4.5 },
+  ].forEach((t) => {
+    const o = document.createElement("canvas");
+    ((o.width = 256), (o.height = 128));
+    const a = o.getContext("2d"),
+      n = a.createRadialGradient(128, 64, 10, 128, 64, 100);
+    (n.addColorStop(0, "rgba(255,255,255,0.7)"),
+      n.addColorStop(0.4, "rgba(255,255,255,0.35)"),
+      n.addColorStop(1, "rgba(255,255,255,0)"),
+      (a.fillStyle = n),
+      a.fillRect(0, 0, 256, 128),
+      [
+        [90, 58, 60],
+        [166, 58, 55],
+        [128, 48, 50],
+      ].forEach(([e, t, o]) => {
+        const n = a.createRadialGradient(e, t, 4, e, t, o);
+        (n.addColorStop(0, "rgba(255,255,255,0.5)"),
+          n.addColorStop(1, "rgba(255,255,255,0)"),
+          (a.fillStyle = n),
+          a.beginPath(),
+          a.arc(e, t, o, 0, 2 * Math.PI),
+          a.fill());
+      }));
+    const s = new e.CanvasTexture(o);
+    s.colorSpace = e.SRGBColorSpace;
+    const r = new e.Mesh(
+      new e.PlaneGeometry(t.w, t.h),
+      new e.MeshBasicMaterial({
+        map: s,
+        transparent: !0,
+        opacity: 0.6,
+        depthWrite: !1,
+        side: e.DoubleSide,
+        fog: !1,
+      }),
+    );
+    (r.position.set(wo + t.x, at + t.y, Mo + t.z),
+      (r.rotation.x = -0.15),
+      (r.userData.startX = r.position.x),
+      (r.userData.speed = 0.15 + 0.2 * Math.random()),
+      j.add(r),
+      fo.push(r));
   });
-  const auntEcho = createPerson({
-    torso: "#ffd8e4",
-    torsoAccent: "#ffe8ef",
-    legs: "#ffd8e4",
-    skin: "#f0cab4",
-    hair: "#5a4648",
-    shoes: "#5a4749",
-    female: true,
-    echo: true,
-    echoOpacity: 0.26,
-    echoColor: "#ffc0d6",
-    scale: 1,
+  const uo = [];
+  for (let t = 0; t < 4; t++) {
+    const o = new e.Group(),
+      a = new e.MeshBasicMaterial({
+        color: "#2a2a2a",
+        side: e.DoubleSide,
+        fog: !1,
+      }),
+      n = new e.Mesh(new e.PlaneGeometry(0.4, 0.08), a);
+    (n.position.set(-0.18, 0, 0), (n.rotation.z = 0.3));
+    const s = new e.Mesh(new e.PlaneGeometry(0.4, 0.08), a);
+    (s.position.set(0.18, 0, 0),
+      (s.rotation.z = -0.3),
+      o.add(n, s),
+      o.position.set(wo - 30 + 18 * t, 20 + 3 * t, Mo - 20 + 12 * t),
+      (o.userData.startX = o.position.x),
+      (o.userData.startZ = o.position.z),
+      (o.userData.wingL = n),
+      (o.userData.wingR = s),
+      (o.userData.speed = 0.6 + 0.4 * Math.random()),
+      (o.userData.phase = Math.random() * Math.PI * 2),
+      j.add(o),
+      uo.push(o));
+  }
+  const yo = new e.BufferGeometry(),
+    go = [];
+  for (let t = 0; t < renderTuning.dustCount; t += 1)
+    go.push(
+      e.MathUtils.lerp(N + 0.24, O - 0.2, Math.random()),
+      e.MathUtils.lerp(0.26, 2.84, Math.random()),
+      e.MathUtils.lerp(Y + 0.2, J - 0.2, Math.random()),
+    );
+  yo.setAttribute("position", new e.Float32BufferAttribute(go, 3));
+  const xo = new e.PointsMaterial({
+      color: "#fff0d6",
+      size: 0.035,
+      transparent: !0,
+      opacity: 0.22,
+      depthWrite: !1,
+    }),
+    bo = new e.Points(yo, xo);
+  j.add(bo);
+  const So = new e.Mesh(
+    new e.BoxGeometry(ne, 0.08, ut),
+    new e.MeshStandardMaterial({ color: "#f5f3ef", roughness: 0.9 }),
+  );
+  (So.position.set((ee + te) / 2, 2.88, yt),
+    (So.receiveShadow = !0),
+    j.add(So));
+  const zo = new e.MeshStandardMaterial({
+      color: "#ffffff",
+      emissive: "#ffffff",
+      emissiveIntensity: 0.5,
+    }),
+    Po = new e.BoxGeometry(0.3, 0.04, 0.3);
+  t.desks.forEach((t, o) => {
+    if (o % 4 != 0) return;
+    const a = new e.Mesh(Po, zo);
+    (a.position.set(g(t.x), 2.86, g(t.z)), j.add(a));
   });
-  actorGroup.add(senior, junior, fatherEcho, auntEcho);
-
-  const hotspotColorMap = {
-    scene: 0xfbe3b8,
-    memory: 0x9ad8ff,
-  };
+  const vo = {
+      senior: new e.Vector3(),
+      junior: new e.Vector3(),
+      frontDoor: ve(
+        t.frontDoor.center.x,
+        t.frontDoor.center.y,
+        t.frontDoor.center.z,
+      ),
+      backDoor: ve(
+        t.backDoor.center.x,
+        t.backDoor.center.y,
+        t.backDoor.center.z,
+      ),
+      doorPlaque: ve(t.plaque.x, t.plaque.y, t.plaque.z),
+      parapetBand: new e.Vector3(
+        N + 0.22,
+        g(t.corridor.parapetHeight) + 0.32,
+        g(t.frontDoor.center.z - 8),
+      ),
+      boardWall: new e.Vector3(me, g((t.board.y1 + t.board.y2) / 2), he - 0.02),
+    },
+    Go = S({
+      torso: "#f0f2f8",
+      torsoAccent: "#c8d4e8",
+      legs: "#1e2a3a",
+      skin: "#f2d8c8",
+      hair: "#1a1214",
+      shoes: "#e8e6e2",
+      iris: "#4a3830",
+      female: !1,
+      phone: !0,
+      highlight: !0,
+      scale: 1.08,
+    }),
+    Co = S({
+      torso: "#fefefe",
+      torsoAccent: "#f8f4f0",
+      legs: "#4a6e96",
+      skin: "#fae4d0",
+      hair: "#1e1510",
+      shoes: "#f8f6f2",
+      iris: "#503828",
+      female: !0,
+      highlight: !0,
+      referenceJunior: !0,
+      scale: 1.08,
+    }),
+    Bo = S({
+      torso: "#f2c49e",
+      torsoAccent: "#ffd8b8",
+      legs: "#ffe9d5",
+      skin: "#f0c7ab",
+      hair: "#533f3c",
+      shoes: "#4b4040",
+      female: !1,
+      echo: !0,
+      echoOpacity: 0.28,
+      echoColor: "#ffd5b0",
+      scale: 0.98,
+    }),
+    ko = S({
+      torso: "#ffd8e4",
+      torsoAccent: "#ffe8ef",
+      legs: "#ffd8e4",
+      skin: "#f0cab4",
+      hair: "#5a4648",
+      shoes: "#5a4749",
+      female: !0,
+      echo: !0,
+      echoOpacity: 0.26,
+      echoColor: "#ffc0d6",
+      scale: 1,
+  });
+  $.add(Go, Co, Bo, ko);
+  Co.userData.legacyChildren = [...Co.children];
+  const juniorRuntimeModelRoot = new e.Group(),
+    juniorHeroCloseupModelRoot = new e.Group();
+  (juniorRuntimeModelRoot.name = "junior-runtime-model-root",
+    (juniorRuntimeModelRoot.visible = !1),
+    (juniorRuntimeModelRoot.userData.ready = !1),
+    (juniorRuntimeModelRoot.userData.kind = "runtime"),
+    (juniorHeroCloseupModelRoot.name = "junior-hero-closeup-model-root"),
+    (juniorHeroCloseupModelRoot.visible = !1),
+    (juniorHeroCloseupModelRoot.userData.ready = !1),
+    (juniorHeroCloseupModelRoot.userData.kind = "hero_closeup"),
+    Co.add(juniorRuntimeModelRoot, juniorHeroCloseupModelRoot));
+  Co.userData.runtimeModelRoot = juniorRuntimeModelRoot;
+  Co.userData.heroCloseupModelRoot = juniorHeroCloseupModelRoot;
+  Co.userData.pose &&
+    ((Co.userData.pose.runtimeModelRoot = juniorRuntimeModelRoot),
+    (Co.userData.pose.heroCloseupModelRoot = juniorHeroCloseupModelRoot));
+  const juniorHeroLight = new e.SpotLight(16772596, 2.6, 18, 0.42, 0.55, 1.1);
+  (juniorHeroLight.position.set(ee + 3.8, 4.3, g(t.backDoor.center.z + 96)),
+    juniorHeroLight.target.position.set(
+      g(120),
+      1.44,
+      g(t.backDoor.center.z + 6),
+    ),
+    W.add(juniorHeroLight.target),
+    W.add(juniorHeroLight));
+  const juniorRimLight = new e.PointLight(16774134, 1.5, 14, 2);
+  (juniorRimLight.position.set(ee + 0.84, 2.08, g(t.backDoor.center.z + 14)),
+    W.add(juniorRimLight));
+  const juniorPortraitShell = new e.Group();
+  ((juniorPortraitShell.name = "junior-portrait-shell"),
+    (juniorPortraitShell.visible = !1),
+    (juniorPortraitShell.userData.loaded = !1),
+    Co.add(juniorPortraitShell),
+    (Co.userData.portraitShell = juniorPortraitShell));
+  (function () {
+    const t = runtimeState.characterAssets?.junior2005;
+    if (!t?.textures?.front && !t?.textures?.frontClose) return;
+    const o = new e.TextureLoader();
+    assetState.textureStatus = "loading";
+    Promise.all(
+      Object.entries(t.textures ?? {})
+        .filter(([, e]) => Boolean(e))
+        .map(([t, a]) =>
+          loadLm402Texture(o, a)
+            .then((e) => [t, e])
+            .catch((o) => {
+              if ("front" === t || "frontClose" === t) throw o;
+              return [t, null];
+            }),
+        ),
+    )
+      .then((t) => {
+        const o = Object.fromEntries(t.filter(([, e]) => e)),
+          a = buildJuniorPortraitShell(o, {
+            scaleX: renderTuning.portraitBoost,
+            scaleY: renderTuning.portraitBoost,
+          });
+        (juniorPortraitShell.add(...a.children),
+        (juniorPortraitShell.userData.planes = a.userData.planes),
+          (juniorPortraitShell.userData.glow = a.userData.glow),
+          (juniorPortraitShell.visible = !juniorRuntimeModelRoot.userData.ready),
+          (juniorPortraitShell.userData.loaded = !0),
+          (assetState.textureStatus = "ready"),
+          (assetState.textureFallback = !1),
+          (assetState.loadedTextures = Object.keys(o)));
+      })
+      .catch((e) => {
+        ((assetState.textureStatus = "fallback"),
+          (assetState.textureFallback = !0),
+          (assetState.textureLastError =
+            e instanceof Error ? e.message : String(e).slice(0, 180)));
+      });
+  })();
+  (function () {
+    const t = juniorRuntimeManifest,
+      o = resolveJuniorGltfLoaderCtor();
+    if (!t.runtimeModelUrl && !t.heroCloseupModelUrl) return;
+    if (!o) {
+      (assetState.loaderAvailable = !1,
+        assetState.status = "procedural_fallback",
+        assetState.modelMode = "procedural_fallback",
+        assetState.lastError ??=
+          "GLTFLoader unavailable for junior runtime asset.");
+      return;
+    }
+    (assetState.loaderAvailable = !0,
+      assetState.status = "loading_model",
+      assetState.modelMode = "loading_model");
+    const a = [];
+    t.runtimeModelUrl &&
+      a.push(
+        loadJuniorGltfModel(t.runtimeModelUrl, {
+          crossOrigin: "anonymous",
+        })
+          .then((t) => ({
+            kind: "runtime",
+            gltf: t,
+            root: juniorRuntimeModelRoot,
+          }))
+          .catch((t) => ({
+            kind: "runtime",
+            error: t,
+            root: juniorRuntimeModelRoot,
+          })),
+      );
+    t.heroCloseupModelUrl &&
+      a.push(
+        loadJuniorGltfModel(t.heroCloseupModelUrl, {
+          crossOrigin: "anonymous",
+        })
+          .then((t) => ({
+            kind: "hero_closeup",
+            gltf: t,
+            root: juniorHeroCloseupModelRoot,
+          }))
+          .catch((t) => ({
+            kind: "hero_closeup",
+            error: t,
+            root: juniorHeroCloseupModelRoot,
+          })),
+      );
+    Promise.all(a)
+      .then((t) => {
+        const o = [];
+        t.forEach((t) => {
+          if (t?.gltf && t.root) {
+            const a = attachJuniorGltfModel(t.root, t.gltf, {
+              scale: "hero_closeup" === t.kind ? 0.7696 : 0.7488,
+            });
+            a &&
+              ((t.root.userData.ready = !0),
+              (t.root.userData.assetKind = t.kind),
+              (t.root.userData.sourceUrl =
+                "hero_closeup" === t.kind
+                  ? juniorRuntimeManifest.heroCloseupModelUrl
+                  : juniorRuntimeManifest.runtimeModelUrl),
+              o.push(t.kind));
+            if ("runtime" === t.kind && juniorPortraitShell) juniorPortraitShell.visible = !1;
+          } else
+            t?.error &&
+              o.push(
+                `${t.kind}: ${
+                  t.error instanceof Error ? t.error.message : String(t.error)
+                }`,
+              );
+        });
+        const n = t.some((t) => Boolean(t?.gltf));
+        n
+          ? ((assetState.status = "ready"),
+            (assetState.fallback = !1),
+            (assetState.modelMode = "runtime_model"),
+            (assetState.loadedModels = t
+              .filter((t) => Boolean(t?.gltf))
+              .map((t) => t.kind)),
+            (assetState.lastError = null))
+          : ((assetState.status = "fallback"),
+            (assetState.fallback = !0),
+            (assetState.modelMode = "procedural_fallback"),
+            (assetState.lastError = "No junior GLB asset loaded."));
+      })
+      .catch((t) => {
+        ((assetState.status = "fallback"),
+          (assetState.fallback = !0),
+          (assetState.modelMode = "procedural_fallback"),
+          (assetState.lastError =
+            t instanceof Error ? t.message : String(t).slice(0, 180)));
+      });
+  })();
+  const To = { scene: 16507832, memory: 10148095 };
   [
     { id: "front_call", type: "scene" },
     { id: "plaque", type: "memory" },
@@ -2106,581 +4640,1292 @@ export function createLm402Scene(canvas) {
     { id: "notes", type: "memory" },
     { id: "junior", type: "scene" },
     { id: "backdoor", type: "scene" },
-  ].forEach((meta) => {
-    const ring = createRing(hotspotColorMap[meta.type]);
-    hotspotNodes.set(meta.id, ring);
-    glowGroup.add(ring);
+  ].forEach((t) => {
+    const o = (function (t = 16507832) {
+      const o = new e.Group(),
+        a = new e.Mesh(
+          new e.TorusGeometry(0.18, 0.014, 12, 32),
+          new e.MeshBasicMaterial({ color: t, transparent: !0, opacity: 0.14 }),
+        );
+      a.rotation.x = Math.PI / 2;
+      const n = new e.Mesh(
+        new e.SphereGeometry(0.05, 12, 12),
+        new e.MeshBasicMaterial({
+          color: 16777215,
+          transparent: !0,
+          opacity: 0.18,
+        }),
+      );
+      return (o.add(a, n), (o.visible = !1), o);
+    })(To[t.type]);
+    (L.set(t.id, o), F.add(o));
   });
-
-  const introCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(minX - campusDepth * 0.74, 12.2, scaled(3050)),
-    new THREE.Vector3(minX - campusDepth * 0.62, 11.0, scaled(2820)),
-    new THREE.Vector3(minX - campusDepth * 0.52, 9.8, scaled(2520)),
-    new THREE.Vector3(minX - campusDepth * 0.42, 8.8, scaled(2140)),
-    new THREE.Vector3(minX - campusDepth * 0.32, 7.6, scaled(1780)),
-    new THREE.Vector3(minX - campusDepth * 0.2, 6.6, scaled(1430)),
-    new THREE.Vector3(minX - campusDepth * 0.1, 5.6, scaled(1100)),
-    new THREE.Vector3(minX + 0.08, 4.7, scaled(860)),
-    new THREE.Vector3(minX + 0.62, 3.94, scaled(1380)),
-    new THREE.Vector3(corridorMinX + 1.42, 3.14, scaled(1780)),
-    new THREE.Vector3(corridorMinX + 2.28, 2.42, scaled(WORLD.frontDoor.center.z - 214)),
-    new THREE.Vector3(corridorMinX + 2.06, 2.06, scaled(WORLD.frontDoor.center.z - 146)),
-  ]);
-  const introTube = new THREE.Mesh(
-    new THREE.TubeGeometry(introCurve, 220, 0.074, 12, false),
-    new THREE.MeshStandardMaterial({
-      color: "#f1627d",
-      emissive: "#f1627d",
-      emissiveIntensity: 1.72,
-      roughness: 0.2,
-      metalness: 0.08,
-      transparent: true,
-      opacity: 0.96,
-    })
-  );
-  introGroup.add(introTube);
-
-
-
-
-
-  const introAura = createGlowPlane("rgba(255,116,142,1)", 1.8, 2.4, 0.44);
-  const introBloom = createGlowPlane("rgba(255,223,176,1)", 5.8, 4.6, 0.28);
-  const introSpark = new THREE.Mesh(
-    new THREE.SphereGeometry(0.1, 16, 16),
-    new THREE.MeshBasicMaterial({ color: "#ffd8e6" })
-  );
-  const introWake = createGlowPlane("rgba(255,157,182,1)", 3.2, 1.8, 0.22);
-  introGroup.add(introAura, introBloom, introSpark, introWake);
-
-  const introRibbon = createGlowPlane("rgba(255,100,136,1)", 4.8, 2.2, 0.18);
-  introGroup.add(introRibbon);
-
-  function resize() {
-    const host = canvas.parentElement ?? canvas;
-    const rect = host.getBoundingClientRect();
-    const visual = window.visualViewport;
-    const width = Math.max(
-      1,
-      Math.round(rect.width || 0),
-      Math.round(visual?.width || 0),
-      Math.round(window.innerWidth || 0)
+  const Io = new e.CatmullRomCurve3([
+      new e.Vector3(N - 0.74 * ot, 12.2, g(3050)),
+      new e.Vector3(N - 0.62 * ot, 11, g(2820)),
+      new e.Vector3(N - 0.52 * ot, 9.8, g(2520)),
+      new e.Vector3(N - 0.42 * ot, 8.8, g(2140)),
+      new e.Vector3(N - 0.32 * ot, 7.6, g(1780)),
+      new e.Vector3(N - 0.2 * ot, 6.6, g(1430)),
+      new e.Vector3(N - 0.1 * ot, 5.6, g(1100)),
+      new e.Vector3(N + 0.08, 4.7, g(860)),
+      new e.Vector3(N + 0.62, 3.94, g(1380)),
+      new e.Vector3(Q + 1.42, 3.14, g(1780)),
+      new e.Vector3(Q + 2.28, 2.42, g(t.frontDoor.center.z - 214)),
+      new e.Vector3(Q + 2.06, 2.06, g(t.frontDoor.center.z - 146)),
+    ]),
+    Ro = new e.Mesh(
+      new e.TubeGeometry(Io, 220, 0.074, 12, !1),
+      new e.MeshStandardMaterial({
+        color: "#f1627d",
+        emissive: "#f1627d",
+        emissiveIntensity: 1.72,
+        roughness: 0.2,
+        metalness: 0.08,
+        transparent: !0,
+        opacity: 0.96,
+      }),
     );
-    const height = Math.max(
-      1,
-      Math.round(rect.height || 0),
-      Math.round(visual?.height || 0),
-      Math.round(window.innerHeight || 0)
-    );
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality.maxPixelRatio));
-    renderer.setSize(width, height, false);
-    renderer.setViewport(0, 0, width, height);
-    renderer.setScissor(0, 0, width, height);
-    renderer.setScissorTest(false);
-    renderer.domElement.style.width = `${width}px`;
-    renderer.domElement.style.height = `${height}px`;
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-  }
-
-  function resolveMotion(current, desired, radius = 0.28) {
-    let x = desired.x;
-    let z = desired.z;
-    let collided = false;
-    let label = null;
-
-    const boundaryMinX = minX + 0.26;
-    const boundaryMaxX = maxX - 0.22;
-    const boundaryMinZ = minZ + 0.22;
-    const boundaryMaxZ = maxZ - 0.22;
-    if (x < boundaryMinX || x > boundaryMaxX || z < boundaryMinZ || z > boundaryMaxZ) {
-      collided = true;
-      label = "boundary_wall";
-    }
-    x = THREE.MathUtils.clamp(x, boundaryMinX, boundaryMaxX);
-    z = THREE.MathUtils.clamp(z, boundaryMinZ, boundaryMaxZ);
-
-    for (let pass = 0; pass < 2; pass += 1) {
-      colliders.forEach((box) => {
-        const nearestX = THREE.MathUtils.clamp(x, box.minX, box.maxX);
-        const nearestZ = THREE.MathUtils.clamp(z, box.minZ, box.maxZ);
-        const dx = x - nearestX;
-        const dz = z - nearestZ;
-        const distSq = dx * dx + dz * dz;
-        if (distSq >= radius * radius) {
-          return;
-        }
-        collided = true;
-        label = box.label;
-        if (distSq > 0.00001) {
-          const dist = Math.sqrt(distSq);
-          const push = radius - dist + 0.001;
-          x += (dx / dist) * push;
-          z += (dz / dist) * push;
-          return;
-        }
-        const pushLeft = Math.abs(x - box.minX);
-        const pushRight = Math.abs(box.maxX - x);
-        const pushBack = Math.abs(z - box.minZ);
-        const pushFront = Math.abs(box.maxZ - z);
-        const minPush = Math.min(pushLeft, pushRight, pushBack, pushFront);
-        if (minPush === pushLeft) {
-          x = box.minX - radius;
-        } else if (minPush === pushRight) {
-          x = box.maxX + radius;
-        } else if (minPush === pushBack) {
-          z = box.minZ - radius;
-        } else {
-          z = box.maxZ + radius;
-        }
-      });
-      x = THREE.MathUtils.clamp(x, boundaryMinX, boundaryMaxX);
-      z = THREE.MathUtils.clamp(z, boundaryMinZ, boundaryMaxZ);
-    }
-
-    return { x, z, collided, label };
-  }
-
-  function updateHotspots(hotspots, activeId, time) {
-    hotspots.forEach((hotspot) => {
-      const ring = hotspotNodes.get(hotspot.id);
-      if (!ring) {
-        return;
-      }
-      ring.visible = hotspot.visible;
-      ring.position.set(hotspot.x, hotspot.y, hotspot.z);
-      ring.position.y += Math.sin(time * 1.6 + hotspot.z * 0.18) * 0.04 + 0.16;
-      ring.scale.setScalar(hotspot.id === activeId ? 0.98 : 0.72);
-      ring.children[0].material.opacity = hotspot.id === activeId ? 0.34 : 0.08;
-      ring.children[1].material.opacity = hotspot.id === activeId ? 0.22 : 0.06;
-    });
-  }
-
-  function updateCharacters(game) {
-    const isIntro = game.mode === "intro";
-    senior.visible = !isIntro;
-    junior.visible = !isIntro;
-    fatherEcho.visible = !isIntro && game.characters.fatherEcho.alpha > 0.02;
-    auntEcho.visible = !isIntro && game.characters.auntEcho.alpha > 0.02;
-
-
-    introAura.visible = isIntro;
-    introBloom.visible = isIntro;
-    introSpark.visible = isIntro;
-    introWake.visible = isIntro;
-    introRibbon.visible = isIntro;
-
-    senior.position.set(game.characters.senior.x, 0, game.characters.senior.z);
-    senior.rotation.y = game.characters.senior.rotationY ?? 0;
-    junior.position.set(game.characters.junior.x, 0, game.characters.junior.z);
-    junior.rotation.y = game.characters.junior.rotationY ?? 0;
-    fatherEcho.position.set(game.characters.fatherEcho.x, 0, game.characters.fatherEcho.z);
-    auntEcho.position.set(game.characters.auntEcho.x, 0, game.characters.auntEcho.z);
-    fatherEcho.traverse((child) => {
-      if (child.material) child.material.opacity = game.characters.fatherEcho.alpha;
-    });
-    auntEcho.traverse((child) => {
-      if (child.material) child.material.opacity = game.characters.auntEcho.alpha;
-    });
-    if (junior.userData.glow) {
-      junior.userData.glow.material.opacity = game.phase === "eye_contact" || game.ending === "perfect" ? 0.42 + game.cinematicGlow * 0.18 : 0.18;
-    }
-
-    resetCharacterPose(senior);
-    resetCharacterPose(junior);
-
-
-
-    if (isIntro) {
-      applyIdlePose(junior, game.time * 0.4, 0.4);
-    } else if (game.endingSequence?.type === "perfect") {
-      const seniorWalkT = THREE.MathUtils.smoothstep(game.endingSequence.time, 0.12, 11.7);
-      const juniorWalkT = THREE.MathUtils.smoothstep(game.endingSequence.time, 0.24, 7.7);
-      if (game.endingSequence.time < 11.7) {
-        applyWalkingPose(senior, Math.sin(game.endingSequence.time * 3.53) * 0.9, 0.9);
-      } else {
-        applyIdlePose(senior, game.time, 0.8);
-      }
-      if (game.endingSequence.time < 7.7) {
-        applyWalkingPose(junior, Math.sin(game.endingSequence.time * 3.23 + 0.8) * 0.84, 0.7);
-      } else {
-        applyIdlePose(junior, game.time * 0.84, 0.92);
-      }
-      senior.position.y += seniorWalkT * 0.01;
-      junior.position.y += juniorWalkT * 0.014;
-    } else if (game.phase === "front_call") {
-      if (game.phaseClock < 3.6) {
-        applyWalkingPose(senior, Math.sin(game.time * 7.4) * 0.82, 0.82);
-      } else {
-        applyIdlePose(senior, game.time * 0.9, 0.76);
-      }
-      applyIdlePose(junior, game.time * 0.72, 0.9);
-    } else if (game.phase === "rear_wait") {
-      const walk = Math.sin(game.time * 7.1);
-      applyWalkingPose(senior, walk * 0.76, 0.8);
-      applyWalkingPose(junior, Math.sin(game.time * 6.4 + 0.7) * 0.68, 0.66);
-    } else {
-      applyWalkingPose(senior, Math.sin(game.time * 6.2) * 0.34, 0.5);
-      applyIdlePose(junior, game.time * 0.9, 1);
-    }
-
-    debugAnchors.senior.copy(senior.position).add(new THREE.Vector3(0, 1.34, 0));
-    debugAnchors.junior.copy(junior.position).add(new THREE.Vector3(0, 1.34, 0));
-  }
-
-  function applyPlayerCamera(player, time = 0, allowBob = true) {
-    const motion = Math.hypot(player.velocity?.x || 0, player.velocity?.z || 0);
-    const bobStrength = allowBob ? Math.min(0.032, motion * 0.01) : 0;
-    const bobY = bobStrength ? Math.sin(time * 8.4) * bobStrength : 0;
-    const bobX = bobStrength ? Math.cos(time * 4.2) * bobStrength * 0.35 : 0;
-    const roll = bobStrength ? Math.sin(time * 4.2) * bobStrength * 0.4 : 0;
-    const landingDip = !allowBob ? 0 : Math.max(0, 0.015 - motion * 0.04) * Math.exp(-time * 2);
-    camera.position.set(player.x + bobX, PLAYER_EYE + bobY - landingDip, player.z);
-    camera.rotation.y = player.yaw;
-    camera.rotation.x = player.pitch;
-    camera.rotation.z = roll;
-  }
-
-function applyIntroCamera(intro) {
-  const progress = THREE.MathUtils.clamp(intro.progress, 0, 1);
-  const speedCurve = 0.5 + 0.5 * Math.sin(progress * Math.PI * 2.6 - Math.PI * 0.5);
-  const cameraT = THREE.MathUtils.smoothstep(THREE.MathUtils.clamp(progress * (0.7 + speedCurve * 0.3), 0, 1), 0.02, 0.98);
-  const camPos = introCurve.getPoint(cameraT);
-  const target = introCurve.getPoint(THREE.MathUtils.clamp(cameraT + 0.06, 0, 1));
-  const heartbeat = Math.sin(progress * Math.PI * 8.4) * Math.exp(-progress * 1.8) * 4;
-  const baseFov = THREE.MathUtils.lerp(108, 42, THREE.MathUtils.smoothstep(progress, 0.06, 0.92));
-  camera.fov = baseFov + heartbeat;
-  camera.updateProjectionMatrix();
-  camera.position.copy(camPos);
-  const settleT = THREE.MathUtils.smoothstep(progress, 0.7, 1);
-  const settleTarget = new THREE.Vector3(
-    THREE.MathUtils.lerp(
-      target.x + THREE.MathUtils.lerp(3.24, 0.08, progress),
-      debugAnchors.senior.x * 0.28 + debugAnchors.doorPlaque.x * 0.38 + debugAnchors.frontDoor.x * 0.12 + debugAnchors.parapetBand.x * 0.22,
-      settleT
+  H.add(Ro);
+  const Do = b("rgba(255,116,142,1)", 1.8, 2.4, 0.44),
+    Vo = b("rgba(255,223,176,1)", 5.8, 4.6, 0.28),
+    Eo = new e.Mesh(
+      new e.SphereGeometry(0.1, 16, 16),
+      new e.MeshBasicMaterial({ color: "#ffd8e6" }),
     ),
-    THREE.MathUtils.lerp(4.18, 1.42, progress),
-    THREE.MathUtils.lerp(
-      target.z + THREE.MathUtils.lerp(-0.86, -0.12, progress),
-      debugAnchors.senior.z * 0.26 + debugAnchors.doorPlaque.z * 0.34 + debugAnchors.frontDoor.z * 0.14 + debugAnchors.parapetBand.z * 0.26,
-      settleT
-    )
-  );
-  camera.lookAt(settleTarget);
-  const spiralRoll = Math.sin(progress * Math.PI * 3.2) * THREE.MathUtils.lerp(0.56, 0.006, progress);
-  const microShake = Math.sin(progress * Math.PI * 18) * THREE.MathUtils.lerp(0.02, 0, progress) * 0.3;
-  camera.rotateZ(spiralRoll + microShake);
-
-    introGroup.visible = true;
-    const threadPulse = 0.5 + 0.5 * Math.sin(progress * Math.PI * 6.2);
-    introTube.material.opacity = THREE.MathUtils.lerp(0.92, 0.18, progress) * (0.85 + threadPulse * 0.15);
-    introTube.material.emissiveIntensity = THREE.MathUtils.lerp(2.6, 0.62, progress) * (0.8 + threadPulse * 0.2);
-    const daughterT = THREE.MathUtils.clamp(progress + 0.03, 0, 1);
-    const daughterPos = introCurve.getPoint(daughterT);
-    introAura.position.copy(daughterPos).add(new THREE.Vector3(0, 0.32, -0.18));
-    introAura.lookAt(camera.position);
-    introAura.material.opacity = THREE.MathUtils.lerp(0.92, 0.24, progress) * (0.8 + threadPulse * 0.2);
-    introBloom.position.copy(daughterPos).add(new THREE.Vector3(-0.2, 0.34, -0.48));
-    introBloom.lookAt(camera.position);
-    introBloom.material.opacity = THREE.MathUtils.lerp(0.62, 0.18, progress);
-    introRibbon.position.copy(daughterPos).add(new THREE.Vector3(-0.14, 0.22, -0.74));
-    introRibbon.lookAt(camera.position);
-    introRibbon.material.opacity = THREE.MathUtils.lerp(0.42, 0.06, progress);
-    introSpark.position.copy(introCurve.getPoint(THREE.MathUtils.clamp(progress + 0.08, 0, 1)));
-    introSpark.scale.setScalar(1 + Math.sin(progress * Math.PI * 6) * 0.42);
-    introWake.position.copy(daughterPos).add(new THREE.Vector3(0.1, 0.14, -0.56));
-    introWake.lookAt(camera.position);
-    introWake.material.opacity = THREE.MathUtils.lerp(0.42, 0.08, progress);
-
+    Uo = b("rgba(255,157,182,1)", 3.2, 1.8, 0.22);
+  H.add(Do, Vo, Eo, Uo);
+  const Wo = b("rgba(255,100,136,1)", 4.8, 2.2, 0.18);
+  function qo() {
+    const e = (D.parentElement ?? D).getBoundingClientRect(),
+      t = Math.max(
+        1,
+        Math.round(e.width || D.clientWidth || window.innerWidth || 1),
+      ),
+      o = Math.max(
+        1,
+        Math.round(e.height || D.clientHeight || window.innerHeight || 1),
+      );
+    (U.setPixelRatio(
+      Math.min(window.devicePixelRatio || 1, renderTuning.maxPixelRatio),
+    ),
+      U.setSize(t, o, !1),
+      U.setViewport(0, 0, t, o),
+      U.setScissor(0, 0, t, o),
+      U.setScissorTest(!1),
+      (U.domElement.style.width = `${t}px`),
+      (U.domElement.style.height = `${o}px`),
+      (q.aspect = t / o),
+      q.updateProjectionMatrix());
   }
-
-function perfectEndingPhase(time) {
-  const seniorPovEnd = CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 10;
-  if (time < seniorPovEnd) {
-    return "senior_pov_hold";
+  function _o(e, t = 0, o = !0) {
+    const a = Math.hypot(e.velocity?.x || 0, e.velocity?.z || 0),
+      n = o ? Math.min(0.032, 0.01 * a) : 0,
+      s = n ? Math.sin(8.4 * t) * n : 0,
+      r = n ? Math.cos(4.2 * t) * n * 0.35 : 0,
+      i = n ? Math.sin(4.2 * t) * n * 0.4 : 0,
+      l = o ? Math.max(0, 0.015 - 0.04 * a) * Math.exp(2 * -t) : 0;
+    (q.position.set(e.x + r, 1.62 + s - l + (e.stairY || 0), e.z),
+      (q.rotation.y = e.yaw),
+      (q.rotation.x = e.pitch),
+      (q.rotation.z = i));
   }
-  return "eyes";
-}
-
-function applyPerfectEndingCamera(game) {
-  const totalTime = game.endingSequence?.time ?? 0;
-  const seniorPovEnd = CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 10;
-  const center = junior.position.clone().add(new THREE.Vector3(0, 1.5, 0));
-  const faceForward = new THREE.Vector3(Math.sin(junior.rotation.y), 0, Math.cos(junior.rotation.y));
-  const eyeTarget = center.clone().add(faceForward.clone().multiplyScalar(0.138)).add(new THREE.Vector3(0.004, 0.018, 0));
-  const seniorEye = senior.position.clone().add(new THREE.Vector3(0.03, 1.57, 0.04));
-
-  // ── 10-second senior POV slow-motion zoom ──
-  // The entire ending is just the senior looking at the junior, getting closer
-  if (totalTime < seniorPovEnd) {
-    const holdT = THREE.MathUtils.clamp(totalTime / seniorPovEnd, 0, 1);
-    const eased = THREE.MathUtils.smoothstep(holdT, 0, 1);
-    // Subtle breathing / heartbeat sway
-    const heartSway = Math.sin(totalTime * 1.1) * 0.0016 * (1 + holdT * 0.5);
-    const heartRise = Math.cos(totalTime * 0.82) * 0.0012;
-    // Camera starts at senior's eye, slowly creeps toward junior
-    const seniorHoldPos = seniorEye.clone().add(new THREE.Vector3(0.022, 0.014, 0.004));
-    // Slowly move closer to junior (lerp between senior's eye position and 70% toward junior)
-    const closePos = seniorHoldPos.clone().lerp(eyeTarget, eased * 0.38);
-    closePos.y += heartRise;
-    closePos.x += heartSway;
-    camera.position.copy(closePos);
-    // FOV zooms in slowly → cinematic slow-motion getting-closer effect
-    camera.fov = THREE.MathUtils.lerp(18, 10.4, THREE.MathUtils.smoothstep(holdT, 0.05, 0.95));
-    camera.updateProjectionMatrix();
-    camera.lookAt(eyeTarget.x, eyeTarget.y + 0.001, eyeTarget.z);
-    // Gentle cinematic roll
-    camera.rotateZ(Math.sin(totalTime * 0.6) * 0.002 * (1 - holdT * 0.3));
-    return;
+  function Ao(e) {
+    return e < (o.perfectOrbitEnd ?? 14.2)
+      ? "orbit"
+      : e < (o.perfectTransitionEnd ?? 17.4)
+        ? "transition"
+        : e < (o.perfectSeniorPovEnd ?? 27.6)
+          ? "senior_pov"
+          : e < (o.perfectOverlayAt ?? 34.8)
+            ? "eyes"
+            : "overlay";
   }
-
-  // After 10s — hold on eyes
-  const eyesElapsed = totalTime - seniorPovEnd;
-  const eyeHoldPos = seniorEye.clone().lerp(eyeTarget, 0.38).add(new THREE.Vector3(0.01, 0.008, 0));
-  const tremble = Math.min(1, eyesElapsed * 0.1);
-  eyeHoldPos.y += Math.sin(totalTime * 0.3) * 0.001 + Math.sin(totalTime * 2.2) * 0.0003 * tremble;
-  eyeHoldPos.x += Math.cos(totalTime * 0.16) * 0.0008;
-  camera.position.copy(eyeHoldPos);
-  camera.fov = THREE.MathUtils.lerp(10.4, 9.2, THREE.MathUtils.smoothstep(eyesElapsed, 0, 3));
-  camera.updateProjectionMatrix();
-  camera.lookAt(eyeTarget.x, eyeTarget.y + 0.001, eyeTarget.z);
-  camera.rotateZ(Math.sin(totalTime * 0.4) * 0.001 * tremble);
-}
-
-  function pickHotspot(candidates, player, activeId) {
-    applyPlayerCamera(player);
-    camera.updateMatrixWorld();
-    const cameraDir = camera.getWorldDirection(tempVecA);
-    let best = null;
-
-    candidates.forEach((hotspot) => {
-      const ring = hotspotNodes.get(hotspot.id);
-      if (!ring || !hotspot.visible) {
+  function Zo(e, t, o, a) {
+    return (
+      s.copy(t).project(q),
+      {
+        name: e,
+        visible:
+          s.z >= -1 && s.z <= 1 && Math.abs(s.x) <= 1.2 && Math.abs(s.y) <= 1.2,
+        ndcX: Number(s.x.toFixed(4)),
+        ndcY: Number(s.y.toFixed(4)),
+        screenX: Math.round((0.5 * s.x + 0.5) * o),
+        screenY: Math.round((0.5 * -s.y + 0.5) * a),
+      }
+    );
+  }
+  function Lo(t) {
+    const o = {};
+    return (
+      (t.hotspots || []).forEach((t) => {
+        t.visible
+          ? (o[t.id] = (function (e) {
+              n.copy(e).sub(q.position);
+              const t = n.length(),
+                o = n.normalize();
+              _.set(q.position, o);
+              const a = _.intersectObjects(A, !1);
+              return !a.length || a[0].distance >= t - 0.12;
+            })(new e.Vector3(t.x, t.y, t.z)))
+          : (o[t.id] = !1);
+      }),
+      o
+    );
+  }
+  H.add(Wo);
+  let Xo = null,
+    jo = 0;
+  var _wormholeActive = false,
+    _wormholeTime = 0,
+    _wormholeDuration = 1.8,
+    _wormholeGroup = null;
+  function initWormhole() {
+    if (_wormholeGroup) return;
+    _wormholeGroup = new e.Group();
+    _wormholeGroup.visible = false;
+    for (var i = 0; i < 8; i++) {
+      var ring = new e.Mesh(
+        new e.TorusGeometry(0.6 + i * 0.35, 0.02 + i * 0.008, 8, 32),
+        new e.MeshBasicMaterial({
+          color: new e.Color().setHSL(0.55 + i * 0.04, 1, 0.5 + i * 0.04),
+          transparent: true,
+          opacity: 0,
+          side: e.DoubleSide,
+          blending: e.AdditiveBlending,
+        }),
+      );
+      ring.rotation.x = Math.PI / 2;
+      ring.userData.idx = i;
+      _wormholeGroup.add(ring);
+    }
+    var core = new e.Mesh(
+      new e.SphereGeometry(0.15, 16, 16),
+      new e.MeshBasicMaterial({
+        color: 0x88eeff,
+        transparent: true,
+        opacity: 0,
+        blending: e.AdditiveBlending,
+      }),
+    );
+    core.userData.isCore = true;
+    _wormholeGroup.add(core);
+    j.add(_wormholeGroup);
+  }
+  function triggerWormhole(px, py, pz) {
+    initWormhole();
+    _wormholeActive = true;
+    _wormholeTime = 0;
+    _wormholeGroup.position.set(px, (py || 0) + 1.2, pz);
+    _wormholeGroup.visible = true;
+  }
+  function updateWormhole(dt) {
+    if (!_wormholeActive || !_wormholeGroup) return;
+    _wormholeTime += dt;
+    var t = _wormholeTime / _wormholeDuration;
+    if (t >= 1) {
+      _wormholeActive = false;
+      _wormholeGroup.visible = false;
+      return;
+    }
+    var peak = t < 0.3 ? t / 0.3 : t < 0.7 ? 1 : (1 - t) / 0.3;
+    _wormholeGroup.children.forEach(function (c) {
+      if (c.userData.isCore) {
+        c.material.opacity = peak * 0.8;
+        c.scale.setScalar(1 + Math.sin(t * 12) * 0.3);
         return;
       }
-      const dist = camera.position.distanceTo(ring.position);
-      if (dist > hotspot.radius) {
-        return;
-      }
-      const toHotspot = tempVecB.copy(ring.position).sub(camera.position).normalize();
-      const facing = cameraDir.dot(toHotspot);
-      if (facing < 0.75) {
-        return;
-      }
-      raycaster.set(camera.position, toHotspot);
-      const hits = raycaster.intersectObjects(occluders, false);
-      if (hits.length && hits[0].distance < dist - 0.16) {
-        return;
-      }
-      const score = facing * 2.12 - dist;
-      if (!best || score > best.score || (hotspot.id === activeId && score > best.score - 0.18)) {
-        best = { id: hotspot.id, score, distance: dist, label: hotspot.label, prompt: hotspot.prompt };
-      }
+      var i = c.userData.idx;
+      var phase = t * 6 - i * 0.4;
+      var ringScale = 1 + Math.max(0, Math.sin(phase * Math.PI)) * 2;
+      c.scale.setScalar(ringScale);
+      c.material.opacity =
+        peak * (0.7 - i * 0.06) * Math.max(0, Math.cos(phase * Math.PI * 0.5));
+      c.rotation.z = t * 3 + i * 0.4;
     });
-
-    return best;
   }
-
-  function getDebugSnapshot() {
-    return lastDebugSnapshot;
-  }
-
-  function projectNode(name, point, viewportWidth, viewportHeight) {
-    tempVecC.copy(point).project(camera);
-    return {
-      name,
-      visible: tempVecC.z >= -1 && tempVecC.z <= 1 && Math.abs(tempVecC.x) <= 1.2 && Math.abs(tempVecC.y) <= 1.2,
-      ndcX: Number(tempVecC.x.toFixed(4)),
-      ndcY: Number(tempVecC.y.toFixed(4)),
-      screenX: Math.round((tempVecC.x * 0.5 + 0.5) * viewportWidth),
-      screenY: Math.round((-tempVecC.y * 0.5 + 0.5) * viewportHeight),
-    };
-  }
-
-  function hasLineOfSight(target) {
-    tempVecB.copy(target).sub(camera.position);
-    const distance = tempVecB.length();
-    const direction = tempVecB.normalize();
-    raycaster.set(camera.position, direction);
-    const hits = raycaster.intersectObjects(occluders, false);
-    return !hits.length || hits[0].distance >= distance - 0.12;
-  }
-
-  function buildHotspotLOS(game) {
-    const result = {};
-    (game.hotspots || []).forEach((hotspot) => {
-      if (!hotspot.visible) {
-        result[hotspot.id] = false;
-        return;
-      }
-      result[hotspot.id] = hasLineOfSight(new THREE.Vector3(hotspot.x, hotspot.y, hotspot.z));
-    });
-    return result;
-  }
-
-  let activeHologram = null;
-  let hologramStartTime = 0;
-
-  function spawnHologram(type, time) {
-    if (activeHologram) {
-      scene.remove(activeHologram);
-      activeHologram = null;
+  function getStairY(t, o) {
+    for (const stair of stairLayouts) {
+      if (t < stair.xOuter || t > stair.xInner || o < stair.z1 || o > stair.z2)
+        continue;
+      if (o >= stair.landing.z1 && o <= stair.landing.z2) return 0;
+      const a = e.MathUtils.clamp(
+          (stair.xEntry - t) / Math.max(0.001, stair.xEntry - stair.xExit),
+          0,
+          1,
+        ),
+        n = e.MathUtils.smoothstep(a, 0, 1);
+      return o < stair.landing.z1 ? stair.totalRise * n : -stair.totalRise * n;
     }
-
-    if (type === "seat" || type === "notes") {
-      activeHologram = createRealisticJuniorHologram();
-      if (type === "seat") {
-        activeHologram.position.set(23.7, 0, 25.72); // scale(1896), 0, scale(2058)
-        activeHologram.rotation.y = 0.03;
-        applyIdlePose(activeHologram, 0, 1.0);
-      } else if (type === "notes") {
-        activeHologram.position.set(23.7, 0, 25.72);
-        activeHologram.rotation.y = -Math.PI / 2;
-        applyIdlePose(activeHologram, 0, 1.0);
-      }
-    } else if (type === "board") {
-      activeHologram = createSilhouette({
-        phone: true, hairColor: "#11100f", shirtColor: "#323846", pantsColor: "#1d222a", shoesColor: "#383634",
-        echo: true, echoOpacity: 0.8, echoColor: "#88ccff", scale: 1.05
-      });
-      activeHologram.position.set(-4.2, 0, 28.65); // scale(-336), 0, frontDoor.center.z - 42
-      activeHologram.rotation.y = Math.PI / 2;
-      applyIdlePose(activeHologram, 0, 1.0);
-    }
-
-    if (activeHologram) {
-      scene.add(activeHologram);
-      hologramStartTime = time;
-    }
+    return 0;
   }
-
-  function render(game) {
-    resize();
-    const time = game.time ?? 0;
-    updateCharacters(game);
-    updateHotspots(game.hotspots, game.activeHotspotId, time);
-
-    const isIntro = game.mode === "intro";
-    if (isIntro) {
-      applyIntroCamera(game.intro);
-    } else if (game.endingSequence?.type === "perfect") {
-      introGroup.visible = false;
-      applyPerfectEndingCamera(game);
-    } else {
-      introGroup.visible = false;
-      const targetFov = game.phase === "front_call" ? 42 : game.phase === "eye_contact" ? 46 : 56;
-      if (camera.fov !== targetFov) {
-        camera.fov = targetFov;
-        camera.updateProjectionMatrix();
-      }
-      applyPlayerCamera(game.player, time, true);
-    }
-
-    const daylight = isIntro ? THREE.MathUtils.lerp(0.34, 1, game.intro.progress) : 1;
-    sun.intensity = 1.96 * daylight + (game.phase === "eye_contact" || game.ending === "perfect" ? 0.68 : game.phase === "front_call" ? 0.26 : 0.12);
-    ambient.intensity = 0.28 + daylight * 0.2;
-    corridorFill.intensity = isIntro ? 0.66 : 0.98;
-    corridorSun.intensity = game.ending === "perfect" ? 2.02 : game.phase === "front_call" ? 2.28 : 1.32;
-    classroomAccent.intensity = game.phase === "eye_contact" || game.ending === "perfect" ? 2.04 : game.phase === "front_call" ? 1.64 : 1.18;
-    backdoorAccent.intensity = game.phase === "eye_contact" || game.ending === "perfect" ? 1.34 : 0.8;
-    corridorSunPatch.material.opacity = game.ending === "perfect" ? 0.72 : game.phase === "front_call" ? 0.94 : 0.36;
-    parapetSunPatch.material.opacity = game.phase === "front_call" ? 0.82 : game.ending === "perfect" ? 0.54 : 0.24;
-    classroomSunPatch.material.opacity = game.phase === "eye_contact" || game.ending === "perfect" ? 0.86 : 0.54;
-    leftClassroomSunPatch.material.opacity = game.phase === "eye_contact" || game.ending === "perfect" ? 0.66 : 0.34;
-    seatSunPatch.material.opacity = game.ending === "perfect" ? 0.72 : game.phase === "eye_contact" ? 0.48 : 0.26;
-    backdoorSunPatch.material.opacity = game.ending === "perfect" ? 0.58 : game.phase === "eye_contact" ? 0.4 : 0.2;
-    scene.background.setStyle(isIntro ? "#090d16" : "#dde8f2");
-    scene.fog.color.setStyle(isIntro ? "#121722" : "#d6e1eb");
-    scene.fog.near = isIntro ? 3 : 16;
-    scene.fog.far = isIntro ? 20 : 68;
-
-    dust.visible = game.endingSequence?.type !== "perfect";
-    dust.rotation.y = time * 0.018;
-    dust.position.x = Math.sin(time * 0.12) * 0.08;
-
-    if (activeHologram) {
-      const elapsed = time - hologramStartTime;
-      let targetOpacity = 0;
-      if (elapsed > 5.0 && elapsed <= 6.0) {
-        targetOpacity = (6.0 - elapsed) * 0.8;
-      } else if (elapsed > 1.0 && elapsed <= 5.0) {
-        targetOpacity = 0.8 + Math.sin(time * 4) * 0.12;
-      } else if (elapsed >= 0 && elapsed <= 1.0) {
-        targetOpacity = elapsed * 0.8;
-      } else if (elapsed > 6.0) {
-        scene.remove(activeHologram);
-        activeHologram = null;
-      }
-      
-      if (activeHologram) {
-        activeHologram.position.y = Math.sin(time * 2) * 0.02;
-        activeHologram.traverse((child) => {
-          if (child.material) {
-            child.material.opacity = targetOpacity;
-          }
-        });
-      }
-    }
-
-    const stageRect = (canvas.parentElement ?? canvas).getBoundingClientRect();
-    const cssRect = canvas.getBoundingClientRect();
-    const logicalViewport = renderer.getSize(tempSize2D);
-    const drawViewport = renderer.getDrawingBufferSize(tempDrawSize2D);
-    const viewportWidth = renderer.domElement.width || drawViewport.x || 0;
-    const viewportHeight = renderer.domElement.height || drawViewport.y || 0;
-    const cssWidth = Math.round(cssRect.width);
-    const cssHeight = Math.round(cssRect.height);
-    const stageWidth = Math.round(stageRect.width);
-    const stageHeight = Math.round(stageRect.height);
-    const mobileBlackRegionDetected =
-      (stageWidth > 0 && cssWidth > 0 && Math.abs(stageWidth - cssWidth) > 4) ||
-      (stageHeight > 0 && cssHeight > 0 && Math.abs(stageHeight - cssHeight) > 4) ||
-      Math.abs(cssWidth - canvas.clientWidth) > 4 ||
-      Math.abs(cssHeight - canvas.clientHeight) > 4 ||
-      Math.abs(Math.round(logicalViewport.x) - stageWidth) > 4 ||
-      Math.abs(Math.round(logicalViewport.y) - stageHeight) > 4;
-
-    lastDebugSnapshot = {
-      camera: {
-        x: Number(camera.position.x.toFixed(3)),
-        y: Number(camera.position.y.toFixed(3)),
-        z: Number(camera.position.z.toFixed(3)),
-        yaw: Number(camera.rotation.y.toFixed(3)),
-        pitch: Number(camera.rotation.x.toFixed(3)),
-      },
-      viewport: { width: viewportWidth, height: viewportHeight },
-      cssViewport: { width: cssWidth, height: cssHeight },
-      stageViewport: { width: stageWidth, height: stageHeight },
-      webglViewport: { width: Math.round(logicalViewport.x), height: Math.round(logicalViewport.y) },
-      projectedNodes: {
-        senior: projectNode("senior", debugAnchors.senior, viewportWidth, viewportHeight),
-        junior: projectNode("junior", debugAnchors.junior, viewportWidth, viewportHeight),
-        frontDoor: projectNode("frontDoor", debugAnchors.frontDoor, viewportWidth, viewportHeight),
-        backDoor: projectNode("backDoor", debugAnchors.backDoor, viewportWidth, viewportHeight),
-        doorPlaque: projectNode("doorPlaque", debugAnchors.doorPlaque, viewportWidth, viewportHeight),
-        parapetBand: projectNode("parapetBand", debugAnchors.parapetBand, viewportWidth, viewportHeight),
-        boardWall: projectNode("boardWall", debugAnchors.boardWall, viewportWidth, viewportHeight),
-      },
-      hotspotLOS: buildHotspotLOS(game),
-      currentRoomIds: WORLD.floorRooms.map((room) => room.id),
-      endingShotPhase:
-        game.endingSequence?.type === "perfect"
-          ? perfectEndingPhase(game.endingSequence.time)
-          : null,
-      colliders: colliders.length,
-      mobileBlackRegionDetected,
-    };
-
-    renderer.render(scene, camera);
-  }
-
   return {
-    render,
-    resize,
-    resolveMotion,
-    pickHotspot,
-    getDebugSnapshot,
-    spawnHologram,
-    worldBounds: { minX: minX + 0.26, maxX: maxX - 0.22, minZ: minZ + 0.22, maxZ: maxZ - 0.22 },
+    getStairY: getStairY,
+    triggerWormhole: triggerWormhole,
+    _worldGroup: j,
+    _scene: W,
+    render: function (s) {
+      qo();
+      const g = s.time ?? 0;
+      const perfectType = s.endingSequence?.type ?? s.ending,
+        perfectPhase = "perfect" === perfectType ? Ao(s.endingSequence?.time ?? 0) : null,
+        juniorHeroLead =
+          "rear_wait" === s.phase ||
+          "eye_contact" === s.phase ||
+          ("perfect" === perfectType &&
+            ("senior_pov" === perfectPhase ||
+              "eyes" === perfectPhase ||
+              "overlay" === perfectPhase));
+      (!(function (t) {
+        const isIntro = "intro" === t.mode;
+        if (
+          ((Go.visible = !isIntro && (t.characters.senior.alpha ?? 1) > 0.02),
+          (Co.visible = !isIntro),
+          (Bo.visible = !isIntro && t.characters.fatherEcho.alpha > 0.02),
+          (ko.visible = !isIntro && t.characters.auntEcho.alpha > 0.02),
+          (Do.visible = isIntro),
+          (Vo.visible = isIntro),
+          (Eo.visible = isIntro),
+          (Uo.visible = isIntro),
+          (Wo.visible = isIntro),
+          Go.position.set(t.characters.senior.x, 0, t.characters.senior.z),
+          (Go.rotation.y = t.characters.senior.rotationY ?? 0),
+          (t.characters.senior.alpha ?? 1) < 1 &&
+            Go.traverse((e) => {
+              e.material && (e.material.opacity = t.characters.senior.alpha);
+            }),
+          Co.position.set(t.characters.junior.x, 0, t.characters.junior.z),
+          (Co.rotation.y = t.characters.junior.rotationY ?? 0),
+          juniorHeroLight.target.position.set(
+            Co.position.x + 0.03,
+            1.54,
+            Co.position.z + 0.06,
+          ),
+          Bo.position.set(
+            t.characters.fatherEcho.x,
+            0,
+            t.characters.fatherEcho.z,
+          ),
+          ko.position.set(t.characters.auntEcho.x, 0, t.characters.auntEcho.z),
+          Bo.traverse((e) => {
+            e.material && (e.material.opacity = t.characters.fatherEcho.alpha);
+          }),
+	          ko.traverse((e) => {
+	            e.material && (e.material.opacity = t.characters.auntEcho.alpha);
+	          }),
+          (() => {
+            const e = Co.userData.runtimeModelRoot ?? null,
+              o = Co.userData.heroCloseupModelRoot ?? null,
+              a = Boolean(e?.userData?.ready),
+              s = !1,
+              r = a,
+              i = r;
+	            e &&
+	              (e.userData.basePosition ??= e.position.clone(),
+	              e.userData.baseScale ??= e.scale.clone(),
+	              e.userData.baseRotation ??= e.rotation.clone());
+	            o &&
+	              (o.userData.basePosition ??= o.position.clone(),
+	              o.userData.baseScale ??= o.scale.clone(),
+	              o.userData.baseRotation ??= o.rotation.clone());
+	            Co.userData.legacyChildren?.forEach((e) => {
+	              e.visible = !i;
+	            }),
+	              e &&
+	                ((e.visible = r),
+	                r
+	                  ? (e.position.copy(e.userData.basePosition),
+	                    e.scale.copy(e.userData.baseScale),
+	                    e.rotation.copy(e.userData.baseRotation))
+	                  : e.visible ||
+	                    (e.position.copy(e.userData.basePosition),
+	                    e.scale.copy(e.userData.baseScale),
+	                    e.rotation.copy(e.userData.baseRotation))),
+              r && e?.userData?.ready && (() => {
+                e.updateMatrixWorld(!0);
+                juniorHeroAnchorBox.setFromObject(e);
+                const footY = juniorHeroAnchorBox.min.y;
+                if (Number.isFinite(footY) && Math.abs(footY) > 0.001) {
+                  e.position.y -= footY;
+                }
+              })(),
+              o &&
+                ((o.visible = s),
+                  s
+                    ? (o.position.copy(o.userData.basePosition),
+                      o.scale.copy(o.userData.baseScale),
+                      o.rotation.copy(o.userData.baseRotation),
+                      setJuniorGltfFaceVisibility(o, !0))
+                    : (o.position.copy(o.userData.basePosition),
+                      o.scale.copy(o.userData.baseScale),
+                      o.rotation.copy(o.userData.baseRotation),
+                      setJuniorGltfFaceVisibility(o, !0))),
+              (assetState.currentVariant = r
+                ? "runtime_glb"
+                : "procedural_fallback");
+          })(),
+	          Co.userData.glow &&
+	            (Co.userData.glow.material.opacity =
+	              "eye_contact" === t.phase ||
+	              "perfect" === (t.endingSequence?.type ?? t.ending)
+	                ? 0.5 + 0.2 * t.cinematicGlow
+	                : 0.18),
+	          Co.userData.pose?.referenceJunior &&
+	            (() => {
+              const e = Co.userData.pose,
+                o = "perfect" === (t.endingSequence?.type ?? t.ending),
+                s = o ? Ao(t.endingSequence?.time ?? 0) : null,
+                a =
+                  "rear_wait" === t.phase ||
+                  "eye_contact" === t.phase ||
+                  (o &&
+                    ("senior_pov" === s ||
+                      "eyes" === s ||
+                      "overlay" === s));
+              setJuniorHeroLeadVisibility(e, a, {
+                heroHeadRoot: e.heroHeadRoot,
+                keepLegacyBody: !1,
+                suppressRuntimeModel: !1,
+                showHeroHeadRoot: !1,
+              });
+              if (e.head?.material && e.jaw?.material) {
+                [e.head.material, e.jaw.material].forEach((t) => {
+                  if (!t?.isMaterial) return;
+                  t.userData.baseRoughness ??= t.roughness;
+                  t.userData.baseClearcoat ??= t.clearcoat ?? 0;
+                  t.userData.baseSheen ??= t.sheen ?? 0;
+                  t.userData.baseOpacity ??= t.opacity ?? 1;
+                  t.userData.baseTransparent ??= t.transparent;
+                  t.userData.baseDepthWrite ??= t.depthWrite;
+                  t.roughness = a ? 0.44 : t.userData.baseRoughness;
+                  "clearcoat" in t &&
+                    (t.clearcoat = a ? 0.04 : t.userData.baseClearcoat);
+                  "sheen" in t && (t.sheen = a ? 0.06 : t.userData.baseSheen);
+                  (t.transparent = t.userData.baseTransparent),
+                    (t.opacity = t.userData.baseOpacity),
+                    (t.depthWrite = t.userData.baseDepthWrite);
+                });
+              }
+              e.blushL?.material &&
+                (e.blushL.material.opacity = a ? 0.1 : e.blushL.material.userData.baseOpacity ?? e.blushL.material.opacity);
+              e.blushR?.material &&
+                (e.blushR.material.opacity = a ? 0.1 : e.blushR.material.userData.baseOpacity ?? e.blushR.material.opacity);
+            })(),
+          Co.userData.portraitShell &&
+            (() => {
+              const a = Co.userData.portraitShell,
+                n = Boolean(a.userData.loaded) && !isIntro,
+                p = "perfect" === (t.endingSequence?.type ?? t.ending),
+                s =
+                  p
+                    ? e.MathUtils.lerp(
+                        0.46,
+                        0.94,
+                        e.MathUtils.smoothstep(
+                          t.endingSequence?.time ?? 0,
+                          o.perfectTransitionEnd ?? 17.4,
+                          o.perfectEyesEnd ?? 35,
+                        ),
+                      )
+                  : "eye_contact" === t.phase
+                      ? 0.82
+                      : "rear_wait" === t.phase
+                        ? 0.16
+                        : 0,
+                r =
+                  n &&
+                  !p &&
+                  !1 &&
+                  s > 0.02 &&
+                  ("rear_wait" === t.phase ||
+                    "eye_contact" === t.phase ||
+                    "perfect" === (t.endingSequence?.type ?? t.ending)),
+                i = !1;
+              a.userData.planes?.forEach((e) => {
+                e.visible = !1;
+              }),
+                a.userData.glow && (a.userData.glow.visible = r),
+                a.userData.heroFaceCard &&
+                  updateJuniorHeroFaceCard(
+                    Co,
+                    a,
+                    q,
+                    i ? Math.min(0.92, Math.max(0.68, 0.72 * s)) : 0,
+                  ),
+                (a.visible = r && !p),
+                r && updateJuniorPortraitShell(Co, a, q, s);
+            })(),
+          z(Go),
+          z(Co),
+          isIntro)
+        )
+          v(Co, 0.4 * t.time, 0.4);
+        else if ("perfect" === t.endingSequence?.type) {
+          const a = e.MathUtils.smoothstep(
+              t.endingSequence.time,
+              0.24,
+              o.perfectSeniorPovEnd ?? 27.6,
+            ),
+            n = e.MathUtils.smoothstep(
+              t.endingSequence.time,
+              0.48,
+              o.perfectOrbitEnd ?? 14.2,
+            );
+          (t.endingSequence.time < (o.perfectSeniorPovEnd ?? 27.6)
+            ? P(Go, 0.9 * Math.sin(3.53 * t.endingSequence.time), 0.9)
+            : v(Go, t.time, 0.8),
+            t.endingSequence.time < (o.perfectOrbitEnd ?? 14.2)
+              ? P(Co, 0.84 * Math.sin(3.23 * t.endingSequence.time + 0.8), 0.7)
+              : v(Co, 0.84 * t.time, 0.92),
+            (Go.position.y += 0.01 * a),
+            (Co.position.y += 0.014 * n));
+        } else if ("front_call" === t.phase)
+          (t.phaseClock < 7.2
+            ? P(Go, 0.82 * Math.sin(7.4 * t.time), 0.82)
+            : v(Go, 0.9 * t.time, 0.76),
+            v(Co, 0.72 * t.time, 0.9));
+        else if ("rear_wait" === t.phase) {
+          const e = Math.sin(7.1 * t.time);
+          (P(Go, 0.76 * e, 0.8),
+            P(Co, 0.68 * Math.sin(6.4 * t.time + 0.7), 0.66),
+            v(Co, t.time, 0.58));
+        } else
+          (P(Go, 0.34 * Math.sin(6.2 * t.time), 0.5), v(Co, 0.9 * t.time, 1));
+        ((juniorHeroLight.intensity =
+          "perfect" === (t.endingSequence?.type ?? t.ending)
+            ? 3.6
+            : "eye_contact" === t.phase
+              ? 3.02
+              : "rear_wait" === t.phase
+                ? 2.58
+                : 1.76),
+          (juniorRimLight.intensity =
+            "perfect" === (t.endingSequence?.type ?? t.ending)
+              ? 2.34
+              : "eye_contact" === t.phase
+                ? 1.98
+                : 1.32));
+        (vo.senior.copy(Go.position).add(new e.Vector3(0, 1.34, 0)),
+          vo.junior.copy(Co.position).add(new e.Vector3(0, 1.34, 0)));
+      })(s),
+        (function (e, t, o) {
+          e.forEach((e) => {
+            const a = L.get(e.id);
+            a &&
+              ((a.visible = e.visible),
+              a.position.set(e.x, e.y, e.z),
+              (a.position.y += 0.04 * Math.sin(1.6 * o + 0.18 * e.z) + 0.16),
+              a.scale.setScalar(e.id === t ? 0.98 : 0.72),
+              (a.children[0].material.opacity = e.id === t ? 0.34 : 0.08),
+              (a.children[1].material.opacity = e.id === t ? 0.22 : 0.06));
+          });
+        })(s.hotspots, s.activeHotspotId, g));
+      const x = "intro" === s.mode;
+      if (x)
+        !(function (t) {
+          const o = e.MathUtils.clamp(t.progress, 0, 1),
+            a = 0.5 + 0.5 * Math.sin(o * Math.PI * 2.6 - 0.5 * Math.PI),
+            s =
+              o < 0.18
+                ? 1.22 * o
+                : o < 0.46
+                  ? 0.2196 + 0.96 * (o - 0.18)
+                  : 0.4884 + 0.9 * (o - 0.46),
+            r = e.MathUtils.clamp(s, 0, 1),
+            i = e.MathUtils.smoothstep(
+              e.MathUtils.clamp(r * (0.7 + 0.3 * a), 0, 1),
+              0.02,
+              0.98,
+            ),
+            w = Io.getPoint(i),
+            M = Io.getPoint(e.MathUtils.clamp(i + 0.12, 0, 1)),
+            f = Math.sin(o * Math.PI * 8.4) * Math.exp(1.6 * -o) * 5,
+            u = e.MathUtils.lerp(
+              104,
+              42,
+              e.MathUtils.smoothstep(o, 0.02, 0.88),
+            ),
+            y =
+              o > 0.3 && o < 0.4
+                ? 12 * Math.sin(((o - 0.3) / 0.1) * Math.PI)
+                : 0;
+          ((q.fov = u + f + y),
+            q.updateProjectionMatrix(),
+            q.position
+              .copy(w)
+              .add(
+                n.set(
+                  0.28 * (1 - o) * Math.sin(0.8 + o * Math.PI * 2.8),
+                  0.22 * Math.sin(o * Math.PI * 1.16) +
+                    0.08 * Math.sin(o * Math.PI * 5.2) * (1 - 0.45 * o),
+                  -0.64 * (1 - o) * (0.3 + 0.7 * o),
+                ),
+              ));
+          const g = new e.Vector3(
+              0.22 * vo.senior.x +
+                0.38 * vo.doorPlaque.x +
+                0.18 * vo.frontDoor.x +
+                0.22 * vo.parapetBand.x,
+              e.MathUtils.lerp(3.8, 1.46, o),
+              0.22 * vo.senior.z +
+                0.34 * vo.doorPlaque.z +
+                0.18 * vo.frontDoor.z +
+                0.26 * vo.parapetBand.z,
+            ),
+            x = e.MathUtils.smoothstep(o, 0.12, 0.78),
+            b = new e.Vector3(
+              e.MathUtils.lerp(M.x + e.MathUtils.lerp(1.8, 0.12, o), g.x, x),
+              e.MathUtils.lerp(4.02, g.y, x),
+              e.MathUtils.lerp(M.z - e.MathUtils.lerp(0.42, 0.1, o), g.z, x),
+            );
+          q.lookAt(b);
+          const S =
+              Math.sin(o * Math.PI * 2.7) * e.MathUtils.lerp(0.46, 0.004, o),
+            z =
+              Math.sin(o * Math.PI * 16) * e.MathUtils.lerp(0.02, 0, o) * 0.34,
+            P =
+              o > 0.24 && o < 0.34
+                ? 0.009 * Math.sin(148 * (o - 0.24)) * (1 - (o - 0.24) / 0.1)
+                : 0;
+          (q.rotateZ(S + z + P), (H.visible = !0));
+          const v = 0.5 + 0.5 * Math.sin(o * Math.PI * 6.2),
+            G =
+              o > 0.28 && o < 0.36
+                ? 1.4 + 0.6 * Math.sin(((o - 0.28) / 0.08) * Math.PI * 4)
+                : 1;
+          ((Ro.material.opacity =
+            e.MathUtils.lerp(1, 0.2, o) * (0.9 + 0.18 * v) * G),
+            (Ro.material.emissiveIntensity =
+              e.MathUtils.lerp(4.2, 0.72, o) * (0.88 + 0.24 * v) * G));
+          const C = e.MathUtils.clamp(r + 0.03, 0, 1),
+            B = Io.getPoint(C);
+          (Do.position.copy(B).add(l),
+            Do.lookAt(q.position),
+            (Do.material.opacity =
+              e.MathUtils.lerp(0.96, 0.22, o) * (0.8 + 0.2 * v)),
+            Vo.position.copy(B).add(c),
+            Vo.lookAt(q.position));
+          const k = o > 0.29 && o < 0.37 ? 1.6 : 1;
+          ((Vo.material.opacity = e.MathUtils.lerp(0.72, 0.16, o) * k),
+            Wo.position.copy(B).add(h),
+            Wo.lookAt(q.position),
+            (Wo.material.opacity = e.MathUtils.lerp(0.48, 0.04, o)),
+            Eo.position.copy(Io.getPoint(e.MathUtils.clamp(r + 0.08, 0, 1))),
+            Eo.scale.setScalar(1 + 0.5 * Math.sin(o * Math.PI * 6)),
+            Eo.material.color.lerpColors(
+              p,
+              m,
+              e.MathUtils.smoothstep(o, 0.5, 0.9),
+            ),
+            Uo.position.copy(B).add(d),
+            Uo.lookAt(q.position),
+            (Uo.material.opacity = e.MathUtils.lerp(0.46, 0.06, o)));
+        })(s.intro);
+      else if ("perfect" === s.endingSequence?.type)
+        ((H.visible = !1),
+          (function (t) {
+            const s = t.endingSequence?.time ?? 0,
+              r = o.perfectEstablishEnd ?? 2.2,
+              i0 = o.perfectOrbitEnd ?? 14.2,
+              l0 = o.perfectTransitionEnd ?? 17.4,
+              c0 = o.perfectSeniorPovEnd ?? 27.6,
+              h0 = o.perfectOverlayAt ?? 34.8,
+              heroAnchor = resolveJuniorHeroAnchor(Co, {
+                forceRoot: Co.userData.runtimeModelRoot ?? null,
+                allowLegacyFallback: !1,
+              }),
+              i =
+                (Co.position.clone().add(w),
+                a.set(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y)),
+                Go.position.clone().add(M)),
+              l = new e.Vector3(
+                Math.sin(Co.rotation.y),
+                0,
+                Math.cos(Co.rotation.y),
+              ),
+              c = heroAnchor.chest,
+              h = heroAnchor.face;
+            Co.userData.heroCloseupTarget = {
+              kind: heroAnchor.kind,
+              leadMode:
+                "procedural_hero_head" === heroAnchor.kind
+                  ? "hero_head"
+                  : "model_root",
+              rootVisible: Boolean(heroAnchor.root?.visible),
+              rootKind: heroAnchor.root?.userData?.kind ?? null,
+              sourceUrl: heroAnchor.root?.userData?.sourceUrl ?? null,
+              rootPosition: heroAnchor.root
+                ? {
+                    x: Number(heroAnchor.root.position.x.toFixed(3)),
+                    y: Number(heroAnchor.root.position.y.toFixed(3)),
+                    z: Number(heroAnchor.root.position.z.toFixed(3)),
+                  }
+                : null,
+              rootScale: heroAnchor.root
+                ? {
+                    x: Number(heroAnchor.root.scale.x.toFixed(3)),
+                    y: Number(heroAnchor.root.scale.y.toFixed(3)),
+                    z: Number(heroAnchor.root.scale.z.toFixed(3)),
+                  }
+                : null,
+              center: {
+                x: Number(heroAnchor.center.x.toFixed(3)),
+                y: Number(heroAnchor.center.y.toFixed(3)),
+                z: Number(heroAnchor.center.z.toFixed(3)),
+              },
+              face: {
+                x: Number(heroAnchor.face.x.toFixed(3)),
+                y: Number(heroAnchor.face.y.toFixed(3)),
+                z: Number(heroAnchor.face.z.toFixed(3)),
+              },
+              chest: {
+                x: Number(heroAnchor.chest.x.toFixed(3)),
+                y: Number(heroAnchor.chest.y.toFixed(3)),
+                z: Number(heroAnchor.chest.z.toFixed(3)),
+              },
+              eyes: {
+                x: Number(heroAnchor.eyes.x.toFixed(3)),
+                y: Number(heroAnchor.eyes.y.toFixed(3)),
+                z: Number(heroAnchor.eyes.z.toFixed(3)),
+              },
+            };
+            if (s < r) {
+              const t = s / r,
+                o = e.MathUtils.smoothstep(t, 0, 1),
+                establishOffset = f.clone();
+              establishOffset.multiplyScalar(1 - 0.5 * o);
+              const l = i.clone().add(establishOffset),
+                c = 0.004 * Math.sin(0.7 * s) * (1 - 0.3 * o),
+                d = 0.002 * Math.sin(1.4 * s);
+              ((l.y += c + d),
+                (l.x += 0.002 * Math.sin(0.5 * s)),
+                q.position.copy(l),
+                (q.fov = e.MathUtils.lerp(
+                  30,
+                  24,
+                  e.MathUtils.smoothstep(t, 0.1, 0.9),
+                )),
+                q.updateProjectionMatrix());
+              const p = e.MathUtils.smoothstep(t, 0.2, 0.8),
+                m = Go.position
+                  .clone()
+                  .add(
+                    a
+                      .set(Math.sin(Go.rotation.y), 0, Math.cos(Go.rotation.y))
+                      .multiplyScalar(3),
+                  )
+                  .add(n.set(0, 1.4, 0))
+                  .clone()
+                  .lerp(h, p);
+              return (
+                q.lookAt(m),
+                void q.rotateZ(0.003 * Math.sin(0.4 * s) * (1 + 0.5 * o))
+              );
+            }
+            if (s < i0) {
+              const t = (s - r) / Math.max(0.01, i0 - r),
+                o = 2.2,
+                a =
+                  e.MathUtils.smoothstep(t, 0, 1) * Math.PI * 2 + Co.rotation.y,
+                orbitX = c.x + Math.sin(a) * o,
+                orbitZ = c.z + Math.cos(a) * o,
+                orbitY = c.y + 0.4 + 0.3 * Math.sin(t * Math.PI);
+              (q.position.set(orbitX, orbitY, orbitZ),
+                (q.fov = e.MathUtils.lerp(
+                  36,
+                  30,
+                  e.MathUtils.smoothstep(t, 0, 1),
+                )),
+                q.updateProjectionMatrix());
+              const l = Co.position.clone().add(new e.Vector3(0, 1.45, 0));
+              q.lookAt(l);
+              const h = 0.002 * Math.sin(1.8 * s);
+              return void q.rotateZ(h);
+            }
+            if (s < l0) {
+              const t = (s - i0) / Math.max(0.01, l0 - i0),
+                o = e.MathUtils.smoothstep(t, 0, 1),
+                a = 2 * Math.PI + Co.rotation.y,
+                n = new e.Vector3(
+                  c.x + 2.2 * Math.sin(a),
+                  c.y + 0.4,
+                  c.z + 2.2 * Math.cos(a),
+                ),
+                r = i.clone().add(u),
+                l = n.clone().lerp(r, o),
+                d = 0.002 * Math.sin(0.8 * s);
+              ((l.y += d),
+                q.position.copy(l),
+                (q.fov = e.MathUtils.lerp(30, 18, o)),
+                q.updateProjectionMatrix());
+              const p = c.clone().lerp(h, o);
+              q.lookAt(p);
+              const m = 0.002 * Math.sin(1.8 * s) * (1 - o);
+              return void q.rotateZ(m);
+            }
+            if (s < c0) {
+              const t = (s - l0) / Math.max(0.01, c0 - l0),
+                o = e.MathUtils.smoothstep(t, 0, 1),
+                a = i
+                  .clone()
+                  .add(u)
+                  .clone()
+                  .lerp(h, 0.52 * o),
+                n = 1.2 + 0.3 * t,
+                r = 0.002 * Math.sin(s * n) * (1 + 0.8 * t),
+                l = 0.0015 * Math.cos(s * n * 0.7);
+              ((a.y += l),
+                (a.x += r),
+                q.position.copy(a),
+                (q.fov = e.MathUtils.lerp(
+                  18,
+                  14,
+                  e.MathUtils.smoothstep(t, 0.05, 0.95),
+                )),
+                q.updateProjectionMatrix(),
+                q.lookAt(h.x, h.y + 0.001, h.z));
+              const c = 0.003 * Math.sin(0.5 * s) * (0.5 + 0.5 * t);
+              return void q.rotateZ(c);
+            }
+            if (s < h0) {
+              const t = (s - c0) / Math.max(0.01, h0 - c0),
+                focusMid = c.clone().lerp(h, 0.62),
+                closeAnchor = h
+                  .clone()
+                  .add(l.clone().multiplyScalar(1.54))
+                  .add(new e.Vector3(0.046, 0.008, 0.022)),
+                o = closeAnchor.clone(),
+                a = e.MathUtils.smoothstep(t, 0, 0.5),
+                n = 4e-4 * Math.sin(2.8 * s) * a,
+                driftY = 3e-4 * Math.sin(3.1 * s + 1.2) * a,
+                bobY = 8e-4 * Math.sin(0.6 * s);
+              return (
+                (o.y += bobY + driftY),
+                (o.x += 8e-4 * Math.cos(0.2 * s) + n),
+                q.position.copy(o),
+                (q.fov = e.MathUtils.lerp(
+                  25.8,
+                  23.6,
+                  e.MathUtils.smoothstep(t, 0, 0.8),
+                )),
+                q.updateProjectionMatrix(),
+                q.lookAt(focusMid.x, focusMid.y + 0.006, focusMid.z + 0.016),
+                void q.rotateZ(8e-4 * Math.sin(0.35 * s) * a)
+              );
+            }
+            const d = s - h0,
+              p = e.MathUtils.smoothstep(d, 0, 4),
+              overlayAnchor = h
+                .clone()
+                .add(l.clone().multiplyScalar(1.68 - 0.14 * p))
+                .add(new e.Vector3(0.108, -0.022, 0.03)),
+              m = overlayAnchor.clone();
+            m.add(a.set(0.01 + 0.02 * p, 0.008 + 0.01 * p, 0));
+            const g = Math.min(1, 0.08 * d);
+            ((m.y += 0.001 * Math.sin(0.3 * s) + 3e-4 * Math.sin(2.2 * s) * g),
+              (m.x += 8e-4 * Math.cos(0.16 * s)),
+              q.position.copy(m),
+              (q.fov = e.MathUtils.lerp(
+                21.5,
+                25,
+                e.MathUtils.smoothstep(d, 0, 5),
+              )),
+              q.updateProjectionMatrix(),
+              q.lookAt(h.x, h.y - 0.04, h.z + 0.028),
+              q.rotateZ(0.001 * Math.sin(0.4 * s) * g));
+          })(s));
+      else {
+        H.visible = !1;
+        const e =
+          "front_call" === s.phase ? 42 : "eye_contact" === s.phase ? 46 : 56;
+        (q.fov !== e && ((q.fov = e), q.updateProjectionMatrix()),
+          _o(s.player, g, !0));
+      }
+      const b = x ? e.MathUtils.lerp(0.34, 1, s.intro.progress) : 1;
+      if (
+        ((Te.intensity =
+          1.96 * b +
+          ("eye_contact" === s.phase ||
+          "perfect" === (s.endingSequence?.type ?? s.ending)
+            ? 0.68
+            : "front_call" === s.phase
+              ? 0.26
+              : 0.12)),
+        (ke.intensity = 0.28 + 0.2 * b),
+        (Ie.intensity = x ? 0.66 : 0.98),
+        (Re.intensity =
+          "perfect" === s.ending
+            ? 2.02
+            : "front_call" === s.phase
+              ? 2.28
+              : 1.32),
+        (De.intensity =
+          "eye_contact" === s.phase || "perfect" === s.ending
+            ? 2.04
+            : "front_call" === s.phase
+              ? 1.64
+              : 1.18),
+        (Ve.intensity =
+          "eye_contact" === s.phase || "perfect" === s.ending ? 1.34 : 0.8),
+        (_t.material.opacity =
+          "perfect" === s.ending
+            ? 0.72
+            : "front_call" === s.phase
+              ? 0.94
+              : 0.36),
+        (At.material.opacity =
+          "front_call" === s.phase
+            ? 0.82
+            : "perfect" === s.ending
+              ? 0.54
+              : 0.24),
+        (Xt.material.opacity =
+          "eye_contact" === s.phase || "perfect" === s.ending ? 0.86 : 0.54),
+        (jt.material.opacity =
+          "eye_contact" === s.phase || "perfect" === s.ending ? 0.66 : 0.34),
+        (Ht.material.opacity =
+          "perfect" === s.ending
+            ? 0.72
+            : "eye_contact" === s.phase
+              ? 0.48
+              : 0.26),
+        ($t.material.opacity =
+          "perfect" === s.ending
+            ? 0.58
+            : "eye_contact" === s.phase
+              ? 0.4
+              : 0.2),
+        W.background.setStyle(x ? "#090d16" : "#dde8f2"),
+        W.fog.color.setStyle(x ? "#121722" : "#d6e1eb"),
+        (W.fog.near = x ? 3 : 16),
+        (W.fog.far = x ? 20 : 68),
+        (bo.visible = "perfect" !== s.endingSequence?.type),
+        (bo.rotation.y = 0.018 * g),
+        (bo.position.x = 0.08 * Math.sin(0.12 * g)),
+        fo.forEach((e) => {
+          e.position.x =
+            e.userData.startX +
+            8 * Math.sin(0.02 * g * e.userData.speed) +
+            g * e.userData.speed * 0.1;
+        }),
+        uo.forEach((e) => {
+          const t = g * e.userData.speed;
+          ((e.position.x = e.userData.startX + 2 * t),
+            (e.position.z =
+              e.userData.startZ + 6 * Math.sin(0.5 * t + e.userData.phase)),
+            (e.position.y += 0.002 * Math.sin(t + e.userData.phase)),
+            (e.userData.wingL.rotation.z =
+              0.3 + 0.4 * Math.sin(6 * t + e.userData.phase)),
+            (e.userData.wingR.rotation.z =
+              -0.3 - 0.4 * Math.sin(6 * t + e.userData.phase)),
+            e.position.x > e.userData.startX + 120 &&
+              (e.position.x = e.userData.startX - 40));
+        }),
+        Xo)
+      ) {
+        const e = g - jo;
+        let t = 0;
+        (e > 5 && e <= 6
+          ? (t = 0.8 * (6 - e))
+          : e > 1 && e <= 5
+            ? (t = 0.8 + 0.12 * Math.sin(4 * g))
+            : e >= 0 && e <= 1
+              ? (t = 0.8 * e)
+              : e > 6 && (W.remove(Xo), (Xo = null)),
+          Xo &&
+            ((Xo.position.y = 0.02 * Math.sin(2 * g)),
+            Xo.traverse((e) => {
+              e.material && (e.material.opacity = t);
+            })));
+      }
+      const S = (D.parentElement ?? D).getBoundingClientRect(),
+        G = D.getBoundingClientRect(),
+        C = U.getSize(r),
+        B = U.getDrawingBufferSize(i),
+        k = U.domElement.width || B.x || 0,
+        T = U.domElement.height || B.y || 0,
+        I = Math.round(G.width),
+        R = Math.round(G.height),
+        V = Math.round(S.width),
+        E = Math.round(S.height),
+        _ =
+          (V > 0 && I > 0 && Math.abs(V - I) > 4) ||
+          (E > 0 && R > 0 && Math.abs(E - R) > 4) ||
+          Math.abs(I - D.clientWidth) > 4 ||
+          Math.abs(R - D.clientHeight) > 4 ||
+          Math.abs(Math.round(C.x) - V) > 4 ||
+          Math.abs(Math.round(C.y) - E) > 4;
+      ((X = {
+        camera: {
+          x: Number(q.position.x.toFixed(3)),
+          y: Number(q.position.y.toFixed(3)),
+          z: Number(q.position.z.toFixed(3)),
+          yaw: Number(q.rotation.y.toFixed(3)),
+          pitch: Number(q.rotation.x.toFixed(3)),
+        },
+        viewport: { width: k, height: T },
+        cssViewport: { width: I, height: R },
+        stageViewport: { width: V, height: E },
+        webglViewport: { width: Math.round(C.x), height: Math.round(C.y) },
+        projectedNodes: {
+          senior: Zo("senior", vo.senior, k, T),
+          junior: Zo("junior", vo.junior, k, T),
+          frontDoor: Zo("frontDoor", vo.frontDoor, k, T),
+          backDoor: Zo("backDoor", vo.backDoor, k, T),
+          doorPlaque: Zo("doorPlaque", vo.doorPlaque, k, T),
+          parapetBand: Zo("parapetBand", vo.parapetBand, k, T),
+          boardWall: Zo("boardWall", vo.boardWall, k, T),
+        },
+        hotspotLOS: Lo(s),
+        currentRoomIds: t.floorRooms.map((e) => e.id),
+        endingShotPhase:
+          "perfect" === s.endingSequence?.type
+            ? Ao(s.endingSequence.time)
+            : null,
+        heroCloseupTarget: Co.userData.heroCloseupTarget ?? null,
+        portraitShellVisible: juniorPortraitShell?.visible ?? null,
+        juniorGrounded: (() => {
+          const rm = Co.userData.runtimeModelRoot;
+          if (!rm?.visible || !rm.userData?.ready) return null;
+          rm.updateMatrixWorld(!0);
+          const bb = new e.Box3().setFromObject(rm);
+          return Number.isFinite(bb.min.y) ? Math.abs(bb.min.y) < 0.05 : null;
+        })(),
+        heroCloseupRoots: {
+          runtime: Co.userData.runtimeModelRoot
+            ? {
+                visible: Co.userData.runtimeModelRoot.visible,
+                ready: Co.userData.runtimeModelRoot.userData?.ready ?? !1,
+                kind: Co.userData.runtimeModelRoot.userData?.kind ?? null,
+              }
+            : null,
+          closeup: Co.userData.heroCloseupModelRoot
+            ? {
+                visible: Co.userData.heroCloseupModelRoot.visible,
+                ready: Co.userData.heroCloseupModelRoot.userData?.ready ?? !1,
+                kind: Co.userData.heroCloseupModelRoot.userData?.kind ?? null,
+              }
+            : null,
+          procedural: Co.userData.pose?.heroHeadRoot
+            ? {
+                visible: Co.userData.pose.heroHeadRoot.visible,
+                kind: "procedural_hero_head",
+              }
+            : null,
+        },
+        colliders: Z.length,
+        mobileBlackRegionDetected: _,
+        qualityTier: runtimeState.qualityTier,
+        rendererProfile: U.__lm402RendererProfile ?? "unknown",
+        assetState: { ...assetState },
+      }),
+        updateWormhole(0.016),
+        U.render(W, q));
+    },
+    resize: qo,
+    resolveMotion: function (t, o, a = 0.28) {
+      let n = o.x,
+        s = o.z,
+        r = !1,
+        i = null;
+      const l = N + 0.26,
+        c = O - 0.22,
+        h = Y + 0.22,
+        d = J - 0.22;
+      ((n < l || n > c || s < h || s > d) && ((r = !0), (i = "boundary_wall")),
+        (n = e.MathUtils.clamp(n, l, c)),
+        (s = e.MathUtils.clamp(s, h, d)));
+      for (let t = 0; t < 2; t += 1)
+        (Z.forEach((t) => {
+          const o = e.MathUtils.clamp(n, t.minX, t.maxX),
+            l = e.MathUtils.clamp(s, t.minZ, t.maxZ),
+            c = n - o,
+            h = s - l,
+            d = c * c + h * h;
+          if (d >= a * a) return;
+          if (((r = !0), (i = t.label), d > 1e-5)) {
+            const e = Math.sqrt(d),
+              t = a - e + 0.001;
+            return ((n += (c / e) * t), void (s += (h / e) * t));
+          }
+          const p = Math.abs(n - t.minX),
+            m = Math.abs(t.maxX - n),
+            w = Math.abs(s - t.minZ),
+            M = Math.abs(t.maxZ - s),
+            f = Math.min(p, m, w, M);
+          f === p
+            ? (n = t.minX - a)
+            : f === m
+              ? (n = t.maxX + a)
+              : (s = f === w ? t.minZ - a : t.maxZ + a);
+        }),
+          (n = e.MathUtils.clamp(n, l, c)),
+          (s = e.MathUtils.clamp(s, h, d)));
+      return { x: n, z: s, collided: r, label: i };
+    },
+    pickHotspot: function (e, t, o) {
+      (_o(t), q.updateMatrixWorld());
+      const s = q.getWorldDirection(a);
+      let r = null;
+      return (
+        e.forEach((e) => {
+          const t = L.get(e.id);
+          if (!t || !e.visible) return;
+          const a = q.position.distanceTo(t.position);
+          if (a > e.radius) return;
+          const i = n.copy(t.position).sub(q.position).normalize(),
+            l = s.dot(i);
+          if (l < 0.75) return;
+          _.set(q.position, i);
+          const c = _.intersectObjects(A, !1);
+          if (c.length && c[0].distance < a - 0.16) return;
+          const h = 2.12 * l - a;
+          (!r || h > r.score || (e.id === o && h > r.score - 0.18)) &&
+            (r = {
+              id: e.id,
+              score: h,
+              distance: a,
+              label: e.label,
+              prompt: e.prompt,
+            });
+        }),
+        r
+      );
+    },
+    setRuntimeConfig: function (e = {}) {
+      const t = resolveJuniorRuntimeManifest(
+        e.characterAssets?.junior2005 ?? runtimeState.characterAssets?.junior2005 ?? {},
+      );
+      ((runtimeState.qualityTier = e.qualityTier ?? runtimeState.qualityTier),
+        (runtimeState.qualityTiers =
+          e.qualityTiers ?? runtimeState.qualityTiers),
+        (runtimeState.characterAssets =
+          e.characterAssets ?? runtimeState.characterAssets),
+        (renderTuning = {
+          shadowMapSize:
+            runtimeState.qualityTiers?.[runtimeState.qualityTier]
+              ?.shadowMapSize ?? renderTuning.shadowMapSize,
+          maxPixelRatio:
+            runtimeState.qualityTiers?.[runtimeState.qualityTier]
+              ?.maxPixelRatio ?? renderTuning.maxPixelRatio,
+          dustCount:
+            runtimeState.qualityTiers?.[runtimeState.qualityTier]?.dustCount ??
+            renderTuning.dustCount,
+          mirrorOpacity:
+            runtimeState.qualityTiers?.[runtimeState.qualityTier]
+              ?.mirrorOpacity ?? renderTuning.mirrorOpacity,
+          portraitBoost:
+            runtimeState.qualityTiers?.[runtimeState.qualityTier]
+              ?.portraitBoost ?? renderTuning.portraitBoost,
+        }),
+        (assetState.qualityTier = runtimeState.qualityTier),
+        (assetState.runtimeModelUrl = t.runtimeModelUrl ?? null),
+        (assetState.heroCloseupModelUrl = t.heroCloseupModelUrl ?? null),
+        (assetState.loaderAvailable = Boolean(resolveJuniorGltfLoaderCtor())),
+        !assetState.loaderAvailable &&
+          (assetState.status = "procedural_fallback"),
+        ht.material && (ht.material.opacity = renderTuning.mirrorOpacity),
+        Co.userData.portraitShell?.scale.setScalar(renderTuning.portraitBoost),
+        Co.userData.runtimeModelRoot?.scale.setScalar(renderTuning.portraitBoost),
+        Co.userData.heroCloseupModelRoot?.scale.setScalar(
+          renderTuning.portraitBoost,
+        ),
+        Te.shadow.mapSize.set(
+          renderTuning.shadowMapSize,
+          renderTuning.shadowMapSize,
+        ),
+        qo());
+    },
+    getDebugSnapshot: function () {
+      return X;
+    },
+    spawnHologram: function (t, o) {
+      (Xo &&
+        (Xo.traverse((e) => {
+          (e.geometry && e.geometry.dispose(),
+            e.material &&
+              (Array.isArray(e.material) ? e.material : [e.material]).forEach(
+                (e) => {
+                  (e.map && e.map.dispose(), e.dispose());
+                },
+              ));
+        }),
+        W.remove(Xo),
+        (Xo = null)),
+        "seat" === t || "notes" === t
+          ? ((Xo = (function () {
+              const t = new e.Group();
+              t.userData.baseY = 0;
+              const o = new e.MeshPhysicalMaterial({
+                color: 16777215,
+                metalness: 0.1,
+                roughness: 0.2,
+                transparent: !0,
+                opacity: 0.85,
+                blending: e.AdditiveBlending,
+                emissive: 2250154,
+                emissiveIntensity: 0.6,
+                clearcoat: 1,
+                side: e.DoubleSide,
+              });
+              o.onBeforeCompile = (e) => {
+                ((e.fragmentShader = e.fragmentShader.replace(
+                  "#include <dithering_fragment>",
+                  "\n      #include <dithering_fragment>\n      float slice = sin(vWorldPosition.y * 120.0 - cameraPosition.y * 10.0) * 0.5 + 0.5;\n      slice = pow(slice, 8.0);\n      gl_FragColor.rgb += vec3(0.2, 0.5, 1.0) * slice * 0.8;\n      gl_FragColor.a *= (0.7 + slice * 0.3);\n      ",
+                )),
+                  (e.vertexShader =
+                    "varying vec3 vWorldPosition;\n" + e.vertexShader),
+                  (e.vertexShader = e.vertexShader.replace(
+                    "#include <worldpos_vertex>",
+                    "\n      #include <worldpos_vertex>\n      vWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;\n      ",
+                  )));
+              };
+              const a = o.clone();
+              (a.color.setHex(2232593), a.emissive.setHex(1122884));
+              const n = o.clone();
+              (n.color.setHex(16772064), n.emissive.setHex(3346705));
+              const s = o.clone();
+              (s.color.setHex(16777215), (s.opacity = 0.9));
+              const r = o.clone();
+              (r.color.setHex(2045005), (r.opacity = 0.95));
+              const i = o.clone();
+              i.color.setHex(15658734);
+              const l = new e.Group();
+              l.position.set(0, 1.54, 0);
+              const c = new e.Mesh(new e.SphereGeometry(0.105, 32, 32), n);
+              (c.scale.set(1, 1.15, 1.05), l.add(c));
+              const h = new e.Mesh(new e.SphereGeometry(0.11, 32, 32), a);
+              (h.scale.set(1.02, 1.1, 1.05),
+                h.position.set(0, 0.02, -0.01),
+                l.add(h));
+              for (let t = 0; t < 8; t++) {
+                const o = new e.Mesh(
+                  new e.CapsuleGeometry(0.015, 0.06, 8, 8),
+                  a,
+                );
+                (o.position.set(
+                  0.02 * t - 0.07,
+                  0.06 - 0.005 * Math.abs(t - 3.5),
+                  0.1,
+                ),
+                  (o.rotation.z = 0.1 * (t - 3.5)),
+                  (o.rotation.x = 0.2),
+                  l.add(o));
+              }
+              const d = new e.Mesh(
+                new e.CapsuleGeometry(0.035, 0.25, 16, 16),
+                a,
+              );
+              (d.position.set(0, -0.05, -0.15), (d.rotation.x = 0.3));
+              const p = new e.Mesh(new e.TorusGeometry(0.04, 0.015, 16, 32), r);
+              (p.position.set(0, 0.05, -0.12),
+                (p.rotation.x = 1.2),
+                l.add(d, p),
+                t.add(l),
+                (t.userData.head = l));
+              const m = new e.Group();
+              m.position.set(0, 1.15, 0);
+              const w = new e.Mesh(
+                new e.CylinderGeometry(0.11, 0.1, 0.25, 32),
+                s,
+              );
+              (w.position.set(0, 0.15, 0), w.scale.set(1, 1, 0.7), m.add(w));
+              const M = new e.Mesh(
+                new e.CylinderGeometry(0.1, 0.12, 0.2, 32),
+                s,
+              );
+              (M.position.set(0, -0.05, 0), M.scale.set(1, 1, 0.75), m.add(M));
+              const f = new e.Mesh(
+                new e.TorusGeometry(0.065, 0.015, 16, 32),
+                s,
+              );
+              (f.position.set(0, 0.27, 0.02),
+                (f.rotation.x = 1.3),
+                m.add(f),
+                t.add(m));
+              const u = new e.Group();
+              u.position.set(0, 0.95, 0);
+              const y = new e.Mesh(
+                new e.CylinderGeometry(0.125, 0.135, 0.18, 32),
+                r,
+              );
+              function g(t, o, a, n) {
+                const s = new e.Mesh(new e.CylinderGeometry(t, o, a, 32), n);
+                s.position.y = -a / 2;
+                const r = new e.Group();
+                return (r.add(s), { pivot: r, mesh: s });
+              }
+              (y.scale.set(1, 1, 0.8), u.add(y), t.add(u));
+              const x = g(0.035, 0.025, 0.25, s);
+              (x.pivot.position.set(-0.15, 1.35, 0),
+                (x.pivot.rotation.z = 0.2));
+              const b = g(0.025, 0.02, 0.22, n);
+              (b.pivot.position.set(0, -0.25, 0),
+                (b.pivot.rotation.x = -0.1),
+                x.mesh.add(b.pivot),
+                t.add(x.pivot),
+                (t.userData.armL = x.pivot));
+              const S = g(0.035, 0.025, 0.25, s);
+              (S.pivot.position.set(0.15, 1.35, 0),
+                (S.pivot.rotation.z = -0.2));
+              const z = g(0.025, 0.02, 0.22, n);
+              (z.pivot.position.set(0, -0.25, 0),
+                (z.pivot.rotation.x = -0.1),
+                S.mesh.add(z.pivot),
+                t.add(S.pivot),
+                (t.userData.armR = S.pivot));
+              const P = g(0.06, 0.045, 0.45, n);
+              P.pivot.position.set(-0.06, 0.85, 0);
+              const v = g(0.04, 0.03, 0.4, n);
+              (v.pivot.position.set(0, -0.45, 0), P.mesh.add(v.pivot));
+              const G = new e.Mesh(new e.BoxGeometry(0.06, 0.05, 0.11), i);
+              (G.position.set(0, -0.4, 0.02),
+                v.mesh.add(G),
+                t.add(P.pivot),
+                (t.userData.legL = P.pivot));
+              const C = g(0.06, 0.045, 0.45, n);
+              C.pivot.position.set(0.06, 0.85, 0);
+              const B = g(0.04, 0.03, 0.4, n);
+              (B.pivot.position.set(0, -0.45, 0), C.mesh.add(B.pivot));
+              const k = new e.Mesh(new e.BoxGeometry(0.06, 0.05, 0.11), i);
+              return (
+                k.position.set(0, -0.4, 0.02),
+                B.mesh.add(k),
+                t.add(C.pivot),
+                (t.userData.legR = C.pivot),
+                t
+              );
+            })()),
+            "seat" === t
+              ? (Xo.position.set(23.7, 0, 25.72),
+                (Xo.rotation.y = 0.03),
+                v(Xo, 0, 1))
+              : "notes" === t &&
+                (Xo.position.set(23.7, 0, 25.72),
+                (Xo.rotation.y = -Math.PI / 2),
+                v(Xo, 0, 1)))
+          : "board" === t &&
+            ((Xo = createSilhouette({
+              phone: !0,
+              hairColor: "#11100f",
+              shirtColor: "#323846",
+              pantsColor: "#1d222a",
+              shoesColor: "#383634",
+              echo: !0,
+              echoOpacity: 0.8,
+              echoColor: "#88ccff",
+              scale: 1.05,
+            })),
+            Xo.position.set(-4.2, 0, 28.65),
+            (Xo.rotation.y = Math.PI / 2),
+            v(Xo, 0, 1)),
+        Xo && (W.add(Xo), (jo = o)));
+    },
+    worldBounds: {
+      minX: N + 0.26,
+      maxX: O - 0.22,
+      minZ: Y + 0.22,
+      maxZ: J - 0.22,
+    },
   };
 }

@@ -1,230 +1,601 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-TW">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#050608">
-<meta name="description" content="LM402 真 3D 沉浸式互動場景。跟著女兒沿著紅線飛進利瑪竇四樓，走過前門來電、後門等待與一眼瞬間。">
-<title>LM402 一眼瞬間 · 時間裡的兩個妳</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@300;400;500&family=Noto+Serif+TC:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/lm402/lm402.css">
-</head>
-<body class="lm402-page">
-  <div id="rotate-lock" class="rotate-lock" hidden>
-    <div class="rotate-card">
-      <div class="rotate-kicker">LM402 · Landscape Only</div>
-      <h1>請把手機橫過來</h1>
-      <p>這一關是用手遊邏輯設計的。橫屏後，左下搖桿負責移動，右下搖桿負責視角，底部字幕與現場聲音也會留在不遮畫面的安全位置。</p>
-      <p style="margin-top: 16px; font-size: 13px; color: rgba(255,255,255,0.6);">若您由社群軟體 (Threads, FB) 開啟，請點擊右上角「•••」並選擇<b>在 Safari / 原生瀏覽器中開啟</b>，以獲得完美橫向體驗。</p>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#050608" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <!-- Security headers such as CSP / X-Frame-Options should be sent by the host, not meta tags. -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <meta
+      name="description"
+      content="LM402 立體沉浸式互動場景。跟著女兒沿著紅線飛進利瑪竇四樓，走過前門來電、後門等待與一眼瞬間。"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="LM402 一眼瞬間 · 時間裡的兩個妳" />
+    <meta
+      property="og:description"
+      content="立體沉浸式互動場景。跟著女兒沿著紅線飛進利瑪竇四樓，走過前門來電、後門等待與一眼瞬間。"
+    />
+    <meta
+      property="og:image"
+      content="https://img.youtube.com/vi/eACPFC4K89o/maxresdefault.jpg"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="LM402 一眼瞬間 · 時間裡的兩個妳" />
+    <meta
+      name="twitter:description"
+      content="立體沉浸式互動場景。跟著女兒沿著紅線飛進利瑪竇四樓，走過前門來電、後門等待與一眼瞬間。"
+    />
+    <meta
+      name="twitter:image"
+      content="https://img.youtube.com/vi/eACPFC4K89o/maxresdefault.jpg"
+    />
+    <title>LM402 一眼瞬間 · 時間裡的兩個妳</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@300;400;500&family=Noto+Serif+TC:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/lm402/lm402.css" />
+  </head>
+  <body class="lm402-page">
+    <div id="rotate-lock" class="rotate-lock" hidden>
+      <div class="rotate-card">
+        <div class="rotate-kicker">LM402 · 請橫向使用</div>
+        <h1>請把手機橫過來</h1>
+        <p>
+          這個場景是用手遊邏輯設計的。橫屏後，左下搖桿負責移動，右下搖桿負責視角，字幕與控制元件都會留在不遮畫面的安全位置。
+        </p>
+        <p
+          style="
+            margin-top: 16px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+          "
+        >
+          若您由社群軟體 (Threads, FB) 開啟，請點擊右上角「•••」並選擇<b
+            >在 Safari / 原生瀏覽器中開啟</b
+          >，以獲得完美橫向體驗。
+        </p>
+      </div>
     </div>
-  </div>
 
-  <header id="hud" class="hud">
-    <button id="hud-toggle" class="hud-toggle" type="button" aria-expanded="false">
-      <span class="hud-toggle-label">展開任務</span>
-      <span class="hud-toggle-icon">+</span>
-    </button>
-    <div class="hud-body">
-      <div class="hud-brand">
-        <div class="hud-overline">LM402 · 真 3D 沉浸式場景</div>
-        <div class="hud-title">一眼瞬間</div>
-        <div class="hud-copy">玩家固定控制女兒。你會沿著紅線飛進利瑪竇四樓，先看見 LM401 到 LM404 的長走廊，再走過 LM402 的前門來電、後門等待，最後把那一秒真的看清楚。</div>
-      </div>
-      <div class="hud-meta">
-        <div class="hud-pill">2005年10月17日</div>
-        <div class="hud-pill">11:00 陽光</div>
-        <div class="hud-pill">利瑪竇大樓 LM402</div>
-      </div>
-      <div class="hud-links">
-        <a class="hud-link" href="index.html">返回首頁</a>
-        <button class="hud-link hud-link-button" id="perfect-ending-btn" type="button">女兒飛到一眼瞬間那一秒</button>
-        <a class="hud-link" id="back-story-btn" href="reader.html">飛回故事那一刻</a>
-      </div>
-    </div>
-  </header>
-
-  <main id="game-shell" class="game-shell">
-    <section id="stage" class="stage">
-      <canvas id="scene-canvas" aria-label="LM402 一眼瞬間互動場景" tabindex="0"></canvas>
-      <div class="stage-vignette" aria-hidden="true"></div>
-      <!-- Time-travel intro FX overlay -->
-      <div id="intro-fx" class="intro-fx intro-fx-active" aria-hidden="true"></div>
-      <div id="crosshair" class="crosshair" aria-hidden="true"></div>
-      <div id="pointer-pill" class="pointer-pill" aria-live="polite">右鍵進入視角鎖定</div>
-
-      <section id="speed-widget" class="speed-widget">
-        <button id="speed-toggle" class="speed-toggle" type="button" aria-expanded="false">
-          <span class="speed-toggle-label">視角速度</span>
-          <span id="speed-toggle-value" class="speed-toggle-value">標準 · 100%</span>
-        </button>
-        <div id="speed-panel" class="speed-panel" hidden>
-          <div class="speed-panel-kicker">Look Speed</div>
-          <div class="speed-presets" id="speed-presets">
-            <button class="speed-preset" type="button" data-speed-preset="slow">慢</button>
-            <button class="speed-preset active" type="button" data-speed-preset="standard">標準</button>
-            <button class="speed-preset" type="button" data-speed-preset="fast">快</button>
+    <header id="hud" class="hud">
+      <button
+        id="hud-toggle"
+        class="hud-toggle"
+        type="button"
+        aria-expanded="false"
+      >
+        <span class="hud-toggle-label">展開任務</span>
+        <span class="hud-toggle-icon">+</span>
+      </button>
+      <div class="hud-body">
+        <div class="hud-brand">
+          <div class="hud-overline">LM402 · 立體沉浸式場景</div>
+          <div class="hud-title">一眼瞬間</div>
+          <div class="hud-copy">
+            玩家固定控制女兒。你會沿著紅線飛進利瑪竇四樓，先看見 LM401 到 LM404
+            的長走廊，再走過 LM402
+            的前門來電、後門等待，最後把那一秒真的看清楚。
           </div>
-          <label class="speed-slider" for="speed-range">
-            <span class="speed-slider-label">精細微調</span>
-            <input id="speed-range" type="range" min="55" max="155" step="1" value="100">
-            <span id="speed-range-value" class="speed-range-value">100%</span>
-          </label>
         </div>
-      </section>
-
-      <section id="audio-widget" class="audio-widget">
-        <button id="audio-toggle" class="audio-toggle" type="button" aria-pressed="true">
-          <span class="audio-toggle-label">背景音樂</span>
-          <span id="audio-toggle-value" class="audio-toggle-value">開啟</span>
-        </button>
-      </section>
-
-      <div id="music-prompt" class="music-prompt" hidden>
-        <div class="music-prompt-kicker">飛進你們的心裡.mp3</div>
-        <div class="music-prompt-copy">瀏覽器先把音樂擋住了。點一下，讓這一層樓重新有聲音。</div>
-        <button id="music-prompt-button" class="music-prompt-button" type="button">開啟音樂</button>
-      </div>
-
-      <div id="objective-prompt" class="objective-prompt" aria-live="polite">
-        <div class="objective-kicker" id="objective-kicker">目前任務</div>
-        <div class="objective-title" id="objective-title">前門來電</div>
-        <div class="objective-copy" id="objective-copy">先靠近 LM402 前門外的走廊，把電話真的聽見。</div>
-      </div>
-
-      <div id="hint-pill" class="hint-pill" aria-live="polite"></div>
-
-      <div id="focus-prompt" class="focus-prompt" aria-live="polite"></div>
-
-      <div id="bottom-dock" class="bottom-dock">
-        <button id="ambience-chip" class="ambience-chip" type="button" aria-expanded="false" hidden>
-          <span class="dock-kicker">場景提示</span>
-          <span id="ambience-chip-copy" class="ambience-chip-copy">點一下展開</span>
-        </button>
-        <div id="ambience-box" class="dock-box ambience-box">
-          <div class="dock-kicker">場景提示</div>
-          <div id="ambience-text" class="dock-copy">粉筆味像一層薄雲，十一點的光正慢慢沿著百葉窗往教室裡推。</div>
+        <div class="hud-meta">
+          <!-- ✅ 已校對：日期與 EP11、EP29、EP38 原文一致 -->
+          <div class="hud-pill">2005年10月17日</div>
+          <!-- ✅ 已校對：EP38 原文「11:00｜鐘響、前門、電話、後門」一致 -->
+          <div class="hud-pill" id="hud-time-pill">10:40 陽光</div>
+          <div class="hud-pill">利瑪竇大樓 LM402</div>
         </div>
-        <div id="subtitle-box" class="dock-box subtitle-box subtitle-rail">
-          <div class="dock-kicker" id="subtitle-source">女兒</div>
-          <div id="subtitle-text" class="dock-copy">我可以飛翔，只要沿著那條紅線往前，LM402 就會在光裡慢慢長出來。</div>
+        <div class="hud-links">
+          <a class="hud-link" href="index.html">返回首頁</a>
+          <button
+            class="hud-link hud-link-button"
+            id="perfect-ending-btn"
+            type="button"
+          >
+            女兒飛到一眼瞬間那一秒
+          </button>
+          <a class="hud-link" id="back-story-btn" href="reader.html"
+            >讀完整個故事</a
+          >
         </div>
       </div>
+    </header>
 
-      <section id="transcript-dock" class="transcript-dock">
-        <button id="transcript-toggle" class="transcript-toggle" type="button" aria-expanded="false">
-          <span class="dock-kicker">文字視窗</span>
-          <span id="transcript-status" class="transcript-status">展開對話紀錄</span>
-        </button>
-        <div id="transcript-box" class="transcript-box" hidden>
-          <div class="transcript-head">
-            <div>
-              <div class="dock-kicker">一眼瞬間 · 對話紀錄</div>
-              <div class="transcript-copy">浮出字幕會完整顯示 5 秒，然後淡化；所有文字都會留在這裡。</div>
+    <main id="game-shell" class="game-shell">
+      <section id="stage" class="stage">
+        <canvas
+          id="scene-canvas"
+          aria-label="LM402 一眼瞬間互動場景"
+          tabindex="0"
+        ></canvas>
+        <div class="stage-vignette" aria-hidden="true"></div>
+        <!-- Time-travel intro FX overlay -->
+        <div id="intro-fx" class="intro-fx intro-fx-active" aria-hidden="true">
+          <div class="intro-fx-thread"></div>
+          <div class="intro-fx-runner"></div>
+          <div class="intro-fx-flare"></div>
+        </div>
+        <div id="crosshair" class="crosshair" aria-hidden="true"></div>
+        <div id="pointer-pill" class="pointer-pill" aria-live="polite">
+          右鍵進入視角鎖定
+        </div>
+
+        <section id="speed-widget" class="speed-widget">
+          <button
+            id="speed-toggle"
+            class="speed-toggle"
+            type="button"
+            aria-expanded="false"
+          >
+            <span class="speed-toggle-label">視角速度</span>
+            <span id="speed-toggle-value" class="speed-toggle-value"
+              >標準 · 100%</span
+            >
+          </button>
+          <div id="speed-panel" class="speed-panel" hidden>
+            <div class="speed-panel-kicker">視角速度</div>
+            <div class="speed-presets" id="speed-presets">
+              <button
+                class="speed-preset"
+                type="button"
+                data-speed-preset="slow"
+              >
+                慢
+              </button>
+              <button
+                class="speed-preset active"
+                type="button"
+                data-speed-preset="standard"
+              >
+                標準
+              </button>
+              <button
+                class="speed-preset"
+                type="button"
+                data-speed-preset="fast"
+              >
+                快
+              </button>
+            </div>
+            <label class="speed-slider" for="speed-range">
+              <span class="speed-slider-label">精細微調</span>
+              <input
+                id="speed-range"
+                type="range"
+                min="55"
+                max="155"
+                step="1"
+                value="100"
+              />
+              <span id="speed-range-value" class="speed-range-value">100%</span>
+            </label>
+          </div>
+        </section>
+
+        <section id="audio-widget" class="audio-widget">
+          <button
+            id="audio-toggle"
+            class="audio-toggle"
+            type="button"
+            aria-pressed="false"
+          >
+            <span class="audio-toggle-label">背景音樂</span>
+            <span id="audio-toggle-value" class="audio-toggle-value">關閉</span>
+          </button>
+        </section>
+
+        <div id="time-watch" class="time-watch" aria-live="polite">
+          <div class="time-watch-label">時空手錶</div>
+          <div class="time-watch-display" id="time-watch-display">10:40</div>
+        </div>
+
+        <section id="font-widget" class="font-widget">
+          <button id="font-toggle" class="font-toggle" type="button">
+            <span class="font-toggle-label">字體大小</span>
+            <span id="font-toggle-value" class="font-toggle-value">標準</span>
+          </button>
+        </section>
+
+        <div id="music-prompt" class="music-prompt" hidden>
+          <div class="music-prompt-kicker">音樂預設關閉</div>
+          <div class="music-prompt-copy">
+            LM402 開場預設是靜音。點一下「開啟音樂」，讓這一層樓開始有聲音。
+          </div>
+          <button
+            id="music-prompt-button"
+            class="music-prompt-button"
+            type="button"
+          >
+            開啟音樂
+          </button>
+        </div>
+
+        <div id="objective-prompt" class="objective-prompt" aria-live="polite">
+          <div class="objective-kicker" id="objective-kicker">目前任務</div>
+          <div class="objective-title" id="objective-title">前門來電</div>
+          <div class="objective-copy" id="objective-copy">
+            先靠近 LM402 前門外的走廊，把電話真正聽見。
+          </div>
+        </div>
+
+        <div id="hint-pill" class="hint-pill" aria-live="polite"></div>
+
+        <div id="focus-prompt" class="focus-prompt" aria-live="polite"></div>
+
+        <div id="bottom-dock" class="bottom-dock">
+          <button
+            id="ambience-chip"
+            class="ambience-chip"
+            type="button"
+            aria-expanded="false"
+            hidden
+          >
+            <span class="dock-kicker">場景提示</span>
+            <span id="ambience-chip-copy" class="ambience-chip-copy"
+              >點一下展開</span
+            >
+          </button>
+          <div id="ambience-box" class="dock-box ambience-box">
+            <div class="dock-kicker">場景提示</div>
+            <div id="ambience-text" class="dock-copy">
+              粉筆味像一層薄雲，十一點的光正慢慢沿著百葉窗往教室裡推。
             </div>
           </div>
-          <div id="transcript-list" class="transcript-list" aria-live="polite"></div>
-        </div>
-      </section>
-
-      <section id="debug-panel" class="debug-panel" hidden aria-live="polite">
-        <div class="debug-kicker">Debug</div>
-        <pre id="debug-text" class="debug-text"></pre>
-      </section>
-
-      <!-- Intro skip button -->
-      <button id="intro-skip-btn" class="intro-skip-btn" type="button" hidden>略過開場動畫 ↗</button>
-
-      <div id="mobile-controls" class="mobile-controls" aria-hidden="true">
-        <div class="control-cluster left">
-          <div class="joystick-shell">
-            <div class="joystick-label">移動</div>
-            <div class="joystick" id="move-stick">
-              <div class="joystick-ring"></div>
-              <div class="joystick-thumb"></div>
+          <div id="subtitle-box" class="dock-box subtitle-box subtitle-rail">
+            <div class="dock-kicker" id="subtitle-source">女兒</div>
+            <div id="subtitle-text" class="dock-copy">
+              我可以飛翔，只要沿著那條紅線往前，LM402 就會在光裡慢慢長出來。
             </div>
           </div>
         </div>
-        <div class="control-cluster right">
-          <div class="joystick-shell">
-            <div class="joystick-label">視角</div>
-            <div class="joystick" id="look-stick">
-              <div class="joystick-ring"></div>
-              <div class="joystick-thumb"></div>
+
+        <div
+          id="cinematic-subtitle-layer"
+          class="cinematic-subtitle-layer"
+          hidden
+          aria-live="polite"
+        >
+          <div class="cinematic-subtitle-card">
+            <div
+              id="cinematic-subtitle-source"
+              class="cinematic-subtitle-source"
+            >
+              學長
             </div>
-            <button class="action-glyph north" id="inspect-btn" type="button">看</button>
-            <button class="action-glyph west" id="center-btn" type="button">置</button>
-            <button class="action-glyph east" id="interact-btn" type="button">互</button>
-            <button class="action-glyph south" id="replay-btn" type="button">飛</button>
+            <div id="cinematic-subtitle-text" class="cinematic-subtitle-text">
+              也太像徐若瑄了吧！
+            </div>
           </div>
         </div>
+
+        <section id="transcript-dock" class="transcript-dock">
+          <div id="transcript-dock-bar" class="transcript-dock-bar" aria-hidden="true">
+            <span class="transcript-dock-grip"></span>
+            <span class="transcript-dock-hint">拖曳移動 · 拉角縮放</span>
+            <button
+              id="transcript-dock-reset"
+              class="transcript-dock-reset"
+              type="button"
+              aria-label="重設文字視窗"
+            >
+              ↺
+            </button>
+          </div>
+          <button
+            id="transcript-toggle"
+            class="transcript-toggle"
+            type="button"
+            aria-expanded="false"
+          >
+            <span class="dock-kicker">文字視窗</span>
+            <span id="transcript-status" class="transcript-status"
+              >展開對話紀錄</span
+            >
+          </button>
+          <div id="transcript-box" class="transcript-box" hidden>
+            <div class="transcript-head">
+              <div>
+                <div class="dock-kicker">一眼瞬間 · 對話紀錄</div>
+                <div class="transcript-copy">
+                  浮動字幕會完整顯示 5 秒，然後淡化；所有文字都會留在這裡。
+                </div>
+              </div>
+            </div>
+            <div
+              id="transcript-list"
+              class="transcript-list"
+              aria-live="polite"
+            ></div>
+          </div>
+          <div id="transcript-resize-handle" class="transcript-resize-handle" aria-hidden="true"></div>
+        </section>
+
+        <section id="debug-panel" class="debug-panel" hidden aria-live="polite">
+          <div class="debug-kicker">Debug</div>
+          <pre id="debug-text" class="debug-text"></pre>
+        </section>
+
+        <!-- Intro skip button -->
+        <button id="intro-skip-btn" class="intro-skip-btn" type="button" hidden>
+          略過開場動畫 ↗
+        </button>
+
+        <div id="mobile-controls" class="mobile-controls" aria-hidden="true">
+          <div class="control-cluster left">
+            <div class="joystick-shell">
+              <div class="joystick-label">移動</div>
+              <div class="joystick" id="move-stick">
+                <div class="joystick-ring"></div>
+                <div class="joystick-thumb"></div>
+              </div>
+            </div>
+          </div>
+          <div class="control-cluster right">
+            <div class="joystick-shell">
+              <div class="joystick-label">視角</div>
+              <div class="joystick" id="look-stick">
+                <div class="joystick-ring"></div>
+                <div class="joystick-thumb"></div>
+              </div>
+              <button class="action-glyph north" id="inspect-btn" type="button">
+                看
+              </button>
+              <button class="action-glyph west" id="center-btn" type="button">
+                置
+              </button>
+              <button class="action-glyph east" id="interact-btn" type="button">
+                互
+              </button>
+              <button class="action-glyph south" id="replay-btn" type="button">
+                飛
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside id="side-panel" class="side-panel">
+        <section class="panel-card">
+          <div class="panel-kicker">關卡進度</div>
+          <div class="panel-title">三幕任務</div>
+          <div id="phase-strip" class="phase-strip"></div>
+          <div id="panel-objective" class="panel-objective">
+            先靠近前門走廊，把第一句電話聽見。
+          </div>
+          <div class="panel-actions">
+            <button
+              class="ending-button primary panel-action"
+              id="perfect-ending-side-btn"
+              type="button"
+            >
+              女兒飛到一眼瞬間那一秒
+            </button>
+            <a class="ending-button panel-action" href="reader.html"
+              >讀完整個故事</a
+            >
+          </div>
+        </section>
+
+        <section class="panel-card">
+          <div class="panel-kicker">讀進來的片段</div>
+          <div id="memory-list" class="memory-list"></div>
+        </section>
+
+        <section class="panel-card">
+          <div class="panel-kicker">控制方式</div>
+          <div class="tip-list">
+            <div class="tip-row">
+              <span class="tip-key">WASD</span
+              ><span class="tip-copy"
+                >移動女兒（走路）。右鍵可切換視角鎖定；滑鼠或右搖桿控制視角方向。</span
+              >
+            </div>
+            <div class="tip-row">
+              <span class="tip-key">F</span
+              ><span class="tip-copy"
+                >互動。靠近前門、門牌、黑板、座位與後門時會打開動作或對話選項。</span
+              >
+            </div>
+            <div class="tip-row">
+              <span class="tip-key">R</span
+              ><span class="tip-copy"
+                >把視線帶回目標方向；手機右下角的「置」也是同一個功能。</span
+              >
+            </div>
+            <div class="tip-row">
+              <span class="tip-key">G</span
+              ><span class="tip-copy"
+                >重播女兒跟著紅線飛進 LM402 的開場動畫。</span
+              >
+            </div>
+            <div class="tip-row">
+              <span class="tip-key">速度</span
+              ><span class="tip-copy"
+                >右上角的「視角速度」可切換慢／標準／快，也能用滑桿微調，桌機和手機會共用同一組設定。</span
+              >
+            </div>
+          </div>
+        </section>
+
+        <section class="panel-card">
+          <div class="panel-kicker">結局狀態</div>
+          <div class="ending-legend">
+            <div class="ending-row">
+              <span class="ending-dot perfect"></span
+              ><span
+                >完美結局 ·
+                女兒飛到一眼瞬間那一秒（收齊全部記憶＋正確站位）</span
+              >
+            </div>
+            <div class="ending-row">
+              <span class="ending-dot canon"></span
+              ><span>正史結局 · 後門那一眼（正確站位，但未收齊記憶）</span>
+            </div>
+            <div class="ending-row">
+              <span class="ending-dot memory"></span
+              ><span
+                >記憶豐滿結局 ·
+                把光、風、門牌與紙邊都留下來（收齊記憶，但站位偏了）</span
+              >
+            </div>
+            <div class="ending-row">
+              <span class="ending-dot missed"></span
+              ><span>錯過結局 · 只聽見動靜，沒看清那一秒</span>
+            </div>
+          </div>
+        </section>
+        <section class="panel-card">
+          <div class="panel-kicker">結局紀錄</div>
+          <div
+            id="ending-tracker-side"
+            class="ending-tracker"
+            style="
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 6px;
+              margin-top: 8px;
+            "
+          ></div>
+          <div
+            id="ending-tracker-side-summary"
+            style="
+              font-size: 11px;
+              letter-spacing: 0.08em;
+              color: rgba(238, 232, 222, 0.4);
+              margin-top: 8px;
+            "
+          ></div>
+        </section>
+      </aside>
+    </main>
+
+    <section id="dialogue-sheet" class="dialogue-sheet" hidden>
+      <div class="dialogue-scrim" id="dialogue-scrim"></div>
+      <div
+        class="dialogue-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dialogue-title"
+      >
+        <button
+          id="dialogue-close"
+          class="dialogue-close"
+          type="button"
+          aria-label="關閉互動"
+        >
+          ×
+        </button>
+        <div class="dialogue-eyebrow" id="dialogue-eyebrow">LM402</div>
+        <div class="dialogue-title" id="dialogue-title">前門來電</div>
+        <div class="dialogue-copy" id="dialogue-copy"></div>
+        <div class="dialogue-choices" id="dialogue-choices"></div>
       </div>
     </section>
 
-    <aside id="side-panel" class="side-panel">
-      <section class="panel-card">
-        <div class="panel-kicker">關卡進度</div>
-        <div class="panel-title">三幕任務</div>
-        <div id="phase-strip" class="phase-strip"></div>
-        <div id="panel-objective" class="panel-objective">先靠近前門走廊，把第一句電話聽見。</div>
-        <div class="panel-actions">
-          <button class="ending-button primary panel-action" id="perfect-ending-side-btn" type="button">女兒飛到一眼瞬間那一秒</button>
-          <a class="ending-button panel-action" href="reader.html">飛回故事那一刻</a>
+    <section id="ending-overlay" class="ending-overlay" hidden>
+      <div id="ending-card" class="ending-card">
+        <div class="ending-kicker" id="ending-kicker">LM402 結局</div>
+        <div class="ending-title" id="ending-title">後門那一眼</div>
+        <div class="ending-copy" id="ending-copy"></div>
+        <div
+          class="ending-hook"
+          style="
+            margin: 20px 0 8px;
+            padding: 16px 20px;
+            border-left: 2px solid rgba(217, 179, 106, 0.4);
+            font-size: 13px;
+            line-height: 1.8;
+            color: rgba(238, 232, 222, 0.7);
+            font-family: &quot;Noto Serif TC&quot;, serif;
+          "
+        >
+          <div
+            style="
+              color: #d9b36a;
+              font-size: 11px;
+              letter-spacing: 0.12em;
+              margin-bottom: 8px;
+            "
+          >
+            你剛才體驗的，是故事裡的這一秒
+          </div>
+          那一眼之前，他們各自走了很遠的路才走到這裡。<br />
+          她為什麼會出現在後門？他為什麼會打那通電話？<br />
+          女兒又是怎麼飛進這一秒的？<br />
+          <div
+            style="
+              margin-top: 10px;
+              color: rgba(238, 232, 222, 0.5);
+              font-size: 12px;
+            "
+          >
+            EP38 意識菜市場 · EP11 她第一次出現 · EP0 一切的開始
+          </div>
         </div>
-      </section>
-
-      <section class="panel-card">
-        <div class="panel-kicker">讀進來的片段</div>
-        <div id="memory-list" class="memory-list"></div>
-      </section>
-
-      <section class="panel-card">
-        <div class="panel-kicker">控制方式</div>
-        <div class="tip-list">
-          <div class="tip-row"><span class="tip-key">WASD</span><span class="tip-copy">移動女兒的視角。右鍵可切換視角鎖定；滑鼠或右搖桿都可以左右上下看。</span></div>
-          <div class="tip-row"><span class="tip-key">F</span><span class="tip-copy">互動。靠近前門、門牌、黑板、座位與後門時會打開動作或對話選項。</span></div>
-          <div class="tip-row"><span class="tip-key">R</span><span class="tip-copy">把視線帶回目標方向；手機右下角的「置」也是同一個功能。</span></div>
-          <div class="tip-row"><span class="tip-key">G</span><span class="tip-copy">重播女兒跟著紅線飛進 LM402 的開場動畫。</span></div>
-          <div class="tip-row"><span class="tip-key">速度</span><span class="tip-copy">右上角的「視角速度」可切換慢／標準／快，也能用滑桿微調，桌機和手機會共用同一組設定。</span></div>
+        <div
+          id="ending-tracker"
+          class="ending-tracker"
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin: 14px 0 6px;
+          "
+        ></div>
+        <div
+          id="ending-tracker-summary"
+          style="
+            text-align: center;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            color: rgba(238, 232, 222, 0.45);
+            margin-bottom: 10px;
+          "
+        ></div>
+        <div class="ending-actions">
+          <button id="ending-retry" class="ending-button primary" type="button">
+            重走這一段
+          </button>
+          <button id="ending-perfect-btn" class="ending-button" type="button">
+            女兒飛到一眼瞬間那一秒
+          </button>
+          <a
+            class="ending-button"
+            href="reader.html"
+            style="
+              background: rgba(22, 168, 100, 0.12);
+              border-color: rgba(22, 168, 100, 0.4);
+              color: #73d0a5;
+            "
+            >從 EP0 開始讀這個故事</a
+          >
         </div>
-      </section>
-
-      <section class="panel-card">
-        <div class="panel-kicker">結局狀態</div>
-        <div class="ending-legend">
-          <div class="ending-row"><span class="ending-dot canon"></span><span>正史結局 · 後門那一眼</span></div>
-          <div class="ending-row"><span class="ending-dot memory"></span><span>記憶豐滿結局 · 把整個光與風都留下來</span></div>
-          <div class="ending-row"><span class="ending-dot missed"></span><span>錯過結局 · 只聽見動靜，沒看清那一秒</span></div>
-        </div>
-      </section>
-    </aside>
-  </main>
-
-  <section id="dialogue-sheet" class="dialogue-sheet" hidden>
-    <div class="dialogue-scrim" id="dialogue-scrim"></div>
-    <div class="dialogue-card" role="dialog" aria-modal="true" aria-labelledby="dialogue-title">
-      <button id="dialogue-close" class="dialogue-close" type="button" aria-label="關閉互動">×</button>
-      <div class="dialogue-eyebrow" id="dialogue-eyebrow">LM402</div>
-      <div class="dialogue-title" id="dialogue-title">前門來電</div>
-      <div class="dialogue-copy" id="dialogue-copy"></div>
-      <div class="dialogue-choices" id="dialogue-choices"></div>
-    </div>
-  </section>
-
-  <section id="ending-overlay" class="ending-overlay" hidden>
-    <div class="ending-card">
-      <div class="ending-kicker" id="ending-kicker">LM402 結局</div>
-      <div class="ending-title" id="ending-title">後門那一眼</div>
-      <div class="ending-copy" id="ending-copy"></div>
-      <div class="ending-actions">
-        <button id="ending-retry" class="ending-button primary" type="button">重走這一段</button>
-        <button id="ending-perfect-btn" class="ending-button" type="button">女兒飛到一眼瞬間那一秒</button>
-        <a class="ending-button" href="reader.html">飛回故事那一刻</a>
       </div>
-    </div>
-  </section>
+      <label
+        id="ending-scroll-control"
+        class="ending-scroll-control"
+        hidden
+        aria-label="手機版結局內容滑動控制"
+      >
+        <span>滑動看完整局</span>
+        <input
+          id="ending-scroll-range"
+          type="range"
+          min="0"
+          max="0"
+          value="0"
+          step="1"
+        />
+      </label>
+    </section>
 
-  <script type="module" src="assets/lm402/app.js"></script>
-</body>
+    <script type="module" src="assets/lm402/app.js"></script>
+  </body>
 </html>
