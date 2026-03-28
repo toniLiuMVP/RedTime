@@ -384,12 +384,28 @@ function createPerson(spec) {
   rightLeg.rotation.z = -0.02;
   group.add(leftLeg, rightLeg);
 
+  // Shorts: female shorts must be taller than the hip/butt cylinder (0.24)
+  // to properly cover beyond the butt — high-waisted denim shorts style
   const shorts = new THREE.Mesh(
-    new THREE.BoxGeometry(spec.female ? 0.32 : 0.38, spec.female ? 0.16 : 0.22, spec.female ? 0.25 : 0.27),
+    new THREE.BoxGeometry(spec.female ? 0.34 : 0.38, spec.female ? 0.30 : 0.22, spec.female ? 0.26 : 0.27),
     legsMat
   );
-  shorts.position.set(0, spec.female ? 0.66 : 0.63, 0.01);
+  shorts.position.set(0, spec.female ? 0.64 : 0.63, 0.01);
   group.add(shorts);
+
+  // Female denim waistband — visible in 2005 reference (high-waisted shorts)
+  if (spec.female) {
+    const waistbandMat = new THREE.MeshPhysicalMaterial({
+      color: "#1e3a56", roughness: 0.52, metalness: 0.04,
+      clearcoat: 0.08, clearcoatRoughness: 0.5
+    });
+    const waistband = new THREE.Mesh(
+      new THREE.BoxGeometry(0.35, 0.04, 0.27),
+      waistbandMat
+    );
+    waistband.position.set(0, 0.80, 0.01);
+    group.add(waistband);
+  }
 
   if (!spec.female) {
     const trouserLeft = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.66, 0.18), legsMat);
@@ -662,13 +678,25 @@ function createPerson(spec) {
     group.add(wispL, wispR);
 
     if (realisticJunior) {
-      const frontWispL = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.24, 0.018), hairMat);
-      frontWispL.position.set(-0.046, 1.512, 0.158);
-      frontWispL.rotation.z = -0.02;
+      // Enhanced side-swept bangs matching 2005 reference photo
+      const frontWispL = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.28, 0.02), hairMat);
+      frontWispL.position.set(-0.052, 1.502, 0.16);
+      frontWispL.rotation.z = -0.06;
       const frontWispR = frontWispL.clone();
-      frontWispR.position.x = 0.05;
-      frontWispR.rotation.z = 0.02;
+      frontWispR.position.x = 0.056;
+      frontWispR.rotation.z = 0.04;
       group.add(frontWispL, frontWispR);
+
+      // Additional fringe strands for natural side-swept look
+      const fringeCenter = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.12, 0.016), hairMat);
+      fringeCenter.position.set(0.01, 1.56, 0.172);
+      fringeCenter.rotation.z = 0.02;
+      group.add(fringeCenter);
+
+      const fringeLeft = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.2, 0.016), hairMat);
+      fringeLeft.position.set(-0.074, 1.52, 0.154);
+      fringeLeft.rotation.z = -0.1;
+      group.add(fringeLeft);
     }
 
     const midStrandL = new THREE.Mesh(new THREE.BoxGeometry(0.034, 0.34, 0.032), hairMat);
@@ -692,7 +720,8 @@ function createPerson(spec) {
       new THREE.MeshPhysicalMaterial({ color: "#fffdfa", roughness: 0.3, metalness: 0.01, clearcoat: 0.2, clearcoatRoughness: 0.24 })
     );
     blouse.position.set(0, 1.06, 0.02);
-    blouse.scale.set(referenceJunior ? 0.92 : 0.94, referenceJunior ? 1.05 : 0.92, 0.8);
+    // referenceJunior: slightly relaxed fit matching 2005 reference
+    blouse.scale.set(referenceJunior ? 0.96 : 0.94, referenceJunior ? 1.06 : 0.92, referenceJunior ? 0.84 : 0.8);
     group.add(blouse);
 
     const blouseHem = new THREE.Mesh(new THREE.TorusGeometry(0.146, 0.012, 8, 20), buttonMat);
@@ -2053,6 +2082,8 @@ export function createLm402Scene(canvas) {
     phone: true,
     scale: 1.08,
   });
+  // Junior height: 160cm (senior is 170cm at scale 1.08)
+  // Ratio: 1.08 × (160/170) ≈ 1.02
   const junior = createPerson({
     torso: "#fffdfa",
     torsoAccent: "#ffffff",
@@ -2064,7 +2095,7 @@ export function createLm402Scene(canvas) {
     female: true,
     highlight: true,
     referenceJunior: true,
-    scale: 1.09,
+    scale: 1.02,
   });
   const fatherEcho = createPerson({
     torso: "#f2c49e",
