@@ -565,6 +565,18 @@ function S(t) {
   ((z.position.x = t.female ? 0.085 : 0.092),
     (z.rotation.z = -0.02),
     o.add(S, z));
+  if (n) {
+    var collarMat = new e.MeshPhysicalMaterial({color:"#fcfcfa",roughness:0.34,metalness:0.01,clearcoat:0.2,clearcoatRoughness:0.2});
+    var collarL = new e.Mesh(new e.BoxGeometry(0.07,0.05,0.02), collarMat);
+    collarL.position.set(-0.04, 1.38, 0.12); collarL.rotation.set(-0.3, -0.15, -0.2);
+    var collarR = new e.Mesh(new e.BoxGeometry(0.07,0.05,0.02), collarMat);
+    collarR.position.set(0.04, 1.38, 0.12); collarR.rotation.set(-0.3, 0.15, 0.2);
+    o.add(collarL, collarR);
+    var cuffMat = new e.MeshPhysicalMaterial({color:"#faf8f5",roughness:0.38,metalness:0.01,clearcoat:0.14});
+    var cuffL = new e.Mesh(new e.TorusGeometry(0.032, 0.008, 6, 16), cuffMat);
+    cuffL.position.set(-0.085, -0.04, 0.01); cuffL.rotation.x = Math.PI/2; o.add(cuffL);
+    var cuffR = cuffL.clone(); cuffR.position.x = 0.085; o.add(cuffR);
+  }
   const P = new e.Mesh(
     new e.BoxGeometry(
       t.female ? 0.34 : 0.38,
@@ -575,16 +587,19 @@ function S(t) {
   );
   if ((P.position.set(0, t.female ? 0.78 : 0.63, 0.01), o.add(P),
     t.female && (function(){
-      var dm = new e.MeshPhysicalMaterial({color:"#3d6a9e",roughness:0.52,metalness:0.04,clearcoat:0.08,clearcoatRoughness:0.5});
-      var legL = new e.Mesh(new e.BoxGeometry(0.12, 0.62, 0.17), dm);
-      legL.position.set(-0.082, 0.44, 0.008); o.add(legL);
-      var legR = legL.clone(); legR.position.x = 0.082; o.add(legR);
-      var wb = new e.MeshPhysicalMaterial({color:"#1e3a56",roughness:0.52,metalness:0.04,clearcoat:0.08,clearcoatRoughness:0.5});
-      var wm = new e.Mesh(new e.BoxGeometry(0.35,0.04,0.27), wb);
+      var dm = new e.MeshPhysicalMaterial({color:"#4a7ab0",roughness:0.48,metalness:0.03,clearcoat:0.12,clearcoatRoughness:0.4,sheen:0.15,sheenRoughness:0.3,sheenColor:new e.Color("#6a9ad0")});
+      var legL = new e.Mesh(new e.CapsuleGeometry(0.054, 0.52, 6, 12), dm);
+      legL.position.set(-0.078, 0.42, 0.008); o.add(legL);
+      var legR = legL.clone(); legR.position.x = 0.078; o.add(legR);
+      var wb = new e.MeshPhysicalMaterial({color:"#1e3a56",roughness:0.46,metalness:0.04,clearcoat:0.14,clearcoatRoughness:0.3});
+      var wm = new e.Mesh(new e.BoxGeometry(0.35,0.05,0.27), wb);
       wm.position.set(0,0.80,0.01); o.add(wm);
-      var cuff = new e.Mesh(new e.BoxGeometry(0.13,0.03,0.18), wb);
-      cuff.position.set(-0.082,0.13,0.008); o.add(cuff);
-      var cuffR = cuff.clone(); cuffR.position.x = 0.082; o.add(cuffR);
+      var pocket = new e.Mesh(new e.BoxGeometry(0.05,0.04,0.002), new e.MeshStandardMaterial({color:"#3a6894",roughness:0.6}));
+      pocket.position.set(-0.06,0.72,0.14); o.add(pocket);
+      var pocketR = pocket.clone(); pocketR.position.x = 0.06; o.add(pocketR);
+      var cuff = new e.Mesh(new e.BoxGeometry(0.12,0.025,0.12), wb);
+      cuff.position.set(-0.078,0.155,0.008); o.add(cuff);
+      var cuffR = cuff.clone(); cuffR.position.x = 0.078; o.add(cuffR);
     })(),
     !t.female)) {
     const t = new e.Mesh(new e.BoxGeometry(0.13, 0.66, 0.18), i);
@@ -4473,7 +4488,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       female: !0,
       highlight: !0,
       referenceJunior: !0,
-      scale: 1.015,
+      scale: 1.06,
     }),
     Bo = S({
       torso: "#f2c49e",

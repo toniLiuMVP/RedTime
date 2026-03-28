@@ -159,6 +159,7 @@
         transform-origin: left;
         transform: scaleX(0);
         transition: transform 0.1s linear;
+        will-change: transform;
         pointer-events: none;
       }
 
@@ -7115,10 +7116,10 @@
         const { host, max } = getScrollMetrics();
         const clamped = Math.max(0, Math.min(max, y));
         if (host && host !== window) {
-          host.scrollTo(0, clamped);
+          host.scrollTo({ top: clamped, behavior: "instant" });
           return;
         }
-        window.scrollTo(0, clamped);
+        window.scrollTo({ top: clamped, behavior: "instant" });
       }
       function startAutoScroll() {
         autoActive = true;

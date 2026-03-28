@@ -2470,7 +2470,7 @@ body.landscape-prompt .debug-panel {
   align-items: center;
   justify-content: center;
   z-index: 3;
-  transition: all 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, opacity 0.15s;
 }
 .ui-maximize-btn:hover {
   background: rgba(115, 208, 165, 0.12);
@@ -2604,7 +2604,7 @@ body.landscape-prompt .debug-panel {
   align-items: center;
   justify-content: center;
   z-index: 3;
-  transition: all 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, opacity 0.15s;
 }
 .ui-max-btn:hover {
   background: rgba(115, 208, 165, 0.1);
