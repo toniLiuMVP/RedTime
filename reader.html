@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#06060a">
 <title>時間裡的兩個妳</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=Noto+Sans+TC:wght@300;400;500&family=DM+Mono:ital@0;1&family=Cormorant+Garamond:ital,wght@1,300;1,500;0,300&display=swap" rel="stylesheet">
 <style>
 /* ── Variables ─── */
@@ -23,7 +24,7 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;scroll-padding-top:var(--top-offset)}
-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;background:var(--bg);color:var(--t1);font-family:'Noto Serif TC',serif;font-size:var(--fs);line-height:var(--lh);font-weight:300;overflow-x:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;background:var(--bg);color:var(--t1);font-family:'Noto Serif TC',serif;font-size:var(--fs);line-height:var(--lh);font-weight:300;overflow-x:hidden}
 a,button,[role="button"],input{touch-action:manipulation}
 :focus-visible{outline:2px solid rgba(22,168,100,.78);outline-offset:3px}
 .ui-sprite{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
@@ -34,7 +35,7 @@ a,button,[role="button"],input{touch-action:manipulation}
 .nav-icon{width:16px;height:16px}
 
 /* ── Progress Bar ─── */
-#prog-bar{position:fixed;top:0;left:0;right:0;height:2.5px;z-index:1000;background:linear-gradient(90deg,var(--jade),var(--amber),var(--ember));transform-origin:left;transform:scaleX(0);transition:transform .1s linear;pointer-events:none}
+#prog-bar{position:fixed;top:0;left:0;right:0;height:2.5px;z-index:1000;background:linear-gradient(90deg,var(--jade),var(--amber),var(--ember));transform-origin:left;transform:scaleX(0);transition:transform .1s linear;pointer-events:none;will-change:transform;contain:layout style}
 
 /* ═══════ HERO ══════════════════════════════ */
 #hero{min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:72px 28px 88px;position:relative;overflow:hidden;background:radial-gradient(ellipse 120% 60% at 50% 18%,#091808 0%,transparent 58%),radial-gradient(ellipse 80% 80% at 82% 82%,#08060f 0%,transparent 52%),var(--bg)}
@@ -75,17 +76,21 @@ a,button,[role="button"],input{touch-action:manipulation}
 
 /* ═══════ DESKTOP LAYOUT ══════════════════ */
 @media(min-width:768px){
-  body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;overflow-x:hidden}
+  body{overflow:hidden;height:100vh}
   #topnav-mobile{display:none!important}
   #fab-bar{display:none!important}
-  #desktop-layout{display:flex;min-height:100vh}
+  #desktop-layout{display:flex;height:100vh}
   #sidebar{
     width:var(--sidebar);flex-shrink:0;
     position:sticky;top:0;height:100vh;overflow:hidden;
     border-right:1px solid var(--line);background:var(--bg2);
     display:flex;flex-direction:column;z-index:200
   }
-  #main-col{flex:1;min-width:0;display:flex;flex-direction:column}
+  #main-col{flex:1;min-width:0;display:flex;flex-direction:column;height:100vh;overflow-y:auto;scroll-behavior:smooth;scroll-padding-top:var(--top-offset);scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  #main-col::-webkit-scrollbar{width:8px}
+  #main-col::-webkit-scrollbar-track{background:transparent}
+  #main-col::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+  #main-col::-webkit-scrollbar-thumb:hover{background:var(--t3)}
   #desktop-topbar{
     position:sticky;top:0;z-index:300;
     background:rgba(6,6,10,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
@@ -110,7 +115,7 @@ a,button,[role="button"],input{touch-action:manipulation}
   .sb-logo{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:17px;color:var(--t1);margin-bottom:2px;letter-spacing:.06em}
   .sb-sub{font-family:'DM Mono',monospace;font-size:8.5px;color:var(--t3);letter-spacing:.2em;text-transform:uppercase}
   .sb-filter{display:flex;flex-wrap:wrap;gap:5px;padding:10px 14px;border-bottom:1px solid var(--line2);flex-shrink:0}
-  .sb-filter-btn{padding:3px 9px;border-radius:16px;border:1px solid var(--line);background:transparent;font-family:'Noto Sans TC',sans-serif;font-size:10px;color:var(--t3);cursor:pointer;transition:all .12s}
+  .sb-filter-btn{padding:3px 9px;border-radius:16px;border:1px solid var(--line);background:transparent;font-family:'Noto Sans TC',sans-serif;font-size:10px;color:var(--t3);cursor:pointer;transition:border-color .12s,color .12s}
   .sb-filter-btn:hover,.sb-filter-btn.active{border-color:var(--amber);color:var(--amber)}
   #sb-ep-list{flex:1;overflow-y:auto;padding:6px 8px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   #sb-ep-list::-webkit-scrollbar{width:4px}
@@ -207,7 +212,7 @@ a,button,[role="button"],input{touch-action:manipulation}
 .jp-close{width:28px;height:28px;border-radius:50%;background:var(--bg3);border:1px solid var(--line);color:var(--t2);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
 .jp-filter{padding:0 16px 10px;flex-shrink:0;display:flex;gap:7px;overflow-x:auto;scrollbar-width:none}
 .jp-filter::-webkit-scrollbar{display:none}
-.jp-filter-btn{flex-shrink:0;padding:5px 12px;border-radius:20px;border:1px solid var(--line);background:transparent;font-family:'Noto Sans TC',sans-serif;font-size:11px;color:var(--t3);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .12s}
+.jp-filter-btn{flex-shrink:0;padding:5px 12px;border-radius:20px;border:1px solid var(--line);background:transparent;font-family:'Noto Sans TC',sans-serif;font-size:11px;color:var(--t3);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .12s,color .12s,background .12s}
 .jp-filter-btn.active{border-color:var(--amber);color:var(--amber)}
 .jp-filter-btn[data-arc="father"].active{border-color:var(--jade);color:var(--jade)}
 .jp-filter-btn[data-arc="male"].active{border-color:var(--silver);color:var(--silver)}
@@ -384,7 +389,7 @@ a,button,[role="button"],input{touch-action:manipulation}
 
 /* ═══════ EPISODE SECTIONS ════════════════ */
 #main{padding-bottom:var(--page-bottom-space)}
-.episode{padding:clamp(40px,6.5vw,52px) clamp(18px,5vw,48px) clamp(42px,7vw,50px);border-bottom:1px solid var(--line2);position:relative;opacity:1;transform:none;scroll-margin-top:var(--top-offset)}
+.episode{padding:clamp(40px,6.5vw,52px) clamp(18px,5vw,48px) clamp(42px,7vw,50px);border-bottom:1px solid var(--line2);position:relative;opacity:1;transform:none;scroll-margin-top:var(--top-offset);content-visibility:auto;contain-intrinsic-size:auto 800px}
 .episode.visible{opacity:1;transform:none}
 .episode::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;opacity:0;transition:opacity .5s ease}
 .episode.visible::before{opacity:1}
@@ -421,13 +426,13 @@ a,button,[role="button"],input{touch-action:manipulation}
 .ep-tline-wrap{margin-bottom:12px}
 .ep-tline-toggle{font-family:'Noto Sans TC',sans-serif;font-size:11.5px;color:var(--t2);cursor:pointer;letter-spacing:.06em;padding:3px 0;-webkit-tap-highlight-color:transparent;user-select:none}
 .ep-tline-toggle:active{color:var(--t2)}
-.ep-tline-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;padding:6px 10px 4px;border-left:2px solid var(--line2)}
+.ep-tline-body{padding:6px 10px 4px;border-left:2px solid var(--line2)}
 .ep-tline-body.ep-tline-hidden{display:none}
 .ep-tline-text{font-family:'DM Mono',monospace;font-size:11px;color:var(--t2);letter-spacing:.06em}
 .eih-count{font-family:'DM Mono',monospace;font-size:10px;color:var(--t2)}
 .eih-arrow{font-size:11px;color:var(--t3);transition:transform .2s;margin-left:4px}
 .ep-info-head.open .eih-arrow{transform:rotate(180deg)}
-.ep-info-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;display:none;border-top:1px solid var(--line2)}
+.ep-info-body{display:none;border-top:1px solid var(--line2)}
 .ep-info-body.open{display:block}
 .tl-inline{padding:12px 10px 8px;overflow-x:auto;scrollbar-width:none}
 .tl-inline::-webkit-scrollbar{display:none}
@@ -449,10 +454,10 @@ a,button,[role="button"],input{touch-action:manipulation}
 /* Note */
 .ep-note{margin-bottom:14px;padding:11px 13px;border-left:2px solid var(--line);background:rgba(255,255,255,.015);border-radius:0 4px 4px 0}
 .ep-note-toggle{font-family:'Noto Sans TC',sans-serif;font-size:13.2px;color:rgba(234,230,222,.78);cursor:pointer;letter-spacing:.05em;-webkit-tap-highlight-color:transparent;user-select:none;font-weight:400}
-.ep-note-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;font-family:'Noto Sans TC',sans-serif;font-size:12.8px;color:rgba(234,230,222,.8);line-height:1.84;margin-top:8px}
+.ep-note-body{font-family:'Noto Sans TC',sans-serif;font-size:12.8px;color:rgba(234,230,222,.8);line-height:1.84;margin-top:8px}
 .ep-note-body.hidden{display:none}
 /* Story text */
-.ep-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;max-width:var(--measure);padding-top:2px;text-wrap:pretty;word-break:break-word}
+.ep-body{max-width:var(--measure);padding-top:2px;text-wrap:pretty;word-break:break-word;contain:content}
 .ep-body p.spacer{height:.92em;margin:0;padding:0;line-height:1}
 .ep-body p{margin:0;color:var(--t1);-webkit-text-fill-color:var(--t1);line-height:1.95;letter-spacing:.012em}
 .ep-body p:not(.spacer)+p:not(.spacer){margin-top:.16em}
@@ -536,7 +541,7 @@ body[data-width="wide"]{--measure:38em}
 #toast.show{opacity:1;pointer-events:auto;transform:none}
 #toast-glyph{width:26px;height:26px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 #toast-glyph .ui-glyph{width:100%;height:100%}
-#toast-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;flex:1;min-width:0}
+#toast-body{flex:1;min-width:0}
 .toast-label{font-family:'DM Mono',monospace;font-size:8.5px;color:var(--amber);letter-spacing:.28em;text-transform:uppercase;margin-bottom:3px}
 #toast-title{font-size:13.5px;color:var(--t1);line-height:1.4;font-weight:400}
 #toast-sub{font-size:11.5px;color:var(--t2);margin-top:2px}
@@ -605,7 +610,7 @@ body[data-width="wide"]{--measure:38em}
 .hnote-head{display:flex;gap:9px;align-items:center;margin-bottom:5px}
 .hnote-icon{font-size:15px;flex-shrink:0}
 .hnote-title{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--amber);letter-spacing:.08em;font-weight:400}
-.hnote-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;font-family:'Noto Sans TC',sans-serif;font-size:12.5px;color:var(--t2);line-height:1.9;font-weight:400}
+.hnote-body{font-family:'Noto Sans TC',sans-serif;font-size:12.5px;color:var(--t2);line-height:1.9;font-weight:400}
 
 /* ═══════ DAY MODE ═════════════════════════ */
 body.day-mode{
@@ -627,7 +632,7 @@ body.day-mode #hero-canvas{opacity:.3}
 .eg-label{font-family:'Noto Sans TC',sans-serif;font-size:12px;color:var(--f6);flex:1;letter-spacing:.06em;font-weight:400}
 .eg-arrow{font-size:10px;color:rgba(144,64,240,.5);transition:transform .2s}
 .ep-granny-toggle.open .eg-arrow{transform:rotate(180deg)}
-.ep-granny-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;display:none;padding:14px 16px 16px;border-top:1px solid rgba(144,64,240,.15)}
+.ep-granny-body{display:none;padding:14px 16px 16px;border-top:1px solid rgba(144,64,240,.15)}
 .ep-granny-body.open{display:block}
 .eg-kicker{font-family:'DM Mono',monospace;font-size:8.1px;color:rgba(200,176,255,.72);letter-spacing:.16em;text-transform:uppercase;margin-bottom:6px}
 .eg-title{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--t1);margin-bottom:8px;font-weight:300;line-height:1.4}
@@ -1041,24 +1046,9 @@ input[type=range].ap-slider::-moz-range-thumb{width:14px;height:14px;border-radi
 <section id="hero">
   <canvas id="hero-canvas"></canvas>
   <div class="hero-inner">
-    <div class="hero-label">EP0 — EP40 · 全集閱讀版</div>
     <div class="hero-sub-en">The Two Yous in Time</div>
     <h1 class="hero-title">時間裡的<br>兩個妳</h1>
-    <p class="hero-tagline">把拔與女兒的故事<br>學長與學妹的故事</p>
     <div class="hero-divider"></div>
-    <div class="hero-stats">
-      <div class="hero-stat"><span class="stat-n">41</span><span class="stat-l">集</span></div>
-      <div class="hero-stat"><span class="stat-n">3</span><span class="stat-l">線</span></div>
-      <div class="hero-stat"><span class="stat-n">20</span><span class="stat-l">年</span></div>
-      <div class="hero-stat"><span class="stat-n">5</span><span class="stat-l">彩蛋</span></div>
-    </div>
-    <div class="hero-arcs">
-      <div class="arc-pill"><div class="a-dot" style="background:var(--jade)"></div>把拔視角</div>
-      <div class="arc-pill"><div class="a-dot" style="background:var(--silver)"></div>學長視角</div>
-      <div class="arc-pill"><div class="a-dot rainbow"></div>學妹視角</div>
-      <div class="arc-pill"><div class="a-dot" style="background:var(--amber)"></div>女兒視角</div>
-      <div class="arc-pill"><div class="a-dot" style="background:var(--ember)"></div>複合視角</div>
-    </div>
     <button class="hero-cta" onclick="goToEp(0)">↓ &nbsp; 開始閱讀</button>
     <a class="hero-scene-link" href="lm402.html">↗ &nbsp; LM402 一眼瞬間</a>
     <button class="hero-resume" id="resume-card" onclick="resumeReading()" aria-label="繼續上次閱讀進度">
@@ -1213,8 +1203,8 @@ input[type=range].ap-slider::-moz-range-thumb{width:14px;height:14px;border-radi
   </div>
   <div class="fab-nav-row">
     <button class="fab-nav-btn" id="fab-prev" onclick="navEp(-1)">上一集</button>
-    <button class="fab-nav-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">最上面</button>
-    <button class="fab-nav-btn" onclick="window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'})">最下面</button>
+    <button class="fab-nav-btn" onclick="smoothScrollTo(0)">最上面</button>
+    <button class="fab-nav-btn" onclick="smoothScrollTo(getScrollContainer()?getScrollContainer().scrollHeight:document.documentElement.scrollHeight)">最下面</button>
     <button class="fab-nav-btn" id="fab-next" onclick="navEp(1)">下一集</button>
   </div>
 </div>
@@ -1353,6 +1343,38 @@ EGGS.forEach(egg=>{
 // ── Device detection ──
 function isMobile(){return window.innerWidth<768}
 
+// ── Desktop scroll container ──
+// On desktop, #main-col is the scroll container (own scrollbar);
+// on mobile, window remains the scroll container.
+function getScrollContainer(){
+  if(isMobile()) return null;
+  return document.getElementById('main-col');
+}
+function getScrollY(){
+  const sc=getScrollContainer();
+  if(sc) return sc.scrollTop;
+  return window.scrollY||window.pageYOffset||document.documentElement.scrollTop||document.body.scrollTop||0;
+}
+function setScrollY(y){
+  const sc=getScrollContainer();
+  if(sc){sc.style.scrollBehavior='auto';sc.scrollTop=y;sc.style.scrollBehavior='';return;}
+  window.scrollTo(0,y);
+}
+function smoothScrollTo(y){
+  const sc=getScrollContainer();
+  if(sc){sc.scrollTo({top:y,behavior:'smooth'});return;}
+  window.scrollTo({top:y,behavior:'smooth'});
+}
+// Move hero and footer into scroll container on desktop
+(function setupDesktopScroll(){
+  if(isMobile()) return;
+  const mainCol=document.getElementById('main-col');
+  const hero=document.getElementById('hero');
+  const footer=document.getElementById('site-footer');
+  if(mainCol&&hero) mainCol.insertBefore(hero,mainCol.firstChild);
+  if(mainCol&&footer) mainCol.appendChild(footer);
+})();
+
 // ── Sidebar (desktop) ──
 function buildSidebar(arc){
   const list=document.getElementById('sb-ep-list');list.innerHTML='';
@@ -1484,27 +1506,45 @@ const obs=new IntersectionObserver(entries=>{
       buildTimelinePanel(maxEpReached);buildTraversePanel(maxEpReached);
     }
   });
-},{threshold:.06,rootMargin:'0px 0px -25% 0px'});
+},{threshold:.06,rootMargin:'0px 0px -25% 0px',root:getScrollContainer()||null});
 document.querySelectorAll('.episode').forEach(el=>obs.observe(el));
 buildTimelinePanel(0);buildTraversePanel(0);
 syncMobileNav();
 
-window.addEventListener('scroll',()=>{const d=document.documentElement;document.getElementById('prog-bar').style.transform='scaleX('+(d.scrollTop/(d.scrollHeight-d.clientHeight)||0)+')';},{passive:true});
+(function initProgressBar(){
+  const sc=getScrollContainer();
+  const target=sc||window;
+  const bar=document.getElementById('prog-bar');
+  let progTick=false;
+  target.addEventListener('scroll',()=>{
+    if(progTick)return;progTick=true;
+    requestAnimationFrame(()=>{
+      progTick=false;
+      if(sc){bar.style.transform='scaleX('+(sc.scrollTop/(sc.scrollHeight-sc.clientHeight)||0)+')';}
+      else{const d=document.documentElement;bar.style.transform='scaleX('+(d.scrollTop/(d.scrollHeight-d.clientHeight)||0)+')';}
+    });
+  },{passive:true});
+})();
 
+const _mobileHero=document.getElementById('hero');
+const _mobileTopnav=document.getElementById('topnav-mobile');
+const _mobileMQ=window.matchMedia('(max-width:767px)');
+let _mobileTick=false;
 function syncMobileChrome(){
-  if(!window.matchMedia('(max-width:767px)').matches){
+  if(!_mobileMQ.matches){
     document.body.classList.remove('at-hero');
     return;
   }
-  const hero=document.getElementById('hero');
-  const topnav=document.getElementById('topnav-mobile');
-  if(!hero)return;
-  const heroBottom=hero.getBoundingClientRect().bottom;
+  if(!_mobileHero)return;
+  const heroBottom=_mobileHero.getBoundingClientRect().bottom;
   const atHero=heroBottom>Math.max(120,window.innerHeight*.62);
   document.body.classList.toggle('at-hero',atHero);
-  if(atHero&&topnav)topnav.classList.remove('visible');
+  if(atHero&&_mobileTopnav)_mobileTopnav.classList.remove('visible');
 }
-window.addEventListener('scroll',syncMobileChrome,{passive:true});
+window.addEventListener('scroll',()=>{
+  if(_mobileTick)return;_mobileTick=true;
+  requestAnimationFrame(()=>{_mobileTick=false;syncMobileChrome();});
+},{passive:true});
 window.addEventListener('resize',syncMobileChrome);
 syncMobileChrome();
 
@@ -1521,8 +1561,10 @@ function goToEp(n){const el=document.getElementById('ep-'+n);if(!el)return;
   // Ensure all episodes up to n are visible (opacity:0 guard)
   EPISODES.forEach(ep=>{if(ep.ep<=n){const s=document.getElementById('ep-'+ep.ep);if(s)s.classList.add('visible');}});
   const topOffset=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--top-offset'),10)||84;
-  const y=el.getBoundingClientRect().top+window.scrollY-topOffset+8;
-  window.scrollTo({top:y,behavior:'smooth'});}
+  const sc=getScrollContainer();
+  const rect=el.getBoundingClientRect();
+  const y=sc?(rect.top-sc.getBoundingClientRect().top+sc.scrollTop-topOffset+8):(rect.top+window.scrollY-topOffset+8);
+  smoothScrollTo(y);}
 function toggleEpInfo(h){
   h.classList.toggle('open');h.nextElementSibling.classList.toggle('open');
   const c=h.querySelector('.eih-lbl-c');const o=h.querySelector('.eih-lbl-o');
@@ -1774,14 +1816,7 @@ function playAutoMode(){
   else{startAutoScroll();}
 }
 
-function getScrollY(){
-  // Universal scroll position read - works on all browsers including iOS Safari
-  return window.scrollY||window.pageYOffset||document.documentElement.scrollTop||document.body.scrollTop||0;
-}
-function setScrollY(y){
-  // Universal scroll - window.scrollTo is the only method that reliably works on iOS Safari
-  window.scrollTo(0,y);
-}
+// getScrollY and setScrollY are now defined in the desktop scroll container section above
 function startAutoScroll(){
   autoActive=true;
   updateAutoPlayBtn();
@@ -1794,7 +1829,8 @@ function startAutoScroll(){
       setScrollY(pos);
     }
     last=ts;
-    const maxScroll=document.documentElement.scrollHeight-window.innerHeight;
+    const sc=getScrollContainer();
+    const maxScroll=sc?(sc.scrollHeight-sc.clientHeight):(document.documentElement.scrollHeight-window.innerHeight);
     if(getScrollY()>=maxScroll-8||pos>=maxScroll){
       stopAutoScroll();return;
     }
@@ -1846,8 +1882,8 @@ function navEp(dir){
 <!-- Navigation cluster (right-side fixed) -->
 <div id="jump-tb">
   <button class="tb-btn tb-ep-btn" id="tb-prev" onclick="navEp(-1)" title="上一集">‹</button>
-  <button class="tb-btn" id="tb-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到頂端">↑</button>
-  <button class="tb-btn" id="tb-bottom" onclick="window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'})" title="前往底部">↓</button>
+  <button class="tb-btn" id="tb-top" onclick="smoothScrollTo(0)" title="回到頂端">↑</button>
+  <button class="tb-btn" id="tb-bottom" onclick="smoothScrollTo(getScrollContainer()?getScrollContainer().scrollHeight:document.documentElement.scrollHeight)" title="前往底部">↓</button>
   <button class="tb-btn tb-ep-btn" id="tb-next" onclick="navEp(1)" title="下一集">›</button>
 </div>
 </body>

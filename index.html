@@ -7,6 +7,7 @@
 <meta name="description" content="時間裡的兩個妳——把拔與女兒、學長與學妹的故事。toni 連載故事，EP0–EP40 全集免費閱讀。">
 <title>時間裡的兩個妳 · toni</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@200;300;400&family=Noto+Sans+TC:wght@300;400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,200;1,300;1,400&family=DM+Mono:ital@0;1&display=swap" rel="stylesheet">
 <style>
 /* ─── Reset & Root ─── */
@@ -20,7 +21,7 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;scroll-padding-top:82px}
-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;background:var(--ink);color:var(--parchment);font-family:'Noto Serif TC',serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;cursor:default}
+body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;background:var(--ink);color:var(--parchment);font-family:'Noto Serif TC',serif;overflow-x:hidden;cursor:default}
 a,button,[role="button"]{touch-action:manipulation}
 :focus-visible{outline:2px solid rgba(22,168,100,.78);outline-offset:3px}
 .ui-sprite{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
@@ -68,11 +69,11 @@ body::before{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
 .hero-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;opacity:0;animation:fadeUp .9s 1.2s forwards}
 .btn-primary{padding:16px 36px;background:rgba(22,168,100,.13);border:1px solid rgba(22,168,100,.58);color:#7ce5b2;
   font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.27em;text-transform:uppercase;
-  border-radius:3px;cursor:pointer;text-decoration:none;transition:all .22s;display:inline-flex;align-items:center;gap:10px}
+  border-radius:3px;cursor:pointer;text-decoration:none;transition:background .22s,border-color .22s,color .22s,box-shadow .22s;display:inline-flex;align-items:center;gap:10px}
 .btn-primary:hover{background:rgba(22,168,100,.24);border-color:rgba(22,168,100,.86);box-shadow:0 0 28px rgba(22,168,100,.14)}
 .btn-ghost{padding:16px 36px;background:rgba(255,255,255,.015);border:1px solid rgba(234,230,222,.24);color:rgba(234,230,222,.86);
   font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.27em;text-transform:uppercase;
-  border-radius:3px;cursor:pointer;text-decoration:none;transition:all .22s;display:inline-flex;align-items:center;gap:10px}
+  border-radius:3px;cursor:pointer;text-decoration:none;transition:background .22s,border-color .22s,color .22s,box-shadow .22s;display:inline-flex;align-items:center;gap:10px}
 .btn-ghost:hover{border-color:rgba(234,230,222,.48);background:rgba(255,255,255,.04);color:var(--parchment)}
 .hero-scroll{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);
   font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.35em;text-transform:uppercase;color:var(--mist);
@@ -94,7 +95,7 @@ section{padding:clamp(72px,12vw,140px) var(--gutter);position:relative}
 
 .about-quote{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(18px,3vw,26px);font-weight:300;line-height:1.7;color:rgba(234,230,222,.8);margin-bottom:16px;letter-spacing:.04em}
 .about-quote-src{font-family:'DM Mono',monospace;font-size:9px;color:var(--mist);letter-spacing:.2em}
-.about-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;font-size:15.5px;font-weight:300;line-height:2.04;color:rgba(234,230,222,.74);letter-spacing:.028em;max-width:33em;text-wrap:pretty}
+.about-body{font-size:15.5px;font-weight:300;line-height:2.04;color:rgba(234,230,222,.74);letter-spacing:.028em;max-width:33em;text-wrap:pretty}
 .about-body p+p{margin-top:1.12em}
 .about-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;border:1px solid var(--seam);border-radius:8px;overflow:hidden;margin-top:40px;background:var(--seam)}
 .stat-box{background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.008));padding:24px 20px;text-align:center}
@@ -182,7 +183,7 @@ section{padding:clamp(72px,12vw,140px) var(--gutter);position:relative}
 /* ─── READ SECTION ─── */
 #read{text-align:center;background:radial-gradient(ellipse 100% 80% at 50% 50%,rgba(8,28,14,.9) 0%,var(--ink) 70%)}
 .read-inner{max-width:600px;margin:0 auto}
-.read-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;font-size:15.6px;font-weight:300;line-height:2.02;color:rgba(234,230,222,.76);letter-spacing:.026em;margin:24px auto 38px;max-width:32em;text-wrap:pretty}
+.read-body{font-size:15.6px;font-weight:300;line-height:2.02;color:rgba(234,230,222,.76);letter-spacing:.026em;margin:24px auto 38px;max-width:32em;text-wrap:pretty}
 .read-epbadges{display:flex;flex-wrap:wrap;justify-content:center;gap:9px 8px;margin-bottom:42px}
 .ep-badge{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.13em;padding:5px 12px;border:1px solid rgba(255,255,255,.09);border-radius:20px;color:rgba(234,230,222,.56);background:rgba(255,255,255,.018)}
 .ep-badge.active{border-color:rgba(22,168,100,.4);color:var(--jade);background:rgba(22,168,100,.06)}
@@ -195,7 +196,7 @@ section{padding:clamp(72px,12vw,140px) var(--gutter);position:relative}
 @media(max-width:768px){.comm-header{grid-template-columns:1fr}}
 .comm-intro{font-size:14.8px;font-weight:300;line-height:1.92;color:rgba(234,230,222,.7);letter-spacing:.028em;max-width:34em;text-wrap:pretty}
 .platform-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
-.platform-card{display:flex;align-items:center;gap:18px;padding:22px 22px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,.024),rgba(255,255,255,.012));text-decoration:none;transition:all .2s;-webkit-tap-highlight-color:transparent}
+.platform-card{display:flex;align-items:center;gap:18px;padding:22px 22px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,.024),rgba(255,255,255,.012));text-decoration:none;transition:border-color .2s,background .2s,transform .2s;-webkit-tap-highlight-color:transparent}
 .platform-card:hover{border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.05);transform:translateY(-2px)}
 .plat-icon{
   width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;
@@ -244,7 +245,7 @@ footer{padding:60px var(--gutter) 40px;border-top:1px solid var(--seam2);backgro
   .btn-primary,.btn-ghost{width:100%;justify-content:center;padding:15px 20px;font-size:10px;letter-spacing:.22em}
   .hero-scroll{bottom:24px}
   .about-body,.arcs-intro,.tl-intro,.read-body,.comm-intro{max-width:100%}
-  .read-body{-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;font-size:15.1px;line-height:1.96;margin-bottom:32px}
+  .read-body{font-size:15.1px;line-height:1.96;margin-bottom:32px}
   .read-epbadges{gap:7px 6px;margin-bottom:34px}
   .about-stats{margin-top:30px}
   .stat-box{padding:20px 16px}
@@ -501,28 +502,14 @@ footer{padding:60px var(--gutter) 40px;border-top:1px solid var(--seam2);backgro
 <section id="read">
   <div class="read-inner">
     <div class="reveal">
-      <div class="section-label" style="justify-content:center;display:flex">全集免費閱讀</div>
       <h2 class="section-title" style="margin-bottom:0">從 EP0<br>開始讀起</h2>
     </div>
-    <p class="read-body reveal">閱讀器為手機與電腦雙平台設計，支援日間／夜間模式、字體大小調整、章節跳轉，以及逐集解鎖的隱藏彩蛋。</p>
-    <div class="read-epbadges reveal">
-      <span class="ep-badge active">EP0 把拔</span>
-      <span class="ep-badge">EP11 學妹初現</span>
-      <span class="ep-badge">EP21 女兒飛行</span>
-      <span class="ep-badge">EP30 1997年夜</span>
-      <span class="ep-badge">EP38 意識菜市場</span>
-      <span class="ep-badge">EP40 相信</span>
-    </div>
-    <div class="reveal">
+    <div class="reveal" style="margin-top:38px">
       <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:12px">
         <a class="btn-primary" href="reader.html" style="font-size:12px;padding:18px 44px;display:inline-flex">
           ↓ &nbsp; 進入全集閱讀器
         </a>
-        <a class="btn-ghost" href="lm402.html" style="font-size:12px;padding:18px 30px;display:inline-flex">
-          ↗ &nbsp; 進入 LM402 互動場景
-        </a>
       </div>
-      <div class="read-note" style="margin-top:20px">EP0–EP40 · 全集 · 免費 · 無需登入</div>
     </div>
   </div>
 </section>
