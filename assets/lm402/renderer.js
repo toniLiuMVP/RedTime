@@ -580,7 +580,7 @@ function S(t) {
   const P = new e.Mesh(
     new e.BoxGeometry(
       t.female ? 0.34 : 0.38,
-      t.female ? 0.06 : 0.22,
+      t.female ? 0.12 : 0.22,
       t.female ? 0.26 : 0.27,
     ),
     i,
@@ -588,18 +588,20 @@ function S(t) {
   if ((P.position.set(0, t.female ? 0.78 : 0.63, 0.01), o.add(P),
     t.female && (function(){
       var dm = new e.MeshPhysicalMaterial({color:"#4a7ab0",roughness:0.48,metalness:0.03,clearcoat:0.12,clearcoatRoughness:0.4,sheen:0.15,sheenRoughness:0.3,sheenColor:new e.Color("#6a9ad0")});
-      var legL = new e.Mesh(new e.CapsuleGeometry(0.054, 0.52, 6, 12), dm);
-      legL.position.set(-0.078, 0.42, 0.008); o.add(legL);
-      var legR = legL.clone(); legR.position.x = 0.078; o.add(legR);
+      var legL = new e.Mesh(new e.CapsuleGeometry(0.07, 0.58, 6, 12), dm);
+      legL.position.set(-0.085, 0.44, 0.008); o.add(legL);
+      var legR = legL.clone(); legR.position.x = 0.085; o.add(legR);
+      var hipCover = new e.Mesh(new e.BoxGeometry(0.34, 0.14, 0.26), dm);
+      hipCover.position.set(0, 0.74, 0.01); o.add(hipCover);
       var wb = new e.MeshPhysicalMaterial({color:"#1e3a56",roughness:0.46,metalness:0.04,clearcoat:0.14,clearcoatRoughness:0.3});
       var wm = new e.Mesh(new e.BoxGeometry(0.35,0.05,0.27), wb);
       wm.position.set(0,0.80,0.01); o.add(wm);
       var pocket = new e.Mesh(new e.BoxGeometry(0.05,0.04,0.002), new e.MeshStandardMaterial({color:"#3a6894",roughness:0.6}));
       pocket.position.set(-0.06,0.72,0.14); o.add(pocket);
       var pocketR = pocket.clone(); pocketR.position.x = 0.06; o.add(pocketR);
-      var cuff = new e.Mesh(new e.BoxGeometry(0.12,0.025,0.12), wb);
-      cuff.position.set(-0.078,0.155,0.008); o.add(cuff);
-      var cuffR = cuff.clone(); cuffR.position.x = 0.078; o.add(cuffR);
+      var cuff = new e.Mesh(new e.BoxGeometry(0.15,0.03,0.15), wb);
+      cuff.position.set(-0.085,0.145,0.008); o.add(cuff);
+      var cuffR = cuff.clone(); cuffR.position.x = 0.085; o.add(cuffR);
     })(),
     !t.female)) {
     const t = new e.Mesh(new e.BoxGeometry(0.13, 0.66, 0.18), i);
