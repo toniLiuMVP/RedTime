@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050508">
+<meta name="description" content="時間裡的兩個妳——把拔與女兒、學長與學妹的故事。toni 連載故事，EP0–EP40 全集免費閱讀。">
+<title>時間裡的兩個妳 · toni</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@200;300;400&family=Noto+Sans+TC:wght@300;400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,200;1,300;1,400&family=DM+Mono:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* ─── Reset & Root ─── */
+:root{
+  --ink:#050508;--ink2:#0a0a10;--ink3:#101018;
+  --seam:#1a1a24;--seam2:#141420;
+  --parchment:#eae6de;--warm:#b4b0a8;--mist:#8c8a88;
+  --jade:#16a864;--amber:#c89010;--rose:#e04860;
+  --f1:#ff4858;--f2:#ff7820;--f3:#e8cc10;--f4:#30c850;--f5:#3880ff;--f6:#9040f0;
+  --gutter:clamp(22px,6vw,80px);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;scroll-padding-top:82px}
+body{background:var(--ink);color:var(--parchment);font-family:'Noto Serif TC',serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;cursor:default}
+a,button,[role="button"]{touch-action:manipulation}
+:focus-visible{outline:2px solid rgba(22,168,100,.78);outline-offset:3px}
+.ui-sprite{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
+.icon-svg{display:block;width:100%;height:100%;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;fill:none}
+
+/* ─── Grain overlay ─── */
+body::before{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+  background-size:200px 200px;opacity:.55;mix-blend-mode:overlay}
+
+/* ─── NAV ─── */
+#nav{position:fixed;top:0;left:0;right:0;z-index:500;height:60px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 var(--gutter);
+  background:rgba(5,5,8,0);backdrop-filter:blur(0px);
+  transition:background .4s,backdrop-filter .4s}
+#nav.scrolled{background:rgba(5,5,8,.88);backdrop-filter:blur(16px)}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:17px;font-weight:300;color:rgba(234,230,222,.65);letter-spacing:.1em;text-decoration:none;transition:color .2s}
+.nav-logo:hover{color:var(--parchment)}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-link{font-family:'DM Mono',monospace;font-size:9.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--mist);text-decoration:none;transition:color .18s;-webkit-tap-highlight-color:transparent}
+.nav-link:hover{color:var(--parchment)}
+.nav-cta{padding:7px 16px;border:1px solid rgba(22,168,100,.4);color:var(--jade);border-radius:3px;background:rgba(22,168,100,.06);font-family:'DM Mono',monospace;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;text-decoration:none;transition:background .18s,border-color .18s;cursor:pointer}
+.nav-cta:hover{background:rgba(22,168,100,.14);border-color:rgba(22,168,100,.65)}
+@media(max-width:600px){.nav-links{gap:14px}.nav-link.hide-m{display:none}}
+
+/* ─── HERO ─── */
+#hero{min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:80px var(--gutter) 100px;position:relative;overflow:hidden}
+#hero-bg{position:absolute;inset:0;z-index:0}
+#hero-canvas{position:absolute;inset:0;width:100%;height:100%}
+.hero-radial{position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 90% 70% at 50% 30%,rgba(8,28,14,.95) 0%,transparent 65%),
+    radial-gradient(ellipse 60% 60% at 20% 80%,rgba(8,6,18,.8) 0%,transparent 50%),
+    radial-gradient(ellipse 70% 50% at 80% 90%,rgba(16,8,4,.7) 0%,transparent 50%),
+    var(--ink)}
+.hero-inner{position:relative;z-index:2;max-width:700px;width:100%;margin:0 auto}
+.hero-pre{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.5em;text-transform:uppercase;color:var(--mist);margin-bottom:32px;opacity:0;animation:fadeUp .9s .2s forwards}
+.hero-en{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:200;font-size:clamp(14px,2.5vw,20px);letter-spacing:.22em;color:rgba(234,230,222,.38);margin-bottom:20px;opacity:0;animation:fadeUp .9s .35s forwards}
+.hero-title{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(62px,15vw,110px);line-height:.98;letter-spacing:.06em;color:var(--parchment);margin-bottom:36px;opacity:0;animation:fadeUp 1.1s .5s forwards;
+  text-shadow:0 0 80px rgba(22,168,100,.12),0 0 160px rgba(22,168,100,.05)}
+.hero-divider{width:1px;height:52px;background:linear-gradient(180deg,transparent,rgba(234,230,222,.25),transparent);margin:0 auto 36px;opacity:0;animation:fadeIn .9s .85s forwards}
+.hero-tagline{font-size:clamp(14.5px,2vw,17.5px);font-weight:300;color:rgba(234,230,222,.8);line-height:1.92;letter-spacing:.045em;text-wrap:pretty;max-width:29em;margin:0 auto 48px;opacity:0;animation:fadeUp .9s 1s forwards}
+.hero-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;opacity:0;animation:fadeUp .9s 1.2s forwards}
+.btn-primary{padding:16px 36px;background:rgba(22,168,100,.13);border:1px solid rgba(22,168,100,.58);color:#7ce5b2;
+  font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.27em;text-transform:uppercase;
+  border-radius:3px;cursor:pointer;text-decoration:none;transition:all .22s;display:inline-flex;align-items:center;gap:10px}
+.btn-primary:hover{background:rgba(22,168,100,.24);border-color:rgba(22,168,100,.86);box-shadow:0 0 28px rgba(22,168,100,.14)}
+.btn-ghost{padding:16px 36px;background:rgba(255,255,255,.015);border:1px solid rgba(234,230,222,.24);color:rgba(234,230,222,.86);
+  font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.27em;text-transform:uppercase;
+  border-radius:3px;cursor:pointer;text-decoration:none;transition:all .22s;display:inline-flex;align-items:center;gap:10px}
+.btn-ghost:hover{border-color:rgba(234,230,222,.48);background:rgba(255,255,255,.04);color:var(--parchment)}
+.hero-scroll{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);
+  font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.35em;text-transform:uppercase;color:var(--mist);
+  display:flex;flex-direction:column;align-items:center;gap:10px;opacity:0;animation:fadeIn 1s 1.8s forwards}
+.scroll-line{width:1px;height:36px;background:linear-gradient(180deg,var(--mist),transparent);animation:scrollPulse 2s 2s ease-in-out infinite}
+@keyframes scrollPulse{0%,100%{opacity:.4;transform:scaleY(1)}50%{opacity:1;transform:scaleY(1.2)}}
+
+/* ─── SECTION SHARED ─── */
+section{padding:clamp(72px,12vw,140px) var(--gutter);position:relative}
+.section-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.45em;text-transform:uppercase;color:var(--mist);margin-bottom:20px}
+.section-title{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(28px,5vw,52px);line-height:1.15;letter-spacing:.06em;color:var(--parchment)}
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .75s ease,transform .75s ease}
+.reveal.in{opacity:1;transform:none}
+
+/* ─── ABOUT ─── */
+#about{background:linear-gradient(180deg,var(--ink) 0%,rgba(6,12,8,.96) 50%,var(--ink) 100%)}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(40px,6vw,100px);align-items:center;max-width:1100px;margin:0 auto}
+@media(max-width:768px){.about-grid{grid-template-columns:1fr}}
+
+.about-quote{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(18px,3vw,26px);font-weight:300;line-height:1.7;color:rgba(234,230,222,.8);margin-bottom:16px;letter-spacing:.04em}
+.about-quote-src{font-family:'DM Mono',monospace;font-size:9px;color:var(--mist);letter-spacing:.2em}
+.about-body{font-size:15.5px;font-weight:300;line-height:2.04;color:rgba(234,230,222,.74);letter-spacing:.028em;max-width:33em;text-wrap:pretty}
+.about-body p+p{margin-top:1.12em}
+.about-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;border:1px solid var(--seam);border-radius:8px;overflow:hidden;margin-top:40px;background:var(--seam)}
+.stat-box{background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.008));padding:24px 20px;text-align:center}
+.stat-n{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:40px;line-height:1;color:var(--parchment);display:block;margin-bottom:6px}
+.stat-l{font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.25em;text-transform:uppercase;color:var(--mist);display:block}
+
+/* ─── ARC SECTION ─── */
+#arcs{background:var(--ink2)}
+.arcs-header{max-width:1100px;margin:0 auto 56px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:end}
+@media(max-width:768px){.arcs-header{grid-template-columns:1fr}}
+.arcs-intro{font-size:14.8px;font-weight:300;line-height:1.92;color:rgba(234,230,222,.7);letter-spacing:.028em;max-width:34em;text-wrap:pretty}
+.arc-cards{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;align-items:stretch}
+.arc-card{
+  padding:24px 20px;border:1px solid var(--seam);border-radius:8px;background:rgba(255,255,255,.018);position:relative;overflow:hidden;transition:border-color .2s,transform .2s;cursor:default;
+  display:flex;flex-direction:column;height:100%
+}
+.arc-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.arc-card:hover{transform:translateY(-2px)}
+.arc-father::before{background:linear-gradient(180deg,transparent,var(--jade),transparent)}
+.arc-father:hover{border-color:rgba(22,168,100,.35)}
+.arc-male::before{background:linear-gradient(180deg,transparent,rgba(168,164,156,.6),transparent)}
+.arc-male:hover{border-color:rgba(168,164,156,.25)}
+.arc-female::before{background:linear-gradient(180deg,var(--f1),var(--f3),var(--f5))}
+.arc-female:hover{border-color:rgba(255,72,88,.3)}
+.arc-daughter::before{background:linear-gradient(180deg,transparent,var(--amber),transparent)}
+.arc-daughter:hover{border-color:rgba(200,144,16,.35)}
+.arc-mixed::before{background:linear-gradient(180deg,transparent,rgba(184,72,32,.7),transparent)}
+.arc-mixed:hover{border-color:rgba(184,72,32,.3)}
+.arc-card-icon{
+  width:54px;height:54px;margin-bottom:16px;border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(255,255,255,.08);
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.018));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 12px 24px rgba(0,0,0,.18)
+}
+.arc-card-icon svg{width:28px;height:28px}
+.arc-father .arc-card-icon{color:var(--jade);background:linear-gradient(180deg,rgba(22,168,100,.12),rgba(22,168,100,.03));border-color:rgba(22,168,100,.18)}
+.arc-male .arc-card-icon{color:rgba(210,206,198,.86);background:linear-gradient(180deg,rgba(168,164,156,.12),rgba(168,164,156,.03));border-color:rgba(168,164,156,.18)}
+.arc-female .arc-card-icon{color:rgba(255,248,244,.94);background:linear-gradient(135deg,rgba(255,72,88,.22),rgba(232,204,16,.12) 48%,rgba(56,128,255,.18));border-color:rgba(255,120,128,.18)}
+.arc-daughter .arc-card-icon{color:var(--amber);background:linear-gradient(180deg,rgba(200,144,16,.13),rgba(200,144,16,.03));border-color:rgba(200,144,16,.18)}
+.arc-mixed .arc-card-icon{color:rgba(238,188,164,.92);background:linear-gradient(180deg,rgba(184,72,32,.14),rgba(184,72,32,.04));border-color:rgba(184,72,32,.18)}
+.arc-card-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;letter-spacing:.08em;margin-bottom:6px}
+.arc-father .arc-card-name{color:var(--jade)}
+.arc-male .arc-card-name{color:rgba(168,164,156,.9)}
+.arc-female .arc-card-name{background:linear-gradient(90deg,var(--f1),var(--f3),var(--f5));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.arc-daughter .arc-card-name{color:var(--amber)}
+.arc-mixed .arc-card-name{color:rgba(184,72,32,.9)}
+.arc-card-sub{font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--mist);margin-bottom:12px}
+.arc-card-desc{font-family:'Noto Sans TC',sans-serif;font-size:12.7px;color:rgba(234,230,222,.68);line-height:1.8;font-weight:300;text-wrap:pretty;flex:1}
+.arc-eps{font-family:'DM Mono',monospace;font-size:9px;color:var(--mist);margin-top:auto;padding-top:14px;letter-spacing:.12em}
+
+/* ─── TIMELINE TEASER ─── */
+#timeline-sec{background:linear-gradient(180deg,var(--ink2),var(--ink))}
+.tl-inner{max-width:1100px;margin:0 auto}
+.tl-header{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:end;margin-bottom:60px}
+@media(max-width:768px){.tl-header{grid-template-columns:1fr}}
+.tl-intro{font-size:14.8px;font-weight:300;line-height:1.92;color:rgba(234,230,222,.7);letter-spacing:.028em;max-width:34em;text-wrap:pretty}
+.tl-track{position:relative;padding:0 0 0 62px}
+.tl-axis{position:absolute;left:18px;top:12px;bottom:12px;width:1px;background:linear-gradient(180deg,transparent,var(--seam) 15%,var(--seam) 85%,transparent)}
+.tl-event{
+  position:relative;display:flex;flex-direction:column;gap:8px;
+  margin-bottom:18px;padding:18px 20px 20px 18px;
+  border:1px solid var(--seam2);border-left:none;border-radius:0 14px 14px 0;
+  background:linear-gradient(180deg,rgba(255,255,255,.022),rgba(255,255,255,.01));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025),0 10px 22px rgba(0,0,0,.08)
+}
+.tl-event:last-child{margin-bottom:0}
+.tl-dot{
+  position:absolute;left:-62px;top:-1px;width:40px;height:40px;border-radius:14px;border:1px solid;
+  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 12px 28px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.04)
+}
+.tl-dot svg{width:20px;height:20px}
+.tl-event-year{
+  display:inline-flex;align-items:center;align-self:flex-start;
+  padding:4px 9px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.018);
+  font-family:'DM Mono',monospace;font-size:9.2px;color:var(--mist);letter-spacing:.13em
+}
+.tl-event-label{font-family:'Cormorant Garamond',serif;font-size:20px;line-height:1.18;font-weight:300;color:var(--parchment);letter-spacing:.04em}
+.tl-event-desc{max-width:30em;font-family:'Noto Sans TC',sans-serif;font-size:12.5px;color:var(--warm);line-height:1.9;font-weight:300}
+
+/* ─── READ SECTION ─── */
+#read{text-align:center;background:radial-gradient(ellipse 100% 80% at 50% 50%,rgba(8,28,14,.9) 0%,var(--ink) 70%)}
+.read-inner{max-width:600px;margin:0 auto}
+.read-body{font-size:15.6px;font-weight:300;line-height:2.02;color:rgba(234,230,222,.76);letter-spacing:.026em;margin:24px auto 38px;max-width:32em;text-wrap:pretty}
+.read-epbadges{display:flex;flex-wrap:wrap;justify-content:center;gap:9px 8px;margin-bottom:42px}
+.ep-badge{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.13em;padding:5px 12px;border:1px solid rgba(255,255,255,.09);border-radius:20px;color:rgba(234,230,222,.56);background:rgba(255,255,255,.018)}
+.ep-badge.active{border-color:rgba(22,168,100,.4);color:var(--jade);background:rgba(22,168,100,.06)}
+.read-note{font-family:'DM Mono',monospace;font-size:9px;color:var(--mist);letter-spacing:.18em;margin-top:28px}
+
+/* ─── COMMUNITY ─── */
+#community{background:var(--ink2)}
+.comm-inner{max-width:1100px;margin:0 auto}
+.comm-header{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:end;margin-bottom:56px}
+@media(max-width:768px){.comm-header{grid-template-columns:1fr}}
+.comm-intro{font-size:14.8px;font-weight:300;line-height:1.92;color:rgba(234,230,222,.7);letter-spacing:.028em;max-width:34em;text-wrap:pretty}
+.platform-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.platform-card{display:flex;align-items:center;gap:18px;padding:22px 22px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,.024),rgba(255,255,255,.012));text-decoration:none;transition:all .2s;-webkit-tap-highlight-color:transparent}
+.platform-card:hover{border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.05);transform:translateY(-2px)}
+.plat-icon{
+  width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-family:'DM Mono',monospace;font-weight:bold;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 10px 24px rgba(0,0,0,.16)
+}
+.plat-icon svg{width:23px;height:23px;display:block}
+.plat-icon.yt{background:rgba(255,0,0,.1);border:1px solid rgba(255,0,0,.2);color:#ff4444}
+.plat-icon.fb{background:rgba(24,119,242,.1);border:1px solid rgba(24,119,242,.2);color:#4488ff}
+.plat-icon.ln{background:rgba(0,195,0,.1);border:1px solid rgba(0,195,0,.2);color:#00c844}
+.plat-icon.th{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:var(--parchment)}
+.plat-info{flex:1}
+.plat-name{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--mist);margin-bottom:3px}
+.plat-label{font-family:'Noto Sans TC',sans-serif;font-size:14px;color:var(--parchment);font-weight:300}
+.plat-sub{font-family:'Noto Sans TC',sans-serif;font-size:11.5px;color:var(--warm);font-weight:300;margin-top:2px}
+.plat-arrow{font-family:'DM Mono',monospace;font-size:12px;color:var(--mist);flex-shrink:0}
+
+/* ─── FOOTER ─── */
+footer{padding:60px var(--gutter) 40px;border-top:1px solid var(--seam2);background:var(--ink)}
+.foot-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr auto;align-items:end;gap:40px}
+@media(max-width:600px){.foot-inner{grid-template-columns:1fr}}
+.foot-logo{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:24px;font-weight:300;color:var(--parchment);margin-bottom:6px;letter-spacing:.08em}
+.foot-sub{font-family:'DM Mono',monospace;font-size:8.5px;color:var(--mist);letter-spacing:.3em;text-transform:uppercase;margin-bottom:18px}
+.foot-copy{font-family:'DM Mono',monospace;font-size:8.5px;color:var(--mist);letter-spacing:.12em}
+.foot-links{display:flex;gap:20px;align-items:center}
+.foot-link{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--mist);text-decoration:none;transition:color .15s}
+.foot-link:hover{color:var(--parchment)}
+
+/* ─── KEYFRAMES ─── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+@media(max-width:600px){
+  #film [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
+}
+
+.foot-title-line{font-family:'Noto Serif TC',serif;font-size:15px;color:var(--parchment);letter-spacing:.1em;margin-bottom:4px;font-weight:300}
+@media(max-width:520px){
+  #hero{padding:92px var(--gutter) 86px}
+  .hero-inner{max-width:420px}
+  .hero-pre{margin-bottom:24px;letter-spacing:.38em}
+  .hero-title{font-size:clamp(54px,18vw,82px);margin-bottom:28px}
+  .hero-divider{height:44px;margin-bottom:28px}
+  .hero-tagline{max-width:19em;margin-bottom:36px}
+  .hero-actions{flex-direction:column;align-items:stretch;gap:10px}
+  .btn-primary,.btn-ghost{width:100%;justify-content:center;padding:15px 20px;font-size:10px;letter-spacing:.22em}
+  .hero-scroll{bottom:24px}
+  .about-body,.arcs-intro,.tl-intro,.read-body,.comm-intro{max-width:100%}
+  .read-body{font-size:15.1px;line-height:1.96;margin-bottom:32px}
+  .read-epbadges{gap:7px 6px;margin-bottom:34px}
+  .about-stats{margin-top:30px}
+  .stat-box{padding:20px 16px}
+  .arc-card{padding:22px 18px}
+  .arc-card-icon{width:50px;height:50px;border-radius:14px}
+  .arc-card-icon svg{width:25px;height:25px}
+  .tl-track{padding-left:54px}
+  .tl-axis{left:16px}
+  .tl-event{gap:7px;padding:14px 14px 18px 12px;margin-bottom:18px;border-radius:0 12px 12px 0}
+  .tl-dot{left:-54px;width:34px;height:34px;border-radius:12px}
+  .tl-dot svg{width:17px;height:17px}
+  .tl-event-year{padding:4px 8px;font-size:8.5px}
+  .tl-event-label{font-size:17px}
+  .tl-event-desc{max-width:none;line-height:1.82}
+  .platform-card{gap:14px;padding:18px 18px}
+  .plat-icon{width:44px;height:44px;border-radius:12px}
+  .plat-icon svg{width:20px;height:20px}
+}
+@media(min-width:1360px){
+  #hero{padding-top:92px;padding-bottom:110px}
+  .hero-inner{max-width:820px}
+  .about-grid,.arcs-header,.tl-inner,.comm-inner,.foot-inner{max-width:1220px}
+  .arc-cards{max-width:1220px;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px}
+  .platform-cards{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+  .read-inner{max-width:760px}
+  #film [style*="max-width:1100px"]{max-width:1220px!important}
+  #film [style*="grid-template-columns:1fr 1fr"]{gap:32px!important}
+}
+</style>
+</head>
+<body>
+
+<svg class="ui-sprite" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="ic-person" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="8" r="3.2"></circle>
+      <path d="M6.8 18c1.2-2.6 3.1-4 5.2-4s4 1.4 5.2 4"></path>
+    </symbol>
+    <symbol id="ic-cap" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3.5 9.4 12 5.6l8.5 3.8L12 13.2 3.5 9.4Z"></path>
+      <path d="M7 11.6v3c1.3 1 3 1.5 5 1.5s3.7-.5 5-1.5v-3"></path>
+      <path d="M20.5 10v4.4"></path>
+    </symbol>
+    <symbol id="ic-starburst" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m12 3.5 1.7 5 5 1.7-5 1.6-1.7 5-1.6-5-5-1.6 5-1.7 1.6-5Z"></path>
+      <path d="m18.2 4.6.7 1.9 1.9.7-1.9.7-.7 1.9-.7-1.9-1.9-.7 1.9-.7.7-1.9Z"></path>
+    </symbol>
+    <symbol id="ic-moon" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16.7 4.6a7.8 7.8 0 1 0 2.6 12.5 7.1 7.1 0 0 1-2.6-12.5Z"></path>
+      <circle cx="17.7" cy="8.2" r=".7" fill="currentColor" stroke="none"></circle>
+      <circle cx="19.3" cy="11.1" r=".55" fill="currentColor" stroke="none"></circle>
+    </symbol>
+    <symbol id="ic-orbit" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="2.3"></circle>
+      <ellipse cx="12" cy="12" rx="7.5" ry="3.8"></ellipse>
+      <ellipse cx="12" cy="12" rx="7.5" ry="3.8" transform="rotate(60 12 12)"></ellipse>
+    </symbol>
+    <symbol id="ic-phone" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15.8 14.2 18.2 16.6a1 1 0 0 1 0 1.4l-1.1 1.1a2.3 2.3 0 0 1-2.3.6c-1.7-.5-4.1-1.8-6.2-3.9S5.2 11.3 4.8 9.6A2.3 2.3 0 0 1 5.4 7.3l1.1-1.1a1 1 0 0 1 1.4 0l2.4 2.4a1 1 0 0 1 .2 1.1l-.8 2a10.2 10.2 0 0 0 3.6 3.6l2-.8a1 1 0 0 1 1.1.2Z"></path>
+    </symbol>
+    <symbol id="ic-youtube" viewBox="0 0 24 24" stroke="none" fill="currentColor">
+      <path d="M20.2 7.2a2.5 2.5 0 0 0-1.8-1.8C16.8 5 12 5 12 5s-4.8 0-6.4.4A2.5 2.5 0 0 0 3.8 7.2C3.4 8.8 3.4 12 3.4 12s0 3.2.4 4.8a2.5 2.5 0 0 0 1.8 1.8c1.6.4 6.4.4 6.4.4s4.8 0 6.4-.4a2.5 2.5 0 0 0 1.8-1.8c.4-1.6.4-4.8.4-4.8s0-3.2-.4-4.8ZM10.3 15.4V8.6l5.7 3.4-5.7 3.4Z"></path>
+    </symbol>
+    <symbol id="ic-facebook" viewBox="0 0 24 24" stroke="none" fill="currentColor">
+      <path d="M13.8 20v-6h2.5l.4-3h-2.9V9.1c0-.9.3-1.6 1.7-1.6h1.4V4.8c-.2 0-1-.1-2-.1-2.9 0-4.5 1.5-4.5 4.2V11H8.1v3h2.3v6h3.4Z"></path>
+    </symbol>
+    <symbol id="ic-line" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4.6 8.1C6.1 6.6 8.7 5.6 12 5.6s5.9 1 7.4 2.5c1.1 1.1 1.7 2.5 1.7 4 0 3.6-4 6.5-9.1 6.5-.8 0-1.7-.1-2.4-.2L5.5 20l1-3c-1.2-.9-1.9-2.1-1.9-4 0-1.5.6-2.8 1.7-3.9Z"></path>
+      <path d="M8.6 10.3v3.3"></path>
+      <path d="M11.9 10.3v3.3"></path>
+      <path d="M15.2 10.3v3.3"></path>
+    </symbol>
+    <symbol id="ic-threads" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15.9 9.3c-.8-1.7-2.3-2.6-4.2-2.6-3.3 0-5.8 2.3-5.8 5.4 0 3.2 2.4 5.6 5.8 5.6 2.8 0 4.8-1.7 4.8-4.1 0-2.1-1.5-3.5-3.7-3.5-1.9 0-3.3 1-3.3 2.6 0 1.3 1.1 2.2 2.5 2.2 1.2 0 2.2-.7 2.5-1.8"></path>
+      <path d="M16 9.4c1.1.8 1.9 2 1.9 4 0 3.7-2.7 6.1-6.5 6.1-4.3 0-7.3-3.1-7.3-7.4 0-4.2 3.1-7.2 7.4-7.2 3.3 0 5.7 1.6 6.8 4.5"></path>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- NAV -->
+<nav id="nav">
+  <a class="nav-logo" href="#">時間裡的兩個妳</a>
+  <div class="nav-links">
+    <a class="nav-link hide-m" href="#about">關於</a>
+    <a class="nav-link hide-m" href="#film">影像</a>
+    <a class="nav-link hide-m" href="#arcs">角色</a>
+    <a class="nav-link hide-m" href="#community">社群</a>
+    <a class="nav-cta" href="reader.html">開始閱讀</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div id="hero-bg">
+    <div class="hero-radial"></div>
+    <canvas id="hero-canvas"></canvas>
+  </div>
+  <div class="hero-inner">
+    <div class="hero-pre">TONI · 連載故事 · EP0—EP40</div>
+    <div class="hero-en">The Two Yous in Time</div>
+    <h1 class="hero-title">時間裡的<br>兩個妳</h1>
+    <div class="hero-divider"></div>
+    <p class="hero-tagline">把拔與女兒的故事<br>學長與學妹的故事<br>從2005年開始，慢慢走到後來</p>
+    <div class="hero-actions">
+      <a class="btn-primary" href="reader.html">↓ &nbsp; 立即閱讀全集</a>
+      <a class="btn-ghost" href="#about">了解這個故事</a>
+    </div>
+  </div>
+  <div class="hero-scroll"><span>向下捲動</span><div class="scroll-line"></div></div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="about-grid">
+    <div class="about-left reveal">
+      <div class="section-label">關於這個故事</div>
+      <h2 class="section-title" style="margin-bottom:32px">命運不是命定，<br>但紅線是<br>命中注定</h2>
+      <blockquote class="about-quote">「相信『相信的力量』」</blockquote>
+      <div class="about-quote-src">— 時間裡的兩個妳</div>
+    </div>
+    <div class="about-right reveal">
+      <div class="about-body">
+        <p>這是一個關於把拔與女兒的故事，關於學長與學妹的故事。</p>
+        <p>故事從2005年大學校園裡的相遇開始，也一路走到女兒後來在夢裡看見的那些時間。</p>
+        <p>讀的時候先跟著人物往前走，時間線會在不同視角裡慢慢展開。</p>
+      </div>
+      <div class="about-stats reveal">
+        <div class="stat-box"><span class="stat-n">41</span><span class="stat-l">章節</span></div>
+        <div class="stat-box"><span class="stat-n">3</span><span class="stat-l">時間線</span></div>
+        <div class="stat-box"><span class="stat-n">20</span><span class="stat-l">年跨度</span></div>
+        <div class="stat-box"><span class="stat-n">5</span><span class="stat-l">隱藏彩蛋</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FILM -->
+<section id="film" style="background:var(--ink);padding-top:clamp(60px,10vw,120px);padding-bottom:clamp(60px,10vw,120px);padding-left:var(--gutter);padding-right:var(--gutter)">
+  <div style="max-width:1100px;margin:0 auto">
+    <div class="reveal" style="margin-bottom:48px">
+      <div class="section-label">影像作品</div>
+      <h2 class="section-title">時間裡的兩個妳<br>一眼瞬間</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:1100px;margin:0 auto">
+      <div class="reveal">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--mist);margin-bottom:12px">微電影</div>
+        <div style="position:relative;padding-bottom:56.25%;border-radius:10px;overflow:hidden;border:1px solid var(--seam)">
+          <iframe style="position:absolute;inset:0;width:100%;height:100%" src="https://www.youtube.com/embed/eACPFC4K89o" title="時間裡的兩個妳：一眼瞬間 微電影" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <div style="margin-top:12px;font-family:'Noto Sans TC',sans-serif;font-size:13px;color:var(--warm);line-height:1.8;font-weight:300">《時間裡的兩個妳：一眼瞬間》微電影</div>
+      </div>
+      <div class="reveal">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--mist);margin-bottom:12px">原聲帶</div>
+        <div style="position:relative;padding-bottom:56.25%;border-radius:10px;overflow:hidden;border:1px solid var(--seam)">
+          <iframe style="position:absolute;inset:0;width:100%;height:100%" src="https://www.youtube.com/embed/Ne3mv-6Ufl8" title="時間裡的兩個妳：一眼瞬間 原聲帶" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <div style="margin-top:12px;font-family:'Noto Sans TC',sans-serif;font-size:13px;color:var(--warm);line-height:1.8;font-weight:300">《時間裡的兩個妳：一眼瞬間》原聲帶</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ARCS -->
+<section id="arcs">
+  <div class="arcs-header">
+    <div class="reveal">
+      <div class="section-label">三條時間線 · 五種視角</div>
+      <h2 class="section-title">命運不是命定，<br>但紅線是<br>命中注定</h2>
+    </div>
+    <div class="arcs-intro reveal">
+      故事從不同視角展開。每一集只先看見其中一個人的位置，前後讀下去，時間線會慢慢接起來。
+    </div>
+  </div>
+  <div class="arc-cards">
+    <div class="arc-card arc-father reveal">
+      <div class="arc-card-icon"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-person"></use></svg></div>
+      <div class="arc-card-name">把拔</div>
+      <div class="arc-card-sub">父親視角</div>
+      <div class="arc-card-desc">一個自以為能預知女兒青春期的補習班老師。</div>
+      <div class="arc-eps">EP0 · 1 · 4 · 15</div>
+    </div>
+    <div class="arc-card arc-male reveal">
+      <div class="arc-card-icon"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-cap"></use></svg></div>
+      <div class="arc-card-name">學長</div>
+      <div class="arc-card-sub">男主視角</div>
+      <div class="arc-card-desc">他始終相信。</div>
+      <div class="arc-eps">EP2 · 3 · 5–9 · 13 · 18 · 19 · 27–29 · 31 · 39 · 40</div>
+    </div>
+    <div class="arc-card arc-female reveal">
+      <div class="arc-card-icon"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-starburst"></use></svg></div>
+      <div class="arc-card-name">學妹</div>
+      <div class="arc-card-sub">女主視角</div>
+      <div class="arc-card-desc">當他變成他，我才是我。</div>
+      <div class="arc-eps">EP11 · 12 · 14 · 17 · 20 · 38</div>
+    </div>
+    <div class="arc-card arc-daughter reveal">
+      <div class="arc-card-icon"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-moon"></use></svg></div>
+      <div class="arc-card-name">女兒</div>
+      <div class="arc-card-sub">夢境視角</div>
+      <div class="arc-card-desc">她在夢裡飛過不同時間，也一次次看見把拔與阿姨的過去。</div>
+      <div class="arc-eps">EP16 · 21–23 · 26 · 30 · 32–35</div>
+    </div>
+    <div class="arc-card arc-mixed reveal">
+      <div class="arc-card-icon"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-orbit"></use></svg></div>
+      <div class="arc-card-name">複合視角</div>
+      <div class="arc-card-sub">多線交織</div>
+      <div class="arc-card-desc">這些章節把兩條或三條時間線放在同一集裡，讓不同視角彼此照見。</div>
+      <div class="arc-eps">EP10 · 24 · 25 · 36 · 37</div>
+    </div>
+  </div>
+</section>
+
+<!-- TIMELINE TEASER -->
+<section id="timeline-sec">
+  <div class="tl-inner">
+    <div class="tl-header">
+      <div class="reveal">
+        <div class="section-label">時間軸 · 部分揭示</div>
+        <h2 class="section-title">故事發生<br>在這些時刻</h2>
+      </div>
+      <div class="tl-intro reveal">以下是故事裡幾個關鍵時間點，其餘內容請跟著章節慢慢讀。</div>
+    </div>
+    <div class="tl-track reveal">
+      <div class="tl-axis"></div>
+      <div class="tl-event">
+        <div class="tl-dot" style="border-color:var(--jade);background:linear-gradient(180deg,rgba(22,168,100,.14),rgba(22,168,100,.04));color:var(--jade)"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-person"></use></svg></div>
+        <div class="tl-event-year">1997年 · 某個夜晚</div>
+        <div class="tl-event-label">把拔，十三歲</div>
+        <div class="tl-event-desc">他不知道有人飛到他身邊，那一夜，他並不孤單。</div>
+      </div>
+      <div class="tl-event">
+        <div class="tl-dot" style="border-color:rgba(168,164,156,.5);background:linear-gradient(180deg,rgba(168,164,156,.14),rgba(168,164,156,.04));color:rgba(210,206,198,.9)"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-cap"></use></svg></div>
+        <div class="tl-event-year">2005年 · 大學校園</div>
+        <div class="tl-event-label">一眼瞬間</div>
+        <div class="tl-event-desc">這一次，依然再次遇見妳。</div>
+      </div>
+      <div class="tl-event">
+        <div class="tl-dot" style="border-color:rgba(255,72,88,.6);background:linear-gradient(180deg,rgba(255,72,88,.16),rgba(255,72,88,.04));color:rgba(255,212,218,.92)"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-phone"></use></svg></div>
+        <div class="tl-event-year">2005年9月22日 · 20:57</div>
+        <div class="tl-event-label">那通一定要接到的電話</div>
+        <div class="tl-event-desc">2005年9月22日20:57，那通電話準時響起。</div>
+      </div>
+      <div class="tl-event">
+        <div class="tl-dot" style="border-color:var(--amber);background:linear-gradient(180deg,rgba(200,144,16,.16),rgba(200,144,16,.05));color:var(--amber)"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-moon"></use></svg></div>
+        <div class="tl-event-year">2025年之後 · 夢境</div>
+        <div class="tl-event-label">女兒</div>
+        <div class="tl-event-desc">她開始在夢裡飛行，也開始看見更早以前的時間。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- READ -->
+<section id="read">
+  <div class="read-inner">
+    <div class="reveal">
+      <div class="section-label" style="justify-content:center;display:flex">全集免費閱讀</div>
+      <h2 class="section-title" style="margin-bottom:0">從 EP0<br>開始讀起</h2>
+    </div>
+    <p class="read-body reveal">閱讀器為手機與電腦雙平台設計，支援日間／夜間模式、字體大小調整、章節跳轉，以及逐集解鎖的隱藏彩蛋。</p>
+    <div class="read-epbadges reveal">
+      <span class="ep-badge active">EP0 把拔</span>
+      <span class="ep-badge">EP11 學妹初現</span>
+      <span class="ep-badge">EP21 女兒飛行</span>
+      <span class="ep-badge">EP30 1997年夜</span>
+      <span class="ep-badge">EP38 意識菜市場</span>
+      <span class="ep-badge">EP40 相信</span>
+    </div>
+    <div class="reveal">
+      <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:12px">
+        <a class="btn-primary" href="reader.html" style="font-size:12px;padding:18px 44px;display:inline-flex">
+          ↓ &nbsp; 進入全集閱讀器
+        </a>
+        <a class="btn-ghost" href="lm402.html" style="font-size:12px;padding:18px 30px;display:inline-flex">
+          ↗ &nbsp; 進入 LM402 互動場景
+        </a>
+      </div>
+      <div class="read-note" style="margin-top:20px">EP0–EP40 · 全集 · 免費 · 無需登入</div>
+    </div>
+  </div>
+</section>
+
+<!-- COMMUNITY -->
+<section id="community">
+  <div class="comm-inner">
+    <div class="comm-header">
+      <div class="reveal">
+        <div class="section-label">官方頻道</div>
+        <h2 class="section-title">跟著故事<br>不會迷路</h2>
+      </div>
+      <div class="comm-intro reveal">toni 在 YouTube、Facebook、Threads 與 LINE 社群持續更新故事相關內容，包括幕後創作、角色解析、以及讀者交流。</div>
+    </div>
+    <div class="platform-cards">
+      <a class="platform-card reveal" href="https://www.youtube.com/c/toniMVP" target="_blank" rel="noopener">
+        <div class="plat-icon yt"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-youtube"></use></svg></div>
+        <div class="plat-info">
+          <div class="plat-name">YouTube</div>
+          <div class="plat-label">toni</div>
+          <div class="plat-sub">故事影音 · 幕後創作</div>
+        </div>
+        <div class="plat-arrow">→</div>
+      </a>
+      <a class="platform-card reveal" href="https://www.facebook.com/share/16aMnThEBX/?mibextid=wwXIfr" target="_blank" rel="noopener">
+        <div class="plat-icon fb"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-facebook"></use></svg></div>
+        <div class="plat-info">
+          <div class="plat-name">Facebook</div>
+          <div class="plat-label">官方粉絲頁</div>
+          <div class="plat-sub">最新消息 · 讀者交流</div>
+        </div>
+        <div class="plat-arrow">→</div>
+      </a>
+      <a class="platform-card reveal" href="https://lin.ee/VNdWUvr" target="_blank" rel="noopener">
+        <div class="plat-icon ln"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-line"></use></svg></div>
+        <div class="plat-info">
+          <div class="plat-name">LINE 社群</div>
+          <div class="plat-label">官方社群</div>
+          <div class="plat-sub">即時互動 · 讀者社群</div>
+        </div>
+        <div class="plat-arrow">→</div>
+      </a>
+      <a class="platform-card reveal" href="https://www.threads.com/@toniliumvp" target="_blank" rel="noopener">
+        <div class="plat-icon th"><svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-threads"></use></svg></div>
+        <div class="plat-info">
+          <div class="plat-name">Threads</div>
+          <div class="plat-label">@toniliumvp</div>
+          <div class="plat-sub">日常創作 · 即時發文</div>
+        </div>
+        <div class="plat-arrow">→</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-inner">
+    <div>
+      <div class="foot-logo">時間裡的兩個妳</div>
+      <div class="foot-title-line">THE TWO YOUS IN TIME</div>
+      <div style="text-align:center;margin:24px 0 8px">
+    <a href="mailto:toniLiuMVP@gmail.com" style="display:inline-flex;align-items:center;gap:8px;font-family:'Noto Sans TC',sans-serif;font-size:13px;letter-spacing:.08em;padding:10px 24px;border-radius:4px;border:1px solid rgba(22,168,100,.35);color:#16a864;text-decoration:none;background:rgba(22,168,100,.05);transition:border-color .15s">✉ 寫信給作者</a>
+  </div>
+  <div class="foot-copy">© toni · 版權所有</div>
+    </div>
+    <div class="foot-links">
+      <a class="foot-link" href="https://www.youtube.com/c/toniMVP" target="_blank" rel="noopener">YouTube</a>
+      <a class="foot-link" href="https://www.facebook.com/share/16aMnThEBX/?mibextid=wwXIfr" target="_blank" rel="noopener">Facebook</a>
+      <a class="foot-link" href="https://lin.ee/VNdWUvr" target="_blank" rel="noopener">LINE</a>
+      <a class="foot-link" href="https://www.threads.com/@toniliumvp" target="_blank" rel="noopener">Threads</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// NAV scroll
+window.addEventListener('scroll',()=>{document.getElementById('nav').classList.toggle('scrolled',window.scrollY>40)},{passive:true});
+
+// Reveal on scroll
+const ro=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');ro.unobserve(e.target)}})},{threshold:.12,rootMargin:'0px 0px -60px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
+
+// Hero particle canvas
+(function(){
+  const cvs=document.getElementById('hero-canvas'),ctx=cvs.getContext('2d');
+  let W,H,pts=[];
+  const COLS=['#16a864','#c89010','#a8a49c','#b84820','#3880ff','#9040f0','#ff4858','#e8cc10'];
+  function resize(){W=cvs.width=cvs.offsetWidth;H=cvs.height=cvs.offsetHeight}
+  function mkP(){return{x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.8+.2,vx:(Math.random()-.5)*.12,vy:(Math.random()-.5)*.12,c:COLS[Math.floor(Math.random()*COLS.length)],a:Math.random()*.35+.04,life:Math.random()*320+120,age:0}}
+  for(let i=0;i<130;i++)pts.push(mkP());
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    pts=pts.filter(p=>{p.x+=p.vx;p.y+=p.vy;p.age++;const f=Math.min(p.age/40,1)*Math.min(1-(p.age-p.life+40)/40,1);if(f<=0)return false;ctx.globalAlpha=p.a*f;ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();return true});
+    while(pts.length<130)pts.push(mkP());
+    requestAnimationFrame(draw);
+  }
+  resize();
+  draw();
+  window.addEventListener('resize',resize,{passive:true});
+})();
+</script>
+</body>
+</html>
