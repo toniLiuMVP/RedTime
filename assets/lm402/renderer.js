@@ -948,14 +948,14 @@ function S(t) {
     ),
     d,
   );
-  (fe.position.set(0, 1.62, -0.01), (fe.rotation.x = -0.1), o.add(fe));
+  (fe.position.set(0, 1.62, -0.01), (fe.rotation.x = -0.1), !t.pompadour && o.add(fe));
   const ue = new e.Mesh(
     new e.SphereGeometry(t.female ? 0.214 : 0.182, 28, 28),
     d,
   );
   (ue.position.set(0, t.female ? 1.5 : 1.61, t.female ? -0.08 : -0.1),
     ue.scale.set(0.88, t.female ? 1.42 : 0.42, t.female ? 0.7 : 0.52),
-    o.add(ue));
+    !t.pompadour && o.add(ue));
   if (a) {
     fe.scale.set(0.88, 0.86, 0.84);
     fe.position.set(0, 1.604, 0.024);
@@ -1023,7 +1023,7 @@ function S(t) {
   );
   (ye.position.set(0, a ? 1.622 : 1.612, a ? 0.134 : 0.12),
     a && ((ye.rotation.z = -0.08), (ye.rotation.x = 0.22)),
-    o.add(ye),
+    !t.pompadour && o.add(ye),
     n &&
       (ye.position.set(0, 1.606, 0.132),
       ye.scale.set(0.84, 0.92, 0.82),
@@ -1039,13 +1039,93 @@ function S(t) {
   a && ((ge.rotation.z = 0.16), (ge.rotation.x = 0.02));
   const xe = ge.clone();
   ((xe.position.x = a ? 0.108 : 0.15),
-    o.add(ge, xe),
+    !t.pompadour && o.add(ge, xe),
     n &&
       (ge.position.set(-0.122, 1.452, 0.062),
       xe.position.set(0.122, 1.452, 0.062),
       (xe.rotation.z = -0.16),
       ge.scale.set(0.86, 0.98, 0.82),
       xe.scale.copy(ge.scale)));
+  // ── Beckham pompadour + black-frame glasses (senior only) ─────────────────
+  if (t.pompadour) {
+    // Skull base cap — shaved look (flattened sides, close to head)
+    const pBase = new e.Mesh(
+      new e.SphereGeometry(0.186, 22, 22, 0, 2 * Math.PI, 0, 0.68 * Math.PI),
+      d,
+    );
+    pBase.position.set(0, 1.616, -0.014);
+    pBase.rotation.x = -0.1;
+    pBase.scale.set(0.72, 0.58, 0.86);
+    o.add(pBase);
+    // Back of skull fill
+    const pBack = new e.Mesh(new e.SphereGeometry(0.178, 18, 18), d);
+    pBack.position.set(0, 1.61, -0.09);
+    pBack.scale.set(0.68, 0.38, 0.54);
+    o.add(pBack);
+    // Left shaved side strip
+    const pSideL = new e.Mesh(new e.BoxGeometry(0.028, 0.18, 0.09), d);
+    pSideL.position.set(-0.152, 1.512, 0.018);
+    pSideL.rotation.z = 0.08;
+    o.add(pSideL);
+    // Right shaved side strip
+    const pSideR = pSideL.clone();
+    pSideR.position.x = 0.152;
+    pSideR.rotation.z = -0.08;
+    o.add(pSideR);
+    // Pompadour crest — swept-up ridge from forehead arcing back
+    const pompadourPath = new e.CatmullRomCurve3([
+      new e.Vector3(0, 1.636, 0.078),   // front base at hairline
+      new e.Vector3(0, 1.698, 0.042),   // peak of sweep
+      new e.Vector3(0, 1.706, -0.004),  // crown
+      new e.Vector3(0, 1.686, -0.052),  // slope rearward
+      new e.Vector3(0, 1.662, -0.09),   // tail settling back
+    ]);
+    const pCrest = new e.Mesh(
+      new e.TubeGeometry(pompadourPath, 22, 0.048, 9, false),
+      d,
+    );
+    o.add(pCrest);
+    // Front overhang flap — the forward-sweeping peak
+    const pFront = new e.Mesh(new e.BoxGeometry(0.092, 0.055, 0.044), d);
+    pFront.position.set(0, 1.66, 0.092);
+    pFront.rotation.x = 0.28;
+    o.add(pFront);
+    // Width fill for top of pompadour (give it body)
+    const pTopFill = new e.Mesh(new e.BoxGeometry(0.11, 0.062, 0.16), d);
+    pTopFill.position.set(0, 1.692, -0.012);
+    pTopFill.rotation.x = -0.14;
+    o.add(pTopFill);
+    // ── Thick black-frame glasses ──────────────────────────────────────────
+    const glassesMat = new e.MeshPhysicalMaterial({
+      color: "#0a0a0a",
+      roughness: 0.28,
+      metalness: 0.38,
+      clearcoat: 0.62,
+      clearcoatRoughness: 0.18,
+    });
+    // Left lens frame (thick torus)
+    const lensL = new e.Mesh(new e.TorusGeometry(0.026, 0.007, 8, 20), glassesMat);
+    lensL.position.set(-0.055, 1.569, 0.162);
+    lensL.rotation.x = Math.PI / 2 - 0.12;
+    lensL.scale.set(1.1, 1.0, 1.0);
+    o.add(lensL);
+    // Right lens frame
+    const lensR = lensL.clone();
+    lensR.position.x = 0.055;
+    o.add(lensR);
+    // Nose bridge
+    const bridge = new e.Mesh(new e.BoxGeometry(0.024, 0.007, 0.006), glassesMat);
+    bridge.position.set(0, 1.572, 0.163);
+    o.add(bridge);
+    // Left temple arm (goes back toward ear)
+    const templeL = new e.Mesh(new e.BoxGeometry(0.007, 0.007, 0.096), glassesMat);
+    templeL.position.set(-0.084, 1.569, 0.12);
+    o.add(templeL);
+    // Right temple arm
+    const templeR = templeL.clone();
+    templeR.position.x = 0.084;
+    o.add(templeR);
+  }
   let closeupRefinement = null,
     heroCloseupHead = null;
   const be = new e.Mesh(
@@ -4584,6 +4664,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       phone: !0,
       highlight: !0,
       scale: 1.08,
+      pompadour: !0,
     }),
     Co = S({
       torso: "#f8f6f2",
@@ -4950,47 +5031,85 @@ export function createLm402Scene(D, runtimeOptions = {}) {
   H.add(Wo);
   let Xo = null,
     jo = 0;
+  /* ── 光線隧道蟲洞系統 ── */
   var _wormholeActive = false,
     _wormholeTime = 0,
-    _wormholeDuration = 1.8,
+    _wormholeDuration = 2.2,
     _wormholeGroup = null;
   function initWormhole() {
     if (_wormholeGroup) return;
     _wormholeGroup = new e.Group();
     _wormholeGroup.visible = false;
-    for (var i = 0; i < 8; i++) {
-      var ring = new e.Mesh(
-        new e.TorusGeometry(0.6 + i * 0.35, 0.02 + i * 0.008, 8, 32),
-        new e.MeshBasicMaterial({
-          color: new e.Color().setHSL(0.55 + i * 0.04, 1, 0.5 + i * 0.04),
-          transparent: true,
-          opacity: 0,
-          side: e.DoubleSide,
-          blending: e.AdditiveBlending,
-        }),
-      );
-      ring.rotation.x = Math.PI / 2;
-      ring.userData.idx = i;
-      _wormholeGroup.add(ring);
-    }
-    var core = new e.Mesh(
-      new e.SphereGeometry(0.15, 16, 16),
-      new e.MeshBasicMaterial({
-        color: 0x88eeff,
+    /* 隧道圓柱體 — 從外觀看是一個向前拉伸的光管 */
+    var tunnelGeo = new e.CylinderGeometry(0.38, 0.52, 12, 24, 1, true);
+    var tunnelMat = new e.MeshBasicMaterial({
+      color: 0xaaddff,
+      transparent: true,
+      opacity: 0,
+      side: e.DoubleSide,
+      blending: e.AdditiveBlending,
+    });
+    var tunnel = new e.Mesh(tunnelGeo, tunnelMat);
+    tunnel.rotation.x = Math.PI / 2;
+    tunnel.userData.isTunnel = true;
+    _wormholeGroup.add(tunnel);
+    /* 速度光線 — 向前延伸的光條 */
+    var NUM_STREAKS = 28;
+    for (var si = 0; si < NUM_STREAKS; si++) {
+      var angle = (si / NUM_STREAKS) * Math.PI * 2;
+      var radius = 0.18 + Math.random() * 0.32;
+      var streakLen = 1.4 + Math.random() * 2.2;
+      var pts = [
+        new e.Vector3(Math.cos(angle) * radius, Math.sin(angle) * radius, 0),
+        new e.Vector3(Math.cos(angle) * radius * 0.4, Math.sin(angle) * radius * 0.4, -streakLen),
+      ];
+      var streakGeo = new e.BufferGeometry().setFromPoints(pts);
+      var hue = 0.54 + si * 0.012;
+      var streakMat = new e.LineBasicMaterial({
+        color: new e.Color().setHSL(hue % 1, 1, 0.82),
         transparent: true,
         opacity: 0,
         blending: e.AdditiveBlending,
-      }),
-    );
+        linewidth: 1,
+      });
+      var streak = new e.Line(streakGeo, streakMat);
+      streak.userData.isStreak = true;
+      streak.userData.baseOpacity = 0.5 + Math.random() * 0.4;
+      streak.userData.phase = Math.random() * Math.PI * 2;
+      _wormholeGroup.add(streak);
+    }
+    /* 中央爆發光核 */
+    var coreGeo = new e.SphereGeometry(0.12, 12, 12);
+    var coreMat = new e.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0,
+      blending: e.AdditiveBlending,
+    });
+    var core = new e.Mesh(coreGeo, coreMat);
     core.userData.isCore = true;
     _wormholeGroup.add(core);
+    /* 外圍光暈環 */
+    for (var ri = 0; ri < 3; ri++) {
+      var haloGeo = new e.TorusGeometry(0.28 + ri * 0.22, 0.014, 8, 32);
+      var haloMat = new e.MeshBasicMaterial({
+        color: new e.Color().setHSL(0.56 + ri * 0.06, 1, 0.7),
+        transparent: true,
+        opacity: 0,
+        blending: e.AdditiveBlending,
+      });
+      var halo = new e.Mesh(haloGeo, haloMat);
+      halo.userData.isHalo = true;
+      halo.userData.haloIdx = ri;
+      _wormholeGroup.add(halo);
+    }
     j.add(_wormholeGroup);
   }
   function triggerWormhole(px, py, pz) {
     initWormhole();
     _wormholeActive = true;
     _wormholeTime = 0;
-    _wormholeGroup.position.set(px, (py || 0) + 1.2, pz);
+    _wormholeGroup.position.set(px, (py || 0) + 1.4, pz);
     _wormholeGroup.visible = true;
   }
   function updateWormhole(dt) {
@@ -5002,20 +5121,45 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       _wormholeGroup.visible = false;
       return;
     }
-    var peak = t < 0.3 ? t / 0.3 : t < 0.7 ? 1 : (1 - t) / 0.3;
+    /* 包絡：0→快速爆發→維持→漸出 */
+    var peak = t < 0.18 ? t / 0.18 : t < 0.72 ? 1 : (1 - t) / 0.28;
+    peak = Math.max(0, Math.min(1, peak));
+    /* 讓整個群組面向攝影機 (billboard Y) */
+    _wormholeGroup.rotation.y = Math.atan2(
+      q.position.x - _wormholeGroup.position.x,
+      q.position.z - _wormholeGroup.position.z,
+    );
     _wormholeGroup.children.forEach(function (c) {
-      if (c.userData.isCore) {
-        c.material.opacity = peak * 0.8;
-        c.scale.setScalar(1 + Math.sin(t * 12) * 0.3);
+      if (c.userData.isTunnel) {
+        c.material.opacity = peak * 0.22;
+        /* 隧道向前拉伸感 */
+        c.scale.z = 1 + t * 2.4;
         return;
       }
-      var i = c.userData.idx;
-      var phase = t * 6 - i * 0.4;
-      var ringScale = 1 + Math.max(0, Math.sin(phase * Math.PI)) * 2;
-      c.scale.setScalar(ringScale);
-      c.material.opacity =
-        peak * (0.7 - i * 0.06) * Math.max(0, Math.cos(phase * Math.PI * 0.5));
-      c.rotation.z = t * 3 + i * 0.4;
+      if (c.userData.isCore) {
+        var corePulse = 1 + Math.sin(t * 18) * 0.22 * peak;
+        c.scale.setScalar(corePulse * (0.8 + peak * 1.6));
+        c.material.opacity = peak * 0.9;
+        return;
+      }
+      if (c.userData.isHalo) {
+        var hi = c.userData.haloIdx;
+        var hPhase = t * 5 - hi * 0.5;
+        var hEnv = Math.max(0, Math.sin(hPhase * Math.PI * 0.6)) * peak;
+        c.material.opacity = hEnv * (0.7 - hi * 0.14);
+        c.scale.setScalar(1 + hPhase * 0.18);
+        c.rotation.z = t * 2.2 + hi * 1.2;
+        return;
+      }
+      if (c.userData.isStreak) {
+        var sp = c.userData.phase;
+        /* 速度線閃爍，模擬穿越感 */
+        var streakPulse = Math.abs(Math.sin(t * 9 + sp));
+        c.material.opacity = peak * c.userData.baseOpacity * streakPulse;
+        /* 讓速度線向前射出 */
+        c.scale.z = 1 + t * 3.2 * peak;
+        return;
+      }
     });
   }
   function getStairY(t, o) {
@@ -5107,6 +5251,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             }),
           Co.position.set(t.characters.junior.x, 0, t.characters.junior.z),
           (Co.rotation.y = t.characters.junior.rotationY ?? 0),
+          juniorHeroLight.position.set(Co.position.x + 3.8, 4.3, Co.position.z),
+          juniorRimLight.position.set(Co.position.x + 0.84, 2.08, Co.position.z + g(8)),
           juniorHeroLight.target.position.set(
             Co.position.x + 0.03,
             1.54,
@@ -5639,6 +5785,70 @@ export function createLm402Scene(D, runtimeOptions = {}) {
               q.updateProjectionMatrix(),
               q.lookAt(h.x, h.y - 0.04, h.z + 0.028),
               q.rotateZ(0.001 * Math.sin(0.4 * s) * g));
+          })(s));
+      else if ("perfect_eye" === s.endingSequence?.type || "one_gaze" === s.endingSequence?.type)
+        /* ── 一眼瞬間：360° 環繞 → 停在學妹眼前 ── */
+        ((H.visible = false),
+          (function(t) {
+            const et = t.endingSequence?.time ?? 0;
+            const heroAnchor = resolveJuniorHeroAnchor(Co, {
+              forceRoot: Co.userData.runtimeModelRoot ?? null,
+              allowLegacyFallback: !1,
+            });
+            const facePos = heroAnchor.face;
+            const chestPos = heroAnchor.chest;
+            /* Way B 有一段學妹走路前置動畫 (0-6s)；Way A 跳過前置 */
+            const isOneGaze = "one_gaze" === t.endingSequence?.type;
+            const WALK_END   = isOneGaze ? 6.0 : 0.0;   // Way B 有走路前置
+            const ORBIT_START = WALK_END;
+            const ORBIT_END   = WALK_END + 9.0;          // 環繞 9 秒（≈ 1 圈）
+            const CLOSE_START = ORBIT_END;
+            const CLOSE_END   = CLOSE_START + 2.5;       // 2.5 秒拉近
+
+            if (et < ORBIT_START + 0.01) {
+              /* 還沒開始環繞，保持站在玩家位置、望向學妹 */
+              const lookTgt = new e.Vector3(facePos.x, facePos.y + 0.06, facePos.z);
+              q.position.copy(t.player
+                ? new e.Vector3(t.player.x, t.player.y + 1.62, t.player.z)
+                : new e.Vector3(chestPos.x + 1.8, chestPos.y + 0.3, chestPos.z));
+              q.lookAt(lookTgt);
+              return;
+            }
+
+            if (et >= ORBIT_START && et < ORBIT_END) {
+              /* 360° 慢速環繞：鏡頭繞學妹臉轉一圈 */
+              const ot = (et - ORBIT_START) / (ORBIT_END - ORBIT_START);
+              const orbitRadius = e.MathUtils.lerp(2.6, 1.5, e.MathUtils.smoothstep(ot, 0.4, 1));
+              const angle = ot * Math.PI * 2;
+              const orbitX = facePos.x + Math.sin(angle) * orbitRadius;
+              const orbitZ = facePos.z + Math.cos(angle) * orbitRadius;
+              const orbitY = facePos.y + e.MathUtils.lerp(0.5, 0.1, e.MathUtils.smoothstep(ot, 0.6, 1));
+              /* 學妹面向鏡頭 */
+              Co.rotation.y = Math.atan2(orbitX - facePos.x, orbitZ - facePos.z);
+              q.position.set(orbitX, orbitY, orbitZ);
+              q.fov = e.MathUtils.lerp(42, 30, e.MathUtils.smoothstep(ot, 0, 0.8));
+              q.updateProjectionMatrix();
+              q.lookAt(facePos.x, facePos.y + 0.04, facePos.z);
+              q.rotateZ(0.002 * Math.sin(2.0 * et));
+              return;
+            }
+
+            /* 拉近到學妹眼前「一個人的距離」(~1.2m) */
+            if (et >= CLOSE_START) {
+              const ct = Math.min(1, (et - CLOSE_START) / (CLOSE_END - CLOSE_START));
+              const cEase = e.MathUtils.smoothstep(ct, 0, 1);
+              const fwd = new e.Vector3(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y));
+              const farPos = facePos.clone().add(fwd.clone().multiplyScalar(2.6)).add(new e.Vector3(0, 0.3, 0));
+              const nearPos = facePos.clone().add(fwd.clone().multiplyScalar(1.2)).add(new e.Vector3(0, 0.1, 0));
+              const camPos = farPos.clone().lerp(nearPos, cEase);
+              const bob = 4e-4 * Math.sin(0.6 * et);
+              camPos.y += bob;
+              q.position.copy(camPos);
+              q.fov = e.MathUtils.lerp(32, 26, cEase);
+              q.updateProjectionMatrix();
+              q.lookAt(facePos.x, facePos.y + 0.04, facePos.z);
+              return;
+            }
           })(s));
       else {
         H.visible = !1;

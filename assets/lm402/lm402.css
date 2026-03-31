@@ -3435,3 +3435,111 @@ body.cinematic-mode .letterbox-bar {
     max-width: 52% !important;
   }
 }
+
+/* ═══════════════════════════════════════════
+   D2: 可互動按鈕亮光脈動特效
+   ═══════════════════════════════════════════ */
+@keyframes btn-glow-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(180,220,255,0), 0 0 8px 2px rgba(140,200,255,0.18); }
+  50%  { box-shadow: 0 0 0 5px rgba(140,200,255,0.10), 0 0 18px 6px rgba(140,200,255,0.28); }
+  100% { box-shadow: 0 0 0 0 rgba(180,220,255,0), 0 0 8px 2px rgba(140,200,255,0.18); }
+}
+@keyframes btn-glow-pulse-primary {
+  0%   { box-shadow: 0 0 0 0 rgba(217,179,106,0), 0 0 8px 2px rgba(217,179,106,0.22); }
+  50%  { box-shadow: 0 0 0 6px rgba(217,179,106,0.12), 0 0 22px 8px rgba(217,179,106,0.32); }
+  100% { box-shadow: 0 0 0 0 rgba(217,179,106,0), 0 0 8px 2px rgba(217,179,106,0.22); }
+}
+
+/* 未點擊過的主要按鈕 — 金色脈動 */
+.ending-button.primary:not(.glow-off) {
+  animation: btn-glow-pulse-primary 2.4s ease-in-out infinite;
+}
+/* 未點擊過的普通互動按鈕 */
+.ending-button:not(.primary):not(.glow-off),
+.panel-action:not(.primary):not(.glow-off),
+.action-glyph:not(.glow-off) {
+  animation: btn-glow-pulse 2.8s ease-in-out infinite;
+}
+/* 已點擊：停止發光 */
+.ending-button.glow-off,
+.panel-action.glow-off,
+.action-glyph.glow-off {
+  animation: none !important;
+}
+
+/* ═══════════════════════════════════════════
+   D2: 視角搖桿標籤位置上移，避免與 action-glyph 重疊
+   ═══════════════════════════════════════════ */
+.control-cluster.right .joystick-label {
+  top: -44px;
+}
+
+/* ═══════════════════════════════════════════
+   D2: 可拖移 UI 面板 — side-panel、speed-panel 浮動版
+   ═══════════════════════════════════════════ */
+.side-panel.ui-float {
+  position: fixed !important;
+  top: 60px;
+  right: 12px;
+  left: auto !important;
+  bottom: auto !important;
+  width: 300px;
+  max-height: 88vh;
+  overflow-y: auto;
+  border-radius: 12px;
+  cursor: default;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.48), 0 0 0 1px rgba(255,255,255,0.06);
+  z-index: 200;
+  resize: none;
+  transition: box-shadow 0.2s;
+}
+.side-panel.ui-float:hover {
+  box-shadow: 0 8px 40px rgba(0,0,0,0.58), 0 0 0 1px rgba(140,200,255,0.14);
+}
+.side-panel.ui-float .panel-card:first-child {
+  cursor: grab;
+  user-select: none;
+}
+.side-panel.ui-float .panel-card:first-child:active {
+  cursor: grabbing;
+}
+/* 拖移把手提示線 */
+.ui-drag-handle-hint {
+  display: block;
+  width: 32px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.14);
+  margin: 0 auto 6px;
+}
+
+/* ═══════════════════════════════════════════
+   D2: 一眼瞬間結局文字全螢幕疊加
+   ═══════════════════════════════════════════ */
+#one-gaze-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.8s ease;
+}
+#one-gaze-overlay.show {
+  opacity: 1;
+}
+#one-gaze-overlay .one-gaze-text {
+  font: 400 26px/1.6 'Cormorant Garamond', serif;
+  letter-spacing: 0.12em;
+  color: rgba(238,232,222,0.96);
+  text-align: center;
+  text-shadow: 0 0 40px rgba(180,200,255,0.5), 0 2px 8px rgba(0,0,0,0.8);
+  padding: 24px 40px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 4px;
+  background: rgba(4,6,12,0.72);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}

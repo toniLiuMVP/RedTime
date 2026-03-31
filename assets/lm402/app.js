@@ -210,6 +210,8 @@ const dom = {
   fontWidget: document.getElementById("font-widget"),
   fontToggle: document.getElementById("font-toggle"),
   fontToggleValue: document.getElementById("font-toggle-value"),
+  oneGazeOverlay: document.getElementById("one-gaze-overlay"),
+  sidePanel: document.getElementById("side-panel"),
 };
 
 /* ── Font Scale System ── */
@@ -260,9 +262,10 @@ function checkStairWarp() {
   const px = state.player.x / WORLD_SCALE;
   const pz = state.player.z / WORLD_SCALE;
   const pad = stairsWarp.triggerEdgePadding;
-  /* 上樓樓梯已移除，只檢測下樓（back）樓梯 */
-  const inBack = pz >= (stairsWarp.back.z1 - pad) && pz <= (stairsWarp.back.z2 + pad);
-  if (!inBack) return;
+  /* 前後兩邊樓梯都觸發蟲洞 */
+  const inBack  = pz >= (stairsWarp.back.z1  - pad) && pz <= (stairsWarp.back.z2  + pad);
+  const inFront = pz >= (stairsWarp.front.z1 - pad) && pz <= (stairsWarp.front.z2 + pad);
+  if (!inBack && !inFront) return;
   stairWarpCooldownUntil = now + stairsWarp.cooldown;
   scene.triggerWormhole(state.player.x, 0, state.player.z);
   setTimeout(() => {
@@ -1563,8 +1566,16 @@ function startEnding(type, options = {}) {
     state.phase = "eye_contact";
     state.phaseClock = 0;
     state.flags.perfectLinePlayed = false;
+    state.flags.oneGazeTextShown = false;
     setSubtitle("女兒", "阿姨乖乖站在後門，沒有往前也沒有往後。光落在她身上，學長停下腳步。", 6);
     setAmbience("整條走廊的光像有人調慢了速度，只剩兩個人和那一格門洞。");
+  } else if (type === "one_gaze") {
+    state.phase = "eye_contact";
+    state.phaseClock = 0;
+    state.flags.perfectLinePlayed = false;
+    state.flags.oneGazeTextShown = false;
+    setSubtitle("女兒", "光先落在她身上。阿姨先向後轉，然後慢慢走向後門——那一秒，就要來了。", 6);
+    setAmbience("學妹轉身、走動、停步。整條走廊在等待那一個對視。");
   } else if (type === "restrain") {
     setSubtitle("女兒", "我好想往前衝去抱把拔……可是我的手……", 4.5);
     setAmbience("畫面開始變暗。");
@@ -1591,6 +1602,19 @@ function startPerfectEnding() {
   dom.endingOverlay.hidden = true;
   dom.body.classList.remove("ending-open");
   startEnding("perfect", { manual: true });
+}
+
+/* Way B：從任務面板「飛到一眼瞬間那一秒」觸發 */
+function startOneGazeEnding() {
+  if (state.dialogue) closeDialogue();
+  if (document.pointerLockElement === canvas) document.exitPointerLock?.();
+  clearTransientInput();
+  state.mode = "play";
+  state.ending = null;
+  state.endingSequence = null;
+  dom.endingOverlay.hidden = true;
+  dom.body.classList.remove("ending-open");
+  startEnding("one_gaze", { manual: true });
 }
 
 function finishEndingSequence() {
@@ -1789,26 +1813,83 @@ function updateCharacters() {
     return;
   }
 
+  /* ── Way A / Way B：perfect_eye / one_gaze 結局角色動畫 ── */
+  if (state.endingSequence?.type === "perfect_eye" || state.endingSequence?.type === "one_gaze") {
+    const et = state.endingSequence.time;
+    /* 學長隱藏在景深外 */
+    setCharacterPose("senior", scale(-9999), scale(-9999), 0, 0);
+    setCharacterPose("fatherEcho", scale(-272), scale(WORLD.backDoor.center.z + 2), Math.PI / 2, 0);
+    setCharacterPose("auntEcho", scale(-116), scale(WORLD.backDoor.center.z + 26), -Math.PI / 2, 0);
+
+    if (state.endingSequence.type === "one_gaze" && et < 6.0) {
+      /* Way B：
+         0-1.2s  原位（靠窗座）
+         1.2-3s  向後轉走到後牆
+         3-4s    停在後牆、轉身
+         4-6s    走向後門停下                                          */
+      const WALL_Z    = scale(WORLD.classroom.backZ ?? 2484);   // 教室後牆
+      const BACKDOOR_Z = scale(WORLD.backDoor.center.z - 4);
+
+      if (et < 1.2) {
+        setCharacterPose("junior", scale(1896), scale(2058), 0);
+      } else if (et < 3.0) {
+        const t = smoothstep(1.2, 3.0, et);
+        const jz = lerp(scale(2058), WALL_Z, t);
+        setCharacterPose("junior", scale(1896), jz, Math.PI); // 面向後牆
+      } else if (et < 4.0) {
+        const t = smoothstep(3.0, 4.0, et);
+        // 轉身：從面向後牆 (Math.PI) → 面向前方後門 (0)
+        const yaw = lerp(Math.PI, 0, t);
+        setCharacterPose("junior", scale(1896), WALL_Z, yaw);
+      } else {
+        const t = smoothstep(4.0, 6.0, et);
+        const jx = lerp(scale(1896), scale(100), t);
+        const jz = lerp(WALL_Z, BACKDOOR_Z, t);
+        setCharacterPose("junior", jx, jz, 0); // 面向後門走
+      }
+    } else {
+      /* Way A 或 one_gaze 走路完成後：學妹站在後門 */
+      setCharacterPose("junior", scale(100), scale(WORLD.backDoor.center.z - 4), 0);
+    }
+    return;
+  }
+
   if (state.phase === "front_call") {
-    // 學長：先面向正門站著(0-2s) → 轉身(2-3.5s) → 往後門方向走(3.5-7s)
-    const standPhase = smoothstep(0, 0.1, state.phaseClock); // 立刻站定
-    const turnT = smoothstep(2.0, 3.5, state.phaseClock); // 2-3.5秒轉身
-    const walkT = smoothstep(3.5, 7.0, state.phaseClock); // 3.5-7秒開始走
+    /* ── 11:00 跑步過場：學長從前樓梯衝上來，跑過 LM401 後門到 LM402 前門
+         過場時間：0 ~ 3.8s  (跑步)
+         3.8s 後：轉身打電話的正常動畫                                    ── */
+    const RUN_END = 3.8;
+    if (state.phaseClock < RUN_END) {
+      /* 起跑點：三樓前樓梯出口 (z=front.z1 ~ z2，x 走廊外側) */
+      const runStartX = scale(-360);
+      const runStartZ = scale(WORLD.stairs.front.landingZ);          // 前樓梯登陸點 ~196
+      /* 終點：LM402 前門外稍前一點 */
+      const runEndX   = scale(-336);
+      const runEndZ   = scale(WORLD.frontDoor.center.z - 42);        // ~2292
+      const runT = smoothstep(0, RUN_END, state.phaseClock);
+      /* 使用 easeOutCubic 讓衝刺感更明顯 */
+      const runEase = 1 - Math.pow(1 - runT, 2.8);
+      const srX = lerp(runStartX, runEndX, runEase);
+      const srZ = lerp(runStartZ, runEndZ, runEase);
+      /* 跑步方向：始終面向 +Z（後門方向） */
+      const runYaw = Math.PI; // 面向後方（畫面深處）
+      setCharacterPose("senior", srX, srZ, runYaw);
+      setCharacterPose("junior", scale(1896), scale(2058), 0.03);
+      setCharacterPose("fatherEcho", scale(-272), scale(WORLD.backDoor.center.z + 2), Math.PI / 2, 0);
+      setCharacterPose("auntEcho", scale(-116), scale(WORLD.backDoor.center.z + 26), -Math.PI / 2, 0);
+      return;
+    }
+    /* RUN_END 之後：正常 front_call 動畫 (phaseClock 從 RUN_END 計) */
+    const pc = state.phaseClock - RUN_END;
+    const turnT = smoothstep(0, 1.5, pc);      // 0-1.5s 轉身
+    const walkT = smoothstep(1.5, 5.0, pc);    // 1.5-5s 開始走向後門
     const seniorStandX = scale(-336);
     const seniorStandZ = scale(WORLD.frontDoor.center.z - 42);
     const seniorWalkEndZ = scale(WORLD.frontDoor.center.z - 200);
     const seniorX = seniorStandX;
     const seniorZ = lerp(seniorStandZ, seniorWalkEndZ, walkT);
-    // 面向正門(+Z方向) yaw≈0 → 轉身面向後門(-Z方向) yaw≈Math.PI
-    const facingFront = 0; // 面向正門
-    const facingBack = Math.PI; // 面向後門
-    const seniorYaw = lerp(facingFront, facingBack, turnT);
-    setCharacterPose(
-      "senior",
-      seniorX,
-      seniorZ,
-      seniorYaw
-    );
+    const seniorYaw = lerp(Math.PI, 0, turnT);  // 從背對前門 → 面向前門打電話
+    setCharacterPose("senior", seniorX, seniorZ, seniorYaw);
     setCharacterPose("junior", scale(1896), scale(2058), 0.03);
     setCharacterPose("fatherEcho", scale(-272), scale(WORLD.backDoor.center.z + 2), Math.PI / 2, 0);
     setCharacterPose("auntEcho", scale(-116), scale(WORLD.backDoor.center.z + 26), -Math.PI / 2, 0);
@@ -1937,38 +2018,60 @@ function updateEndingSequence(dt) {
     return;
   }
   state.endingSequence.time += dt;
-  if (state.ending === "perfect" || state.ending === "perfect_eye") {
-    // No orbit — direct senior POV
+  if (state.ending === "perfect") {
+    // 完美結局：維持原有完整過場
     if (state.endingSequence.time < (CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 10)) {
       state.endingSequence.shotPhase = "senior_pov_hold";
     } else {
       state.endingSequence.shotPhase = "eyes";
     }
-    if (state.ending === "perfect") {
-      if (!state.flags.perfectLine1Played && state.endingSequence.time >= (CINEMATIC_TIMELINE.perfectLine1At ?? 1)) {
-        state.flags.perfectLine1Played = true;
-        setSubtitle("學長（心底的聲音）", "也太像徐若瑄了吧！", 5.0);
-        setAmbience("學長心裡先跳出一句很不正經的念頭。他還不知道，這一秒會記二十年。");
-      }
-      if (!state.flags.perfectLine2Played && state.endingSequence.time >= (CINEMATIC_TIMELINE.perfectLine2At ?? 6)) {
-        state.flags.perfectLine2Played = true;
-        setSubtitle("", "這一次，依然再次遇見妳。", 10.0);
-        setAmbience("這一次，依然再次遇見妳。");
-      }
-    } else {
-      // perfect_eye: 360° orbit → senior POV → "這一次，依然再次遇見妳。"
-      if (!state.flags.perfectLine1Played && state.endingSequence.time >= 1.5) {
-        state.flags.perfectLine1Played = true;
-        setSubtitle("學長（心底的聲音）", "也太像徐若瑄了吧！", 4.5);
-        setAmbience("學長心裡先跳出一句很不正經的念頭。他還不知道，這一秒會記二十年。");
-      }
-      if (!state.flags.perfectLine2Played && state.endingSequence.time >= (CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 27.6)) {
-        state.flags.perfectLine2Played = true;
-        setSubtitle("", "這一次，依然再次遇見妳。", 10.0);
-        setAmbience("這一次，依然再次遇見妳。");
-      }
+    if (!state.flags.perfectLine1Played && state.endingSequence.time >= (CINEMATIC_TIMELINE.perfectLine1At ?? 1)) {
+      state.flags.perfectLine1Played = true;
+      setSubtitle("學長（心底的聲音）", "也太像徐若瑄了吧！", 5.0);
+      setAmbience("學長心裡先跳出一句很不正經的念頭。他還不知道，這一秒會記二十年。");
+    }
+    if (!state.flags.perfectLine2Played && state.endingSequence.time >= (CINEMATIC_TIMELINE.perfectLine2At ?? 6)) {
+      state.flags.perfectLine2Played = true;
+      setSubtitle("", "這一次，依然再次遇見妳。", 10.0);
+      setAmbience("這一次，依然再次遇見妳。");
     }
     if (state.endingSequence.time > (CINEMATIC_TIMELINE.perfectDuration + 0.35) && dom.endingOverlay.hidden) {
+      finishEndingSequence();
+    }
+    return;
+  }
+
+  /* ── Way A：perfect_eye（從對話選項「乖乖站著不動」觸發）
+     Way B：one_gaze（從任務面板「飛到一眼瞬間那一秒」觸發）
+     共用邏輯：360° 環繞 → 停在學妹眼前 → 顯示文字 10 秒            ── */
+  if (state.ending === "perfect_eye" || state.ending === "one_gaze") {
+    state.endingSequence.shotPhase = "one_gaze_orbit";
+    const WALK_END  = state.ending === "one_gaze" ? 6.0 : 0.0;
+    const ORBIT_END = WALK_END + 9.0;
+    const CLOSE_END = ORBIT_END + 2.5;
+    const TEXT_START = CLOSE_END;   // 文字疊加從拉近完成後開始
+    const TOTAL_DUR  = TEXT_START + 12.0;  // 文字顯示 12 秒
+
+    /* Way B：學妹走路前置動畫 */
+    if (state.ending === "one_gaze" && state.endingSequence.time < WALK_END) {
+      /* 不做角色動畫（updateCharacters 裡 perfect_eye/one_gaze 分支處理） */
+    }
+
+    /* 文字疊加層 */
+    if (!state.flags.oneGazeTextShown && state.endingSequence.time >= TEXT_START) {
+      state.flags.oneGazeTextShown = true;
+      if (dom.oneGazeOverlay) {
+        dom.oneGazeOverlay.classList.add("show");
+        setTimeout(() => {
+          if (dom.oneGazeOverlay) dom.oneGazeOverlay.classList.remove("show");
+        }, 10500);
+      }
+      setSubtitle("", "這一次，依然再次遇見妳。", 10.0);
+      setAmbience("這一次，依然再次遇見妳。");
+    }
+
+    if (state.endingSequence.time > TOTAL_DUR && dom.endingOverlay.hidden) {
+      if (dom.oneGazeOverlay) dom.oneGazeOverlay.classList.remove("show");
       finishEndingSequence();
     }
     return;
@@ -2573,7 +2676,7 @@ function bindUI() {
     audioSystem.unlock();
   });
   dom.perfectEndingBtn.addEventListener("click", startPerfectEnding);
-  dom.perfectEndingSideBtn.addEventListener("click", startPerfectEnding);
+  dom.perfectEndingSideBtn.addEventListener("click", startOneGazeEnding);
   dom.objectivePrompt.addEventListener("click", toggleObjectivePrompt);
   dom.transcriptToggle?.addEventListener("click", () => toggleTranscript());
   dom.transcriptToggle?.addEventListener("dblclick", (e) => {
@@ -2608,6 +2711,55 @@ function bindUI() {
     dom.fontToggle.addEventListener("click", cycleFontScale);
   }
   applyFontScale();
+
+  /* ── D2: 按鈕發光管理 — 點擊後移除光暈 ── */
+  document.querySelectorAll(
+    ".ending-button, .panel-action, .action-glyph"
+  ).forEach((btn) => {
+    btn.addEventListener("click", () => {
+      btn.classList.add("glow-off");
+    }, { once: true });
+  });
+
+  /* ── D2: side-panel 拖移（桌機模式） ── */
+  (function initSidePanelDrag() {
+    const panel = dom.sidePanel;
+    if (!panel) return;
+    // 只在桌機上啟用浮動拖移
+    if (window.innerWidth < 800) return;
+    panel.classList.add("ui-float");
+    // 加入拖把手提示
+    const firstCard = panel.querySelector(".panel-card");
+    if (firstCard) {
+      const hint = document.createElement("div");
+      hint.className = "ui-drag-handle-hint";
+      firstCard.insertBefore(hint, firstCard.firstChild);
+    }
+    let dragging = false, startX = 0, startY = 0, origLeft = 0, origTop = 0;
+    const handle = firstCard || panel;
+    handle.addEventListener("pointerdown", (e) => {
+      if (e.target.closest("button, a, input, select")) return;
+      dragging = true;
+      startX = e.clientX; startY = e.clientY;
+      const rect = panel.getBoundingClientRect();
+      origLeft = rect.left; origTop = rect.top;
+      panel.style.left = origLeft + "px";
+      panel.style.right = "auto";
+      panel.style.top = origTop + "px";
+      panel.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    panel.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - startX, dy = e.clientY - startY;
+      const newLeft = Math.max(0, Math.min(window.innerWidth - 60, origLeft + dx));
+      const newTop = Math.max(0, Math.min(window.innerHeight - 60, origTop + dy));
+      panel.style.left = newLeft + "px";
+      panel.style.top = newTop + "px";
+    });
+    panel.addEventListener("pointerup", () => { dragging = false; });
+    panel.addEventListener("pointercancel", () => { dragging = false; });
+  })();
 
   bindJoystick(dom.moveStick, (x, y) => {
     state.input.moveX = x;
