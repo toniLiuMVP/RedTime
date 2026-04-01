@@ -4,6 +4,7 @@ export const STORAGE_KEYS = {
   audioEnabled: "lm402_audio_enabled_v3",
   fontScale: "lm402_font_scale_v1",
   endingsCompleted: "lm402_endings_completed_v1",
+  graphicsQuality: "lm402_graphics_quality_v1",
 };
 export const WORLD = {
   minX: -860,

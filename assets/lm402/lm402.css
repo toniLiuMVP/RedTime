@@ -622,6 +622,10 @@ body[data-ui-preset="ending"] .stage-vignette {
   top: 118px;
   left: 18px;
 }
+.quality-widget {
+  top: 162px;
+  left: 18px;
+}
 .font-toggle {
   display: inline-flex;
   align-items: center;
@@ -641,6 +645,28 @@ body[data-ui-preset="ending"] .stage-vignette {
   color: var(--gold);
 }
 .font-toggle-value {
+  color: #fff4e6e6;
+  font-size: 12px;
+}
+.quality-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #070a10c7;
+}
+.quality-toggle-label {
+  font:
+    500 10px DM Mono,
+    monospace;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.quality-toggle-value {
   color: #fff4e6e6;
   font-size: 12px;
 }
@@ -1566,6 +1592,7 @@ body.landscape-prompt .hud,
 body.landscape-prompt .speed-widget,
 body.landscape-prompt .audio-widget,
 body.landscape-prompt .font-widget,
+body.landscape-prompt .quality-widget,
 body.landscape-prompt .time-watch,
 body.landscape-prompt .objective-prompt,
 body.landscape-prompt .hint-pill,
@@ -1642,6 +1669,11 @@ body.landscape-prompt .debug-panel {
   .font-widget {
     top: max(8px, env(safe-area-inset-top));
     left: calc(max(8px, env(safe-area-inset-left)) + 218px);
+    z-index: 20;
+  }
+  .quality-widget {
+    top: max(8px, env(safe-area-inset-top));
+    left: calc(max(8px, env(safe-area-inset-left)) + 308px);
     z-index: 20;
   }
   .time-watch {
@@ -2117,6 +2149,10 @@ body.landscape-prompt .debug-panel {
   .font-widget {
     top: max(8px, env(safe-area-inset-top));
     left: calc(max(8px, env(safe-area-inset-left)) + 202px);
+  }
+  .quality-widget {
+    top: max(8px, env(safe-area-inset-top));
+    left: calc(max(8px, env(safe-area-inset-left)) + 292px);
   }
   .music-prompt {
     left: auto;
@@ -2978,6 +3014,7 @@ body.landscape-prompt .debug-panel {
   .speed-widget,
   .audio-widget,
   .font-widget,
+  .quality-widget,
   .objective-prompt,
   .hint-pill,
   .focus-prompt,
