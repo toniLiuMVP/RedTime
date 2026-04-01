@@ -210,6 +210,9 @@ const dom = {
   fontWidget: document.getElementById("font-widget"),
   fontToggle: document.getElementById("font-toggle"),
   fontToggleValue: document.getElementById("font-toggle-value"),
+  qualityWidget: document.getElementById("quality-widget"),
+  qualityToggle: document.getElementById("quality-toggle"),
+  qualityToggleValue: document.getElementById("quality-toggle-value"),
   oneGazeOverlay: document.getElementById("one-gaze-overlay"),
   sidePanel: document.getElementById("side-panel"),
 };
@@ -218,6 +221,32 @@ const dom = {
 const FONT_SCALE_PRESETS = { small: 0.85, standard: 1, large: 1.2, xlarge: 1.4 };
 const FONT_SCALE_ORDER = ["small", "standard", "large", "xlarge"];
 const FONT_SCALE_LABELS = { small: "小", standard: "標準", large: "大", xlarge: "特大" };
+
+/* ── Graphics Quality System ── */
+const QUALITY_TIERS = {
+  smooth: { shadowMapSize: 512,  maxPixelRatio: 1.0, dustCount: 32,  mirrorOpacity: 0.08, portraitBoost: 1 },
+  high:   { shadowMapSize: 1024, maxPixelRatio: 1.5, dustCount: 64,  mirrorOpacity: 0.10, portraitBoost: 1 },
+  ultra:  { shadowMapSize: 2048, maxPixelRatio: 4.0, dustCount: 128, mirrorOpacity: 0.14, portraitBoost: 1 },
+};
+const QUALITY_ORDER = ["smooth", "high", "ultra"];
+const QUALITY_LABELS = { smooth: "順暢", high: "高級", ultra: "全開最高" };
+function loadQualitySetting() {
+  try { const v = localStorage.getItem(STORAGE_KEYS.graphicsQuality); return QUALITY_TIERS[v] ? v : "smooth"; } catch { return "smooth"; }
+}
+function persistQualitySetting() {
+  try { localStorage.setItem(STORAGE_KEYS.graphicsQuality, state.graphicsQuality); } catch {}
+}
+function applyQualityTier() {
+  scene.setRuntimeConfig({ qualityTier: state.graphicsQuality, qualityTiers: QUALITY_TIERS });
+  if (dom.qualityToggleValue) dom.qualityToggleValue.textContent = QUALITY_LABELS[state.graphicsQuality] || state.graphicsQuality;
+}
+function cycleQualityTier() {
+  const idx = QUALITY_ORDER.indexOf(state.graphicsQuality);
+  state.graphicsQuality = QUALITY_ORDER[(idx + 1) % QUALITY_ORDER.length];
+  applyQualityTier();
+  persistQualitySetting();
+}
+
 function loadFontScale() {
   try { const v = parseFloat(localStorage.getItem(STORAGE_KEYS.fontScale)); return Number.isFinite(v) ? v : 1; } catch { return 1; }
 }
@@ -552,6 +581,7 @@ const state = {
   lookSensitivityScalar: initialLookSetting.scalar,
   audioEnabled: initialAudioEnabled,
   fontScale: loadFontScale(),
+  graphicsQuality: loadQualitySetting(),
   phase: "consciousness_market",
   ending: null,
   endingSequence: null,
@@ -2777,6 +2807,10 @@ function bindUI() {
     dom.fontToggle.addEventListener("click", cycleFontScale);
   }
   applyFontScale();
+  if (dom.qualityToggle) {
+    dom.qualityToggle.addEventListener("click", cycleQualityTier);
+  }
+  applyQualityTier();
 
   /* ── D2: 按鈕發光管理 — 點擊後移除光暈 ── */
   document.querySelectorAll(
