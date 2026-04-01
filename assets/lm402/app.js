@@ -1681,7 +1681,9 @@ function startOneGazeEnding() {
 }
 
 function finishEndingSequence() {
-  const ending = ENDINGS[state.ending];
+  // one_gaze 與 perfect_eye 共用同一張結局卡；fallback 確保任何未知 type 不崩潰
+  const endingKey = state.ending === "one_gaze" ? "perfect_eye" : (state.ending ?? "canon");
+  const ending = ENDINGS[endingKey] ?? ENDINGS["canon"];
   dom.endingKicker.textContent = ending.kicker;
   dom.endingTitle.textContent = ending.title;
   dom.endingCopy.textContent = ending.copy;
