@@ -1401,6 +1401,26 @@ body[data-ui-preset="ending"] .stage-vignette {
   transition: opacity 2s ease-in;
   pointer-events: none;
 }
+.ending-whiteout.sky {
+  background: linear-gradient(to bottom, #87ceeb 0%, #b3e0ff 50%, #e8f5ff 100%);
+}
+.ending-whiteout.sky::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    108deg,
+    transparent 18%,
+    rgba(255, 80, 80, 0.20) 28%,
+    rgba(255, 165, 0, 0.17) 32%,
+    rgba(255, 240, 0, 0.15) 36%,
+    rgba(50, 200, 80, 0.15) 40%,
+    rgba(30, 140, 255, 0.18) 44%,
+    rgba(160, 60, 230, 0.17) 48%,
+    transparent 58%
+  );
+  pointer-events: none;
+}
 .dialogue-sheet,
 .ending-overlay {
   position: fixed;

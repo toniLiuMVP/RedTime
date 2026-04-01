@@ -1632,7 +1632,7 @@ function finishEndingSequence() {
   state.cameraMode = "play";
   // Reset blackout/whiteout overlays
   if (dom.endingBlackout) { dom.endingBlackout.hidden = true; dom.endingBlackout.style.opacity = "0"; }
-  if (dom.endingWhiteout) { dom.endingWhiteout.hidden = true; dom.endingWhiteout.style.opacity = "0"; }
+  if (dom.endingWhiteout) { dom.endingWhiteout.hidden = true; dom.endingWhiteout.style.opacity = "0"; dom.endingWhiteout.classList.remove("sky"); }
   dom.bottomDock.classList.remove("above-blackout");
   dom.endingOverlay.hidden = false;
   dom.body.classList.add("ending-open");
@@ -1667,7 +1667,7 @@ function resetScene() {
   state.boundaryCollisionState = null;
   dom.endingOverlay.hidden = true;
   if (dom.endingBlackout) { dom.endingBlackout.hidden = true; dom.endingBlackout.style.opacity = "0"; }
-  if (dom.endingWhiteout) { dom.endingWhiteout.hidden = true; dom.endingWhiteout.style.opacity = "0"; }
+  if (dom.endingWhiteout) { dom.endingWhiteout.hidden = true; dom.endingWhiteout.style.opacity = "0"; dom.endingWhiteout.classList.remove("sky"); }
   dom.bottomDock.classList.remove("above-blackout");
   dom.body.classList.remove("ending-open");
   dom.dialogueSheet.hidden = true;
@@ -2166,8 +2166,9 @@ function updateEndingSequence(dt) {
     }
     if (!state.flags.secretWhiteout && state.endingSequence.time >= 9) {
       state.flags.secretWhiteout = true;
-      // Force white screen
+      // 藍天彩虹背景（取代全白）
       if (dom.endingWhiteout) {
+        dom.endingWhiteout.classList.add("sky");
         dom.endingWhiteout.hidden = false;
         dom.endingWhiteout.style.opacity = "1";
       }

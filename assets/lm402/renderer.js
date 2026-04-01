@@ -5797,6 +5797,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             });
             const facePos = heroAnchor.face;
             const chestPos = heroAnchor.chest;
+            const eyePos = heroAnchor.eyes;
             /* Way B 有一段學妹走路前置動畫 (0-6s)；Way A 跳過前置 */
             const isOneGaze = "one_gaze" === t.endingSequence?.type;
             const WALK_END   = isOneGaze ? 15.0 : 0.0;  // Way B 有走路前置（15秒慢走）
@@ -5822,7 +5823,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
               const angle = ot * Math.PI * 2;
               const orbitX = facePos.x + Math.sin(angle) * orbitRadius;
               const orbitZ = facePos.z + Math.cos(angle) * orbitRadius;
-              const orbitY = facePos.y + e.MathUtils.lerp(0.5, 0.1, e.MathUtils.smoothstep(ot, 0.6, 1));
+              const orbitY = facePos.y + e.MathUtils.lerp(0.55, 0.30, e.MathUtils.smoothstep(ot, 0.6, 1));
               /* 學妹面向鏡頭 */
               Co.rotation.y = Math.atan2(orbitX - facePos.x, orbitZ - facePos.z);
               q.position.set(orbitX, orbitY, orbitZ);
@@ -5838,8 +5839,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
               const ct = Math.min(1, (et - CLOSE_START) / (CLOSE_END - CLOSE_START));
               const cEase = e.MathUtils.smoothstep(ct, 0, 1);
               const fwd = new e.Vector3(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y));
-              const farPos = facePos.clone().add(fwd.clone().multiplyScalar(2.6)).add(new e.Vector3(0, 0.3, 0));
-              const nearPos = facePos.clone().add(fwd.clone().multiplyScalar(1.2)).add(new e.Vector3(0, 0.1, 0));
+              const farPos = facePos.clone().add(fwd.clone().multiplyScalar(2.6)).add(new e.Vector3(0, 0.30, 0));
+              const nearPos = facePos.clone().add(fwd.clone().multiplyScalar(1.2)).add(new e.Vector3(0, eyePos.y - facePos.y, 0));
               const camPos = farPos.clone().lerp(nearPos, cEase);
               const bob = 4e-4 * Math.sin(0.6 * et);
               camPos.y += bob;
