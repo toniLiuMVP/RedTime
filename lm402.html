@@ -712,5 +712,20 @@
         updateCinematic();
       })();
     </script>
+    <script>
+      // Ultimate safety net: force-kill intro overlay after 25s no matter what
+      // This catches cases where JS errors kill the tick loop before finishIntro runs
+      setTimeout(function () {
+        var fx = document.getElementById("intro-fx");
+        if (fx && fx.classList.contains("intro-fx-active")) {
+          console.warn("[safety] intro-fx still active after 25s — force removing");
+          fx.classList.remove("intro-fx-active");
+          fx.classList.add("intro-fx-done");
+          fx.style.opacity = "0";
+          fx.style.display = "none";
+          document.body.classList.remove("cinematic-mode");
+        }
+      }, 25000);
+    </script>
   </body>
 </html>

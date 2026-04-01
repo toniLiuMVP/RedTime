@@ -2370,37 +2370,46 @@ function renderFrame() {
 }
 
 function tick(now) {
-  if (!tick.last) {
+  try {
+    if (!tick.last) {
+      tick.last = now;
+    }
+    const dt = Math.min((now - tick.last) / 1000, 0.033);
     tick.last = now;
-  }
-  const dt = Math.min((now - tick.last) / 1000, 0.033);
-  tick.last = now;
-  state.time += dt;
+    state.time += dt;
 
-  dom.rotateLock.hidden = !wantsLandscape();
-  dom.body.classList.toggle("landscape-prompt", wantsLandscape());
+    dom.rotateLock.hidden = !wantsLandscape();
+    dom.body.classList.toggle("landscape-prompt", wantsLandscape());
 
-  if (state.mode === "intro") {
-    updateIntro(dt);
-  } else {
-    if (state.subtitle.ttl > 0) {
-      state.subtitle.ttl = Math.max(0, state.subtitle.ttl - dt);
+    if (state.mode === "intro") {
+      updateIntro(dt);
+    } else {
+      if (state.subtitle.ttl > 0) {
+        state.subtitle.ttl = Math.max(0, state.subtitle.ttl - dt);
+      }
+      updateMovement(dt);
+      updateCharacters();
+      if (!state.endingSequence) {
+        updatePhaseLogic(dt);
+      }
+      updateEndingSequence(dt);
+      updateActiveHotspot();
+      checkStairWarp();
+      updateTimeWatch();
     }
-    updateMovement(dt);
-    updateCharacters();
-    if (!state.endingSequence) {
-      updatePhaseLogic(dt);
-    }
-    updateEndingSequence(dt);
-    updateActiveHotspot();
-    checkStairWarp();
-    updateTimeWatch();
-  }
 
-  adaptSubtitleBackground();
-  audioSystem.update(dt);
-  updateCharacterAudio(dt);
-  renderFrame();
+    adaptSubtitleBackground();
+    audioSystem.update(dt);
+    updateCharacterAudio(dt);
+    renderFrame();
+  } catch (err) {
+    console.error("[tick] error:", err);
+    // If intro is stuck due to error, force finish it
+    if (state.mode === "intro") {
+      console.warn("[tick] forcing finishIntro due to tick error");
+      try { finishIntro(); } catch (_) { state.mode = "play"; }
+    }
+  }
   requestAnimationFrame(tick);
 }
 
