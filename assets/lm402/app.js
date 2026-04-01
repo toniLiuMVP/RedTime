@@ -1512,7 +1512,9 @@ function finishIntro() {
   if (dom.introFx) {
     dom.introFx.classList.remove("intro-fx-active");
     dom.introFx.classList.add("intro-fx-done");
-    // Force hide after transition to prevent white screen stuck
+    // Force hide immediately to prevent white screen stuck
+    dom.introFx.style.display = "none";
+    // Belt-and-suspenders: also hide after transition
     setTimeout(() => { if (dom.introFx) dom.introFx.style.display = "none"; }, 2000);
   }
   // Ensure transcript panel is visible at play start
