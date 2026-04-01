@@ -342,6 +342,7 @@ body[data-ui-preset="ending"] .stage-vignette {
 .speed-widget,
 .audio-widget,
 .font-widget,
+.quality-widget,
 .objective-prompt,
 .hint-pill,
 .focus-prompt,
@@ -2094,6 +2095,14 @@ body.landscape-prompt .debug-panel {
   .dock-copy {
     word-break: break-word;
     overflow-wrap: break-word;
+  }
+}
+@media (max-width: 479px) and (orientation: portrait) {
+  /* 窄手機：quality-widget 移到第二排，避免溢出螢幕 */
+  .quality-widget {
+    top: calc(max(8px, env(safe-area-inset-top)) + 48px);
+    left: max(8px, env(safe-area-inset-left));
+    z-index: 20;
   }
 }
 @media (max-width: 1080px) and (orientation: landscape) {

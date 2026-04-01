@@ -231,7 +231,7 @@ const QUALITY_TIERS = {
 const QUALITY_ORDER = ["smooth", "high", "ultra"];
 const QUALITY_LABELS = { smooth: "順暢", high: "高級", ultra: "全開最高" };
 function loadQualitySetting() {
-  try { const v = localStorage.getItem(STORAGE_KEYS.graphicsQuality); return QUALITY_TIERS[v] ? v : "smooth"; } catch { return "smooth"; }
+  try { const v = localStorage.getItem(STORAGE_KEYS.graphicsQuality); return QUALITY_TIERS[v] ? v : "high"; } catch { return "high"; }
 }
 function persistQualitySetting() {
   try { localStorage.setItem(STORAGE_KEYS.graphicsQuality, state.graphicsQuality); } catch {}
