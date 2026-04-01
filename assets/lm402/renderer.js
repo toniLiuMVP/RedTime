@@ -1046,55 +1046,55 @@ function S(t) {
       (xe.rotation.z = -0.16),
       ge.scale.set(0.86, 0.98, 0.82),
       xe.scale.copy(ge.scale)));
-  // ── Beckham pompadour + black-frame glasses (senior only) ─────────────────
+  // ── Slicked-back undercut + black-frame glasses (senior only) ────────────
   if (t.pompadour) {
-    // Skull base cap — shaved look (flattened sides, close to head)
+    // Skull base cap — tight undercut sides, close to head
     const pBase = new e.Mesh(
       new e.SphereGeometry(0.186, 22, 22, 0, 2 * Math.PI, 0, 0.68 * Math.PI),
       d,
     );
-    pBase.position.set(0, 1.616, -0.014);
-    pBase.rotation.x = -0.1;
-    pBase.scale.set(0.72, 0.58, 0.86);
+    pBase.position.set(0, 1.614, -0.012);
+    pBase.rotation.x = -0.08;
+    pBase.scale.set(0.74, 0.56, 0.88);
     o.add(pBase);
     // Back of skull fill
     const pBack = new e.Mesh(new e.SphereGeometry(0.178, 18, 18), d);
-    pBack.position.set(0, 1.61, -0.09);
-    pBack.scale.set(0.68, 0.38, 0.54);
+    pBack.position.set(0, 1.608, -0.092);
+    pBack.scale.set(0.70, 0.36, 0.52);
     o.add(pBack);
-    // Left shaved side strip
-    const pSideL = new e.Mesh(new e.BoxGeometry(0.028, 0.18, 0.09), d);
-    pSideL.position.set(-0.152, 1.512, 0.018);
-    pSideL.rotation.z = 0.08;
+    // Left undercut side — very thin, shaved close to skull
+    const pSideL = new e.Mesh(new e.BoxGeometry(0.020, 0.155, 0.105), d);
+    pSideL.position.set(-0.156, 1.504, 0.012);
+    pSideL.rotation.z = 0.06;
     o.add(pSideL);
-    // Right shaved side strip
+    // Right undercut side
     const pSideR = pSideL.clone();
-    pSideR.position.x = 0.152;
-    pSideR.rotation.z = -0.08;
+    pSideR.position.x = 0.156;
+    pSideR.rotation.z = -0.06;
     o.add(pSideR);
-    // Pompadour crest — swept-up ridge from forehead arcing back
-    const pompadourPath = new e.CatmullRomCurve3([
-      new e.Vector3(0, 1.636, 0.078),   // front base at hairline
-      new e.Vector3(0, 1.698, 0.042),   // peak of sweep
-      new e.Vector3(0, 1.706, -0.004),  // crown
-      new e.Vector3(0, 1.686, -0.052),  // slope rearward
-      new e.Vector3(0, 1.662, -0.09),   // tail settling back
+    // Slicked-back top — flat low arc from hairline to nape, offset right of part line
+    const slickPath = new e.CatmullRomCurve3([
+      new e.Vector3(0.018, 1.630, 0.082),  // front hairline (right of left part)
+      new e.Vector3(0.012, 1.650, 0.040),  // early rise
+      new e.Vector3(0.006, 1.655, 0.000),  // crown — barely raised, stays low
+      new e.Vector3(0.002, 1.647, -0.046), // slope rearward
+      new e.Vector3(0.000, 1.635, -0.088), // settle at nape
     ]);
-    const pCrest = new e.Mesh(
-      new e.TubeGeometry(pompadourPath, 22, 0.048, 9, false),
+    const pSlick = new e.Mesh(
+      new e.TubeGeometry(slickPath, 22, 0.054, 9, false),
       d,
     );
-    o.add(pCrest);
-    // Front overhang flap — the forward-sweeping peak
-    const pFront = new e.Mesh(new e.BoxGeometry(0.092, 0.055, 0.044), d);
-    pFront.position.set(0, 1.66, 0.092);
-    pFront.rotation.x = 0.28;
-    o.add(pFront);
-    // Width fill for top of pompadour (give it body)
-    const pTopFill = new e.Mesh(new e.BoxGeometry(0.11, 0.062, 0.16), d);
-    pTopFill.position.set(0, 1.692, -0.012);
-    pTopFill.rotation.x = -0.14;
+    o.add(pSlick);
+    // Width fill — gives slicked top its body and flat appearance
+    const pTopFill = new e.Mesh(new e.BoxGeometry(0.118, 0.044, 0.175), d);
+    pTopFill.position.set(0.010, 1.646, -0.004);
+    pTopFill.rotation.x = -0.08;
     o.add(pTopFill);
+    // Side-part ridge — subtle raised edge along left-side parting line
+    const pPart = new e.Mesh(new e.BoxGeometry(0.009, 0.018, 0.128), d);
+    pPart.position.set(-0.026, 1.656, 0.012);
+    pPart.rotation.x = -0.10;
+    o.add(pPart);
     // ── Thick black-frame glasses ──────────────────────────────────────────
     const glassesMat = new e.MeshPhysicalMaterial({
       color: "#0a0a0a",
