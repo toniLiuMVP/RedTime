@@ -1804,9 +1804,9 @@ body.landscape-prompt .debug-panel {
   }
   .transcript-dock {
     position: fixed;
-    left: var(--safe-center);
+    left: 50%;
     right: auto;
-    transform: translate(-50%);
+    transform: translateX(-50%);
     bottom: calc(var(--controls-clearance) + var(--joystick-size) + 8px + var(--bottom-gap));
     top: auto;
     width: min(
@@ -1825,9 +1825,9 @@ body.landscape-prompt .debug-panel {
   }
   .transcript-dock.ui-panel-managed,
   .transcript-dock.mobile-freeform {
-    left: var(--mobile-left-safe);
+    left: 50%;
     right: auto;
-    transform: none;
+    transform: translateX(-50%);
     width: min(
       420px,
       calc(
