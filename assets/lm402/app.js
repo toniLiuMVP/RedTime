@@ -1796,18 +1796,19 @@ function updateCharacters() {
       { x: scale(-324), z: scale(WORLD.backDoor.center.z - 60) },
       { x: scale(-318), z: scale(WORLD.backDoor.center.z + 4) },
     ];
+    /* 學妹碰撞安全路徑：座位 → 後牆 → 沿牆到走道 → 沿走道到後門 → 後門會合 */
     const juniorWaypoints = [
-      { x: scale(1896), z: scale(2058), yaw: 0 },
-      { x: scale(1000), z: scale(WORLD.backDoor.center.z + 60) },
-      { x: scale(400), z: scale(WORLD.backDoor.center.z + 10) },
-      { x: scale(160), z: scale(WORLD.backDoor.center.z - 4) },
-      { x: scale(64), z: scale(WORLD.backDoor.center.z - 4) },
+      { x: scale(1896), z: scale(2058), yaw: 0 },                     // 座位
+      { x: scale(1896), z: scale(WORLD.classroom.backZ) },             // 同列走到後牆
+      { x: scale(WORLD.classroom.aisleX), z: scale(WORLD.classroom.backZ) }, // 沿後牆走到中央走道
+      { x: scale(WORLD.classroom.aisleX), z: scale(780) },             // 沿走道走向後門
+      { x: scale(64), z: scale(WORLD.backDoor.center.z - 4) },         // 走到後門旁
     ];
     const seniorWalkT = smoothstep(0.18, 11.7, state.endingSequence.time);
-    const juniorWalkT = smoothstep(0.4, 10.2, state.endingSequence.time);
+    const juniorWalkT = smoothstep(0.4, 13.0, state.endingSequence.time);
     const seniorPos = followPath(seniorWaypoints, seniorWalkT);
     const juniorPos = followPath(juniorWaypoints, juniorWalkT);
-    const arrivalT = smoothstep(8.0, 10.2, state.endingSequence.time);
+    const arrivalT = smoothstep(10.5, 13.0, state.endingSequence.time);
     const seniorFacingTarget = movementRotation(juniorPos.x - seniorPos.x, juniorPos.z - seniorPos.z, seniorPos.yaw);
     const juniorFacingTarget = movementRotation(seniorPos.x - juniorPos.x, seniorPos.z - juniorPos.z, juniorPos.yaw);
     const seniorFacing = lerp(seniorPos.yaw, seniorFacingTarget, arrivalT);
@@ -1951,14 +1952,16 @@ function updateCharacters() {
       { x: scale(-328), z: scale(WORLD.backDoor.center.z - 80) },
       { x: scale(-324), z: scale(WORLD.backDoor.center.z) },
     ];
+    /* 學妹碰撞安全路徑：座位 → 後牆 → 沿牆到走道 → 沿走道到後門 */
     const juniorWaypoints = [
-      { x: scale(1896), z: scale(2058), yaw: 0 },
-      { x: scale(800), z: scale(WORLD.backDoor.center.z + 40) },
-      { x: scale(300), z: scale(WORLD.backDoor.center.z - 10) },
-      { x: scale(74), z: scale(WORLD.backDoor.center.z - 2) },
+      { x: scale(1896), z: scale(2058), yaw: 0 },                     // 座位
+      { x: scale(1896), z: scale(WORLD.classroom.backZ) },             // 同列走到後牆
+      { x: scale(WORLD.classroom.aisleX), z: scale(WORLD.classroom.backZ) }, // 沿後牆走到中央走道
+      { x: scale(WORLD.classroom.aisleX), z: scale(780) },             // 沿走道走向後門
+      { x: scale(74), z: scale(WORLD.backDoor.center.z - 2) },         // 走到後門旁
     ];
     const seniorT = smoothstep(0.1, 5.8, state.phaseClock);
-    const juniorT = smoothstep(0.8, 7.2, state.phaseClock);
+    const juniorT = smoothstep(0.8, 10.0, state.phaseClock);
     const seniorPos = followPath(seniorWaypoints, seniorT);
     const juniorPos = followPath(juniorWaypoints, juniorT);
     setCharacterPose("senior", seniorPos.x, seniorPos.z, seniorPos.yaw);

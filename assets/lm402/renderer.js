@@ -5221,7 +5221,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     _scene: W,
     render: function (s) {
       qo();
-      const g = s.time ?? 0;
+      const sceneTime = s.time ?? 0;
       const perfectType = s.endingSequence?.type ?? s.ending,
         perfectPhase = "perfect" === perfectType ? Ao(s.endingSequence?.time ?? 0) : null,
         juniorHeroLead =
@@ -5479,7 +5479,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
                 (a.children[1].material.emissiveIntensity =
                   e.id === t ? 0.8 + 0.4 * Math.sin(3.2 * o) : 0.3 + 0.2 * Math.sin(1.6 * o)));
           });
-        })(s.hotspots, s.activeHotspotId, g));
+        })(s.hotspots, s.activeHotspotId, sceneTime));
       const x = "intro" === s.mode;
       if (x)
         !(function (t) {
@@ -5855,7 +5855,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         const e =
           "front_call" === s.phase ? 42 : "eye_contact" === s.phase ? 46 : 56;
         (q.fov !== e && ((q.fov = e), q.updateProjectionMatrix()),
-          _o(s.player, g, !0));
+          _o(s.player, sceneTime, !0));
       }
       const b = x ? e.MathUtils.lerp(0.34, 1, s.intro.progress) : 1;
       if (
@@ -5916,16 +5916,16 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         (W.fog.near = x ? 3 : 16),
         (W.fog.far = x ? 20 : 68),
         (bo.visible = "perfect" !== s.endingSequence?.type),
-        (bo.rotation.y = 0.018 * g),
-        (bo.position.x = 0.08 * Math.sin(0.12 * g)),
+        (bo.rotation.y = 0.018 * sceneTime),
+        (bo.position.x = 0.08 * Math.sin(0.12 * sceneTime)),
         fo.forEach((e) => {
           e.position.x =
             e.userData.startX +
-            8 * Math.sin(0.02 * g * e.userData.speed) +
-            g * e.userData.speed * 0.1;
+            8 * Math.sin(0.02 * sceneTime * e.userData.speed) +
+            sceneTime * e.userData.speed * 0.1;
         }),
         uo.forEach((e) => {
-          const t = g * e.userData.speed;
+          const t = sceneTime * e.userData.speed;
           ((e.position.x = e.userData.startX + 2 * t),
             (e.position.z =
               e.userData.startZ + 6 * Math.sin(0.5 * t + e.userData.phase)),
@@ -5939,17 +5939,17 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         }),
         Xo)
       ) {
-        const e = g - jo;
+        const e = sceneTime - jo;
         let t = 0;
         (e > 5 && e <= 6
           ? (t = 0.8 * (6 - e))
           : e > 1 && e <= 5
-            ? (t = 0.8 + 0.12 * Math.sin(4 * g))
+            ? (t = 0.8 + 0.12 * Math.sin(4 * sceneTime))
             : e >= 0 && e <= 1
               ? (t = 0.8 * e)
               : e > 6 && (W.remove(Xo), (Xo = null)),
           Xo &&
-            ((Xo.position.y = 0.02 * Math.sin(2 * g)),
+            ((Xo.position.y = 0.02 * Math.sin(2 * sceneTime)),
             Xo.traverse((e) => {
               e.material && (e.material.opacity = t);
             })));
