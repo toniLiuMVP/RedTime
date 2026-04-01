@@ -2207,6 +2207,11 @@ function updateIntro(dt) {
   }
   if (state.intro.progress >= 1) {
     finishIntro();
+    return;
+  }
+  // Safety: if tick loop stalls, force-end intro after introDuration + 2s
+  if (state.intro.time > CINEMATIC_TIMELINE.introDuration + 2) {
+    finishIntro();
   }
 }
 
