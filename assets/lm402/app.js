@@ -332,7 +332,7 @@ function loadLookSetting() {
 }
 
 const initialLookSetting = loadLookSetting();
-const initialAudioEnabled = localStorage.getItem(STORAGE_KEYS.audioEnabled) !== "0";
+const initialAudioEnabled = localStorage.getItem(STORAGE_KEYS.audioEnabled) === "1";
 
 function isMobileLayout() {
   return window.matchMedia("(max-width: 1080px)").matches || window.matchMedia("(pointer: coarse)").matches;
@@ -519,6 +519,8 @@ function createInitialFlags() {
     rearWaitHintPlayed: false,
     eyeCuePlayed: false,
     perfectLinePlayed: false,
+    oneGazeTextShown: false,
+    autoFrontCall: false,
   };
 }
 
@@ -668,7 +670,7 @@ function createAudioSystem() {
   }
 
   function syncMusicPrompt() {
-    const shouldShow = state.audioEnabled && autoplayBlocked;
+    const shouldShow = !state.audioEnabled || (state.audioEnabled && autoplayBlocked);
     dom.musicPrompt.classList.toggle("intro-mode", state.mode === "intro");
     dom.musicPrompt.hidden = !shouldShow;
   }
@@ -1510,6 +1512,8 @@ function finishIntro() {
   if (dom.introFx) {
     dom.introFx.classList.remove("intro-fx-active");
     dom.introFx.classList.add("intro-fx-done");
+    // Force hide after transition to prevent white screen stuck
+    setTimeout(() => { if (dom.introFx) dom.introFx.style.display = "none"; }, 2000);
   }
   // Ensure transcript panel is visible at play start
   state.transcriptExpanded = true;
@@ -1821,35 +1825,77 @@ function updateCharacters() {
     setCharacterPose("fatherEcho", scale(-272), scale(WORLD.backDoor.center.z + 2), Math.PI / 2, 0);
     setCharacterPose("auntEcho", scale(-116), scale(WORLD.backDoor.center.z + 26), -Math.PI / 2, 0);
 
-    if (state.endingSequence.type === "one_gaze" && et < 6.0) {
-      /* Way B：
-         0-1.2s  原位（靠窗座）
-         1.2-3s  向後轉走到後牆
-         3-4s    停在後牆、轉身
-         4-6s    走向後門停下                                          */
-      const WALL_Z    = scale(WORLD.classroom.backZ ?? 2484);   // 教室後牆
+    if (state.endingSequence.type === "one_gaze" && et < 15.0) {
+      /* Way B 學妹走路動畫（物理碰撞安全路徑，避開所有桌椅）：
+         0  - 1.0s  原位（靠窗座）不動
+         1.0- 1.8s  原地轉身面向後牆
+         1.8- 4.5s  直走到後牆（x=1896 不變，z→2484）
+         4.5- 5.5s  停在後牆
+         5.5- 6.3s  轉身面向走道方向（-x）
+         6.3- 8.5s  沿後牆走到中央走道（x=1896→1180，z=2484 不變）
+         8.5- 9.3s  轉身面向後門方向（-z）
+         9.3-13.5s  沿走道往後門走（x=1180 不變，z=2484→780）
+        13.5-14.2s  轉身面向後門（朝 -x 方向）
+        14.2-15.0s  走到後門前停下（x=1180→100，z≈722）            */
+      const SEAT_X     = scale(1896);
+      const SEAT_Z     = scale(2058);
+      const WALL_Z     = scale(WORLD.classroom.backZ ?? 2484);
+      const AISLE_X    = scale(WORLD.classroom.aisleX ?? 1180);
+      const BACKDOOR_X = scale(100);
       const BACKDOOR_Z = scale(WORLD.backDoor.center.z - 4);
+      const NEAR_DOOR_Z = scale(780);                             // 走道上靠近後門的位置
 
-      if (et < 1.2) {
-        setCharacterPose("junior", scale(1896), scale(2058), 0);
-      } else if (et < 3.0) {
-        const t = smoothstep(1.2, 3.0, et);
-        const jz = lerp(scale(2058), WALL_Z, t);
-        setCharacterPose("junior", scale(1896), jz, Math.PI); // 面向後牆
-      } else if (et < 4.0) {
-        const t = smoothstep(3.0, 4.0, et);
-        // 轉身：從面向後牆 (Math.PI) → 面向前方後門 (0)
-        const yaw = lerp(Math.PI, 0, t);
-        setCharacterPose("junior", scale(1896), WALL_Z, yaw);
+      if (et < 1.0) {
+        /* 原位不動 */
+        setCharacterPose("junior", SEAT_X, SEAT_Z, 0);
+      } else if (et < 1.8) {
+        /* 原地轉身面向後牆 */
+        const t = smoothstep(1.0, 1.8, et);
+        const yaw = lerp(0, Math.PI, t);
+        setCharacterPose("junior", SEAT_X, SEAT_Z, yaw);
+      } else if (et < 4.5) {
+        /* 直走到後牆（同一列，不穿越桌子） */
+        const t = smoothstep(1.8, 4.5, et);
+        const jz = lerp(SEAT_Z, WALL_Z, t);
+        setCharacterPose("junior", SEAT_X, jz, Math.PI);
+      } else if (et < 5.5) {
+        /* 停在後牆 */
+        setCharacterPose("junior", SEAT_X, WALL_Z, Math.PI);
+      } else if (et < 6.3) {
+        /* 轉身面向走道方向（-x 方向）— 向右轉 90° 取短路 */
+        const t = smoothstep(5.5, 6.3, et);
+        const yaw = lerp(Math.PI, 3 * Math.PI / 2, t);
+        setCharacterPose("junior", SEAT_X, WALL_Z, yaw);
+      } else if (et < 8.5) {
+        /* 沿後牆走到中央走道（z=backZ 不變，沿牆走不碰桌子） */
+        const t = smoothstep(6.3, 8.5, et);
+        const jx = lerp(SEAT_X, AISLE_X, t);
+        setCharacterPose("junior", jx, WALL_Z, 3 * Math.PI / 2);
+      } else if (et < 9.3) {
+        /* 在走道口轉身面向後門方向（-z 方向，yaw = 0）— 向右轉 90° */
+        const t = smoothstep(8.5, 9.3, et);
+        const yaw = lerp(3 * Math.PI / 2, 2 * Math.PI, t);
+        setCharacterPose("junior", AISLE_X, WALL_Z, yaw);
+      } else if (et < 13.5) {
+        /* 沿走道慢慢走向後門（中央走道 x=1180，避開所有桌椅） */
+        const t = smoothstep(9.3, 13.5, et);
+        const jz = lerp(WALL_Z, NEAR_DOOR_Z, t);
+        setCharacterPose("junior", AISLE_X, jz, 0);
+      } else if (et < 14.2) {
+        /* 轉身面向後門出口方向（-x 方向） */
+        const t = smoothstep(13.5, 14.2, et);
+        const yaw = lerp(0, -Math.PI / 2, t);
+        setCharacterPose("junior", AISLE_X, NEAR_DOOR_Z, yaw);
       } else {
-        const t = smoothstep(4.0, 6.0, et);
-        const jx = lerp(scale(1896), scale(100), t);
-        const jz = lerp(WALL_Z, BACKDOOR_Z, t);
-        setCharacterPose("junior", jx, jz, 0); // 面向後門走
+        /* 走到後門前停下 */
+        const t = smoothstep(14.2, 15.0, et);
+        const jx = lerp(AISLE_X, BACKDOOR_X, t);
+        const jz = lerp(NEAR_DOOR_Z, BACKDOOR_Z, t);
+        setCharacterPose("junior", jx, jz, -Math.PI / 2);
       }
     } else {
       /* Way A 或 one_gaze 走路完成後：學妹站在後門 */
-      setCharacterPose("junior", scale(100), scale(WORLD.backDoor.center.z - 4), 0);
+      setCharacterPose("junior", scale(100), scale(WORLD.backDoor.center.z - 4), -Math.PI / 2);
     }
     return;
   }

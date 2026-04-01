@@ -5799,7 +5799,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             const chestPos = heroAnchor.chest;
             /* Way B 有一段學妹走路前置動畫 (0-6s)；Way A 跳過前置 */
             const isOneGaze = "one_gaze" === t.endingSequence?.type;
-            const WALK_END   = isOneGaze ? 6.0 : 0.0;   // Way B 有走路前置
+            const WALK_END   = isOneGaze ? 15.0 : 0.0;  // Way B 有走路前置（15秒慢走）
             const ORBIT_START = WALK_END;
             const ORBIT_END   = WALK_END + 9.0;          // 環繞 9 秒（≈ 1 圈）
             const CLOSE_START = ORBIT_END;
