@@ -1820,31 +1820,77 @@ function updateCharacters() {
   }
 
   if (state.endingSequence?.type === "perfect") {
-    const seniorWaypoints = [
-      { x: scale(-334), z: scale(WORLD.frontDoor.center.z - 44) },
-      { x: scale(-330), z: scale(WORLD.frontDoor.center.z + 60) },
-      { x: scale(-324), z: scale(WORLD.backDoor.center.z - 60) },
-      { x: scale(-318), z: scale(WORLD.backDoor.center.z + 4) },
-    ];
-    /* 學妹碰撞安全路徑：座位 → 後牆 → 沿牆到走道 → 沿走道到後門 → 後門會合 */
-    const juniorWaypoints = [
-      { x: scale(1896), z: scale(2058), yaw: 0 },                     // 座位
-      { x: scale(1896), z: scale(WORLD.classroom.backZ) },             // 同列走到後牆
-      { x: scale(WORLD.classroom.aisleX), z: scale(WORLD.classroom.backZ) }, // 沿後牆走到中央走道
-      { x: scale(WORLD.classroom.aisleX), z: scale(780) },             // 沿走道走向後門
-      { x: scale(64), z: scale(WORLD.backDoor.center.z - 4) },         // 走到後門旁
-    ];
-    const seniorWalkT = smoothstep(0.18, 11.7, state.endingSequence.time);
-    const juniorWalkT = smoothstep(0.4, 13.0, state.endingSequence.time);
-    const seniorPos = followPath(seniorWaypoints, seniorWalkT);
-    const juniorPos = followPath(juniorWaypoints, juniorWalkT);
-    const arrivalT = smoothstep(10.5, 13.0, state.endingSequence.time);
-    const seniorFacingTarget = movementRotation(juniorPos.x - seniorPos.x, juniorPos.z - seniorPos.z, seniorPos.yaw);
-    const juniorFacingTarget = movementRotation(seniorPos.x - juniorPos.x, seniorPos.z - juniorPos.z, juniorPos.yaw);
-    const seniorFacing = lerp(seniorPos.yaw, seniorFacingTarget, arrivalT);
-    const juniorFacing = lerp(juniorPos.yaw, juniorFacingTarget, arrivalT);
-    setCharacterPose("senior", seniorPos.x, seniorPos.z, seniorFacing);
-    setCharacterPose("junior", juniorPos.x, juniorPos.z, juniorFacing);
+    const et = state.endingSequence.time;
+    /* 常數 */
+    const SENIOR_START_X  = scale(-334);
+    const SENIOR_START_Z  = scale(WORLD.frontDoor.center.z - 44);
+    const SENIOR_END_X    = scale(-318);
+    const SENIOR_END_Z    = scale(WORLD.backDoor.center.z + 4);
+    const JUNIOR_DOOR_X   = scale(100);
+    const JUNIOR_DOOR_Z   = scale(WORLD.backDoor.center.z - 4);
+    /* 學長初始面向教室方向，結束時面向學妹 */
+    const SR_INIT_YAW = Math.atan2(scale(1896) - SENIOR_START_X, scale(2058) - SENIOR_START_Z);
+    const SR_DOOR_YAW = Math.atan2(JUNIOR_DOOR_X - SENIOR_END_X, JUNIOR_DOOR_Z - SENIOR_END_Z);
+    /* ── 學長：站前門 → 轉身面後門 → 慢走到後門 → 轉身面學妹 ── */
+    let srX, srZ, srYaw;
+    if (et < 1.62) {
+      srX = SENIOR_START_X; srZ = SENIOR_START_Z; srYaw = SR_INIT_YAW;
+    } else if (et < 4.86) {
+      const t = smoothstep(1.62, 4.86, et);
+      srX = SENIOR_START_X; srZ = SENIOR_START_Z;
+      srYaw = lerp(SR_INIT_YAW, Math.PI, t);
+    } else if (et < 31.5) {
+      const t = smoothstep(4.86, 31.5, et);
+      srX = lerp(SENIOR_START_X, SENIOR_END_X, t);
+      srZ = lerp(SENIOR_START_Z, SENIOR_END_Z, t);
+      srYaw = Math.PI;
+    } else if (et < 39.0) {
+      const t = smoothstep(31.5, 39.0, et);
+      srX = SENIOR_END_X; srZ = SENIOR_END_Z;
+      srYaw = lerp(Math.PI, SR_DOOR_YAW, t);
+    } else {
+      srX = SENIOR_END_X; srZ = SENIOR_END_Z; srYaw = SR_DOOR_YAW;
+    }
+    /* ── 學妹：像 one_gaze 的分段走路動畫（速度 ×3，共 45 秒） ── */
+    const SEAT_X      = scale(1896);
+    const SEAT_Z      = scale(2058);
+    const WALL_Z      = scale(WORLD.classroom.backZ ?? 2484);
+    const AISLE_X     = scale(WORLD.classroom.aisleX ?? 1180);
+    const NEAR_DOOR_Z = scale(780);
+    let jrX, jrZ, jrYaw;
+    if (et < 3.0) {
+      jrX = SEAT_X; jrZ = SEAT_Z; jrYaw = 0;
+    } else if (et < 5.4) {
+      const t = smoothstep(3.0, 5.4, et);
+      jrX = SEAT_X; jrZ = SEAT_Z; jrYaw = lerp(0, Math.PI, t);
+    } else if (et < 13.5) {
+      const t = smoothstep(5.4, 13.5, et);
+      jrX = SEAT_X; jrZ = lerp(SEAT_Z, WALL_Z, t); jrYaw = Math.PI;
+    } else if (et < 16.5) {
+      jrX = SEAT_X; jrZ = WALL_Z; jrYaw = Math.PI;
+    } else if (et < 18.9) {
+      const t = smoothstep(16.5, 18.9, et);
+      jrX = SEAT_X; jrZ = WALL_Z; jrYaw = lerp(Math.PI, 3 * Math.PI / 2, t);
+    } else if (et < 25.5) {
+      const t = smoothstep(18.9, 25.5, et);
+      jrX = lerp(SEAT_X, AISLE_X, t); jrZ = WALL_Z; jrYaw = 3 * Math.PI / 2;
+    } else if (et < 27.9) {
+      const t = smoothstep(25.5, 27.9, et);
+      jrX = AISLE_X; jrZ = WALL_Z; jrYaw = lerp(3 * Math.PI / 2, 2 * Math.PI, t);
+    } else if (et < 40.5) {
+      const t = smoothstep(27.9, 40.5, et);
+      jrX = AISLE_X; jrZ = lerp(WALL_Z, NEAR_DOOR_Z, t); jrYaw = 0;
+    } else if (et < 42.6) {
+      const t = smoothstep(40.5, 42.6, et);
+      jrX = AISLE_X; jrZ = NEAR_DOOR_Z; jrYaw = lerp(0, -Math.PI / 2, t);
+    } else {
+      const t = smoothstep(42.6, 45.0, et);
+      jrX = lerp(AISLE_X, JUNIOR_DOOR_X, t);
+      jrZ = lerp(NEAR_DOOR_Z, JUNIOR_DOOR_Z, t);
+      jrYaw = -Math.PI / 2;
+    }
+    setCharacterPose("senior", srX, srZ, srYaw);
+    setCharacterPose("junior", jrX, jrZ, jrYaw);
     setCharacterPose("fatherEcho", scale(-272), scale(WORLD.backDoor.center.z + 2), Math.PI / 2, 0);
     setCharacterPose("auntEcho", scale(-116), scale(WORLD.backDoor.center.z + 26), -Math.PI / 2, 0);
     return;
@@ -1858,73 +1904,54 @@ function updateCharacters() {
     setCharacterPose("fatherEcho", scale(-272), scale(WORLD.backDoor.center.z + 2), Math.PI / 2, 0);
     setCharacterPose("auntEcho", scale(-116), scale(WORLD.backDoor.center.z + 26), -Math.PI / 2, 0);
 
-    if (state.endingSequence.type === "one_gaze" && et < 15.0) {
-      /* Way B 學妹走路動畫（物理碰撞安全路徑，避開所有桌椅）：
-         0  - 1.0s  原位（靠窗座）不動
-         1.0- 1.8s  原地轉身面向後牆
-         1.8- 4.5s  直走到後牆（x=1896 不變，z→2484）
-         4.5- 5.5s  停在後牆
-         5.5- 6.3s  轉身面向走道方向（-x）
-         6.3- 8.5s  沿後牆走到中央走道（x=1896→1180，z=2484 不變）
-         8.5- 9.3s  轉身面向後門方向（-z）
-         9.3-13.5s  沿走道往後門走（x=1180 不變，z=2484→780）
-        13.5-14.2s  轉身面向後門（朝 -x 方向）
-        14.2-15.0s  走到後門前停下（x=1180→100，z≈722）            */
-      const SEAT_X     = scale(1896);
-      const SEAT_Z     = scale(2058);
-      const WALL_Z     = scale(WORLD.classroom.backZ ?? 2484);
-      const AISLE_X    = scale(WORLD.classroom.aisleX ?? 1180);
-      const BACKDOOR_X = scale(100);
-      const BACKDOOR_Z = scale(WORLD.backDoor.center.z - 4);
-      const NEAR_DOOR_Z = scale(780);                             // 走道上靠近後門的位置
+    if (state.endingSequence.type === "one_gaze" && et < 45.0) {
+      /* Way B 學妹走路動畫（物理碰撞安全路徑，避開所有桌椅，速度 ×3）：
+         0  - 3.0s  原位（靠窗座）不動
+         3.0- 5.4s  原地轉身面向後牆
+         5.4-13.5s  直走到後牆（x=1896 不變，z→2484）
+        13.5-16.5s  停在後牆
+        16.5-18.9s  轉身面向走道方向（-x）
+        18.9-25.5s  沿後牆走到中央走道（x=1896→1180，z=2484 不變）
+        25.5-27.9s  轉身面向後門方向（-z）
+        27.9-40.5s  沿走道往後門走（x=1180 不變，z=2484→780）
+        40.5-42.6s  轉身面向後門（朝 -x 方向）
+        42.6-45.0s  走到後門前停下（x=1180→100，z≈722）            */
+      const SEAT_X      = scale(1896);
+      const SEAT_Z      = scale(2058);
+      const WALL_Z      = scale(WORLD.classroom.backZ ?? 2484);
+      const AISLE_X     = scale(WORLD.classroom.aisleX ?? 1180);
+      const BACKDOOR_X  = scale(100);
+      const BACKDOOR_Z  = scale(WORLD.backDoor.center.z - 4);
+      const NEAR_DOOR_Z = scale(780);
 
-      if (et < 1.0) {
-        /* 原位不動 */
+      if (et < 3.0) {
         setCharacterPose("junior", SEAT_X, SEAT_Z, 0);
-      } else if (et < 1.8) {
-        /* 原地轉身面向後牆 */
-        const t = smoothstep(1.0, 1.8, et);
-        const yaw = lerp(0, Math.PI, t);
-        setCharacterPose("junior", SEAT_X, SEAT_Z, yaw);
-      } else if (et < 4.5) {
-        /* 直走到後牆（同一列，不穿越桌子） */
-        const t = smoothstep(1.8, 4.5, et);
-        const jz = lerp(SEAT_Z, WALL_Z, t);
-        setCharacterPose("junior", SEAT_X, jz, Math.PI);
-      } else if (et < 5.5) {
-        /* 停在後牆 */
-        setCharacterPose("junior", SEAT_X, WALL_Z, Math.PI);
-      } else if (et < 6.3) {
-        /* 轉身面向走道方向（-x 方向）— 向右轉 90° 取短路 */
-        const t = smoothstep(5.5, 6.3, et);
-        const yaw = lerp(Math.PI, 3 * Math.PI / 2, t);
-        setCharacterPose("junior", SEAT_X, WALL_Z, yaw);
-      } else if (et < 8.5) {
-        /* 沿後牆走到中央走道（z=backZ 不變，沿牆走不碰桌子） */
-        const t = smoothstep(6.3, 8.5, et);
-        const jx = lerp(SEAT_X, AISLE_X, t);
-        setCharacterPose("junior", jx, WALL_Z, 3 * Math.PI / 2);
-      } else if (et < 9.3) {
-        /* 在走道口轉身面向後門方向（-z 方向，yaw = 0）— 向右轉 90° */
-        const t = smoothstep(8.5, 9.3, et);
-        const yaw = lerp(3 * Math.PI / 2, 2 * Math.PI, t);
-        setCharacterPose("junior", AISLE_X, WALL_Z, yaw);
+      } else if (et < 5.4) {
+        const t = smoothstep(3.0, 5.4, et);
+        setCharacterPose("junior", SEAT_X, SEAT_Z, lerp(0, Math.PI, t));
       } else if (et < 13.5) {
-        /* 沿走道慢慢走向後門（中央走道 x=1180，避開所有桌椅） */
-        const t = smoothstep(9.3, 13.5, et);
-        const jz = lerp(WALL_Z, NEAR_DOOR_Z, t);
-        setCharacterPose("junior", AISLE_X, jz, 0);
-      } else if (et < 14.2) {
-        /* 轉身面向後門出口方向（-x 方向） */
-        const t = smoothstep(13.5, 14.2, et);
-        const yaw = lerp(0, -Math.PI / 2, t);
-        setCharacterPose("junior", AISLE_X, NEAR_DOOR_Z, yaw);
+        const t = smoothstep(5.4, 13.5, et);
+        setCharacterPose("junior", SEAT_X, lerp(SEAT_Z, WALL_Z, t), Math.PI);
+      } else if (et < 16.5) {
+        setCharacterPose("junior", SEAT_X, WALL_Z, Math.PI);
+      } else if (et < 18.9) {
+        const t = smoothstep(16.5, 18.9, et);
+        setCharacterPose("junior", SEAT_X, WALL_Z, lerp(Math.PI, 3 * Math.PI / 2, t));
+      } else if (et < 25.5) {
+        const t = smoothstep(18.9, 25.5, et);
+        setCharacterPose("junior", lerp(SEAT_X, AISLE_X, t), WALL_Z, 3 * Math.PI / 2);
+      } else if (et < 27.9) {
+        const t = smoothstep(25.5, 27.9, et);
+        setCharacterPose("junior", AISLE_X, WALL_Z, lerp(3 * Math.PI / 2, 2 * Math.PI, t));
+      } else if (et < 40.5) {
+        const t = smoothstep(27.9, 40.5, et);
+        setCharacterPose("junior", AISLE_X, lerp(WALL_Z, NEAR_DOOR_Z, t), 0);
+      } else if (et < 42.6) {
+        const t = smoothstep(40.5, 42.6, et);
+        setCharacterPose("junior", AISLE_X, NEAR_DOOR_Z, lerp(0, -Math.PI / 2, t));
       } else {
-        /* 走到後門前停下 */
-        const t = smoothstep(14.2, 15.0, et);
-        const jx = lerp(AISLE_X, BACKDOOR_X, t);
-        const jz = lerp(NEAR_DOOR_Z, BACKDOOR_Z, t);
-        setCharacterPose("junior", jx, jz, -Math.PI / 2);
+        const t = smoothstep(42.6, 45.0, et);
+        setCharacterPose("junior", lerp(AISLE_X, BACKDOOR_X, t), lerp(NEAR_DOOR_Z, BACKDOOR_Z, t), -Math.PI / 2);
       }
     } else {
       /* Way A 或 one_gaze 走路完成後：學妹站在後門 */
@@ -1958,17 +1985,15 @@ function updateCharacters() {
       setCharacterPose("auntEcho", scale(-116), scale(WORLD.backDoor.center.z + 26), -Math.PI / 2, 0);
       return;
     }
-    /* RUN_END 之後：正常 front_call 動畫 (phaseClock 從 RUN_END 計) */
+    /* RUN_END 之後：學長站在走廊前門，轉身面向學妹座位 */
     const pc = state.phaseClock - RUN_END;
-    const turnT = smoothstep(0, 1.5, pc);      // 0-1.5s 轉身
-    const walkT = smoothstep(1.5, 5.0, pc);    // 1.5-5s 開始走向後門
+    const turnT = smoothstep(0, 1.5, pc);
     const seniorStandX = scale(-336);
     const seniorStandZ = scale(WORLD.frontDoor.center.z - 42);
-    const seniorWalkEndZ = scale(WORLD.frontDoor.center.z - 200);
-    const seniorX = seniorStandX;
-    const seniorZ = lerp(seniorStandZ, seniorWalkEndZ, walkT);
-    const seniorYaw = lerp(Math.PI, 0, turnT);  // 從背對前門 → 面向前門打電話
-    setCharacterPose("senior", seniorX, seniorZ, seniorYaw);
+    /* 計算面向學妹座位（1896, 2058）的 yaw */
+    const juniorFaceYaw = Math.atan2(scale(1896) - seniorStandX, scale(2058) - seniorStandZ);
+    const seniorYaw = lerp(Math.PI, juniorFaceYaw, turnT);
+    setCharacterPose("senior", seniorStandX, seniorStandZ, seniorYaw);
     setCharacterPose("junior", scale(1896), scale(2058), 0.03);
     setCharacterPose("fatherEcho", scale(-272), scale(WORLD.backDoor.center.z + 2), Math.PI / 2, 0);
     setCharacterPose("auntEcho", scale(-116), scale(WORLD.backDoor.center.z + 26), -Math.PI / 2, 0);
@@ -1976,26 +2001,77 @@ function updateCharacters() {
   }
 
   if (state.phase === "rear_wait") {
-    const seniorWaypoints = [
-      { x: scale(-342), z: scale(WORLD.frontDoor.center.z - 42) },
-      { x: scale(-336), z: scale(WORLD.frontDoor.center.z + 60) },
-      { x: scale(-328), z: scale(WORLD.backDoor.center.z - 80) },
-      { x: scale(-324), z: scale(WORLD.backDoor.center.z) },
-    ];
-    /* 學妹碰撞安全路徑：座位 → 後牆 → 沿牆到走道 → 沿走道到後門 */
-    const juniorWaypoints = [
-      { x: scale(1896), z: scale(2058), yaw: 0 },                     // 座位
-      { x: scale(1896), z: scale(WORLD.classroom.backZ) },             // 同列走到後牆
-      { x: scale(WORLD.classroom.aisleX), z: scale(WORLD.classroom.backZ) }, // 沿後牆走到中央走道
-      { x: scale(WORLD.classroom.aisleX), z: scale(780) },             // 沿走道走向後門
-      { x: scale(74), z: scale(WORLD.backDoor.center.z - 2) },         // 走到後門旁
-    ];
-    const seniorT = smoothstep(0.1, 5.8, state.phaseClock);
-    const juniorT = smoothstep(0.8, 10.0, state.phaseClock);
-    const seniorPos = followPath(seniorWaypoints, seniorT);
-    const juniorPos = followPath(juniorWaypoints, juniorT);
-    setCharacterPose("senior", seniorPos.x, seniorPos.z, seniorPos.yaw);
-    setCharacterPose("junior", juniorPos.x, juniorPos.z, juniorPos.yaw);
+    const pc = state.phaseClock;
+    /* ── 學長：轉身面後門 → 慢走到後門 → 轉身面學妹（共 ~17.4s）── */
+    const SR_START_X  = scale(-342);
+    const SR_START_Z  = scale(WORLD.frontDoor.center.z - 42);
+    const SR_END_X    = scale(-324);
+    const SR_END_Z    = scale(WORLD.backDoor.center.z);
+    const MEET_X      = scale(74);
+    const MEET_Z      = scale(WORLD.backDoor.center.z - 2);
+    const SR_INIT_YAW = Math.atan2(scale(1896) - SR_START_X, scale(2058) - SR_START_Z);
+    const SR_END_YAW  = Math.atan2(MEET_X - SR_END_X, MEET_Z - SR_END_Z);
+    let srX, srZ, srYaw;
+    if (pc < 0.3) {
+      srX = SR_START_X; srZ = SR_START_Z; srYaw = SR_INIT_YAW;
+    } else if (pc < 3.0) {
+      const t = smoothstep(0.3, 3.0, pc);
+      srX = SR_START_X; srZ = SR_START_Z;
+      srYaw = lerp(SR_INIT_YAW, Math.PI, t);
+    } else if (pc < 15.6) {
+      const t = smoothstep(3.0, 15.6, pc);
+      srX = lerp(SR_START_X, SR_END_X, t);
+      srZ = lerp(SR_START_Z, SR_END_Z, t);
+      srYaw = Math.PI;
+    } else if (pc < 17.4) {
+      const t = smoothstep(15.6, 17.4, pc);
+      srX = SR_END_X; srZ = SR_END_Z;
+      srYaw = lerp(Math.PI, SR_END_YAW, t);
+    } else {
+      srX = SR_END_X; srZ = SR_END_Z; srYaw = SR_END_YAW;
+    }
+    /* ── 學妹：像 one_gaze 的分段走路動畫（速度 ×3，共 45 秒）── */
+    const SEAT_X      = scale(1896);
+    const SEAT_Z      = scale(2058);
+    const WALL_Z      = scale(WORLD.classroom.backZ ?? 2484);
+    const AISLE_X     = scale(WORLD.classroom.aisleX ?? 1180);
+    const JUNIOR_DOOR_X   = scale(74);
+    const JUNIOR_DOOR_Z   = scale(WORLD.backDoor.center.z - 2);
+    const NEAR_DOOR_Z = scale(780);
+    let jrX, jrZ, jrYaw;
+    if (pc < 3.0) {
+      jrX = SEAT_X; jrZ = SEAT_Z; jrYaw = 0;
+    } else if (pc < 5.4) {
+      const t = smoothstep(3.0, 5.4, pc);
+      jrX = SEAT_X; jrZ = SEAT_Z; jrYaw = lerp(0, Math.PI, t);
+    } else if (pc < 13.5) {
+      const t = smoothstep(5.4, 13.5, pc);
+      jrX = SEAT_X; jrZ = lerp(SEAT_Z, WALL_Z, t); jrYaw = Math.PI;
+    } else if (pc < 16.5) {
+      jrX = SEAT_X; jrZ = WALL_Z; jrYaw = Math.PI;
+    } else if (pc < 18.9) {
+      const t = smoothstep(16.5, 18.9, pc);
+      jrX = SEAT_X; jrZ = WALL_Z; jrYaw = lerp(Math.PI, 3 * Math.PI / 2, t);
+    } else if (pc < 25.5) {
+      const t = smoothstep(18.9, 25.5, pc);
+      jrX = lerp(SEAT_X, AISLE_X, t); jrZ = WALL_Z; jrYaw = 3 * Math.PI / 2;
+    } else if (pc < 27.9) {
+      const t = smoothstep(25.5, 27.9, pc);
+      jrX = AISLE_X; jrZ = WALL_Z; jrYaw = lerp(3 * Math.PI / 2, 2 * Math.PI, t);
+    } else if (pc < 40.5) {
+      const t = smoothstep(27.9, 40.5, pc);
+      jrX = AISLE_X; jrZ = lerp(WALL_Z, NEAR_DOOR_Z, t); jrYaw = 0;
+    } else if (pc < 42.6) {
+      const t = smoothstep(40.5, 42.6, pc);
+      jrX = AISLE_X; jrZ = NEAR_DOOR_Z; jrYaw = lerp(0, -Math.PI / 2, t);
+    } else {
+      const t = smoothstep(42.6, 45.0, pc);
+      jrX = lerp(AISLE_X, JUNIOR_DOOR_X, t);
+      jrZ = lerp(NEAR_DOOR_Z, JUNIOR_DOOR_Z, t);
+      jrYaw = -Math.PI / 2;
+    }
+    setCharacterPose("senior", srX, srZ, srYaw);
+    setCharacterPose("junior", jrX, jrZ, jrYaw);
     setCharacterPose("fatherEcho", scale(-272), scale(WORLD.backDoor.center.z + 2), Math.PI / 2, 0);
     setCharacterPose("auntEcho", scale(-116), scale(WORLD.backDoor.center.z + 26), -Math.PI / 2, 0);
     return;
@@ -2026,12 +2102,12 @@ function updateCharacterAudio(dt) {
 
   const seniorWalking =
     (state.phase === "front_call" && state.phaseClock < 3.8) ||
-    (state.phase === "rear_wait" && state.phaseClock < 5.8) ||
+    (state.phase === "rear_wait" && state.phaseClock > 3.0 && state.phaseClock < 15.6) ||
     (state.phase === "eye_contact" && state.phaseClock < 2.8) ||
-    (state.endingSequence?.type === "perfect" && state.endingSequence.time < 8.2);
+    (state.endingSequence?.type === "perfect" && state.endingSequence.time > 4.86 && state.endingSequence.time < 31.5);
   const juniorWalking =
-    (state.phase === "rear_wait" && state.phaseClock > 0.5 && state.phaseClock < 4.8) ||
-    (state.endingSequence?.type === "perfect" && state.endingSequence.time > 0.3 && state.endingSequence.time < 5.4);
+    (state.phase === "rear_wait" && state.phaseClock > 5.4 && state.phaseClock < 42.6) ||
+    (state.endingSequence?.type === "perfect" && state.endingSequence.time > 5.4 && state.endingSequence.time < 42.6);
 
   if (seniorWalking && state.time - state.sound.seniorStepAt > 0.48) {
     state.sound.seniorStepAt = state.time;
