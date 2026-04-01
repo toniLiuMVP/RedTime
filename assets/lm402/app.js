@@ -156,6 +156,7 @@ const dom = {
   audioToggleValue: document.getElementById("audio-toggle-value"),
   musicPrompt: document.getElementById("music-prompt"),
   musicPromptButton: document.getElementById("music-prompt-button"),
+  musicPromptClose: document.getElementById("music-prompt-close"),
   perfectEndingBtn: document.getElementById("perfect-ending-btn"),
   perfectEndingSideBtn: document.getElementById("perfect-ending-side-btn"),
   backStoryBtn: document.getElementById("back-story-btn"),
@@ -639,6 +640,8 @@ function createAudioSystem() {
   let context = null;
   let autoplayBlocked = false;
   let playAttempt = null;
+  let promptDismissed = false;
+  let promptReady = false;
 
   function ensureAudio() {
     if (audio) {
@@ -704,9 +707,27 @@ function createAudioSystem() {
   }
 
   function syncMusicPrompt() {
-    const shouldShow = !state.audioEnabled || (state.audioEnabled && autoplayBlocked);
+    if (promptDismissed) return;
+    const shouldShow = promptReady && (!state.audioEnabled || (state.audioEnabled && autoplayBlocked));
     dom.musicPrompt.classList.toggle("intro-mode", state.mode === "intro");
-    dom.musicPrompt.hidden = !shouldShow;
+    if (shouldShow && dom.musicPrompt.hidden) {
+      dom.musicPrompt.hidden = false;
+      requestAnimationFrame(() => dom.musicPrompt.classList.add("show"));
+    } else if (!shouldShow && !dom.musicPrompt.hidden) {
+      dom.musicPrompt.classList.remove("show");
+      setTimeout(() => { dom.musicPrompt.hidden = true; }, 420);
+    }
+  }
+
+  function showMusicPrompt() {
+    promptReady = true;
+    syncMusicPrompt();
+  }
+
+  function dismissMusicPrompt() {
+    promptDismissed = true;
+    dom.musicPrompt.classList.remove("show");
+    setTimeout(() => { dom.musicPrompt.hidden = true; }, 420);
   }
 
   function unlock() {
@@ -790,6 +811,8 @@ function createAudioSystem() {
     playCue,
     tryPlay,
     syncPrompt: syncMusicPrompt,
+    showPrompt: showMusicPrompt,
+    dismissPrompt: dismissMusicPrompt,
   };
 }
 
@@ -2843,7 +2866,14 @@ function bindUI() {
     audioSystem.setEnabled(!state.audioEnabled);
   });
   dom.musicPromptButton.addEventListener("click", () => {
+    if (!state.audioEnabled) {
+      audioSystem.setEnabled(true);
+    }
     audioSystem.unlock();
+    audioSystem.dismissPrompt();
+  });
+  dom.musicPromptClose?.addEventListener("click", () => {
+    audioSystem.dismissPrompt();
   });
   dom.perfectEndingBtn.addEventListener("click", startPerfectEnding);
   dom.perfectEndingSideBtn.addEventListener("click", startOneGazeEnding);
@@ -3006,6 +3036,8 @@ bindKeyboard();
 bindPointerLook();
 bindUI();
 initPanelSystem();
+// Show music prompt after loader fades (~1400ms)
+setTimeout(() => audioSystem.showPrompt(), 1400);
 handleResize();
 window.addEventListener("resize", handleResize);
 window.visualViewport?.addEventListener("resize", handleResize);
