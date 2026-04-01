@@ -5582,280 +5582,100 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             (Uo.material.opacity = e.MathUtils.lerp(0.46, 0.06, o)));
         })(s.intro);
       else if ("perfect" === s.endingSequence?.type)
+        /* ── perfect：跟拍學妹 → 停門口拍臉 5 秒 → 金句 ── */
         ((H.visible = !1),
           (function (t) {
-            const s = t.endingSequence?.time ?? 0,
-              r = o.perfectEstablishEnd ?? 2.2,
-              i0 = o.perfectOrbitEnd ?? 14.2,
-              l0 = o.perfectTransitionEnd ?? 17.4,
-              c0 = o.perfectSeniorPovEnd ?? 27.6,
-              h0 = o.perfectOverlayAt ?? 34.8,
-              heroAnchor = resolveJuniorHeroAnchor(Co, {
-                forceRoot: Co.userData.runtimeModelRoot ?? null,
-                allowLegacyFallback: !1,
-              }),
-              i =
-                (Co.position.clone().add(w),
-                a.set(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y)),
-                Go.position.clone().add(M)),
-              l = new e.Vector3(
-                Math.sin(Co.rotation.y),
-                0,
-                Math.cos(Co.rotation.y),
-              ),
-              c = heroAnchor.chest,
-              h = heroAnchor.face;
-            Co.userData.heroCloseupTarget = {
-              kind: heroAnchor.kind,
-              leadMode:
-                "procedural_hero_head" === heroAnchor.kind
-                  ? "hero_head"
-                  : "model_root",
-              rootVisible: Boolean(heroAnchor.root?.visible),
-              rootKind: heroAnchor.root?.userData?.kind ?? null,
-              sourceUrl: heroAnchor.root?.userData?.sourceUrl ?? null,
-              rootPosition: heroAnchor.root
-                ? {
-                    x: Number(heroAnchor.root.position.x.toFixed(3)),
-                    y: Number(heroAnchor.root.position.y.toFixed(3)),
-                    z: Number(heroAnchor.root.position.z.toFixed(3)),
-                  }
-                : null,
-              rootScale: heroAnchor.root
-                ? {
-                    x: Number(heroAnchor.root.scale.x.toFixed(3)),
-                    y: Number(heroAnchor.root.scale.y.toFixed(3)),
-                    z: Number(heroAnchor.root.scale.z.toFixed(3)),
-                  }
-                : null,
-              center: {
-                x: Number(heroAnchor.center.x.toFixed(3)),
-                y: Number(heroAnchor.center.y.toFixed(3)),
-                z: Number(heroAnchor.center.z.toFixed(3)),
-              },
-              face: {
-                x: Number(heroAnchor.face.x.toFixed(3)),
-                y: Number(heroAnchor.face.y.toFixed(3)),
-                z: Number(heroAnchor.face.z.toFixed(3)),
-              },
-              chest: {
-                x: Number(heroAnchor.chest.x.toFixed(3)),
-                y: Number(heroAnchor.chest.y.toFixed(3)),
-                z: Number(heroAnchor.chest.z.toFixed(3)),
-              },
-              eyes: {
-                x: Number(heroAnchor.eyes.x.toFixed(3)),
-                y: Number(heroAnchor.eyes.y.toFixed(3)),
-                z: Number(heroAnchor.eyes.z.toFixed(3)),
-              },
-            };
-            if (s < r) {
-              const t = s / r,
-                o = e.MathUtils.smoothstep(t, 0, 1),
-                establishOffset = f.clone();
-              establishOffset.multiplyScalar(1 - 0.5 * o);
-              const l = i.clone().add(establishOffset),
-                c = 0.004 * Math.sin(0.7 * s) * (1 - 0.3 * o),
-                d = 0.002 * Math.sin(1.4 * s);
-              ((l.y += c + d),
-                (l.x += 0.002 * Math.sin(0.5 * s)),
-                q.position.copy(l),
-                (q.fov = e.MathUtils.lerp(
-                  30,
-                  24,
-                  e.MathUtils.smoothstep(t, 0.1, 0.9),
-                )),
-                q.updateProjectionMatrix());
-              const p = e.MathUtils.smoothstep(t, 0.2, 0.8),
-                m = Go.position
-                  .clone()
-                  .add(
-                    a
-                      .set(Math.sin(Go.rotation.y), 0, Math.cos(Go.rotation.y))
-                      .multiplyScalar(3),
-                  )
-                  .add(n.set(0, 1.4, 0))
-                  .clone()
-                  .lerp(h, p);
-              return (
-                q.lookAt(m),
-                void q.rotateZ(0.003 * Math.sin(0.4 * s) * (1 + 0.5 * o))
-              );
-            }
-            if (s < i0) {
-              // 360° 韓劇風環繞：鏡頭繞學妹轉，學妹跟著轉保持正面朝鏡頭
-              const t = (s - r) / Math.max(0.01, i0 - r),
-                orbitRadius = e.MathUtils.lerp(2.2, 1.6, e.MathUtils.smoothstep(t, 0.5, 1)),
-                a = e.MathUtils.smoothstep(t, 0, 1) * Math.PI * 2,
-                orbitX = c.x + Math.sin(a) * orbitRadius,
-                orbitZ = c.z + Math.cos(a) * orbitRadius,
-                orbitY = c.y + e.MathUtils.lerp(0.4, 0.2, e.MathUtils.smoothstep(t, 0.7, 1)) + 0.15 * Math.sin(t * Math.PI);
-              // 學妹轉身面向鏡頭
-              Co.rotation.y = Math.atan2(orbitX - c.x, orbitZ - c.z);
-              (q.position.set(orbitX, orbitY, orbitZ),
-                (q.fov = e.MathUtils.lerp(
-                  36,
-                  28,
-                  e.MathUtils.smoothstep(t, 0, 1),
-                )),
-                q.updateProjectionMatrix());
-              const lookTarget = Co.position.clone().add(new e.Vector3(0, e.MathUtils.lerp(1.45, 1.5, t), 0));
-              q.lookAt(lookTarget);
-              const tilt = 0.002 * Math.sin(1.8 * s);
-              return void q.rotateZ(tilt);
-            }
-            if (s < l0) {
-              // Transition: 從環繞收到學妹正面上半身特寫
-              const t = (s - i0) / Math.max(0.01, l0 - i0),
-                o = e.MathUtils.smoothstep(t, 0, 1),
-                fwd = new e.Vector3(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y)),
-                closePos = c.clone().add(fwd.clone().multiplyScalar(1.8)).add(new e.Vector3(0, 0.3, 0)),
-                endPos = c.clone().add(fwd.clone().multiplyScalar(1.2)).add(new e.Vector3(0, 0.15, 0)),
-                camPos = closePos.clone().lerp(endPos, o),
-                d = 0.001 * Math.sin(0.8 * s);
-              ((camPos.y += d),
-                q.position.copy(camPos),
-                (q.fov = e.MathUtils.lerp(28, 22, o)),
-                q.updateProjectionMatrix());
-              const lookY = e.MathUtils.lerp(1.45, 1.52, o);
-              q.lookAt(c.x, c.y - 0.1 + lookY, c.z);
-              const m = 0.001 * Math.sin(1.8 * s) * (1 - o);
-              return void q.rotateZ(m);
-            }
-            if (s < c0) {
-              // Senior POV hold: 停留在學妹上半身到頭部
-              const t = (s - l0) / Math.max(0.01, c0 - l0),
-                o = e.MathUtils.smoothstep(t, 0, 1),
-                fwd = new e.Vector3(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y)),
-                holdPos = c.clone().add(fwd.clone().multiplyScalar(1.2)).add(new e.Vector3(0, 0.15, 0)),
-                breathe = 0.003 * Math.sin(0.5 * s),
-                drift = 0.001 * Math.cos(0.3 * s);
-              (holdPos.y += breathe),
-                (holdPos.x += drift),
-                q.position.copy(holdPos),
-                (q.fov = e.MathUtils.lerp(22, 20, o)),
-                q.updateProjectionMatrix(),
-                q.lookAt(c.x, c.y + 1.52, c.z);
-              const tilt = 0.001 * Math.sin(0.35 * s) * (0.5 + 0.5 * t);
-              return void q.rotateZ(tilt);
-            }
-            if (s < h0) {
-              const t = (s - c0) / Math.max(0.01, h0 - c0),
-                focusMid = c.clone().lerp(h, 0.62),
-                closeAnchor = h
-                  .clone()
-                  .add(l.clone().multiplyScalar(1.54))
-                  .add(new e.Vector3(0.046, 0.008, 0.022)),
-                o = closeAnchor.clone(),
-                a = e.MathUtils.smoothstep(t, 0, 0.5),
-                n = 4e-4 * Math.sin(2.8 * s) * a,
-                driftY = 3e-4 * Math.sin(3.1 * s + 1.2) * a,
-                bobY = 8e-4 * Math.sin(0.6 * s);
-              return (
-                (o.y += bobY + driftY),
-                (o.x += 8e-4 * Math.cos(0.2 * s) + n),
-                q.position.copy(o),
-                (q.fov = e.MathUtils.lerp(
-                  25.8,
-                  23.6,
-                  e.MathUtils.smoothstep(t, 0, 0.8),
-                )),
-                q.updateProjectionMatrix(),
-                q.lookAt(focusMid.x, focusMid.y + 0.006, focusMid.z + 0.016),
-                void q.rotateZ(8e-4 * Math.sin(0.35 * s) * a)
-              );
-            }
-            const d = s - h0,
-              p = e.MathUtils.smoothstep(d, 0, 4),
-              overlayAnchor = h
-                .clone()
-                .add(l.clone().multiplyScalar(1.68 - 0.14 * p))
-                .add(new e.Vector3(0.108, -0.022, 0.03)),
-              m = overlayAnchor.clone();
-            m.add(a.set(0.01 + 0.02 * p, 0.008 + 0.01 * p, 0));
-            const g = Math.min(1, 0.08 * d);
-            ((m.y += 0.001 * Math.sin(0.3 * s) + 3e-4 * Math.sin(2.2 * s) * g),
-              (m.x += 8e-4 * Math.cos(0.16 * s)),
-              q.position.copy(m),
-              (q.fov = e.MathUtils.lerp(
-                21.5,
-                25,
-                e.MathUtils.smoothstep(d, 0, 5),
-              )),
-              q.updateProjectionMatrix(),
-              q.lookAt(h.x, h.y - 0.04, h.z + 0.028),
-              q.rotateZ(0.001 * Math.sin(0.4 * s) * g));
-          })(s));
-      else if ("perfect_eye" === s.endingSequence?.type || "one_gaze" === s.endingSequence?.type)
-        /* ── 一眼瞬間：360° 環繞 → 停在學妹眼前 ── */
-        ((H.visible = false),
-          (function(t) {
             const et = t.endingSequence?.time ?? 0;
+            const WALK_END = 45.0;            // 學妹走路 45 秒到達後門
+            const FACE_TRANS_END = WALK_END + 1.0; // 1 秒過渡到拍臉鏡頭
             const heroAnchor = resolveJuniorHeroAnchor(Co, {
               forceRoot: Co.userData.runtimeModelRoot ?? null,
               allowLegacyFallback: !1,
             });
             const facePos = heroAnchor.face;
-            const chestPos = heroAnchor.chest;
-            const eyePos = heroAnchor.eyes;
-            /* Way B 有一段學妹走路前置動畫 (0-6s)；Way A 跳過前置 */
-            const isOneGaze = "one_gaze" === t.endingSequence?.type;
-            const WALK_END   = isOneGaze ? 15.0 : 0.0;  // Way B 有走路前置（15秒慢走）
-            const ORBIT_START = WALK_END;
-            const ORBIT_END   = WALK_END + 9.0;          // 環繞 9 秒（≈ 1 圈）
-            const CLOSE_START = ORBIT_END;
-            const CLOSE_END   = CLOSE_START + 2.5;       // 2.5 秒拉近
-
-            if (et < ORBIT_START + 0.01) {
-              /* 還沒開始環繞，保持站在玩家位置、望向學妹 */
-              const lookTgt = new e.Vector3(facePos.x, facePos.y + 0.06, facePos.z);
-              q.position.copy(t.player
-                ? new e.Vector3(t.player.x, t.player.y + 1.62, t.player.z)
-                : new e.Vector3(chestPos.x + 1.8, chestPos.y + 0.3, chestPos.z));
+            const eyePos  = heroAnchor.eyes;
+            const fwd = new e.Vector3(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y));
+            // ── 跟拍鏡頭：位在學妹背後偏上，望著學妹上半身 ──
+            const followPos = Co.position.clone()
+              .add(fwd.clone().multiplyScalar(-2.5))
+              .add(new e.Vector3(0, 1.8, 0));
+            const lookTgt = Co.position.clone().add(new e.Vector3(0, 1.4, 0));
+            if (et < WALK_END) {
+              q.position.copy(followPos);
+              q.fov = 46;
+              q.updateProjectionMatrix();
               q.lookAt(lookTgt);
               return;
             }
-
-            if (et >= ORBIT_START && et < ORBIT_END) {
-              /* 360° 慢速環繞：鏡頭繞學妹臉轉一圈 */
-              const ot = (et - ORBIT_START) / (ORBIT_END - ORBIT_START);
-              const orbitRadius = e.MathUtils.lerp(2.6, 1.5, e.MathUtils.smoothstep(ot, 0.4, 1));
-              const angle = ot * Math.PI * 2;
-              const orbitX = facePos.x + Math.sin(angle) * orbitRadius;
-              const orbitZ = facePos.z + Math.cos(angle) * orbitRadius;
-              const orbitY = facePos.y + e.MathUtils.lerp(0.55, 0.30, e.MathUtils.smoothstep(ot, 0.6, 1));
-              /* 學妹面向鏡頭 */
-              Co.rotation.y = Math.atan2(orbitX - facePos.x, orbitZ - facePos.z);
-              q.position.set(orbitX, orbitY, orbitZ);
-              q.fov = e.MathUtils.lerp(42, 30, e.MathUtils.smoothstep(ot, 0, 0.8));
-              q.updateProjectionMatrix();
-              q.lookAt(facePos.x, facePos.y + 0.04, facePos.z);
-              q.rotateZ(0.002 * Math.sin(2.0 * et));
-              return;
-            }
-
-            /* 拉近到學妹眼前「一個人的距離」(~1.2m) */
-            if (et >= CLOSE_START) {
-              const ct = Math.min(1, (et - CLOSE_START) / (CLOSE_END - CLOSE_START));
-              const cEase = e.MathUtils.smoothstep(ct, 0, 1);
-              const fwd = new e.Vector3(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y));
-              const farPos = facePos.clone().add(fwd.clone().multiplyScalar(2.6)).add(new e.Vector3(0, 0.30, 0));
-              const nearPos = facePos.clone().add(fwd.clone().multiplyScalar(1.2)).add(new e.Vector3(0, eyePos.y - facePos.y, 0));
-              const camPos = farPos.clone().lerp(nearPos, cEase);
-              const bob = 4e-4 * Math.sin(0.6 * et);
-              camPos.y += bob;
-              q.position.copy(camPos);
-              q.fov = e.MathUtils.lerp(32, 26, cEase);
-              q.updateProjectionMatrix();
-              q.lookAt(facePos.x, facePos.y + 0.04, facePos.z);
-              return;
-            }
+            // ── 拍臉鏡頭：過渡到學妹正前方，對準眼睛 ──
+            const tFace = e.MathUtils.smoothstep(et, WALK_END, FACE_TRANS_END);
+            const faceShot = new e.Vector3(
+              Co.position.x + fwd.x * 0.9,
+              eyePos.y + 3e-4 * Math.sin(0.5 * et),
+              Co.position.z + fwd.z * 0.9
+            );
+            const camPos = followPos.clone().lerp(faceShot, tFace);
+            q.position.copy(camPos);
+            q.fov = e.MathUtils.lerp(46, 36, tFace);
+            q.updateProjectionMatrix();
+            q.lookAt(facePos.x, facePos.y, facePos.z);
           })(s));
-      else {
+      else if ("perfect_eye" === s.endingSequence?.type || "one_gaze" === s.endingSequence?.type)
+        /* ── 跟拍學妹 → 停門口拍臉 5 秒 ── */
+        ((H.visible = false),
+          (function(t) {
+            const et = t.endingSequence?.time ?? 0;
+            const isOneGaze = "one_gaze" === t.endingSequence?.type;
+            const WALK_END = isOneGaze ? 45.0 : 0.0; // one_gaze 學妹走 45 秒，perfect_eye 直接拍臉
+            const FACE_TRANS_END = WALK_END + 1.0;   // 1 秒過渡到拍臉鏡頭
+            const heroAnchor = resolveJuniorHeroAnchor(Co, {
+              forceRoot: Co.userData.runtimeModelRoot ?? null,
+              allowLegacyFallback: !1,
+            });
+            const facePos = heroAnchor.face;
+            const eyePos  = heroAnchor.eyes;
+            const fwd = new e.Vector3(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y));
+            // ── 跟拍鏡頭：位在學妹背後偏上，望著學妹上半身 ──
+            const followPos = Co.position.clone()
+              .add(fwd.clone().multiplyScalar(-2.5))
+              .add(new e.Vector3(0, 1.8, 0));
+            const lookTgt = Co.position.clone().add(new e.Vector3(0, 1.4, 0));
+            if (et < WALK_END) {
+              q.position.copy(followPos);
+              q.fov = 46;
+              q.updateProjectionMatrix();
+              q.lookAt(lookTgt);
+              return;
+            }
+            // ── 拍臉鏡頭：過渡到學妹正前方，對準眼睛 ──
+            const tFace = e.MathUtils.smoothstep(et, WALK_END, FACE_TRANS_END);
+            const faceShot = new e.Vector3(
+              Co.position.x + fwd.x * 0.9,
+              eyePos.y + 3e-4 * Math.sin(0.5 * et),
+              Co.position.z + fwd.z * 0.9
+            );
+            const camPos = followPos.clone().lerp(faceShot, tFace);
+            q.position.copy(camPos);
+            q.fov = e.MathUtils.lerp(46, 36, tFace);
+            q.updateProjectionMatrix();
+            q.lookAt(facePos.x, facePos.y, facePos.z);
+          })(s));
+      else if ("rear_wait" === s.phase && s.phaseClock > 3.0) {
+        // rear_wait 過場：跟拍鏡頭跟著學妹走向後門
         H.visible = !1;
-        const e =
+        const fwd = new e.Vector3(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y));
+        const followPos = Co.position.clone()
+          .add(fwd.clone().multiplyScalar(-2.5))
+          .add(new e.Vector3(0, 1.8, 0));
+        q.fov = 46;
+        q.updateProjectionMatrix();
+        q.position.copy(followPos);
+        q.lookAt(Co.position.clone().add(new e.Vector3(0, 1.4, 0)));
+      } else {
+        H.visible = !1;
+        const fov =
           "front_call" === s.phase ? 42 : "eye_contact" === s.phase ? 46 : 56;
-        (q.fov !== e && ((q.fov = e), q.updateProjectionMatrix()),
+        (q.fov !== fov && ((q.fov = fov), q.updateProjectionMatrix()),
           _o(s.player, sceneTime, !0));
       }
       const b = x ? e.MathUtils.lerp(0.34, 1, s.intro.progress) : 1;

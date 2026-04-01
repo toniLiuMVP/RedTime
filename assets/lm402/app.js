@@ -2180,23 +2180,22 @@ function updateEndingSequence(dt) {
   }
   state.endingSequence.time += dt;
   if (state.ending === "perfect") {
-    // 完美結局：維持原有完整過場
-    if (state.endingSequence.time < (CINEMATIC_TIMELINE.perfectSeniorPovEnd ?? 10)) {
-      state.endingSequence.shotPhase = "senior_pov_hold";
-    } else {
-      state.endingSequence.shotPhase = "eyes";
-    }
-    if (!state.flags.perfectLine1Played && state.endingSequence.time >= (CINEMATIC_TIMELINE.perfectLine1At ?? 1)) {
+    // 完美結局：跟拍鏡頭 → 學妹停門口 → 拍臉 5 秒 → 金句
+    const PERFECT_WALK_END = 45.0;
+    const PERFECT_QUOTE_AT = PERFECT_WALK_END + 5.0; // 50 秒後顯示金句
+    const PERFECT_TOTAL    = PERFECT_QUOTE_AT + 13.0; // 63 秒後結束
+    state.endingSequence.shotPhase = state.endingSequence.time < PERFECT_WALK_END ? "walk" : "face";
+    if (!state.flags.perfectLine1Played && state.endingSequence.time >= (CINEMATIC_TIMELINE.perfectLine1At ?? 27.6)) {
       state.flags.perfectLine1Played = true;
       setSubtitle("學長（心底的聲音）", "也太像徐若瑄了吧！", 5.0);
       setAmbience("學長心裡先跳出一句很不正經的念頭。他還不知道，這一秒會記二十年。");
     }
-    if (!state.flags.perfectLine2Played && state.endingSequence.time >= (CINEMATIC_TIMELINE.perfectLine2At ?? 6)) {
+    if (!state.flags.perfectLine2Played && state.endingSequence.time >= PERFECT_QUOTE_AT) {
       state.flags.perfectLine2Played = true;
       setSubtitle("", "這一次，依然再次遇見妳。", 10.0);
       setAmbience("這一次，依然再次遇見妳。");
     }
-    if (state.endingSequence.time > (CINEMATIC_TIMELINE.perfectDuration + 0.35) && dom.endingOverlay.hidden) {
+    if (state.endingSequence.time > PERFECT_TOTAL && dom.endingOverlay.hidden) {
       finishEndingSequence();
     }
     return;
@@ -2206,17 +2205,11 @@ function updateEndingSequence(dt) {
      Way B：one_gaze（從任務面板「飛到一眼瞬間那一秒」觸發）
      共用邏輯：360° 環繞 → 停在學妹眼前 → 顯示文字 10 秒            ── */
   if (state.ending === "perfect_eye" || state.ending === "one_gaze") {
-    state.endingSequence.shotPhase = "one_gaze_orbit";
-    const WALK_END  = state.ending === "one_gaze" ? 6.0 : 0.0;
-    const ORBIT_END = WALK_END + 9.0;
-    const CLOSE_END = ORBIT_END + 2.5;
-    const TEXT_START = CLOSE_END;   // 文字疊加從拉近完成後開始
+    // 跟拍鏡頭 → 學妹停門口 → 拍臉 5 秒 → 金句
+    const WALK_END   = state.ending === "one_gaze" ? 45.0 : 0.0; // 學妹走路 45 秒（perfect_eye 已在門口）
+    const TEXT_START = WALK_END + 5.0;  // 拍臉 5 秒後顯示金句
     const TOTAL_DUR  = TEXT_START + 12.0;  // 文字顯示 12 秒
-
-    /* Way B：學妹走路前置動畫 */
-    if (state.ending === "one_gaze" && state.endingSequence.time < WALK_END) {
-      /* 不做角色動畫（updateCharacters 裡 perfect_eye/one_gaze 分支處理） */
-    }
+    state.endingSequence.shotPhase = state.endingSequence.time < WALK_END ? "follow" : "face";
 
     /* 文字疊加層 */
     if (!state.flags.oneGazeTextShown && state.endingSequence.time >= TEXT_START) {
