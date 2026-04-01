@@ -230,8 +230,12 @@ const QUALITY_TIERS = {
 };
 const QUALITY_ORDER = ["smooth", "high", "ultra"];
 const QUALITY_LABELS = { smooth: "順暢", high: "高級", ultra: "全開最高" };
+function getDefaultQuality() {
+  const isMobile = window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  return isMobile ? "high" : "ultra";
+}
 function loadQualitySetting() {
-  try { const v = localStorage.getItem(STORAGE_KEYS.graphicsQuality); return QUALITY_TIERS[v] ? v : "high"; } catch { return "high"; }
+  try { const v = localStorage.getItem(STORAGE_KEYS.graphicsQuality); return QUALITY_TIERS[v] ? v : getDefaultQuality(); } catch { return getDefaultQuality(); }
 }
 function persistQualitySetting() {
   try { localStorage.setItem(STORAGE_KEYS.graphicsQuality, state.graphicsQuality); } catch {}
@@ -2340,6 +2344,7 @@ function buildSceneState() {
     endingSequence: state.endingSequence,
     ending: state.ending,
     time: state.time,
+    phaseClock: state.phaseClock,
   };
 }
 
