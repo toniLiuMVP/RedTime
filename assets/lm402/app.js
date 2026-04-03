@@ -1398,12 +1398,35 @@ function applyEffect(effect) {
     closeDialogue();
     state.controlMode = "daughter";
     state.flags.daughterActive = true;
-    /* 女兒觀察點：後門附近偏旁 */
-    state.player.x = scale(0);
-    state.player.z = scale(WORLD.backDoor.center.z + 40);
-    state.player.yaw = Math.PI / 2;
-    state.player.pitch = 0;
+
+    /* ── 學妹和學長在後門互望（凍結位置）── */
+    const JUNIOR_MEET_X = scale(74);
+    const JUNIOR_MEET_Z = scale(WORLD.backDoor.center.z - 2);
+    const SENIOR_DOOR_X = scale(-324);
+    const SENIOR_DOOR_Z = scale(WORLD.backDoor.center.z);
+    // 學妹面向學長
+    state.characters.junior.x = JUNIOR_MEET_X;
+    state.characters.junior.z = JUNIOR_MEET_Z;
+    state.characters.junior.rotationY = Math.atan2(
+      SENIOR_DOOR_X - JUNIOR_MEET_X, SENIOR_DOOR_Z - JUNIOR_MEET_Z
+    );
+    // 學長面向學妹
+    state.characters.senior.x = SENIOR_DOOR_X;
+    state.characters.senior.z = SENIOR_DOOR_Z;
+    state.characters.senior.rotationY = Math.atan2(
+      JUNIOR_MEET_X - SENIOR_DOOR_X, JUNIOR_MEET_Z - SENIOR_DOOR_Z
+    );
+
+    /* 女兒觀察點：教室走道中央，離後門約 6m，面向後門方向 */
+    state.player.x = scale(900);
+    state.player.z = scale(1000);
+    state.player.yaw = Math.atan2(
+      state.player.x - JUNIOR_MEET_X,
+      state.player.z - JUNIOR_MEET_Z
+    );
+    state.player.pitch = -0.06;
     state.player.velocity = { x: 0, z: 0 };
+
     /* 把拔和阿姨的回憶影像浮現 */
     state.characters.fatherEcho.alpha = 0.6;
     state.characters.auntEcho.alpha = 0.6;
@@ -2192,7 +2215,18 @@ function updateCharacters() {
 
     /* ── 玩家控制學妹 / 女兒視角：跳過學妹腳本動畫 ── */
     if (state.controlMode === "junior" || state.controlMode === "daughter") {
-      /* 學妹位置由 updateMovement() 同步，不做腳本覆寫 */
+      if (state.controlMode === "daughter") {
+        /* 女兒視角：學妹和學長凍結在後門互望 */
+        const JM_X = scale(74);
+        const JM_Z = scale(WORLD.backDoor.center.z - 2);
+        const SD_X = scale(-324);
+        const SD_Z = scale(WORLD.backDoor.center.z);
+        setCharacterPose("junior", JM_X, JM_Z,
+          Math.atan2(SD_X - JM_X, SD_Z - JM_Z));
+        setCharacterPose("senior", SD_X, SD_Z,
+          Math.atan2(JM_X - SD_X, JM_Z - SD_Z));
+      }
+      /* junior 模式：學妹位置由 updateMovement() 同步，學長照腳本走 */
       const echoAlpha = state.controlMode === "daughter" ? 0.6 : 0;
       setCharacterPose("fatherEcho", scale(-272), scale(WORLD.backDoor.center.z + 2), Math.PI / 2, echoAlpha);
       setCharacterPose("auntEcho", scale(-116), scale(WORLD.backDoor.center.z + 26), -Math.PI / 2, echoAlpha * 0.9);
