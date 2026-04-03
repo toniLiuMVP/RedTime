@@ -1339,7 +1339,7 @@ function applyEffect(effect) {
     state.controlMode = "junior";
     state.player.x = scale(1896);
     state.player.z = scale(2058);
-    state.player.yaw = Math.PI; // 朝向後門方向
+    state.player.yaw = 0; // 朝向後門方向（-Z = 後門側）
     state.player.pitch = 0;
     state.player.velocity = { x: 0, z: 0 };
     state.player.isGhostObserver = false;
@@ -1598,7 +1598,27 @@ function updateActiveHotspot() {
   }
 
   const hotspots = buildHotspotState();
-  const picked = scene.pickHotspot(hotspots, state.player, state.activeHotspotId);
+  const isThirdPerson = state.controlMode === "junior" || state.controlMode === "daughter";
+  let picked;
+  if (isThirdPerson) {
+    /* 第三人稱模式：用玩家位置做純距離判定（跳過角度檢查） */
+    let best = null;
+    for (const h of hotspots) {
+      if (!h.visible) continue;
+      const dx = state.player.x - h.x;
+      const dz = state.player.z - h.z;
+      const dist = Math.sqrt(dx * dx + dz * dz);
+      const maxR = h.radius * 1.6;
+      if (dist > maxR) continue;
+      const score = -dist;
+      if (!best || score > best.score || (h.id === state.activeHotspotId && score > best.score - 0.18)) {
+        best = { id: h.id, score, distance: dist, label: h.label, prompt: h.prompt };
+      }
+    }
+    picked = best;
+  } else {
+    picked = scene.pickHotspot(hotspots, state.player, state.activeHotspotId);
+  }
   state.activeHotspotId = picked?.id ?? null;
   state.activeHotspot = picked ? hotspots.find((item) => item.id === picked.id) : null;
 
@@ -1949,6 +1969,23 @@ function updateMovement(dt) {
   state.player.z = resolved.z;
   state.boundaryCollisionState = resolved.collided ? resolved.label : null;
 
+  /* ── 角色間物理碰撞：學妹不可穿過學長 ── */
+  if (state.controlMode === "junior" || state.controlMode === "daughter") {
+    const CHARACTER_RADIUS = scale(36);
+    const sr = state.characters.senior;
+    const cdx = state.player.x - sr.x;
+    const cdz = state.player.z - sr.z;
+    const cDist = Math.sqrt(cdx * cdx + cdz * cdz);
+    const minDist = CHARACTER_RADIUS * 2;
+    if (cDist < minDist && cDist > 0.001) {
+      const push = minDist - cDist + 0.002;
+      state.player.x += (cdx / cDist) * push;
+      state.player.z += (cdz / cDist) * push;
+      state.player.velocity.x *= 0.2;
+      state.player.velocity.z *= 0.2;
+    }
+  }
+
   /* ── 玩家控制學妹時：同步學妹模型位置 ── */
   if (state.controlMode === "junior") {
     state.characters.junior.x = state.player.x;
@@ -2089,24 +2126,23 @@ function updateCharacters() {
   }
 
   if (state.phase === "front_call") {
-    /* ── 11:00 跑步過場：學長從前樓梯衝上來，跑過 LM401 後門到 LM402 前門
-         過場時間：0 ~ 3.8s  (跑步)
-         3.8s 後：轉身打電話的正常動畫                                    ── */
-    const RUN_END = 3.8;
+    /* ── 11:00 跑步過場：學長從後樓梯衝過來，跑到 LM402 前門
+         過場時間：0 ~ 2.4s  (跑步)
+         2.4s 後：轉身打電話的正常動畫                                    ── */
+    const RUN_END = 2.4;
     if (state.phaseClock < RUN_END) {
-      /* 起跑點：三樓前樓梯出口 (z=front.z1 ~ z2，x 走廊外側) */
+      /* 起跑點：後樓梯出口 (唯一可見的樓梯) */
       const runStartX = scale(-360);
-      const runStartZ = scale(WORLD.stairs.front.landingZ);          // 前樓梯登陸點 ~196
+      const runStartZ = scale(WORLD.stairs.back.landingZ);           // 後樓梯登陸點 ~3196
       /* 終點：LM402 前門外稍前一點 */
       const runEndX   = scale(-336);
       const runEndZ   = scale(WORLD.frontDoor.center.z - 42);        // ~2292
       const runT = smoothstep(0, RUN_END, state.phaseClock);
-      /* 使用 easeOutCubic 讓衝刺感更明顯 */
       const runEase = 1 - Math.pow(1 - runT, 2.8);
       const srX = lerp(runStartX, runEndX, runEase);
       const srZ = lerp(runStartZ, runEndZ, runEase);
-      /* 跑步方向：始終面向 +Z（後門方向） */
-      const runYaw = Math.PI; // 面向後方（畫面深處）
+      /* 跑步方向：從後樓梯往前門跑（-Z 方向） */
+      const runYaw = Math.PI;
       setCharacterPose("senior", srX, srZ, runYaw);
       setCharacterPose("junior", scale(1896), scale(2058), 0.03);
       setCharacterPose("fatherEcho", scale(-272), scale(WORLD.backDoor.center.z + 2), Math.PI / 2, 0);
@@ -2118,7 +2154,6 @@ function updateCharacters() {
     const turnT = smoothstep(0, 1.5, pc);
     const seniorStandX = scale(-336);
     const seniorStandZ = scale(WORLD.frontDoor.center.z - 42);
-    /* 計算面向學妹座位（1896, 2058）的 yaw */
     const juniorFaceYaw = Math.atan2(scale(1896) - seniorStandX, scale(2058) - seniorStandZ);
     const seniorYaw = lerp(Math.PI, juniorFaceYaw, turnT);
     setCharacterPose("senior", seniorStandX, seniorStandZ, seniorYaw);
@@ -2239,7 +2274,7 @@ function updateCharacterAudio(dt) {
   }
 
   const seniorWalking =
-    (state.phase === "front_call" && state.phaseClock < 3.8) ||
+    (state.phase === "front_call" && state.phaseClock < 2.4) ||
     (state.phase === "rear_wait" && state.phaseClock > 3.0 && state.phaseClock < 15.6) ||
     (state.phase === "eye_contact" && state.phaseClock < 2.8) ||
     (state.endingSequence?.type === "perfect" && state.endingSequence.time > 4.86 && state.endingSequence.time < 31.5);
@@ -2986,8 +3021,8 @@ function bindUI() {
   dom.musicPromptClose?.addEventListener("click", () => {
     audioSystem.dismissPrompt();
   });
-  dom.perfectEndingBtn.addEventListener("click", startPerfectEnding);
-  dom.perfectEndingSideBtn.addEventListener("click", startOneGazeEnding);
+  dom.perfectEndingBtn.addEventListener("click", resetScene);
+  dom.perfectEndingSideBtn.addEventListener("click", resetScene);
   dom.objectivePrompt.addEventListener("click", toggleObjectivePrompt);
   dom.transcriptToggle?.addEventListener("click", () => toggleTranscript());
   dom.transcriptToggle?.addEventListener("dblclick", (e) => {
