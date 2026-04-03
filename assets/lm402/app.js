@@ -1335,7 +1335,7 @@ function applyEffect(effect) {
   }
   if (effect === "trigger_ending_sequence") {
     setPhase("rear_wait");
-    /* ── 玩家接管學妹：第三人稱控制 ── */
+    /* ── 玩家接管學妹：第一人稱（學妹的眼睛）── */
     state.controlMode = "junior";
     state.player.x = scale(1896);
     state.player.z = scale(2058);
@@ -1355,17 +1355,12 @@ function applyEffect(effect) {
       memories: new Set(state.memories),
     };
     audioSystem.playCue("phone");
-    setSubtitle("學妹", "「你走到後門。」", 3.6);
-    setTimeout(() => {
-      if (state.mode === "play") {
-        setSubtitle("女兒", "阿姨說出那句排練過無數次的台詞了！我要趕快飛到後門！", 5.0);
-      }
-    }, 4000);
+    setSubtitle("學妹", "剛剛我叫學長到後門。", 4.0);
     setTimeout(() => {
       if (state.mode === "play" && state.controlMode === "junior") {
-        setSubtitle("", "用方向鍵或搖桿控制學妹走到後門", 4.0);
+        setSubtitle("", "走到後門找學長", 4.0);
       }
-    }, 9000);
+    }, 5000);
     setAmbience("話筒裡的聲音很輕，但已經足夠讓整條走廊開始轉向。他正在把腳步折向後門。");
     closeDialogue();
     return;

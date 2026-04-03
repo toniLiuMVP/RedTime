@@ -5648,18 +5648,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             q.updateProjectionMatrix();
             q.lookAt(facePos.x, facePos.y, facePos.z);
           })(s));
-      else if ("junior" === s.controlMode) {
-        /* ── 玩家控制學妹：第三人稱跟拍（攝影機在角色背後） ── */
-        H.visible = !1;
-        const fwd = new e.Vector3(-Math.sin(Co.rotation.y), 0, -Math.cos(Co.rotation.y));
-        const followPos = Co.position.clone()
-          .add(fwd.clone().multiplyScalar(-2.5))
-          .add(new e.Vector3(0, 1.8, 0));
-        q.fov = 46;
-        q.updateProjectionMatrix();
-        q.position.copy(followPos);
-        q.lookAt(Co.position.clone().add(new e.Vector3(0, 1.4, 0)));
-      } else if ("rear_wait" === s.phase && s.phaseClock > 3.0) {
+      else if ("rear_wait" === s.phase && s.phaseClock > 3.0 && "ghost" === s.controlMode) {
         // rear_wait 過場：跟拍鏡頭跟著學妹走向後門（腳本模式）
         H.visible = !1;
         const fwd = new e.Vector3(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y));
@@ -5672,6 +5661,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         q.lookAt(Co.position.clone().add(new e.Vector3(0, 1.4, 0)));
       } else {
         H.visible = !1;
+        /* 第一人稱控制學妹時隱藏學妹模型（攝影機在模型內部） */
+        Co.visible = "junior" !== s.controlMode;
         const fov =
           "front_call" === s.phase ? 42 : "eye_contact" === s.phase ? 46 : 56;
         (q.fov !== fov && ((q.fov = fov), q.updateProjectionMatrix()),
