@@ -2027,7 +2027,7 @@ function updateCharacters() {
   // 意識菜市場：學長不出現（遠距離、透明）
   if (state.phase === "consciousness_market") {
     setCharacterPose("senior", scale(-9999), scale(-9999), 0, 0);
-    setCharacterPose("junior", scale(1896), scale(2058), 0.03);
+    setCharacterPose("junior", scale(1896), scale(2058), Math.PI);
     setCharacterPose("fatherEcho", scale(-272), scale(WORLD.backDoor.center.z + 2), Math.PI / 2, 0);
     setCharacterPose("auntEcho", scale(-116), scale(WORLD.backDoor.center.z + 26), -Math.PI / 2, 0);
     return;
@@ -2144,7 +2144,7 @@ function updateCharacters() {
       /* 跑步方向：從後樓梯往前門跑（-Z 方向） */
       const runYaw = Math.PI;
       setCharacterPose("senior", srX, srZ, runYaw);
-      setCharacterPose("junior", scale(1896), scale(2058), 0.03);
+      setCharacterPose("junior", scale(1896), scale(2058), Math.PI);
       setCharacterPose("fatherEcho", scale(-272), scale(WORLD.backDoor.center.z + 2), Math.PI / 2, 0);
       setCharacterPose("auntEcho", scale(-116), scale(WORLD.backDoor.center.z + 26), -Math.PI / 2, 0);
       return;
@@ -2157,7 +2157,7 @@ function updateCharacters() {
     const juniorFaceYaw = Math.atan2(scale(1896) - seniorStandX, scale(2058) - seniorStandZ);
     const seniorYaw = lerp(Math.PI, juniorFaceYaw, turnT);
     setCharacterPose("senior", seniorStandX, seniorStandZ, seniorYaw);
-    setCharacterPose("junior", scale(1896), scale(2058), 0.03);
+    setCharacterPose("junior", scale(1896), scale(2058), Math.PI);
     setCharacterPose("fatherEcho", scale(-272), scale(WORLD.backDoor.center.z + 2), Math.PI / 2, 0);
     setCharacterPose("auntEcho", scale(-116), scale(WORLD.backDoor.center.z + 26), -Math.PI / 2, 0);
     return;

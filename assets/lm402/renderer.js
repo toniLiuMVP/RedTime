@@ -5648,8 +5648,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             q.updateProjectionMatrix();
             q.lookAt(facePos.x, facePos.y, facePos.z);
           })(s));
-      else if ("junior" === s.controlMode || "daughter" === s.controlMode) {
-        /* ── 玩家控制學妹 / 女兒視角：第三人稱跟拍（攝影機在角色背後） ── */
+      else if ("junior" === s.controlMode) {
+        /* ── 玩家控制學妹：第三人稱跟拍（攝影機在角色背後） ── */
         H.visible = !1;
         const fwd = new e.Vector3(-Math.sin(Co.rotation.y), 0, -Math.cos(Co.rotation.y));
         const followPos = Co.position.clone()
