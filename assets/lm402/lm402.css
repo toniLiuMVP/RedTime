@@ -2050,8 +2050,10 @@ body.landscape-prompt .debug-panel {
     overflow-y: auto;
   }
   .ending-overlay {
-    align-items: flex-start;
-    justify-content: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
     overflow-y: auto;
     overscroll-behavior: contain;
     padding:
@@ -2069,6 +2071,7 @@ body.landscape-prompt .debug-panel {
     overflow-y: auto;
     margin: 0 auto;
     padding-bottom: 54px;
+    animation: ending-card-rise-mobile 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
   .ending-scroll-control {
     display: flex;
@@ -2131,6 +2134,15 @@ body.landscape-prompt .debug-panel {
   }
 }
 @media (max-width: 1080px) and (orientation: landscape) {
+  .ending-hook,
+  .ending-tracker,
+  #ending-tracker-summary {
+    display: none;
+  }
+  .ending-card {
+    max-height: none;
+    overflow-y: visible;
+  }
   .hud {
     top: max(8px, env(safe-area-inset-top));
     left: max(8px, env(safe-area-inset-left));
@@ -3164,6 +3176,23 @@ body.landscape-prompt .debug-panel {
     filter: blur(0);
   }
 }
+@keyframes ending-card-rise-mobile {
+  0% {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+    filter: blur(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+@media (max-width: 1080px) {
+  .ending-card {
+    animation: ending-card-rise-mobile 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+}
 
 .ending-card::before {
   content: "";
@@ -3248,13 +3277,7 @@ body.cinematic-mode .letterbox-bar {
 }
 
 /* Ending buttons — cinematic staggered entrance */
-.ending-actions .ending-button:nth-child(1) { opacity: 0; animation: ending-btn-in 0.6s 1.0s ease forwards; }
-.ending-actions .ending-button:nth-child(2) { opacity: 0; animation: ending-btn-in 0.6s 1.2s ease forwards; }
-.ending-actions .ending-button:nth-child(3) { opacity: 0; animation: ending-btn-in 0.6s 1.4s ease forwards; }
-@keyframes ending-btn-in {
-  0% { opacity: 0; transform: translateY(8px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
+/* 按鈕入場由 btn-glow-pulse 接管，不再額外設 opacity: 0 避免衝突 */
 
 /* Ending card light beam effect */
 .ending-card::after {

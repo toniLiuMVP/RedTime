@@ -567,6 +567,49 @@ export const INTERACTIONS = {
       },
     ],
   },
+  /* ── 玩家控制學妹走到後門後，點擊學長的二選一 ── */
+  senior_backdoor_choices: {
+    eyebrow: "11:07 · 後門",
+    title: "學長就在面前",
+    speaker: "學妹",
+    copy: [
+      "他就站在那裡。光剛好落在我們兩個人之間。",
+      "心裡有一個聲音說：衝過去抱他。另一個聲音說：站好就好。",
+    ],
+    choices: [
+      {
+        id: "choice_a_observe",
+        label: "不往前也不往後，不要說話，就乖乖看著學長",
+        detail: "站好就好。讓那一眼自己發生。",
+        effect: "switch_to_daughter",
+      },
+      {
+        id: "choice_b_hug",
+        label: "抱抱學長，跟他説我很想他",
+        detail: "可是如果往前衝，時間會怎麼反應？",
+        effect: "rewind_hug_attempt",
+      },
+    ],
+  },
+  /* ── 女兒視角：與把拔互動 ── */
+  daughter_father: {
+    eyebrow: "女兒的視角",
+    title: "把拔的聲音",
+    speaker: "把拔",
+    copy: [
+      "（說出口的話）「也太像徐若瑄了吧！」",
+      "（心底的聲音）我當時不知道那叫什麼。後來才知道，那就是你媽媽。",
+      "（心底的聲音）那一眼不是開始，是命運把往後二十年的重量，全部壓縮進那一秒裡了。",
+    ],
+    choices: [
+      {
+        id: "daughter_father_close",
+        label: "聽完了",
+        detail: "把把拔的聲音收好。",
+        effect: "close_only",
+      },
+    ],
+  },
   senior_rear: {
     eyebrow: "11:05 · 走廊",
     title: "走向後門的那段路",

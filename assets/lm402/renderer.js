@@ -1046,55 +1046,62 @@ function S(t) {
       (xe.rotation.z = -0.16),
       ge.scale.set(0.86, 0.98, 0.82),
       xe.scale.copy(ge.scale)));
-  // ── Slicked-back undercut + black-frame glasses (senior only) ────────────
+  // ── Natural short male hair + black-frame glasses (senior only) ──────────
   if (t.pompadour) {
-    // Skull base cap — tight undercut sides, close to head
+    // Main hair cap — full coverage on top of head
     const pBase = new e.Mesh(
-      new e.SphereGeometry(0.186, 22, 22, 0, 2 * Math.PI, 0, 0.68 * Math.PI),
+      new e.SphereGeometry(0.196, 28, 28, 0, 2 * Math.PI, 0, 0.72 * Math.PI),
       d,
     );
-    pBase.position.set(0, 1.614, -0.012);
+    pBase.position.set(0, 1.618, -0.006);
     pBase.rotation.x = -0.08;
-    pBase.scale.set(0.74, 0.56, 0.88);
+    pBase.scale.set(0.96, 0.78, 0.94);
     o.add(pBase);
-    // Back of skull fill
-    const pBack = new e.Mesh(new e.SphereGeometry(0.178, 18, 18), d);
-    pBack.position.set(0, 1.608, -0.092);
-    pBack.scale.set(0.70, 0.36, 0.52);
+    // Back hair volume
+    const pBack = new e.Mesh(new e.SphereGeometry(0.186, 22, 22), d);
+    pBack.position.set(0, 1.604, -0.082);
+    pBack.scale.set(0.86, 0.50, 0.62);
     o.add(pBack);
-    // Left undercut side — very thin, shaved close to skull
-    const pSideL = new e.Mesh(new e.BoxGeometry(0.020, 0.155, 0.105), d);
-    pSideL.position.set(-0.156, 1.504, 0.012);
-    pSideL.rotation.z = 0.06;
+    // Left side hair — tapered but clearly visible
+    const pSideL = new e.Mesh(new e.BoxGeometry(0.048, 0.15, 0.11), d);
+    pSideL.position.set(-0.152, 1.51, 0.012);
+    pSideL.rotation.z = 0.05;
     o.add(pSideL);
-    // Right undercut side
+    // Right side hair
     const pSideR = pSideL.clone();
-    pSideR.position.x = 0.156;
-    pSideR.rotation.z = -0.06;
+    pSideR.position.x = 0.152;
+    pSideR.rotation.z = -0.05;
     o.add(pSideR);
-    // Slicked-back top — flat low arc from hairline to nape, offset right of part line
+    // Top volume — natural body swept slightly to the right
     const slickPath = new e.CatmullRomCurve3([
-      new e.Vector3(0.018, 1.630, 0.082),  // front hairline (right of left part)
-      new e.Vector3(0.012, 1.650, 0.040),  // early rise
-      new e.Vector3(0.006, 1.655, 0.000),  // crown — barely raised, stays low
-      new e.Vector3(0.002, 1.647, -0.046), // slope rearward
-      new e.Vector3(0.000, 1.635, -0.088), // settle at nape
+      new e.Vector3(0.012, 1.638, 0.088),
+      new e.Vector3(0.008, 1.662, 0.044),
+      new e.Vector3(0.004, 1.668, -0.004),
+      new e.Vector3(0.000, 1.660, -0.050),
+      new e.Vector3(-0.002, 1.645, -0.088),
     ]);
     const pSlick = new e.Mesh(
-      new e.TubeGeometry(slickPath, 22, 0.054, 9, false),
+      new e.TubeGeometry(slickPath, 24, 0.064, 10, false),
       d,
     );
     o.add(pSlick);
-    // Width fill — gives slicked top its body and flat appearance
-    const pTopFill = new e.Mesh(new e.BoxGeometry(0.118, 0.044, 0.175), d);
-    pTopFill.position.set(0.010, 1.646, -0.004);
-    pTopFill.rotation.x = -0.08;
+    // Width fill — broadens the top volume
+    const pTopFill = new e.Mesh(new e.BoxGeometry(0.148, 0.054, 0.182), d);
+    pTopFill.position.set(0.006, 1.656, -0.002);
+    pTopFill.rotation.x = -0.06;
     o.add(pTopFill);
-    // Side-part ridge — subtle raised edge along left-side parting line
-    const pPart = new e.Mesh(new e.BoxGeometry(0.009, 0.018, 0.128), d);
-    pPart.position.set(-0.026, 1.656, 0.012);
-    pPart.rotation.x = -0.10;
-    o.add(pPart);
+    // Front fringe — natural hairline across forehead
+    const fringePath = new e.CatmullRomCurve3([
+      new e.Vector3(-0.072, 1.622, 0.098),
+      new e.Vector3(-0.024, 1.636, 0.112),
+      new e.Vector3(0.028, 1.640, 0.114),
+      new e.Vector3(0.076, 1.626, 0.100),
+    ]);
+    const pFringe = new e.Mesh(
+      new e.TubeGeometry(fringePath, 18, 0.032, 8, false),
+      d,
+    );
+    o.add(pFringe);
     // ── Thick black-frame glasses ──────────────────────────────────────────
     const glassesMat = new e.MeshPhysicalMaterial({
       color: "#0a0a0a",
@@ -5621,13 +5628,9 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             q.lookAt(facePos.x, facePos.y, facePos.z);
           })(s));
       else if ("perfect_eye" === s.endingSequence?.type || "one_gaze" === s.endingSequence?.type)
-        /* ── 跟拍學妹 → 停門口拍臉 5 秒 ── */
+        /* ── 靜態臉部特寫：不旋轉、不 orbit、直接對準學妹眼睛 ── */
         ((H.visible = false),
           (function(t) {
-            const et = t.endingSequence?.time ?? 0;
-            const isOneGaze = "one_gaze" === t.endingSequence?.type;
-            const WALK_END = isOneGaze ? 45.0 : 0.0; // one_gaze 學妹走 45 秒，perfect_eye 直接拍臉
-            const FACE_TRANS_END = WALK_END + 1.0;   // 1 秒過渡到拍臉鏡頭
             const heroAnchor = resolveJuniorHeroAnchor(Co, {
               forceRoot: Co.userData.runtimeModelRoot ?? null,
               allowLegacyFallback: !1,
@@ -5635,33 +5638,29 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             const facePos = heroAnchor.face;
             const eyePos  = heroAnchor.eyes;
             const fwd = new e.Vector3(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y));
-            // ── 跟拍鏡頭：位在學妹背後偏上，望著學妹上半身 ──
-            const followPos = Co.position.clone()
-              .add(fwd.clone().multiplyScalar(-2.5))
-              .add(new e.Vector3(0, 1.8, 0));
-            const lookTgt = Co.position.clone().add(new e.Vector3(0, 1.4, 0));
-            if (et < WALK_END) {
-              q.position.copy(followPos);
-              q.fov = 46;
-              q.updateProjectionMatrix();
-              q.lookAt(lookTgt);
-              return;
-            }
-            // ── 拍臉鏡頭：過渡到學妹正前方，對準眼睛 ──
-            const tFace = e.MathUtils.smoothstep(et, WALK_END, FACE_TRANS_END);
-            const faceShot = new e.Vector3(
+            // 靜態臉部特寫：攝影機在學妹正前方 0.9m，對準眼睛
+            q.position.set(
               Co.position.x + fwd.x * 0.9,
-              eyePos.y + 3e-4 * Math.sin(0.5 * et),
+              eyePos.y,
               Co.position.z + fwd.z * 0.9
             );
-            const camPos = followPos.clone().lerp(faceShot, tFace);
-            q.position.copy(camPos);
-            q.fov = e.MathUtils.lerp(46, 36, tFace);
+            q.fov = 36;
             q.updateProjectionMatrix();
             q.lookAt(facePos.x, facePos.y, facePos.z);
           })(s));
-      else if ("rear_wait" === s.phase && s.phaseClock > 3.0) {
-        // rear_wait 過場：跟拍鏡頭跟著學妹走向後門
+      else if ("junior" === s.controlMode || "daughter" === s.controlMode) {
+        /* ── 玩家控制學妹 / 女兒視角：第三人稱跟拍 ── */
+        H.visible = !1;
+        const fwd = new e.Vector3(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y));
+        const followPos = Co.position.clone()
+          .add(fwd.clone().multiplyScalar(-2.5))
+          .add(new e.Vector3(0, 1.8, 0));
+        q.fov = 46;
+        q.updateProjectionMatrix();
+        q.position.copy(followPos);
+        q.lookAt(Co.position.clone().add(new e.Vector3(0, 1.4, 0)));
+      } else if ("rear_wait" === s.phase && s.phaseClock > 3.0) {
+        // rear_wait 過場：跟拍鏡頭跟著學妹走向後門（腳本模式）
         H.visible = !1;
         const fwd = new e.Vector3(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y));
         const followPos = Co.position.clone()

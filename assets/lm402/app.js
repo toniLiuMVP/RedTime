@@ -203,7 +203,6 @@ const dom = {
   endingTitle: document.getElementById("ending-title"),
   endingCopy: document.getElementById("ending-copy"),
   endingRetry: document.getElementById("ending-retry"),
-  endingPerfectBtn: document.getElementById("ending-perfect-btn"),
   debugPanel: document.getElementById("debug-panel"),
   debugText: document.getElementById("debug-text"),
   introSkipBtn: document.getElementById("intro-skip-btn"),
@@ -555,6 +554,8 @@ function createInitialFlags() {
     perfectLinePlayed: false,
     oneGazeTextShown: false,
     autoFrontCall: false,
+    rewindPlayed: false,
+    daughterActive: false,
   };
 }
 
@@ -590,6 +591,8 @@ const state = {
   phase: "consciousness_market",
   ending: null,
   endingSequence: null,
+  controlMode: "ghost",
+  juniorControlSnapshot: null,
   intro: {
     progress: 0,
     time: 0,
@@ -1332,7 +1335,25 @@ function applyEffect(effect) {
   }
   if (effect === "trigger_ending_sequence") {
     setPhase("rear_wait");
-    resetView();
+    /* ── 玩家接管學妹：第三人稱控制 ── */
+    state.controlMode = "junior";
+    state.player.x = scale(1896);
+    state.player.z = scale(2058);
+    state.player.yaw = Math.PI; // 朝向後門方向
+    state.player.pitch = 0;
+    state.player.velocity = { x: 0, z: 0 };
+    state.player.isGhostObserver = false;
+    /* 保存回溯快照（Choice B 用） */
+    state.juniorControlSnapshot = {
+      playerX: state.player.x,
+      playerZ: state.player.z,
+      playerYaw: state.player.yaw,
+      phase: state.phase,
+      phaseClock: state.phaseClock,
+      characters: JSON.parse(JSON.stringify(state.characters)),
+      flags: { ...state.flags },
+      memories: new Set(state.memories),
+    };
     audioSystem.playCue("phone");
     setSubtitle("學妹", "「你走到後門。」", 3.6);
     setTimeout(() => {
@@ -1340,6 +1361,11 @@ function applyEffect(effect) {
         setSubtitle("女兒", "阿姨說出那句排練過無數次的台詞了！我要趕快飛到後門！", 5.0);
       }
     }, 4000);
+    setTimeout(() => {
+      if (state.mode === "play" && state.controlMode === "junior") {
+        setSubtitle("", "用方向鍵或搖桿控制學妹走到後門", 4.0);
+      }
+    }, 9000);
     setAmbience("話筒裡的聲音很輕，但已經足夠讓整條走廊開始轉向。他正在把腳步折向後門。");
     closeDialogue();
     return;
@@ -1371,9 +1397,108 @@ function applyEffect(effect) {
     closeDialogue();
     return;
   }
+
+  /* ── Choice A：切換女兒視角 ── */
+  if (effect === "switch_to_daughter") {
+    closeDialogue();
+    state.controlMode = "daughter";
+    state.flags.daughterActive = true;
+    /* 女兒觀察點：後門附近偏旁 */
+    state.player.x = scale(0);
+    state.player.z = scale(WORLD.backDoor.center.z + 40);
+    state.player.yaw = Math.PI / 2;
+    state.player.pitch = 0;
+    state.player.velocity = { x: 0, z: 0 };
+    /* 把拔和阿姨的回憶影像浮現 */
+    state.characters.fatherEcho.alpha = 0.6;
+    state.characters.auntEcho.alpha = 0.6;
+    setSubtitle("女兒", "我變成女兒的視角了！可以去找把拔和阿姨說話。", 5.0);
+    setAmbience("世界安靜了一秒。然後妳發現，自己的眼睛變了——看出去的光，比剛才多了二十年的溫度。");
+    return;
+  }
+
+  /* ── Choice B：時間回溯（抱抱學長） ── */
+  if (effect === "rewind_hug_attempt") {
+    closeDialogue();
+    state.flags.rewindPlayed = true;
+
+    /* Step 1: 1.0s 螢幕全黑 */
+    setTimeout(() => {
+      if (dom.endingBlackout) {
+        dom.endingBlackout.hidden = false;
+        dom.endingBlackout.style.opacity = "1";
+      }
+    }, 1000);
+
+    /* Step 2: 2.5s 蟲洞爆炸（時間線碎裂） */
+    setTimeout(() => {
+      if (state.mode === "play") {
+        scene.triggerWormhole(state.player.x, 0, state.player.z);
+      }
+    }, 2500);
+
+    /* Step 3: 4.0s 學妹獨白 */
+    setTimeout(() => {
+      if (state.mode === "play") {
+        setSubtitle("學妹", "我不可以這樣做。", 3.0);
+      }
+    }, 4000);
+
+    /* Step 4: 7.0s 淡出黑幕 + 二次蟲洞（回溯視覺） */
+    setTimeout(() => {
+      if (dom.endingBlackout) {
+        dom.endingBlackout.style.opacity = "0";
+        setTimeout(() => { dom.endingBlackout.hidden = true; }, 600);
+      }
+      scene.triggerWormhole(state.player.x, 0, state.player.z);
+    }, 7000);
+
+    /* Step 5: 7.5s 從快照還原狀態 */
+    setTimeout(() => {
+      const snap = state.juniorControlSnapshot;
+      if (!snap) return;
+      state.player.x = snap.playerX;
+      state.player.z = snap.playerZ;
+      state.player.yaw = snap.playerYaw;
+      state.player.pitch = 0;
+      state.player.velocity = { x: 0, z: 0 };
+      state.phase = snap.phase;
+      state.phaseClock = snap.phaseClock;
+      state.characters = JSON.parse(JSON.stringify(snap.characters));
+      state.flags = { ...snap.flags, rewindPlayed: true };
+      state.memories = new Set(snap.memories);
+      state.controlMode = "junior";
+      /* 重新保存快照給下次使用 */
+      state.juniorControlSnapshot = {
+        playerX: state.player.x,
+        playerZ: state.player.z,
+        playerYaw: state.player.yaw,
+        phase: state.phase,
+        phaseClock: state.phaseClock,
+        characters: JSON.parse(JSON.stringify(state.characters)),
+        flags: { ...state.flags },
+        memories: new Set(state.memories),
+      };
+      setSubtitle("", "時間倒轉了……", 3.0);
+      setAmbience("蟲洞收攏，光重新鋪回教室。一切回到那一秒以前。");
+    }, 7500);
+    return;
+  }
 }
 
 function getInteractionById(id) {
+  /* ── 玩家控制學妹模式：只能跟學長互動 ── */
+  if (state.controlMode === "junior") {
+    if (id === "front_call") return INTERACTIONS.senior_backdoor_choices;
+    return null; // 其他 hotspot 不可互動
+  }
+  /* ── 女兒視角模式 ── */
+  if (state.controlMode === "daughter") {
+    if (id === "front_call") return INTERACTIONS.daughter_father;
+    if (id === "junior") return INTERACTIONS.junior_rear_choices;
+    return null;
+  }
+
   // 意識菜市場階段：學長不出現，學妹只有 pre-phone 對話
   if (id === "front_call" && state.phase === "consciousness_market") {
     return null;
@@ -1413,6 +1538,14 @@ function getInteractionById(id) {
 }
 
 function hotspotVisible(hotspot) {
+  /* ── 玩家控制學妹：只看到學長 hotspot ── */
+  if (state.controlMode === "junior") {
+    return hotspot.id === "front_call";
+  }
+  /* ── 女兒視角：看到學長(把拔) 和學妹(阿姨) ── */
+  if (state.controlMode === "daughter") {
+    return hotspot.id === "front_call" || hotspot.id === "junior";
+  }
   // 學長（front_call hotspot）在 consciousness_market 階段不出現
   if (hotspot.id === "front_call" && state.phase === "consciousness_market") {
     return false;
@@ -1614,6 +1747,7 @@ function startEnding(type, options = {}) {
   state.ending = type;
   state.endingSequence = { type, time: 0, manual, shotPhase: type === "perfect" ? "walk-in" : "fade" };
   state.cameraMode = "ending";
+  state.controlMode = "ghost"; // 結局期間回歸鬼魂觀察模式
   state.transcriptExpanded = true;
   syncTranscriptUI();
   if (document.pointerLockElement === canvas) {
@@ -1695,6 +1829,11 @@ function finishEndingSequence() {
   dom.bottomDock.classList.remove("above-blackout");
   dom.endingOverlay.hidden = false;
   dom.body.classList.add("ending-open");
+  // 確保按鈕區域在手機上可見：等動畫完成後自動滾到結局操作按鈕
+  setTimeout(() => {
+    const actions = document.querySelector(".ending-actions");
+    if (actions) actions.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, 1600);
 }
 
 function resetScene() {
@@ -1715,6 +1854,8 @@ function resetScene() {
     isGhostObserver: true,
   };
   state.characters = createInitialCharacters();
+  state.controlMode = "ghost";
+  state.juniorControlSnapshot = null;
   state.cinematicGlow = 0;
   state.mobileDockExpanded = false;
   state.introBeatIndex = 0;
@@ -1807,6 +1948,13 @@ function updateMovement(dt) {
   state.player.x = resolved.x;
   state.player.z = resolved.z;
   state.boundaryCollisionState = resolved.collided ? resolved.label : null;
+
+  /* ── 玩家控制學妹時：同步學妹模型位置 ── */
+  if (state.controlMode === "junior") {
+    state.characters.junior.x = state.player.x;
+    state.characters.junior.z = state.player.z;
+    state.characters.junior.rotationY = state.player.yaw;
+  }
 
   const currentSpeed = Math.hypot(state.player.velocity.x, state.player.velocity.z);
   const moving = currentSpeed > scale(26);
@@ -1933,59 +2081,10 @@ function updateCharacters() {
     setCharacterPose("fatherEcho", scale(-272), scale(WORLD.backDoor.center.z + 2), Math.PI / 2, 0);
     setCharacterPose("auntEcho", scale(-116), scale(WORLD.backDoor.center.z + 26), -Math.PI / 2, 0);
 
-    if (state.endingSequence.type === "one_gaze" && et < 45.0) {
-      /* Way B 學妹走路動畫（物理碰撞安全路徑，避開所有桌椅，速度 ×3）：
-         0  - 3.0s  原位（靠窗座）不動
-         3.0- 5.4s  原地轉身面向後牆
-         5.4-13.5s  直走到後牆（x=1896 不變，z→2484）
-        13.5-16.5s  停在後牆
-        16.5-18.9s  轉身面向走道方向（-x）
-        18.9-25.5s  沿後牆走到中央走道（x=1896→1180，z=2484 不變）
-        25.5-27.9s  轉身面向後門方向（-z）
-        27.9-40.5s  沿走道往後門走（x=1180 不變，z=2484→780）
-        40.5-42.6s  轉身面向後門（朝 -x 方向）
-        42.6-45.0s  走到後門前停下（x=1180→100，z≈722）            */
-      const SEAT_X      = scale(1896);
-      const SEAT_Z      = scale(2058);
-      const WALL_Z      = scale(WORLD.classroom.backZ ?? 2484);
-      const AISLE_X     = scale(WORLD.classroom.aisleX ?? 1180);
-      const BACKDOOR_X  = scale(100);
-      const BACKDOOR_Z  = scale(WORLD.backDoor.center.z - 4);
-      const NEAR_DOOR_Z = scale(780);
-
-      if (et < 3.0) {
-        setCharacterPose("junior", SEAT_X, SEAT_Z, 0);
-      } else if (et < 5.4) {
-        const t = smoothstep(3.0, 5.4, et);
-        setCharacterPose("junior", SEAT_X, SEAT_Z, lerp(0, Math.PI, t));
-      } else if (et < 13.5) {
-        const t = smoothstep(5.4, 13.5, et);
-        setCharacterPose("junior", SEAT_X, lerp(SEAT_Z, WALL_Z, t), Math.PI);
-      } else if (et < 16.5) {
-        setCharacterPose("junior", SEAT_X, WALL_Z, Math.PI);
-      } else if (et < 18.9) {
-        const t = smoothstep(16.5, 18.9, et);
-        setCharacterPose("junior", SEAT_X, WALL_Z, lerp(Math.PI, 3 * Math.PI / 2, t));
-      } else if (et < 25.5) {
-        const t = smoothstep(18.9, 25.5, et);
-        setCharacterPose("junior", lerp(SEAT_X, AISLE_X, t), WALL_Z, 3 * Math.PI / 2);
-      } else if (et < 27.9) {
-        const t = smoothstep(25.5, 27.9, et);
-        setCharacterPose("junior", AISLE_X, WALL_Z, lerp(3 * Math.PI / 2, 2 * Math.PI, t));
-      } else if (et < 40.5) {
-        const t = smoothstep(27.9, 40.5, et);
-        setCharacterPose("junior", AISLE_X, lerp(WALL_Z, NEAR_DOOR_Z, t), 0);
-      } else if (et < 42.6) {
-        const t = smoothstep(40.5, 42.6, et);
-        setCharacterPose("junior", AISLE_X, NEAR_DOOR_Z, lerp(0, -Math.PI / 2, t));
-      } else {
-        const t = smoothstep(42.6, 45.0, et);
-        setCharacterPose("junior", lerp(AISLE_X, BACKDOOR_X, t), lerp(NEAR_DOOR_Z, BACKDOOR_Z, t), -Math.PI / 2);
-      }
-    } else {
-      /* Way A 或 one_gaze 走路完成後：學妹站在後門 */
-      setCharacterPose("junior", scale(100), scale(WORLD.backDoor.center.z - 4), -Math.PI / 2);
-    }
+    /* 學妹維持在當前位置（玩家已操控走到後門） — 面向學長 */
+    const srPos = state.characters.senior;
+    const jrFaceYaw = Math.atan2(srPos.x - state.characters.junior.x, srPos.z - state.characters.junior.z);
+    setCharacterPose("junior", state.characters.junior.x, state.characters.junior.z, jrFaceYaw);
     return;
   }
 
@@ -2059,7 +2158,18 @@ function updateCharacters() {
     } else {
       srX = SR_END_X; srZ = SR_END_Z; srYaw = SR_END_YAW;
     }
-    /* ── 學妹：像 one_gaze 的分段走路動畫（速度 ×3，共 45 秒）── */
+    setCharacterPose("senior", srX, srZ, srYaw);
+
+    /* ── 玩家控制學妹 / 女兒視角：跳過學妹腳本動畫 ── */
+    if (state.controlMode === "junior" || state.controlMode === "daughter") {
+      /* 學妹位置由 updateMovement() 同步，不做腳本覆寫 */
+      const echoAlpha = state.controlMode === "daughter" ? 0.6 : 0;
+      setCharacterPose("fatherEcho", scale(-272), scale(WORLD.backDoor.center.z + 2), Math.PI / 2, echoAlpha);
+      setCharacterPose("auntEcho", scale(-116), scale(WORLD.backDoor.center.z + 26), -Math.PI / 2, echoAlpha * 0.9);
+      return;
+    }
+
+    /* ── 原始腳本模式：學妹分段走路動畫（速度 ×3，共 45 秒）── */
     const SEAT_X      = scale(1896);
     const SEAT_Z      = scale(2058);
     const WALL_Z      = scale(WORLD.classroom.backZ ?? 2484);
@@ -2099,7 +2209,6 @@ function updateCharacters() {
       jrZ = lerp(NEAR_DOOR_Z, JUNIOR_DOOR_Z, t);
       jrYaw = -Math.PI / 2;
     }
-    setCharacterPose("senior", srX, srZ, srYaw);
     setCharacterPose("junior", jrX, jrZ, jrYaw);
     setCharacterPose("fatherEcho", scale(-272), scale(WORLD.backDoor.center.z + 2), Math.PI / 2, 0);
     setCharacterPose("auntEcho", scale(-116), scale(WORLD.backDoor.center.z + 26), -Math.PI / 2, 0);
@@ -2135,7 +2244,7 @@ function updateCharacterAudio(dt) {
     (state.phase === "eye_contact" && state.phaseClock < 2.8) ||
     (state.endingSequence?.type === "perfect" && state.endingSequence.time > 4.86 && state.endingSequence.time < 31.5);
   const juniorWalking =
-    (state.phase === "rear_wait" && state.phaseClock > 5.4 && state.phaseClock < 42.6) ||
+    (state.phase === "rear_wait" && state.controlMode === "ghost" && state.phaseClock > 5.4 && state.phaseClock < 42.6) ||
     (state.endingSequence?.type === "perfect" && state.endingSequence.time > 5.4 && state.endingSequence.time < 42.6);
 
   if (seniorWalking && state.time - state.sound.seniorStepAt > 0.48) {
@@ -2228,15 +2337,14 @@ function updateEndingSequence(dt) {
 
   /* ── Way A：perfect_eye（從對話選項「乖乖站著不動」觸發）
      Way B：one_gaze（從任務面板「飛到一眼瞬間那一秒」觸發）
-     共用邏輯：360° 環繞 → 停在學妹眼前 → 顯示文字 10 秒            ── */
+     玩家已自己走到後門，不需走路動畫 → 靜態臉部特寫 5 秒 → 字幕 10 秒   ── */
   if (state.ending === "perfect_eye" || state.ending === "one_gaze") {
-    // 跟拍鏡頭 → 學妹停門口 → 拍臉 5 秒 → 金句
-    const WALK_END   = state.ending === "one_gaze" ? 45.0 : 0.0; // 學妹走路 45 秒（perfect_eye 已在門口）
-    const TEXT_START = WALK_END + 5.0;  // 拍臉 5 秒後顯示金句
-    const TOTAL_DUR  = TEXT_START + 12.0;  // 文字顯示 12 秒
-    state.endingSequence.shotPhase = state.endingSequence.time < WALK_END ? "follow" : "face";
+    const FACE_DUR  = 5.0;                // 靜態臉部特寫
+    const TEXT_START = FACE_DUR;           // 5 秒後顯示字幕
+    const TOTAL_DUR  = TEXT_START + 10.0;  // 字幕持續 10 秒
+    state.endingSequence.shotPhase = "face"; // 始終臉部特寫，不需 follow
 
-    /* 文字疊加層 */
+    /* 字幕疊加層 */
     if (!state.flags.oneGazeTextShown && state.endingSequence.time >= TEXT_START) {
       state.flags.oneGazeTextShown = true;
       if (dom.oneGazeOverlay) {
@@ -2361,6 +2469,7 @@ function buildSceneState() {
     cinematicGlow: state.cinematicGlow,
     endingSequence: state.endingSequence,
     ending: state.ending,
+    controlMode: state.controlMode,
     time: state.time,
     phaseClock: state.phaseClock,
   };
@@ -2908,7 +3017,6 @@ function bindUI() {
   dom.dialogueClose.addEventListener("click", closeDialogue);
   dom.dialogueScrim.addEventListener("click", closeDialogue);
   dom.endingRetry.addEventListener("click", resetScene);
-  dom.endingPerfectBtn.addEventListener("click", startPerfectEnding);
   if (dom.fontToggle) {
     dom.fontToggle.addEventListener("click", cycleFontScale);
   }
