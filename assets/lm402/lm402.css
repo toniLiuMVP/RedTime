@@ -381,6 +381,32 @@ body[data-ui-preset="ending"] .stage-vignette {
   top: 74px;
   left: 18px;
 }
+.song-selector {
+  margin-top: 8px;
+  display: grid;
+  gap: 4px;
+  min-width: 200px;
+}
+.song-selector[hidden] { display: none; }
+.song-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #0a0e16e0;
+  color: #eee8de;
+  font: 500 13px/1.3 "DM Sans", sans-serif;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.song-row:hover:not(:disabled) { background: #151a24; border-color: var(--jade); }
+.song-row.active { border-color: var(--jade); background: #0d1a14e0; }
+.song-row.locked { opacity: 0.5; cursor: not-allowed; }
+.song-lock { font-size: 14px; }
+.song-label { font-weight: 600; color: var(--jade); min-width: 32px; }
+.song-name { color: #eee8ded1; }
 .time-watch {
   position: absolute;
   top: 12px;
@@ -908,6 +934,14 @@ body[data-ui-preset="ending"] .stage-vignette {
   padding:
     24px 24px calc(24px + max(env(safe-area-inset-bottom), 0px));
   pointer-events: none;
+}
+.cinematic-subtitle-layer.centered {
+  align-items: center;
+  padding-top: 8vh;
+}
+.cinematic-subtitle-layer.center-low {
+  align-items: center;
+  padding-top: 22vh;
 }
 .cinematic-subtitle-layer[hidden] {
   display: none;
@@ -1490,14 +1524,24 @@ body[data-ui-preset="ending"] .stage-vignette {
 .ending-card {
   position: absolute;
   left: 50%;
-  bottom: max(18px, env(safe-area-inset-bottom));
-  transform: translate(-50%);
+  top: 50%;
+  transform: translate(-50%, -50%);
   width: min(760px, calc(100vw - 32px));
   border-radius: 28px;
   padding: 22px 20px 20px;
   border: 1px solid var(--line-strong);
-  background: linear-gradient(180deg, #090d14f5, #080a10f0);
+  background: #0a0e16;
   box-shadow: var(--shadow);
+  cursor: grab;
+}
+.dialogue-card:active,
+.ending-card:active {
+  cursor: grabbing;
+}
+.dialogue-card.dragging,
+.ending-card.dragging {
+  cursor: grabbing;
+  user-select: none;
 }
 .dialogue-close {
   position: absolute;
@@ -2991,13 +3035,7 @@ body.landscape-prompt .debug-panel {
 }
 
 .dialogue-card {
-  background:
-    linear-gradient(
-      180deg,
-      rgba(9, 13, 20, 0.22),
-      rgba(8, 10, 16, 0.1) 72%,
-      rgba(8, 10, 16, 0)
-    );
+  background: #0a0e16;
 }
 
 .panel-card,

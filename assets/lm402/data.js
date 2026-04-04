@@ -5,6 +5,7 @@ export const STORAGE_KEYS = {
   fontScale: "lm402_font_scale_v1",
   endingsCompleted: "lm402_endings_completed_v1",
   graphicsQuality: "lm402_graphics_quality_v1",
+  unlockedSongs: "lm402_unlocked_songs_v1",
 };
 export const WORLD = {
   minX: -860,
@@ -550,19 +551,19 @@ export const INTERACTIONS = {
       {
         id: "ending_perfect_eye",
         label: "我要乖乖待著後門，不要向前也不要向後。",
-        detail: "站好就好。讓那一眼自己發生。",
+        detail: "（阿姨的選擇二選一）站好就好。讓那一眼自己發生。",
         effect: "ending_perfect_eye",
       },
       {
         id: "ending_restrain",
         label: "我要往前去抱學長，我好想他。",
-        detail: "可是如果往前衝，會不會改變什麼？",
+        detail: "（阿姨的選擇二選一）可是如果往前衝，會不會改變什麼？",
         effect: "ending_restrain",
       },
       {
         id: "ending_secret_heart",
         label: "我決定先飛進阿姨的心裡。",
-        detail: "阿姨的心裡面，到底藏了什麼？",
+        detail: "（這是我的選擇，我真的想先看看。）阿姨的心裡面，到底藏了什麼？",
         effect: "ending_secret_heart",
       },
     ],
@@ -598,8 +599,6 @@ export const INTERACTIONS = {
     speaker: "把拔",
     copy: [
       "（說出口的話）「也太像徐若瑄了吧！」",
-      "（心底的聲音）我當時不知道那叫什麼。後來才知道，那就是你媽媽。",
-      "（心底的聲音）那一眼不是開始，是命運把往後二十年的重量，全部壓縮進那一秒裡了。",
     ],
     choices: [
       {

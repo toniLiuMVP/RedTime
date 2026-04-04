@@ -638,6 +638,24 @@ const state = {
 };
 liveState = state;
 
+/* ── 歌曲定義 ── */
+const SONGS = [
+  { id: "flying_hearts", file: "飛進你們的心裡.mp3", label: "女兒", name: "飛進你們的心裡", defaultUnlocked: true },
+  { id: "one_gaze_song", file: "一眼瞬間.mp3", label: "學妹", name: "一眼瞬間", defaultUnlocked: false },
+];
+
+function loadUnlockedSongs() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEYS.unlockedSongs) || "null");
+    if (Array.isArray(raw)) return raw;
+  } catch {}
+  return SONGS.filter(s => s.defaultUnlocked).map(s => s.id);
+}
+
+function persistUnlockedSongs(unlocked) {
+  try { localStorage.setItem(STORAGE_KEYS.unlockedSongs, JSON.stringify(unlocked)); } catch {}
+}
+
 function createAudioSystem() {
   let audio = null;
   let context = null;
@@ -645,19 +663,29 @@ function createAudioSystem() {
   let playAttempt = null;
   let promptDismissed = false;
   let promptReady = false;
+  let currentSongId = null;
+  let unlockedSongs = loadUnlockedSongs();
 
-  function ensureAudio() {
-    if (audio) {
-      return audio;
-    }
-    audio = new Audio(new URL("../../飛進你們的心裡.mp3", import.meta.url).href);
+  function songUrl(file) {
+    return new URL("../../" + file, import.meta.url).href;
+  }
+
+  function ensureAudio(songId) {
+    const target = songId || currentSongId || "flying_hearts";
+    const song = SONGS.find(s => s.id === target) || SONGS[0];
+    if (audio && currentSongId === song.id) return audio;
+    const wasPlaying = audio && !audio.paused;
+    if (audio) { audio.pause(); audio.src = ""; }
+    audio = new Audio(songUrl(song.file));
     audio.loop = true;
     audio.preload = "auto";
     audio.volume = 0.84;
     audio.playsInline = true;
+    currentSongId = song.id;
     audio.addEventListener("playing", () => {
       autoplayBlocked = false;
       syncMusicPrompt();
+      syncSongUI();
     });
     audio.addEventListener("pause", () => {
       if (!state.audioEnabled) {
@@ -665,47 +693,27 @@ function createAudioSystem() {
         syncMusicPrompt();
       }
     });
+    if (wasPlaying && state.audioEnabled) void tryPlay("switch");
     return audio;
   }
 
   function ensureContext() {
-    if (context) {
-      return context;
-    }
+    if (context) return context;
     const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextCtor) {
-      return null;
-    }
+    if (!AudioContextCtor) return null;
     context = new AudioContextCtor();
     return context;
   }
 
   async function tryPlay(reason = "auto") {
-    if (!state.audioEnabled) {
-      syncMusicPrompt();
-      return false;
-    }
+    if (!state.audioEnabled) { syncMusicPrompt(); return false; }
     const player = ensureAudio();
-    if (playAttempt) {
-      return playAttempt;
-    }
+    if (playAttempt) return playAttempt;
     playAttempt = player
       .play()
-      .then(() => {
-        autoplayBlocked = false;
-        syncMusicPrompt();
-        logDebug("music", `${reason}:playing`);
-        return true;
-      })
-      .catch(() => {
-        autoplayBlocked = true;
-        syncMusicPrompt();
-        logDebug("music", `${reason}:blocked`);
-        return false;
-      })
-      .finally(() => {
-        playAttempt = null;
-      });
+      .then(() => { autoplayBlocked = false; syncMusicPrompt(); logDebug("music", reason + ":playing:" + currentSongId); return true; })
+      .catch(() => { autoplayBlocked = true; syncMusicPrompt(); logDebug("music", reason + ":blocked"); return false; })
+      .finally(() => { playAttempt = null; });
     return playAttempt;
   }
 
@@ -722,16 +730,8 @@ function createAudioSystem() {
     }
   }
 
-  function showMusicPrompt() {
-    promptReady = true;
-    syncMusicPrompt();
-  }
-
-  function dismissMusicPrompt() {
-    promptDismissed = true;
-    dom.musicPrompt.classList.remove("show");
-    setTimeout(() => { dom.musicPrompt.hidden = true; }, 420);
-  }
+  function showMusicPrompt() { promptReady = true; syncMusicPrompt(); }
+  function dismissMusicPrompt() { promptDismissed = true; dom.musicPrompt.classList.remove("show"); setTimeout(() => { dom.musicPrompt.hidden = true; }, 420); }
 
   function unlock() {
     const ctx = ensureContext();
@@ -740,12 +740,8 @@ function createAudioSystem() {
   }
 
   function update() {
-    if (!state.audioEnabled || !audio) {
-      return;
-    }
-    if (!document.hidden && audio.paused && !autoplayBlocked) {
-      void tryPlay("resume");
-    }
+    if (!state.audioEnabled || !audio) return;
+    if (!document.hidden && audio.paused && !autoplayBlocked) void tryPlay("resume");
   }
 
   function setEnabled(enabled) {
@@ -764,6 +760,59 @@ function createAudioSystem() {
     void tryPlay("toggle");
   }
 
+  /* ── 歌曲切換 ── */
+  function switchSong(songId) {
+    if (!unlockedSongs.includes(songId)) return;
+    ensureAudio(songId);
+    syncSongUI();
+  }
+
+  function unlockSong(songId) {
+    if (unlockedSongs.includes(songId)) return false;
+    unlockedSongs.push(songId);
+    persistUnlockedSongs(unlockedSongs);
+    syncSongUI();
+    return true;
+  }
+
+  function isSongUnlocked(songId) { return unlockedSongs.includes(songId); }
+  function getCurrentSongId() { return currentSongId || "flying_hearts"; }
+  function getSongs() { return SONGS; }
+  function getUnlockedSongs() { return [...unlockedSongs]; }
+
+  /* ── 歌曲選擇 UI（使用安全 DOM 方法，不用 innerHTML）── */
+  function syncSongUI() {
+    const panel = document.getElementById("song-selector");
+    if (!panel) return;
+    while (panel.firstChild) panel.removeChild(panel.firstChild);
+    SONGS.forEach(song => {
+      const isUnlocked = unlockedSongs.includes(song.id);
+      const isCurrent = song.id === currentSongId;
+      const row = document.createElement("button");
+      row.className = "song-row" + (isCurrent ? " active" : "") + (isUnlocked ? "" : " locked");
+      row.disabled = !isUnlocked;
+      const lockSpan = document.createElement("span");
+      lockSpan.className = "song-lock";
+      lockSpan.textContent = isUnlocked ? "\u{1F513}" : "\u{1F512}";
+      const labelSpan = document.createElement("span");
+      labelSpan.className = "song-label";
+      labelSpan.textContent = song.label;
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "song-name";
+      nameSpan.textContent = isUnlocked ? song.name : "???";
+      row.appendChild(lockSpan);
+      row.appendChild(labelSpan);
+      row.appendChild(nameSpan);
+      if (isUnlocked) {
+        row.addEventListener("click", () => {
+          switchSong(song.id);
+          if (state.audioEnabled) void tryPlay("select");
+        });
+      }
+      panel.appendChild(row);
+    });
+  }
+
   function playEnvelope(ctx, { type = "sine", frequency = 440, duration = 0.12, gain = 0.04, when = 0, attack = 0.008, release = 0.08, detune = 0 }) {
     const osc = ctx.createOscillator();
     const amp = ctx.createGain();
@@ -779,13 +828,9 @@ function createAudioSystem() {
   }
 
   function playCue(type) {
-    if (!state.audioEnabled) {
-      return;
-    }
+    if (!state.audioEnabled) return;
     const ctx = ensureContext();
-    if (!ctx || ctx.state !== "running") {
-      return;
-    }
+    if (!ctx || ctx.state !== "running") return;
     const when = ctx.currentTime + 0.01;
     if (type === "step") {
       playEnvelope(ctx, { type: "triangle", frequency: 110, duration: 0.04, gain: 0.018, when, attack: 0.004, release: 0.06 });
@@ -816,6 +861,13 @@ function createAudioSystem() {
     syncPrompt: syncMusicPrompt,
     showPrompt: showMusicPrompt,
     dismissPrompt: dismissMusicPrompt,
+    switchSong,
+    unlockSong,
+    isSongUnlocked,
+    getCurrentSongId,
+    getSongs,
+    getUnlockedSongs,
+    syncSongUI,
   };
 }
 
@@ -936,6 +988,63 @@ function setAmbience(text) {
   state.ambience.text = text;
   dom.ambienceText.textContent = text;
   dom.ambienceChipCopy.textContent = state.mobileDockExpanded ? "點一下收起" : condensedCopy(text);
+}
+
+/* ── 置中字幕（結局用） ── */
+function showCenteredSubtitle(source, text, duration, position = "centered") {
+  const layer = document.getElementById("cinematic-subtitle-layer");
+  const srcEl = document.getElementById("cinematic-subtitle-source");
+  const txtEl = document.getElementById("cinematic-subtitle-text");
+  if (!layer || !txtEl) return;
+  if (srcEl) srcEl.textContent = source || "";
+  txtEl.textContent = text;
+  layer.classList.remove("centered", "center-low");
+  layer.classList.add(position);
+  layer.hidden = false;
+  appendTranscriptEntry(source, text);
+  if (duration > 0) {
+    setTimeout(() => {
+      layer.hidden = true;
+      layer.classList.remove("centered", "center-low");
+    }, duration * 1000);
+  }
+}
+
+function hideCenteredSubtitle() {
+  const layer = document.getElementById("cinematic-subtitle-layer");
+  if (layer) {
+    layer.hidden = true;
+    layer.classList.remove("centered", "center-low");
+  }
+}
+
+/* ── 結局隱藏/顯示全 UI ── */
+function hideAllGameUI() {
+  dom.bottomDock.style.display = "none";
+  dom.hud?.style.setProperty("display", "none");
+  if (dom.objectivePrompt) dom.objectivePrompt.style.display = "none";
+  if (dom.mobileControls) dom.mobileControls.style.display = "none";
+  if (dom.speedWidget) dom.speedWidget.style.display = "none";
+  if (dom.audioWidget) dom.audioWidget.style.display = "none";
+  if (dom.fontWidget) dom.fontWidget.style.display = "none";
+  if (dom.qualityWidget) dom.qualityWidget.style.display = "none";
+  if (dom.sidePanel) dom.sidePanel.style.display = "none";
+  if (dom.hintPill) dom.hintPill.style.display = "none";
+  if (dom.transcriptDock) dom.transcriptDock.style.display = "none";
+}
+
+function showAllGameUI() {
+  dom.bottomDock.style.display = "";
+  dom.hud?.style.setProperty("display", "");
+  if (dom.objectivePrompt) dom.objectivePrompt.style.display = "";
+  if (dom.mobileControls) dom.mobileControls.style.display = "";
+  if (dom.speedWidget) dom.speedWidget.style.display = "";
+  if (dom.audioWidget) dom.audioWidget.style.display = "";
+  if (dom.fontWidget) dom.fontWidget.style.display = "";
+  if (dom.qualityWidget) dom.qualityWidget.style.display = "";
+  if (dom.sidePanel) dom.sidePanel.style.display = "";
+  if (dom.hintPill) dom.hintPill.style.display = "";
+  if (dom.transcriptDock) dom.transcriptDock.style.display = "";
 }
 
 function persistLookSetting() {
@@ -1428,7 +1537,7 @@ function applyEffect(effect) {
     /* 把拔和阿姨的回憶影像浮現 */
     state.characters.fatherEcho.alpha = 0.6;
     state.characters.auntEcho.alpha = 0.6;
-    setSubtitle("女兒", "我變成女兒的視角了！可以去找把拔和阿姨說話。", 5.0);
+    setSubtitle("女兒", "我現在可以去找把拔跟阿姨說話。", 5.0);
     setAmbience("世界安靜了一秒。然後妳發現，自己的眼睛變了——看出去的光，比剛才多了二十年的溫度。");
     return;
   }
@@ -1807,8 +1916,10 @@ function startEnding(type, options = {}) {
     state.phaseClock = 0;
     state.flags.perfectLinePlayed = false;
     state.flags.oneGazeTextShown = false;
-    setSubtitle("女兒", "光先落在她身上。阿姨先向後轉，然後慢慢走向後門——那一秒，就要來了。", 6);
-    setAmbience("學妹轉身、走動、停步。整條走廊在等待那一個對視。");
+    state.flags.oneGazeUIHidden = false;
+    hideAllGameUI();
+    state.flags.oneGazeUIHidden = true;
+    showCenteredSubtitle("女兒", "光先落在她身上。阿姨先向後轉，然後慢慢走向後門——那一秒，就要來了。", 5, "center-low");
   } else if (type === "restrain") {
     setSubtitle("女兒", "我好想往前衝去抱把拔……可是我的手……", 4.5);
     setAmbience("畫面開始變暗。");
@@ -1851,6 +1962,14 @@ function startOneGazeEnding() {
 }
 
 function finishEndingSequence() {
+  /* ── 一眼瞬間結局 → 解鎖新音樂 ── */
+  if (state.ending === "one_gaze" || state.ending === "perfect_eye") {
+    const justUnlocked = audioSystem.unlockSong("one_gaze_song");
+    if (justUnlocked) {
+      showCenteredSubtitle("", "\u{1F3B5} 已解鎖新音樂：一眼瞬間", 4.0, "center-low");
+      audioSystem.switchSong("one_gaze_song");
+    }
+  }
   // one_gaze 與 perfect_eye 共用同一張結局卡；fallback 確保任何未知 type 不崩潰
   const endingKey = state.ending === "one_gaze" ? "perfect_eye" : (state.ending ?? "canon");
   const ending = ENDINGS[endingKey] ?? ENDINGS["canon"];
@@ -1863,6 +1982,9 @@ function finishEndingSequence() {
   if (dom.endingBlackout) { dom.endingBlackout.hidden = true; dom.endingBlackout.style.opacity = "0"; }
   if (dom.endingWhiteout) { dom.endingWhiteout.hidden = true; dom.endingWhiteout.style.opacity = "0"; dom.endingWhiteout.classList.remove("sky"); }
   dom.bottomDock.classList.remove("above-blackout");
+  // 清除置中字幕並恢復 UI
+  hideCenteredSubtitle();
+  showAllGameUI();
   dom.endingOverlay.hidden = false;
   dom.body.classList.add("ending-open");
   // 確保按鈕區域在手機上可見：等動畫完成後自動滾到結局操作按鈕
@@ -1906,6 +2028,8 @@ function resetScene() {
   if (dom.endingWhiteout) { dom.endingWhiteout.hidden = true; dom.endingWhiteout.style.opacity = "0"; dom.endingWhiteout.classList.remove("sky"); }
   dom.bottomDock.classList.remove("above-blackout");
   dom.body.classList.remove("ending-open");
+  hideCenteredSubtitle();
+  showAllGameUI();
   dom.dialogueSheet.hidden = true;
   dom.body.classList.remove("dialogue-open");
   updateObjective(true);
@@ -2398,15 +2522,13 @@ function updateEndingSequence(dt) {
   }
 
   /* ── Way A：perfect_eye（從對話選項「乖乖站著不動」觸發）
-     Way B：one_gaze（從任務面板「飛到一眼瞬間那一秒」觸發）
      玩家已自己走到後門，不需走路動畫 → 靜態臉部特寫 5 秒 → 字幕 10 秒   ── */
-  if (state.ending === "perfect_eye" || state.ending === "one_gaze") {
-    const FACE_DUR  = 5.0;                // 靜態臉部特寫
-    const TEXT_START = FACE_DUR;           // 5 秒後顯示字幕
-    const TOTAL_DUR  = TEXT_START + 10.0;  // 字幕持續 10 秒
-    state.endingSequence.shotPhase = "face"; // 始終臉部特寫，不需 follow
+  if (state.ending === "perfect_eye") {
+    const FACE_DUR  = 5.0;
+    const TEXT_START = FACE_DUR;
+    const TOTAL_DUR  = TEXT_START + 10.0;
+    state.endingSequence.shotPhase = "face";
 
-    /* 字幕疊加層 */
     if (!state.flags.oneGazeTextShown && state.endingSequence.time >= TEXT_START) {
       state.flags.oneGazeTextShown = true;
       if (dom.oneGazeOverlay) {
@@ -2416,11 +2538,37 @@ function updateEndingSequence(dt) {
         }, 10500);
       }
       setSubtitle("", "這一次，依然再次遇見妳。", 10.0);
-      setAmbience("這一次，依然再次遇見妳。");
     }
 
     if (state.endingSequence.time > TOTAL_DUR && dom.endingOverlay.hidden) {
       if (dom.oneGazeOverlay) dom.oneGazeOverlay.classList.remove("show");
+      finishEndingSequence();
+    }
+    return;
+  }
+
+  /* ── Way B：one_gaze（從任務面板「飛到一眼瞬間那一秒」觸發）
+     學長視角看學妹眼睛、無 UI、置中偏下字幕 ── */
+  if (state.ending === "one_gaze") {
+    const FACE_DUR  = 5.0;
+    const TEXT_START = FACE_DUR;
+    const TOTAL_DUR  = TEXT_START + 10.0;
+    state.endingSequence.shotPhase = "face";
+
+    /* 隱藏全部遊戲 UI */
+    if (!state.flags.oneGazeUIHidden) {
+      state.flags.oneGazeUIHidden = true;
+      hideAllGameUI();
+    }
+
+    if (!state.flags.oneGazeTextShown && state.endingSequence.time >= TEXT_START) {
+      state.flags.oneGazeTextShown = true;
+      showCenteredSubtitle("", "這一次，依然再次遇見妳。", 10.0, "center-low");
+    }
+
+    if (state.endingSequence.time > TOTAL_DUR && dom.endingOverlay.hidden) {
+      hideCenteredSubtitle();
+      showAllGameUI();
       finishEndingSequence();
     }
     return;
@@ -2440,15 +2588,14 @@ function updateEndingSequence(dt) {
     }
     if (!state.flags.perfectLine1Played && state.endingSequence.time >= 3) {
       state.flags.perfectLine1Played = true;
-      setSubtitle("女兒", "我的手慢慢在消失了。", 5.0);
-      setAmbience("我的手慢慢在消失了。");
+      showCenteredSubtitle("女兒", "我的手慢慢在消失了。", 5.0, "centered");
     }
     if (!state.flags.perfectLine2Played && state.endingSequence.time >= 8) {
       state.flags.perfectLine2Played = true;
-      setSubtitle("女兒", "阿姨好像忍住沒有抱把拔，我的手又跑出來了，好像在變魔術喔。", 8.0);
-      setAmbience("阿姨好像忍住沒有抱把拔，我的手又跑出來了，好像在變魔術喔。");
+      showCenteredSubtitle("女兒", "阿姨好像忍住沒有抱把拔，我的手又跑出來了，好像在變魔術喔。", 8.0, "centered");
     }
     if (state.endingSequence.time > 16 && dom.endingOverlay.hidden) {
+      hideCenteredSubtitle();
       finishEndingSequence();
     }
     return;
@@ -2459,8 +2606,7 @@ function updateEndingSequence(dt) {
     // 結局C: 彩虹紅線特效 → 字幕 → 漸白 → 彩虹文字
     if (!state.flags.perfectLine1Played && state.endingSequence.time >= 2) {
       state.flags.perfectLine1Played = true;
-      setSubtitle("女兒", "我在阿姨的心裡飛來飛去，阿姨的心底都是滿滿把拔", 6);
-      setAmbience("我在阿姨的心裡飛來飛去，阿姨的心底都是滿滿把拔");
+      showCenteredSubtitle("女兒", "我在阿姨的心裡飛來飛去，阿姨的心底都是滿滿把拔", 6, "centered");
     }
     if (!state.flags.secretWhiteout && state.endingSequence.time >= 9) {
       state.flags.secretWhiteout = true;
@@ -2474,10 +2620,10 @@ function updateEndingSequence(dt) {
     }
     if (!state.flags.perfectLine2Played && state.endingSequence.time >= 11) {
       state.flags.perfectLine2Played = true;
-      setSubtitle("", "原來阿姨跟把拔互相是一眼瞬間", 8);
-      setAmbience("原來阿姨跟把拔互相是一眼瞬間");
+      showCenteredSubtitle("", "原來阿姨跟把拔互相是一眼瞬間", 8, "centered");
     }
     if (state.endingSequence.time > 20 && dom.endingOverlay.hidden) {
+      hideCenteredSubtitle();
       finishEndingSequence();
     }
     return;
@@ -3037,6 +3183,13 @@ function bindUI() {
   });
   dom.audioToggle.addEventListener("click", () => {
     audioSystem.setEnabled(!state.audioEnabled);
+    /* 切換歌曲選擇面板 */
+    const sel = document.getElementById("song-selector");
+    if (sel) {
+      const nowHidden = sel.hidden;
+      sel.hidden = !nowHidden;
+      if (!sel.hidden) audioSystem.syncSongUI();
+    }
   });
   dom.musicPromptButton.addEventListener("click", () => {
     if (!state.audioEnabled) {

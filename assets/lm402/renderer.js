@@ -589,10 +589,11 @@ function S(t) {
     ),
     i,
   );
-  if ((P.position.set(0, t.female ? 0.67 : 0.63, 0.01), o.add(P),
+  if ((P.position.set(0, t.female ? 0.67 : 0.63, 0.01), (!n && o.add(P)),
     t.female && (function(){
-      var legL = new e.Mesh(new e.BoxGeometry(0.14, 0.40, 0.19), i);
-      legL.position.set(-0.085, 0.44, 0.008); o.add(legL);
+      var legMat = n ? c : i;
+      var legL = new e.Mesh(new e.BoxGeometry(0.14, n ? 0.36 : 0.40, 0.19), legMat);
+      legL.position.set(-0.085, n ? 0.46 : 0.44, 0.008); o.add(legL);
       var legR = legL.clone(); legR.position.x = 0.085; o.add(legR);
       var wb = new e.MeshPhysicalMaterial({color:"#1e3a56",roughness:0.46,metalness:0.04,clearcoat:0.14,clearcoatRoughness:0.3});
       var wm = new e.Mesh(new e.BoxGeometry(0.35,0.05,0.27), wb);
@@ -5631,8 +5632,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             q.updateProjectionMatrix();
             q.lookAt(facePos.x, facePos.y, facePos.z);
           })(s));
-      else if ("perfect_eye" === s.endingSequence?.type || "one_gaze" === s.endingSequence?.type)
-        /* ── 靜態臉部特寫：不旋轉、不 orbit、直接對準學妹眼睛 ── */
+      else if ("perfect_eye" === s.endingSequence?.type)
+        /* ── perfect_eye：靜態臉部特寫，攝影機在學妹正前方 ── */
         ((H.visible = false),
           (function(t) {
             const heroAnchor = resolveJuniorHeroAnchor(Co, {
@@ -5642,11 +5643,30 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             const facePos = heroAnchor.face;
             const eyePos  = heroAnchor.eyes;
             const fwd = new e.Vector3(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y));
-            // 靜態臉部特寫：攝影機在學妹正前方 0.9m，對準眼睛
             q.position.set(
               Co.position.x + fwd.x * 0.9,
               eyePos.y,
               Co.position.z + fwd.z * 0.9
+            );
+            q.fov = 36;
+            q.updateProjectionMatrix();
+            q.lookAt(facePos.x, facePos.y, facePos.z);
+          })(s))
+      else if ("one_gaze" === s.endingSequence?.type)
+        /* ── one_gaze：學長視角看著學妹的眼睛 ── */
+        ((H.visible = false),
+          (function(t) {
+            const heroAnchor = resolveJuniorHeroAnchor(Co, {
+              forceRoot: Co.userData.runtimeModelRoot ?? null,
+              allowLegacyFallback: !1,
+            });
+            const facePos = heroAnchor.face;
+            const eyePos  = heroAnchor.eyes;
+            // 攝影機放在學長(Go)的眼睛高度位置，看向學妹的臉
+            q.position.set(
+              Go.position.x,
+              Go.position.y + 1.65,
+              Go.position.z
             );
             q.fov = 36;
             q.updateProjectionMatrix();
