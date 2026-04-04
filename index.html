@@ -311,9 +311,8 @@
         letter-spacing: 0.06em;
         color: var(--parchment);
         margin-bottom: 36px;
-        animation: fadeUp 1.1s 0.5s forwards, titleBreathe 6s 2s ease-in-out infinite;
         opacity: 0;
-        animation: fadeUp 1.1s 0.5s forwards;
+        animation: fadeUp 1.1s 0.5s forwards, titleBreathe 6s 2s ease-in-out infinite;
         text-shadow:
           0 0 80px rgba(22, 168, 100, 0.12),
           0 0 160px rgba(22, 168, 100, 0.05);
@@ -2338,6 +2337,7 @@
                 src="https://www.youtube.com/embed/eACPFC4K89o"
                 title="時間裡的兩個妳：一眼瞬間 微電影"
                 frameborder="0"
+                sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
                 allow="
                   accelerometer;
                   autoplay;
@@ -2390,6 +2390,7 @@
                 src="https://www.youtube.com/embed/Ne3mv-6Ufl8"
                 title="時間裡的兩個妳：一眼瞬間 原聲帶"
                 frameborder="0"
+                sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
                 allow="
                   accelerometer;
                   autoplay;
@@ -2973,6 +2974,11 @@
 
         function draw() {
           frame++;
+          /* 當 hero 完全滾出視野時暫停繪製，節省 CPU/電池 */
+          if (cvs.getBoundingClientRect().bottom < 0) {
+            requestAnimationFrame(draw);
+            return;
+          }
           var time = frame * 0.016;
           ctx.clearRect(0, 0, W, H);
 

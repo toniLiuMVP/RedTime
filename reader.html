@@ -6518,8 +6518,11 @@
       window.addEventListener("resize", syncProgressBar, { passive: true });
       syncProgressBar();
 
+      /* 快取 MediaQueryList 避免 scroll 事件中重複建立 */
+      const _mqMobile = window.matchMedia("(max-width:767px)");
+      const _mqDesktop = window.matchMedia("(min-width:768px)");
       function syncMobileChrome() {
-        if (!window.matchMedia("(max-width:767px)").matches) {
+        if (!_mqMobile.matches) {
           document.body.classList.remove("at-hero");
           return;
         }
@@ -6535,22 +6538,23 @@
       window.addEventListener("resize", syncMobileChrome);
       syncMobileChrome();
 
+      /* 快取上一個 current 元素，避免每次 querySelectorAll 全掃描 */
+      let _prevJumpBtn = null;
       function markJumpCurrent() {
-        document
-          .querySelectorAll(".jp-ep-btn")
-          .forEach((b) => b.classList.remove("current"));
+        if (_prevJumpBtn) _prevJumpBtn.classList.remove("current");
         const c = document.getElementById("jp-btn-" + currentEpNum);
         if (c) c.classList.add("current");
+        _prevJumpBtn = c;
       }
+      let _prevSidebarItem = null;
       function markSidebarCurrent() {
-        document
-          .querySelectorAll(".sb-ep-item")
-          .forEach((b) => b.classList.remove("current"));
+        if (_prevSidebarItem) _prevSidebarItem.classList.remove("current");
         const c = document.getElementById("sb-item-" + currentEpNum);
         if (c) {
           c.classList.add("current");
           c.scrollIntoView({ block: "nearest", behavior: "smooth" });
         }
+        _prevSidebarItem = c;
       }
       function refreshEggMarks() {
         unlockedEggs.forEach((id) => {
@@ -6563,7 +6567,7 @@
         });
       }
       function getDesktopScrollHost() {
-        return window.matchMedia("(min-width:768px)").matches
+        return _mqDesktop.matches
           ? document.getElementById("main-col")
           : null;
       }
@@ -6709,13 +6713,8 @@
 
       // ── Jump panel ──
       function openJump() {
-        if (!isMobile()) {
-          document.getElementById("jump-overlay").classList.add("open");
-          document.getElementById("jump-panel").classList.add("open");
-        } else {
-          document.getElementById("jump-overlay").classList.add("open");
-          document.getElementById("jump-panel").classList.add("open");
-        }
+        document.getElementById("jump-overlay").classList.add("open");
+        document.getElementById("jump-panel").classList.add("open");
         markJumpCurrent();
       }
       function closeJump() {
@@ -7084,6 +7083,11 @@
         }
         for (let i = 0; i < 110; i++) pts.push(mkP());
         function draw() {
+          /* 當 hero 完全滾出視野時暫停繪製，節省 CPU/電池 */
+          if (cvs.getBoundingClientRect().bottom < 0) {
+            requestAnimationFrame(draw);
+            return;
+          }
           ctx.clearRect(0, 0, W, H);
           pts = pts.filter((p) => {
             p.x += p.vx;
@@ -7103,7 +7107,7 @@
           ctx.globalAlpha = 1;
           requestAnimationFrame(draw);
         }
-        window.addEventListener("resize", resize);
+        window.addEventListener("resize", resize, { passive: true });
         resize();
         draw();
       })();

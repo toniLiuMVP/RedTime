@@ -1921,8 +1921,10 @@ function startEnding(type, options = {}) {
     state.phaseClock = 0;
     state.flags.perfectLinePlayed = false;
     state.flags.oneGazeTextShown = false;
-    setSubtitle("女兒", "阿姨乖乖站在後門，沒有往前也沒有往後。光落在她身上，學長停下腳步。", 6);
-    setAmbience("整條走廊的光像有人調慢了速度，只剩兩個人和那一格門洞。");
+    state.flags.oneGazeUIHidden = false;
+    hideAllGameUI();
+    hideCenteredSubtitle();
+    state.flags.oneGazeUIHidden = true;
   } else if (type === "one_gaze") {
     state.phase = "eye_contact";
     state.phaseClock = 0;
@@ -1930,8 +1932,8 @@ function startEnding(type, options = {}) {
     state.flags.oneGazeTextShown = false;
     state.flags.oneGazeUIHidden = false;
     hideAllGameUI();
+    hideCenteredSubtitle();
     state.flags.oneGazeUIHidden = true;
-    showCenteredSubtitle("女兒", "光先落在她身上。阿姨先向後轉，然後慢慢走向後門——那一秒，就要來了。", 5, "center-low");
   } else if (type === "restrain") {
     setSubtitle("女兒", "可是我的手……", 4.5);
     setAmbience("畫面開始變暗。");
@@ -2539,22 +2541,26 @@ function updateEndingSequence(dt) {
   if (state.ending === "perfect_eye") {
     const FACE_DUR  = 5.0;
     const TEXT_START = FACE_DUR;
-    const TOTAL_DUR  = TEXT_START + 10.0;
+    const TEXT_DUR   = 5.0;
+    const TOTAL_DUR  = TEXT_START + TEXT_DUR;
     state.endingSequence.shotPhase = "face";
 
+    /* 隱藏全部 UI（含字幕） */
+    if (!state.flags.oneGazeUIHidden) {
+      state.flags.oneGazeUIHidden = true;
+      hideAllGameUI();
+      hideCenteredSubtitle();
+    }
+
+    /* 5 秒後顯示唯一一行文字，置中下方 */
     if (!state.flags.oneGazeTextShown && state.endingSequence.time >= TEXT_START) {
       state.flags.oneGazeTextShown = true;
-      if (dom.oneGazeOverlay) {
-        dom.oneGazeOverlay.classList.add("show");
-        safeTimeout(() => {
-          if (dom.oneGazeOverlay) dom.oneGazeOverlay.classList.remove("show");
-        }, 10500);
-      }
-      setSubtitle("", "這一次，依然再次遇見妳。", 10.0);
+      showCenteredSubtitle("", "這一次，依然再次遇見妳。", TEXT_DUR, "center-low");
     }
 
     if (state.endingSequence.time > TOTAL_DUR && dom.endingOverlay.hidden) {
-      if (dom.oneGazeOverlay) dom.oneGazeOverlay.classList.remove("show");
+      hideCenteredSubtitle();
+      showAllGameUI();
       finishEndingSequence();
     }
     return;
@@ -2565,18 +2571,21 @@ function updateEndingSequence(dt) {
   if (state.ending === "one_gaze") {
     const FACE_DUR  = 5.0;
     const TEXT_START = FACE_DUR;
-    const TOTAL_DUR  = TEXT_START + 10.0;
+    const TEXT_DUR   = 5.0;
+    const TOTAL_DUR  = TEXT_START + TEXT_DUR;
     state.endingSequence.shotPhase = "face";
 
-    /* 隱藏全部遊戲 UI */
+    /* 隱藏全部 UI（含字幕） */
     if (!state.flags.oneGazeUIHidden) {
       state.flags.oneGazeUIHidden = true;
       hideAllGameUI();
+      hideCenteredSubtitle();
     }
 
+    /* 5 秒後顯示唯一一行文字，置中下方 */
     if (!state.flags.oneGazeTextShown && state.endingSequence.time >= TEXT_START) {
       state.flags.oneGazeTextShown = true;
-      showCenteredSubtitle("", "這一次，依然再次遇見妳。", 10.0, "center-low");
+      showCenteredSubtitle("", "這一次，依然再次遇見妳。", TEXT_DUR, "center-low");
     }
 
     if (state.endingSequence.time > TOTAL_DUR && dom.endingOverlay.hidden) {
