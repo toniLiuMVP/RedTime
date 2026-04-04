@@ -1417,14 +1417,12 @@ function applyEffect(effect) {
       JUNIOR_MEET_X - SENIOR_DOOR_X, JUNIOR_MEET_Z - SENIOR_DOOR_Z
     );
 
-    /* 女兒觀察點：教室走道中央，離後門約 6m，面向後門方向 */
-    state.player.x = scale(900);
-    state.player.z = scale(1000);
-    state.player.yaw = Math.atan2(
-      state.player.x - JUNIOR_MEET_X,
-      state.player.z - JUNIOR_MEET_Z
-    );
-    state.player.pitch = -0.06;
+    /* 女兒觀察點：就在學妹剛才走到後門的位置（保證不卡牆）
+       只轉頭看向學妹和學長中間，不移動位置 */
+    const midX = (JUNIOR_MEET_X + SENIOR_DOOR_X) / 2;
+    const midZ = (JUNIOR_MEET_Z + SENIOR_DOOR_Z) / 2;
+    state.player.yaw = Math.atan2(state.player.x - midX, state.player.z - midZ);
+    state.player.pitch = -0.04;
     state.player.velocity = { x: 0, z: 0 };
 
     /* 把拔和阿姨的回憶影像浮現 */
