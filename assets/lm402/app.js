@@ -1765,7 +1765,7 @@ function finishIntro() {
       lookInput: { x: 0, y: 0 },
       isGhostObserver: true,
     };
-    setSubtitle("女兒", "意識市集開始了，把拔和阿姨還不知道彼此的存在。四周的記憶碎片正在浮現⋯⋯", 8);
+    setSubtitle("女兒", "意識市集開始了，這是把拔跟阿姨的第一次見面。四周的記憶碎片正在浮現⋯⋯", 8);
     setAmbience("十點四十分，教室像一只剛被打開的舊鐘，所有指針還沒對準。走廊的風撥動粉筆灰，陽光沿著矮牆一格一格鋪進來。");
   }
 
@@ -1910,7 +1910,7 @@ function resetScene() {
   dom.body.classList.remove("dialogue-open");
   updateObjective(true);
   updateMemoryList();
-  setSubtitle("女兒", "意識市集開始了，把拔和阿姨還不知道彼此的存在。四周的記憶碎片正在浮現⋯⋯", 5);
+  setSubtitle("女兒", "意識市集開始了，這是把拔跟阿姨的第一次見面。四周的記憶碎片正在浮現⋯⋯", 5);
   setAmbience("十點四十分的教室只有陽光和粉筆灰，走廊的風帶著校園樹葉的氣味，一切還停在被喚醒之前。");
   syncDockState();
   updatePointerHint();
@@ -3229,6 +3229,16 @@ syncObjectiveChip();
 updatePointerHint();
 updateActionButtons();
 void audioSystem.tryPlay("startup");
+
+/* ── WebGL Context Loss Detection ── */
+canvas.addEventListener("webglcontextlost", (e) => {
+  console.error("[WebGL] CONTEXT LOST!", e);
+  e.preventDefault();
+});
+canvas.addEventListener("webglcontextrestored", () => {
+  console.warn("[WebGL] context restored");
+});
+
 requestAnimationFrame(tick);
 
 /* ── Loader dismiss ── */

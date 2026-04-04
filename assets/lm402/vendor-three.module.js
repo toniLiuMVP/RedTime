@@ -14069,7 +14069,7 @@ function WebGLMaterials( renderer, properties ) {
 
 		}
 
-		if ( material.emissive ) {
+		if ( material.emissive && uniforms.emissive ) {
 
 			uniforms.emissive.value.copy( material.emissive ).multiplyScalar( material.emissiveIntensity );
 

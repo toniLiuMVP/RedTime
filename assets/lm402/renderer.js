@@ -1994,8 +1994,12 @@ function S(t) {
           ((o.material = o.material.clone()),
           (o.material.transparent = !0),
           (o.material.opacity = t.echoOpacity ?? 0.35),
-          (o.material.emissive = new e.Color(t.echoColor ?? "#ffcfb1")),
-          (o.material.emissiveIntensity = 0.16));
+          o.material.emissive && o.material.emissive.set
+            ? (o.material.emissive.set(t.echoColor ?? "#ffcfb1"),
+               (o.material.emissiveIntensity = 0.16))
+            : (o.material.emissive = new e.Color(t.echoColor ?? "#ffcfb1"),
+               (o.material.emissiveIntensity = 0.16),
+               (o.material.needsUpdate = !0)));
       }),
     o.scale.setScalar(t.scale ?? 0.95),
     (o.userData.pose = {
