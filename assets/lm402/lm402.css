@@ -378,7 +378,7 @@ body[data-ui-preset="ending"] .stage-vignette {
   justify-items: start;
 }
 .audio-widget {
-  top: 74px;
+  top: 162px;
   left: 18px;
 }
 .song-selector {
@@ -671,11 +671,11 @@ body[data-ui-preset="ending"] .stage-vignette {
   color: var(--jade);
 }
 .font-widget {
-  top: 118px;
+  top: 74px;
   left: 18px;
 }
 .quality-widget {
-  top: 162px;
+  top: 118px;
   left: 18px;
 }
 .font-toggle {
@@ -1751,17 +1751,17 @@ body.landscape-prompt .debug-panel {
     left: max(8px, env(safe-area-inset-left));
     z-index: 20;
   }
-  .audio-widget {
+  .font-widget {
     top: max(8px, env(safe-area-inset-top));
     left: calc(max(8px, env(safe-area-inset-left)) + 128px);
     z-index: 20;
   }
-  .font-widget {
+  .quality-widget {
     top: max(8px, env(safe-area-inset-top));
     left: calc(max(8px, env(safe-area-inset-left)) + 218px);
     z-index: 20;
   }
-  .quality-widget {
+  .audio-widget {
     top: max(8px, env(safe-area-inset-top));
     left: calc(max(8px, env(safe-area-inset-left)) + 308px);
     z-index: 20;
@@ -2252,15 +2252,15 @@ body.landscape-prompt .debug-panel {
     top: max(8px, env(safe-area-inset-top));
     left: max(8px, env(safe-area-inset-left));
   }
-  .audio-widget {
+  .font-widget {
     top: max(8px, env(safe-area-inset-top));
     left: calc(max(8px, env(safe-area-inset-left)) + 112px);
   }
-  .font-widget {
+  .quality-widget {
     top: max(8px, env(safe-area-inset-top));
     left: calc(max(8px, env(safe-area-inset-left)) + 202px);
   }
-  .quality-widget {
+  .audio-widget {
     top: max(8px, env(safe-area-inset-top));
     left: calc(max(8px, env(safe-area-inset-left)) + 292px);
   }

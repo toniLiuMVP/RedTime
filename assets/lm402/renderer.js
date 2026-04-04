@@ -5653,7 +5653,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             q.lookAt(facePos.x, facePos.y, facePos.z);
           })(s))
       else if ("one_gaze" === s.endingSequence?.type)
-        /* ── one_gaze：學長視角看著學妹的眼睛 ── */
+        /* ── one_gaze：學妹臉部正前方靜態特寫（同 perfect_eye 角度） ── */
         ((H.visible = false),
           (function(t) {
             const heroAnchor = resolveJuniorHeroAnchor(Co, {
@@ -5662,11 +5662,11 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             });
             const facePos = heroAnchor.face;
             const eyePos  = heroAnchor.eyes;
-            // 攝影機放在學長(Go)的眼睛高度位置，看向學妹的臉
+            const fwd = new e.Vector3(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y));
             q.position.set(
-              Go.position.x,
-              Go.position.y + 1.65,
-              Go.position.z
+              Co.position.x + fwd.x * 0.9,
+              eyePos.y,
+              Co.position.z + fwd.z * 0.9
             );
             q.fov = 36;
             q.updateProjectionMatrix();

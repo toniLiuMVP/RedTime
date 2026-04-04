@@ -1921,7 +1921,7 @@ function startEnding(type, options = {}) {
     state.flags.oneGazeUIHidden = true;
     showCenteredSubtitle("女兒", "光先落在她身上。阿姨先向後轉，然後慢慢走向後門——那一秒，就要來了。", 5, "center-low");
   } else if (type === "restrain") {
-    setSubtitle("女兒", "我好想往前衝去抱把拔……可是我的手……", 4.5);
+    setSubtitle("女兒", "可是我的手……", 4.5);
     setAmbience("畫面開始變暗。");
   } else if (type === "secret_heart") {
     setSubtitle("女兒", "我飛進阿姨的心裡了！裡面好多好多彩色的線在飛！", 5);
