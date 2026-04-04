@@ -592,14 +592,18 @@ function S(t) {
   if ((P.position.set(0, t.female ? 0.67 : 0.63, 0.01), (!n && o.add(P)),
     t.female && (function(){
       var legMat = n ? c : i;
-      var legL = new e.Mesh(new e.BoxGeometry(0.14, n ? 0.36 : 0.40, 0.19), legMat);
+      var legGeo = n
+        ? new e.CapsuleGeometry(0.065, 0.36, 6, 12)
+        : new e.CapsuleGeometry(0.072, 0.40, 6, 12);
+      var legL = new e.Mesh(legGeo, legMat);
       legL.position.set(-0.085, n ? 0.46 : 0.44, 0.008); o.add(legL);
       var legR = legL.clone(); legR.position.x = 0.085; o.add(legR);
       var wb = new e.MeshPhysicalMaterial({color:"#1e3a56",roughness:0.46,metalness:0.04,clearcoat:0.14,clearcoatRoughness:0.3});
       var wm = new e.Mesh(new e.BoxGeometry(0.35,0.05,0.27), wb);
       wm.position.set(0,0.80,0.01); o.add(wm);
-      var cuff = new e.Mesh(new e.BoxGeometry(0.15,0.03,0.20), wb);
-      cuff.position.set(-0.085,0.26,0.008); o.add(cuff);
+      var cuffGeo = new e.CylinderGeometry(n ? 0.078 : 0.085, n ? 0.076 : 0.083, 0.03, 12);
+      var cuff = new e.Mesh(cuffGeo, wb);
+      cuff.position.set(-0.085, n ? 0.62 : 0.62, 0.008); o.add(cuff);
       var cuffR = cuff.clone(); cuffR.position.x = 0.085; o.add(cuffR);
     })(),
     !t.female)) {
@@ -5637,40 +5641,42 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         ((H.visible = false),
           (function(t) {
             const heroAnchor = resolveJuniorHeroAnchor(Co, {
-              forceRoot: Co.userData.runtimeModelRoot ?? null,
-              allowLegacyFallback: !1,
+              forceRoot: Co.userData.runtimeModelRoot?.visible ? Co.userData.runtimeModelRoot : null,
+              allowLegacyFallback: !0,
             });
             const facePos = heroAnchor.face;
-            const eyePos  = heroAnchor.eyes;
+            const eyeY = heroAnchor.eyes.y > Co.position.y + 1.0 ? heroAnchor.eyes.y : Co.position.y + 1.52;
             const fwd = new e.Vector3(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y));
             q.position.set(
               Co.position.x + fwd.x * 0.9,
-              eyePos.y,
+              eyeY,
               Co.position.z + fwd.z * 0.9
             );
             q.fov = 36;
             q.updateProjectionMatrix();
-            q.lookAt(facePos.x, facePos.y, facePos.z);
+            const lookY = facePos.y > Co.position.y + 1.0 ? facePos.y : Co.position.y + 1.53;
+            q.lookAt(facePos.x, lookY, facePos.z);
           })(s))
       else if ("one_gaze" === s.endingSequence?.type)
         /* ── one_gaze：學妹臉部正前方靜態特寫（同 perfect_eye 角度） ── */
         ((H.visible = false),
           (function(t) {
             const heroAnchor = resolveJuniorHeroAnchor(Co, {
-              forceRoot: Co.userData.runtimeModelRoot ?? null,
-              allowLegacyFallback: !1,
+              forceRoot: Co.userData.runtimeModelRoot?.visible ? Co.userData.runtimeModelRoot : null,
+              allowLegacyFallback: !0,
             });
             const facePos = heroAnchor.face;
-            const eyePos  = heroAnchor.eyes;
+            const eyeY = heroAnchor.eyes.y > Co.position.y + 1.0 ? heroAnchor.eyes.y : Co.position.y + 1.52;
             const fwd = new e.Vector3(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y));
             q.position.set(
               Co.position.x + fwd.x * 0.9,
-              eyePos.y,
+              eyeY,
               Co.position.z + fwd.z * 0.9
             );
             q.fov = 36;
             q.updateProjectionMatrix();
-            q.lookAt(facePos.x, facePos.y, facePos.z);
+            const lookY2 = facePos.y > Co.position.y + 1.0 ? facePos.y : Co.position.y + 1.53;
+            q.lookAt(facePos.x, lookY2, facePos.z);
           })(s));
       else if ("rear_wait" === s.phase && s.phaseClock > 3.0 && "ghost" === s.controlMode) {
         // rear_wait 過場：跟拍鏡頭跟著學妹走向後門（腳本模式）
