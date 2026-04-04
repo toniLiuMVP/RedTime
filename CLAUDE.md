@@ -79,6 +79,36 @@ git --git-dir=.git --work-tree=. checkout .claude/worktrees/<name> -- . 2>/dev/n
 ```
 確保 preview worktree（通常是 `.claude/worktrees/` 中正在使用的那個）反映最新的 main 狀態。
 
+## NAS 備份流程
+
+備份目標：`/Volumes/918 資料夾/晴晴/時間裡的兩個妳/解析/EP0~EP40修訂二版/網站/`
+
+### 自動掛載 + 備份指令（GO 指令備份步驟使用）
+
+```bash
+# 1. 確認是否已掛載，未掛載則自動掛載
+if [ ! -d "/Volumes/918 資料夾" ]; then
+  osascript -e 'tell application "Finder" to open location "smb://toniLiuMVP._smb._tcp.local/918%20%E8%B3%87%E6%96%99%E5%A4%BE"'
+  sleep 8
+fi
+
+# 2. 確認掛載成功
+ls "/Volumes/918 資料夾/"
+
+# 3. rsync 備份（排除不必要目錄）
+rsync -av --delete \
+  --exclude='.git' \
+  --exclude='node_modules' \
+  --exclude='.claude' \
+  --exclude='test-results' \
+  --exclude='output' \
+  --exclude='.playwright-cli' \
+  "/Users/toni/Downloads/時間裡的兩個妳/" \
+  "/Volumes/918 資料夾/晴晴/時間裡的兩個妳/解析/EP0~EP40修訂二版/網站/"
+```
+
+**重要**：NAS 未掛載時，絕對不要叫 toni 手動掛載，直接用上方 osascript 自動掛載。
+
 ## 開發注意事項
 
 - 這是 **GitHub Pages** 靜態部署，所有路徑必須相對路徑

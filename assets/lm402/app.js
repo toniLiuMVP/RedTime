@@ -301,7 +301,7 @@ function checkStairWarp() {
   if (!inBack && !inFront) return;
   stairWarpCooldownUntil = now + stairsWarp.cooldown;
   scene.triggerWormhole(state.player.x, 0, state.player.z);
-  setTimeout(() => {
+  safeTimeout(() => {
     state.player.x = scale(stairsWarp.returnPoint.x);
     state.player.z = scale(stairsWarp.returnPoint.z);
     scene.triggerWormhole(state.player.x, 0, state.player.z);
@@ -875,6 +875,18 @@ const audioSystem = createAudioSystem();
 const debugEnabled = new URLSearchParams(window.location.search).get("debug") === "1";
 let objectiveCompactTimer = 0;
 
+/* ── Timer Registry：追蹤所有 setTimeout，resetScene 時統一清除 ── */
+const _pendingTimers = new Set();
+function safeTimeout(fn, delay) {
+  const id = window.setTimeout(() => { _pendingTimers.delete(id); fn(); }, delay);
+  _pendingTimers.add(id);
+  return id;
+}
+function clearAllPendingTimers() {
+  for (const id of _pendingTimers) window.clearTimeout(id);
+  _pendingTimers.clear();
+}
+
 function logDebug(type, detail = "") {
   const entry = {
     time: new Date().toISOString().slice(11, 19),
@@ -1003,7 +1015,7 @@ function showCenteredSubtitle(source, text, duration, position = "centered") {
   layer.hidden = false;
   appendTranscriptEntry(source, text);
   if (duration > 0) {
-    setTimeout(() => {
+    safeTimeout(() => {
       layer.hidden = true;
       layer.classList.remove("centered", "center-low");
     }, duration * 1000);
@@ -1341,7 +1353,7 @@ function applyEffect(effect) {
     resetView();
     audioSystem.playCue("phone");
     setSubtitle("學妹", "「你走到後門。」", 3.6);
-    setTimeout(() => {
+    safeTimeout(() => {
       if (state.mode === "play") {
         setSubtitle("女兒", "把拔的聲音聽起來好年輕。如果我沿著這條紅線走到後門，我是不是就能看見他們的一眼瞬間？", 5.0);
       }
@@ -1370,10 +1382,10 @@ function applyEffect(effect) {
     collectMemory("notes");
     renderer.spawnHologram("notes", state.time);
     audioSystem.playCue("thread");
-    setTimeout(() => {
+    safeTimeout(() => {
       if (state.mode === "play") setSubtitle("把拔（心底的聲音）", "「這一次，依然再次遇見妳。」", 3.5);
     }, 500);
-    setTimeout(() => {
+    safeTimeout(() => {
       if (state.mode === "play") setSubtitle("女兒", "原來阿姨當時在腦海裡開了一場『意識菜市場』會議，才緊張地把那句『你走到後門』練得這麼穩。", 5.0);
     }, 4200);
     closeDialogue();
@@ -1419,7 +1431,7 @@ function applyEffect(effect) {
     setPhase("front_call");
     audioSystem.playCue("phone");
     setSubtitle("學長", "「妳在哪裡？」", 4.0);
-    setTimeout(() => {
+    safeTimeout(() => {
       if (state.mode === "play") {
         setSubtitle("女兒", "把拔的聲音聽起來好年輕喔，原來把拔年輕的時候，說話的聲音是這樣的。", 5.0);
       }
@@ -1433,7 +1445,7 @@ function applyEffect(effect) {
     resetView();
     audioSystem.playCue("thread");
     setSubtitle("學妹", "「你走到後門。」", 3.6);
-    setTimeout(() => {
+    safeTimeout(() => {
       if (state.mode === "play") {
         setSubtitle("女兒", "阿姨叫把拔走到後門，我也要趕快飛到後門那邊去看！", 5.0);
       }
@@ -1465,7 +1477,7 @@ function applyEffect(effect) {
     };
     audioSystem.playCue("phone");
     setSubtitle("學妹", "剛剛我叫學長到後門。", 4.0);
-    setTimeout(() => {
+    safeTimeout(() => {
       if (state.mode === "play" && state.controlMode === "junior") {
         setSubtitle("", "走到後門找學長", 4.0);
       }
@@ -1548,7 +1560,7 @@ function applyEffect(effect) {
     state.flags.rewindPlayed = true;
 
     /* Step 1: 1.0s 螢幕全黑 */
-    setTimeout(() => {
+    safeTimeout(() => {
       if (dom.endingBlackout) {
         dom.endingBlackout.hidden = false;
         dom.endingBlackout.style.opacity = "1";
@@ -1556,30 +1568,30 @@ function applyEffect(effect) {
     }, 1000);
 
     /* Step 2: 2.5s 蟲洞爆炸（時間線碎裂） */
-    setTimeout(() => {
+    safeTimeout(() => {
       if (state.mode === "play") {
         scene.triggerWormhole(state.player.x, 0, state.player.z);
       }
     }, 2500);
 
     /* Step 3: 4.0s 學妹獨白 */
-    setTimeout(() => {
+    safeTimeout(() => {
       if (state.mode === "play") {
         setSubtitle("學妹", "我不可以這樣做。", 3.0);
       }
     }, 4000);
 
     /* Step 4: 7.0s 淡出黑幕 + 二次蟲洞（回溯視覺） */
-    setTimeout(() => {
+    safeTimeout(() => {
       if (dom.endingBlackout) {
         dom.endingBlackout.style.opacity = "0";
-        setTimeout(() => { dom.endingBlackout.hidden = true; }, 600);
+        safeTimeout(() => { dom.endingBlackout.hidden = true; }, 600);
       }
       scene.triggerWormhole(state.player.x, 0, state.player.z);
     }, 7000);
 
     /* Step 5: 7.5s 從快照還原狀態 */
-    setTimeout(() => {
+    safeTimeout(() => {
       const snap = state.juniorControlSnapshot;
       if (!snap) return;
       state.player.x = snap.playerX;
@@ -1988,13 +2000,14 @@ function finishEndingSequence() {
   dom.endingOverlay.hidden = false;
   dom.body.classList.add("ending-open");
   // 確保按鈕區域在手機上可見：等動畫完成後自動滾到結局操作按鈕
-  setTimeout(() => {
+  safeTimeout(() => {
     const actions = document.querySelector(".ending-actions");
     if (actions) actions.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, 1600);
 }
 
 function resetScene() {
+  clearAllPendingTimers();
   clearTransientInput();
   state.mode = "play";
   state.cameraMode = "play";
@@ -2452,7 +2465,7 @@ function updatePhaseLogic(dt) {
     setPhase("front_call");
     audioSystem.playCue("phone");
     setSubtitle("學長", "「妳在哪裡？」", 4.0);
-    setTimeout(() => {
+    safeTimeout(() => {
       if (state.mode === "play") {
         setSubtitle("女兒", "11 點鐘響了！把拔從前面的樓梯走上來，站在前門打電話。", 5.0);
       }
@@ -2533,7 +2546,7 @@ function updateEndingSequence(dt) {
       state.flags.oneGazeTextShown = true;
       if (dom.oneGazeOverlay) {
         dom.oneGazeOverlay.classList.add("show");
-        setTimeout(() => {
+        safeTimeout(() => {
           if (dom.oneGazeOverlay) dom.oneGazeOverlay.classList.remove("show");
         }, 10500);
       }
@@ -2783,20 +2796,21 @@ function snapshotDebug() {
   };
 }
 
-window.__LM402_DEBUG__ = {
-  snapshot: snapshotDebug,
-  reset: resetScene,
-  replayIntro: () => startIntro(true),
-  skipIntro: () => {
-    if (state.mode === "intro") {
-      finishIntro();
-    }
-  },
-  setPhase: (id) => setPhase(id),
-  applyEffect: (effect) => applyEffect(effect),
-  setLookSensitivity: (scalar, preset = null) => setLookSensitivity({ scalar, preset }),
-  toggleObjective: toggleObjectivePrompt,
-};
+/* ── Debug API：僅在 URL 帶 ?debug=1 時暴露遊戲控制函數 ── */
+if (debugEnabled) {
+  window.__LM402_DEBUG__ = {
+    snapshot: snapshotDebug,
+    reset: resetScene,
+    replayIntro: () => startIntro(true),
+    skipIntro: () => { if (state.mode === "intro") finishIntro(); },
+    setPhase: (id) => setPhase(id),
+    applyEffect: (effect) => applyEffect(effect),
+    setLookSensitivity: (scalar, preset = null) => setLookSensitivity({ scalar, preset }),
+    toggleObjective: toggleObjectivePrompt,
+  };
+} else {
+  window.__LM402_DEBUG__ = { snapshot: snapshotDebug };
+}
 
 function renderFrame() {
   try {
