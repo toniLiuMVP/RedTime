@@ -1775,7 +1775,8 @@ body.landscape-prompt .debug-panel {
   }
   .audio-widget {
     top: max(8px, env(safe-area-inset-top));
-    left: calc(max(8px, env(safe-area-inset-left)) + 308px);
+    left: auto;
+    right: max(8px, env(safe-area-inset-right));
     z-index: 20;
   }
   .time-watch {
@@ -2079,6 +2080,10 @@ body.landscape-prompt .debug-panel {
     margin-top: 5px;
     font-size: calc(10px * var(--game-font-scale, 1));
     line-height: 1.4;
+    text-align: center;
+  }
+  .transcript-item-head {
+    justify-content: center;
   }
   .control-cluster {
     position: fixed;
@@ -2274,7 +2279,8 @@ body.landscape-prompt .debug-panel {
   }
   .audio-widget {
     top: max(8px, env(safe-area-inset-top));
-    left: calc(max(8px, env(safe-area-inset-left)) + 292px);
+    left: auto;
+    right: max(8px, env(safe-area-inset-right));
   }
   .music-prompt {
     left: auto;
