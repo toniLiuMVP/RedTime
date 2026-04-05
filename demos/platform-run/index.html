@@ -62,8 +62,11 @@ canvas{display:block;width:100%;height:100%}
 #joystick-knob{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.15);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transition:none}
 #sprint-btn{position:fixed;bottom:60px;right:30px;z-index:40;display:none;width:64px;height:64px;border-radius:50%;background:rgba(243,156,18,0.2);border:2px solid rgba(243,156,18,0.4);color:#f39c12;font-size:12px;font-weight:700;line-height:64px;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
 
+/* ── 跳躍按鈕（手機）── */
+#jump-btn{position:fixed;bottom:140px;right:30px;z-index:40;display:none;width:64px;height:64px;border-radius:50%;background:rgba(46,204,113,0.2);border:2px solid rgba(46,204,113,0.4);color:#2ecc71;font-size:12px;font-weight:700;line-height:64px;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+
 /* ── 必殺技按鈕 ── */
-#ultimate-btn{position:fixed;bottom:140px;right:30px;z-index:40;display:none;width:64px;height:64px;border-radius:50%;background:rgba(255,215,0,0.15);border:2px solid rgba(255,215,0,0.5);color:#ffd700;font-size:10px;font-weight:700;line-height:1.2;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;padding-top:18px}
+#ultimate-btn{position:fixed;bottom:220px;right:30px;z-index:40;display:none;width:64px;height:64px;border-radius:50%;background:rgba(255,215,0,0.15);border:2px solid rgba(255,215,0,0.5);color:#ffd700;font-size:10px;font-weight:700;line-height:1.2;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;padding-top:18px}
 #ultimate-btn.used{opacity:0.3;border-color:rgba(255,215,0,0.15);pointer-events:none}
 
 /* ── 道具拾取通知 ── */
@@ -108,7 +111,7 @@ canvas{display:block;width:100%;height:100%}
 </div>
 <div id="sprint-bar-wrap">
   <div id="sprint-bar"><div id="sprint-fill"></div></div>
-  <div id="sprint-label">衝刺 [Shift]</div>
+  <div id="sprint-label">衝刺 [Shift] · Space 跳躍</div>
 </div>
 
 <!-- 敘事文字 -->
@@ -133,6 +136,7 @@ canvas{display:block;width:100%;height:100%}
 <!-- 手機觸控 -->
 <div id="touch-controls"><div id="joystick-area"><div id="joystick-knob"></div></div></div>
 <div id="sprint-btn">衝刺</div>
+<div id="jump-btn">跳躍</div>
 <div id="ultimate-btn">必殺技<br>E</div>
 
 <!-- 靜音按鈕 -->
@@ -162,13 +166,22 @@ const SPRINT_DRAIN = 35;
 const SPRINT_REGEN = 18;
 const GAME_TIME    = 36;
 const DODGE_SPEED  = 6;
-const NPC_COUNT    = 55;
+const NPC_COUNT    = 35;
 const CAR_LEN      = 22;
 const CAR_COUNT    = 8;
 const DAUGHTER_Z   = -(PLATFORM_LEN / 2 - 25);
 
 const POWERUP_COLLECT_RADIUS = 1.5;
 const NPC_SAFE_DISTANCE = 3;
+
+/* Jump constants */
+const JUMP_VELOCITY = 5;
+const JUMP_GRAVITY  = -15;
+
+/* Luggage constants */
+const LUGGAGE_COUNT = 10;
+const LUGGAGE_COLLISION_RADIUS = 0.5;
+const LUGGAGE_CLEAR_HEIGHT = 0.3;
 
 /* ════════════════════════════════════════════════
    DOM 參照
@@ -191,6 +204,7 @@ const dom = {
   joystickArea: document.getElementById("joystick-area"),
   joystickKnob: document.getElementById("joystick-knob"),
   sprintBtn:    document.getElementById("sprint-btn"),
+  jumpBtn:      document.getElementById("jump-btn"),
   ultimateBtn:  document.getElementById("ultimate-btn"),
   breathHint:   document.getElementById("breath-hint"),
   pickupNotify: document.getElementById("pickup-notify"),
@@ -232,6 +246,12 @@ const state = {
   ultimateTimer: 0,
   /* pickup notification */
   pickupNotifyTimer: 0,
+  /* jump state */
+  jumpY: 0,
+  jumpVel: 0,
+  isJumping: false,
+  /* luggage slow */
+  luggageSlowTimer: 0,
 };
 
 /* ════════════════════════════════════════════════
@@ -315,8 +335,13 @@ const MAT = {
   pinkBag:    new THREE.MeshStandardMaterial({ color: 0xff69b4, roughness: 0.6 }),
 };
 
+/* Father-specific materials */
+const MAT_whiteSneaker = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.5 });
+const MAT_glasses      = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3 });
+const MAT_fauxHawk     = new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 0.9 });
+
 /* ════════════════════════════════════════════════
-   迷彩紋理（背包用）
+   迷彩紋理（背包 + 短褲用）
    ════════════════════════════════════════════════ */
 function createCamoTexture() {
   const canvas = document.createElement("canvas");
@@ -487,6 +512,12 @@ const fatherRightLeg = new THREE.Group();
 const fatherLeftArm = new THREE.Group();
 const fatherRightArm = new THREE.Group();
 
+/* Father grounded base Y: shoe bottom sits on y=0
+   Left leg pivot at y=0.6, shoe at relative y=-0.55, shoe half-height=0.04
+   So shoe bottom relative to father origin = 0.6 - 0.55 - 0.04 = 0.01
+   We need father baseY = -0.01 so shoe bottom = 0 */
+const FATHER_BASE_Y = -0.01;
+
 function buildFather() {
   /* Head */
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 12), MAT.skin);
@@ -494,12 +525,37 @@ function buildFather() {
   head.castShadow = true;
   father.add(head);
 
-  /* Hair (short dark hair - flat box on top) */
-  const hair = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.08, 0.38), MAT.hair);
-  hair.position.y = 1.72;
-  father.add(hair);
+  /* Beckham faux hawk hair: tapered box, wider at front, narrower at back */
+  const fauxHawkShape = new THREE.Shape();
+  fauxHawkShape.moveTo(-0.12, -0.06);
+  fauxHawkShape.lineTo(0.12, -0.06);
+  fauxHawkShape.lineTo(0.08, 0.06);
+  fauxHawkShape.lineTo(-0.08, 0.06);
+  fauxHawkShape.closePath();
+  const fauxHawkGeo = new THREE.ExtrudeGeometry(fauxHawkShape, { depth: 0.3, bevelEnabled: false });
+  const fauxHawk = new THREE.Mesh(fauxHawkGeo, MAT_fauxHawk);
+  fauxHawk.position.set(0, 1.68, -0.15);
+  father.add(fauxHawk);
 
-  /* Torso */
+  /* Thick-framed glasses */
+  const glassesGroup = new THREE.Group();
+  /* Left eye frame */
+  const frameL = new THREE.Mesh(new THREE.TorusGeometry(0.065, 0.015, 8, 16), MAT_glasses);
+  frameL.position.set(-0.08, 0, 0);
+  glassesGroup.add(frameL);
+  /* Right eye frame */
+  const frameR = new THREE.Mesh(new THREE.TorusGeometry(0.065, 0.015, 8, 16), MAT_glasses);
+  frameR.position.set(0.08, 0, 0);
+  glassesGroup.add(frameR);
+  /* Bridge bar connecting frames */
+  const bridge = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.06, 6), MAT_glasses);
+  bridge.rotation.z = Math.PI / 2;
+  bridge.position.set(0, 0, 0);
+  glassesGroup.add(bridge);
+  glassesGroup.position.set(0, 1.55, -0.22);
+  father.add(glassesGroup);
+
+  /* Torso (dark shirt) */
   const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 0.5, 4, 8), MAT.fatherBody);
   torso.position.y = 1.05;
   torso.castShadow = true;
@@ -526,23 +582,29 @@ function buildFather() {
   fatherRightArm.rotation.z = -0.15;
   father.add(fatherRightArm);
 
-  /* Left leg */
-  const legL = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.6, 6), MAT.pants);
-  legL.position.set(0, -0.25, 0);
-  fatherLeftLeg.add(legL);
-  const shoeL = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.08, 0.22), MAT.shoe);
-  shoeL.position.set(0, -0.55, -0.04);
-  fatherLeftLeg.add(shoeL);
+  /* Left leg: upper (camo shorts) + lower (skin calf) + white sneaker */
+  const upperLegL = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.085, 0.25, 6), MAT_camo);
+  upperLegL.position.set(0, -0.1, 0);
+  fatherLeftLeg.add(upperLegL);
+  const calfL = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.065, 0.25, 6), MAT.skin);
+  calfL.position.set(0, -0.35, 0);
+  fatherLeftLeg.add(calfL);
+  const sneakerL = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.09, 0.24), MAT_whiteSneaker);
+  sneakerL.position.set(0, -0.52, -0.04);
+  fatherLeftLeg.add(sneakerL);
   fatherLeftLeg.position.set(-0.13, 0.6, 0);
   father.add(fatherLeftLeg);
 
-  /* Right leg */
-  const legR = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.6, 6), MAT.pants);
-  legR.position.set(0, -0.25, 0);
-  fatherRightLeg.add(legR);
-  const shoeR = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.08, 0.22), MAT.shoe);
-  shoeR.position.set(0, -0.55, -0.04);
-  fatherRightLeg.add(shoeR);
+  /* Right leg: upper (camo shorts) + lower (skin calf) + white sneaker */
+  const upperLegR = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.085, 0.25, 6), MAT_camo);
+  upperLegR.position.set(0, -0.1, 0);
+  fatherRightLeg.add(upperLegR);
+  const calfR = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.065, 0.25, 6), MAT.skin);
+  calfR.position.set(0, -0.35, 0);
+  fatherRightLeg.add(calfR);
+  const sneakerR = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.09, 0.24), MAT_whiteSneaker);
+  sneakerR.position.set(0, -0.52, -0.04);
+  fatherRightLeg.add(sneakerR);
   fatherRightLeg.position.set(0.13, 0.6, 0);
   father.add(fatherRightLeg);
 
@@ -552,7 +614,7 @@ function buildFather() {
   backpack.castShadow = true;
   father.add(backpack);
 
-  father.position.set(0, 0, state.playerZ);
+  father.position.set(0, FATHER_BASE_Y, state.playerZ);
   scene.add(father);
 }
 
@@ -613,18 +675,102 @@ function buildDaughter() {
   scene.add(daughter);
 }
 
+/* ════════════════════════════════════════════════
+   Enhanced NPC humanoid builder
+   ════════════════════════════════════════════════ */
 function makeHumanoid(bodyColor, h, w, headSize) {
   const g = new THREE.Group();
-  const bodyG = new THREE.CapsuleGeometry(w * 0.5, h * 0.4, 4, 8);
-  const bodyM = new THREE.Mesh(bodyG, new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.7 }));
-  bodyM.position.y = h * 0.45;
-  bodyM.castShadow = true;
-  g.add(bodyM);
-  const headG = new THREE.SphereGeometry(headSize, 8, 8);
-  const headM = new THREE.Mesh(headG, MAT.skin);
-  headM.position.y = h * 0.8;
-  headM.castShadow = true;
-  g.add(headM);
+  const scale = h / 1.7; /* normalize to ~1.7 average */
+
+  /* Random clothing colors */
+  const shirtColors = [0x555555, 0x666677, 0x776655, 0x557766, 0x886655, 0x556688, 0x778855, 0x887766, 0x993333, 0x336699, 0x669933, 0x996633];
+  const pantsColors = [0x2a2a3a, 0x333344, 0x3a3a2a, 0x222233, 0x1a1a2a, 0x2a3a2a, 0x443322];
+  const hairColors  = [0x1a1a1a, 0x3a2a1a, 0x2a1a0a, 0x5a3a2a, 0x1a0a0a, 0x4a3a2a];
+  const shoeColors  = [0x1a1a1a, 0x2a2a2a, 0x3a2a1a, 0xf0f0f0, 0x555555];
+
+  const shirtMat = new THREE.MeshStandardMaterial({ color: bodyColor || shirtColors[Math.floor(Math.random() * shirtColors.length)], roughness: 0.7 });
+  const pantsMat = new THREE.MeshStandardMaterial({ color: pantsColors[Math.floor(Math.random() * pantsColors.length)], roughness: 0.7 });
+  const hairMat  = new THREE.MeshStandardMaterial({ color: hairColors[Math.floor(Math.random() * hairColors.length)], roughness: 0.9 });
+  const shoeMat  = new THREE.MeshStandardMaterial({ color: shoeColors[Math.floor(Math.random() * shoeColors.length)], roughness: 0.8 });
+
+  /* Head */
+  const headMesh = new THREE.Mesh(new THREE.SphereGeometry(headSize, 8, 8), MAT.skin);
+  headMesh.position.y = h * 0.82;
+  headMesh.castShadow = true;
+  g.add(headMesh);
+
+  /* Hair on top */
+  const hairMesh = new THREE.Mesh(new THREE.SphereGeometry(headSize * 0.85, 6, 6), hairMat);
+  hairMesh.position.y = h * 0.82 + headSize * 0.55;
+  hairMesh.scale.set(1.1, 0.5, 1.1);
+  g.add(hairMesh);
+
+  /* Torso */
+  const torsoH = h * 0.3;
+  const torsoMesh = new THREE.Mesh(new THREE.CapsuleGeometry(w * 0.5, torsoH, 4, 8), shirtMat);
+  torsoMesh.position.y = h * 0.52;
+  torsoMesh.castShadow = true;
+  g.add(torsoMesh);
+
+  /* Left arm */
+  const armLen = h * 0.25;
+  const npcLeftArm = new THREE.Group();
+  const armLMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.04 * scale, 0.035 * scale, armLen, 6), shirtMat);
+  armLMesh.position.y = -armLen * 0.4;
+  npcLeftArm.add(armLMesh);
+  npcLeftArm.position.set(-(w * 0.5 + 0.06), h * 0.62, 0);
+  npcLeftArm.rotation.z = 0.12;
+  g.add(npcLeftArm);
+  g.userData.leftArm = npcLeftArm;
+
+  /* Right arm */
+  const npcRightArm = new THREE.Group();
+  const armRMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.04 * scale, 0.035 * scale, armLen, 6), shirtMat);
+  armRMesh.position.y = -armLen * 0.4;
+  npcRightArm.add(armRMesh);
+  npcRightArm.position.set(w * 0.5 + 0.06, h * 0.62, 0);
+  npcRightArm.rotation.z = -0.12;
+  g.add(npcRightArm);
+  g.userData.rightArm = npcRightArm;
+
+  /* Left leg */
+  const legLen = h * 0.22;
+  const npcLeftLeg = new THREE.Group();
+  const legLMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.055 * scale, 0.045 * scale, legLen, 6), pantsMat);
+  legLMesh.position.y = -legLen * 0.4;
+  npcLeftLeg.add(legLMesh);
+  const shoeLMesh = new THREE.Mesh(new THREE.BoxGeometry(0.1 * scale, 0.06 * scale, 0.16 * scale), shoeMat);
+  shoeLMesh.position.set(0, -legLen * 0.85, -0.02);
+  npcLeftLeg.add(shoeLMesh);
+  npcLeftLeg.position.set(-w * 0.22, h * 0.24, 0);
+  g.add(npcLeftLeg);
+  g.userData.leftLeg = npcLeftLeg;
+
+  /* Right leg */
+  const npcRightLeg = new THREE.Group();
+  const legRMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.055 * scale, 0.045 * scale, legLen, 6), pantsMat);
+  legRMesh.position.y = -legLen * 0.4;
+  npcRightLeg.add(legRMesh);
+  const shoeRMesh = new THREE.Mesh(new THREE.BoxGeometry(0.1 * scale, 0.06 * scale, 0.16 * scale), shoeMat);
+  shoeRMesh.position.set(0, -legLen * 0.85, -0.02);
+  npcRightLeg.add(shoeRMesh);
+  npcRightLeg.position.set(w * 0.22, h * 0.24, 0);
+  g.add(npcRightLeg);
+  g.userData.rightLeg = npcRightLeg;
+
+  /* Some NPCs carry bags/luggage (30% chance) */
+  if (Math.random() < 0.3) {
+    const bagColors = [0x8b4513, 0x2a2a2a, 0x556b2f, 0x4a3728, 0xcc6622];
+    const bagMat = new THREE.MeshStandardMaterial({ color: bagColors[Math.floor(Math.random() * bagColors.length)], roughness: 0.7 });
+    const bagW = 0.15 + Math.random() * 0.1;
+    const bagH = 0.2 + Math.random() * 0.1;
+    const bagD = 0.08 + Math.random() * 0.06;
+    const bag = new THREE.Mesh(new THREE.BoxGeometry(bagW, bagH, bagD), bagMat);
+    const side = Math.random() > 0.5 ? 1 : -1;
+    bag.position.set(side * (w * 0.5 + 0.12), h * 0.35, 0);
+    g.add(bag);
+  }
+
   return g;
 }
 
@@ -641,13 +787,107 @@ function buildCharacters() {
   for (let i = 0; i < NPC_COUNT; i++) {
     const h = 1.4 + Math.random() * 0.5;
     const c = npcColors[Math.floor(Math.random() * npcColors.length)];
-    const npc = makeHumanoid(c, h, 0.3 + Math.random() * 0.15, 0.18);
+    const npc = makeHumanoid(c, h, 0.3 + Math.random() * 0.15, 0.15 + Math.random() * 0.05);
     const z = (Math.random() - 0.5) * (PLATFORM_LEN - 40);
     const x = (Math.random() - 0.5) * (PLATFORM_W - 3);
     npc.position.set(x, 0, z);
-    npc.userData = { baseX: x, baseZ: z, wobblePhase: Math.random() * Math.PI * 2, wobbleSpeed: 0.3 + Math.random() * 0.5 };
+    npc.userData.baseX = x;
+    npc.userData.baseZ = z;
+    npc.userData.wobblePhase = Math.random() * Math.PI * 2;
+    npc.userData.wobbleSpeed = 0.3 + Math.random() * 0.5;
     scene.add(npc);
     npcs.push(npc);
+  }
+}
+
+/* ════════════════════════════════════════════════
+   行李障礙物系統
+   ════════════════════════════════════════════════ */
+const luggageItems = [];
+
+function isNearNPCOrLuggage(x, z) {
+  for (const npc of npcs) {
+    const dx = x - npc.userData.baseX;
+    const dz = z - npc.userData.baseZ;
+    if (Math.sqrt(dx * dx + dz * dz) < NPC_SAFE_DISTANCE) return true;
+  }
+  for (const lg of luggageItems) {
+    const dx = x - lg.position.x;
+    const dz = z - lg.position.z;
+    if (Math.sqrt(dx * dx + dz * dz) < 2) return true;
+  }
+  return false;
+}
+
+function spawnLuggage() {
+  const luggageColors = [0x8b4513, 0x2a2a2a, 0x666666, 0x1a2a4a, 0x4a3728, 0x3a3a3a];
+  const zStart = PLATFORM_LEN / 2 - 25;
+  const zEnd = DAUGHTER_Z + 15;
+
+  for (let i = 0; i < LUGGAGE_COUNT; i++) {
+    const segLen = (zStart - zEnd) / LUGGAGE_COUNT;
+    const zMin = zStart - (i + 1) * segLen;
+    const zMax = zStart - i * segLen;
+
+    let px, pz, found = false;
+    for (let attempt = 0; attempt < 30; attempt++) {
+      px = (Math.random() - 0.5) * (PLATFORM_W - 4);
+      pz = zMin + Math.random() * (zMax - zMin);
+      if (!isNearNPCOrLuggage(px, pz)) { found = true; break; }
+    }
+    if (!found) {
+      px = (Math.random() - 0.5) * 3;
+      pz = zMin + Math.random() * (zMax - zMin);
+    }
+
+    const w = 0.5 + Math.random() * 0.2;
+    const h = 0.3 + Math.random() * 0.1;
+    const d = 0.35 + Math.random() * 0.1;
+    const color = luggageColors[Math.floor(Math.random() * luggageColors.length)];
+    const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.8 });
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    mesh.position.set(px, h / 2, pz);
+    mesh.rotation.y = Math.random() * Math.PI;
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    /* Add a handle/strap on top */
+    const handleMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.5 });
+    const handle = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.04, 0.04), handleMat);
+    handle.position.y = h / 2 + 0.02;
+    mesh.add(handle);
+
+    scene.add(mesh);
+    luggageItems.push(mesh);
+  }
+}
+
+function resetLuggage() {
+  for (const lg of luggageItems) {
+    scene.remove(lg);
+    lg.traverse(child => {
+      if (child.geometry) child.geometry.dispose();
+      if (child.material && child.material.dispose) child.material.dispose();
+    });
+  }
+  luggageItems.length = 0;
+  spawnLuggage();
+}
+
+function checkLuggageCollisions() {
+  if (state.luggageSlowTimer > 0) return;
+  for (const lg of luggageItems) {
+    const dx = father.position.x - lg.position.x;
+    const dz = father.position.z - lg.position.z;
+    const dist = Math.sqrt(dx * dx + dz * dz);
+    if (dist < LUGGAGE_COLLISION_RADIUS) {
+      /* If jumping high enough, clear the luggage */
+      if (state.jumpY > LUGGAGE_CLEAR_HEIGHT) continue;
+      /* Hit luggage: slow + camera shake */
+      state.luggageSlowTimer = 0.5;
+      state.cameraShake = 4;
+      playCollisionBump();
+      showPickupNotify("\u884C\u674E\u7D46\u5012\uFF01\u6E1B\u901F\u4E2D...");
+    }
   }
 }
 
@@ -811,6 +1051,7 @@ function updatePowerups(dt) {
   if (state.coffeeTimer > 0) state.coffeeTimer = Math.max(0, state.coffeeTimer - dt);
   if (state.collisionSlowTimer > 0) state.collisionSlowTimer = Math.max(0, state.collisionSlowTimer - dt);
   if (state.ultimateTimer > 0) state.ultimateTimer = Math.max(0, state.ultimateTimer - dt);
+  if (state.luggageSlowTimer > 0) state.luggageSlowTimer = Math.max(0, state.luggageSlowTimer - dt);
 
   /* Update pickup notification */
   if (state.pickupNotifyTimer > 0) {
@@ -1034,16 +1275,147 @@ function playCollisionBump() {
 }
 
 /* ════════════════════════════════════════════════
+   環境音效系統（車站氛圍）
+   ════════════════════════════════════════════════ */
+const ambientNodes = [];
+let ambientRunning = false;
+let nextPAChime = 0;
+
+function startAmbientSounds() {
+  if (!audioCtx || ambientRunning) return;
+  ambientRunning = true;
+
+  /* 1) Crowd murmur: filtered white noise at very low volume */
+  const crowdBufLen = audioCtx.sampleRate * 4;
+  const crowdBuf = audioCtx.createBuffer(1, crowdBufLen, audioCtx.sampleRate);
+  const crowdData = crowdBuf.getChannelData(0);
+  for (let i = 0; i < crowdBufLen; i++) crowdData[i] = (Math.random() * 2 - 1);
+  const crowdSrc = audioCtx.createBufferSource();
+  crowdSrc.buffer = crowdBuf;
+  crowdSrc.loop = true;
+  const crowdFilter = audioCtx.createBiquadFilter();
+  crowdFilter.type = "lowpass";
+  crowdFilter.frequency.value = 400;
+  const crowdFilter2 = audioCtx.createBiquadFilter();
+  crowdFilter2.type = "highpass";
+  crowdFilter2.frequency.value = 80;
+  const crowdGain = audioCtx.createGain();
+  crowdGain.gain.value = 0.04;
+  crowdSrc.connect(crowdFilter);
+  crowdFilter.connect(crowdFilter2);
+  crowdFilter2.connect(crowdGain);
+  crowdGain.connect(audioCtx.destination);
+  crowdSrc.start();
+  ambientNodes.push(crowdSrc, crowdFilter, crowdFilter2, crowdGain);
+
+  /* 2) Platform hum: low-frequency continuous tone (~100Hz) */
+  const humOsc = audioCtx.createOscillator();
+  humOsc.type = "sine";
+  humOsc.frequency.value = 100;
+  const humGain = audioCtx.createGain();
+  humGain.gain.value = 0.015;
+  humOsc.connect(humGain);
+  humGain.connect(audioCtx.destination);
+  humOsc.start();
+  ambientNodes.push(humOsc, humGain);
+
+  /* 3) PA announcement timer */
+  nextPAChime = audioCtx.currentTime + 12 + Math.random() * 5;
+}
+
+function playPAChime() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  /* Ding */
+  const ding = audioCtx.createOscillator();
+  ding.type = "sine";
+  ding.frequency.value = 880;
+  const dingGain = audioCtx.createGain();
+  dingGain.gain.setValueAtTime(0.06, now);
+  dingGain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+  ding.connect(dingGain);
+  dingGain.connect(audioCtx.destination);
+  ding.start(now);
+  ding.stop(now + 0.9);
+  /* Dong */
+  const dong = audioCtx.createOscillator();
+  dong.type = "sine";
+  dong.frequency.value = 660;
+  const dongGain = audioCtx.createGain();
+  dongGain.gain.setValueAtTime(0.06, now + 0.5);
+  dongGain.gain.exponentialRampToValueAtTime(0.001, now + 1.3);
+  dong.connect(dongGain);
+  dongGain.connect(audioCtx.destination);
+  dong.start(now + 0.5);
+  dong.stop(now + 1.4);
+}
+
+function playTrainScreech() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  /* Metallic screech using sawtooth with bandpass */
+  const noiseBuf = audioCtx.createBuffer(1, audioCtx.sampleRate * 1.5, audioCtx.sampleRate);
+  const noiseData = noiseBuf.getChannelData(0);
+  for (let i = 0; i < noiseData.length; i++) noiseData[i] = (Math.random() * 2 - 1);
+  const noiseSrc = audioCtx.createBufferSource();
+  noiseSrc.buffer = noiseBuf;
+  const bandpass = audioCtx.createBiquadFilter();
+  bandpass.type = "bandpass";
+  bandpass.frequency.value = 3000;
+  bandpass.Q.value = 5;
+  const screechGain = audioCtx.createGain();
+  screechGain.gain.setValueAtTime(0.06, now);
+  screechGain.gain.linearRampToValueAtTime(0.1, now + 0.3);
+  screechGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+  noiseSrc.connect(bandpass);
+  bandpass.connect(screechGain);
+  screechGain.connect(audioCtx.destination);
+  noiseSrc.start(now);
+}
+
+function updateAmbientSounds() {
+  if (!ambientRunning || !audioCtx) return;
+  /* Periodic PA chime */
+  if (audioCtx.currentTime >= nextPAChime) {
+    playPAChime();
+    nextPAChime = audioCtx.currentTime + 13 + Math.random() * 5;
+  }
+}
+
+function stopAmbientSounds() {
+  ambientRunning = false;
+  for (const node of ambientNodes) {
+    try {
+      if (node.stop) node.stop();
+      if (node.disconnect) node.disconnect();
+    } catch (e) { /* ignore */ }
+  }
+  ambientNodes.length = 0;
+}
+
+/* ════════════════════════════════════════════════
    輸入系統
    ════════════════════════════════════════════════ */
 const keys = {};
 let isMobile = false;
 let touchJoyX = 0, touchJoyY = 0;
 let touchSprinting = false;
+let touchJumping = false;
+
+function triggerJump() {
+  if (!state.isJumping && (state.phase === "running" || state.phase === "sprint2")) {
+    state.isJumping = true;
+    state.jumpVel = JUMP_VELOCITY;
+  }
+}
 
 window.addEventListener("keydown", e => {
   keys[e.code] = true;
   if (e.code === "KeyE") activateUltimate();
+  if (e.code === "Space") {
+    e.preventDefault();
+    triggerJump();
+  }
 });
 window.addEventListener("keyup", e => { keys[e.code] = false; });
 
@@ -1052,10 +1424,11 @@ function detectMobile() {
   if (isMobile) {
     dom.touchCtrl.style.display = "block";
     dom.sprintBtn.style.display = "block";
+    dom.jumpBtn.style.display = "block";
     dom.ultimateBtn.style.display = "block";
-    dom.breathHint.textContent = "\u5DE6\u624B\u6416\u687F\u79FB\u52D5 \u00B7 \u53F3\u624B\u885D\u523A \u00B7 \u5FC5\u6BBA\u6280[E]";
+    dom.breathHint.textContent = "\u5DE6\u624B\u6416\u687F\u79FB\u52D5 \u00B7 \u53F3\u624B\u885D\u523A \u00B7 \u8DF3\u8E8D \u00B7 \u5FC5\u6BBA\u6280[E]";
   } else {
-    dom.breathHint.textContent = "WASD \u79FB\u52D5 \u00B7 Shift \u885D\u523A \u00B7 E \u5FC5\u6BBA\u6280";
+    dom.breathHint.textContent = "WASD \u79FB\u52D5 \u00B7 Shift \u885D\u523A \u00B7 Space \u8DF3\u8E8D \u00B7 E \u5FC5\u6BBA\u6280";
   }
 }
 
@@ -1087,6 +1460,8 @@ dom.joystickArea.addEventListener("touchcancel", endJoy);
 dom.sprintBtn.addEventListener("touchstart", e => { e.preventDefault(); touchSprinting = true; }, { passive: false });
 dom.sprintBtn.addEventListener("touchend",   () => { touchSprinting = false; });
 dom.sprintBtn.addEventListener("touchcancel", () => { touchSprinting = false; });
+
+dom.jumpBtn.addEventListener("touchstart", e => { e.preventDefault(); triggerJump(); }, { passive: false });
 
 dom.ultimateBtn.addEventListener("touchstart", e => { e.preventDefault(); activateUltimate(); }, { passive: false });
 
@@ -1141,9 +1516,12 @@ function checkCollisions() {
 /* ════════════════════════════════════════════════
    開場動畫
    ════════════════════════════════════════════════ */
+let introScreechPlayed = false;
+
 function startIntro() {
   state.phase = "intro";
   state.introTimer = 0;
+  introScreechPlayed = false;
   document.body.classList.add("letterbox-on");
   state.trainSouthZ = PLATFORM_LEN * 0.8;
   state.trainNorthZ = -PLATFORM_LEN * 0.8;
@@ -1168,6 +1546,11 @@ function updateIntro(dt) {
 
   if (!state.trainSouthArrived) {
     state.trainSouthZ -= dt * 25;
+    /* Play train screech when approaching */
+    if (!introScreechPlayed && state.trainSouthZ < PLATFORM_LEN * 0.4) {
+      introScreechPlayed = true;
+      playTrainScreech();
+    }
     if (state.trainSouthZ <= 0) {
       state.trainSouthZ = 0;
       state.trainSouthArrived = true;
@@ -1216,6 +1599,7 @@ function updateIntro(dt) {
     document.body.classList.remove("letterbox-on");
     showNarrative("\u8DD1\uFF01", 1.5);
     if (audioCtx) playDoorChime();
+    startAmbientSounds();
   }
 }
 
@@ -1267,6 +1651,28 @@ function updateBuffIndicators() {
     el.textContent = "\u6E1B\u901F\u4E2D " + state.collisionSlowTimer.toFixed(1) + "s";
     dom.buffIndicators.appendChild(el);
   }
+  if (state.luggageSlowTimer > 0) {
+    const el = document.createElement("div");
+    el.className = "buff-item";
+    el.style.color = "#e74c3c";
+    el.textContent = "\u884C\u674E\u7D46\u5012 " + state.luggageSlowTimer.toFixed(1) + "s";
+    dom.buffIndicators.appendChild(el);
+  }
+}
+
+/* ════════════════════════════════════════════════
+   跳躍物理更新
+   ════════════════════════════════════════════════ */
+function updateJump(dt) {
+  if (state.isJumping) {
+    state.jumpVel += JUMP_GRAVITY * dt;
+    state.jumpY += state.jumpVel * dt;
+    if (state.jumpY <= 0) {
+      state.jumpY = 0;
+      state.jumpVel = 0;
+      state.isJumping = false;
+    }
+  }
 }
 
 /* ════════════════════════════════════════════════
@@ -1297,6 +1703,7 @@ function updateGame(dt) {
   if (state.riceBallTimer > 0) drainMult *= 0.5;
   if (state.ultimateTimer > 0) { speedMult *= 2; drainMult *= 0.5; }
   if (state.collisionSlowTimer > 0) speedMult *= 0.5;
+  if (state.luggageSlowTimer > 0) speedMult *= 0.3;
 
   if (state.sprinting && state.sprint > 0) {
     state.sprint = Math.max(0, state.sprint - SPRINT_DRAIN * drainMult * dt);
@@ -1331,6 +1738,10 @@ function updateGame(dt) {
   }
 
   checkCollisions();
+  checkLuggageCollisions();
+
+  /* Update jump physics */
+  updateJump(dt);
 
   state.timeLeft -= dt;
 
@@ -1339,21 +1750,31 @@ function updateGame(dt) {
   playHeartbeat();
 
   footstepTimer -= dt;
-  if (footstepTimer <= 0) {
+  if (footstepTimer <= 0 && !state.isJumping) {
     playFootstep();
     footstepTimer = state.sprinting ? 0.25 : 0.35;
   }
 
+  /* Father position: grounded base + bob + jump */
   const bobFreq = state.sprinting ? 12 : 8;
-  father.position.y = Math.abs(Math.sin(state.clock * bobFreq)) * 0.08;
-  father.rotation.z = Math.sin(state.clock * bobFreq * 0.5) * 0.05;
+  const bobAmt = state.isJumping ? 0 : (Math.abs(Math.sin(state.clock * bobFreq)) * 0.035);
+  father.position.y = FATHER_BASE_Y + bobAmt + state.jumpY;
+  father.rotation.z = state.isJumping ? 0 : (Math.sin(state.clock * bobFreq * 0.5) * 0.05);
 
   /* Leg animation */
-  const legSwing = Math.sin(state.clock * bobFreq) * 0.5;
-  fatherLeftLeg.rotation.x = legSwing;
-  fatherRightLeg.rotation.x = -legSwing;
-  fatherLeftArm.rotation.x = -legSwing * 0.7;
-  fatherRightArm.rotation.x = legSwing * 0.7;
+  if (state.isJumping) {
+    /* Tucked pose during jump */
+    fatherLeftLeg.rotation.x = 0.3;
+    fatherRightLeg.rotation.x = 0.3;
+    fatherLeftArm.rotation.x = -0.2;
+    fatherRightArm.rotation.x = -0.2;
+  } else {
+    const legSwing = Math.sin(state.clock * bobFreq) * 0.5;
+    fatherLeftLeg.rotation.x = legSwing;
+    fatherRightLeg.rotation.x = -legSwing;
+    fatherLeftArm.rotation.x = -legSwing * 0.7;
+    fatherRightArm.rotation.x = legSwing * 0.7;
+  }
 
   /* Father glow during ultimate */
   if (fatherGlowLight && state.ultimateTimer > 0) {
@@ -1390,6 +1811,7 @@ function updateGame(dt) {
   updatePowerups(dt);
   updateBuffIndicators();
   updateDoorMarker();
+  updateAmbientSounds();
 
   if (!state.gotDaughter && Math.abs(father.position.z - DAUGHTER_Z) < 2.5) {
     state.gotDaughter = true;
@@ -1459,10 +1881,12 @@ function victory() {
   if (isMobile) {
     dom.touchCtrl.style.display = "none";
     dom.sprintBtn.style.display = "none";
+    dom.jumpBtn.style.display = "none";
     dom.ultimateBtn.style.display = "none";
   }
   playSuccess();
   showNarrative("\u300C\u6211\u8D95\u4E0A\u4E86\u3002\u300D", 4);
+  stopAmbientSounds();
 
   /* Fade BGM */
   fadeBGM(3);
@@ -1502,9 +1926,11 @@ function failure() {
   if (isMobile) {
     dom.touchCtrl.style.display = "none";
     dom.sprintBtn.style.display = "none";
+    dom.jumpBtn.style.display = "none";
     dom.ultimateBtn.style.display = "none";
   }
   showNarrative("\u8ECA\u9580\u95DC\u4E0A\u4E86\u2026\u2026", 4);
+  stopAmbientSounds();
 
   /* Stop BGM */
   bgm.pause();
@@ -1582,13 +2008,20 @@ function updateCamera(dt) {
 }
 
 /* ════════════════════════════════════════════════
-   NPC 微動
+   NPC 微動 + idle animation
    ════════════════════════════════════════════════ */
 function updateNPCs(dt) {
   for (const npc of npcs) {
     const d = npc.userData;
     d.wobblePhase += d.wobbleSpeed * dt;
     npc.position.x = d.baseX + Math.sin(d.wobblePhase) * 0.15;
+
+    /* Idle leg/arm sway */
+    const sway = Math.sin(d.wobblePhase * 1.5) * 0.08;
+    if (d.leftLeg) d.leftLeg.rotation.x = sway;
+    if (d.rightLeg) d.rightLeg.rotation.x = -sway;
+    if (d.leftArm) d.leftArm.rotation.x = -sway * 0.5;
+    if (d.rightArm) d.rightArm.rotation.x = sway * 0.5;
   }
 }
 
@@ -1608,6 +2041,7 @@ const gameClock = new THREE.Clock();
 
 function animate() {
   requestAnimationFrame(animate);
+  {
   const dt = Math.min(gameClock.getDelta(), 0.05);
   state.clock += dt;
 
@@ -1649,6 +2083,7 @@ function animate() {
 
   updateNarrative(dt);
   renderer.render(scene, camera);
+  }
 }
 
 /* ════════════════════════════════════════════════
@@ -1659,6 +2094,7 @@ function init() {
   setupTrains();
   buildCharacters();
   spawnPowerups();
+  spawnLuggage();
   createDoorMarker();
   detectMobile();
   animate();
@@ -1693,12 +2129,23 @@ function resetGame() {
   state.pickupNotifyTimer = 0;
   sprint2HintShown = false;
 
+  /* Jump state reset */
+  state.jumpY = 0;
+  state.jumpVel = 0;
+  state.isJumping = false;
+
+  /* Luggage state reset */
+  state.luggageSlowTimer = 0;
+
   /* Audio reset */
   nextBeat = 0;
   bgm.pause();
   bgm.currentTime = 0;
   bgm.volume = 0.3;
   bgmFading = false;
+
+  /* Stop ambient sounds */
+  stopAmbientSounds();
 
   /* Father glow cleanup */
   if (fatherGlowLight && fatherGlowLight.parent) {
@@ -1707,7 +2154,7 @@ function resetGame() {
   }
 
   /* Position resets */
-  father.position.set(0, 0, state.playerZ);
+  father.position.set(0, FATHER_BASE_Y, state.playerZ);
   father.rotation.set(0, 0, 0);
 
   /* Restore daughter */
@@ -1728,8 +2175,9 @@ function resetGame() {
     npc.userData.wobblePhase = Math.random() * Math.PI * 2;
   }
 
-  /* Recreate power-ups */
+  /* Recreate power-ups and luggage */
   resetPowerups();
+  resetLuggage();
 
   /* Door marker */
   if (doorMarker) doorMarker.visible = false;
@@ -1739,6 +2187,7 @@ function resetGame() {
   touchJoyX = 0;
   touchJoyY = 0;
   touchSprinting = false;
+  touchJumping = false;
   dom.joystickKnob.style.transform = "translate(-50%,-50%)";
 
   /* DOM resets */
@@ -1772,6 +2221,7 @@ function resetGame() {
   }
 
   footstepTimer = 0;
+  introScreechPlayed = false;
 }
 
 dom.title.addEventListener("click", () => {
