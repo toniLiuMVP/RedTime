@@ -95,7 +95,7 @@ export const stairsWarp = {
   returnPoint: { x: -548, y: 0, z: 1978 },
   subtitle: {
     source: "女兒",
-    text: "下樓後也會回到四樓耶",
+    text: "不管上樓還是下樓，都會回到四樓耶",
     ttl: 4.6,
   },
   front: {
