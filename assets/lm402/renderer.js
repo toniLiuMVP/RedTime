@@ -3785,7 +3785,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     void 0);
   const Ct = t.leftWallWindows.map((e) => Ge(e, "left")),
     Bt = t.rightWallWindows.map((e) => Ge(e, "right")),
-    kt = gt.map((e) => ({ z1: e.z1 - 0.5, z2: e.z2 + 0.5, y1: 0, y2: ie }));
+    kt = gt.map((e) => ({ z1: e.z1 - 0.15, z2: e.z2 + 0.15, y1: 0, y2: ie }));
   Ce({
     x: te,
     zStart: Mt,

@@ -667,6 +667,8 @@ function createAudioSystem() {
   let promptReady = false;
   let currentSongId = null;
   let unlockedSongs = loadUnlockedSongs();
+  /* 若玩家曾解鎖一眼瞬間，下次遊戲預設播放該曲 */
+  if (unlockedSongs.includes("one_gaze_song")) currentSongId = "one_gaze_song";
 
   function songUrl(file) {
     return new URL("../../" + file, import.meta.url).href;
@@ -2616,9 +2618,9 @@ function updateEndingSequence(dt) {
     }
     if (!state.flags.perfectLine2Played && state.endingSequence.time >= 8) {
       state.flags.perfectLine2Played = true;
-      showCenteredSubtitle("女兒", "阿姨好像忍住沒有抱把拔，我的手又跑出來了，好像在變魔術喔。", 8.0, "centered");
+      showCenteredSubtitle("女兒", "阿姨好像忍住沒有抱把拔，我的手又跑出來了，好像在變魔術喔。", 5.0, "centered");
     }
-    if (state.endingSequence.time > 16 && dom.endingOverlay.hidden) {
+    if (state.endingSequence.time > 13 && dom.endingOverlay.hidden) {
       hideCenteredSubtitle();
       finishEndingSequence();
     }
@@ -3216,6 +3218,10 @@ function bindUI() {
       if (!sel.hidden) audioSystem.syncSongUI();
     }
   });
+  /* 音樂選單預設展開：讓玩家一開始就看到兩首歌 */
+  { const selInit = document.getElementById("song-selector");
+    if (selInit) { selInit.hidden = false; audioSystem.syncSongUI(); }
+  }
   dom.musicPromptButton.addEventListener("click", () => {
     if (!state.audioEnabled) {
       audioSystem.setEnabled(true);
