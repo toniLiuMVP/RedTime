@@ -348,10 +348,6 @@ body[data-ui-preset="ending"] #scene-canvas {
   height: 8px;
 }
 .pointer-pill,
-.speed-widget,
-.audio-widget,
-.font-widget,
-.quality-widget,
 .objective-prompt,
 .hint-pill,
 .focus-prompt,
@@ -360,6 +356,13 @@ body[data-ui-preset="ending"] #scene-canvas {
   z-index: 12;
   -webkit-backdrop-filter: blur(18px);
   backdrop-filter: blur(18px);
+}
+.speed-widget,
+.audio-widget,
+.font-widget,
+.quality-widget {
+  position: absolute;
+  z-index: 12;
 }
 .pointer-pill {
   top: 18px;
@@ -590,9 +593,9 @@ body[data-ui-preset="ending"] #scene-canvas {
   min-height: 42px;
   padding: 10px 14px;
   border-radius: 999px;
-  border: 1px solid var(--line);
-  background: #070a10c7;
-  box-shadow: 0 16px 34px #00000038;
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 .speed-toggle-label,
 .speed-panel-kicker,
@@ -694,8 +697,8 @@ body[data-ui-preset="ending"] #scene-canvas {
   min-height: 40px;
   padding: 10px 14px;
   border-radius: 999px;
-  border: 1px solid var(--line);
-  background: #070a10c7;
+  border: none;
+  background: transparent;
 }
 .font-toggle-label {
   font:

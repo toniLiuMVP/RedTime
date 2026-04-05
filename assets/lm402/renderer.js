@@ -3704,27 +3704,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     };
     (b(m, w, 1), b(m, M, -1));
     const _floorThick = 0.12, _ceilH = ie, _hallW = oe + ne + 0.2, _hallCX = (Q + te) / 2;
-
-    /* ── 真實 5F 樓層（在 4F 天花板之上） ── */
-    const _5fY = _ceilH;
-    const _5fFloor = new e.Mesh(new e.BoxGeometry(_hallW, _floorThick, se * 0.7), nt);
-    _5fFloor.position.set(_hallCX, _5fY + _floorThick / 2, re);
-    (_5fFloor.receiveShadow = !0), j.add(_5fFloor);
-    const _5fCeil = new e.Mesh(new e.BoxGeometry(_hallW, _floorThick, se * 0.7), nt);
-    _5fCeil.position.set(_hallCX, _5fY + _ceilH, re);
-    (_5fCeil.receiveShadow = !0), j.add(_5fCeil);
-    const _5fWallBack = new e.Mesh(new e.BoxGeometry(_hallW, _ceilH - _floorThick, 0.08), Oe);
-    _5fWallBack.position.set(_hallCX, _5fY + _ceilH / 2, re - se * 0.35);
-    (_5fWallBack.castShadow = !0), j.add(_5fWallBack);
-    const _5fWallFront = new e.Mesh(new e.BoxGeometry(_hallW, _ceilH - _floorThick, 0.08), Oe);
-    _5fWallFront.position.set(_hallCX, _5fY + _ceilH / 2, re + se * 0.35);
-    (_5fWallFront.castShadow = !0), j.add(_5fWallFront);
-    const _5fWallL = new e.Mesh(new e.BoxGeometry(0.08, _ceilH - _floorThick, se * 0.7), Oe);
-    _5fWallL.position.set(_hallCX - _hallW / 2, _5fY + _ceilH / 2, re);
-    j.add(_5fWallL);
-    const _5fWallR = new e.Mesh(new e.BoxGeometry(0.08, _ceilH - _floorThick, se * 0.7), Oe);
-    _5fWallR.position.set(_hallCX + _hallW / 2, _5fY + _ceilH / 2, re);
-    j.add(_5fWallR);
+    /* 5F 不建模（畫面美觀優先），上樓仍由蟲洞送回 4F */
 
     /* ── 真實 3F 樓層（在 4F 地板之下） ── */
     const _3fY = -_ceilH;
@@ -3747,11 +3727,6 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     _3fWallR.position.set(_hallCX + _hallW / 2, _3fY - _ceilH / 2, re);
     j.add(_3fWallR);
 
-    /* ── 5F 光源 ── */
-    const _5fLight = new e.PointLight("#fff4e0", 0.4, 8);
-    _5fLight.position.set(_hallCX, _5fY + _ceilH - 0.3, re);
-    j.add(_5fLight);
-
     /* ── 3F 光源 ── */
     const _3fLight = new e.PointLight("#e8eeff", 0.4, 8);
     _3fLight.position.set(_hallCX, _3fY - 0.3, re);
@@ -3759,7 +3734,6 @@ export function createLm402Scene(D, runtimeOptions = {}) {
 
     /* ── 樓層標示 ── */
     [
-      { text: "5F", y: _5fY + 1.5, z: re },
       { text: "3F", y: _3fY - _ceilH + 1.5, z: re },
     ].forEach((a) => {
       const n = T(a.text, 0.5, 0.2, { bg: "#5c6672", fg: "#f7f0de" });
