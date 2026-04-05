@@ -1117,7 +1117,7 @@ function persistAudioSetting() {
 
 function syncAudioUI() {
   dom.audioToggle.setAttribute("aria-pressed", String(state.audioEnabled));
-  dom.audioToggleValue.textContent = state.audioEnabled ? "關閉音樂" : "開啟音樂";
+  /* 按鈕文字由列表開關狀態決定，不在此處覆寫 */
   audioSystem.syncPrompt();
 }
 
@@ -3209,13 +3209,12 @@ function bindUI() {
     setLookSensitivity({ preset: null, scalar: Number(dom.speedRange.value) / 100 });
   });
   dom.audioToggle.addEventListener("click", () => {
-    audioSystem.setEnabled(!state.audioEnabled);
-    /* 切換歌曲選擇面板 */
+    /* 僅切換歌曲選擇面板（不影響音樂播放狀態） */
     const sel = document.getElementById("song-selector");
     if (sel) {
-      const nowHidden = sel.hidden;
-      sel.hidden = !nowHidden;
+      sel.hidden = !sel.hidden;
       if (!sel.hidden) audioSystem.syncSongUI();
+      dom.audioToggleValue.textContent = sel.hidden ? "開啟音樂" : "關閉音樂";
     }
   });
   /* 音樂選單預設收合：玩家點擊「開啟音樂」後展開 */

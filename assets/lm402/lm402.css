@@ -1758,20 +1758,20 @@ body.landscape-prompt .debug-panel {
   .crosshair {
     display: none;
   }
-  .speed-widget {
+  .font-widget {
     top: max(8px, env(safe-area-inset-top));
     left: max(8px, env(safe-area-inset-left));
     z-index: 20;
   }
-  .font-widget {
+  .speed-widget {
     top: max(8px, env(safe-area-inset-top));
-    left: calc(max(8px, env(safe-area-inset-left)) + 128px);
+    left: calc(max(8px, env(safe-area-inset-left)) + 55px);
     z-index: 20;
   }
   .quality-widget {
     top: max(8px, env(safe-area-inset-top));
     left: auto;
-    right: calc(max(8px, env(safe-area-inset-right)) + 100px);
+    right: calc(max(8px, env(safe-area-inset-right)) + 210px);
     z-index: 20;
   }
   .audio-widget {
@@ -2192,7 +2192,7 @@ body.landscape-prompt .debug-panel {
   .quality-widget {
     top: max(8px, env(safe-area-inset-top));
     left: auto;
-    right: calc(max(8px, env(safe-area-inset-right)) + 100px);
+    right: calc(max(8px, env(safe-area-inset-right)) + 210px);
     z-index: 20;
   }
 }
@@ -2267,18 +2267,18 @@ body.landscape-prompt .debug-panel {
         var(--bottom-gap)
     );
   }
-  .speed-widget {
+  .font-widget {
     top: max(8px, env(safe-area-inset-top));
     left: max(8px, env(safe-area-inset-left));
   }
-  .font-widget {
+  .speed-widget {
     top: max(8px, env(safe-area-inset-top));
-    left: calc(max(8px, env(safe-area-inset-left)) + 112px);
+    left: calc(max(8px, env(safe-area-inset-left)) + 55px);
   }
   .quality-widget {
     top: max(8px, env(safe-area-inset-top));
     left: auto;
-    right: calc(max(8px, env(safe-area-inset-right)) + 100px);
+    right: calc(max(8px, env(safe-area-inset-right)) + 210px);
   }
   .audio-widget {
     top: max(8px, env(safe-area-inset-top));
