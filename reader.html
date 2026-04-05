@@ -6495,6 +6495,13 @@
       buildTraversePanel(0);
       syncMobileNav();
 
+      /* 快取 MediaQueryList 避免 scroll 事件中重複建立 */
+      const _mqMobile = window.matchMedia("(max-width:767px)");
+      const _mqDesktop = window.matchMedia("(min-width:768px)");
+      /* 快取上一個 current 元素，避免每次 querySelectorAll 全掃描 */
+      let _prevJumpBtn = null;
+      let _prevSidebarItem = null;
+
       function syncProgressBar() {
         const bar = document.getElementById("prog-bar");
         if (!bar) return;
@@ -6518,9 +6525,6 @@
       window.addEventListener("resize", syncProgressBar, { passive: true });
       syncProgressBar();
 
-      /* 快取 MediaQueryList 避免 scroll 事件中重複建立 */
-      const _mqMobile = window.matchMedia("(max-width:767px)");
-      const _mqDesktop = window.matchMedia("(min-width:768px)");
       function syncMobileChrome() {
         if (!_mqMobile.matches) {
           document.body.classList.remove("at-hero");
@@ -6538,15 +6542,12 @@
       window.addEventListener("resize", syncMobileChrome);
       syncMobileChrome();
 
-      /* 快取上一個 current 元素，避免每次 querySelectorAll 全掃描 */
-      let _prevJumpBtn = null;
       function markJumpCurrent() {
         if (_prevJumpBtn) _prevJumpBtn.classList.remove("current");
         const c = document.getElementById("jp-btn-" + currentEpNum);
         if (c) c.classList.add("current");
         _prevJumpBtn = c;
       }
-      let _prevSidebarItem = null;
       function markSidebarCurrent() {
         if (_prevSidebarItem) _prevSidebarItem.classList.remove("current");
         const c = document.getElementById("sb-item-" + currentEpNum);
@@ -6687,7 +6688,8 @@
         buildTraversePanel(maxEpReached);
         if (!isMobile()) {
           document.getElementById("info-panel").classList.add("open");
-          document.getElementById("btn-collapse").classList.add("active");
+          const bc = document.getElementById("btn-collapse");
+          if (bc) bc.classList.add("active");
         } else {
           document.getElementById("info-overlay").classList.add("open");
           document.getElementById("info-panel").classList.add("open");
