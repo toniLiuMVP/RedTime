@@ -809,8 +809,16 @@ function createAudioSystem() {
       row.appendChild(nameSpan);
       if (isUnlocked) {
         row.addEventListener("click", () => {
-          switchSong(song.id);
-          if (state.audioEnabled) void tryPlay("select");
+          if (isCurrent && state.audioEnabled) {
+            /* 點擊正在播放的歌曲 → 停止音樂 */
+            setEnabled(false);
+            syncSongUI();
+          } else {
+            /* 點擊其他歌曲 → 切換並播放 */
+            if (!state.audioEnabled) setEnabled(true);
+            switchSong(song.id);
+            void tryPlay("select");
+          }
         });
       }
       panel.appendChild(row);
@@ -3209,8 +3217,7 @@ function bindUI() {
     setLookSensitivity({ preset: null, scalar: Number(dom.speedRange.value) / 100 });
   });
   dom.audioToggle.addEventListener("click", () => {
-    /* 切換音樂播放 + 歌曲選擇面板 */
-    audioSystem.setEnabled(!state.audioEnabled);
+    /* 按鈕僅切換歌曲列表顯示/隱藏（音樂開關由歌曲列表內控制） */
     const sel = document.getElementById("song-selector");
     if (sel) {
       sel.hidden = !sel.hidden;
