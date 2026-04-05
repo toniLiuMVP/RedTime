@@ -224,15 +224,17 @@ const FONT_SCALE_LABELS = { small: "小", standard: "標準", large: "大", xlar
 
 /* ── Graphics Quality System ── */
 const QUALITY_TIERS = {
-  smooth: { shadowMapSize: 512,  maxPixelRatio: 1.0, dustCount: 32,  mirrorOpacity: 0.08, portraitBoost: 1 },
-  high:   { shadowMapSize: 1024, maxPixelRatio: 1.5, dustCount: 64,  mirrorOpacity: 0.10, portraitBoost: 1 },
-  ultra:  { shadowMapSize: 2048, maxPixelRatio: 4.0, dustCount: 128, mirrorOpacity: 0.14, portraitBoost: 1 },
+  low:     { shadowMapSize: 256,  maxPixelRatio: 0.75, dustCount: 16,  mirrorOpacity: 0.04, portraitBoost: 1 },
+  smooth:  { shadowMapSize: 512,  maxPixelRatio: 1.0,  dustCount: 32,  mirrorOpacity: 0.08, portraitBoost: 1 },
+  high:    { shadowMapSize: 1024, maxPixelRatio: 1.5,  dustCount: 64,  mirrorOpacity: 0.10, portraitBoost: 1 },
+  ultra:   { shadowMapSize: 2048, maxPixelRatio: 4.0,  dustCount: 128, mirrorOpacity: 0.14, portraitBoost: 1 },
+  perfect: { shadowMapSize: 4096, maxPixelRatio: 8.0,  dustCount: 256, mirrorOpacity: 0.18, portraitBoost: 1.5 },
 };
-const QUALITY_ORDER = ["smooth", "high", "ultra"];
-const QUALITY_LABELS = { smooth: "順暢", high: "高級", ultra: "全開最高" };
+const QUALITY_ORDER = ["low", "smooth", "high", "ultra", "perfect"];
+const QUALITY_LABELS = { low: "低", smooth: "順暢", high: "高級", ultra: "全開最高", perfect: "完美畫質" };
 function getDefaultQuality() {
   const isMobile = window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  return isMobile ? "high" : "ultra";
+  return isMobile ? "smooth" : "ultra";
 }
 function loadQualitySetting() {
   try { const v = localStorage.getItem(STORAGE_KEYS.graphicsQuality); return QUALITY_TIERS[v] ? v : getDefaultQuality(); } catch { return getDefaultQuality(); }

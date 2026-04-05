@@ -48,10 +48,10 @@ export const WORLD = {
     { z: 2e3, y1: 84, y2: 256, width: 236 },
   ],
   leftWallWindows: [
-    { z: 882, y1: 92, y2: 246, width: 148 },
-    { z: 1242, y1: 92, y2: 250, width: 246 },
-    { z: 1602, y1: 92, y2: 250, width: 246 },
-    { z: 1962, y1: 92, y2: 246, width: 224 },
+    { z: 882, y1: 92, y2: 238, width: 148 },
+    { z: 1242, y1: 92, y2: 238, width: 246 },
+    { z: 1602, y1: 92, y2: 238, width: 246 },
+    { z: 1962, y1: 92, y2: 238, width: 224 },
   ],
   lightBeams: [
     { side: "right", z: 920, width: 236, reach: 1020, alpha: 0.36 },

@@ -3299,8 +3299,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     (Te.shadow.camera.top = 14),
     (Te.shadow.camera.bottom = -14),
     (Te.shadow.bias = -3e-4),
-    (Te.shadow.normalBias = 0.018),
-    (Te.shadow.radius = 2),
+    (Te.shadow.normalBias = 0.026),
+    (Te.shadow.radius = 4),
     W.add(Te));
   const Ie = new e.PointLight(14215156, 1.28, 58, 2);
   (Ie.position.set(Q + 2.42, 3.64, g(t.frontDoor.center.z - 122)), W.add(Ie));
@@ -3752,7 +3752,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       { ...t.backDoor, kind: "back", z1: fe, z2: ue },
     ].sort((e, t) => e.z1 - t.z1),
     xt = g(84),
-    bt = g(256),
+    bt = ie,
     St = bt - xt,
     zt = (xt + bt) / 2,
     Pt = 0.1,
@@ -3777,11 +3777,14 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       }
       I(Z, a, n, t - 0.06, t + 0.06, "end_wall");
     };
-  (Gt(Mt, 0, ee, te, 4),
+  (/* 前端牆改為實牆(不設窗戶) */
+    R(j, A, new e.BoxGeometry(te - ee + 0.22, ie, le), Oe,
+      new e.Vector3((ee + te) / 2, ie / 2, Mt), null, Z,
+      { minX: ee - 0.12, maxX: te + 0.12, minZ: Mt - 0.06, maxZ: Mt + 0.06, label: "end_wall" }),
     de - ee > 0.6 && Gt(ft, 0, ee, de - 0.06, 2),
     te - pe > 0.6 && Gt(ft, 0, pe + 0.06, te, 2));
   const Ct = t.leftWallWindows.map((e) => Ge(e, "left")),
-    Bt = t.rightWallWindows.map((e) => Ge(e, "right")),
+    Bt = [], /* 右牆改為實牆(不設窗戶) */
     kt = gt.map((e) => ({ z1: e.z1 - 0.5, z2: e.z2 + 0.5, y1: 0, y2: ie }));
   Ce({
     x: te,
@@ -3900,25 +3903,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     const p = new e.Mesh(new e.BoxGeometry(0.04, 0.025, a - 0.02), Et);
     (p.position.set(ee, r, s), j.add(l, c, h, d, p));
   }),
-    t.rightWallWindows.forEach((t) => {
-      const o = Ge(t, "right"),
-        a = o.z2 - o.z1,
-        n = o.y2 - o.y1,
-        s = (o.z1 + o.z2) / 2,
-        r = (o.y1 + o.y2) / 2,
-        i = new e.Mesh(new e.PlaneGeometry(a - 0.04, n - 0.04), Vt);
-      (i.position.set(te, r, s), (i.rotation.y = Math.PI / 2), j.add(i));
-      const l = new e.Mesh(new e.BoxGeometry(0.04, 0.03, a + 0.02), Et);
-      l.position.set(te, o.y2 + 0.01, s);
-      const c = new e.Mesh(new e.BoxGeometry(0.04, 0.05, a + 0.02), Et);
-      c.position.set(te, o.y1 - 0.02, s);
-      const h = new e.Mesh(new e.BoxGeometry(0.04, n + 0.06, 0.03), Et);
-      h.position.set(te, r, o.z1 - 0.01);
-      const d = h.clone();
-      d.position.z = o.z2 + 0.01;
-      const p = new e.Mesh(new e.BoxGeometry(0.04, 0.025, a - 0.02), Et);
-      (p.position.set(te, r, s), j.add(l, c, h, d, p));
-    }));
+    /* 右牆已改為實牆，不建窗戶玻璃和窗框 */
+    void 0);
   const Ut = (t, o, a, n) => {
     const s = (a - o - Pt * (n + 1)) / n;
     for (let a = 0; a < n; a++) {
@@ -3931,7 +3917,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       (l.position.set(n, xt - 0.02, t), j.add(i, l));
     }
   };
-  (Ut(Mt, ee, te, 4),
+  (/* 前端牆已改為實牆，不建窗玻璃 */
     de - ee > 0.6 && Ut(ft, ee, de - 0.06, 2),
     te - pe > 0.6 && Ut(ft, pe + 0.06, te, 2),
     R(
@@ -4013,40 +3999,40 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         (n.rotation.y = o % 2 ? 0.06 : -0.06),
         j.add(n));
     }));
-  const _t = b("rgba(255,228,168,1)", 9.2, 4.4, 0.56);
+  const _t = b("rgba(255,228,168,1)", 9.2, 4.4, 0.76);
   (_t.position.set(N + 1.96, 0.018, g(t.frontDoor.center.z - 28)),
     (_t.rotation.x = -Math.PI / 2),
     (_t.rotation.z = 0.12),
     j.add(_t));
-  const At = b("rgba(255,236,195,1)", 9.6, 4.8, 0.48);
+  const At = b("rgba(255,236,195,1)", 9.6, 4.8, 0.66);
   (At.position.set(N + 0.72, 1.56, g(t.frontDoor.center.z + 44)),
     (At.rotation.y = Math.PI / 2),
     (At.rotation.z = 0.04),
     j.add(At));
-  const Zt = b("rgba(255,232,182,1)", 4.8, 3.2, 0.3);
+  const Zt = b("rgba(255,232,182,1)", 4.8, 3.2, 0.44);
   (Zt.position.set(ee + 0.12, 1.74, g(t.frontDoor.center.z - 32)),
     (Zt.rotation.y = Math.PI / 2),
     j.add(Zt));
-  const Lt = b("rgba(255,241,210,1)", 3.6, 2.8, 0.32);
+  const Lt = b("rgba(255,241,210,1)", 3.6, 2.8, 0.46);
   (Lt.position.set(ee + 0.48, 1.52, g(t.frontDoor.center.z + 8)),
     (Lt.rotation.y = Math.PI / 2),
     j.add(Lt));
-  const Xt = b("rgba(255,220,162,1)", 9.4, 4, 0.48);
+  const Xt = b("rgba(255,220,162,1)", 9.4, 4, 0.66);
   (Xt.position.set(te - 3.18, 0.019, g(t.classroom.lightWellZ + 84)),
     (Xt.rotation.x = -Math.PI / 2),
     (Xt.rotation.z = -0.16),
     j.add(Xt));
-  const jt = b("rgba(255,232,186,1)", 7, 3.4, 0.32);
+  const jt = b("rgba(255,232,186,1)", 7, 3.4, 0.48);
   (jt.position.set(ee + 2.16, 0.018, g(t.classroom.lightWellZ - 104)),
     (jt.rotation.x = -Math.PI / 2),
     (jt.rotation.z = 0.14),
     j.add(jt));
-  const $t = b("rgba(255,240,198,1)", 3.8, 2.1, 0.22);
+  const $t = b("rgba(255,240,198,1)", 3.8, 2.1, 0.34);
   ($t.position.set(ee + 1.12, 0.018, g(t.backDoor.center.z)),
     ($t.rotation.x = -Math.PI / 2),
     ($t.rotation.z = 0.08),
     j.add($t));
-  const Ht = b("rgba(255,220,172,1)", 5.2, 2.8, 0.36);
+  const Ht = b("rgba(255,220,172,1)", 5.2, 2.8, 0.50);
   (Ht.position.set(g(1896), 0.02, g(2058)),
     (Ht.rotation.x = -Math.PI / 2),
     (Ht.rotation.z = -0.22),
@@ -4621,10 +4607,10 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     );
   yo.setAttribute("position", new e.Float32BufferAttribute(go, 3));
   const xo = new e.PointsMaterial({
-      color: "#fff0d6",
-      size: 0.035,
+      color: "#ffe8b0",
+      size: 0.055,
       transparent: !0,
-      opacity: 0.22,
+      opacity: 0.36,
       depthWrite: !1,
     }),
     bo = new e.Points(yo, xo);
@@ -4669,12 +4655,12 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       boardWall: new e.Vector3(me, g((t.board.y1 + t.board.y2) / 2), he - 0.02),
     },
     Go = S({
-      torso: "#f0f2f8",
-      torsoAccent: "#c8d4e8",
-      legs: "#1e2a3a",
+      torso: "#f8f8f8",
+      torsoAccent: "#f2f2f2",
+      legs: "#3d5c8a",
       skin: "#f2d8c8",
       hair: "#1a1214",
-      shoes: "#e8e6e2",
+      shoes: "#f4f4f4",
       iris: "#4a3830",
       female: !1,
       phone: !0,
@@ -4683,12 +4669,12 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       pompadour: !0,
     }),
     Co = S({
-      torso: "#f8f6f2",
-      torsoAccent: "#fffefa",
-      legs: "#1e3048",
+      torso: "#f6f4f0",
+      torsoAccent: "#faf8f4",
+      legs: "#1c2e46",
       skin: "#fce4d4",
-      hair: "#6b4a3a",
-      shoes: "#f8f8f6",
+      hair: "#7a5842",
+      shoes: "#f6f6f4",
       iris: "#7a5a42",
       female: !0,
       highlight: !0,
@@ -5206,15 +5192,15 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     exposure: 1.14,
   };
   const _atmosWarm = {
-    fogColor: new e.Color("#ddd5c8"),
-    bgColor: new e.Color("#d8cfc2"),
-    dirColor: new e.Color("#ffe0a0"),
-    dirIntensity: 3.2,
-    hemiSky: new e.Color("#9ac4e8"),
-    hemiGround: new e.Color("#c8b898"),
-    ambColor: new e.Color("#fff0d0"),
-    ambIntensity: 0.28,
-    exposure: 1.22,
+    fogColor: new e.Color("#e2d0b8"),
+    bgColor: new e.Color("#dcc8b0"),
+    dirColor: new e.Color("#ffd080"),
+    dirIntensity: 3.6,
+    hemiSky: new e.Color("#b8d4e8"),
+    hemiGround: new e.Color("#d8c8a0"),
+    ambColor: new e.Color("#ffe8b8"),
+    ambIntensity: 0.32,
+    exposure: 1.28,
   };
   const _tmpColor = new e.Color();
   function updateAtmosphere(progress) {
@@ -5515,7 +5501,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             ),
             w = Io.getPoint(i),
             M = Io.getPoint(e.MathUtils.clamp(i + 0.12, 0, 1)),
-            f = Math.sin(o * Math.PI * 8.4) * Math.exp(1.6 * -o) * 5,
+            f = Math.sin(o * Math.PI * 4.2) * Math.exp(2.0 * -o) * 2.5,
             u = e.MathUtils.lerp(
               104,
               42,
@@ -5556,12 +5542,12 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             );
           q.lookAt(b);
           const S =
-              Math.sin(o * Math.PI * 2.7) * e.MathUtils.lerp(0.46, 0.004, o),
+              Math.sin(o * Math.PI * 1.8) * e.MathUtils.lerp(0.24, 0.002, o),
             z =
-              Math.sin(o * Math.PI * 16) * e.MathUtils.lerp(0.02, 0, o) * 0.34,
+              Math.sin(o * Math.PI * 10) * e.MathUtils.lerp(0.01, 0, o) * 0.2,
             P =
               o > 0.24 && o < 0.34
-                ? 0.009 * Math.sin(148 * (o - 0.24)) * (1 - (o - 0.24) / 0.1)
+                ? 0.004 * Math.sin(80 * (o - 0.24)) * (1 - (o - 0.24) / 0.1)
                 : 0;
           (q.rotateZ(S + z + P), (H.visible = !0));
           const v = 0.5 + 0.5 * Math.sin(o * Math.PI * 6.2),
