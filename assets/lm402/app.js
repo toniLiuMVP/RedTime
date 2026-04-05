@@ -1117,7 +1117,7 @@ function persistAudioSetting() {
 
 function syncAudioUI() {
   dom.audioToggle.setAttribute("aria-pressed", String(state.audioEnabled));
-  dom.audioToggleValue.textContent = state.audioEnabled ? "開啟" : "關閉";
+  dom.audioToggleValue.textContent = state.audioEnabled ? "關閉音樂" : "開啟音樂";
   audioSystem.syncPrompt();
 }
 
@@ -3218,9 +3218,9 @@ function bindUI() {
       if (!sel.hidden) audioSystem.syncSongUI();
     }
   });
-  /* 音樂選單預設展開：讓玩家一開始就看到兩首歌 */
+  /* 音樂選單預設收合：玩家點擊「開啟音樂」後展開 */
   { const selInit = document.getElementById("song-selector");
-    if (selInit) { selInit.hidden = false; audioSystem.syncSongUI(); }
+    if (selInit) { selInit.hidden = true; }
   }
   dom.musicPromptButton.addEventListener("click", () => {
     if (!state.audioEnabled) {

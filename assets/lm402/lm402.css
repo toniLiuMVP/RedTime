@@ -1770,7 +1770,8 @@ body.landscape-prompt .debug-panel {
   }
   .quality-widget {
     top: max(8px, env(safe-area-inset-top));
-    left: calc(max(8px, env(safe-area-inset-left)) + 218px);
+    left: auto;
+    right: calc(max(8px, env(safe-area-inset-right)) + 100px);
     z-index: 20;
   }
   .audio-widget {
@@ -2187,10 +2188,11 @@ body.landscape-prompt .debug-panel {
   }
 }
 @media (max-width: 479px) and (orientation: portrait) {
-  /* 窄手機：quality-widget 移到第二排，避免溢出螢幕 */
+  /* 窄手機：quality-widget 在右側（時空手錶與音樂之間） */
   .quality-widget {
-    top: calc(max(8px, env(safe-area-inset-top)) + 48px);
-    left: max(8px, env(safe-area-inset-left));
+    top: max(8px, env(safe-area-inset-top));
+    left: auto;
+    right: calc(max(8px, env(safe-area-inset-right)) + 100px);
     z-index: 20;
   }
 }
@@ -2275,7 +2277,8 @@ body.landscape-prompt .debug-panel {
   }
   .quality-widget {
     top: max(8px, env(safe-area-inset-top));
-    left: calc(max(8px, env(safe-area-inset-left)) + 202px);
+    left: auto;
+    right: calc(max(8px, env(safe-area-inset-right)) + 100px);
   }
   .audio-widget {
     top: max(8px, env(safe-area-inset-top));
