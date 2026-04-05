@@ -3209,7 +3209,8 @@ function bindUI() {
     setLookSensitivity({ preset: null, scalar: Number(dom.speedRange.value) / 100 });
   });
   dom.audioToggle.addEventListener("click", () => {
-    /* 僅切換歌曲選擇面板（不影響音樂播放狀態） */
+    /* 切換音樂播放 + 歌曲選擇面板 */
+    audioSystem.setEnabled(!state.audioEnabled);
     const sel = document.getElementById("song-selector");
     if (sel) {
       sel.hidden = !sel.hidden;

@@ -1760,12 +1760,12 @@ body.landscape-prompt .debug-panel {
   }
   .font-widget {
     top: max(8px, env(safe-area-inset-top));
-    left: max(8px, env(safe-area-inset-left));
+    left: calc(max(8px, env(safe-area-inset-left)) + 100px);
     z-index: 20;
   }
   .speed-widget {
     top: max(8px, env(safe-area-inset-top));
-    left: calc(max(8px, env(safe-area-inset-left)) + 55px);
+    left: calc(max(8px, env(safe-area-inset-left)) + 155px);
     z-index: 20;
   }
   .quality-widget {
@@ -2269,11 +2269,11 @@ body.landscape-prompt .debug-panel {
   }
   .font-widget {
     top: max(8px, env(safe-area-inset-top));
-    left: max(8px, env(safe-area-inset-left));
+    left: calc(max(8px, env(safe-area-inset-left)) + 100px);
   }
   .speed-widget {
     top: max(8px, env(safe-area-inset-top));
-    left: calc(max(8px, env(safe-area-inset-left)) + 55px);
+    left: calc(max(8px, env(safe-area-inset-left)) + 155px);
   }
   .quality-widget {
     top: max(8px, env(safe-area-inset-top));
