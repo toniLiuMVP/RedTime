@@ -3781,8 +3781,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     R(j, A, new e.BoxGeometry(te - ee + 0.22, ie, le), Oe,
       new e.Vector3((ee + te) / 2, ie / 2, Mt), null, Z,
       { minX: ee - 0.12, maxX: te + 0.12, minZ: Mt - 0.06, maxZ: Mt + 0.06, label: "end_wall" }),
-    de - ee > 0.6 && Gt(ft, 0, ee, de - 0.06, 2),
-    te - pe > 0.6 && Gt(ft, 0, pe + 0.06, te, 2));
+    /* 黑板牆兩側也改為實牆(不設窗戶) — Gt(ft,...) 已移除 */
+    void 0);
   const Ct = t.leftWallWindows.map((e) => Ge(e, "left")),
     Bt = t.rightWallWindows.map((e) => Ge(e, "right")),
     kt = gt.map((e) => ({ z1: e.z1 - 0.5, z2: e.z2 + 0.5, y1: 0, y2: ie }));
@@ -3820,7 +3820,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       x: ee,
       zStart: Mt,
       zEnd: ft,
-      openings: [...kt], /* 左牆改為實牆(只保留門的開口，不設窗戶) */
+      openings: [...kt, ...Ct],
       material: Ye,
       label: "divider_wall",
     }));
@@ -3884,7 +3884,25 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       roughness: 0.62,
       metalness: 0.14,
     });
-  (/* 左牆已改為實牆，不建窗戶玻璃和窗框 */
+  (t.leftWallWindows.forEach((t) => {
+    const o = Ge(t, "left"),
+      a = o.z2 - o.z1,
+      n = o.y2 - o.y1,
+      s = (o.z1 + o.z2) / 2,
+      r = (o.y1 + o.y2) / 2,
+      i = new e.Mesh(new e.PlaneGeometry(a - 0.04, n - 0.04), Vt);
+    (i.position.set(ee, r, s), (i.rotation.y = Math.PI / 2), j.add(i));
+    const l = new e.Mesh(new e.BoxGeometry(0.04, 0.03, a + 0.02), Et);
+    l.position.set(ee, o.y2 + 0.01, s);
+    const c = new e.Mesh(new e.BoxGeometry(0.04, 0.05, a + 0.02), Et);
+    c.position.set(ee, o.y1 - 0.02, s);
+    const h = new e.Mesh(new e.BoxGeometry(0.04, n + 0.06, 0.03), Et);
+    h.position.set(ee, r, o.z1 - 0.01);
+    const d = h.clone();
+    d.position.z = o.z2 + 0.01;
+    const p = new e.Mesh(new e.BoxGeometry(0.04, 0.025, a - 0.02), Et);
+    (p.position.set(ee, r, s), j.add(l, c, h, d, p));
+  }),
     t.rightWallWindows.forEach((t) => {
       const o = Ge(t, "right"),
         a = o.z2 - o.z1,
@@ -3916,20 +3934,19 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       (l.position.set(n, xt - 0.02, t), j.add(i, l));
     }
   };
-  (/* 前端牆已改為實牆，不建窗玻璃 */
-    de - ee > 0.6 && Ut(ft, ee, de - 0.06, 2),
-    te - pe > 0.6 && Ut(ft, pe + 0.06, te, 2),
+  (/* 前端牆與黑板牆皆改為實牆，不建窗玻璃 */
+    void 0,
     R(
       j,
       A,
-      new e.BoxGeometry(pe - de + 0.22, ie, le),
+      new e.BoxGeometry(te - ee + 0.22, ie, le),
       Oe,
-      new e.Vector3((de + pe) / 2, 1.46, ft),
+      new e.Vector3((ee + te) / 2, ie / 2, ft),
       null,
       Z,
       {
-        minX: de - 0.12,
-        maxX: pe + 0.12,
+        minX: ee - 0.12,
+        maxX: te + 0.12,
         minZ: ft - 0.06,
         maxZ: ft + 0.06,
         label: "board_wall",
