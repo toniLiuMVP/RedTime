@@ -3784,7 +3784,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     de - ee > 0.6 && Gt(ft, 0, ee, de - 0.06, 2),
     te - pe > 0.6 && Gt(ft, 0, pe + 0.06, te, 2));
   const Ct = t.leftWallWindows.map((e) => Ge(e, "left")),
-    Bt = [], /* 右牆改為實牆(不設窗戶) */
+    Bt = t.rightWallWindows.map((e) => Ge(e, "right")),
     kt = gt.map((e) => ({ z1: e.z1 - 0.5, z2: e.z2 + 0.5, y1: 0, y2: ie }));
   Ce({
     x: te,
@@ -3820,7 +3820,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       x: ee,
       zStart: Mt,
       zEnd: ft,
-      openings: [...kt, ...Ct],
+      openings: [...kt], /* 左牆改為實牆(只保留門的開口，不設窗戶) */
       material: Ye,
       label: "divider_wall",
     }));
@@ -3884,27 +3884,26 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       roughness: 0.62,
       metalness: 0.14,
     });
-  (t.leftWallWindows.forEach((t) => {
-    const o = Ge(t, "left"),
-      a = o.z2 - o.z1,
-      n = o.y2 - o.y1,
-      s = (o.z1 + o.z2) / 2,
-      r = (o.y1 + o.y2) / 2,
-      i = new e.Mesh(new e.PlaneGeometry(a - 0.04, n - 0.04), Vt);
-    (i.position.set(ee, r, s), (i.rotation.y = Math.PI / 2), j.add(i));
-    const l = new e.Mesh(new e.BoxGeometry(0.04, 0.03, a + 0.02), Et);
-    l.position.set(ee, o.y2 + 0.01, s);
-    const c = new e.Mesh(new e.BoxGeometry(0.04, 0.05, a + 0.02), Et);
-    c.position.set(ee, o.y1 - 0.02, s);
-    const h = new e.Mesh(new e.BoxGeometry(0.04, n + 0.06, 0.03), Et);
-    h.position.set(ee, r, o.z1 - 0.01);
-    const d = h.clone();
-    d.position.z = o.z2 + 0.01;
-    const p = new e.Mesh(new e.BoxGeometry(0.04, 0.025, a - 0.02), Et);
-    (p.position.set(ee, r, s), j.add(l, c, h, d, p));
-  }),
-    /* 右牆已改為實牆，不建窗戶玻璃和窗框 */
-    void 0);
+  (/* 左牆已改為實牆，不建窗戶玻璃和窗框 */
+    t.rightWallWindows.forEach((t) => {
+      const o = Ge(t, "right"),
+        a = o.z2 - o.z1,
+        n = o.y2 - o.y1,
+        s = (o.z1 + o.z2) / 2,
+        r = (o.y1 + o.y2) / 2,
+        i = new e.Mesh(new e.PlaneGeometry(a - 0.04, n - 0.04), Vt);
+      (i.position.set(te, r, s), (i.rotation.y = Math.PI / 2), j.add(i));
+      const l = new e.Mesh(new e.BoxGeometry(0.04, 0.03, a + 0.02), Et);
+      l.position.set(te, o.y2 + 0.01, s);
+      const c = new e.Mesh(new e.BoxGeometry(0.04, 0.05, a + 0.02), Et);
+      c.position.set(te, o.y1 - 0.02, s);
+      const h = new e.Mesh(new e.BoxGeometry(0.04, n + 0.06, 0.03), Et);
+      h.position.set(te, r, o.z1 - 0.01);
+      const d = h.clone();
+      d.position.z = o.z2 + 0.01;
+      const p = new e.Mesh(new e.BoxGeometry(0.04, 0.025, a - 0.02), Et);
+      (p.position.set(te, r, s), j.add(l, c, h, d, p));
+    }));
   const Ut = (t, o, a, n) => {
     const s = (a - o - Pt * (n + 1)) / n;
     for (let a = 0; a < n; a++) {

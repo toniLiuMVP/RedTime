@@ -42,10 +42,10 @@ export const WORLD = {
   focusMark: { x: -236, y: 0, z: 726 },
   board: { z: 2424, x1: 520, x2: 1960, y1: 92, y2: 236 },
   rightWallWindows: [
-    { z: 920, y1: 84, y2: 256, width: 236 },
-    { z: 1280, y1: 84, y2: 260, width: 260 },
-    { z: 1640, y1: 84, y2: 260, width: 260 },
-    { z: 2e3, y1: 84, y2: 256, width: 236 },
+    { z: 920, y1: 84, y2: 238, width: 236 },
+    { z: 1280, y1: 84, y2: 238, width: 260 },
+    { z: 1640, y1: 84, y2: 238, width: 260 },
+    { z: 2e3, y1: 84, y2: 238, width: 236 },
   ],
   leftWallWindows: [
     { z: 882, y1: 92, y2: 238, width: 148 },
@@ -54,14 +54,11 @@ export const WORLD = {
     { z: 1962, y1: 92, y2: 238, width: 224 },
   ],
   lightBeams: [
+    /* 只保留右牆(外牆)光束，左牆已改為實牆 */
     { side: "right", z: 920, width: 236, reach: 1020, alpha: 0.36 },
     { side: "right", z: 1280, width: 268, reach: 1160, alpha: 0.48 },
     { side: "right", z: 1640, width: 272, reach: 1220, alpha: 0.5 },
     { side: "right", z: 2e3, width: 236, reach: 1040, alpha: 0.36 },
-    { side: "left", z: 882, width: 148, reach: 980, alpha: 0.32 },
-    { side: "left", z: 1242, width: 252, reach: 1120, alpha: 0.42 },
-    { side: "left", z: 1602, width: 252, reach: 1140, alpha: 0.44 },
-    { side: "left", z: 1962, width: 222, reach: 980, alpha: 0.32 },
   ],
   desks: [930, 1090, 1250, 1410, 1570, 1730, 1890, 2050].flatMap((e) =>
     [300, 580, 860, 1140, 1420, 1700, 1980].map((t) => ({ x: t, z: e })),
