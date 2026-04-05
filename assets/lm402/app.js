@@ -578,7 +578,7 @@ const state = {
   cameraMode: "intro",
   hudMode: "chip",
   subtitleMode: "full",
-  transcriptExpanded: true,
+  transcriptExpanded: false,
   transcriptMaximized: false,
   pointerLockState: "free",
   pointerLockPending: false,
@@ -1868,8 +1868,8 @@ function finishIntro() {
     // Belt-and-suspenders: also hide after transition
     setTimeout(() => { if (dom.introFx) dom.introFx.style.display = "none"; }, 2000);
   }
-  // Ensure transcript panel is visible at play start
-  state.transcriptExpanded = true;
+  // 對話紀錄預設收合，玩家需要時自行展開
+  state.transcriptExpanded = false;
   syncTranscriptUI();
 
   if (resume) {
@@ -2037,7 +2037,7 @@ function resetScene() {
   state.mobileDockExpanded = false;
   state.introBeatIndex = 0;
   state.introCameraTrack = INTRO_BEATS[0].id;
-  state.transcriptExpanded = true;
+  state.transcriptExpanded = false;
   state.memories = new Set();
   state.activeHotspot = null;
   state.activeHotspotId = null;
