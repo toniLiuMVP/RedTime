@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>月台上的奔跑 — 三十秒偶像劇</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#0a0a0a;font-family:"Noto Serif TC","PingFang TC","Microsoft JhengHei",serif}
+canvas{display:block;width:100%;height:100%}
+
+/* ── 全畫面覆蓋層 ── */
+#overlay{position:fixed;inset:0;z-index:10;pointer-events:none;display:flex;flex-direction:column;align-items:center;justify-content:center}
+
+/* ── 標題畫面 ── */
+#title-screen{position:fixed;inset:0;z-index:100;background:#0a0a0a;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:opacity 1.2s}
+#title-screen.hide{opacity:0;pointer-events:none}
+.title-year{font-size:clamp(14px,2vw,20px);color:#b8956a;letter-spacing:0.5em;margin-bottom:12px;opacity:0;animation:fadeUp 1.5s 0.5s forwards}
+.title-main{font-size:clamp(28px,5vw,56px);color:#e8d5b8;font-weight:700;letter-spacing:0.15em;opacity:0;animation:fadeUp 1.5s 1s forwards}
+.title-sub{font-size:clamp(14px,2.5vw,22px);color:#8a7560;margin-top:16px;opacity:0;animation:fadeUp 1.5s 1.5s forwards}
+.title-start{font-size:clamp(12px,1.8vw,16px);color:#b8956a;margin-top:48px;opacity:0;animation:fadeUp 1.5s 2.2s forwards,pulse 2s 3s infinite}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* ── 遊戲 HUD ── */
+#hud{position:fixed;top:0;left:0;right:0;z-index:20;padding:12px 20px;display:none;pointer-events:none}
+#timer-bar{width:100%;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;margin-bottom:8px}
+#timer-fill{width:100%;height:100%;background:linear-gradient(90deg,#e74c3c,#f39c12,#2ecc71);border-radius:3px;transition:width 0.1s}
+#hud-info{display:flex;justify-content:space-between;align-items:center;color:#e8d5b8;font-size:clamp(12px,1.6vw,16px)}
+#timer-text{color:#f39c12;font-weight:700;font-size:clamp(16px,2.5vw,24px)}
+#distance-text{color:#b8956a}
+#sprint-bar-wrap{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:20;display:none;width:clamp(120px,30vw,200px)}
+#sprint-bar{width:100%;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden}
+#sprint-fill{width:100%;height:100%;background:linear-gradient(90deg,#3498db,#1abc9c);border-radius:2px;transition:width 0.15s}
+#sprint-label{text-align:center;color:#5a8a9a;font-size:11px;margin-top:4px}
+
+/* ── 敘事文字 ── */
+#narrative{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:30;text-align:center;pointer-events:none;width:clamp(280px,80vw,600px)}
+#narrative p{color:#e8d5b8;font-size:clamp(14px,2.2vw,20px);line-height:1.8;opacity:0;transition:opacity 0.8s;text-shadow:0 2px 12px rgba(0,0,0,0.8)}
+#narrative p.show{opacity:1}
+
+/* ── 結果畫面 ── */
+#result-screen{position:fixed;inset:0;z-index:90;background:rgba(10,10,10,0.95);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+#result-screen.show{display:flex}
+.result-text{color:#e8d5b8;font-size:clamp(20px,4vw,40px);font-weight:700;opacity:0;animation:fadeUp 1s 0.5s forwards}
+.result-sub{color:#8a7560;font-size:clamp(13px,2vw,18px);margin-top:20px;line-height:2;text-align:center;max-width:500px;opacity:0;animation:fadeUp 1s 1.2s forwards}
+.result-retry{color:#b8956a;font-size:clamp(12px,1.6vw,15px);margin-top:40px;cursor:pointer;pointer-events:auto;opacity:0;animation:fadeUp 1s 2s forwards}
+.result-retry:hover{color:#e8d5b8}
+
+/* ── 電影黑邊 ── */
+.letterbox-top,.letterbox-bot{position:fixed;left:0;right:0;height:0;background:#0a0a0a;z-index:5;transition:height 0.8s}
+.letterbox-top{top:0}
+.letterbox-bot{bottom:0}
+.letterbox-on .letterbox-top,.letterbox-on .letterbox-bot{height:clamp(30px,6vh,60px)}
+
+/* ── 紅暈（時間不足警告）── */
+#vignette{position:fixed;inset:0;z-index:8;pointer-events:none;opacity:0;transition:opacity 0.3s;background:radial-gradient(ellipse at center,transparent 50%,rgba(180,40,40,0.4) 100%)}
+
+/* ── 手機觸控搖桿 ── */
+#touch-controls{position:fixed;bottom:30px;left:20px;z-index:40;display:none}
+#joystick-area{width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.05);border:2px solid rgba(255,255,255,0.1);position:relative}
+#joystick-knob{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.15);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transition:none}
+#sprint-btn{position:fixed;bottom:60px;right:30px;z-index:40;display:none;width:64px;height:64px;border-radius:50%;background:rgba(243,156,18,0.2);border:2px solid rgba(243,156,18,0.4);color:#f39c12;font-size:12px;font-weight:700;line-height:64px;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+
+/* ── 呼吸提示 ── */
+#breath-hint{position:fixed;bottom:clamp(80px,12vh,120px);left:50%;transform:translateX(-50%);z-index:20;color:#b8956a;font-size:clamp(11px,1.4vw,14px);opacity:0;transition:opacity 0.5s;pointer-events:none;text-align:center;white-space:nowrap}
+</style>
+</head>
+<body>
+
+<!-- 電影黑邊 -->
+<div class="letterbox-top"></div>
+<div class="letterbox-bot"></div>
+
+<!-- 標題畫面 -->
+<div id="title-screen">
+  <div class="title-year">2018 年 台中火車站</div>
+  <div class="title-main">月台上的奔跑</div>
+  <div class="title-sub">三十秒偶像劇</div>
+  <div class="title-start">點擊開始</div>
+</div>
+
+<!-- 遊戲 HUD -->
+<div id="hud">
+  <div id="timer-bar"><div id="timer-fill"></div></div>
+  <div id="hud-info">
+    <span id="timer-text">30.0</span>
+    <span id="distance-text"></span>
+  </div>
+</div>
+<div id="sprint-bar-wrap">
+  <div id="sprint-bar"><div id="sprint-fill"></div></div>
+  <div id="sprint-label">衝刺 [Shift]</div>
+</div>
+
+<!-- 敘事文字 -->
+<div id="narrative"><p id="narr-text"></p></div>
+
+<!-- 紅暈 -->
+<div id="vignette"></div>
+
+<!-- 結果畫面 -->
+<div id="result-screen">
+  <div class="result-text" id="result-title"></div>
+  <div class="result-sub" id="result-body"></div>
+  <div class="result-retry" id="result-retry">再來一次</div>
+</div>
+
+<!-- 手機觸控 -->
+<div id="touch-controls"><div id="joystick-area"><div id="joystick-knob"></div></div></div>
+<div id="sprint-btn">衝刺</div>
+
+<!-- 呼吸提示 -->
+<div id="breath-hint"></div>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from "three";
+
+/* ════════════════════════════════════════════════
+   常數與設定
+   ════════════════════════════════════════════════ */
+const PLATFORM_LEN = 260;
+const PLATFORM_W   = 10;
+const RUN_SPEED    = 8.5;
+const SPRINT_SPEED = 12.5;
+const SPRINT_MAX   = 100;
+const SPRINT_DRAIN = 35;
+const SPRINT_REGEN = 18;
+const GAME_TIME    = 32;
+const DODGE_SPEED  = 6;
+const NPC_COUNT    = 55;
+const CAR_LEN      = 22;
+const CAR_COUNT    = 8;
+const DAUGHTER_Z   = -(PLATFORM_LEN / 2 - 20);
+
+/* ════════════════════════════════════════════════
+   DOM 參照
+   ════════════════════════════════════════════════ */
+const dom = {
+  title:       document.getElementById("title-screen"),
+  hud:         document.getElementById("hud"),
+  timerFill:   document.getElementById("timer-fill"),
+  timerText:   document.getElementById("timer-text"),
+  distText:    document.getElementById("distance-text"),
+  sprintWrap:  document.getElementById("sprint-bar-wrap"),
+  sprintFill:  document.getElementById("sprint-fill"),
+  narrText:    document.getElementById("narr-text"),
+  vignette:    document.getElementById("vignette"),
+  result:      document.getElementById("result-screen"),
+  resultTitle: document.getElementById("result-title"),
+  resultBody:  document.getElementById("result-body"),
+  resultRetry: document.getElementById("result-retry"),
+  touchCtrl:   document.getElementById("touch-controls"),
+  joystickArea:document.getElementById("joystick-area"),
+  joystickKnob:document.getElementById("joystick-knob"),
+  sprintBtn:   document.getElementById("sprint-btn"),
+  breathHint:  document.getElementById("breath-hint"),
+};
+
+/* ════════════════════════════════════════════════
+   遊戲狀態
+   ════════════════════════════════════════════════ */
+const state = {
+  phase: "title",
+  clock: 0,
+  timeLeft: GAME_TIME,
+  sprint: SPRINT_MAX,
+  playerZ: PLATFORM_LEN / 2 - 10,
+  playerX: 0,
+  playerVx: 0,
+  sprinting: false,
+  gotDaughter: false,
+  introTimer: 0,
+  narrTimer: 0,
+  cameraShake: 0,
+  heartRate: 60,
+  trainSouthZ: PLATFORM_LEN,
+  trainNorthZ: -PLATFORM_LEN,
+  trainSouthArrived: false,
+  trainNorthArrived: false,
+  trainNorthDoorOpen: false,
+  trainNorthLeaving: false,
+  doorPhase: 0,
+};
+
+/* ════════════════════════════════════════════════
+   Three.js 初始化
+   ════════════════════════════════════════════════ */
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.9;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.prepend(renderer.domElement);
+
+const scene  = new THREE.Scene();
+scene.background = new THREE.Color(0x1a1a2e);
+scene.fog = new THREE.FogExp2(0x1a1a2e, 0.006);
+
+const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 500);
+camera.position.set(0, 12, PLATFORM_LEN / 2 + 20);
+camera.lookAt(0, 0, 0);
+
+/* ════════════════════════════════════════════════
+   光源
+   ════════════════════════════════════════════════ */
+const ambientLight = new THREE.AmbientLight(0xfff5e6, 0.25);
+scene.add(ambientLight);
+
+const mainLight = new THREE.DirectionalLight(0xffe8cc, 1.2);
+mainLight.position.set(10, 30, 0);
+mainLight.castShadow = true;
+mainLight.shadow.mapSize.set(1024, 1024);
+mainLight.shadow.camera.left   = -15;
+mainLight.shadow.camera.right  =  15;
+mainLight.shadow.camera.top    =  60;
+mainLight.shadow.camera.bottom = -60;
+scene.add(mainLight);
+
+const warmFill = new THREE.PointLight(0xffaa55, 0.6, 50);
+warmFill.position.set(0, 8, 0);
+scene.add(warmFill);
+
+/* ════════════════════════════════════════════════
+   材質庫
+   ════════════════════════════════════════════════ */
+const MAT = {
+  platform:   new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.9 }),
+  yellow:     new THREE.MeshStandardMaterial({ color: 0xf0c040, roughness: 0.5 }),
+  rail:       new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.8, roughness: 0.3 }),
+  gravel:     new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 1.0 }),
+  pillar:     new THREE.MeshStandardMaterial({ color: 0x999999, roughness: 0.6 }),
+  roof:       new THREE.MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.5, transparent: true, opacity: 0.7 }),
+  window:     new THREE.MeshStandardMaterial({ color: 0x1a2a3a, roughness: 0.1, metalness: 0.5 }),
+  door:       new THREE.MeshStandardMaterial({ color: 0xbbbbbb, roughness: 0.3, metalness: 0.4 }),
+  skin:       new THREE.MeshStandardMaterial({ color: 0xdeb887, roughness: 0.8 }),
+  fatherBody: new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.7 }),
+  backpack:   new THREE.MeshStandardMaterial({ color: 0x556b2f, roughness: 0.8 }),
+  pink:       new THREE.MeshStandardMaterial({ color: 0xff69b4, roughness: 0.6 }),
+  bench:      new THREE.MeshStandardMaterial({ color: 0x8b7355, roughness: 0.8 }),
+};
+
+/* ════════════════════════════════════════════════
+   建立月台
+   ════════════════════════════════════════════════ */
+function buildPlatform() {
+  const g = new THREE.BoxGeometry(PLATFORM_W, 0.6, PLATFORM_LEN);
+  const m = new THREE.Mesh(g, MAT.platform);
+  m.position.y = -0.3;
+  m.receiveShadow = true;
+  scene.add(m);
+
+  for (const side of [-1, 1]) {
+    const yg = new THREE.BoxGeometry(0.3, 0.02, PLATFORM_LEN);
+    const ym = new THREE.Mesh(yg, MAT.yellow);
+    ym.position.set(side * (PLATFORM_W / 2 - 0.2), 0.01, 0);
+    scene.add(ym);
+  }
+
+  for (const side of [-1, 1]) {
+    const gg = new THREE.BoxGeometry(4, 0.1, PLATFORM_LEN);
+    const gm = new THREE.Mesh(gg, MAT.gravel);
+    gm.position.set(side * (PLATFORM_W / 2 + 3), -0.85, 0);
+    scene.add(gm);
+  }
+
+  for (const side of [-1, 1]) {
+    for (const rr of [-0.4, 0.4]) {
+      const rg = new THREE.BoxGeometry(0.08, 0.12, PLATFORM_LEN);
+      const rm = new THREE.Mesh(rg, MAT.rail);
+      rm.position.set(side * (PLATFORM_W / 2 + 3) + rr, -0.7, 0);
+      scene.add(rm);
+    }
+  }
+
+  for (let z = -PLATFORM_LEN / 2 + 10; z <= PLATFORM_LEN / 2 - 10; z += 20) {
+    for (const x of [-3, 3]) {
+      const pg = new THREE.CylinderGeometry(0.2, 0.25, 6, 8);
+      const pm = new THREE.Mesh(pg, MAT.pillar);
+      pm.position.set(x, 3, z);
+      pm.castShadow = true;
+      scene.add(pm);
+    }
+    const rg = new THREE.BoxGeometry(PLATFORM_W + 2, 0.15, 18);
+    const rm = new THREE.Mesh(rg, MAT.roof);
+    rm.position.set(0, 6, z);
+    scene.add(rm);
+  }
+
+  for (let z = -PLATFORM_LEN / 2 + 30; z <= PLATFORM_LEN / 2 - 30; z += 40) {
+    const bg = new THREE.BoxGeometry(2, 0.5, 0.6);
+    const bm = new THREE.Mesh(bg, MAT.bench);
+    bm.position.set(-2.5, 0.25, z);
+    bm.castShadow = true;
+    scene.add(bm);
+  }
+
+  const floorG = new THREE.PlaneGeometry(100, PLATFORM_LEN + 40);
+  const floorMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 1 });
+  const floorM = new THREE.Mesh(floorG, floorMat);
+  floorM.rotation.x = -Math.PI / 2;
+  floorM.position.y = -0.9;
+  floorM.receiveShadow = true;
+  scene.add(floorM);
+}
+
+/* ════════════════════════════════════════════════
+   建立火車
+   ════════════════════════════════════════════════ */
+const trainSouth = new THREE.Group();
+const trainNorth = new THREE.Group();
+const northDoors = [];
+
+function buildTrain(group, color, stripe, hasDoors) {
+  for (let i = 0; i < CAR_COUNT; i++) {
+    const cz = -i * CAR_LEN;
+    const body = new THREE.Mesh(
+      new THREE.BoxGeometry(3.2, 2.8, CAR_LEN - 1),
+      new THREE.MeshStandardMaterial({ color, roughness: 0.35, metalness: 0.25 })
+    );
+    body.position.set(0, 1.4, cz);
+    body.castShadow = true;
+    group.add(body);
+
+    const sg = new THREE.BoxGeometry(3.22, 0.2, CAR_LEN - 1.2);
+    const sm = new THREE.Mesh(sg, new THREE.MeshStandardMaterial({ color: stripe, roughness: 0.4 }));
+    sm.position.set(0, 1.8, cz);
+    group.add(sm);
+
+    for (let wz = -CAR_LEN / 2 + 3; wz < CAR_LEN / 2 - 3; wz += 3) {
+      for (const wx of [-1.61, 1.61]) {
+        const wg = new THREE.BoxGeometry(0.02, 0.8, 1.4);
+        const wm = new THREE.Mesh(wg, MAT.window);
+        wm.position.set(wx, 2.0, cz + wz);
+        group.add(wm);
+      }
+    }
+
+    if (hasDoors) {
+      for (const dz of [-CAR_LEN / 4, CAR_LEN / 4]) {
+        const doorL = new THREE.Mesh(
+          new THREE.BoxGeometry(0.05, 2.2, 0.7),
+          MAT.door.clone()
+        );
+        const doorR = doorL.clone();
+        doorL.position.set(1.61, 1.1, cz + dz - 0.35);
+        doorR.position.set(1.61, 1.1, cz + dz + 0.35);
+        group.add(doorL);
+        group.add(doorR);
+        northDoors.push({ left: doorL, right: doorR, z: cz + dz });
+      }
+    }
+
+    for (const bz of [-CAR_LEN / 3, CAR_LEN / 3]) {
+      const bg = new THREE.BoxGeometry(3.0, 0.5, 2);
+      const bm = new THREE.Mesh(bg, new THREE.MeshStandardMaterial({ color: 0x333333 }));
+      bm.position.set(0, -0.25, cz + bz);
+      group.add(bm);
+    }
+  }
+}
+
+function setupTrains() {
+  buildTrain(trainSouth, 0x2c5f8a, 0x1a3a6a, false);
+  trainSouth.position.set(-(PLATFORM_W / 2 + 3), 0, PLATFORM_LEN);
+  scene.add(trainSouth);
+
+  buildTrain(trainNorth, 0xcc6622, 0xe88833, true);
+  trainNorth.position.set(PLATFORM_W / 2 + 3, 0, -PLATFORM_LEN);
+  scene.add(trainNorth);
+}
+
+/* ════════════════════════════════════════════════
+   建立角色
+   ════════════════════════════════════════════════ */
+const father   = new THREE.Group();
+const daughter = new THREE.Group();
+const mother   = new THREE.Group();
+const npcs     = [];
+
+function makeHumanoid(bodyColor, h, w, headSize) {
+  const g = new THREE.Group();
+  const bodyG = new THREE.CapsuleGeometry(w * 0.5, h * 0.4, 4, 8);
+  const bodyM = new THREE.Mesh(bodyG, new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.7 }));
+  bodyM.position.y = h * 0.45;
+  bodyM.castShadow = true;
+  g.add(bodyM);
+  const headG = new THREE.SphereGeometry(headSize, 8, 8);
+  const headM = new THREE.Mesh(headG, MAT.skin);
+  headM.position.y = h * 0.8;
+  headM.castShadow = true;
+  g.add(headM);
+  return g;
+}
+
+function buildCharacters() {
+  const fBody = makeHumanoid(0x2c3e50, 1.75, 0.55, 0.22);
+  father.add(fBody);
+  const belly = new THREE.Mesh(
+    new THREE.SphereGeometry(0.32, 8, 8),
+    MAT.fatherBody
+  );
+  belly.position.set(0, 0.75, 0.15);
+  father.add(belly);
+  const bp = new THREE.Mesh(
+    new THREE.BoxGeometry(0.5, 0.6, 0.3),
+    MAT.backpack
+  );
+  bp.position.set(0, 1.0, -0.3);
+  father.add(bp);
+  father.position.set(0, 0, state.playerZ);
+  scene.add(father);
+
+  const dBody = makeHumanoid(0xffc0cb, 0.9, 0.25, 0.16);
+  daughter.add(dBody);
+  const dbp = new THREE.Mesh(
+    new THREE.BoxGeometry(0.25, 0.3, 0.15),
+    MAT.pink
+  );
+  dbp.position.set(0, 0.45, -0.15);
+  daughter.add(dbp);
+  const beacon = new THREE.PointLight(0xff69b4, 2, 15);
+  beacon.position.y = 1.2;
+  daughter.add(beacon);
+  daughter.position.set(1, 0, DAUGHTER_Z);
+  scene.add(daughter);
+
+  const mBody = makeHumanoid(0x6b4c3b, 1.6, 0.4, 0.2);
+  mother.add(mBody);
+  mother.position.set(2.5, 0, DAUGHTER_Z + 0.5);
+  scene.add(mother);
+
+  const npcColors = [0x555555, 0x666677, 0x776655, 0x557766, 0x886655, 0x556688, 0x778855, 0x887766];
+  for (let i = 0; i < NPC_COUNT; i++) {
+    const h = 1.4 + Math.random() * 0.5;
+    const c = npcColors[Math.floor(Math.random() * npcColors.length)];
+    const npc = makeHumanoid(c, h, 0.3 + Math.random() * 0.15, 0.18);
+    const z = (Math.random() - 0.5) * (PLATFORM_LEN - 40);
+    const x = (Math.random() - 0.5) * (PLATFORM_W - 3);
+    npc.position.set(x, 0, z);
+    npc.userData = { baseX: x, baseZ: z, wobblePhase: Math.random() * Math.PI * 2, wobbleSpeed: 0.3 + Math.random() * 0.5 };
+    scene.add(npc);
+    npcs.push(npc);
+  }
+}
+
+/* ════════════════════════════════════════════════
+   音效系統（程序化生成）
+   ════════════════════════════════════════════════ */
+let audioCtx = null;
+let nextBeat = 0;
+
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function playHeartbeat() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  if (now < nextBeat) return;
+  const interval = 60 / state.heartRate;
+  nextBeat = now + interval;
+
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(55, now);
+  osc.frequency.exponentialRampToValueAtTime(35, now + 0.15);
+  gain.gain.setValueAtTime(0.3, now);
+  gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.3);
+
+  const osc2 = audioCtx.createOscillator();
+  const gain2 = audioCtx.createGain();
+  osc2.type = "sine";
+  osc2.frequency.setValueAtTime(50, now + 0.12);
+  osc2.frequency.exponentialRampToValueAtTime(30, now + 0.27);
+  gain2.gain.setValueAtTime(0.2, now + 0.12);
+  gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+  osc2.connect(gain2);
+  gain2.connect(audioCtx.destination);
+  osc2.start(now + 0.12);
+  osc2.stop(now + 0.4);
+}
+
+function playFootstep() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.05, audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.015));
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  const gain = audioCtx.createGain();
+  gain.gain.value = 0.08;
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.value = 800;
+  src.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+  src.start(now);
+}
+
+function playDoorChime() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  for (let i = 0; i < 4; i++) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.15, now + i * 0.3);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.3 + 0.2);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now + i * 0.3);
+    osc.stop(now + i * 0.3 + 0.25);
+  }
+}
+
+function playSuccess() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  [523, 659, 784].forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.12, now + i * 0.2);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.2 + 0.4);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now + i * 0.2);
+    osc.stop(now + i * 0.2 + 0.5);
+  });
+}
+
+/* ════════════════════════════════════════════════
+   輸入系統
+   ════════════════════════════════════════════════ */
+const keys = {};
+let isMobile = false;
+let touchJoyX = 0, touchJoyY = 0;
+let touchSprinting = false;
+
+window.addEventListener("keydown", e => { keys[e.code] = true; });
+window.addEventListener("keyup",   e => { keys[e.code] = false; });
+
+function detectMobile() {
+  isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+  if (isMobile) {
+    dom.touchCtrl.style.display = "block";
+    dom.sprintBtn.style.display = "block";
+    dom.breathHint.textContent = "左手搖桿移動 · 右手衝刺";
+  } else {
+    dom.breathHint.textContent = "WASD 移動 · Shift 衝刺";
+  }
+}
+
+let joyActive = false;
+let joyCenter = { x: 0, y: 0 };
+dom.joystickArea.addEventListener("touchstart", e => {
+  e.preventDefault();
+  joyActive = true;
+  const r = dom.joystickArea.getBoundingClientRect();
+  joyCenter = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+}, { passive: false });
+dom.joystickArea.addEventListener("touchmove", e => {
+  e.preventDefault();
+  if (!joyActive) return;
+  const t = e.touches[0];
+  const dx = t.clientX - joyCenter.x;
+  const dy = t.clientY - joyCenter.y;
+  const maxR = 50;
+  const dist = Math.min(Math.sqrt(dx * dx + dy * dy), maxR);
+  const angle = Math.atan2(dy, dx);
+  touchJoyX = Math.cos(angle) * (dist / maxR);
+  touchJoyY = Math.sin(angle) * (dist / maxR);
+  dom.joystickKnob.style.transform = "translate(calc(-50% + " + (touchJoyX * 38) + "px), calc(-50% + " + (touchJoyY * 38) + "px))";
+}, { passive: false });
+const endJoy = () => { joyActive = false; touchJoyX = 0; touchJoyY = 0; dom.joystickKnob.style.transform = "translate(-50%,-50%)"; };
+dom.joystickArea.addEventListener("touchend", endJoy);
+dom.joystickArea.addEventListener("touchcancel", endJoy);
+
+dom.sprintBtn.addEventListener("touchstart", e => { e.preventDefault(); touchSprinting = true; }, { passive: false });
+dom.sprintBtn.addEventListener("touchend",   () => { touchSprinting = false; });
+dom.sprintBtn.addEventListener("touchcancel", () => { touchSprinting = false; });
+
+/* ════════════════════════════════════════════════
+   敘事系統
+   ════════════════════════════════════════════════ */
+function showNarrative(text, duration) {
+  duration = duration || 3;
+  dom.narrText.textContent = text;
+  dom.narrText.classList.add("show");
+  state.narrTimer = duration;
+}
+
+function updateNarrative(dt) {
+  if (state.narrTimer > 0) {
+    state.narrTimer -= dt;
+    if (state.narrTimer <= 0) {
+      dom.narrText.classList.remove("show");
+    }
+  }
+}
+
+/* ════════════════════════════════════════════════
+   碰撞偵測
+   ════════════════════════════════════════════════ */
+function checkCollisions() {
+  for (const npc of npcs) {
+    const dx = father.position.x - npc.position.x;
+    const dz = father.position.z - npc.position.z;
+    const dist = Math.sqrt(dx * dx + dz * dz);
+    if (dist < 0.8) {
+      const push = (0.8 - dist) * 0.7;
+      father.position.x += (dx / dist) * push;
+      father.position.z += (dz / dist) * push;
+    }
+  }
+  const halfW = PLATFORM_W / 2 - 0.5;
+  father.position.x = Math.max(-halfW, Math.min(halfW, father.position.x));
+}
+
+/* ════════════════════════════════════════════════
+   開場動畫
+   ════════════════════════════════════════════════ */
+function startIntro() {
+  state.phase = "intro";
+  state.introTimer = 0;
+  document.body.classList.add("letterbox-on");
+  state.trainSouthZ = PLATFORM_LEN * 0.8;
+  state.trainNorthZ = -PLATFORM_LEN * 0.8;
+  state.trainSouthArrived = false;
+  state.trainNorthArrived = false;
+}
+
+function updateIntro(dt) {
+  state.introTimer += dt;
+  const t = state.introTimer;
+
+  if (t < 4) {
+    const p = t / 4;
+    camera.position.set(
+      Math.sin(p * 0.3) * 8,
+      15 - p * 5,
+      PLATFORM_LEN / 2 - p * 30
+    );
+    camera.lookAt(0, 0, PLATFORM_LEN / 3);
+    if (t > 1 && t < 3.5) showNarrative("南下的火車慢慢滑進台中站", 2);
+  }
+
+  if (!state.trainSouthArrived) {
+    state.trainSouthZ -= dt * 25;
+    if (state.trainSouthZ <= 0) {
+      state.trainSouthZ = 0;
+      state.trainSouthArrived = true;
+    }
+    trainSouth.position.z = state.trainSouthZ;
+  }
+
+  if (t >= 4 && t < 7) {
+    const p = (t - 4) / 3;
+    camera.position.set(2, 2.5, state.playerZ + 5 - p * 3);
+    camera.lookAt(father.position.x, 1.2, father.position.z);
+    if (t > 4.5 && t < 6.5) showNarrative("有一個人從一號車廂衝了出來——那是把拔", 2.5);
+  }
+
+  if (t > 3 && !state.trainNorthArrived) {
+    state.trainNorthZ += dt * 20;
+    if (state.trainNorthZ >= 0) {
+      state.trainNorthZ = 0;
+      state.trainNorthArrived = true;
+      state.trainNorthDoorOpen = true;
+      state.doorPhase = 0;
+    }
+    trainNorth.position.z = state.trainNorthZ;
+  }
+
+  if (t >= 7 && t < 9) {
+    const p = (t - 7) / 2;
+    camera.position.set(
+      THREE.MathUtils.lerp(2, 3, p),
+      THREE.MathUtils.lerp(2.5, 2, p),
+      THREE.MathUtils.lerp(state.playerZ + 2, DAUGHTER_Z + 8, p)
+    );
+    camera.lookAt(1, 0.5, DAUGHTER_Z);
+    if (t > 7.5) showNarrative("月台另一端，有個粉紅色小背包在等他", 2);
+  }
+
+  if (t >= 9.5) {
+    state.phase = "running";
+    state.timeLeft = GAME_TIME;
+    dom.hud.style.display = "block";
+    dom.sprintWrap.style.display = "block";
+    dom.breathHint.style.opacity = "1";
+    setTimeout(() => { dom.breathHint.style.opacity = "0"; }, 4000);
+    document.body.classList.remove("letterbox-on");
+    showNarrative("跑！", 1.5);
+    if (audioCtx) playDoorChime();
+  }
+}
+
+/* ════════════════════════════════════════════════
+   門動畫
+   ════════════════════════════════════════════════ */
+function updateDoors() {
+  const dt = 0.016;
+  if (state.trainNorthDoorOpen && state.doorPhase < 1) {
+    state.doorPhase = Math.min(1, state.doorPhase + dt * 1.5);
+  }
+  if (state.trainNorthLeaving && state.doorPhase > 0) {
+    state.doorPhase = Math.max(0, state.doorPhase - dt * 2);
+  }
+  const offset = state.doorPhase * 0.65;
+  for (const d of northDoors) {
+    d.left.position.z  = d.z - 0.35 - offset;
+    d.right.position.z = d.z + 0.35 + offset;
+  }
+}
+
+/* ════════════════════════════════════════════════
+   遊戲邏輯更新
+   ════════════════════════════════════════════════ */
+let footstepTimer = 0;
+
+function updateGame(dt) {
+  if (state.phase !== "running" && state.phase !== "sprint2") return;
+
+  let moveX = 0, moveZ = 0;
+  if (isMobile) {
+    moveX = touchJoyX;
+    moveZ = -touchJoyY;
+    state.sprinting = touchSprinting;
+  } else {
+    if (keys["KeyA"] || keys["ArrowLeft"])  moveX = -1;
+    if (keys["KeyD"] || keys["ArrowRight"]) moveX =  1;
+    if (keys["KeyW"] || keys["ArrowUp"])    moveZ = -1;
+    if (keys["KeyS"] || keys["ArrowDown"])  moveZ =  1;
+    state.sprinting = !!(keys["ShiftLeft"] || keys["ShiftRight"]);
+  }
+
+  if (state.sprinting && state.sprint > 0) {
+    state.sprint = Math.max(0, state.sprint - SPRINT_DRAIN * dt);
+  } else {
+    state.sprinting = false;
+    state.sprint = Math.min(SPRINT_MAX, state.sprint + SPRINT_REGEN * dt);
+  }
+
+  const speed = state.sprinting ? SPRINT_SPEED : RUN_SPEED;
+  const carrying = state.gotDaughter ? 0.75 : 1;
+
+  let vz = -speed * carrying;
+  if (moveZ > 0) vz = speed * 0.3 * carrying;
+  if (moveZ < 0) vz = -speed * carrying;
+
+  father.position.z += vz * dt;
+  father.position.x += moveX * DODGE_SPEED * dt;
+
+  checkCollisions();
+
+  state.timeLeft -= dt;
+
+  const urgency = 1 - state.timeLeft / GAME_TIME;
+  state.heartRate = 60 + urgency * 120;
+  playHeartbeat();
+
+  footstepTimer -= dt;
+  if (footstepTimer <= 0) {
+    playFootstep();
+    footstepTimer = state.sprinting ? 0.25 : 0.35;
+  }
+
+  const bobFreq = state.sprinting ? 12 : 8;
+  father.position.y = Math.abs(Math.sin(state.clock * bobFreq)) * 0.08;
+  father.rotation.z = Math.sin(state.clock * bobFreq * 0.5) * 0.05;
+
+  const pct = Math.max(0, state.timeLeft / GAME_TIME) * 100;
+  dom.timerFill.style.width = pct + "%";
+  dom.timerText.textContent = Math.max(0, state.timeLeft).toFixed(1);
+  dom.sprintFill.style.width = (state.sprint / SPRINT_MAX * 100) + "%";
+
+  if (!state.gotDaughter) {
+    const dist = Math.abs(father.position.z - DAUGHTER_Z);
+    dom.distText.textContent = "距離女兒 " + Math.max(0, dist).toFixed(0) + "m";
+  } else {
+    let minD = Infinity;
+    for (const d of northDoors) {
+      const dWorldZ = trainNorth.position.z + d.z;
+      const dz = Math.abs(father.position.z - dWorldZ);
+      if (dz < minD) minD = dz;
+    }
+    dom.distText.textContent = "距離車門 " + Math.max(0, minD).toFixed(0) + "m";
+  }
+
+  dom.vignette.style.opacity = state.timeLeft < 10 ? String((1 - state.timeLeft / 10) * 0.6) : "0";
+
+  if (state.timeLeft < 8) {
+    dom.timerText.style.color = "#e74c3c";
+  } else if (state.timeLeft < 15) {
+    dom.timerText.style.color = "#f39c12";
+  }
+
+  if (!state.gotDaughter && Math.abs(father.position.z - DAUGHTER_Z) < 2.5) {
+    state.gotDaughter = true;
+    state.phase = "grabbed";
+    showNarrative("把拔把我整個抱起來", 2);
+    playSuccess();
+    scene.remove(daughter);
+    father.add(daughter);
+    daughter.position.set(0.3, 0.6, 0.2);
+    setTimeout(() => {
+      state.phase = "sprint2";
+      showNarrative("快！北上自強號的門要關了！", 2.5);
+      if (audioCtx) playDoorChime();
+    }, 1500);
+    return;
+  }
+
+  if (state.gotDaughter && state.phase === "sprint2") {
+    const trainX = PLATFORM_W / 2 + 3;
+    const distToTrainX = Math.abs(father.position.x - (trainX - 2));
+    for (const d of northDoors) {
+      const doorWorldZ = trainNorth.position.z + d.z;
+      const dz = Math.abs(father.position.z - doorWorldZ);
+      if (dz < 2.5 && distToTrainX < 4) {
+        victory();
+        return;
+      }
+    }
+  }
+
+  if (state.timeLeft <= 0) {
+    failure();
+  }
+}
+
+/* ════════════════════════════════════════════════
+   勝利 / 失敗
+   ════════════════════════════════════════════════ */
+function victory() {
+  state.phase = "victory";
+  document.body.classList.add("letterbox-on");
+  dom.hud.style.display = "none";
+  dom.sprintWrap.style.display = "none";
+  dom.vignette.style.opacity = "0";
+  if (isMobile) {
+    dom.touchCtrl.style.display = "none";
+    dom.sprintBtn.style.display = "none";
+  }
+  playSuccess();
+  showNarrative("「我趕上了。」", 4);
+
+  setTimeout(() => {
+    showNarrative("他一邊喘氣，一邊笑", 3);
+  }, 4500);
+
+  setTimeout(() => {
+    dom.result.classList.add("show");
+    dom.resultTitle.textContent = "我趕上了。";
+    const lines = [
+      "在那個擁抱裡，我看到他心裡真正想的是：",
+      "不管多趕、多累，他都要「每一次都趕上」。",
+      "",
+      "只要他還願意在月台上那樣用力奔跑，",
+      "我們之間，就還有一條",
+      "拉得再長也不會斷的線。"
+    ];
+    dom.resultBody.textContent = "";
+    lines.forEach((line, i) => {
+      const el = document.createElement("div");
+      el.textContent = line || "\u00A0";
+      dom.resultBody.appendChild(el);
+    });
+  }, 8000);
+}
+
+function failure() {
+  state.phase = "fail";
+  state.trainNorthLeaving = true;
+  document.body.classList.add("letterbox-on");
+  dom.hud.style.display = "none";
+  dom.sprintWrap.style.display = "none";
+  dom.vignette.style.opacity = "0";
+  if (isMobile) {
+    dom.touchCtrl.style.display = "none";
+    dom.sprintBtn.style.display = "none";
+  }
+  showNarrative("車門關上了……", 4);
+
+  setTimeout(() => {
+    dom.result.classList.add("show");
+    dom.resultTitle.textContent = "來不及了";
+    const lines = [
+      "可是他從不放棄。",
+      "每一次，他都會再試一次。",
+      "",
+      "因為月台的另一端，",
+      "有他最想趕上的人。"
+    ];
+    dom.resultBody.textContent = "";
+    lines.forEach((line) => {
+      const el = document.createElement("div");
+      el.textContent = line || "\u00A0";
+      dom.resultBody.appendChild(el);
+    });
+  }, 4000);
+}
+
+/* ════════════════════════════════════════════════
+   攝影機系統
+   ════════════════════════════════════════════════ */
+const camTarget = new THREE.Vector3();
+const camPos    = new THREE.Vector3();
+
+function updateCamera(dt) {
+  if (state.phase === "intro") return;
+
+  if (state.phase === "running" || state.phase === "sprint2") {
+    const behind = 6;
+    const height = 3.5;
+    const fovTarget = state.sprinting ? 68 : 58;
+    camera.fov = THREE.MathUtils.lerp(camera.fov, fovTarget, dt * 3);
+    camera.updateProjectionMatrix();
+
+    camPos.set(
+      father.position.x * 0.3,
+      height,
+      father.position.z + behind
+    );
+    camTarget.set(father.position.x, 1.2, father.position.z - 8);
+
+    camera.position.lerp(camPos, dt * 5);
+    camera.lookAt(camTarget);
+
+    if (state.cameraShake > 0) {
+      camera.position.x += (Math.random() - 0.5) * state.cameraShake * 0.1;
+      camera.position.y += (Math.random() - 0.5) * state.cameraShake * 0.05;
+      state.cameraShake *= 0.9;
+    }
+  }
+
+  if (state.phase === "grabbed") {
+    camPos.set(father.position.x + 2, 2, father.position.z + 2);
+    camera.position.lerp(camPos, dt * 3);
+    camera.lookAt(father.position.x, 1, father.position.z);
+  }
+
+  if (state.phase === "victory") {
+    camPos.set(father.position.x + 3, 3, father.position.z + 6);
+    camera.position.lerp(camPos, dt * 0.5);
+    camera.lookAt(father.position.x, 1.2, father.position.z);
+  }
+
+  if (state.phase === "fail") {
+    camPos.set(father.position.x, 4, father.position.z + 12);
+    camera.position.lerp(camPos, dt * 1);
+    camera.lookAt(trainNorth.position.x, 2, trainNorth.position.z);
+  }
+}
+
+/* ════════════════════════════════════════════════
+   NPC 微動
+   ════════════════════════════════════════════════ */
+function updateNPCs(dt) {
+  for (const npc of npcs) {
+    const d = npc.userData;
+    d.wobblePhase += d.wobbleSpeed * dt;
+    npc.position.x = d.baseX + Math.sin(d.wobblePhase) * 0.15;
+  }
+}
+
+/* ════════════════════════════════════════════════
+   火車離站動畫
+   ════════════════════════════════════════════════ */
+function updateTrainLeave(dt) {
+  if (state.trainNorthLeaving) {
+    trainNorth.position.z += dt * 15;
+  }
+}
+
+/* ════════════════════════════════════════════════
+   主迴圈
+   ════════════════════════════════════════════════ */
+const gameClock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(gameClock.getDelta(), 0.05);
+  state.clock += dt;
+
+  mainLight.position.z = father.position.z;
+  mainLight.target.position.z = father.position.z;
+  warmFill.position.z = father.position.z;
+
+  if (!state.gotDaughter && daughter.parent === scene) {
+    const beaconLight = daughter.children.find(c => c.isLight);
+    if (beaconLight) beaconLight.intensity = 1.5 + Math.sin(state.clock * 4) * 0.8;
+  }
+
+  switch (state.phase) {
+    case "intro":
+      updateIntro(dt);
+      updateDoors();
+      break;
+    case "running":
+    case "sprint2":
+      updateGame(dt);
+      updateDoors();
+      updateNPCs(dt);
+      updateCamera(dt);
+      break;
+    case "grabbed":
+      updateDoors();
+      updateCamera(dt);
+      break;
+    case "victory":
+      updateCamera(dt);
+      updateDoors();
+      break;
+    case "fail":
+      updateTrainLeave(dt);
+      updateDoors();
+      updateCamera(dt);
+      break;
+  }
+
+  updateNarrative(dt);
+  renderer.render(scene, camera);
+}
+
+/* ════════════════════════════════════════════════
+   初始化與事件
+   ════════════════════════════════════════════════ */
+function init() {
+  buildPlatform();
+  setupTrains();
+  buildCharacters();
+  detectMobile();
+  animate();
+}
+
+function resetGame() {
+  state.phase = "title";
+  state.clock = 0;
+  state.timeLeft = GAME_TIME;
+  state.sprint = SPRINT_MAX;
+  state.playerZ = PLATFORM_LEN / 2 - 10;
+  state.playerX = 0;
+  state.sprinting = false;
+  state.gotDaughter = false;
+  state.introTimer = 0;
+  state.narrTimer = 0;
+  state.cameraShake = 0;
+  state.heartRate = 60;
+  state.trainSouthArrived = false;
+  state.trainNorthArrived = false;
+  state.trainNorthDoorOpen = false;
+  state.trainNorthLeaving = false;
+  state.doorPhase = 0;
+  nextBeat = 0;
+
+  father.position.set(0, 0, state.playerZ);
+  father.rotation.set(0, 0, 0);
+
+  if (daughter.parent === father) {
+    father.remove(daughter);
+    scene.add(daughter);
+  }
+  daughter.position.set(1, 0, DAUGHTER_Z);
+
+  trainSouth.position.z = PLATFORM_LEN;
+  trainNorth.position.z = -PLATFORM_LEN;
+
+  dom.result.classList.remove("show");
+  dom.hud.style.display = "none";
+  dom.sprintWrap.style.display = "none";
+  dom.vignette.style.opacity = "0";
+  dom.timerText.style.color = "#f39c12";
+  dom.narrText.classList.remove("show");
+  document.body.classList.remove("letterbox-on");
+
+  dom.title.classList.remove("hide");
+  dom.title.style.display = "flex";
+}
+
+dom.title.addEventListener("click", () => {
+  initAudio();
+  dom.title.classList.add("hide");
+  setTimeout(() => {
+    dom.title.style.display = "none";
+    startIntro();
+  }, 1200);
+});
+
+dom.resultRetry.addEventListener("click", () => {
+  resetGame();
+});
+
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+init();
+
+</script>
+</body>
+</html>
