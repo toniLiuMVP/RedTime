@@ -203,7 +203,7 @@ import * as THREE from "three";
 /* ════════════════════════════════════════════════
    常數與設定
    ════════════════════════════════════════════════ */
-const PLATFORM_LEN = 320;
+const PLATFORM_LEN = 400;
 const PLATFORM_W   = 10;
 const RUN_SPEED    = 8.5;
 const SPRINT_SPEED = 12.5;
@@ -331,6 +331,13 @@ const state = {
   quality: 3,
   /* leaderboard */
   itemsCollected: 0,
+  /* guard slow */
+  guardSlowTimer: 0,
+  /* victory animation */
+  victoryTimer: 0,
+  victoryPhase: 0,
+  victoryDoorX: 0,
+  victoryDoorZ: 0,
 };
 
 /* ════════════════════════════════════════════════
@@ -389,11 +396,14 @@ const mainLight = new THREE.DirectionalLight(0xfff5e6, 2.0);
 mainLight.position.set(15, 50, 10);
 mainLight.castShadow = true;
 mainLight.shadow.mapSize.set(preset.shadowSize || 1024, preset.shadowSize || 1024);
-mainLight.shadow.camera.left   = -15;
-mainLight.shadow.camera.right  =  15;
+mainLight.shadow.camera.left   = -25;
+mainLight.shadow.camera.right  =  25;
 mainLight.shadow.camera.top    =  60;
 mainLight.shadow.camera.bottom = -60;
+mainLight.shadow.bias = -0.001;
+mainLight.shadow.normalBias = 0.02;
 scene.add(mainLight);
+scene.add(mainLight.target);
 
 const warmFill = new THREE.PointLight(0xffeedd, 0.3, 50);
 warmFill.position.set(0, 8, 0);
@@ -472,7 +482,7 @@ function buildPlatform() {
   scene.add(m);
 
   for (const side of [-1, 1]) {
-    const yg = new THREE.BoxGeometry(0.3, 0.03, PLATFORM_LEN);
+    const yg = new THREE.BoxGeometry(0.5, 0.05, PLATFORM_LEN);
     const ym = new THREE.Mesh(yg, MAT.yellow);
     ym.position.set(side * (PLATFORM_W / 2 - 0.2), 0.02, 0);
     scene.add(ym);
@@ -577,18 +587,133 @@ function buildTrain(group, color, stripe, hasDoors) {
       const bm = new THREE.Mesh(bg, new THREE.MeshStandardMaterial({ color: 0x333333 }));
       bm.position.set(0, -0.25, cz + bz);
       group.add(bm);
+
+      /* Wheels: 4 per bogie (2 per side) */
+      const wheelMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.6, roughness: 0.4 });
+      for (const wx of [-1.2, 1.2]) {
+        for (const wzo of [-0.5, 0.5]) {
+          const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.12, 12), wheelMat);
+          wheel.rotation.x = Math.PI / 2;
+          wheel.position.set(wx, -0.5, cz + bz + wzo);
+          group.add(wheel);
+        }
+      }
     }
   }
 }
 
 function setupTrains() {
   buildTrain(trainSouth, 0x2c5f8a, 0x1a3a6a, false);
-  trainSouth.position.set(-(PLATFORM_W / 2 + 3), 0, PLATFORM_LEN);
+  trainSouth.position.set(-(PLATFORM_W / 2 + 3), -0.45, PLATFORM_LEN);
   scene.add(trainSouth);
 
   buildTrain(trainNorth, 0xcc6622, 0xe88833, true);
-  trainNorth.position.set(PLATFORM_W / 2 + 3, 0, -PLATFORM_LEN);
+  trainNorth.position.set(PLATFORM_W / 2 + 3, -0.45, -PLATFORM_LEN);
   scene.add(trainNorth);
+}
+
+/* ════════════════════════════════════════════════
+   黃線安全警衛
+   ════════════════════════════════════════════════ */
+const guards = [];
+const MAT_guardVest = new THREE.MeshStandardMaterial({ color: 0xccff00, roughness: 0.5, emissive: 0x334400, emissiveIntensity: 0.2 });
+const MAT_guardSkin = new THREE.MeshStandardMaterial({ color: 0xdeb887, roughness: 0.8 });
+const MAT_guardPants = new THREE.MeshStandardMaterial({ color: 0x2a2a3a, roughness: 0.7 });
+const MAT_guardHat = new THREE.MeshStandardMaterial({ color: 0x1a1a8a, roughness: 0.6 });
+
+function createGuards() {
+  /* Remove old guards */
+  for (var gi = 0; gi < guards.length; gi++) {
+    if (guards[gi].parent) scene.remove(guards[gi]);
+  }
+  guards.length = 0;
+
+  for (var side = -1; side <= 1; side += 2) {
+    for (var i = 0; i < 5; i++) {
+      var guard = new THREE.Group();
+
+      /* Body (high-vis vest) */
+      var body = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.8, 8), MAT_guardVest);
+      body.position.y = 0.8;
+      body.castShadow = true;
+      guard.add(body);
+
+      /* Head */
+      var head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), MAT_guardSkin);
+      head.position.y = 1.35;
+      head.castShadow = true;
+      guard.add(head);
+
+      /* Hat */
+      var hat = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 0.12, 8), MAT_guardHat);
+      hat.position.y = 1.48;
+      guard.add(hat);
+
+      /* Legs */
+      var legL = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.4, 6), MAT_guardPants);
+      legL.position.set(-0.08, 0.2, 0);
+      guard.add(legL);
+      var legR = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.4, 6), MAT_guardPants);
+      legR.position.set(0.08, 0.2, 0);
+      guard.add(legR);
+
+      var baseZ = -PLATFORM_LEN / 2 + 30 + (PLATFORM_LEN - 60) * (i / 4);
+      var patrolRange = 10 + Math.random() * 15;
+      guard.position.set(
+        side * (PLATFORM_W / 2 - 0.2),
+        0,
+        baseZ
+      );
+      guard.userData = {
+        side: side,
+        baseZ: baseZ,
+        patrolMin: baseZ - patrolRange,
+        patrolMax: baseZ + patrolRange,
+        patrolSpeed: 1.2 + Math.random() * 1.0,
+        patrolDir: Math.random() > 0.5 ? 1 : -1
+      };
+      scene.add(guard);
+      guards.push(guard);
+    }
+  }
+}
+
+function playGuardWhistle() {
+  if (!audioCtx) return;
+  var now = audioCtx.currentTime;
+  var osc = audioCtx.createOscillator();
+  var gain = audioCtx.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(2000, now);
+  osc.frequency.linearRampToValueAtTime(2200, now + 0.15);
+  osc.frequency.linearRampToValueAtTime(2000, now + 0.3);
+  gain.gain.setValueAtTime(0.25, now);
+  gain.gain.linearRampToValueAtTime(0.2, now + 0.15);
+  gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.5);
+}
+
+function updateGuards(dt) {
+  for (var gi = 0; gi < guards.length; gi++) {
+    var g = guards[gi];
+    var d = g.userData;
+    g.position.z += d.patrolDir * d.patrolSpeed * dt;
+    if (g.position.z > d.patrolMax) d.patrolDir = -1;
+    if (g.position.z < d.patrolMin) d.patrolDir = 1;
+
+    /* Collision check with father */
+    var dx = father.position.x - g.position.x;
+    var dz = father.position.z - g.position.z;
+    var dist = Math.sqrt(dx * dx + dz * dz);
+    if (dist < 1.0 && state.guardSlowTimer <= 0) {
+      state.guardSlowTimer = 5;
+      showNarrative("\u300C\u8ACB\u52FF\u8DE8\u8D8A\u9EC3\u7DDA\u3002\u300D", 2);
+      playGuardWhistle();
+    }
+  }
 }
 
 /* ════════════════════════════════════════════════
@@ -648,6 +773,7 @@ function buildFather() {
   /* Belly */
   const belly = new THREE.Mesh(new THREE.SphereGeometry(0.32, 8, 8), MAT.fatherBody);
   belly.position.set(0, 0.85, -0.2);
+  belly.castShadow = true;
   father.add(belly);
 
   /* Left arm */
@@ -697,6 +823,15 @@ function buildFather() {
   backpack.position.set(0, 1.05, 0.35);
   backpack.castShadow = true;
   father.add(backpack);
+
+  /* Contact shadow (blob) for visual grounding */
+  const contactShadow = new THREE.Mesh(
+    new THREE.CircleGeometry(0.5, 16),
+    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.25 })
+  );
+  contactShadow.rotation.x = -Math.PI / 2;
+  contactShadow.position.y = FATHER_BASE_Y + 0.01;
+  father.add(contactShadow);
 
   father.position.set(0, FATHER_BASE_Y, state.playerZ);
   scene.add(father);
@@ -1270,6 +1405,7 @@ function updatePowerups(dt) {
   if (state.collisionSlowTimer > 0) state.collisionSlowTimer = Math.max(0, state.collisionSlowTimer - dt);
   if (state.ultimateTimer > 0) state.ultimateTimer = Math.max(0, state.ultimateTimer - dt);
   if (state.luggageSlowTimer > 0) state.luggageSlowTimer = Math.max(0, state.luggageSlowTimer - dt);
+  if (state.guardSlowTimer > 0) state.guardSlowTimer = Math.max(0, state.guardSlowTimer - dt);
 
   if (state.pickupNotifyTimer > 0) {
     state.pickupNotifyTimer -= dt;
@@ -2289,6 +2425,13 @@ function updateBuffIndicators() {
     el.textContent = "\u884C\u674E\u7D46\u5012 " + state.luggageSlowTimer.toFixed(1) + "s";
     dom.buffIndicators.appendChild(el);
   }
+  if (state.guardSlowTimer > 0) {
+    const el = document.createElement("div");
+    el.className = "buff-item";
+    el.style.color = "#e74c3c";
+    el.textContent = "\u26A0 \u8ACB\u52FF\u8DE8\u8D8A\u9EC3\u7DDA " + state.guardSlowTimer.toFixed(1) + "s";
+    dom.buffIndicators.appendChild(el);
+  }
 }
 
 /* ════════════════════════════════════════════════
@@ -2338,6 +2481,7 @@ function updateGame(dt) {
   if (state.ultimateTimer > 0) { speedMult *= 2; drainMult *= 0.5; }
   if (state.collisionSlowTimer > 0) speedMult *= 0.5;
   if (state.luggageSlowTimer > 0) speedMult *= 0.3;
+  if (state.guardSlowTimer > 0) speedMult *= 0.1;
 
   /* Sprint only works when moving forward */
   if (state.sprinting && moveZ < 0 && state.sprint > 0) {
@@ -2588,6 +2732,8 @@ let lastSavedHighlight = -1;
    ════════════════════════════════════════════════ */
 function victory() {
   state.phase = "victory";
+  state.victoryTimer = 0;
+  state.victoryPhase = 0;
   document.body.classList.add("letterbox-on");
   dom.hud.style.display = "none";
   dom.sprintWrap.style.display = "none";
@@ -2600,40 +2746,118 @@ function victory() {
     dom.ultimateBtn.style.display = "none";
   }
   playSuccess();
-  showNarrative("\u300C\u6211\u8D95\u4E0A\u4E86\u3002\u300D", 4);
   stopAmbientSounds();
 
+  /* Find nearest north door */
+  var nearestDist = Infinity;
+  var nearestDoorZ = 0;
+  for (var di = 0; di < northDoors.length; di++) {
+    var dWorldZ = trainNorth.position.z + northDoors[di].z;
+    var ddz = Math.abs(father.position.z - dWorldZ);
+    if (ddz < nearestDist) {
+      nearestDist = ddz;
+      nearestDoorZ = dWorldZ;
+    }
+  }
+  state.victoryDoorX = PLATFORM_W / 2 - 1;
+  state.victoryDoorZ = nearestDoorZ;
+
+  /* Phase 1 starts: walk toward door */
+  showNarrative("\u300C\u6211\u8D95\u4E0A\u4E86\u3002\u300D", 3);
+
   /* BGM continues — do NOT fade or pause */
+}
 
-  setTimeout(function() {
-    showNarrative("\u4ED6\u4E00\u908A\u5598\u6C23\uFF0C\u4E00\u908A\u7B11", 3);
-  }, 4500);
+function updateVictoryAnimation(dt) {
+  state.victoryTimer += dt;
+  var t = state.victoryTimer;
 
-  setTimeout(function() {
-    dom.result.classList.add("show");
-    dom.resultTitle.textContent = "\u6211\u8D95\u4E0A\u4E86\u3002";
-    dom.resultBody.textContent = "";
-    const lines = [
-      "\u5728\u90A3\u500B\u64C1\u62B1\u88E1\uFF0C\u6211\u770B\u5230\u4ED6\u5FC3\u88E1\u771F\u6B63\u60F3\u7684\u662F\uFF1A",
-      "\u4E0D\u7BA1\u591A\u8D95\u3001\u591A\u7D2F\uFF0C\u4ED6\u90FD\u8981\u300C\u6BCF\u4E00\u6B21\u90FD\u8D95\u4E0A\u300D\u3002",
-      "",
-      "\u53EA\u8981\u4ED6\u9084\u9858\u610F\u5728\u6708\u53F0\u4E0A\u90A3\u6A23\u7528\u529B\u5954\u8DD1\uFF0C",
-      "\u6211\u5011\u4E4B\u9593\uFF0C\u5C31\u9084\u6709\u4E00\u689D",
-      "\u62C9\u5F97\u518D\u9577\u4E5F\u4E0D\u6703\u65B7\u7684\u7DDA\u3002"
-    ];
-    lines.forEach(function(line) {
-      const el = document.createElement("div");
-      el.textContent = line || "\u00A0";
-      dom.resultBody.appendChild(el);
-    });
-    /* Show name input + leaderboard on victory */
-    dom.nameInputWrap.classList.add("show");
-    dom.nameInput.value = "";
-    dom.nameInput.readOnly = false;
-    dom.saveScoreBtn.disabled = false;
-    dom.saveScoreBtn.textContent = "\u8A18\u9304\u6210\u7E3E";
-    lastSavedHighlight = -1;
-  }, 8000);
+  /* Phase 1 (0-3s): Father walks toward nearest north door */
+  if (state.victoryPhase === 0) {
+    var targetX = state.victoryDoorX;
+    var targetZ = state.victoryDoorZ;
+    father.position.x = THREE.MathUtils.lerp(father.position.x, targetX, dt * 2);
+    father.position.z = THREE.MathUtils.lerp(father.position.z, targetZ, dt * 2);
+    /* Leg walking animation */
+    var legSwing = Math.sin(t * 10) * 0.4;
+    fatherLeftLeg.rotation.x = legSwing;
+    fatherRightLeg.rotation.x = -legSwing;
+    fatherLeftArm.rotation.x = -legSwing * 0.5;
+    fatherRightArm.rotation.x = legSwing * 0.5;
+    father.position.y = FATHER_BASE_Y + Math.abs(Math.sin(t * 10)) * 0.02;
+
+    if (t >= 3) {
+      state.victoryPhase = 1;
+      showNarrative("\u4ED6\u4E00\u908A\u5598\u6C23\uFF0C\u4E00\u908A\u7B11", 2);
+    }
+  }
+
+  /* Phase 2 (3-5s): Father enters the train */
+  if (state.victoryPhase === 1) {
+    var enterX = PLATFORM_W / 2 + 2;
+    father.position.x = THREE.MathUtils.lerp(father.position.x, enterX, dt * 3);
+    var legSwing2 = Math.sin(t * 8) * 0.3;
+    fatherLeftLeg.rotation.x = legSwing2;
+    fatherRightLeg.rotation.x = -legSwing2;
+    fatherLeftArm.rotation.x = -legSwing2 * 0.5;
+    fatherRightArm.rotation.x = legSwing2 * 0.5;
+
+    if (t >= 5) {
+      father.visible = false;
+      state.victoryPhase = 2;
+      state.trainNorthDoorOpen = false;
+    }
+  }
+
+  /* Phase 3 (5-7s): Doors close, train departs */
+  if (state.victoryPhase === 2) {
+    /* Doors closing handled by updateDoors via trainNorthDoorOpen=false + trainNorthLeaving */
+    if (state.doorPhase <= 0.05 && !state.trainNorthLeaving) {
+      state.trainNorthLeaving = true;
+    }
+    if (state.trainNorthLeaving) {
+      var accel = Math.min((t - 5) * 3, 20);
+      trainNorth.position.z += dt * accel;
+    }
+
+    if (t >= 7) {
+      state.victoryPhase = 3;
+    }
+  }
+
+  /* Phase 4 (7s+): Show result screen */
+  if (state.victoryPhase === 3) {
+    /* Train keeps moving away */
+    if (state.trainNorthLeaving) {
+      trainNorth.position.z += dt * 25;
+    }
+
+    if (state.victoryPhase === 3 && t >= 7.5 && !dom.result.classList.contains("show")) {
+      dom.result.classList.add("show");
+      dom.resultTitle.textContent = "\u6211\u8D95\u4E0A\u4E86\u3002";
+      dom.resultBody.textContent = "";
+      var lines = [
+        "\u5728\u90A3\u500B\u64C1\u62B1\u88E1\uFF0C\u6211\u770B\u5230\u4ED6\u5FC3\u88E1\u771F\u6B63\u60F3\u7684\u662F\uFF1A",
+        "\u4E0D\u7BA1\u591A\u8D95\u3001\u591A\u7D2F\uFF0C\u4ED6\u90FD\u8981\u300C\u6BCF\u4E00\u6B21\u90FD\u8D95\u4E0A\u300D\u3002",
+        "",
+        "\u53EA\u8981\u4ED6\u9084\u9858\u610F\u5728\u6708\u53F0\u4E0A\u90A3\u6A23\u7528\u529B\u5954\u8DD1\uFF0C",
+        "\u6211\u5011\u4E4B\u9593\uFF0C\u5C31\u9084\u6709\u4E00\u689D",
+        "\u62C9\u5F97\u518D\u9577\u4E5F\u4E0D\u6703\u65B7\u7684\u7DDA\u3002"
+      ];
+      lines.forEach(function(line) {
+        var el = document.createElement("div");
+        el.textContent = line || "\u00A0";
+        dom.resultBody.appendChild(el);
+      });
+      /* Show name input + leaderboard on victory */
+      dom.nameInputWrap.classList.add("show");
+      dom.nameInput.value = "";
+      dom.nameInput.readOnly = false;
+      dom.saveScoreBtn.disabled = false;
+      dom.saveScoreBtn.textContent = "\u8A18\u9304\u6210\u7E3E";
+      lastSavedHighlight = -1;
+    }
+  }
 }
 
 function failure() {
@@ -2717,9 +2941,22 @@ function updateCamera(dt) {
   }
 
   if (state.phase === "victory") {
-    camPos.set(father.position.x + 3, 3, father.position.z + 6);
-    camera.position.lerp(camPos, dt * 0.5);
-    camera.lookAt(father.position.x, 1.2, father.position.z);
+    if (state.victoryPhase <= 1) {
+      /* Orbit around father as he boards */
+      var vAngle = state.victoryTimer * 0.3;
+      camPos.set(
+        father.position.x + Math.cos(vAngle) * 5,
+        2.5,
+        father.position.z + Math.sin(vAngle) * 5
+      );
+      camera.position.lerp(camPos, dt * 2);
+      camera.lookAt(father.position.x, 1.2, father.position.z);
+    } else {
+      /* Watch train leave */
+      camPos.set(trainNorth.position.x - 5, 4, trainNorth.position.z + 8);
+      camera.position.lerp(camPos, dt * 1.5);
+      camera.lookAt(trainNorth.position.x, 2, trainNorth.position.z);
+    }
   }
 
   if (state.phase === "fail") {
@@ -2821,8 +3058,9 @@ function animate() {
   const dt = Math.min(gameClock.getDelta(), 0.033);
   state.clock += dt;
 
-  mainLight.position.z = father.position.z;
-  mainLight.target.position.z = father.position.z;
+  mainLight.position.set(father.position.x + 15, 50, father.position.z + 10);
+  mainLight.target.position.copy(father.position);
+  mainLight.target.updateMatrixWorld();
   warmFill.position.z = father.position.z;
 
   if (!state.gotDaughter && daughter.parent === scene) {
@@ -2840,6 +3078,7 @@ function animate() {
       updateGame(dt);
       updateDoors();
       updateNPCs(dt);
+      updateGuards(dt);
       updateCamera(dt);
       break;
     case "grabbed":
@@ -2847,6 +3086,7 @@ function animate() {
       updateCamera(dt);
       break;
     case "victory":
+      updateVictoryAnimation(dt);
       updateCamera(dt);
       updateDoors();
       break;
@@ -2868,6 +3108,7 @@ function init() {
   buildPlatform();
   setupTrains();
   buildCharacters();
+  createGuards();
   spawnPowerups();
   spawnLuggage();
   createDoorMarker();
@@ -2914,6 +3155,13 @@ function resetGame() {
   /* Luggage/barrier state reset */
   state.luggageSlowTimer = 0;
   state.barrierHintShown = false;
+
+  /* Victory animation reset */
+  state.victoryTimer = 0;
+  state.victoryPhase = 0;
+  state.victoryDoorX = 0;
+  state.victoryDoorZ = 0;
+  father.visible = true;
 
   /* Leaderboard state reset */
   state.itemsCollected = 0;
@@ -2971,6 +3219,17 @@ function resetGame() {
     npc.position.x = npc.userData.baseX;
     npc.position.z = npc.userData.baseZ;
     npc.userData.wobblePhase = Math.random() * Math.PI * 2;
+  }
+
+  /* Reset guards */
+  state.guardSlowTimer = 0;
+  for (var gi = 0; gi < guards.length; gi++) {
+    var g = guards[gi];
+    var patrolRange = 10 + Math.random() * 15;
+    g.position.z = g.userData.baseZ;
+    g.userData.patrolMin = g.userData.baseZ - patrolRange;
+    g.userData.patrolMax = g.userData.baseZ + patrolRange;
+    g.userData.patrolDir = Math.random() > 0.5 ? 1 : -1;
   }
 
   /* Recreate power-ups and luggage */
