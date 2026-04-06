@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>月台上的奔跑 — 三十秒偶像劇</title>
+<title>月台上的狂奔 — 三十秒偶像劇</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;overflow:hidden;background:#3a6ea0;font-family:"Noto Serif TC","PingFang TC","Microsoft JhengHei",serif}
@@ -60,6 +60,10 @@ canvas{display:block;width:100%;height:100%}
 .lb-table tr.highlight td{color:#ffd700;font-weight:700}
 .lb-close{color:#b8956a;font-size:clamp(12px,1.6vw,15px);margin-top:24px;cursor:pointer;pointer-events:auto}
 .lb-close:hover{color:#e8d5b8}
+/* ── 結果畫面連結 ── */
+.result-links{margin-top:16px;display:flex;gap:20px;opacity:0;animation:fadeUp 1s 3s forwards}
+.result-link{color:#8a7560;font-size:clamp(11px,1.4vw,14px);text-decoration:none;pointer-events:auto;transition:color 0.2s}
+.result-link:hover{color:#e8d5b8}
 /* ── 名字輸入（勝利後）── */
 #name-input-wrap{margin-top:20px;opacity:0;text-align:center;display:none}
 #name-input-wrap.show{display:block;animation:fadeUp 1s 0.3s forwards}
@@ -126,7 +130,7 @@ canvas{display:block;width:100%;height:100%}
 <!-- 標題畫面 -->
 <div id="title-screen">
   <div class="title-year">2018 年 台中火車站</div>
-  <div class="title-main">月台上的奔跑</div>
+  <div class="title-main">月台上的狂奔</div>
   <div class="title-sub">三十秒偶像劇</div>
   <div class="title-start">點擊開始</div>
 </div>
@@ -166,6 +170,10 @@ canvas{display:block;width:100%;height:100%}
   </div>
   <div class="result-retry" id="result-retry">再來一次</div>
   <div id="leaderboard-btn">🏆 排行榜</div>
+  <div class="result-links">
+    <a class="result-link" href="../../index.html">回到首頁</a>
+    <a class="result-link" href="../../reader.html">閱讀完整故事</a>
+  </div>
 </div>
 
 <!-- 排行榜面板 -->
@@ -360,7 +368,7 @@ dom.muteBtn.addEventListener("click", function() {
    Three.js 初始化
    ════════════════════════════════════════════════ */
 let isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-const defaultQuality = isMobile ? 1 : 3;
+const defaultQuality = isMobile ? 3 : 4;
 state.quality = defaultQuality;
 const preset = QUALITY_PRESETS[state.quality];
 
@@ -628,49 +636,52 @@ function createGuards() {
   }
   guards.length = 0;
 
+  var GUARDS_PER_SIDE = 10;
   for (var side = -1; side <= 1; side += 2) {
-    for (var i = 0; i < 5; i++) {
+    for (var i = 0; i < GUARDS_PER_SIDE; i++) {
       var guard = new THREE.Group();
 
       /* Body (high-vis vest) */
-      var body = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.8, 8), MAT_guardVest);
-      body.position.y = 0.8;
-      body.castShadow = true;
-      guard.add(body);
+      var gbody = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.8, 8), MAT_guardVest);
+      gbody.position.y = 0.8;
+      gbody.castShadow = true;
+      guard.add(gbody);
 
       /* Head */
-      var head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), MAT_guardSkin);
-      head.position.y = 1.35;
-      head.castShadow = true;
-      guard.add(head);
+      var ghead = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), MAT_guardSkin);
+      ghead.position.y = 1.35;
+      ghead.castShadow = true;
+      guard.add(ghead);
 
       /* Hat */
-      var hat = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 0.12, 8), MAT_guardHat);
-      hat.position.y = 1.48;
-      guard.add(hat);
+      var ghat = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 0.12, 8), MAT_guardHat);
+      ghat.position.y = 1.48;
+      guard.add(ghat);
 
       /* Legs */
-      var legL = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.4, 6), MAT_guardPants);
-      legL.position.set(-0.08, 0.2, 0);
-      guard.add(legL);
-      var legR = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.4, 6), MAT_guardPants);
-      legR.position.set(0.08, 0.2, 0);
-      guard.add(legR);
+      var glegL = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.4, 6), MAT_guardPants);
+      glegL.position.set(-0.08, 0.2, 0);
+      guard.add(glegL);
+      var glegR = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.4, 6), MAT_guardPants);
+      glegR.position.set(0.08, 0.2, 0);
+      guard.add(glegR);
 
-      var baseZ = -PLATFORM_LEN / 2 + 30 + (PLATFORM_LEN - 60) * (i / 4);
-      var patrolRange = 10 + Math.random() * 15;
-      guard.position.set(
-        side * (PLATFORM_W / 2 - 0.2),
-        0,
-        baseZ
-      );
+      var baseZ = -PLATFORM_LEN / 2 + 20 + (PLATFORM_LEN - 40) * (i / (GUARDS_PER_SIDE - 1));
+      var patrolRange = 10 + Math.random() * 20;
+      var lineX = side * (PLATFORM_W / 2 - 0.2);
+      guard.position.set(lineX, 0, baseZ);
       guard.userData = {
         side: side,
+        lineX: lineX,
         baseZ: baseZ,
         patrolMin: baseZ - patrolRange,
         patrolMax: baseZ + patrolRange,
-        patrolSpeed: 1.2 + Math.random() * 1.0,
-        patrolDir: Math.random() > 0.5 ? 1 : -1
+        patrolSpeed: 1.0 + Math.random() * 1.2,
+        patrolDir: Math.random() > 0.5 ? 1 : -1,
+        /* X wander: can leave line up to ~0.5 (one person width) toward center */
+        wanderX: 0,
+        wanderTarget: 0,
+        wanderTimer: Math.random() * 3
       };
       scene.add(guard);
       guards.push(guard);
@@ -700,9 +711,22 @@ function updateGuards(dt) {
   for (var gi = 0; gi < guards.length; gi++) {
     var g = guards[gi];
     var d = g.userData;
+
+    /* Z patrol along the line (unlimited range on line) */
     g.position.z += d.patrolDir * d.patrolSpeed * dt;
     if (g.position.z > d.patrolMax) d.patrolDir = -1;
     if (g.position.z < d.patrolMin) d.patrolDir = 1;
+
+    /* X wander: leave line up to 0.5m toward center, stay on line freely */
+    d.wanderTimer -= dt;
+    if (d.wanderTimer <= 0) {
+      d.wanderTarget = (Math.random() - 0.3) * 0.7;
+      if (d.wanderTarget < 0) d.wanderTarget = 0;
+      d.wanderTarget *= -d.side;
+      d.wanderTimer = 1.5 + Math.random() * 3;
+    }
+    d.wanderX += (d.wanderTarget - d.wanderX) * dt * 2;
+    g.position.x = d.lineX + d.wanderX;
 
     /* Collision check with father */
     var dx = father.position.x - g.position.x;
@@ -3225,11 +3249,15 @@ function resetGame() {
   state.guardSlowTimer = 0;
   for (var gi = 0; gi < guards.length; gi++) {
     var g = guards[gi];
-    var patrolRange = 10 + Math.random() * 15;
+    var patrolRange = 10 + Math.random() * 20;
     g.position.z = g.userData.baseZ;
+    g.position.x = g.userData.lineX;
     g.userData.patrolMin = g.userData.baseZ - patrolRange;
     g.userData.patrolMax = g.userData.baseZ + patrolRange;
     g.userData.patrolDir = Math.random() > 0.5 ? 1 : -1;
+    g.userData.wanderX = 0;
+    g.userData.wanderTarget = 0;
+    g.userData.wanderTimer = Math.random() * 3;
   }
 
   /* Recreate power-ups and luggage */
