@@ -6,14 +6,14 @@
 <title>月台上的奔跑 — 三十秒偶像劇</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;overflow:hidden;background:#0a0a0a;font-family:"Noto Serif TC","PingFang TC","Microsoft JhengHei",serif}
+html,body{width:100%;height:100%;overflow:hidden;background:#3a6ea0;font-family:"Noto Serif TC","PingFang TC","Microsoft JhengHei",serif}
 canvas{display:block;width:100%;height:100%}
 
 /* ── 全畫面覆蓋層 ── */
 #overlay{position:fixed;inset:0;z-index:10;pointer-events:none;display:flex;flex-direction:column;align-items:center;justify-content:center}
 
 /* ── 標題畫面 ── */
-#title-screen{position:fixed;inset:0;z-index:100;background:#0a0a0a;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:opacity 1.2s}
+#title-screen{position:fixed;inset:0;z-index:100;background:linear-gradient(135deg,#1a2a3a 0%,#0a1520 50%,#1a2a3a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:opacity 1.2s}
 #title-screen.hide{opacity:0;pointer-events:none}
 .title-year{font-size:clamp(14px,2vw,20px);color:#b8956a;letter-spacing:0.5em;margin-bottom:12px;opacity:0;animation:fadeUp 1.5s 0.5s forwards}
 .title-main{font-size:clamp(28px,5vw,56px);color:#e8d5b8;font-weight:700;letter-spacing:0.15em;opacity:0;animation:fadeUp 1.5s 1s forwards}
@@ -26,26 +26,48 @@ canvas{display:block;width:100%;height:100%}
 #hud{position:fixed;top:0;left:0;right:0;z-index:20;padding:12px 20px;display:none;pointer-events:none}
 #timer-bar{width:100%;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;margin-bottom:8px}
 #timer-fill{width:100%;height:100%;background:linear-gradient(90deg,#e74c3c,#f39c12,#2ecc71);border-radius:3px;transition:width 0.1s}
-#hud-info{display:flex;justify-content:space-between;align-items:center;color:#e8d5b8;font-size:clamp(12px,1.6vw,16px)}
-#timer-text{color:#f39c12;font-weight:700;font-size:clamp(16px,2.5vw,24px)}
-#distance-text{color:#b8956a}
+#hud-info{display:flex;justify-content:space-between;align-items:center;color:#2c3e50;font-size:clamp(12px,1.6vw,16px);text-shadow:0 1px 3px rgba(255,255,255,0.5)}
+#timer-text{color:#c0392b;font-weight:700;font-size:clamp(16px,2.5vw,24px)}
+#distance-text{color:#5a4a3a}
 #sprint-bar-wrap{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:20;display:none;width:clamp(120px,30vw,200px)}
-#sprint-bar{width:100%;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden}
+#sprint-bar{width:100%;height:4px;background:rgba(0,0,0,0.15);border-radius:2px;overflow:hidden}
 #sprint-fill{width:100%;height:100%;background:linear-gradient(90deg,#3498db,#1abc9c);border-radius:2px;transition:width 0.15s}
-#sprint-label{text-align:center;color:#5a8a9a;font-size:11px;margin-top:4px}
+#sprint-label{text-align:center;color:#2c5f8a;font-size:11px;margin-top:4px;text-shadow:0 1px 2px rgba(255,255,255,0.4)}
 
 /* ── 敘事文字 ── */
 #narrative{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:30;text-align:center;pointer-events:none;width:clamp(280px,80vw,600px)}
-#narrative p{color:#e8d5b8;font-size:clamp(14px,2.2vw,20px);line-height:1.8;opacity:0;transition:opacity 0.8s;text-shadow:0 2px 12px rgba(0,0,0,0.8)}
+#narrative p{color:#2c3e50;font-size:clamp(14px,2.2vw,20px);line-height:1.8;opacity:0;transition:opacity 0.8s;text-shadow:0 1px 8px rgba(255,255,255,0.7),0 0px 3px rgba(255,255,255,0.5)}
 #narrative p.show{opacity:1}
 
 /* ── 結果畫面 ── */
-#result-screen{position:fixed;inset:0;z-index:90;background:rgba(10,10,10,0.95);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+#result-screen{position:fixed;inset:0;z-index:90;background:rgba(10,10,10,0.92);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px}
 #result-screen.show{display:flex}
 .result-text{color:#e8d5b8;font-size:clamp(20px,4vw,40px);font-weight:700;opacity:0;animation:fadeUp 1s 0.5s forwards}
 .result-sub{color:#8a7560;font-size:clamp(13px,2vw,18px);margin-top:20px;line-height:2;text-align:center;max-width:500px;opacity:0;animation:fadeUp 1s 1.2s forwards}
 .result-retry{color:#b8956a;font-size:clamp(12px,1.6vw,15px);margin-top:40px;cursor:pointer;pointer-events:auto;opacity:0;animation:fadeUp 1s 2s forwards}
 .result-retry:hover{color:#e8d5b8}
+
+/* ── 排行榜 ── */
+#leaderboard-btn{color:#b8956a;font-size:clamp(12px,1.6vw,15px);margin-top:16px;cursor:pointer;pointer-events:auto;opacity:0;animation:fadeUp 1s 2.5s forwards}
+#leaderboard-btn:hover{color:#e8d5b8}
+#leaderboard-panel{position:fixed;inset:0;z-index:95;background:rgba(10,10,10,0.95);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+#leaderboard-panel.show{display:flex}
+.lb-title{color:#e8d5b8;font-size:clamp(18px,3vw,28px);font-weight:700;margin-bottom:16px}
+.lb-table{width:clamp(280px,70vw,420px);border-collapse:collapse}
+.lb-table th,.lb-table td{padding:6px 10px;text-align:center;font-size:clamp(11px,1.4vw,14px)}
+.lb-table th{color:#b8956a;border-bottom:1px solid rgba(184,149,106,0.3)}
+.lb-table td{color:#c8c0b0}
+.lb-table tr.highlight td{color:#ffd700;font-weight:700}
+.lb-close{color:#b8956a;font-size:clamp(12px,1.6vw,15px);margin-top:24px;cursor:pointer;pointer-events:auto}
+.lb-close:hover{color:#e8d5b8}
+/* ── 名字輸入（勝利後）── */
+#name-input-wrap{margin-top:20px;opacity:0;text-align:center;display:none}
+#name-input-wrap.show{display:block;animation:fadeUp 1s 0.3s forwards}
+#name-input{background:rgba(255,255,255,0.08);border:1px solid rgba(184,149,106,0.4);border-radius:6px;color:#e8d5b8;font-size:15px;padding:8px 14px;width:160px;text-align:center;font-family:monospace;letter-spacing:2px;outline:none}
+#name-input:focus{border-color:#b8956a}
+#name-input::placeholder{color:rgba(184,149,106,0.4)}
+#save-score-btn{background:rgba(184,149,106,0.2);border:1px solid rgba(184,149,106,0.5);border-radius:6px;color:#b8956a;font-size:13px;padding:6px 18px;margin-left:8px;cursor:pointer;font-family:inherit}
+#save-score-btn:hover{background:rgba(184,149,106,0.35);color:#e8d5b8}
 
 /* ── 電影黑邊 ── */
 .letterbox-top,.letterbox-bot{position:fixed;left:0;right:0;height:0;background:#0a0a0a;z-index:5;transition:height 0.8s}
@@ -58,8 +80,8 @@ canvas{display:block;width:100%;height:100%}
 
 /* ── 手機觸控搖桿 ── */
 #touch-controls{position:fixed;bottom:30px;left:20px;z-index:40;display:none}
-#joystick-area{width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.05);border:2px solid rgba(255,255,255,0.1);position:relative}
-#joystick-knob{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.15);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transition:none}
+#joystick-area{width:120px;height:120px;border-radius:50%;background:rgba(0,0,0,0.08);border:2px solid rgba(0,0,0,0.15);position:relative}
+#joystick-knob{width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,0.18);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transition:none}
 #sprint-btn{position:fixed;bottom:60px;right:30px;z-index:40;display:none;width:64px;height:64px;border-radius:50%;background:rgba(243,156,18,0.2);border:2px solid rgba(243,156,18,0.4);color:#f39c12;font-size:12px;font-weight:700;line-height:64px;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
 
 /* ── 跳躍按鈕（手機）── */
@@ -70,21 +92,29 @@ canvas{display:block;width:100%;height:100%}
 #ultimate-btn.used{opacity:0.3;border-color:rgba(255,215,0,0.15);pointer-events:none}
 
 /* ── 道具拾取通知 ── */
-#pickup-notify{position:fixed;top:clamp(60px,10vh,80px);left:50%;transform:translateX(-50%);z-index:25;color:#ffd700;font-size:clamp(14px,2vw,18px);font-weight:700;text-shadow:0 0 12px rgba(255,215,0,0.6);opacity:0;transition:opacity 0.4s;pointer-events:none}
+#pickup-notify{position:fixed;top:clamp(60px,10vh,80px);left:50%;transform:translateX(-50%);z-index:25;color:#c0392b;font-size:clamp(14px,2vw,18px);font-weight:700;text-shadow:0 0 10px rgba(192,57,43,0.5);opacity:0;transition:opacity 0.4s;pointer-events:none}
 #pickup-notify.show{opacity:1}
 
 /* ── 金色閃光（必殺技）── */
 #gold-flash{position:fixed;inset:0;z-index:9;pointer-events:none;background:radial-gradient(ellipse at center,rgba(255,215,0,0.5) 0%,transparent 70%);opacity:0;transition:opacity 0.3s}
 
 /* ── 靜音按鈕 ── */
-#mute-btn{position:fixed;top:12px;right:16px;z-index:50;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#e8d5b8;font-size:18px;line-height:36px;text-align:center;cursor:pointer;display:none;-webkit-tap-highlight-color:transparent;pointer-events:auto}
+#mute-btn{position:fixed;top:12px;right:16px;z-index:50;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.12);border:1px solid rgba(0,0,0,0.2);color:#2c3e50;font-size:18px;line-height:36px;text-align:center;cursor:pointer;display:block;-webkit-tap-highlight-color:transparent;pointer-events:auto}
 
 /* ── 呼吸提示 ── */
-#breath-hint{position:fixed;bottom:clamp(80px,12vh,120px);left:50%;transform:translateX(-50%);z-index:20;color:#b8956a;font-size:clamp(11px,1.4vw,14px);opacity:0;transition:opacity 0.5s;pointer-events:none;text-align:center;white-space:nowrap}
+#breath-hint{position:fixed;bottom:clamp(80px,12vh,120px);left:50%;transform:translateX(-50%);z-index:20;color:#5a4a3a;font-size:clamp(11px,1.4vw,14px);opacity:0;transition:opacity 0.5s;pointer-events:none;text-align:center;white-space:nowrap;text-shadow:0 1px 3px rgba(255,255,255,0.4)}
 
 /* ── 道具效果指示器 ── */
 #buff-indicators{position:fixed;top:clamp(40px,7vh,60px);left:20px;z-index:21;display:none;pointer-events:none}
-.buff-item{color:#ffd700;font-size:clamp(11px,1.4vw,14px);margin-bottom:4px;opacity:0.9;text-shadow:0 0 6px rgba(255,215,0,0.4)}
+.buff-item{color:#c0392b;font-size:clamp(11px,1.4vw,14px);margin-bottom:4px;opacity:0.9;text-shadow:0 0 6px rgba(192,57,43,0.4)}
+
+/* ── 畫質設定 ── */
+#quality-btn{position:fixed;top:56px;right:16px;z-index:50;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.12);border:1px solid rgba(0,0,0,0.2);color:#2c3e50;font-size:18px;line-height:36px;text-align:center;cursor:pointer;display:block;-webkit-tap-highlight-color:transparent;pointer-events:auto}
+#quality-panel{position:fixed;top:98px;right:16px;z-index:50;background:rgba(10,10,15,0.92);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px;display:none;pointer-events:auto}
+#quality-panel.show{display:block}
+.quality-opt{display:block;width:100%;padding:6px 16px;margin:2px 0;border:none;border-radius:4px;background:rgba(255,255,255,0.06);color:#c8c0b0;font-size:13px;cursor:pointer;text-align:left;font-family:inherit}
+.quality-opt:hover{background:rgba(255,255,255,0.15)}
+.quality-opt.active{background:rgba(184,149,106,0.3);color:#e8d5b8;font-weight:700}
 </style>
 </head>
 <body>
@@ -130,17 +160,33 @@ canvas{display:block;width:100%;height:100%}
 <div id="result-screen">
   <div class="result-text" id="result-title"></div>
   <div class="result-sub" id="result-body"></div>
+  <div id="name-input-wrap">
+    <input type="text" id="name-input" maxlength="10" placeholder="YOUR NAME" autocomplete="off">
+    <button id="save-score-btn">記錄成績</button>
+  </div>
   <div class="result-retry" id="result-retry">再來一次</div>
+  <div id="leaderboard-btn">🏆 排行榜</div>
+</div>
+
+<!-- 排行榜面板 -->
+<div id="leaderboard-panel">
+  <div class="lb-title">🏆 排行榜 TOP 10</div>
+  <div id="lb-body"></div>
+  <div class="lb-close" id="lb-close">關閉</div>
 </div>
 
 <!-- 手機觸控 -->
 <div id="touch-controls"><div id="joystick-area"><div id="joystick-knob"></div></div></div>
 <div id="sprint-btn">衝刺</div>
 <div id="jump-btn">跳躍</div>
-<div id="ultimate-btn">必殺技<br>E</div>
+<div id="ultimate-btn"></div>
 
 <!-- 靜音按鈕 -->
 <div id="mute-btn"></div>
+
+<!-- 畫質設定 -->
+<div id="quality-btn"></div>
+<div id="quality-panel"></div>
 
 <!-- 道具效果指示器 -->
 <div id="buff-indicators"></div>
@@ -166,7 +212,6 @@ const SPRINT_DRAIN = 35;
 const SPRINT_REGEN = 18;
 const GAME_TIME    = 36;
 const DODGE_SPEED  = 6;
-const NPC_COUNT    = 35;
 const CAR_LEN      = 22;
 const CAR_COUNT    = 8;
 const DAUGHTER_Z   = -(PLATFORM_LEN / 2 - 25);
@@ -179,9 +224,22 @@ const JUMP_VELOCITY = 5;
 const JUMP_GRAVITY  = -15;
 
 /* Luggage constants */
-const LUGGAGE_COUNT = 10;
+const LUGGAGE_COUNT = 7;
 const LUGGAGE_COLLISION_RADIUS = 0.5;
 const LUGGAGE_CLEAR_HEIGHT = 0.3;
+
+/* Barrier constants */
+const BARRIER_CLEAR_HEIGHT = 0.3;
+const BARRIER_COLLISION_RADIUS = 0.8;
+
+/* Quality presets */
+const QUALITY_PRESETS = [
+  { label: "\u4F4E",   pixelRatio: 0.5,  shadows: false, shadowType: null,                    shadowSize: 0,    fog: false, npcCount: 20, antialias: false },
+  { label: "\u9806\u66A2", pixelRatio: 0.75, shadows: true,  shadowType: THREE.BasicShadowMap,    shadowSize: 512,  fog: true,  npcCount: 25, antialias: false },
+  { label: "\u9AD8\u7D1A", pixelRatio: 1.0,  shadows: true,  shadowType: THREE.PCFSoftShadowMap,  shadowSize: 1024, fog: true,  npcCount: 30, antialias: true  },
+  { label: "\u5168\u958B", pixelRatio: Math.min(window.devicePixelRatio, 2), shadows: true, shadowType: THREE.PCFSoftShadowMap, shadowSize: 1024, fog: true, npcCount: 35, antialias: true },
+  { label: "\u5B8C\u7F8E", pixelRatio: Math.min(window.devicePixelRatio, 2), shadows: true, shadowType: THREE.PCFSoftShadowMap, shadowSize: 2048, fog: true, npcCount: 45, antialias: true },
+];
 
 /* ════════════════════════════════════════════════
    DOM 參照
@@ -211,7 +269,21 @@ const dom = {
   goldFlash:    document.getElementById("gold-flash"),
   muteBtn:      document.getElementById("mute-btn"),
   buffIndicators: document.getElementById("buff-indicators"),
+  qualityBtn:   document.getElementById("quality-btn"),
+  qualityPanel: document.getElementById("quality-panel"),
+  /* Leaderboard */
+  nameInput:      document.getElementById("name-input"),
+  nameInputWrap:  document.getElementById("name-input-wrap"),
+  saveScoreBtn:   document.getElementById("save-score-btn"),
+  leaderboardBtn: document.getElementById("leaderboard-btn"),
+  leaderboardPanel: document.getElementById("leaderboard-panel"),
+  lbBody:         document.getElementById("lb-body"),
+  lbClose:        document.getElementById("lb-close"),
 };
+
+/* Set text content safely (no innerHTML) */
+dom.ultimateBtn.textContent = "\u5FC5\u6BBA\u6280 E";
+dom.qualityBtn.textContent = "\u2699";
 
 /* ════════════════════════════════════════════════
    遊戲狀態
@@ -250,22 +322,28 @@ const state = {
   jumpY: 0,
   jumpVel: 0,
   isJumping: false,
+  wasJumping: false,
   /* luggage slow */
   luggageSlowTimer: 0,
+  /* barrier hint shown */
+  barrierHintShown: false,
+  /* quality */
+  quality: 3,
+  /* leaderboard */
+  itemsCollected: 0,
 };
 
 /* ════════════════════════════════════════════════
-   背景音樂
+   背景音樂 — NEVER INTERRUPT
    ════════════════════════════════════════════════ */
-const bgm = new Audio("\u628A\u62D4\u6211\u6703\u60F3\u4F60\u7684\u62F7\u8C9D.mp3");
+const bgm = new Audio("\u628A\u62D4\u6211\u6703\u60F3\u4F60\u7684.mp3");
 bgm.loop = true;
 bgm.volume = 0.3;
 let bgmMuted = false;
-let bgmFading = false;
-let bgmFadeStart = 0;
+let bgmStarted = false;
 
 dom.muteBtn.textContent = "\uD83D\uDD0A";
-dom.muteBtn.addEventListener("click", () => {
+dom.muteBtn.addEventListener("click", function() {
   bgmMuted = !bgmMuted;
   bgm.muted = bgmMuted;
   dom.muteBtn.textContent = bgmMuted ? "\uD83D\uDD07" : "\uD83D\uDD0A";
@@ -274,41 +352,50 @@ dom.muteBtn.addEventListener("click", () => {
 /* ════════════════════════════════════════════════
    Three.js 初始化
    ════════════════════════════════════════════════ */
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+let isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+const defaultQuality = isMobile ? 1 : 3;
+state.quality = defaultQuality;
+const preset = QUALITY_PRESETS[state.quality];
+
+const renderer = new THREE.WebGLRenderer({ antialias: preset.antialias, alpha: false });
+renderer.setPixelRatio(preset.pixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.enabled = preset.shadows;
+if (preset.shadowType) renderer.shadowMap.type = preset.shadowType;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.9;
+renderer.toneMappingExposure = 1.1;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 document.body.prepend(renderer.domElement);
 
 const scene  = new THREE.Scene();
-scene.background = new THREE.Color(0x1a1a2e);
-scene.fog = new THREE.FogExp2(0x1a1a2e, 0.006);
+scene.background = new THREE.Color(0x87CEEB);
+if (preset.fog) {
+  scene.fog = new THREE.FogExp2(0xc8dff0, 0.003);
+} else {
+  scene.fog = null;
+}
 
 const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 500);
 camera.position.set(0, 12, PLATFORM_LEN / 2 + 20);
 camera.lookAt(0, 0, 0);
 
 /* ════════════════════════════════════════════════
-   光源
+   光源 — DAYTIME
    ════════════════════════════════════════════════ */
-const ambientLight = new THREE.AmbientLight(0xfff5e6, 0.25);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
 scene.add(ambientLight);
 
-const mainLight = new THREE.DirectionalLight(0xffe8cc, 1.2);
-mainLight.position.set(10, 30, 0);
+const mainLight = new THREE.DirectionalLight(0xfff5e6, 2.0);
+mainLight.position.set(15, 50, 10);
 mainLight.castShadow = true;
-mainLight.shadow.mapSize.set(1024, 1024);
+mainLight.shadow.mapSize.set(preset.shadowSize || 1024, preset.shadowSize || 1024);
 mainLight.shadow.camera.left   = -15;
 mainLight.shadow.camera.right  =  15;
 mainLight.shadow.camera.top    =  60;
 mainLight.shadow.camera.bottom = -60;
 scene.add(mainLight);
 
-const warmFill = new THREE.PointLight(0xffaa55, 0.6, 50);
+const warmFill = new THREE.PointLight(0xffeedd, 0.3, 50);
 warmFill.position.set(0, 8, 0);
 scene.add(warmFill);
 
@@ -316,13 +403,13 @@ scene.add(warmFill);
    材質庫
    ════════════════════════════════════════════════ */
 const MAT = {
-  platform:   new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.9 }),
-  yellow:     new THREE.MeshStandardMaterial({ color: 0xf0c040, roughness: 0.5 }),
+  platform:   new THREE.MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.9 }),
+  yellow:     new THREE.MeshStandardMaterial({ color: 0xf5d050, roughness: 0.4, emissive: 0xf5d050, emissiveIntensity: 0.15 }),
   rail:       new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.8, roughness: 0.3 }),
-  gravel:     new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 1.0 }),
-  pillar:     new THREE.MeshStandardMaterial({ color: 0x999999, roughness: 0.6 }),
-  roof:       new THREE.MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.5, transparent: true, opacity: 0.7 }),
-  window:     new THREE.MeshStandardMaterial({ color: 0x1a2a3a, roughness: 0.1, metalness: 0.5 }),
+  gravel:     new THREE.MeshStandardMaterial({ color: 0x777777, roughness: 1.0 }),
+  pillar:     new THREE.MeshStandardMaterial({ color: 0xbbbbbb, roughness: 0.6 }),
+  roof:       new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.5, transparent: true, opacity: 0.6 }),
+  window:     new THREE.MeshStandardMaterial({ color: 0x3a6a8a, roughness: 0.1, metalness: 0.5 }),
   door:       new THREE.MeshStandardMaterial({ color: 0xbbbbbb, roughness: 0.3, metalness: 0.4 }),
   skin:       new THREE.MeshStandardMaterial({ color: 0xdeb887, roughness: 0.8 }),
   fatherBody: new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.7 }),
@@ -339,6 +426,10 @@ const MAT = {
 const MAT_whiteSneaker = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.5 });
 const MAT_glasses      = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3 });
 const MAT_fauxHawk     = new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 0.9 });
+
+/* Warning sign materials */
+const MAT_warning = new THREE.MeshStandardMaterial({ color: 0xffdd00, emissive: 0xffdd00, emissiveIntensity: 0.6, roughness: 0.3 });
+const MAT_warningPole = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.5 });
 
 /* ════════════════════════════════════════════════
    迷彩紋理（背包 + 短褲用）
@@ -381,9 +472,9 @@ function buildPlatform() {
   scene.add(m);
 
   for (const side of [-1, 1]) {
-    const yg = new THREE.BoxGeometry(0.3, 0.02, PLATFORM_LEN);
+    const yg = new THREE.BoxGeometry(0.3, 0.03, PLATFORM_LEN);
     const ym = new THREE.Mesh(yg, MAT.yellow);
-    ym.position.set(side * (PLATFORM_W / 2 - 0.2), 0.01, 0);
+    ym.position.set(side * (PLATFORM_W / 2 - 0.2), 0.02, 0);
     scene.add(ym);
   }
 
@@ -426,7 +517,7 @@ function buildPlatform() {
   }
 
   const floorG = new THREE.PlaneGeometry(100, PLATFORM_LEN + 40);
-  const floorMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 1 });
+  const floorMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 1 });
   const floorM = new THREE.Mesh(floorG, floorMat);
   floorM.rotation.x = -Math.PI / 2;
   floorM.position.y = -0.9;
@@ -506,16 +597,12 @@ function setupTrains() {
 const father   = new THREE.Group();
 const daughter = new THREE.Group();
 const mother   = new THREE.Group();
-const npcs     = [];
+let npcs       = [];
 const fatherLeftLeg = new THREE.Group();
 const fatherRightLeg = new THREE.Group();
 const fatherLeftArm = new THREE.Group();
 const fatherRightArm = new THREE.Group();
 
-/* Father grounded base Y: shoe bottom sits on y=0
-   Left leg pivot at y=0.6, shoe at relative y=-0.55, shoe half-height=0.04
-   So shoe bottom relative to father origin = 0.6 - 0.55 - 0.04 = 0.01
-   We need father baseY = -0.01 so shoe bottom = 0 */
 const FATHER_BASE_Y = -0.01;
 
 function buildFather() {
@@ -525,7 +612,7 @@ function buildFather() {
   head.castShadow = true;
   father.add(head);
 
-  /* Beckham faux hawk hair: tapered box, wider at front, narrower at back */
+  /* Beckham faux hawk hair */
   const fauxHawkShape = new THREE.Shape();
   fauxHawkShape.moveTo(-0.12, -0.06);
   fauxHawkShape.lineTo(0.12, -0.06);
@@ -539,15 +626,12 @@ function buildFather() {
 
   /* Thick-framed glasses */
   const glassesGroup = new THREE.Group();
-  /* Left eye frame */
   const frameL = new THREE.Mesh(new THREE.TorusGeometry(0.065, 0.015, 8, 16), MAT_glasses);
   frameL.position.set(-0.08, 0, 0);
   glassesGroup.add(frameL);
-  /* Right eye frame */
   const frameR = new THREE.Mesh(new THREE.TorusGeometry(0.065, 0.015, 8, 16), MAT_glasses);
   frameR.position.set(0.08, 0, 0);
   glassesGroup.add(frameR);
-  /* Bridge bar connecting frames */
   const bridge = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.06, 6), MAT_glasses);
   bridge.rotation.z = Math.PI / 2;
   bridge.position.set(0, 0, 0);
@@ -555,13 +639,13 @@ function buildFather() {
   glassesGroup.position.set(0, 1.55, -0.22);
   father.add(glassesGroup);
 
-  /* Torso (dark shirt) */
+  /* Torso */
   const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 0.5, 4, 8), MAT.fatherBody);
   torso.position.y = 1.05;
   torso.castShadow = true;
   father.add(torso);
 
-  /* Belly (faces running direction = -Z) */
+  /* Belly */
   const belly = new THREE.Mesh(new THREE.SphereGeometry(0.32, 8, 8), MAT.fatherBody);
   belly.position.set(0, 0.85, -0.2);
   father.add(belly);
@@ -582,7 +666,7 @@ function buildFather() {
   fatherRightArm.rotation.z = -0.15;
   father.add(fatherRightArm);
 
-  /* Left leg: upper (camo shorts) + lower (skin calf) + white sneaker */
+  /* Left leg */
   const upperLegL = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.085, 0.25, 6), MAT_camo);
   upperLegL.position.set(0, -0.1, 0);
   fatherLeftLeg.add(upperLegL);
@@ -595,7 +679,7 @@ function buildFather() {
   fatherLeftLeg.position.set(-0.13, 0.6, 0);
   father.add(fatherLeftLeg);
 
-  /* Right leg: upper (camo shorts) + lower (skin calf) + white sneaker */
+  /* Right leg */
   const upperLegR = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.085, 0.25, 6), MAT_camo);
   upperLegR.position.set(0, -0.1, 0);
   fatherRightLeg.add(upperLegR);
@@ -608,7 +692,7 @@ function buildFather() {
   fatherRightLeg.position.set(0.13, 0.6, 0);
   father.add(fatherRightLeg);
 
-  /* Camo backpack on BACK (faces camera = +Z) - story: "背著超大包包" */
+  /* Camo backpack */
   const backpack = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.65, 0.35), MAT_camo);
   backpack.position.set(0, 1.05, 0.35);
   backpack.castShadow = true;
@@ -619,31 +703,26 @@ function buildFather() {
 }
 
 function buildDaughter() {
-  /* Head */
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 10), MAT.skin);
   head.position.y = 0.78;
   head.castShadow = true;
   daughter.add(head);
 
-  /* Dark hair */
   const hairTop = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), MAT.hair);
   hairTop.position.y = 0.86;
   hairTop.scale.set(1.05, 0.6, 1.05);
   daughter.add(hairTop);
 
-  /* Ponytail */
   const ponytail = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), MAT.hair);
   ponytail.position.set(0, 0.82, -0.16);
   ponytail.scale.set(0.7, 1.4, 0.7);
   daughter.add(ponytail);
 
-  /* Body (light pink dress) */
   const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.14, 0.25, 4, 8), MAT.pinkDress);
   body.position.y = 0.45;
   body.castShadow = true;
   daughter.add(body);
 
-  /* Arms */
   const armL = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.035, 0.28, 6), MAT.skin);
   armL.position.set(-0.2, 0.5, 0);
   armL.rotation.z = 0.2;
@@ -653,7 +732,6 @@ function buildDaughter() {
   armR.rotation.z = -0.2;
   daughter.add(armR);
 
-  /* Legs */
   const legL = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.04, 0.25, 6), MAT.skin);
   legL.position.set(-0.07, 0.2, 0);
   daughter.add(legL);
@@ -661,12 +739,10 @@ function buildDaughter() {
   legR.position.set(0.07, 0.2, 0);
   daughter.add(legR);
 
-  /* Pink backpack */
   const dbp = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.3, 0.15), MAT.pinkBag);
   dbp.position.set(0, 0.45, -0.15);
   daughter.add(dbp);
 
-  /* Beacon light */
   const beacon = new THREE.PointLight(0xff69b4, 2, 15);
   beacon.position.y = 1.2;
   daughter.add(beacon);
@@ -680,9 +756,8 @@ function buildDaughter() {
    ════════════════════════════════════════════════ */
 function makeHumanoid(bodyColor, h, w, headSize) {
   const g = new THREE.Group();
-  const scale = h / 1.7; /* normalize to ~1.7 average */
+  const scale = h / 1.7;
 
-  /* Random clothing colors */
   const shirtColors = [0x555555, 0x666677, 0x776655, 0x557766, 0x886655, 0x556688, 0x778855, 0x887766, 0x993333, 0x336699, 0x669933, 0x996633];
   const pantsColors = [0x2a2a3a, 0x333344, 0x3a3a2a, 0x222233, 0x1a1a2a, 0x2a3a2a, 0x443322];
   const hairColors  = [0x1a1a1a, 0x3a2a1a, 0x2a1a0a, 0x5a3a2a, 0x1a0a0a, 0x4a3a2a];
@@ -693,26 +768,22 @@ function makeHumanoid(bodyColor, h, w, headSize) {
   const hairMat  = new THREE.MeshStandardMaterial({ color: hairColors[Math.floor(Math.random() * hairColors.length)], roughness: 0.9 });
   const shoeMat  = new THREE.MeshStandardMaterial({ color: shoeColors[Math.floor(Math.random() * shoeColors.length)], roughness: 0.8 });
 
-  /* Head */
   const headMesh = new THREE.Mesh(new THREE.SphereGeometry(headSize, 8, 8), MAT.skin);
   headMesh.position.y = h * 0.82;
   headMesh.castShadow = true;
   g.add(headMesh);
 
-  /* Hair on top */
   const hairMesh = new THREE.Mesh(new THREE.SphereGeometry(headSize * 0.85, 6, 6), hairMat);
   hairMesh.position.y = h * 0.82 + headSize * 0.55;
   hairMesh.scale.set(1.1, 0.5, 1.1);
   g.add(hairMesh);
 
-  /* Torso */
   const torsoH = h * 0.3;
   const torsoMesh = new THREE.Mesh(new THREE.CapsuleGeometry(w * 0.5, torsoH, 4, 8), shirtMat);
   torsoMesh.position.y = h * 0.52;
   torsoMesh.castShadow = true;
   g.add(torsoMesh);
 
-  /* Left arm */
   const armLen = h * 0.25;
   const npcLeftArm = new THREE.Group();
   const armLMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.04 * scale, 0.035 * scale, armLen, 6), shirtMat);
@@ -723,7 +794,6 @@ function makeHumanoid(bodyColor, h, w, headSize) {
   g.add(npcLeftArm);
   g.userData.leftArm = npcLeftArm;
 
-  /* Right arm */
   const npcRightArm = new THREE.Group();
   const armRMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.04 * scale, 0.035 * scale, armLen, 6), shirtMat);
   armRMesh.position.y = -armLen * 0.4;
@@ -733,7 +803,6 @@ function makeHumanoid(bodyColor, h, w, headSize) {
   g.add(npcRightArm);
   g.userData.rightArm = npcRightArm;
 
-  /* Left leg */
   const legLen = h * 0.22;
   const npcLeftLeg = new THREE.Group();
   const legLMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.055 * scale, 0.045 * scale, legLen, 6), pantsMat);
@@ -746,7 +815,6 @@ function makeHumanoid(bodyColor, h, w, headSize) {
   g.add(npcLeftLeg);
   g.userData.leftLeg = npcLeftLeg;
 
-  /* Right leg */
   const npcRightLeg = new THREE.Group();
   const legRMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.055 * scale, 0.045 * scale, legLen, 6), pantsMat);
   legRMesh.position.y = -legLen * 0.4;
@@ -758,7 +826,6 @@ function makeHumanoid(bodyColor, h, w, headSize) {
   g.add(npcRightLeg);
   g.userData.rightLeg = npcRightLeg;
 
-  /* Some NPCs carry bags/luggage (30% chance) */
   if (Math.random() < 0.3) {
     const bagColors = [0x8b4513, 0x2a2a2a, 0x556b2f, 0x4a3728, 0xcc6622];
     const bagMat = new THREE.MeshStandardMaterial({ color: bagColors[Math.floor(Math.random() * bagColors.length)], roughness: 0.7 });
@@ -774,6 +841,10 @@ function makeHumanoid(bodyColor, h, w, headSize) {
   return g;
 }
 
+function getCurrentNpcCount() {
+  return QUALITY_PRESETS[state.quality].npcCount;
+}
+
 function buildCharacters() {
   buildFather();
   buildDaughter();
@@ -783,8 +854,12 @@ function buildCharacters() {
   mother.position.set(2.5, 0, DAUGHTER_Z + 0.5);
   scene.add(mother);
 
+  spawnNPCs(getCurrentNpcCount());
+}
+
+function spawnNPCs(count) {
   const npcColors = [0x555555, 0x666677, 0x776655, 0x557766, 0x886655, 0x556688, 0x778855, 0x887766];
-  for (let i = 0; i < NPC_COUNT; i++) {
+  for (let i = 0; i < count; i++) {
     const h = 1.4 + Math.random() * 0.5;
     const c = npcColors[Math.floor(Math.random() * npcColors.length)];
     const npc = makeHumanoid(c, h, 0.3 + Math.random() * 0.15, 0.15 + Math.random() * 0.05);
@@ -800,10 +875,27 @@ function buildCharacters() {
   }
 }
 
+function clearNPCs() {
+  for (const npc of npcs) {
+    scene.remove(npc);
+    npc.traverse(function(child) {
+      if (child.geometry) child.geometry.dispose();
+      if (child.material && child.material.dispose) child.material.dispose();
+    });
+  }
+  npcs = [];
+}
+
+function rebuildNPCs(count) {
+  clearNPCs();
+  spawnNPCs(count);
+}
+
 /* ════════════════════════════════════════════════
-   行李障礙物系統
+   行李障礙物系統 + 路障牆
    ════════════════════════════════════════════════ */
 const luggageItems = [];
+const barrierWalls = [];
 
 function isNearNPCOrLuggage(x, z) {
   for (const npc of npcs) {
@@ -819,11 +911,85 @@ function isNearNPCOrLuggage(x, z) {
   return false;
 }
 
+function createWarningSign(z) {
+  const group = new THREE.Group();
+
+  /* Pole */
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 2.5, 6), MAT_warningPole);
+  pole.position.y = 1.25;
+  group.add(pole);
+
+  /* Triangle warning sign */
+  const triShape = new THREE.Shape();
+  triShape.moveTo(0, 0.35);
+  triShape.lineTo(-0.3, -0.15);
+  triShape.lineTo(0.3, -0.15);
+  triShape.closePath();
+  const triGeo = new THREE.ShapeGeometry(triShape);
+  const triMesh = new THREE.Mesh(triGeo, MAT_warning);
+  triMesh.position.set(0, 2.5, 0);
+  group.add(triMesh);
+  /* Back face */
+  const triBack = new THREE.Mesh(triGeo, MAT_warning);
+  triBack.position.set(0, 2.5, 0);
+  triBack.rotation.y = Math.PI;
+  group.add(triBack);
+
+  /* Glow light */
+  const glow = new THREE.PointLight(0xffdd00, 1.5, 8);
+  glow.position.y = 2.6;
+  group.add(glow);
+
+  group.position.set(0, 0, z);
+  scene.add(group);
+  return group;
+}
+
+function spawnBarrierWall(z) {
+  const barrier = { meshes: [], signGroup: null, z: z, xMin: -3, xMax: 3 };
+  const luggageColors = [0x8b4513, 0x2a2a2a, 0x666666, 0x1a2a4a, 0x4a3728, 0x3a3a3a];
+  const numCases = 4;
+  const spacing = 6 / numCases;
+
+  for (let i = 0; i < numCases; i++) {
+    const px = -3 + spacing * i + spacing * 0.5 + (Math.random() - 0.5) * 0.3;
+    const w = 0.7 + Math.random() * 0.2;
+    const h = 0.4 + Math.random() * 0.1;
+    const d = 0.5 + Math.random() * 0.1;
+    const color = luggageColors[Math.floor(Math.random() * luggageColors.length)];
+    const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.8 });
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    mesh.position.set(px, h / 2, z + (Math.random() - 0.5) * 0.3);
+    mesh.rotation.y = Math.random() * 0.3 - 0.15;
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    const handleMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.5 });
+    const handle = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.04, 0.04), handleMat);
+    handle.position.y = h / 2 + 0.02;
+    mesh.add(handle);
+
+    scene.add(mesh);
+    barrier.meshes.push(mesh);
+  }
+
+  barrier.signGroup = createWarningSign(z - 8);
+  barrierWalls.push(barrier);
+}
+
 function spawnLuggage() {
   const luggageColors = [0x8b4513, 0x2a2a2a, 0x666666, 0x1a2a4a, 0x4a3728, 0x3a3a3a];
   const zStart = PLATFORM_LEN / 2 - 25;
   const zEnd = DAUGHTER_Z + 15;
+  const totalRunDist = zStart - zEnd;
 
+  /* Spawn 2 barrier walls at 1/3 and 2/3 of distance */
+  const barrier1Z = zStart - totalRunDist * (1 / 3);
+  const barrier2Z = zStart - totalRunDist * (2 / 3);
+  spawnBarrierWall(barrier1Z);
+  spawnBarrierWall(barrier2Z);
+
+  /* Spawn scattered individual luggage (avoiding barrier zones) */
   for (let i = 0; i < LUGGAGE_COUNT; i++) {
     const segLen = (zStart - zEnd) / LUGGAGE_COUNT;
     const zMin = zStart - (i + 1) * segLen;
@@ -833,7 +999,12 @@ function spawnLuggage() {
     for (let attempt = 0; attempt < 30; attempt++) {
       px = (Math.random() - 0.5) * (PLATFORM_W - 4);
       pz = zMin + Math.random() * (zMax - zMin);
-      if (!isNearNPCOrLuggage(px, pz)) { found = true; break; }
+      /* Avoid barrier zones */
+      let nearBarrier = false;
+      for (const bw of barrierWalls) {
+        if (Math.abs(pz - bw.z) < 4) { nearBarrier = true; break; }
+      }
+      if (!nearBarrier && !isNearNPCOrLuggage(px, pz)) { found = true; break; }
     }
     if (!found) {
       px = (Math.random() - 0.5) * 3;
@@ -850,7 +1021,6 @@ function spawnLuggage() {
     mesh.rotation.y = Math.random() * Math.PI;
     mesh.castShadow = true;
     mesh.receiveShadow = true;
-    /* Add a handle/strap on top */
     const handleMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.5 });
     const handle = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.04, 0.04), handleMat);
     handle.position.y = h / 2 + 0.02;
@@ -864,12 +1034,31 @@ function spawnLuggage() {
 function resetLuggage() {
   for (const lg of luggageItems) {
     scene.remove(lg);
-    lg.traverse(child => {
+    lg.traverse(function(child) {
       if (child.geometry) child.geometry.dispose();
       if (child.material && child.material.dispose) child.material.dispose();
     });
   }
   luggageItems.length = 0;
+
+  for (const bw of barrierWalls) {
+    for (const m of bw.meshes) {
+      scene.remove(m);
+      m.traverse(function(child) {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material && child.material.dispose) child.material.dispose();
+      });
+    }
+    if (bw.signGroup) {
+      scene.remove(bw.signGroup);
+      bw.signGroup.traverse(function(child) {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material && child.material.dispose) child.material.dispose();
+      });
+    }
+  }
+  barrierWalls.length = 0;
+
   spawnLuggage();
 }
 
@@ -880,13 +1069,55 @@ function checkLuggageCollisions() {
     const dz = father.position.z - lg.position.z;
     const dist = Math.sqrt(dx * dx + dz * dz);
     if (dist < LUGGAGE_COLLISION_RADIUS) {
-      /* If jumping high enough, clear the luggage */
       if (state.jumpY > LUGGAGE_CLEAR_HEIGHT) continue;
-      /* Hit luggage: slow + camera shake */
       state.luggageSlowTimer = 0.5;
       state.cameraShake = 4;
       playCollisionBump();
       showPickupNotify("\u884C\u674E\u7D46\u5012\uFF01\u6E1B\u901F\u4E2D...");
+    }
+  }
+}
+
+function checkBarrierCollisions() {
+  for (const bw of barrierWalls) {
+    const dz = father.position.z - bw.z;
+    /* Only block when approaching from the running direction (positive z going negative) */
+    if (dz > -1.5 && dz < 1.5) {
+      if (father.position.x >= bw.xMin - 0.5 && father.position.x <= bw.xMax + 0.5) {
+        if (state.jumpY <= BARRIER_CLEAR_HEIGHT) {
+          /* STOP: clamp position to not pass through */
+          if (dz > 0) {
+            father.position.z = bw.z + 1.5;
+          } else {
+            father.position.z = bw.z - 1.5;
+          }
+          if (state.luggageSlowTimer <= 0) {
+            state.luggageSlowTimer = 0.3;
+            state.cameraShake = 5;
+            playBarrierHit();
+            showPickupNotify("\u88AB\u884C\u674E\u64CB\u4F4F\u4E86\uFF01\u8DF3\u904E\u53BB\uFF01");
+          }
+        }
+      }
+    }
+
+    /* Narrative hint when approaching first barrier */
+    if (!state.barrierHintShown) {
+      const approachDist = father.position.z - bw.z;
+      if (approachDist > 0 && approachDist < 20) {
+        state.barrierHintShown = true;
+        showNarrative("\u524D\u65B9\u6709\u884C\u674E\uFF01\u8DF3\u904E\u53BB\uFF01", 2.5);
+      }
+    }
+  }
+
+  /* Animate warning signs */
+  for (const bw of barrierWalls) {
+    if (bw.signGroup) {
+      const glow = bw.signGroup.children.find(function(c) { return c.isLight; });
+      if (glow) {
+        glow.intensity = 1.2 + Math.sin(state.clock * 5) * 0.8;
+      }
     }
   }
 }
@@ -911,16 +1142,13 @@ function findSafePosition(zMin, zMax) {
   for (let attempt = 0; attempt < 30; attempt++) {
     const x = (Math.random() - 0.5) * (PLATFORM_W - 4);
     const z = zMin + Math.random() * (zMax - zMin);
-    if (!isNearNPC(x, z)) return { x, z };
+    if (!isNearNPC(x, z)) return { x: x, z: z };
   }
-  /* Fallback */
   return { x: (Math.random() - 0.5) * 3, z: zMin + Math.random() * (zMax - zMin) };
 }
 
 function createRiceBall(x, z) {
   const group = new THREE.Group();
-
-  /* White triangle onigiri body */
   const rice = new THREE.Mesh(
     new THREE.ConeGeometry(0.2, 0.35, 3),
     new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.6 })
@@ -928,7 +1156,6 @@ function createRiceBall(x, z) {
   rice.rotation.y = Math.PI / 6;
   group.add(rice);
 
-  /* Dark green nori strip at base */
   const nori = new THREE.Mesh(
     new THREE.BoxGeometry(0.22, 0.12, 0.22),
     new THREE.MeshStandardMaterial({ color: 0x1a3a1a, roughness: 0.9 })
@@ -936,7 +1163,6 @@ function createRiceBall(x, z) {
   nori.position.y = -0.1;
   group.add(nori);
 
-  /* Golden glow */
   const glow = new THREE.PointLight(0xffd700, 1.2, 5);
   glow.position.y = 0.3;
   group.add(glow);
@@ -950,15 +1176,12 @@ function createRiceBall(x, z) {
 
 function createCoffee(x, z) {
   const group = new THREE.Group();
-
-  /* White cup body */
   const cup = new THREE.Mesh(
     new THREE.CylinderGeometry(0.1, 0.08, 0.35, 8),
     new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.5 })
   );
   group.add(cup);
 
-  /* Dark brown coffee top */
   const coffee = new THREE.Mesh(
     new THREE.CylinderGeometry(0.1, 0.1, 0.04, 8),
     new THREE.MeshStandardMaterial({ color: 0x3a1a0a, roughness: 0.7 })
@@ -966,7 +1189,6 @@ function createCoffee(x, z) {
   coffee.position.y = 0.16;
   group.add(coffee);
 
-  /* Dark lid */
   const lid = new THREE.Mesh(
     new THREE.CylinderGeometry(0.11, 0.1, 0.04, 8),
     new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.4 })
@@ -974,7 +1196,6 @@ function createCoffee(x, z) {
   lid.position.y = 0.19;
   group.add(lid);
 
-  /* Blue glow */
   const glow = new THREE.PointLight(0x3498db, 1.2, 5);
   glow.position.y = 0.3;
   group.add(glow);
@@ -987,7 +1208,6 @@ function createCoffee(x, z) {
 }
 
 function spawnPowerups() {
-  /* Scatter along the running path from start to daughter */
   const zStart = PLATFORM_LEN / 2 - 20;
   const zEnd = DAUGHTER_Z + 10;
 
@@ -1011,8 +1231,7 @@ function spawnPowerups() {
 function resetPowerups() {
   for (const p of powerups) {
     scene.remove(p);
-    /* Dispose geometries and materials */
-    p.traverse(child => {
+    p.traverse(function(child) {
       if (child.geometry) child.geometry.dispose();
       if (child.material && child.material.dispose) child.material.dispose();
     });
@@ -1024,18 +1243,18 @@ function resetPowerups() {
 function updatePowerups(dt) {
   for (const p of powerups) {
     if (p.userData.collected) continue;
-    /* Float and rotate */
     p.rotation.y += dt * 1.5;
     p.position.y = p.userData.baseY + Math.sin(state.clock * 3 + p.position.z) * 0.1;
 
-    /* Check collection */
     const dx = father.position.x - p.position.x;
     const dz = father.position.z - p.position.z;
     const dist = Math.sqrt(dx * dx + dz * dz);
     if (dist < POWERUP_COLLECT_RADIUS) {
       p.userData.collected = true;
       scene.remove(p);
+      playPickupDing();
 
+      state.itemsCollected++;
       if (p.userData.type === "riceball") {
         state.riceBallTimer = 3;
         showPickupNotify("+\u5FA1\u98EF\u7CF0\uFF1A\u885D\u523A\u5EF6\u9577\uFF01");
@@ -1046,14 +1265,12 @@ function updatePowerups(dt) {
     }
   }
 
-  /* Update timers */
   if (state.riceBallTimer > 0) state.riceBallTimer = Math.max(0, state.riceBallTimer - dt);
   if (state.coffeeTimer > 0) state.coffeeTimer = Math.max(0, state.coffeeTimer - dt);
   if (state.collisionSlowTimer > 0) state.collisionSlowTimer = Math.max(0, state.collisionSlowTimer - dt);
   if (state.ultimateTimer > 0) state.ultimateTimer = Math.max(0, state.ultimateTimer - dt);
   if (state.luggageSlowTimer > 0) state.luggageSlowTimer = Math.max(0, state.luggageSlowTimer - dt);
 
-  /* Update pickup notification */
   if (state.pickupNotifyTimer > 0) {
     state.pickupNotifyTimer -= dt;
     if (state.pickupNotifyTimer <= 0) {
@@ -1069,9 +1286,13 @@ function showPickupNotify(text) {
 }
 
 /* ════════════════════════════════════════════════
-   必殺技：「我也會想妳的」
+   必殺技：「我也會想妳的」— 時空特效版
    ════════════════════════════════════════════════ */
 let fatherGlowLight = null;
+var ultimateParticles = [];
+var ultimateShockwave = null;
+var ultimateTrailTimer = 0;
+var ultimateScreenPhase = 0;
 
 function activateUltimate() {
   if (state.ultimateUsed) return;
@@ -1079,29 +1300,169 @@ function activateUltimate() {
 
   state.ultimateUsed = true;
   state.ultimateTimer = 5;
+  ultimateScreenPhase = 0;
 
-  /* Golden screen flash */
-  dom.goldFlash.style.opacity = "0.7";
-  setTimeout(() => { dom.goldFlash.style.opacity = "0"; }, 600);
+  /* === Sound === */
+  playUltimateActivation();
 
-  /* Father glows gold */
-  fatherGlowLight = new THREE.PointLight(0xffd700, 3, 8);
+  /* === Father glow light (enhanced) === */
+  fatherGlowLight = new THREE.PointLight(0xffd700, 5, 12);
   fatherGlowLight.position.y = 1;
   father.add(fatherGlowLight);
 
-  /* Narrative */
   showNarrative("\u300C\u628A\u62D4\uFF0C\u6211\u4E5F\u6703\u60F3\u59B3\u7684\u3002\u300D", 3);
-
-  /* Update button */
   dom.ultimateBtn.classList.add("used");
 
-  /* Remove glow after timer */
-  setTimeout(() => {
+  /* === Screen effect phase 1: Full white flash (0-0.3s) === */
+  dom.goldFlash.style.transition = "opacity 0.05s";
+  dom.goldFlash.style.background = "radial-gradient(ellipse at center, rgba(255,255,255,0.9) 0%, rgba(255,215,0,0.6) 40%, transparent 80%)";
+  dom.goldFlash.style.opacity = "1";
+  document.body.style.filter = "brightness(2) saturate(2)";
+
+  setTimeout(function() {
+    /* Phase 2: Gold ripple (0.3-0.8s) */
+    dom.goldFlash.style.transition = "opacity 0.5s";
+    dom.goldFlash.style.background = "radial-gradient(ellipse at center, rgba(255,215,0,0.7) 0%, rgba(255,180,0,0.3) 50%, transparent 80%)";
+    dom.goldFlash.style.opacity = "0.8";
+    document.body.style.filter = "brightness(1.3) saturate(1.5)";
+  }, 300);
+
+  setTimeout(function() {
+    /* Phase 3: Subtle golden hue (0.8-5s) */
+    dom.goldFlash.style.transition = "opacity 0.8s";
+    dom.goldFlash.style.background = "radial-gradient(ellipse at center, rgba(255,215,0,0.15) 0%, transparent 70%)";
+    dom.goldFlash.style.opacity = "0.6";
+    document.body.style.filter = "brightness(1.08) saturate(1.15) hue-rotate(-5deg)";
+    ultimateScreenPhase = 1;
+  }, 800);
+
+  /* === Shockwave ring === */
+  var ringGeo = new THREE.RingGeometry(0.3, 0.6, 32);
+  var ringMat = new THREE.MeshBasicMaterial({
+    color: 0xffd700, transparent: true, opacity: 0.9, side: THREE.DoubleSide
+  });
+  ultimateShockwave = new THREE.Mesh(ringGeo, ringMat);
+  ultimateShockwave.rotation.x = -Math.PI / 2;
+  ultimateShockwave.position.copy(father.position);
+  ultimateShockwave.position.y = 0.1;
+  ultimateShockwave.userData.age = 0;
+  scene.add(ultimateShockwave);
+
+  /* === Particle burst (50 particles) === */
+  for (var p = 0; p < 50; p++) {
+    var size = 0.04 + Math.random() * 0.06;
+    var pGeo = new THREE.SphereGeometry(size, 6, 6);
+    var isWhite = Math.random() > 0.5;
+    var pMat = new THREE.MeshBasicMaterial({
+      color: isWhite ? 0xffffff : 0xffd700,
+      transparent: true, opacity: 1
+    });
+    var pMesh = new THREE.Mesh(pGeo, pMat);
+    pMesh.position.copy(father.position);
+    pMesh.position.y += 0.8 + Math.random() * 0.4;
+    var angle = Math.random() * Math.PI * 2;
+    var speed = 2 + Math.random() * 5;
+    var upSpeed = 1 + Math.random() * 4;
+    pMesh.userData.vx = Math.cos(angle) * speed;
+    pMesh.userData.vy = upSpeed;
+    pMesh.userData.vz = Math.sin(angle) * speed;
+    pMesh.userData.age = 0;
+    pMesh.userData.maxAge = 1.5 + Math.random() * 0.8;
+    scene.add(pMesh);
+    ultimateParticles.push(pMesh);
+  }
+
+  /* === Cleanup after 5s === */
+  setTimeout(function() {
     if (fatherGlowLight && fatherGlowLight.parent) {
       father.remove(fatherGlowLight);
       fatherGlowLight = null;
     }
+    /* Reset screen effects */
+    dom.goldFlash.style.transition = "opacity 0.8s";
+    dom.goldFlash.style.opacity = "0";
+    dom.goldFlash.style.background = "radial-gradient(ellipse at center,rgba(255,215,0,0.5) 0%,transparent 70%)";
+    document.body.style.filter = "";
+    ultimateScreenPhase = 0;
+    /* Clean remaining particles */
+    for (var i = ultimateParticles.length - 1; i >= 0; i--) {
+      if (ultimateParticles[i].parent) scene.remove(ultimateParticles[i]);
+      ultimateParticles[i].geometry.dispose();
+      ultimateParticles[i].material.dispose();
+    }
+    ultimateParticles = [];
+    /* Clean shockwave */
+    if (ultimateShockwave && ultimateShockwave.parent) {
+      scene.remove(ultimateShockwave);
+      ultimateShockwave.geometry.dispose();
+      ultimateShockwave.material.dispose();
+      ultimateShockwave = null;
+    }
   }, 5000);
+}
+
+/* Update ultimate particles — called each frame from game loop */
+function updateUltimateEffects(dt) {
+  /* Shockwave expansion */
+  if (ultimateShockwave && ultimateShockwave.parent) {
+    ultimateShockwave.userData.age += dt;
+    var swAge = ultimateShockwave.userData.age;
+    var swScale = 1 + swAge * 10;
+    ultimateShockwave.scale.set(swScale, swScale, 1);
+    ultimateShockwave.material.opacity = Math.max(0, 0.9 - swAge / 1.5);
+    if (swAge > 1.5) {
+      scene.remove(ultimateShockwave);
+      ultimateShockwave.geometry.dispose();
+      ultimateShockwave.material.dispose();
+      ultimateShockwave = null;
+    }
+  }
+
+  /* Burst particles */
+  for (var i = ultimateParticles.length - 1; i >= 0; i--) {
+    var pt = ultimateParticles[i];
+    pt.userData.age += dt;
+    if (pt.userData.age > pt.userData.maxAge) {
+      if (pt.parent) scene.remove(pt);
+      pt.geometry.dispose();
+      pt.material.dispose();
+      ultimateParticles.splice(i, 1);
+      continue;
+    }
+    pt.position.x += pt.userData.vx * dt;
+    pt.position.y += pt.userData.vy * dt;
+    pt.position.z += pt.userData.vz * dt;
+    pt.userData.vy -= 3 * dt;
+    var life = 1 - pt.userData.age / pt.userData.maxAge;
+    pt.material.opacity = life;
+    pt.scale.setScalar(life);
+  }
+
+  /* Golden particle trail behind father during ultimate */
+  if (state.ultimateTimer > 0) {
+    ultimateTrailTimer -= dt;
+    if (ultimateTrailTimer <= 0) {
+      ultimateTrailTimer = 0.05;
+      var tSize = 0.02 + Math.random() * 0.03;
+      var tGeo = new THREE.SphereGeometry(tSize, 4, 4);
+      var tMat = new THREE.MeshBasicMaterial({
+        color: Math.random() > 0.3 ? 0xffd700 : 0xffffff,
+        transparent: true, opacity: 0.8
+      });
+      var trail = new THREE.Mesh(tGeo, tMat);
+      trail.position.copy(father.position);
+      trail.position.x += (Math.random() - 0.5) * 0.4;
+      trail.position.y += 0.3 + Math.random() * 0.8;
+      trail.position.z += 0.3 + Math.random() * 0.3;
+      trail.userData.vx = (Math.random() - 0.5) * 0.5;
+      trail.userData.vy = 0.5 + Math.random() * 1.0;
+      trail.userData.vz = 0;
+      trail.userData.age = 0;
+      trail.userData.maxAge = 0.6 + Math.random() * 0.4;
+      scene.add(trail);
+      ultimateParticles.push(trail);
+    }
+  }
 }
 
 /* ════════════════════════════════════════════════
@@ -1138,7 +1499,6 @@ function updateDoorMarker() {
   if (!doorMarker) return;
   if (state.gotDaughter && state.phase === "sprint2") {
     doorMarker.visible = true;
-    /* Find nearest door */
     let nearestDoor = null;
     let nearestDist = Infinity;
     for (const d of northDoors) {
@@ -1153,7 +1513,6 @@ function updateDoorMarker() {
       const doorWorldZ = trainNorth.position.z + nearestDoor.z;
       const markerX = PLATFORM_W / 2 - 1;
       doorMarker.position.set(markerX, 0.1, doorWorldZ);
-      /* Pulse animation */
       doorMarker.children[1].position.y = 1.5 + Math.sin(state.clock * 4) * 0.3;
       doorMarker.children[1].rotation.y = state.clock * 2;
     }
@@ -1224,6 +1583,39 @@ function playFootstep() {
   src.start(now);
 }
 
+function playSprintFootstep() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  var buf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.03), audioCtx.sampleRate);
+  var data = buf.getChannelData(0);
+  for (var i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.006));
+  var src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  var gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.12, now);
+  gain.gain.exponentialRampToValueAtTime(0.01, now + 0.03);
+  var filter = audioCtx.createBiquadFilter();
+  filter.type = "bandpass";
+  filter.frequency.value = 1200;
+  filter.Q.value = 2;
+  src.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+  src.start(now);
+  /* Add a sharp click layer for urgency */
+  var clickOsc = audioCtx.createOscillator();
+  clickOsc.type = "square";
+  clickOsc.frequency.setValueAtTime(3000, now);
+  clickOsc.frequency.exponentialRampToValueAtTime(1500, now + 0.015);
+  var clickGain = audioCtx.createGain();
+  clickGain.gain.setValueAtTime(0.05, now);
+  clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+  clickOsc.connect(clickGain);
+  clickGain.connect(audioCtx.destination);
+  clickOsc.start(now);
+  clickOsc.stop(now + 0.025);
+}
+
 function playDoorChime() {
   if (!audioCtx) return;
   const now = audioCtx.currentTime;
@@ -1244,7 +1636,7 @@ function playDoorChime() {
 function playSuccess() {
   if (!audioCtx) return;
   const now = audioCtx.currentTime;
-  [523, 659, 784].forEach((freq, i) => {
+  [523, 659, 784].forEach(function(freq, i) {
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.type = "sine";
@@ -1256,6 +1648,113 @@ function playSuccess() {
     osc.start(now + i * 0.2);
     osc.stop(now + i * 0.2 + 0.5);
   });
+}
+
+/* 抱到女兒 — warm emotional ascending chord */
+function playDaughterGrab() {
+  if (!audioCtx) return;
+  var now = audioCtx.currentTime;
+  /* Warm ascending chord: C5 -> E5 -> G5 -> C6 with sine waves */
+  var notes = [523, 659, 784, 1047];
+  for (var i = 0; i < notes.length; i++) {
+    var osc = audioCtx.createOscillator();
+    osc.type = "sine";
+    osc.frequency.value = notes[i];
+    var g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.0001, now + i * 0.12);
+    g.gain.linearRampToValueAtTime(0.1, now + i * 0.12 + 0.05);
+    g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.12 + 0.6);
+    osc.connect(g);
+    g.connect(audioCtx.destination);
+    osc.start(now + i * 0.12);
+    osc.stop(now + i * 0.12 + 0.7);
+    /* Add soft harmonic overtone for warmth */
+    var harm = audioCtx.createOscillator();
+    harm.type = "sine";
+    harm.frequency.value = notes[i] * 2;
+    var hg = audioCtx.createGain();
+    hg.gain.setValueAtTime(0.0001, now + i * 0.12);
+    hg.gain.linearRampToValueAtTime(0.03, now + i * 0.12 + 0.05);
+    hg.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.8);
+    harm.connect(hg);
+    hg.connect(audioCtx.destination);
+    harm.start(now + i * 0.12);
+    harm.stop(now + i * 0.12 + 0.9);
+  }
+  /* Gentle shimmer overlay */
+  var shimBuf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.8), audioCtx.sampleRate);
+  var shimData = shimBuf.getChannelData(0);
+  for (var j = 0; j < shimData.length; j++) shimData[j] = (Math.random() * 2 - 1);
+  var shimSrc = audioCtx.createBufferSource();
+  shimSrc.buffer = shimBuf;
+  var shimFilter = audioCtx.createBiquadFilter();
+  shimFilter.type = "bandpass";
+  shimFilter.frequency.value = 6000;
+  shimFilter.Q.value = 5;
+  var shimGain = audioCtx.createGain();
+  shimGain.gain.setValueAtTime(0.0001, now + 0.2);
+  shimGain.gain.linearRampToValueAtTime(0.025, now + 0.35);
+  shimGain.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
+  shimSrc.connect(shimFilter);
+  shimFilter.connect(shimGain);
+  shimGain.connect(audioCtx.destination);
+  shimSrc.start(now + 0.2);
+}
+
+/* 必殺技音效 — deep bass sweep + power chord + sparkle */
+function playUltimateActivation() {
+  if (!audioCtx) return;
+  var now = audioCtx.currentTime;
+  /* Deep bass sweep (30Hz -> 80Hz -> 30Hz) */
+  var bass = audioCtx.createOscillator();
+  bass.type = "sine";
+  bass.frequency.setValueAtTime(30, now);
+  bass.frequency.exponentialRampToValueAtTime(80, now + 0.4);
+  bass.frequency.exponentialRampToValueAtTime(30, now + 1.2);
+  var bassGain = audioCtx.createGain();
+  bassGain.gain.setValueAtTime(0.35, now);
+  bassGain.gain.linearRampToValueAtTime(0.25, now + 0.5);
+  bassGain.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
+  bass.connect(bassGain);
+  bassGain.connect(audioCtx.destination);
+  bass.start(now);
+  bass.stop(now + 1.6);
+  /* Ascending power chord (stacked fifths) */
+  var chordFreqs = [220, 330, 440, 660, 880];
+  for (var c = 0; c < chordFreqs.length; c++) {
+    var cOsc = audioCtx.createOscillator();
+    cOsc.type = c < 2 ? "sawtooth" : "sine";
+    cOsc.frequency.setValueAtTime(chordFreqs[c] * 0.5, now + 0.1);
+    cOsc.frequency.exponentialRampToValueAtTime(chordFreqs[c], now + 0.6);
+    var cGain = audioCtx.createGain();
+    cGain.gain.setValueAtTime(0.0001, now + 0.1);
+    cGain.gain.linearRampToValueAtTime(0.06, now + 0.3);
+    cGain.gain.exponentialRampToValueAtTime(0.005, now + 2.0);
+    cOsc.connect(cGain);
+    cGain.connect(audioCtx.destination);
+    cOsc.start(now + 0.1);
+    cOsc.stop(now + 2.2);
+  }
+  /* Sparkle shimmer overlay */
+  var sparkBuf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 2), audioCtx.sampleRate);
+  var sparkData = sparkBuf.getChannelData(0);
+  for (var s = 0; s < sparkData.length; s++) sparkData[s] = (Math.random() * 2 - 1);
+  var sparkSrc = audioCtx.createBufferSource();
+  sparkSrc.buffer = sparkBuf;
+  var sparkFilter = audioCtx.createBiquadFilter();
+  sparkFilter.type = "bandpass";
+  sparkFilter.frequency.setValueAtTime(4000, now + 0.3);
+  sparkFilter.frequency.exponentialRampToValueAtTime(8000, now + 1.0);
+  sparkFilter.frequency.exponentialRampToValueAtTime(3000, now + 2.0);
+  sparkFilter.Q.value = 8;
+  var sparkGain = audioCtx.createGain();
+  sparkGain.gain.setValueAtTime(0.0001, now + 0.3);
+  sparkGain.gain.linearRampToValueAtTime(0.04, now + 0.6);
+  sparkGain.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
+  sparkSrc.connect(sparkFilter);
+  sparkFilter.connect(sparkGain);
+  sparkGain.connect(audioCtx.destination);
+  sparkSrc.start(now + 0.3);
 }
 
 function playCollisionBump() {
@@ -1274,6 +1773,149 @@ function playCollisionBump() {
   osc.stop(now + 0.25);
 }
 
+/* NEW: Jump launch whoosh + ascending sweep */
+function playJumpLaunch() {
+  if (!audioCtx) return;
+  var now = audioCtx.currentTime;
+  /* Noise whoosh layer */
+  var buf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.1), audioCtx.sampleRate);
+  var data = buf.getChannelData(0);
+  for (var i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.03));
+  var src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  var filter = audioCtx.createBiquadFilter();
+  filter.type = "bandpass";
+  filter.frequency.setValueAtTime(1200, now);
+  filter.frequency.exponentialRampToValueAtTime(3000, now + 0.1);
+  filter.Q.value = 1.5;
+  var gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.14, now);
+  gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+  src.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+  src.start(now);
+  /* Ascending pitch sweep 200 -> 600Hz */
+  var sweep = audioCtx.createOscillator();
+  sweep.type = "sine";
+  sweep.frequency.setValueAtTime(200, now);
+  sweep.frequency.exponentialRampToValueAtTime(600, now + 0.12);
+  var sweepGain = audioCtx.createGain();
+  sweepGain.gain.setValueAtTime(0.08, now);
+  sweepGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+  sweep.connect(sweepGain);
+  sweepGain.connect(audioCtx.destination);
+  sweep.start(now);
+  sweep.stop(now + 0.15);
+}
+
+/* NEW: Jump land thud + ground rumble */
+function playJumpLand() {
+  if (!audioCtx) return;
+  var now = audioCtx.currentTime;
+  /* Impact thud */
+  var osc = audioCtx.createOscillator();
+  var gain = audioCtx.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(55, now);
+  osc.frequency.exponentialRampToValueAtTime(22, now + 0.12);
+  gain.gain.setValueAtTime(0.22, now);
+  gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.18);
+  /* Ground rumble layer (filtered noise) */
+  var rumbleBuf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.15), audioCtx.sampleRate);
+  var rumbleData = rumbleBuf.getChannelData(0);
+  for (var i = 0; i < rumbleData.length; i++) rumbleData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.06));
+  var rumbleSrc = audioCtx.createBufferSource();
+  rumbleSrc.buffer = rumbleBuf;
+  var rumbleFilter = audioCtx.createBiquadFilter();
+  rumbleFilter.type = "lowpass";
+  rumbleFilter.frequency.value = 150;
+  var rumbleGain = audioCtx.createGain();
+  rumbleGain.gain.setValueAtTime(0.1, now);
+  rumbleGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+  rumbleSrc.connect(rumbleFilter);
+  rumbleFilter.connect(rumbleGain);
+  rumbleGain.connect(audioCtx.destination);
+  rumbleSrc.start(now);
+}
+
+/* NEW: Barrier hit (deeper impact) */
+function playBarrierHit() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(80, now);
+  osc.frequency.exponentialRampToValueAtTime(20, now + 0.2);
+  gain.gain.setValueAtTime(0.25, now);
+  gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.3);
+
+  /* Add noise layer for impact */
+  const buf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.15), audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.05));
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  const nGain = audioCtx.createGain();
+  nGain.gain.setValueAtTime(0.1, now);
+  nGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+  const lp = audioCtx.createBiquadFilter();
+  lp.type = "lowpass";
+  lp.frequency.value = 300;
+  src.connect(lp);
+  lp.connect(nGain);
+  nGain.connect(audioCtx.destination);
+  src.start(now);
+}
+
+/* NEW: Pickup collect ding — two-tone sparkle */
+function playPickupDing() {
+  if (!audioCtx) return;
+  var now = audioCtx.currentTime;
+  /* First tone: 1200Hz */
+  var osc1 = audioCtx.createOscillator();
+  var gain1 = audioCtx.createGain();
+  osc1.type = "sine";
+  osc1.frequency.value = 1200;
+  gain1.gain.setValueAtTime(0.15, now);
+  gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+  osc1.connect(gain1);
+  gain1.connect(audioCtx.destination);
+  osc1.start(now);
+  osc1.stop(now + 0.15);
+  /* Second tone: 1600Hz (quick arpeggio) */
+  var osc2 = audioCtx.createOscillator();
+  var gain2 = audioCtx.createGain();
+  osc2.type = "sine";
+  osc2.frequency.value = 1600;
+  gain2.gain.setValueAtTime(0.12, now + 0.06);
+  gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+  osc2.connect(gain2);
+  gain2.connect(audioCtx.destination);
+  osc2.start(now + 0.06);
+  osc2.stop(now + 0.25);
+  /* Shimmer harmonic overlay */
+  var shimmer = audioCtx.createOscillator();
+  var shimGain = audioCtx.createGain();
+  shimmer.type = "sine";
+  shimmer.frequency.value = 2400;
+  shimGain.gain.setValueAtTime(0.04, now);
+  shimGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+  shimmer.connect(shimGain);
+  shimGain.connect(audioCtx.destination);
+  shimmer.start(now);
+  shimmer.stop(now + 0.3);
+}
+
 /* ════════════════════════════════════════════════
    環境音效系統（車站氛圍）
    ════════════════════════════════════════════════ */
@@ -1285,7 +1927,6 @@ function startAmbientSounds() {
   if (!audioCtx || ambientRunning) return;
   ambientRunning = true;
 
-  /* 1) Crowd murmur: filtered white noise at very low volume */
   const crowdBufLen = audioCtx.sampleRate * 4;
   const crowdBuf = audioCtx.createBuffer(1, crowdBufLen, audioCtx.sampleRate);
   const crowdData = crowdBuf.getChannelData(0);
@@ -1308,7 +1949,6 @@ function startAmbientSounds() {
   crowdSrc.start();
   ambientNodes.push(crowdSrc, crowdFilter, crowdFilter2, crowdGain);
 
-  /* 2) Platform hum: low-frequency continuous tone (~100Hz) */
   const humOsc = audioCtx.createOscillator();
   humOsc.type = "sine";
   humOsc.frequency.value = 100;
@@ -1319,14 +1959,12 @@ function startAmbientSounds() {
   humOsc.start();
   ambientNodes.push(humOsc, humGain);
 
-  /* 3) PA announcement timer */
   nextPAChime = audioCtx.currentTime + 12 + Math.random() * 5;
 }
 
 function playPAChime() {
   if (!audioCtx) return;
   const now = audioCtx.currentTime;
-  /* Ding */
   const ding = audioCtx.createOscillator();
   ding.type = "sine";
   ding.frequency.value = 880;
@@ -1337,7 +1975,6 @@ function playPAChime() {
   dingGain.connect(audioCtx.destination);
   ding.start(now);
   ding.stop(now + 0.9);
-  /* Dong */
   const dong = audioCtx.createOscillator();
   dong.type = "sine";
   dong.frequency.value = 660;
@@ -1353,7 +1990,6 @@ function playPAChime() {
 function playTrainScreech() {
   if (!audioCtx) return;
   const now = audioCtx.currentTime;
-  /* Metallic screech using sawtooth with bandpass */
   const noiseBuf = audioCtx.createBuffer(1, audioCtx.sampleRate * 1.5, audioCtx.sampleRate);
   const noiseData = noiseBuf.getChannelData(0);
   for (let i = 0; i < noiseData.length; i++) noiseData[i] = (Math.random() * 2 - 1);
@@ -1375,7 +2011,6 @@ function playTrainScreech() {
 
 function updateAmbientSounds() {
   if (!ambientRunning || !audioCtx) return;
-  /* Periodic PA chime */
   if (audioCtx.currentTime >= nextPAChime) {
     playPAChime();
     nextPAChime = audioCtx.currentTime + 13 + Math.random() * 5;
@@ -1394,10 +2029,9 @@ function stopAmbientSounds() {
 }
 
 /* ════════════════════════════════════════════════
-   輸入系統
+   輸入系統 — NO BACKWARD, NO AUTO-RUN
    ════════════════════════════════════════════════ */
 const keys = {};
-let isMobile = false;
 let touchJoyX = 0, touchJoyY = 0;
 let touchSprinting = false;
 let touchJumping = false;
@@ -1406,10 +2040,11 @@ function triggerJump() {
   if (!state.isJumping && (state.phase === "running" || state.phase === "sprint2")) {
     state.isJumping = true;
     state.jumpVel = JUMP_VELOCITY;
+    playJumpLaunch();
   }
 }
 
-window.addEventListener("keydown", e => {
+window.addEventListener("keydown", function(e) {
   keys[e.code] = true;
   if (e.code === "KeyE") activateUltimate();
   if (e.code === "Space") {
@@ -1417,7 +2052,7 @@ window.addEventListener("keydown", e => {
     triggerJump();
   }
 });
-window.addEventListener("keyup", e => { keys[e.code] = false; });
+window.addEventListener("keyup", function(e) { keys[e.code] = false; });
 
 function detectMobile() {
   isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0;
@@ -1428,19 +2063,19 @@ function detectMobile() {
     dom.ultimateBtn.style.display = "block";
     dom.breathHint.textContent = "\u5DE6\u624B\u6416\u687F\u79FB\u52D5 \u00B7 \u53F3\u624B\u885D\u523A \u00B7 \u8DF3\u8E8D \u00B7 \u5FC5\u6BBA\u6280[E]";
   } else {
-    dom.breathHint.textContent = "WASD \u79FB\u52D5 \u00B7 Shift \u885D\u523A \u00B7 Space \u8DF3\u8E8D \u00B7 E \u5FC5\u6BBA\u6280";
+    dom.breathHint.textContent = "WAD \u79FB\u52D5 \u00B7 Shift \u885D\u523A \u00B7 Space \u8DF3\u8E8D \u00B7 E \u5FC5\u6BBA\u6280";
   }
 }
 
 let joyActive = false;
 let joyCenter = { x: 0, y: 0 };
-dom.joystickArea.addEventListener("touchstart", e => {
+dom.joystickArea.addEventListener("touchstart", function(e) {
   e.preventDefault();
   joyActive = true;
   const r = dom.joystickArea.getBoundingClientRect();
   joyCenter = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
 }, { passive: false });
-dom.joystickArea.addEventListener("touchmove", e => {
+dom.joystickArea.addEventListener("touchmove", function(e) {
   e.preventDefault();
   if (!joyActive) return;
   const t = e.touches[0];
@@ -1453,17 +2088,17 @@ dom.joystickArea.addEventListener("touchmove", e => {
   touchJoyY = Math.sin(angle) * (dist / maxR);
   dom.joystickKnob.style.transform = "translate(calc(-50% + " + (touchJoyX * 38) + "px), calc(-50% + " + (touchJoyY * 38) + "px))";
 }, { passive: false });
-const endJoy = () => { joyActive = false; touchJoyX = 0; touchJoyY = 0; dom.joystickKnob.style.transform = "translate(-50%,-50%)"; };
+const endJoy = function() { joyActive = false; touchJoyX = 0; touchJoyY = 0; dom.joystickKnob.style.transform = "translate(-50%,-50%)"; };
 dom.joystickArea.addEventListener("touchend", endJoy);
 dom.joystickArea.addEventListener("touchcancel", endJoy);
 
-dom.sprintBtn.addEventListener("touchstart", e => { e.preventDefault(); touchSprinting = true; }, { passive: false });
-dom.sprintBtn.addEventListener("touchend",   () => { touchSprinting = false; });
-dom.sprintBtn.addEventListener("touchcancel", () => { touchSprinting = false; });
+dom.sprintBtn.addEventListener("touchstart", function(e) { e.preventDefault(); touchSprinting = true; }, { passive: false });
+dom.sprintBtn.addEventListener("touchend",   function() { touchSprinting = false; });
+dom.sprintBtn.addEventListener("touchcancel", function() { touchSprinting = false; });
 
-dom.jumpBtn.addEventListener("touchstart", e => { e.preventDefault(); triggerJump(); }, { passive: false });
+dom.jumpBtn.addEventListener("touchstart", function(e) { e.preventDefault(); triggerJump(); }, { passive: false });
 
-dom.ultimateBtn.addEventListener("touchstart", e => { e.preventDefault(); activateUltimate(); }, { passive: false });
+dom.ultimateBtn.addEventListener("touchstart", function(e) { e.preventDefault(); activateUltimate(); }, { passive: false });
 
 /* ════════════════════════════════════════════════
    敘事系統
@@ -1497,7 +2132,6 @@ function checkCollisions() {
       father.position.x += (dx / dist) * push;
       father.position.z += (dz / dist) * push;
 
-      /* NPC collision penalty */
       if (state.collisionSlowTimer <= 0) {
         state.collisionSlowTimer = 1.0;
         state.cameraShake = 3;
@@ -1508,7 +2142,6 @@ function checkCollisions() {
   const halfW = PLATFORM_W / 2 - 0.5;
   father.position.x = Math.max(-halfW, Math.min(halfW, father.position.x));
 
-  /* Z-axis boundary clamping */
   const halfZ = PLATFORM_LEN / 2 - 2;
   father.position.z = Math.max(-halfZ, Math.min(halfZ, father.position.z));
 }
@@ -1546,7 +2179,6 @@ function updateIntro(dt) {
 
   if (!state.trainSouthArrived) {
     state.trainSouthZ -= dt * 25;
-    /* Play train screech when approaching */
     if (!introScreechPlayed && state.trainSouthZ < PLATFORM_LEN * 0.4) {
       introScreechPlayed = true;
       playTrainScreech();
@@ -1592,10 +2224,9 @@ function updateIntro(dt) {
     state.timeLeft = GAME_TIME;
     dom.hud.style.display = "block";
     dom.sprintWrap.style.display = "block";
-    dom.muteBtn.style.display = "block";
     dom.buffIndicators.style.display = "block";
     dom.breathHint.style.opacity = "1";
-    setTimeout(() => { dom.breathHint.style.opacity = "0"; }, 4000);
+    setTimeout(function() { dom.breathHint.style.opacity = "0"; }, 4000);
     document.body.classList.remove("letterbox-on");
     showNarrative("\u8DD1\uFF01", 1.5);
     if (audioCtx) playDoorChime();
@@ -1671,12 +2302,14 @@ function updateJump(dt) {
       state.jumpY = 0;
       state.jumpVel = 0;
       state.isJumping = false;
+      /* Play land sound */
+      playJumpLand();
     }
   }
 }
 
 /* ════════════════════════════════════════════════
-   遊戲邏輯更新
+   遊戲邏輯更新 — NO AUTO-RUN, NO BACKWARD
    ════════════════════════════════════════════════ */
 let footstepTimer = 0;
 let sprint2HintShown = false;
@@ -1687,13 +2320,14 @@ function updateGame(dt) {
   let moveX = 0, moveZ = 0;
   if (isMobile) {
     moveX = touchJoyX;
-    moveZ = -touchJoyY;
+    /* Only allow forward (negative Y on joystick = up = forward), ignore backward */
+    moveZ = touchJoyY < 0 ? touchJoyY : 0;
     state.sprinting = touchSprinting;
   } else {
     if (keys["KeyA"] || keys["ArrowLeft"])  moveX = -1;
     if (keys["KeyD"] || keys["ArrowRight"]) moveX =  1;
     if (keys["KeyW"] || keys["ArrowUp"])    moveZ = -1;
-    if (keys["KeyS"] || keys["ArrowDown"])  moveZ =  1;
+    /* NO backward: KeyS and ArrowDown are ignored */
     state.sprinting = !!(keys["ShiftLeft"] || keys["ShiftRight"]);
   }
 
@@ -1705,31 +2339,33 @@ function updateGame(dt) {
   if (state.collisionSlowTimer > 0) speedMult *= 0.5;
   if (state.luggageSlowTimer > 0) speedMult *= 0.3;
 
-  if (state.sprinting && state.sprint > 0) {
+  /* Sprint only works when moving forward */
+  if (state.sprinting && moveZ < 0 && state.sprint > 0) {
     state.sprint = Math.max(0, state.sprint - SPRINT_DRAIN * drainMult * dt);
   } else {
     state.sprinting = false;
     state.sprint = Math.min(SPRINT_MAX, state.sprint + SPRINT_REGEN * dt);
   }
 
-  const baseSpeed = state.sprinting ? SPRINT_SPEED : RUN_SPEED;
+  const baseSpeed = (state.sprinting && moveZ < 0) ? SPRINT_SPEED : RUN_SPEED;
   const speed = baseSpeed * speedMult;
   const carrying = state.gotDaughter ? 0.75 : 1;
 
-  let vz = -speed * carrying;
-  if (moveZ > 0) vz = speed * 0.3 * carrying;
-  if (moveZ < 0) vz = -speed * carrying;
+  /* NO auto-run: only move if player is pressing forward */
+  let vz = 0;
+  if (moveZ < 0) {
+    vz = -speed * carrying;
+  }
+  /* No backward: moveZ > 0 is ignored */
 
   father.position.z += vz * dt;
   father.position.x += moveX * DODGE_SPEED * speedMult * dt;
 
-  /* sprint2: auto-steer slightly right toward train */
+  /* sprint2: NO auto-steer, player must manually steer to train door */
   if (state.phase === "sprint2") {
-    father.position.x += 0.5 * dt;
-
     if (!sprint2HintShown) {
       sprint2HintShown = true;
-      setTimeout(() => {
+      setTimeout(function() {
         if (state.phase === "sprint2") {
           showNarrative("\u5F80\u53F3\u908A\uFF01\u885D\u5411\u5317\u4E0A\u81EA\u5F37\u865F\u7684\u8ECA\u9580\uFF01", 3);
         }
@@ -1739,6 +2375,7 @@ function updateGame(dt) {
 
   checkCollisions();
   checkLuggageCollisions();
+  checkBarrierCollisions();
 
   /* Update jump physics */
   updateJump(dt);
@@ -1749,37 +2386,48 @@ function updateGame(dt) {
   state.heartRate = 60 + urgency * 120;
   playHeartbeat();
 
+  /* Footstep only when moving */
+  const isMoving = (vz !== 0 || moveX !== 0);
   footstepTimer -= dt;
-  if (footstepTimer <= 0 && !state.isJumping) {
-    playFootstep();
+  if (footstepTimer <= 0 && !state.isJumping && isMoving) {
+    if (state.sprinting) { playSprintFootstep(); } else { playFootstep(); }
     footstepTimer = state.sprinting ? 0.25 : 0.35;
   }
 
   /* Father position: grounded base + bob + jump */
   const bobFreq = state.sprinting ? 12 : 8;
-  const bobAmt = state.isJumping ? 0 : (Math.abs(Math.sin(state.clock * bobFreq)) * 0.035);
+  const bobAmt = (state.isJumping || !isMoving) ? 0 : (Math.abs(Math.sin(state.clock * bobFreq)) * 0.035);
   father.position.y = FATHER_BASE_Y + bobAmt + state.jumpY;
-  father.rotation.z = state.isJumping ? 0 : (Math.sin(state.clock * bobFreq * 0.5) * 0.05);
+  father.rotation.z = (state.isJumping || !isMoving) ? 0 : (Math.sin(state.clock * bobFreq * 0.5) * 0.05);
 
   /* Leg animation */
   if (state.isJumping) {
-    /* Tucked pose during jump */
     fatherLeftLeg.rotation.x = 0.3;
     fatherRightLeg.rotation.x = 0.3;
     fatherLeftArm.rotation.x = -0.2;
     fatherRightArm.rotation.x = -0.2;
-  } else {
+  } else if (isMoving) {
     const legSwing = Math.sin(state.clock * bobFreq) * 0.5;
     fatherLeftLeg.rotation.x = legSwing;
     fatherRightLeg.rotation.x = -legSwing;
     fatherLeftArm.rotation.x = -legSwing * 0.7;
     fatherRightArm.rotation.x = legSwing * 0.7;
+  } else {
+    /* Idle pose */
+    fatherLeftLeg.rotation.x = 0;
+    fatherRightLeg.rotation.x = 0;
+    fatherLeftArm.rotation.x = 0;
+    fatherRightArm.rotation.x = 0;
   }
 
   /* Father glow during ultimate */
   if (fatherGlowLight && state.ultimateTimer > 0) {
-    fatherGlowLight.intensity = 2 + Math.sin(state.clock * 8) * 1;
+    fatherGlowLight.intensity = 3 + Math.sin(state.clock * 8) * 2;
+    fatherGlowLight.color.setHSL(0.12 + Math.sin(state.clock * 3) * 0.03, 1, 0.6);
   }
+
+  /* Ultimate particle effects */
+  updateUltimateEffects(dt);
 
   const pct = Math.max(0, state.timeLeft / GAME_TIME) * 100;
   dom.timerFill.style.width = pct + "%";
@@ -1799,7 +2447,8 @@ function updateGame(dt) {
     dom.distText.textContent = "\u8DDD\u96E2\u8ECA\u9580 " + Math.max(0, minD).toFixed(0) + "m";
   }
 
-  dom.vignette.style.opacity = state.timeLeft < 10 ? String((1 - state.timeLeft / 10) * 0.6) : "0";
+  /* Vignette at 40% max for daytime */
+  dom.vignette.style.opacity = state.timeLeft < 10 ? String((1 - state.timeLeft / 10) * 0.4) : "0";
 
   if (state.timeLeft < 8) {
     dom.timerText.style.color = "#e74c3c";
@@ -1817,11 +2466,11 @@ function updateGame(dt) {
     state.gotDaughter = true;
     state.phase = "grabbed";
     showNarrative("\u628A\u62D4\u628A\u6211\u6574\u500B\u62B1\u8D77\u4F86", 2);
-    playSuccess();
+    playDaughterGrab();
     scene.remove(daughter);
     father.add(daughter);
     daughter.position.set(0.3, 0.6, 0.2);
-    setTimeout(() => {
+    setTimeout(function() {
       state.phase = "sprint2";
       showNarrative("\u5FEB\uFF01\u5317\u4E0A\u81EA\u5F37\u865F\u7684\u9580\u8981\u95DC\u4E86\uFF01", 2.5);
       if (audioCtx) playDoorChime();
@@ -1829,7 +2478,7 @@ function updateGame(dt) {
     return;
   }
 
-  /* Victory detection — generous zone */
+  /* Victory detection */
   if (state.gotDaughter && state.phase === "sprint2") {
     for (const d of northDoors) {
       const doorWorldZ = trainNorth.position.z + d.z;
@@ -1847,29 +2496,95 @@ function updateGame(dt) {
 }
 
 /* ════════════════════════════════════════════════
-   BGM 淡出
+   排行榜 — localStorage TOP 10
    ════════════════════════════════════════════════ */
-function fadeBGM(duration) {
-  bgmFading = true;
-  bgmFadeStart = performance.now();
-  const startVol = bgm.volume;
-  function fadeStep() {
-    if (!bgmFading) return;
-    const elapsed = (performance.now() - bgmFadeStart) / 1000;
-    const ratio = Math.max(0, 1 - elapsed / duration);
-    bgm.volume = startVol * ratio;
-    if (ratio > 0) {
-      requestAnimationFrame(fadeStep);
-    } else {
-      bgm.pause();
-      bgmFading = false;
-    }
-  }
-  requestAnimationFrame(fadeStep);
+const LB_KEY = "platformRunLeaderboard";
+
+function loadLeaderboard() {
+  try {
+    const raw = localStorage.getItem(LB_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) return [];
+    return arr;
+  } catch (e) { return []; }
 }
 
+function saveLeaderboard(entries) {
+  try { localStorage.setItem(LB_KEY, JSON.stringify(entries)); } catch (e) { /* quota */ }
+}
+
+function addScore(name, timeLeft, items) {
+  const entries = loadLeaderboard();
+  entries.push({ name: name, time: Math.round(timeLeft * 10) / 10, items: items });
+  /* Sort: timeLeft desc, then items desc */
+  entries.sort(function(a, b) {
+    if (b.time !== a.time) return b.time - a.time;
+    return b.items - a.items;
+  });
+  /* Keep top 10 */
+  if (entries.length > 10) entries.length = 10;
+  saveLeaderboard(entries);
+  return entries;
+}
+
+function renderLeaderboard(highlightIndex) {
+  dom.lbBody.textContent = "";
+  const entries = loadLeaderboard();
+  if (entries.length === 0) {
+    const empty = document.createElement("div");
+    empty.textContent = "\u9084\u6C92\u6709\u7D00\u9304\uFF0C\u5FEB\u4F86\u6311\u6230\uFF01";
+    empty.style.color = "#8a7560";
+    empty.style.padding = "20px";
+    dom.lbBody.appendChild(empty);
+    return;
+  }
+  const table = document.createElement("table");
+  table.className = "lb-table";
+  /* Header */
+  const thead = document.createElement("thead");
+  const hrow = document.createElement("tr");
+  ["\u540D\u6B21", "\u540D\u5B57", "\u5269\u9918\u79D2\u6578", "\u5BF6\u7269"].forEach(function(txt) {
+    const th = document.createElement("th");
+    th.textContent = txt;
+    hrow.appendChild(th);
+  });
+  thead.appendChild(hrow);
+  table.appendChild(thead);
+  /* Body — assign rank with ties */
+  const tbody = document.createElement("tbody");
+  let rank = 1;
+  for (let i = 0; i < entries.length; i++) {
+    const e = entries[i];
+    /* Determine rank: same rank if same time AND items */
+    if (i > 0) {
+      const prev = entries[i - 1];
+      if (e.time !== prev.time || e.items !== prev.items) rank = i + 1;
+    }
+    const tr = document.createElement("tr");
+    if (i === highlightIndex) tr.className = "highlight";
+    const tdRank = document.createElement("td");
+    tdRank.textContent = rank;
+    const tdName = document.createElement("td");
+    tdName.textContent = e.name;
+    const tdTime = document.createElement("td");
+    tdTime.textContent = e.time.toFixed(1) + "s";
+    const tdItems = document.createElement("td");
+    tdItems.textContent = e.items;
+    tr.appendChild(tdRank);
+    tr.appendChild(tdName);
+    tr.appendChild(tdTime);
+    tr.appendChild(tdItems);
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  dom.lbBody.appendChild(table);
+}
+
+let lastSavedHighlight = -1;
+
 /* ════════════════════════════════════════════════
-   勝利 / 失敗
+   勝利 / 失敗 — BGM NEVER INTERRUPTED
    ════════════════════════════════════════════════ */
 function victory() {
   state.phase = "victory";
@@ -1888,14 +2603,13 @@ function victory() {
   showNarrative("\u300C\u6211\u8D95\u4E0A\u4E86\u3002\u300D", 4);
   stopAmbientSounds();
 
-  /* Fade BGM */
-  fadeBGM(3);
+  /* BGM continues — do NOT fade or pause */
 
-  setTimeout(() => {
+  setTimeout(function() {
     showNarrative("\u4ED6\u4E00\u908A\u5598\u6C23\uFF0C\u4E00\u908A\u7B11", 3);
   }, 4500);
 
-  setTimeout(() => {
+  setTimeout(function() {
     dom.result.classList.add("show");
     dom.resultTitle.textContent = "\u6211\u8D95\u4E0A\u4E86\u3002";
     dom.resultBody.textContent = "";
@@ -1907,11 +2621,18 @@ function victory() {
       "\u6211\u5011\u4E4B\u9593\uFF0C\u5C31\u9084\u6709\u4E00\u689D",
       "\u62C9\u5F97\u518D\u9577\u4E5F\u4E0D\u6703\u65B7\u7684\u7DDA\u3002"
     ];
-    lines.forEach((line) => {
+    lines.forEach(function(line) {
       const el = document.createElement("div");
       el.textContent = line || "\u00A0";
       dom.resultBody.appendChild(el);
     });
+    /* Show name input + leaderboard on victory */
+    dom.nameInputWrap.classList.add("show");
+    dom.nameInput.value = "";
+    dom.nameInput.readOnly = false;
+    dom.saveScoreBtn.disabled = false;
+    dom.saveScoreBtn.textContent = "\u8A18\u9304\u6210\u7E3E";
+    lastSavedHighlight = -1;
   }, 8000);
 }
 
@@ -1932,10 +2653,9 @@ function failure() {
   showNarrative("\u8ECA\u9580\u95DC\u4E0A\u4E86\u2026\u2026", 4);
   stopAmbientSounds();
 
-  /* Stop BGM */
-  bgm.pause();
+  /* BGM continues — do NOT pause */
 
-  setTimeout(() => {
+  setTimeout(function() {
     dom.result.classList.add("show");
     dom.resultTitle.textContent = "\u4F86\u4E0D\u53CA\u4E86";
     dom.resultBody.textContent = "";
@@ -1946,11 +2666,13 @@ function failure() {
       "\u56E0\u70BA\u6708\u53F0\u7684\u53E6\u4E00\u7AEF\uFF0C",
       "\u6709\u4ED6\u6700\u60F3\u8D95\u4E0A\u7684\u4EBA\u3002"
     ];
-    lines.forEach((line) => {
+    lines.forEach(function(line) {
       const el = document.createElement("div");
       el.textContent = line || "\u00A0";
       dom.resultBody.appendChild(el);
     });
+    /* Hide name input on failure — only victories get recorded */
+    dom.nameInputWrap.classList.remove("show");
   }, 4000);
 }
 
@@ -2016,7 +2738,6 @@ function updateNPCs(dt) {
     d.wobblePhase += d.wobbleSpeed * dt;
     npc.position.x = d.baseX + Math.sin(d.wobblePhase) * 0.15;
 
-    /* Idle leg/arm sway */
     const sway = Math.sin(d.wobblePhase * 1.5) * 0.08;
     if (d.leftLeg) d.leftLeg.rotation.x = sway;
     if (d.rightLeg) d.rightLeg.rotation.x = -sway;
@@ -2035,14 +2756,69 @@ function updateTrainLeave(dt) {
 }
 
 /* ════════════════════════════════════════════════
+   畫質設定系統
+   ════════════════════════════════════════════════ */
+let qualityPanelOpen = false;
+
+function buildQualityPanel() {
+  dom.qualityPanel.textContent = "";
+  QUALITY_PRESETS.forEach(function(p, idx) {
+    const btn = document.createElement("button");
+    btn.className = "quality-opt";
+    if (idx === state.quality) btn.className += " active";
+    btn.textContent = p.label;
+    btn.addEventListener("click", function() {
+      applyQuality(idx);
+      buildQualityPanel();
+    });
+    dom.qualityPanel.appendChild(btn);
+  });
+}
+
+function applyQuality(level) {
+  state.quality = level;
+  const p = QUALITY_PRESETS[level];
+
+  renderer.setPixelRatio(p.pixelRatio);
+  renderer.shadowMap.enabled = p.shadows;
+  if (p.shadowType) renderer.shadowMap.type = p.shadowType;
+
+  mainLight.shadow.mapSize.set(p.shadowSize || 1024, p.shadowSize || 1024);
+  mainLight.shadow.map = null;
+
+  if (p.fog) {
+    scene.fog = new THREE.FogExp2(0xc8dff0, 0.003);
+  } else {
+    scene.fog = null;
+  }
+
+  /* Rebuild NPCs if count changed */
+  const currentCount = npcs.length;
+  if (currentCount !== p.npcCount) {
+    rebuildNPCs(p.npcCount);
+  }
+
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+dom.qualityBtn.addEventListener("click", function() {
+  qualityPanelOpen = !qualityPanelOpen;
+  if (qualityPanelOpen) {
+    buildQualityPanel();
+    dom.qualityPanel.classList.add("show");
+  } else {
+    dom.qualityPanel.classList.remove("show");
+  }
+});
+
+/* ════════════════════════════════════════════════
    主迴圈
    ════════════════════════════════════════════════ */
 const gameClock = new THREE.Clock();
 
 function animate() {
   requestAnimationFrame(animate);
-  {
-  const dt = Math.min(gameClock.getDelta(), 0.05);
+  const dt = Math.min(gameClock.getDelta(), 0.033);
   state.clock += dt;
 
   mainLight.position.z = father.position.z;
@@ -2050,7 +2826,7 @@ function animate() {
   warmFill.position.z = father.position.z;
 
   if (!state.gotDaughter && daughter.parent === scene) {
-    const beaconLight = daughter.children.find(c => c.isLight);
+    const beaconLight = daughter.children.find(function(c) { return c.isLight; });
     if (beaconLight) beaconLight.intensity = 1.5 + Math.sin(state.clock * 4) * 0.8;
   }
 
@@ -2083,7 +2859,6 @@ function animate() {
 
   updateNarrative(dt);
   renderer.render(scene, camera);
-  }
 }
 
 /* ════════════════════════════════════════════════
@@ -2097,6 +2872,7 @@ function init() {
   spawnLuggage();
   createDoorMarker();
   detectMobile();
+  buildQualityPanel();
   animate();
 }
 
@@ -2133,16 +2909,19 @@ function resetGame() {
   state.jumpY = 0;
   state.jumpVel = 0;
   state.isJumping = false;
+  state.wasJumping = false;
 
-  /* Luggage state reset */
+  /* Luggage/barrier state reset */
   state.luggageSlowTimer = 0;
+  state.barrierHintShown = false;
 
-  /* Audio reset */
+  /* Leaderboard state reset */
+  state.itemsCollected = 0;
+  lastSavedHighlight = -1;
+
+  /* Audio reset — do NOT touch bgm */
   nextBeat = 0;
-  bgm.pause();
-  bgm.currentTime = 0;
-  bgm.volume = 0.3;
-  bgmFading = false;
+  /* BGM continues, never paused on reset */
 
   /* Stop ambient sounds */
   stopAmbientSounds();
@@ -2152,6 +2931,25 @@ function resetGame() {
     father.remove(fatherGlowLight);
     fatherGlowLight = null;
   }
+
+  /* Ultimate effects cleanup */
+  for (var upi = ultimateParticles.length - 1; upi >= 0; upi--) {
+    if (ultimateParticles[upi].parent) scene.remove(ultimateParticles[upi]);
+    ultimateParticles[upi].geometry.dispose();
+    ultimateParticles[upi].material.dispose();
+  }
+  ultimateParticles = [];
+  if (ultimateShockwave && ultimateShockwave.parent) {
+    scene.remove(ultimateShockwave);
+    ultimateShockwave.geometry.dispose();
+    ultimateShockwave.material.dispose();
+    ultimateShockwave = null;
+  }
+  dom.goldFlash.style.opacity = "0";
+  dom.goldFlash.style.background = "radial-gradient(ellipse at center,rgba(255,215,0,0.5) 0%,transparent 70%)";
+  document.body.style.filter = "";
+  ultimateScreenPhase = 0;
+  ultimateTrailTimer = 0;
 
   /* Position resets */
   father.position.set(0, FATHER_BASE_Y, state.playerZ);
@@ -2196,19 +2994,33 @@ function resetGame() {
   dom.hud.style.display = "none";
   dom.sprintWrap.style.display = "none";
   dom.vignette.style.opacity = "0";
-  dom.timerText.style.color = "#f39c12";
+  dom.timerText.style.color = "#c0392b";
   dom.narrText.classList.remove("show");
   dom.pickupNotify.classList.remove("show");
   dom.goldFlash.style.opacity = "0";
   dom.buffIndicators.style.display = "none";
   dom.buffIndicators.textContent = "";
-  dom.muteBtn.style.display = "none";
   document.body.classList.remove("letterbox-on");
 
   /* Ultimate button reset */
   dom.ultimateBtn.classList.remove("used");
 
-  /* Title screen reset: remove and re-add animation classes */
+  /* Leaderboard DOM reset */
+  dom.nameInputWrap.classList.remove("show");
+  dom.nameInputWrap.style.opacity = "0";
+  dom.nameInput.value = "";
+  dom.nameInput.readOnly = false;
+  dom.leaderboardPanel.classList.remove("show");
+
+  /* Mobile UI fix: re-show mobile controls */
+  if (isMobile) {
+    dom.touchCtrl.style.display = "block";
+    dom.sprintBtn.style.display = "block";
+    dom.ultimateBtn.style.display = "block";
+    dom.jumpBtn.style.display = "block";
+  }
+
+  /* Title screen reset */
   dom.title.style.display = "flex";
   dom.title.classList.remove("hide");
 
@@ -2224,25 +3036,64 @@ function resetGame() {
   introScreechPlayed = false;
 }
 
-dom.title.addEventListener("click", () => {
+dom.title.addEventListener("click", function() {
   initAudio();
-  /* Start BGM on user gesture */
-  bgm.currentTime = 0;
-  bgm.volume = 0.3;
-  bgm.muted = bgmMuted;
-  bgm.play().catch(() => {});
+  /* Start BGM on first user gesture if not already started */
+  if (!bgmStarted) {
+    bgmStarted = true;
+    bgm.currentTime = 0;
+    bgm.volume = 0.3;
+    bgm.muted = bgmMuted;
+    bgm.play().catch(function() {});
+  }
   dom.title.classList.add("hide");
-  setTimeout(() => {
+  setTimeout(function() {
     dom.title.style.display = "none";
     startIntro();
   }, 1200);
 });
 
-dom.resultRetry.addEventListener("click", () => {
+dom.resultRetry.addEventListener("click", function() {
   resetGame();
 });
 
-window.addEventListener("resize", () => {
+/* ── 排行榜事件 ── */
+/* Name input: only allow A-Z a-z and space */
+dom.nameInput.addEventListener("input", function() {
+  dom.nameInput.value = dom.nameInput.value.replace(/[^A-Za-z ]/g, "").slice(0, 10);
+});
+
+/* Save score button */
+dom.saveScoreBtn.addEventListener("click", function() {
+  if (state.phase !== "victory") return;
+  let name = dom.nameInput.value.replace(/[^A-Za-z ]/g, "").trim().slice(0, 10);
+  if (!name) name = "PLAYER";
+  const entries = addScore(name, state.timeLeft, state.itemsCollected);
+  /* Find the entry we just added to highlight it */
+  lastSavedHighlight = -1;
+  for (let i = 0; i < entries.length; i++) {
+    if (entries[i].name === name && entries[i].time === Math.round(state.timeLeft * 10) / 10 && entries[i].items === state.itemsCollected) {
+      lastSavedHighlight = i;
+      break;
+    }
+  }
+  dom.saveScoreBtn.textContent = "\u2714 \u5DF2\u8A18\u9304";
+  dom.saveScoreBtn.disabled = true;
+  dom.nameInput.readOnly = true;
+});
+
+/* Show leaderboard panel */
+dom.leaderboardBtn.addEventListener("click", function() {
+  renderLeaderboard(lastSavedHighlight);
+  dom.leaderboardPanel.classList.add("show");
+});
+
+/* Close leaderboard panel */
+dom.lbClose.addEventListener("click", function() {
+  dom.leaderboardPanel.classList.remove("show");
+});
+
+window.addEventListener("resize", function() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);

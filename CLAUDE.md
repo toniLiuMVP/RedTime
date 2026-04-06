@@ -7,6 +7,32 @@
 - **GitHub Repo**：`toniLiuMVP/RedTime`（GitHub Pages 部署）
 - **網站類型**：互動式小說 / 遊戲網站
 
+## ⛔ NAS 備份（重要！不要用 Toni-NAS！）
+
+> NAS 名稱是 **toniLiuMVP**，不是 Toni-NAS！
+> 掛載路徑是 **/Volumes/918 資料夾/**，不是 /Volumes/Toni-NAS/！
+
+### 自動掛載
+
+```bash
+if [ ! -d "/Volumes/918 資料夾" ]; then
+  osascript -e 'tell application "Finder" to open location "smb://toniLiuMVP._smb._tcp.local/918%20%E8%B3%87%E6%96%99%E5%A4%BE"'
+  sleep 8
+fi
+```
+
+### rsync 備份
+
+```bash
+rsync -av --delete \
+  --exclude='.git' --exclude='node_modules' --exclude='.claude' \
+  --exclude='test-results' --exclude='output' --exclude='.playwright-cli' \
+  "/Users/toni/Downloads/時間裡的兩個妳/" \
+  "/Volumes/918 資料夾/晴晴/時間裡的兩個妳/解析/EP0~EP40修訂二版/網站/"
+```
+
+---
+
 ## 重要檔案
 
 ```
