@@ -233,6 +233,25 @@ a {
   border-color: #73d0a542;
   color: var(--jade);
 }
+#back-story-btn {
+  border-color: rgba(115, 208, 165, 0.4);
+  background: rgba(115, 208, 165, 0.08);
+  color: var(--jade);
+}
+#back-story-btn:hover {
+  border-color: rgba(115, 208, 165, 0.65);
+  background: rgba(115, 208, 165, 0.16);
+  box-shadow: 0 0 16px rgba(115, 208, 165, 0.12);
+}
+#back-story-side-btn {
+  border-color: rgba(115, 208, 165, 0.4);
+  background: rgba(115, 208, 165, 0.08);
+  color: var(--jade);
+}
+#back-story-side-btn:hover {
+  border-color: rgba(115, 208, 165, 0.65);
+  background: rgba(115, 208, 165, 0.16);
+}
 .game-shell {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(296px, 336px);
