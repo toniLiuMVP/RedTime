@@ -2501,9 +2501,15 @@ function createRiceBall(x, z) {
   nori.position.y = -0.1;
   group.add(nori);
 
-  const glow = new THREE.PointLight(0xffd700, 1.2, 5);
-  glow.position.y = 0.3;
-  group.add(glow);
+  /* 發光光暈（用 Sprite 取代 PointLight 避免 shader 重編譯卡頓） */
+  const glowMat = new THREE.SpriteMaterial({
+    color: 0xffd700, transparent: true, opacity: 0.45,
+    blending: THREE.AdditiveBlending, depthWrite: false
+  });
+  const glowSprite = new THREE.Sprite(glowMat);
+  glowSprite.scale.set(1.8, 1.8, 1);
+  glowSprite.position.y = 0.1;
+  group.add(glowSprite);
 
   group.position.set(x, 0.8, z);
   group.userData = { type: "riceball", collected: false, baseY: 0.8 };
@@ -2534,9 +2540,15 @@ function createCoffee(x, z) {
   lid.position.y = 0.19;
   group.add(lid);
 
-  const glow = new THREE.PointLight(0x3498db, 1.2, 5);
-  glow.position.y = 0.3;
-  group.add(glow);
+  /* 發光光暈（用 Sprite 取代 PointLight 避免 shader 重編譯卡頓） */
+  const glowMat = new THREE.SpriteMaterial({
+    color: 0x3498db, transparent: true, opacity: 0.45,
+    blending: THREE.AdditiveBlending, depthWrite: false
+  });
+  const glowSprite = new THREE.Sprite(glowMat);
+  glowSprite.scale.set(1.8, 1.8, 1);
+  glowSprite.position.y = 0.1;
+  group.add(glowSprite);
 
   group.position.set(x, 0.8, z);
   group.userData = { type: "coffee", collected: false, baseY: 0.8 };
@@ -3588,7 +3600,13 @@ function updateIntro(dt) {
     dom.breathHint.style.opacity = "1";
     dom.levelText.textContent = "\u7B2C " + state.currentLevel + " \u95DC";
     updateUltimateUI();
-    if (isMobile) dom.ultimateCount.style.display = "block";
+    if (isMobile) {
+      dom.touchCtrl.style.display = "block";
+      dom.sprintBtn.style.display = "block";
+      dom.jumpBtn.style.display = "block";
+      dom.ultimateBtn.style.display = "block";
+      dom.ultimateCount.style.display = "block";
+    }
     setTimeout(function() { dom.breathHint.style.opacity = "0"; }, 4000);
     document.body.classList.remove("letterbox-on");
     if (state.currentLevel === 1) {
