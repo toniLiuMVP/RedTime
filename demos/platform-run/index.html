@@ -2501,15 +2501,11 @@ function createRiceBall(x, z) {
   nori.position.y = -0.1;
   group.add(nori);
 
-  /* 發光光暈（用 Sprite 取代 PointLight 避免 shader 重編譯卡頓） */
-  const glowMat = new THREE.SpriteMaterial({
-    color: 0xffd700, transparent: true, opacity: 0.45,
-    blending: THREE.AdditiveBlending, depthWrite: false
-  });
-  const glowSprite = new THREE.Sprite(glowMat);
-  glowSprite.scale.set(1.8, 1.8, 1);
-  glowSprite.position.y = 0.1;
-  group.add(glowSprite);
+  /* 自體發光（emissive 不影響場景光源數量，不觸發 shader 重編譯） */
+  rice.material.emissive = new THREE.Color(0xffd700);
+  rice.material.emissiveIntensity = 0.3;
+  nori.material.emissive = new THREE.Color(0xffd700);
+  nori.material.emissiveIntensity = 0.15;
 
   group.position.set(x, 0.8, z);
   group.userData = { type: "riceball", collected: false, baseY: 0.8 };
@@ -2540,15 +2536,11 @@ function createCoffee(x, z) {
   lid.position.y = 0.19;
   group.add(lid);
 
-  /* 發光光暈（用 Sprite 取代 PointLight 避免 shader 重編譯卡頓） */
-  const glowMat = new THREE.SpriteMaterial({
-    color: 0x3498db, transparent: true, opacity: 0.45,
-    blending: THREE.AdditiveBlending, depthWrite: false
-  });
-  const glowSprite = new THREE.Sprite(glowMat);
-  glowSprite.scale.set(1.8, 1.8, 1);
-  glowSprite.position.y = 0.1;
-  group.add(glowSprite);
+  /* 自體發光（emissive 不影響場景光源數量，不觸發 shader 重編譯） */
+  cup.material.emissive = new THREE.Color(0x3498db);
+  cup.material.emissiveIntensity = 0.3;
+  lid.material.emissive = new THREE.Color(0x3498db);
+  lid.material.emissiveIntensity = 0.2;
 
   group.position.set(x, 0.8, z);
   group.userData = { type: "coffee", collected: false, baseY: 0.8 };
@@ -4302,7 +4294,7 @@ function updateHiddenEnding(dt) {
       state.hiddenEndingPhase = 1;
       state.hiddenEndingTimer = 0;
       dom.hiddenEnding.style.opacity = "1";
-      dom.hiddenEndingText.textContent = "\u3105\u3122\u02C7 \u3105\u3122\u02CA \u3128\u3121\u02C7 \u3124\u3128\u3127\u02CC \u3129\u3127\u3122\u02C7 \u3123\u3127\u02C7 \u3109\u3120\u02D9";
+      dom.hiddenEndingText.textContent = "\u3105\u311A\u02C7 \u3105\u311A\u02CA \u3128\u311B\u02C7 \u310F\u3128\u311F\u02CB \u3112\u3127\u3124\u02C7 \u310B\u3127\u02C7 \u3109\u311C\u02D9";
     }
   }
 
