@@ -3179,6 +3179,24 @@
       body.day-mode .sb-ep-item:hover {
         background: rgba(0, 0, 0, 0.04);
       }
+      /* ── Day-mode: 右側浮動按鈕 & 進度條 ── */
+      body.day-mode .tb-btn {
+        background: rgba(244, 238, 216, 0.92);
+        border-color: var(--line);
+        color: var(--t2);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      body.day-mode .tb-btn:hover {
+        border-color: var(--t3);
+        color: var(--t1);
+        background: rgba(244, 238, 216, 0.98);
+      }
+      @media (min-width: 768px) {
+        body.day-mode #story-progress-slider {
+          background: rgba(244, 238, 216, 0.88);
+          border-color: var(--line);
+        }
+      }
 
       /* ═══ 命運阿嬤 ══════════════════════════════ */
       .ep-granny {
