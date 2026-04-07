@@ -29,6 +29,22 @@ canvas{display:block;width:100%;height:100%}
 #hud-info{display:flex;justify-content:space-between;align-items:center;color:#2c3e50;font-size:clamp(12px,1.6vw,16px);text-shadow:0 1px 3px rgba(255,255,255,0.5)}
 #timer-text{color:#c0392b;font-weight:700;font-size:clamp(16px,2.5vw,24px)}
 #distance-text{color:#5a4a3a}
+#level-text{color:#1a6a3a;font-weight:700;font-size:clamp(14px,2vw,20px);text-shadow:0 0 8px rgba(26,106,58,0.3)}
+
+/* ── 關卡過渡 ── */
+#level-transition{position:fixed;inset:0;z-index:85;background:rgba(10,10,10,0.95);display:none;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.8s}
+#level-transition.show{display:flex}
+.level-clear-text{color:#ffd700;font-size:clamp(28px,5vw,48px);font-weight:700;opacity:0;animation:fadeUp 1s 0.3s forwards}
+.level-next-text{color:#b8956a;font-size:clamp(14px,2.5vw,22px);margin-top:20px;opacity:0;animation:fadeUp 1s 1s forwards}
+
+/* ── 隱藏結局 ── */
+#hidden-ending{position:fixed;inset:0;z-index:88;background:#000;display:none;flex-direction:column;align-items:center;justify-content:center}
+#hidden-ending.show{display:flex}
+#hidden-ending-text{color:#ffd700;font-size:clamp(20px,4vw,36px);font-weight:700;opacity:0;transition:opacity 2s;text-align:center;line-height:1.8;letter-spacing:0.1em}
+#hidden-ending-text.show{opacity:1}
+
+/* ── 大絕招計數 ── */
+#ultimate-count{position:fixed;bottom:286px;right:30px;z-index:41;display:none;color:#ffd700;font-size:12px;font-weight:700;text-align:center;text-shadow:0 0 6px rgba(255,215,0,0.5);pointer-events:none}
 #sprint-bar-wrap{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:20;display:none;width:clamp(120px,30vw,200px)}
 #sprint-bar{width:100%;height:4px;background:rgba(0,0,0,0.15);border-radius:2px;overflow:hidden}
 #sprint-fill{width:100%;height:100%;background:linear-gradient(90deg,#3498db,#1abc9c);border-radius:2px;transition:width 0.15s}
@@ -139,6 +155,7 @@ canvas{display:block;width:100%;height:100%}
 <div id="hud">
   <div id="timer-bar"><div id="timer-fill"></div></div>
   <div id="hud-info">
+    <span id="level-text">第 1 關</span>
     <span id="timer-text">36.0</span>
     <span id="distance-text"></span>
   </div>
@@ -178,9 +195,20 @@ canvas{display:block;width:100%;height:100%}
 
 <!-- 排行榜面板 -->
 <div id="leaderboard-panel">
-  <div class="lb-title">🏆 排行榜 TOP 10</div>
+  <div class="lb-title" id="lb-title">🏆 排行榜 TOP 10</div>
   <div id="lb-body"></div>
   <div class="lb-close" id="lb-close">關閉</div>
+</div>
+
+<!-- 關卡過渡畫面 -->
+<div id="level-transition">
+  <div class="level-clear-text" id="level-clear-text"></div>
+  <div class="level-next-text" id="level-next-text"></div>
+</div>
+
+<!-- 隱藏結局 -->
+<div id="hidden-ending">
+  <div id="hidden-ending-text"></div>
 </div>
 
 <!-- 手機觸控 -->
@@ -188,6 +216,7 @@ canvas{display:block;width:100%;height:100%}
 <div id="sprint-btn">衝刺</div>
 <div id="jump-btn">跳躍</div>
 <div id="ultimate-btn"></div>
+<div id="ultimate-count"></div>
 
 <!-- 靜音按鈕 -->
 <div id="mute-btn"></div>
@@ -287,11 +316,29 @@ const dom = {
   leaderboardPanel: document.getElementById("leaderboard-panel"),
   lbBody:         document.getElementById("lb-body"),
   lbClose:        document.getElementById("lb-close"),
+  /* Level system */
+  levelText:      document.getElementById("level-text"),
+  levelTransition: document.getElementById("level-transition"),
+  levelClearText: document.getElementById("level-clear-text"),
+  levelNextText:  document.getElementById("level-next-text"),
+  hiddenEnding:   document.getElementById("hidden-ending"),
+  hiddenEndingText: document.getElementById("hidden-ending-text"),
+  ultimateCount:  document.getElementById("ultimate-count"),
 };
 
 /* Set text content safely (no innerHTML) */
 dom.ultimateBtn.textContent = "\u5FC5\u6BBA\u6280 E";
 dom.qualityBtn.textContent = "\u2699";
+
+function updateUltimateUI() {
+  if (state.ultimateCharges > 0) {
+    dom.ultimateBtn.classList.remove("used");
+    dom.ultimateCount.textContent = "\u00D7" + state.ultimateCharges;
+  } else {
+    dom.ultimateBtn.classList.add("used");
+    dom.ultimateCount.textContent = "\u00D70";
+  }
+}
 
 /* ════════════════════════════════════════════════
    遊戲狀態
@@ -346,6 +393,20 @@ const state = {
   victoryPhase: 0,
   victoryDoorX: 0,
   victoryDoorZ: 0,
+  /* === Level system === */
+  currentLevel: 1,
+  maxLevel: 10,
+  totalTimeBank: 0,
+  totalItemsBank: 0,
+  levelTimes: [],
+  ultimateCharges: 1,
+  levelTransitionTimer: 0,
+  hiddenEndingPhase: 0,
+  hiddenEndingTimer: 0,
+  /* carry-over state (persists between levels) */
+  carryRiceBall: 0,
+  carryCoffee: 0,
+  carryUltimate: 0,
 };
 
 /* ════════════════════════════════════════════════
@@ -397,25 +458,43 @@ camera.lookAt(0, 0, 0);
 /* ════════════════════════════════════════════════
    光源 — DAYTIME
    ════════════════════════════════════════════════ */
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+/* 半球光 — 天空/地面漸層環境光 */
+const hemiLight = new THREE.HemisphereLight(0x87CEEB, 0x8B7355, 0.4);
+scene.add(hemiLight);
+
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
 scene.add(ambientLight);
 
-const mainLight = new THREE.DirectionalLight(0xfff5e6, 2.0);
-mainLight.position.set(15, 50, 10);
+/* 主陽光（更強、更真實的陰影） */
+const mainLight = new THREE.DirectionalLight(0xfff5e6, 2.2);
+mainLight.position.set(20, 60, 15);
 mainLight.castShadow = true;
 mainLight.shadow.mapSize.set(preset.shadowSize || 1024, preset.shadowSize || 1024);
-mainLight.shadow.camera.left   = -25;
-mainLight.shadow.camera.right  =  25;
-mainLight.shadow.camera.top    =  60;
-mainLight.shadow.camera.bottom = -60;
-mainLight.shadow.bias = -0.001;
+mainLight.shadow.camera.left   = -30;
+mainLight.shadow.camera.right  =  30;
+mainLight.shadow.camera.top    =  80;
+mainLight.shadow.camera.bottom = -80;
+mainLight.shadow.camera.near = 0.5;
+mainLight.shadow.camera.far = 200;
+mainLight.shadow.bias = -0.0005;
 mainLight.shadow.normalBias = 0.02;
 scene.add(mainLight);
 scene.add(mainLight.target);
 
-const warmFill = new THREE.PointLight(0xffeedd, 0.3, 50);
+/* 逆光補光（背光邊緣光效果） */
+const rimLight = new THREE.DirectionalLight(0xffd4a0, 0.6);
+rimLight.position.set(-15, 30, -20);
+scene.add(rimLight);
+
+/* 暖色補光 */
+const warmFill = new THREE.PointLight(0xffeedd, 0.35, 60);
 warmFill.position.set(0, 8, 0);
 scene.add(warmFill);
+
+/* 月台區域補光 */
+const platformFill = new THREE.PointLight(0xffffff, 0.15, 40);
+platformFill.position.set(0, 5.5, -50);
+scene.add(platformFill);
 
 /* ════════════════════════════════════════════════
    材質庫
@@ -526,12 +605,93 @@ function buildPlatform() {
     scene.add(rm);
   }
 
-  for (let z = -PLATFORM_LEN / 2 + 30; z <= PLATFORM_LEN / 2 - 30; z += 40) {
-    const bg = new THREE.BoxGeometry(2, 0.5, 0.6);
-    const bm = new THREE.Mesh(bg, MAT.bench);
-    bm.position.set(-2.5, 0.25, z);
-    bm.castShadow = true;
-    scene.add(bm);
+  /* ── 旅客座椅（精緻：座面 + 椅背 + 椅腳 + 扶手） ── */
+  var benchLegMat = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.5, metalness: 0.6 });
+  var benchSeatMat = new THREE.MeshStandardMaterial({ color: 0x8b7355, roughness: 0.75 });
+  var benchBackMat = new THREE.MeshStandardMaterial({ color: 0x7a6a50, roughness: 0.8 });
+  for (let z = -PLATFORM_LEN / 2 + 25; z <= PLATFORM_LEN / 2 - 25; z += 30) {
+    var benchG = new THREE.Group();
+    /* 座面（木條拼排效果，3 根長條） */
+    for (var bsi = 0; bsi < 3; bsi++) {
+      var slat = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.04, 0.12), benchSeatMat);
+      slat.position.set(0, 0.42, -0.14 + bsi * 0.14);
+      slat.castShadow = true;
+      benchG.add(slat);
+    }
+    /* 椅背（2 根木條） */
+    for (var bbi = 0; bbi < 2; bbi++) {
+      var backSlat = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.1, 0.03), benchBackMat);
+      backSlat.position.set(0, 0.58 + bbi * 0.14, 0.22);
+      backSlat.castShadow = true;
+      benchG.add(backSlat);
+    }
+    /* 4 支椅腳（金屬） */
+    for (var bli = 0; bli < 4; bli++) {
+      var legX = (bli < 2 ? -0.65 : 0.65);
+      var legZ = (bli % 2 === 0 ? -0.12 : 0.18);
+      var benchLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.42, 6), benchLegMat);
+      benchLeg.position.set(legX, 0.21, legZ);
+      benchG.add(benchLeg);
+    }
+    /* 2 支扶手（金屬弧形） */
+    for (var bai = 0; bai < 2; bai++) {
+      var armX = bai === 0 ? -0.72 : 0.72;
+      var armRest = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.35, 6), benchLegMat);
+      armRest.rotation.x = -0.3;
+      armRest.position.set(armX, 0.55, 0.08);
+      benchG.add(armRest);
+    }
+    benchG.position.set(-2.5, 0, z);
+    scene.add(benchG);
+  }
+
+  /* ── 垃圾桶 + 資源回收桶（每隔一段距離配對放置） ── */
+  var trashBodyMat = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.6, metalness: 0.3 });
+  var trashLidMat = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.5, metalness: 0.4 });
+  var recycleMat = new THREE.MeshStandardMaterial({ color: 0x2a7a3a, roughness: 0.5 }); /* 綠色回收桶 */
+  var recycleLidMat = new THREE.MeshStandardMaterial({ color: 0x1a6a2a, roughness: 0.4 });
+  var trashLabelMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.3 }); /* 標示牌 */
+
+  for (let tz = -PLATFORM_LEN / 2 + 40; tz <= PLATFORM_LEN / 2 - 40; tz += 60) {
+    /* 一般垃圾桶（灰色圓桶） */
+    var trashG = new THREE.Group();
+    var trashBody = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 0.65, 10), trashBodyMat);
+    trashBody.position.y = 0.325;
+    trashBody.castShadow = true;
+    trashG.add(trashBody);
+    var trashLid = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.04, 10), trashLidMat);
+    trashLid.position.y = 0.67;
+    trashG.add(trashLid);
+    /* 開口（投入口） */
+    var trashHole = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.02, 0.06), new THREE.MeshStandardMaterial({ color: 0x1a1a1a }));
+    trashHole.position.y = 0.69;
+    trashG.add(trashHole);
+    /* 標示牌「一般垃圾」 */
+    var trashLabel = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.06, 0.01), trashLabelMat);
+    trashLabel.position.set(0, 0.5, -0.2);
+    trashG.add(trashLabel);
+    trashG.position.set(2.5, 0, tz);
+    scene.add(trashG);
+
+    /* 資源回收桶（綠色圓桶，放旁邊） */
+    var recycleG = new THREE.Group();
+    var recycleBody = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 0.65, 10), recycleMat);
+    recycleBody.position.y = 0.325;
+    recycleBody.castShadow = true;
+    recycleG.add(recycleBody);
+    var recycleLid = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.04, 10), recycleLidMat);
+    recycleLid.position.y = 0.67;
+    recycleG.add(recycleLid);
+    /* 圓形投入口 */
+    var recycleHole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.02, 8), new THREE.MeshStandardMaterial({ color: 0x1a1a1a }));
+    recycleHole.position.y = 0.69;
+    recycleG.add(recycleHole);
+    /* 回收標誌 ♻（用三角形環表示） */
+    var recycleSign = new THREE.Mesh(new THREE.RingGeometry(0.04, 0.06, 3), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+    recycleSign.position.set(0, 0.45, -0.2);
+    recycleG.add(recycleSign);
+    recycleG.position.set(2.9, 0, tz);
+    scene.add(recycleG);
   }
 
   const floorG = new THREE.PlaneGeometry(100, PLATFORM_LEN + 40);
@@ -544,6 +704,437 @@ function buildPlatform() {
 }
 
 /* ════════════════════════════════════════════════
+   台中火車站背景 — 偶像劇等級天空 + 真實百貨大樓群
+   ════════════════════════════════════════════════ */
+function buildBackground() {
+
+  /* ═══ 一、偶像劇天空 ═══ */
+  /* 天空漸層球（溫暖午後色調） */
+  const skyGeo = new THREE.SphereGeometry(280, 48, 24);
+  const skyMat = new THREE.ShaderMaterial({
+    side: THREE.BackSide,
+    uniforms: {
+      topColor:    { value: new THREE.Color(0x3a7ec8) },  /* 頂部深藍 */
+      midColor:    { value: new THREE.Color(0x6aadee) },  /* 中段天藍 */
+      bottomColor: { value: new THREE.Color(0xf0e0c8) },  /* 地平線暖金 */
+      sunDir:      { value: new THREE.Vector3(0.5, 0.4, 0.3).normalize() },
+      sunColor:    { value: new THREE.Color(0xfff5e0) },
+      offset:      { value: 12 },
+      exponent:    { value: 0.35 }
+    },
+    vertexShader: [
+      "varying vec3 vWorldPos;",
+      "void main() {",
+      "  vec4 wp = modelMatrix * vec4(position, 1.0);",
+      "  vWorldPos = wp.xyz;",
+      "  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);",
+      "}"
+    ].join("\n"),
+    fragmentShader: [
+      "uniform vec3 topColor;",
+      "uniform vec3 midColor;",
+      "uniform vec3 bottomColor;",
+      "uniform vec3 sunDir;",
+      "uniform vec3 sunColor;",
+      "uniform float offset;",
+      "uniform float exponent;",
+      "varying vec3 vWorldPos;",
+      "void main() {",
+      "  vec3 dir = normalize(vWorldPos + offset);",
+      "  float h = max(dir.y, 0.0);",
+      "  /* 三段式天空漸層 */",
+      "  vec3 skyCol = mix(bottomColor, midColor, smoothstep(0.0, 0.25, h));",
+      "  skyCol = mix(skyCol, topColor, smoothstep(0.25, 0.7, h));",
+      "  /* 太陽光暈 */",
+      "  float sunDot = max(dot(dir, sunDir), 0.0);",
+      "  skyCol += sunColor * pow(sunDot, 32.0) * 0.6;",
+      "  skyCol += sunColor * pow(sunDot, 8.0) * 0.15;",
+      "  gl_FragColor = vec4(skyCol, 1.0);",
+      "}"
+    ].join("\n")
+  });
+  const sky = new THREE.Mesh(skyGeo, skyMat);
+  scene.add(sky);
+
+  /* 太陽光盤（可見的太陽） */
+  var sunGlowMat = new THREE.MeshBasicMaterial({ color: 0xfffce8, transparent: true, opacity: 0.7 });
+  var sunOuter = new THREE.Mesh(new THREE.CircleGeometry(8, 32), new THREE.MeshBasicMaterial({ color: 0xfff8e0, transparent: true, opacity: 0.3 }));
+  sunOuter.position.set(80, 65, 50);
+  sunOuter.lookAt(0, 0, 0);
+  scene.add(sunOuter);
+  var sunCore = new THREE.Mesh(new THREE.CircleGeometry(3.5, 32), sunGlowMat);
+  sunCore.position.set(80, 65, 50);
+  sunCore.lookAt(0, 0, 0);
+  scene.add(sunCore);
+
+  /* ═══ 積雲（Cumulus）叢集 ═══ */
+  /* 每朵雲 = 5~8 個球體堆疊出蓬鬆形狀 */
+  var cloudCoreMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 });
+  var cloudEdgeMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.4 });
+  var cloudSunMat  = new THREE.MeshBasicMaterial({ color: 0xfff8e8, transparent: true, opacity: 0.5 });
+
+  var cloudDefs = [
+    { x: -80, y: 50, z: -60,  scale: 1.2 },
+    { x: -30, y: 55, z: -110, scale: 0.9 },
+    { x:  50, y: 48, z: -80,  scale: 1.0 },
+    { x:  90, y: 58, z: -30,  scale: 1.4 },
+    { x: -60, y: 52, z:  40,  scale: 0.8 },
+    { x:  30, y: 56, z:  70,  scale: 1.1 },
+    { x: -100, y: 45, z: 80,  scale: 1.3 },
+    { x:  70, y: 60, z: 120,  scale: 0.7 },
+    { x: -20, y: 62, z: 140,  scale: 0.6 },
+    { x: 110, y: 50, z:  20,  scale: 1.0 },
+    { x: -110, y: 55, z: -30, scale: 0.85 },
+    { x:  0,  y: 65, z: -140, scale: 0.5 },
+  ];
+
+  for (var ci = 0; ci < cloudDefs.length; ci++) {
+    var cd = cloudDefs[ci];
+    var cloudGroup = new THREE.Group();
+    var numPuffs = 5 + Math.floor(Math.random() * 4);
+    for (var pi = 0; pi < numPuffs; pi++) {
+      var puffR = (3 + Math.random() * 5) * cd.scale;
+      var mat = pi < 2 ? cloudCoreMat : (pi < 4 ? cloudSunMat : cloudEdgeMat);
+      var puff = new THREE.Mesh(new THREE.SphereGeometry(puffR, 8, 6), mat);
+      puff.position.set(
+        (Math.random() - 0.5) * 10 * cd.scale,
+        (Math.random() - 0.3) * 3 * cd.scale,
+        (Math.random() - 0.5) * 6 * cd.scale
+      );
+      puff.scale.y = 0.4 + Math.random() * 0.25;
+      cloudGroup.add(puff);
+    }
+    cloudGroup.position.set(cd.x, cd.y, cd.z);
+    scene.add(cloudGroup);
+  }
+
+  /* ═══ 二、真實建築群 ═══ */
+  /* 共用材質 */
+  var winGlassMat = new THREE.MeshStandardMaterial({ color: 0x6699cc, roughness: 0.05, metalness: 0.7, emissive: 0x1a2a3a, emissiveIntensity: 0.12 });
+  var winFrameMat = new THREE.MeshStandardMaterial({ color: 0x556677, roughness: 0.4 });
+  var acMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.6 });
+  var roofEdgeMat = new THREE.MeshStandardMaterial({ color: 0x556666, roughness: 0.5 });
+
+  /* 每棟建築的定義（含建築型態） */
+  var bldgDefs = [
+    /* ── 左側建築群 ── */
+    { x:-35,  z:-80,  type:"podium_tower", podW:22, podH:8, podD:24, podColor:0xd4c4a8,
+      towerW:14, towerH:30, towerD:16, towerColor:0x8899aa, roofType:"antenna" },
+    { x:-38,  z:-25,  type:"glass_curtain", w:16, h:48, d:16, baseColor:0x5a7a9a,
+      glassColor:0x4488bb, roofType:"helipad" },
+    { x:-32,  z:35,   type:"stepped", levels:[{w:22,h:12,d:24,c:0xccbbaa},{w:16,h:10,d:18,c:0xbbaa99},{w:10,h:8,d:12,c:0xaa9988}],
+      roofType:"garden" },
+    { x:-40,  z:95,   type:"glass_curtain", w:14, h:55, d:14, baseColor:0x7788aa,
+      glassColor:0x3a7aaa, roofType:"spire" },
+    { x:-35,  z:155,  type:"podium_tower", podW:20, podH:10, podD:22, podColor:0xc8b898,
+      towerW:12, towerH:25, towerD:14, towerColor:0x99aabb, roofType:"flat" },
+    /* ── 右側建築群 ── */
+    { x:35,   z:-100, type:"podium_tower", podW:18, podH:9, podD:20, podColor:0xbba888,
+      towerW:12, towerH:35, towerD:14, towerColor:0x889988, roofType:"antenna" },
+    { x:38,   z:-35,  type:"stepped", levels:[{w:22,h:10,d:22,c:0xddc8b0},{w:18,h:12,d:16,c:0xccbb9a},{w:12,h:10,d:12,c:0xbbaa88}],
+      roofType:"flat" },
+    { x:32,   z:25,   type:"glass_curtain", w:14, h:50, d:14, baseColor:0x6a8aaa,
+      glassColor:0x4488aa, roofType:"helipad" },
+    { x:36,   z:85,   type:"podium_tower", podW:20, podH:8, podD:18, podColor:0xc0b090,
+      towerW:14, towerH:30, towerD:12, towerColor:0x8899aa, roofType:"antenna" },
+    { x:40,   z:145,  type:"stepped", levels:[{w:24,h:8,d:22,c:0xd0c0a8},{w:18,h:10,d:16,c:0xc0b098},{w:14,h:8,d:14,c:0xb0a088}],
+      roofType:"garden" },
+    /* ── 後方遠景（簡化但有造型） ── */
+    { x:-58, z:-60,  type:"glass_curtain", w:12, h:62, d:12, baseColor:0x667788, glassColor:0x3a6a8a, roofType:"spire" },
+    { x:-58, z:65,   type:"podium_tower", podW:14, podH:6, podD:14, podColor:0x998877, towerW:9, towerH:38, towerD:9, towerColor:0x778899, roofType:"flat" },
+    { x:58,  z:-50,  type:"glass_curtain", w:12, h:58, d:12, baseColor:0x778899, glassColor:0x4488aa, roofType:"antenna" },
+    { x:58,  z:75,   type:"podium_tower", podW:14, podH:6, podD:14, podColor:0xaa9977, towerW:9, towerH:34, towerD:9, towerColor:0x667788, roofType:"flat" },
+  ];
+
+  /* 窗戶生成器 — 在 bGroup 上繪製窗戶格線 */
+  function addWindowGrid(bGroup, bw, bh, bd, floorH, startY) {
+    var wW = 1.2, wH = 1.6, wGap = 2.2;
+    var floors = Math.floor(bh / floorH);
+    var winsPerRow = Math.max(1, Math.floor((bw - 1.5) / wGap));
+    for (var face = 0; face < 4; face++) {
+      for (var fi = 0; fi < floors; fi++) {
+        var count = (face < 2) ? winsPerRow : Math.max(1, Math.floor((bd - 1.5) / wGap));
+        var faceW = (face < 2) ? bw : bd;
+        for (var wi = 0; wi < count; wi++) {
+          var wx2 = -((count - 1) * wGap) / 2 + wi * wGap;
+          var wy2 = startY + fi * floorH + floorH * 0.5;
+          var wm = new THREE.Mesh(new THREE.PlaneGeometry(wW, wH), winGlassMat);
+          if (face === 0) { wm.position.set(wx2, wy2, -(bd / 2 + 0.02)); }
+          else if (face === 1) { wm.position.set(wx2, wy2, bd / 2 + 0.02); wm.rotation.y = Math.PI; }
+          else if (face === 2) { wm.position.set(-(faceW === bd ? bw : bw) / 2 - 0.02, wy2, wx2); wm.rotation.y = Math.PI / 2; }
+          else { wm.position.set((face === 3 ? bw : bw) / 2 + 0.02, wy2, wx2); wm.rotation.y = -Math.PI / 2; }
+          if (face >= 2) {
+            /* 側面窗位置用 bd 計算 */
+            var sCount = Math.max(1, Math.floor((bd - 1.5) / wGap));
+            var swx = -((sCount - 1) * wGap) / 2 + wi * wGap;
+            if (wi >= sCount) continue;
+            wm.position.z = swx;
+            wm.position.x = (face === 2 ? -1 : 1) * (bw / 2 + 0.02);
+          }
+          bGroup.add(wm);
+        }
+      }
+    }
+  }
+
+  /* 屋頂生成器 */
+  function addRoof(bGroup, bw, bd, topY, type) {
+    /* 屋頂邊框 */
+    var edgeH = 1.0;
+    var edge = new THREE.Mesh(new THREE.BoxGeometry(bw + 0.6, edgeH, bd + 0.6), roofEdgeMat);
+    edge.position.y = topY + edgeH / 2;
+    bGroup.add(edge);
+    /* 空調機組 */
+    var acCount = 2 + Math.floor(Math.random() * 3);
+    for (var ai = 0; ai < acCount; ai++) {
+      var acBox = new THREE.Mesh(new THREE.BoxGeometry(1.2 + Math.random(), 0.8, 0.8 + Math.random()), acMat);
+      acBox.position.set((Math.random() - 0.5) * (bw - 2.5), topY + edgeH + 0.4, (Math.random() - 0.5) * (bd - 2.5));
+      bGroup.add(acBox);
+    }
+    if (type === "antenna") {
+      /* 通訊天線塔 */
+      var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 10, 6), new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.7 }));
+      pole.position.set(0, topY + edgeH + 5, 0);
+      bGroup.add(pole);
+      var dish = new THREE.Mesh(new THREE.SphereGeometry(1.0, 8, 6, 0, Math.PI), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.5 }));
+      dish.rotation.x = Math.PI / 4;
+      dish.position.set(0, topY + edgeH + 7, -0.5);
+      bGroup.add(dish);
+      /* 紅色警示燈 */
+      var warn = new THREE.Mesh(new THREE.SphereGeometry(0.2, 6, 6), new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 0.6 }));
+      warn.position.set(0, topY + edgeH + 10.2, 0);
+      bGroup.add(warn);
+    } else if (type === "helipad") {
+      /* 直升機停機坪 */
+      var pad = new THREE.Mesh(new THREE.CylinderGeometry(bw * 0.3, bw * 0.3, 0.2, 16), new THREE.MeshStandardMaterial({ color: 0x556655 }));
+      pad.position.y = topY + edgeH + 0.1;
+      bGroup.add(pad);
+      var hMark = new THREE.Mesh(new THREE.RingGeometry(bw * 0.15, bw * 0.2, 16), new THREE.MeshStandardMaterial({ color: 0xffffcc }));
+      hMark.rotation.x = -Math.PI / 2;
+      hMark.position.y = topY + edgeH + 0.22;
+      bGroup.add(hMark);
+    } else if (type === "spire") {
+      /* 尖塔造型 */
+      var spire = new THREE.Mesh(new THREE.ConeGeometry(1.5, 8, 8), new THREE.MeshStandardMaterial({ color: 0x8899aa, metalness: 0.5 }));
+      spire.position.y = topY + edgeH + 4;
+      bGroup.add(spire);
+    } else if (type === "garden") {
+      /* 屋頂花園（綠色） */
+      var garden = new THREE.Mesh(new THREE.BoxGeometry(bw - 2, 0.5, bd - 2), new THREE.MeshStandardMaterial({ color: 0x4a7a3a, roughness: 0.9 }));
+      garden.position.y = topY + edgeH + 0.25;
+      bGroup.add(garden);
+      /* 小灌木 */
+      for (var si = 0; si < 4; si++) {
+        var shrub = new THREE.Mesh(new THREE.SphereGeometry(0.8, 6, 6), new THREE.MeshStandardMaterial({ color: 0x3a6a2a, roughness: 0.9 }));
+        shrub.position.set((Math.random() - 0.5) * (bw - 4), topY + edgeH + 1.0, (Math.random() - 0.5) * (bd - 4));
+        shrub.scale.y = 0.7;
+        bGroup.add(shrub);
+      }
+    }
+  }
+
+  /* 裙樓商店（底部） */
+  function addShopFront(bGroup, bw, bd) {
+    var shopColors = [0xcc3333, 0x3366cc, 0xcc9933, 0x339933, 0xcc3399, 0x6633cc];
+    /* 遮陽棚 */
+    var awningColor = shopColors[Math.floor(Math.random() * shopColors.length)];
+    var awning = new THREE.Mesh(
+      new THREE.BoxGeometry(bw * 0.9, 0.12, 1.5),
+      new THREE.MeshStandardMaterial({ color: awningColor, roughness: 0.6 })
+    );
+    awning.position.set(0, 4.0, -(bd / 2 + 0.8));
+    bGroup.add(awning);
+    /* 店面玻璃（大面積） */
+    var shopGlass = new THREE.Mesh(
+      new THREE.PlaneGeometry(bw * 0.8, 3.2),
+      new THREE.MeshStandardMaterial({ color: 0x88bbdd, roughness: 0.05, metalness: 0.6, transparent: true, opacity: 0.5 })
+    );
+    shopGlass.position.set(0, 2.2, -(bd / 2 + 0.03));
+    bGroup.add(shopGlass);
+    /* 店面招牌燈箱 */
+    var signColor = shopColors[Math.floor(Math.random() * shopColors.length)];
+    var shopSign = new THREE.Mesh(
+      new THREE.BoxGeometry(bw * 0.5, 1.2, 0.3),
+      new THREE.MeshStandardMaterial({ color: signColor, emissive: signColor, emissiveIntensity: 0.2, roughness: 0.3 })
+    );
+    shopSign.position.set(0, 5.5, -(bd / 2 + 0.2));
+    bGroup.add(shopSign);
+  }
+
+  /* 生成所有建築 */
+  for (var bi = 0; bi < bldgDefs.length; bi++) {
+    var bd2 = bldgDefs[bi];
+    var bGroup = new THREE.Group();
+
+    if (bd2.type === "podium_tower") {
+      /* === 裙樓 + 塔樓型 === */
+      var podMat = new THREE.MeshStandardMaterial({ color: bd2.podColor, roughness: 0.65 });
+      var podium = new THREE.Mesh(new THREE.BoxGeometry(bd2.podW, bd2.podH, bd2.podD), podMat);
+      podium.position.y = bd2.podH / 2;
+      podium.castShadow = true; podium.receiveShadow = true;
+      bGroup.add(podium);
+      /* 裙樓橫帶裝飾 */
+      var podBand = new THREE.Mesh(new THREE.BoxGeometry(bd2.podW + 0.3, 0.3, bd2.podD + 0.3),
+        new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.3 }));
+      podBand.position.y = bd2.podH;
+      bGroup.add(podBand);
+      addWindowGrid(bGroup, bd2.podW, bd2.podH, bd2.podD, 4.0, 0);
+      addShopFront(bGroup, bd2.podW, bd2.podD);
+
+      /* 塔樓 */
+      var towerMat = new THREE.MeshStandardMaterial({ color: bd2.towerColor, roughness: 0.5 });
+      var tower = new THREE.Mesh(new THREE.BoxGeometry(bd2.towerW, bd2.towerH, bd2.towerD), towerMat);
+      tower.position.y = bd2.podH + bd2.towerH / 2;
+      tower.castShadow = true; tower.receiveShadow = true;
+      bGroup.add(tower);
+      addWindowGrid(bGroup, bd2.towerW, bd2.towerH, bd2.towerD, 3.5, bd2.podH);
+      /* 塔樓底部裝飾帶 */
+      var tBand = new THREE.Mesh(new THREE.BoxGeometry(bd2.towerW + 0.4, 0.4, bd2.towerD + 0.4),
+        new THREE.MeshStandardMaterial({ color: 0x777777, metalness: 0.4 }));
+      tBand.position.y = bd2.podH + 0.2;
+      bGroup.add(tBand);
+      addRoof(bGroup, bd2.towerW, bd2.towerD, bd2.podH + bd2.towerH, bd2.roofType);
+
+    } else if (bd2.type === "glass_curtain") {
+      /* === 玻璃帷幕大樓 === */
+      /* 結構核心 */
+      var coreMat = new THREE.MeshStandardMaterial({ color: bd2.baseColor, roughness: 0.4, metalness: 0.3 });
+      var core = new THREE.Mesh(new THREE.BoxGeometry(bd2.w - 1, bd2.h, bd2.d - 1), coreMat);
+      core.position.y = bd2.h / 2;
+      core.castShadow = true;
+      bGroup.add(core);
+      /* 玻璃帷幕外層 */
+      var curtainMat = new THREE.MeshStandardMaterial({
+        color: bd2.glassColor, roughness: 0.02, metalness: 0.85,
+        transparent: true, opacity: 0.65, envMapIntensity: 1.5
+      });
+      for (var gf = 0; gf < 4; gf++) {
+        var gw = (gf < 2) ? bd2.w : bd2.d;
+        var gd2 = (gf < 2) ? bd2.d : bd2.w;
+        var glassPanel = new THREE.Mesh(new THREE.PlaneGeometry(gw, bd2.h), curtainMat);
+        glassPanel.position.y = bd2.h / 2;
+        if (gf === 0) { glassPanel.position.z = -(bd2.d / 2 + 0.01); }
+        else if (gf === 1) { glassPanel.position.z = bd2.d / 2 + 0.01; glassPanel.rotation.y = Math.PI; }
+        else if (gf === 2) { glassPanel.position.x = -(bd2.w / 2 + 0.01); glassPanel.rotation.y = Math.PI / 2; }
+        else { glassPanel.position.x = bd2.w / 2 + 0.01; glassPanel.rotation.y = -Math.PI / 2; }
+        bGroup.add(glassPanel);
+      }
+      /* 橫向樓層分隔線（金屬條） */
+      var divMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.6 });
+      for (var di = 0; di < Math.floor(bd2.h / 3.5); di++) {
+        var divY = di * 3.5 + 1.75;
+        for (var ds = 0; ds < 2; ds++) {
+          var divLine = new THREE.Mesh(new THREE.BoxGeometry(bd2.w + 0.1, 0.08, 0.08), divMat);
+          divLine.position.set(0, divY, ds === 0 ? -(bd2.d / 2 + 0.02) : (bd2.d / 2 + 0.02));
+          bGroup.add(divLine);
+        }
+      }
+      /* 底部入口 */
+      addShopFront(bGroup, bd2.w, bd2.d);
+      addRoof(bGroup, bd2.w, bd2.d, bd2.h, bd2.roofType);
+
+    } else if (bd2.type === "stepped") {
+      /* === 退縮階梯型 === */
+      var baseY = 0;
+      for (var li = 0; li < bd2.levels.length; li++) {
+        var lv = bd2.levels[li];
+        var lvMat = new THREE.MeshStandardMaterial({ color: lv.c, roughness: 0.6 });
+        var lvMesh = new THREE.Mesh(new THREE.BoxGeometry(lv.w, lv.h, lv.d), lvMat);
+        lvMesh.position.y = baseY + lv.h / 2;
+        lvMesh.castShadow = true; lvMesh.receiveShadow = true;
+        bGroup.add(lvMesh);
+        /* 每層之間的裝飾帶 */
+        if (li > 0) {
+          var stepBand = new THREE.Mesh(new THREE.BoxGeometry(lv.w + 0.5, 0.3, lv.d + 0.5),
+            new THREE.MeshStandardMaterial({ color: 0x888877, metalness: 0.3 }));
+          stepBand.position.y = baseY + 0.15;
+          bGroup.add(stepBand);
+        }
+        /* 退縮平台上的欄杆 */
+        if (li > 0) {
+          var prevLv = bd2.levels[li - 1];
+          var railMat2 = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.4 });
+          for (var rsi = 0; rsi < 2; rsi++) {
+            var railZ = rsi === 0 ? -(lv.d / 2 - 0.2) : (lv.d / 2 - 0.2);
+            var railWidth = (prevLv.w - lv.w) / 2;
+            if (railWidth > 1) {
+              var terRail = new THREE.Mesh(new THREE.BoxGeometry(railWidth, 0.8, 0.05), railMat2);
+              terRail.position.set((lv.w / 2 + railWidth / 2), baseY + 0.4, railZ);
+              bGroup.add(terRail);
+              var terRail2 = terRail.clone();
+              terRail2.position.x = -(lv.w / 2 + railWidth / 2);
+              bGroup.add(terRail2);
+            }
+          }
+        }
+        addWindowGrid(bGroup, lv.w, lv.h, lv.d, 3.5, baseY);
+        baseY += lv.h;
+      }
+      var topLv = bd2.levels[bd2.levels.length - 1];
+      addShopFront(bGroup, bd2.levels[0].w, bd2.levels[0].d);
+      addRoof(bGroup, topLv.w, topLv.d, baseY, bd2.roofType);
+    }
+
+    bGroup.position.set(bd2.x, -0.9, bd2.z);
+    scene.add(bGroup);
+  }
+
+  /* ═══ 三、月台設施 ═══ */
+  /* 車站站名標誌 */
+  var signMat = new THREE.MeshStandardMaterial({ color: 0x1a4a7a, roughness: 0.3 });
+  var signBack = new THREE.Mesh(new THREE.BoxGeometry(6, 1.5, 0.2), signMat);
+  signBack.position.set(0, 7.5, -PLATFORM_LEN / 2 + 5);
+  scene.add(signBack);
+
+  /* 月台遮雨棚裝飾燈（精緻燈具：燈罩 + 燈泡） */
+  var lampShadeMat = new THREE.MeshStandardMaterial({ color: 0xddddcc, roughness: 0.5 });
+  var lampBulbMat = new THREE.MeshStandardMaterial({ color: 0xffffcc, emissive: 0xffeeaa, emissiveIntensity: 0.4, roughness: 0.2 });
+  for (var lz = -PLATFORM_LEN / 2 + 10; lz <= PLATFORM_LEN / 2 - 10; lz += 20) {
+    var lampG = new THREE.Group();
+    /* 燈罩 */
+    var shade = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.3, 0.2, 8), lampShadeMat);
+    shade.position.y = 5.8;
+    lampG.add(shade);
+    /* 燈泡 */
+    var bulb = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), lampBulbMat);
+    bulb.position.y = 5.68;
+    lampG.add(bulb);
+    /* 燈桿 */
+    var stem = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.3, 4), lampShadeMat);
+    stem.position.y = 5.95;
+    lampG.add(stem);
+    lampG.position.set(0, 0, lz);
+    scene.add(lampG);
+  }
+
+  /* 路樹（月台外側） */
+  var treeTrunkMat = new THREE.MeshStandardMaterial({ color: 0x5a3a1a, roughness: 0.9 });
+  var treeFoliageMat = new THREE.MeshStandardMaterial({ color: 0x3a7a2a, roughness: 0.85 });
+  var treeFoliageB = new THREE.MeshStandardMaterial({ color: 0x2a6a1a, roughness: 0.85 });
+  for (var ti = -PLATFORM_LEN / 2 + 15; ti <= PLATFORM_LEN / 2 - 15; ti += 35) {
+    for (var tside = -1; tside <= 1; tside += 2) {
+      var treeG = new THREE.Group();
+      var trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 3.5, 6), treeTrunkMat);
+      trunk.position.y = 1.5;
+      trunk.castShadow = true;
+      treeG.add(trunk);
+      /* 樹冠（多球疊加） */
+      for (var fi2 = 0; fi2 < 4; fi2++) {
+        var foliR = 1.5 + Math.random() * 0.8;
+        var foliMat = Math.random() > 0.5 ? treeFoliageMat : treeFoliageB;
+        var foli = new THREE.Mesh(new THREE.SphereGeometry(foliR, 8, 6), foliMat);
+        foli.position.set((Math.random() - 0.5) * 1.2, 3.5 + Math.random() * 1.5, (Math.random() - 0.5) * 1.2);
+        foli.scale.y = 0.7 + Math.random() * 0.3;
+        foli.castShadow = true;
+        treeG.add(foli);
+      }
+      treeG.position.set(tside * (PLATFORM_W / 2 + 8), -0.9, ti);
+      scene.add(treeG);
+    }
+  }
+}
+
+/* ════════════════════════════════════════════════
    建立火車
    ════════════════════════════════════════════════ */
 const trainSouth = new THREE.Group();
@@ -551,63 +1142,141 @@ const trainNorth = new THREE.Group();
 const northDoors = [];
 
 function buildTrain(group, color, stripe, hasDoors) {
-  for (let i = 0; i < CAR_COUNT; i++) {
-    const cz = -i * CAR_LEN;
-    const body = new THREE.Mesh(
-      new THREE.BoxGeometry(3.2, 2.8, CAR_LEN - 1),
-      new THREE.MeshStandardMaterial({ color, roughness: 0.35, metalness: 0.25 })
-    );
-    body.position.set(0, 1.4, cz);
+  var bodyMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.25, metalness: 0.35 });
+  var stripeMat = new THREE.MeshStandardMaterial({ color: stripe, roughness: 0.3, metalness: 0.2 });
+  var bottomMat = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.5, metalness: 0.3 });
+  var wheelMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.7, roughness: 0.3 });
+  var ventMat = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.6, metalness: 0.4 });
+  var headlightMat = new THREE.MeshStandardMaterial({ color: 0xffffee, emissive: 0xffffcc, emissiveIntensity: 0.6, roughness: 0.1 });
+
+  for (var i = 0; i < CAR_COUNT; i++) {
+    var cz = -i * CAR_LEN;
+
+    /* 車體主結構（圓頂造型） */
+    var body = new THREE.Mesh(new THREE.BoxGeometry(3.2, 2.4, CAR_LEN - 1), bodyMat);
+    body.position.set(0, 1.2, cz);
     body.castShadow = true;
     group.add(body);
 
-    const sg = new THREE.BoxGeometry(3.22, 0.2, CAR_LEN - 1.2);
-    const sm = new THREE.Mesh(sg, new THREE.MeshStandardMaterial({ color: stripe, roughness: 0.4 }));
-    sm.position.set(0, 1.8, cz);
+    /* 圓頂 */
+    var roofGeo = new THREE.CylinderGeometry(1.6, 1.6, CAR_LEN - 1.2, 12, 1, false, 0, Math.PI);
+    var roofMat2 = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.4, metalness: 0.3 });
+    var roofMesh = new THREE.Mesh(roofGeo, roofMat2);
+    roofMesh.rotation.z = Math.PI / 2;
+    roofMesh.rotation.y = Math.PI / 2;
+    roofMesh.position.set(0, 2.4, cz);
+    group.add(roofMesh);
+
+    /* 色帶（車身中段） */
+    var stripeGeo = new THREE.BoxGeometry(3.22, 0.3, CAR_LEN - 1.2);
+    var sm = new THREE.Mesh(stripeGeo, stripeMat);
+    sm.position.set(0, 1.6, cz);
     group.add(sm);
 
-    for (let wz = -CAR_LEN / 2 + 3; wz < CAR_LEN / 2 - 3; wz += 3) {
-      for (const wx of [-1.61, 1.61]) {
-        const wg = new THREE.BoxGeometry(0.02, 0.8, 1.4);
-        const wm = new THREE.Mesh(wg, MAT.window);
-        wm.position.set(wx, 2.0, cz + wz);
-        group.add(wm);
+    /* 下方色帶 */
+    var stripe2 = new THREE.Mesh(new THREE.BoxGeometry(3.22, 0.1, CAR_LEN - 1.2), stripeMat);
+    stripe2.position.set(0, 0.3, cz);
+    group.add(stripe2);
+
+    /* 窗戶（更精緻） */
+    for (var wz = -CAR_LEN / 2 + 3; wz < CAR_LEN / 2 - 3; wz += 2.5) {
+      for (var wside = 0; wside < 2; wside++) {
+        var wx = wside === 0 ? -1.61 : 1.61;
+        /* 窗框 */
+        var wFrame = new THREE.Mesh(new THREE.BoxGeometry(0.04, 1.1, 1.6), new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.4 }));
+        wFrame.position.set(wx, 1.9, cz + wz);
+        group.add(wFrame);
+        /* 玻璃 */
+        var wGlass = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.9, 1.3), new THREE.MeshStandardMaterial({ color: 0x4488aa, roughness: 0.05, metalness: 0.7, transparent: true, opacity: 0.7 }));
+        wGlass.position.set(wx * 0.99, 1.9, cz + wz);
+        group.add(wGlass);
       }
     }
 
+    /* 車門（更精緻） */
     if (hasDoors) {
-      for (const dz of [-CAR_LEN / 4, CAR_LEN / 4]) {
-        const doorL = new THREE.Mesh(
-          new THREE.BoxGeometry(0.05, 2.2, 0.7),
-          MAT.door.clone()
-        );
-        const doorR = doorL.clone();
+      for (var dIdx = 0; dIdx < 2; dIdx++) {
+        var dz = dIdx === 0 ? -CAR_LEN / 4 : CAR_LEN / 4;
+        var doorMatL = new THREE.MeshStandardMaterial({ color: 0xbbbbbb, roughness: 0.2, metalness: 0.5 });
+        var doorL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 2.2, 0.7), doorMatL);
+        var doorR = new THREE.Mesh(new THREE.BoxGeometry(0.06, 2.2, 0.7), doorMatL.clone());
         doorL.position.set(1.61, 1.1, cz + dz - 0.35);
         doorR.position.set(1.61, 1.1, cz + dz + 0.35);
+        /* 門上小窗 */
+        var doorWinMat = new THREE.MeshStandardMaterial({ color: 0x4488aa, roughness: 0.05, metalness: 0.6, transparent: true, opacity: 0.6 });
+        var doorWinL = new THREE.Mesh(new THREE.PlaneGeometry(0.45, 0.5), doorWinMat);
+        doorWinL.position.set(0.035, 0.5, 0);
+        doorL.add(doorWinL);
+        var doorWinR = new THREE.Mesh(new THREE.PlaneGeometry(0.45, 0.5), doorWinMat);
+        doorWinR.position.set(0.035, 0.5, 0);
+        doorR.add(doorWinR);
         group.add(doorL);
         group.add(doorR);
         northDoors.push({ left: doorL, right: doorR, z: cz + dz });
       }
     }
 
-    for (const bz of [-CAR_LEN / 3, CAR_LEN / 3]) {
-      const bg = new THREE.BoxGeometry(3.0, 0.5, 2);
-      const bm = new THREE.Mesh(bg, new THREE.MeshStandardMaterial({ color: 0x333333 }));
-      bm.position.set(0, -0.25, cz + bz);
-      group.add(bm);
-
-      /* Wheels: 4 per bogie (2 per side) */
-      const wheelMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.6, roughness: 0.4 });
-      for (const wx of [-1.2, 1.2]) {
-        for (const wzo of [-0.5, 0.5]) {
-          const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.12, 12), wheelMat);
+    /* 轉向架 + 輪組 */
+    for (var bIdx = 0; bIdx < 2; bIdx++) {
+      var bz = bIdx === 0 ? -CAR_LEN / 3 : CAR_LEN / 3;
+      var bogie = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.4, 2.2), bottomMat);
+      bogie.position.set(0, -0.1, cz + bz);
+      group.add(bogie);
+      /* 輪子（更精緻） */
+      for (var wxi = 0; wxi < 2; wxi++) {
+        for (var wzi = 0; wzi < 2; wzi++) {
+          var wheelX = wxi === 0 ? -1.2 : 1.2;
+          var wheelZ = wzi === 0 ? -0.5 : 0.5;
+          var wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.15, 16), wheelMat);
           wheel.rotation.x = Math.PI / 2;
-          wheel.position.set(wx, -0.5, cz + bz + wzo);
+          wheel.position.set(wheelX, -0.4, cz + bz + wheelZ);
           group.add(wheel);
+          /* 輪緣 */
+          var flange = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.04, 16), wheelMat);
+          flange.rotation.x = Math.PI / 2;
+          flange.position.set(wheelX, -0.4, cz + bz + wheelZ + (wxi === 0 ? -0.08 : 0.08));
+          group.add(flange);
         }
       }
     }
+
+    /* 車頂通風口 */
+    if (i % 2 === 0) {
+      var vent = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.3, 0.6), ventMat);
+      vent.position.set(0, 3.1, cz);
+      group.add(vent);
+    }
+
+    /* 車廂連接器 */
+    if (i > 0) {
+      var conn = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.5, 0.4), bottomMat);
+      conn.position.set(0, 0.6, cz + CAR_LEN / 2 - 0.2);
+      group.add(conn);
+      /* 連接器彈簧 */
+      var spring = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.3, 8), ventMat);
+      spring.rotation.z = Math.PI / 2;
+      spring.position.set(0, 0.3, cz + CAR_LEN / 2 - 0.2);
+      group.add(spring);
+    }
   }
+
+  /* 車頭大燈 */
+  var headL = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.1, 0.08, 12), headlightMat);
+  headL.rotation.x = Math.PI / 2;
+  headL.position.set(-0.8, 1.2, CAR_LEN / 2 - 0.5);
+  group.add(headL);
+  var headR = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.1, 0.08, 12), headlightMat);
+  headR.rotation.x = Math.PI / 2;
+  headR.position.set(0.8, 1.2, CAR_LEN / 2 - 0.5);
+  group.add(headR);
+
+  /* 車頭擋風玻璃 */
+  var frontGlass = new THREE.Mesh(
+    new THREE.PlaneGeometry(2.2, 1.2),
+    new THREE.MeshStandardMaterial({ color: 0x2a5a7a, roughness: 0.05, metalness: 0.5, transparent: true, opacity: 0.6 })
+  );
+  frontGlass.position.set(0, 2.0, CAR_LEN / 2 - 0.51);
+  group.add(frontGlass);
 }
 
 function setupTrains() {
@@ -621,13 +1290,18 @@ function setupTrains() {
 }
 
 /* ════════════════════════════════════════════════
-   黃線安全警衛
+   黃線安全警衛（精緻 3D 模型）
    ════════════════════════════════════════════════ */
 const guards = [];
-const MAT_guardVest = new THREE.MeshStandardMaterial({ color: 0xccff00, roughness: 0.5, emissive: 0x334400, emissiveIntensity: 0.2 });
-const MAT_guardSkin = new THREE.MeshStandardMaterial({ color: 0xdeb887, roughness: 0.8 });
-const MAT_guardPants = new THREE.MeshStandardMaterial({ color: 0x2a2a3a, roughness: 0.7 });
-const MAT_guardHat = new THREE.MeshStandardMaterial({ color: 0x1a1a8a, roughness: 0.6 });
+const MAT_guardVest = new THREE.MeshStandardMaterial({ color: 0xccff00, roughness: 0.4, emissive: 0x445500, emissiveIntensity: 0.25 });
+const MAT_guardSkin = new THREE.MeshStandardMaterial({ color: 0xdeb887, roughness: 0.75 });
+const MAT_guardPants = new THREE.MeshStandardMaterial({ color: 0x1a1a2a, roughness: 0.65 });
+const MAT_guardHat = new THREE.MeshStandardMaterial({ color: 0x1a1a6a, roughness: 0.5 });
+const MAT_guardShirt = new THREE.MeshStandardMaterial({ color: 0x2a3a5a, roughness: 0.6 });
+const MAT_guardBelt = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.4 });
+const MAT_guardShoe = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.5 });
+const MAT_reflective = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.1, metalness: 0.6, emissive: 0xcccccc, emissiveIntensity: 0.15 });
+const MAT_whistle = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.2, metalness: 0.8 });
 
 function createGuards() {
   /* Remove old guards */
@@ -636,40 +1310,199 @@ function createGuards() {
   }
   guards.length = 0;
 
-  var GUARDS_PER_SIDE = 10;
+  /* Level-based scaling: base 10 + (level-1) extra per side */
+  var GUARDS_PER_SIDE = 10 + (state.currentLevel - 1);
+  /* Level-based wander range: 0.5 + (level-1)*0.1 person widths toward center */
+  var maxWanderDist = 0.5 + (state.currentLevel - 1) * 0.1;
+
   for (var side = -1; side <= 1; side += 2) {
     for (var i = 0; i < GUARDS_PER_SIDE; i++) {
       var guard = new THREE.Group();
 
-      /* Body (high-vis vest) */
-      var gbody = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.8, 8), MAT_guardVest);
-      gbody.position.y = 0.8;
-      gbody.castShadow = true;
-      guard.add(gbody);
-
-      /* Head */
-      var ghead = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), MAT_guardSkin);
-      ghead.position.y = 1.35;
+      /* === 頭部 === */
+      var ghead = new THREE.Mesh(new THREE.SphereGeometry(0.17, 14, 14), MAT_guardSkin);
+      ghead.position.y = 1.4;
       ghead.castShadow = true;
       guard.add(ghead);
 
-      /* Hat */
-      var ghat = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 0.12, 8), MAT_guardHat);
-      ghat.position.y = 1.48;
-      guard.add(ghat);
+      /* 耳朵 */
+      var gearL = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 6), MAT_guardSkin);
+      gearL.scale.set(0.5, 1, 0.7);
+      gearL.position.set(-0.17, 1.4, 0);
+      guard.add(gearL);
+      var gearR = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 6), MAT_guardSkin);
+      gearR.scale.set(0.5, 1, 0.7);
+      gearR.position.set(0.17, 1.4, 0);
+      guard.add(gearR);
 
-      /* Legs */
-      var glegL = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.4, 6), MAT_guardPants);
-      glegL.position.set(-0.08, 0.2, 0);
-      guard.add(glegL);
-      var glegR = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.4, 6), MAT_guardPants);
-      glegR.position.set(0.08, 0.2, 0);
-      guard.add(glegR);
+      /* 眼睛 */
+      var gEyeW = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+      var gEyeP = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.2 });
+      for (var gei = 0; gei < 2; gei++) {
+        var gex = gei === 0 ? -0.06 : 0.06;
+        var geW = new THREE.Mesh(new THREE.SphereGeometry(0.028, 8, 8), gEyeW);
+        geW.scale.z = 0.5;
+        geW.position.set(gex, 1.42, -0.15);
+        guard.add(geW);
+        var geP = new THREE.Mesh(new THREE.SphereGeometry(0.015, 8, 8), gEyeP);
+        geP.position.set(gex, 1.42, -0.17);
+        guard.add(geP);
+      }
 
-      var baseZ = -PLATFORM_LEN / 2 + 20 + (PLATFORM_LEN - 40) * (i / (GUARDS_PER_SIDE - 1));
+      /* 眉毛 */
+      var gBrowMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.9 });
+      var gBrowL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.012, 0.015), gBrowMat);
+      gBrowL.position.set(-0.06, 1.47, -0.14);
+      guard.add(gBrowL);
+      var gBrowR = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.012, 0.015), gBrowMat);
+      gBrowR.position.set(0.06, 1.47, -0.14);
+      guard.add(gBrowR);
+
+      /* 頭髮（短平頭） */
+      var gHairMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.9 });
+      var gHair = new THREE.Mesh(new THREE.SphereGeometry(0.15, 10, 10), gHairMat);
+      gHair.position.y = 1.5;
+      gHair.scale.set(1.05, 0.35, 1.05);
+      guard.add(gHair);
+
+      /* === 帽子（正式制帽 + 帽簷 + 帽徽） === */
+      var ghatTop = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.17, 0.12, 12), MAT_guardHat);
+      ghatTop.position.y = 1.56;
+      guard.add(ghatTop);
+      /* 帽簷 */
+      var ghatBrim = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.02, 12, 1, false, 0, Math.PI), MAT_guardHat);
+      ghatBrim.rotation.y = Math.PI;
+      ghatBrim.position.set(0, 1.5, -0.02);
+      guard.add(ghatBrim);
+      /* 帽徽（金色） */
+      var gBadgeMat = new THREE.MeshStandardMaterial({ color: 0xdaa520, roughness: 0.3, metalness: 0.7 });
+      var gBadge = new THREE.Mesh(new THREE.CircleGeometry(0.03, 8), gBadgeMat);
+      gBadge.position.set(0, 1.56, -0.135);
+      guard.add(gBadge);
+
+      /* === 上身 — 深藍襯衫 + 反光背心 === */
+      var gShirt = new THREE.Mesh(new THREE.CapsuleGeometry(0.22, 0.45, 5, 10), MAT_guardShirt);
+      gShirt.position.y = 0.95;
+      gShirt.castShadow = true;
+      guard.add(gShirt);
+
+      /* 反光背心（疊在襯衫上） */
+      var gVest = new THREE.Mesh(new THREE.CapsuleGeometry(0.24, 0.35, 4, 8), MAT_guardVest);
+      gVest.position.y = 0.95;
+      guard.add(gVest);
+
+      /* 反光條紋（V 字型前後） */
+      var gStripe1 = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.035, 0.01), MAT_reflective);
+      gStripe1.position.set(0, 1.05, -0.24);
+      guard.add(gStripe1);
+      var gStripe2 = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.035, 0.01), MAT_reflective);
+      gStripe2.position.set(0, 0.85, -0.24);
+      guard.add(gStripe2);
+      var gStripe3 = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.035, 0.01), MAT_reflective);
+      gStripe3.position.set(0, 1.05, 0.24);
+      guard.add(gStripe3);
+
+      /* === 皮帶 + 對講機 === */
+      var gBelt = new THREE.Mesh(new THREE.CylinderGeometry(0.23, 0.23, 0.05, 10), MAT_guardBelt);
+      gBelt.position.y = 0.68;
+      guard.add(gBelt);
+      /* 皮帶扣 */
+      var gBuckle = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.04, 0.02), gBadgeMat);
+      gBuckle.position.set(0, 0.68, -0.24);
+      guard.add(gBuckle);
+      /* 對講機 */
+      var gRadio = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.1, 0.025), new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.4 }));
+      gRadio.position.set(-0.25, 0.72, 0);
+      guard.add(gRadio);
+      /* 對講機天線 */
+      var gAntenna = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.003, 0.08, 4), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+      gAntenna.position.set(-0.25, 0.82, 0);
+      guard.add(gAntenna);
+
+      /* === 手臂 === */
+      var gArmL = new THREE.Group();
+      var gArmLMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.05, 0.4, 8), MAT_guardShirt);
+      gArmLMesh.position.y = -0.15;
+      gArmL.add(gArmLMesh);
+      var gHandL = new THREE.Mesh(new THREE.SphereGeometry(0.035, 6, 6), MAT_guardSkin);
+      gHandL.position.y = -0.38;
+      gArmL.add(gHandL);
+      gArmL.position.set(-0.3, 1.15, 0);
+      gArmL.rotation.z = 0.1;
+      guard.add(gArmL);
+      guard.userData.leftArm = gArmL;
+
+      var gArmR = new THREE.Group();
+      var gArmRMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.05, 0.4, 8), MAT_guardShirt);
+      gArmRMesh.position.y = -0.15;
+      gArmR.add(gArmRMesh);
+      var gHandR = new THREE.Mesh(new THREE.SphereGeometry(0.035, 6, 6), MAT_guardSkin);
+      gHandR.position.y = -0.38;
+      gArmR.add(gHandR);
+      gArmR.position.set(0.3, 1.15, 0);
+      gArmR.rotation.z = -0.1;
+      guard.add(gArmR);
+      guard.userData.rightArm = gArmR;
+
+      /* 哨子（掛在脖子上） */
+      var gWhistle = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.012, 0.04, 6), MAT_whistle);
+      gWhistle.rotation.x = Math.PI / 2;
+      gWhistle.position.set(0.05, 1.2, -0.2);
+      guard.add(gWhistle);
+      /* 哨子繩 */
+      var gWhistleCord = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.15, 4), new THREE.MeshStandardMaterial({ color: 0x333333 }));
+      gWhistleCord.position.set(0.03, 1.28, -0.18);
+      gWhistleCord.rotation.z = 0.3;
+      guard.add(gWhistleCord);
+
+      /* === 腿（左右分組，方便動畫） === */
+      var gLegL = new THREE.Group();
+      var gLegLUpper = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.065, 0.3, 8), MAT_guardPants);
+      gLegLUpper.position.y = -0.1;
+      gLegL.add(gLegLUpper);
+      var gLegLLower = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.055, 0.25, 8), MAT_guardPants);
+      gLegLLower.position.y = -0.35;
+      gLegL.add(gLegLLower);
+      /* 黑皮鞋 */
+      var gShoeL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.18), MAT_guardShoe);
+      gShoeL.position.set(0, -0.5, -0.03);
+      gLegL.add(gShoeL);
+      gLegL.position.set(-0.1, 0.6, 0);
+      guard.add(gLegL);
+      guard.userData.leftLeg = gLegL;
+
+      var gLegR = new THREE.Group();
+      var gLegRUpper = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.065, 0.3, 8), MAT_guardPants);
+      gLegRUpper.position.y = -0.1;
+      gLegR.add(gLegRUpper);
+      var gLegRLower = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.055, 0.25, 8), MAT_guardPants);
+      gLegRLower.position.y = -0.35;
+      gLegR.add(gLegRLower);
+      var gShoeR = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.18), MAT_guardShoe);
+      gShoeR.position.set(0, -0.5, -0.03);
+      gLegR.add(gShoeR);
+      gLegR.position.set(0.1, 0.6, 0);
+      guard.add(gLegR);
+      guard.userData.rightLeg = gLegR;
+
+      /* Contact shadow */
+      var gShadow = new THREE.Mesh(
+        new THREE.CircleGeometry(0.3, 10),
+        new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.2 })
+      );
+      gShadow.rotation.x = -Math.PI / 2;
+      gShadow.position.y = 0.01;
+      guard.add(gShadow);
+
+      var baseZ = -PLATFORM_LEN / 2 + 20 + (PLATFORM_LEN - 40) * (i / Math.max(1, GUARDS_PER_SIDE - 1));
       var patrolRange = 10 + Math.random() * 20;
       var lineX = side * (PLATFORM_W / 2 - 0.2);
       guard.position.set(lineX, 0, baseZ);
+      /* 保留先前設定的四肢引用，合併巡邏資料 */
+      var _la = guard.userData.leftArm;
+      var _ra = guard.userData.rightArm;
+      var _ll = guard.userData.leftLeg;
+      var _rl = guard.userData.rightLeg;
       guard.userData = {
         side: side,
         lineX: lineX,
@@ -678,10 +1511,16 @@ function createGuards() {
         patrolMax: baseZ + patrolRange,
         patrolSpeed: 1.0 + Math.random() * 1.2,
         patrolDir: Math.random() > 0.5 ? 1 : -1,
-        /* X wander: can leave line up to ~0.5 (one person width) toward center */
+        /* X wander: scales with level */
+        maxWander: maxWanderDist,
         wanderX: 0,
         wanderTarget: 0,
-        wanderTimer: Math.random() * 3
+        wanderTimer: Math.random() * 3,
+        /* 四肢引用（走路動畫用） */
+        leftArm: _la,
+        rightArm: _ra,
+        leftLeg: _ll,
+        rightLeg: _rl
       };
       scene.add(guard);
       guards.push(guard);
@@ -717,16 +1556,31 @@ function updateGuards(dt) {
     if (g.position.z > d.patrolMax) d.patrolDir = -1;
     if (g.position.z < d.patrolMin) d.patrolDir = 1;
 
-    /* X wander: leave line up to 0.5m toward center, stay on line freely */
+    /* X wander: leave line up to maxWander toward center, stay on line freely */
+    var mw = d.maxWander || 0.5;
     d.wanderTimer -= dt;
     if (d.wanderTimer <= 0) {
-      d.wanderTarget = (Math.random() - 0.3) * 0.7;
-      if (d.wanderTarget < 0) d.wanderTarget = 0;
+      d.wanderTarget = Math.random() * mw;
       d.wanderTarget *= -d.side;
       d.wanderTimer = 1.5 + Math.random() * 3;
     }
     d.wanderX += (d.wanderTarget - d.wanderX) * dt * 2;
     g.position.x = d.lineX + d.wanderX;
+
+    /* 警衛也必須留在月台上 */
+    var guardHalfW = PLATFORM_W / 2 - 0.3;
+    var guardHalfZ = PLATFORM_LEN / 2 - 2;
+    g.position.x = Math.max(-guardHalfW, Math.min(guardHalfW, g.position.x));
+    g.position.z = Math.max(-guardHalfZ, Math.min(guardHalfZ, g.position.z));
+
+    /* 警衛巡邏走路動畫 */
+    if (!d.walkPhase) d.walkPhase = Math.random() * Math.PI * 2;
+    d.walkPhase += d.patrolSpeed * dt * 5;
+    var gSwing = Math.sin(d.walkPhase) * 0.3;
+    if (d.leftLeg) d.leftLeg.rotation.x = gSwing;
+    if (d.rightLeg) d.rightLeg.rotation.x = -gSwing;
+    if (d.leftArm) d.leftArm.rotation.x = -gSwing * 0.5;
+    if (d.rightArm) d.rightArm.rotation.x = gSwing * 0.5;
 
     /* Collision check with father */
     var dx = father.position.x - g.position.x;
@@ -755,47 +1609,134 @@ const fatherRightArm = new THREE.Group();
 const FATHER_BASE_Y = -0.01;
 
 function buildFather() {
-  /* Head */
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 12), MAT.skin);
+  /* Head（更高面數、更圓潤） */
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.23, 16, 16), MAT.skin);
   head.position.y = 1.55;
   head.castShadow = true;
   father.add(head);
 
-  /* Beckham faux hawk hair */
-  const fauxHawkShape = new THREE.Shape();
-  fauxHawkShape.moveTo(-0.12, -0.06);
-  fauxHawkShape.lineTo(0.12, -0.06);
-  fauxHawkShape.lineTo(0.08, 0.06);
-  fauxHawkShape.lineTo(-0.08, 0.06);
-  fauxHawkShape.closePath();
-  const fauxHawkGeo = new THREE.ExtrudeGeometry(fauxHawkShape, { depth: 0.3, bevelEnabled: false });
-  const fauxHawk = new THREE.Mesh(fauxHawkGeo, MAT_fauxHawk);
-  fauxHawk.position.set(0, 1.68, -0.15);
-  father.add(fauxHawk);
+  /* 耳朵 */
+  var earMat = new THREE.MeshStandardMaterial({ color: 0xd4a574, roughness: 0.85 });
+  var earL = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), earMat);
+  earL.scale.set(0.6, 1, 0.8);
+  earL.position.set(-0.22, 1.55, 0);
+  father.add(earL);
+  var earR = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), earMat);
+  earR.scale.set(0.6, 1, 0.8);
+  earR.position.set(0.22, 1.55, 0);
+  father.add(earR);
 
-  /* Thick-framed glasses */
+  /* 鼻子 */
+  var noseMat = new THREE.MeshStandardMaterial({ color: 0xd4a070, roughness: 0.8 });
+  var nose = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.08, 8), noseMat);
+  nose.rotation.x = -Math.PI / 2;
+  nose.position.set(0, 1.52, -0.22);
+  father.add(nose);
+
+  /* 嘴巴（微笑弧線） */
+  var mouthCurve = new THREE.QuadraticBezierCurve3(
+    new THREE.Vector3(-0.06, 1.46, -0.21),
+    new THREE.Vector3(0, 1.44, -0.22),
+    new THREE.Vector3(0.06, 1.46, -0.21)
+  );
+  var mouthGeo = new THREE.TubeGeometry(mouthCurve, 8, 0.008, 4, false);
+  var mouthMat = new THREE.MeshStandardMaterial({ color: 0x8B5E3C, roughness: 0.9 });
+  var mouth = new THREE.Mesh(mouthGeo, mouthMat);
+  father.add(mouth);
+
+  /* 眉毛 */
+  var browMat = new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 0.9 });
+  var browL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.015, 0.02), browMat);
+  browL.position.set(-0.08, 1.62, -0.2);
+  browL.rotation.z = 0.1;
+  father.add(browL);
+  var browR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.015, 0.02), browMat);
+  browR.position.set(0.08, 1.62, -0.2);
+  browR.rotation.z = -0.1;
+  father.add(browR);
+
+  /* 眼睛 */
+  var eyeWhiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+  var eyePupilMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.2 });
+  for (var ei = 0; ei < 2; ei++) {
+    var ex = ei === 0 ? -0.08 : 0.08;
+    var eyeW = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), eyeWhiteMat);
+    eyeW.position.set(ex, 1.56, -0.2);
+    eyeW.scale.z = 0.5;
+    father.add(eyeW);
+    var eyeP = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 8), eyePupilMat);
+    eyeP.position.set(ex, 1.56, -0.22);
+    father.add(eyeP);
+  }
+
+  /* Beckham faux hawk hair（更精緻） */
+  const fauxHawkShape = new THREE.Shape();
+  fauxHawkShape.moveTo(-0.14, -0.07);
+  fauxHawkShape.lineTo(0.14, -0.07);
+  fauxHawkShape.lineTo(0.09, 0.08);
+  fauxHawkShape.lineTo(-0.09, 0.08);
+  fauxHawkShape.closePath();
+  const fauxHawkGeo = new THREE.ExtrudeGeometry(fauxHawkShape, { depth: 0.32, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 2 });
+  const fauxHawk = new THREE.Mesh(fauxHawkGeo, MAT_fauxHawk);
+  fauxHawk.position.set(0, 1.68, -0.16);
+  father.add(fauxHawk);
+  /* 側面頭髮 */
+  var sideHairL = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), MAT_fauxHawk);
+  sideHairL.scale.set(0.3, 0.7, 0.9);
+  sideHairL.position.set(-0.18, 1.6, 0);
+  father.add(sideHairL);
+  var sideHairR = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), MAT_fauxHawk);
+  sideHairR.scale.set(0.3, 0.7, 0.9);
+  sideHairR.position.set(0.18, 1.6, 0);
+  father.add(sideHairR);
+
+  /* Thick-framed glasses（更精緻） */
   const glassesGroup = new THREE.Group();
-  const frameL = new THREE.Mesh(new THREE.TorusGeometry(0.065, 0.015, 8, 16), MAT_glasses);
+  var glassMat = new THREE.MeshStandardMaterial({ color: 0x4488aa, roughness: 0.1, metalness: 0.3, transparent: true, opacity: 0.4 });
+  const frameL = new THREE.Mesh(new THREE.TorusGeometry(0.065, 0.018, 10, 20), MAT_glasses);
   frameL.position.set(-0.08, 0, 0);
   glassesGroup.add(frameL);
-  const frameR = new THREE.Mesh(new THREE.TorusGeometry(0.065, 0.015, 8, 16), MAT_glasses);
+  var lensL = new THREE.Mesh(new THREE.CircleGeometry(0.055, 12), glassMat);
+  lensL.position.set(-0.08, 0, -0.01);
+  glassesGroup.add(lensL);
+  const frameR = new THREE.Mesh(new THREE.TorusGeometry(0.065, 0.018, 10, 20), MAT_glasses);
   frameR.position.set(0.08, 0, 0);
   glassesGroup.add(frameR);
+  var lensR = new THREE.Mesh(new THREE.CircleGeometry(0.055, 12), glassMat);
+  lensR.position.set(0.08, 0, -0.01);
+  glassesGroup.add(lensR);
   const bridge = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.06, 6), MAT_glasses);
   bridge.rotation.z = Math.PI / 2;
   bridge.position.set(0, 0, 0);
   glassesGroup.add(bridge);
+  /* 鏡腳 */
+  var templeL = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.006, 0.18, 4), MAT_glasses);
+  templeL.rotation.x = Math.PI / 2;
+  templeL.position.set(-0.14, 0, 0.08);
+  glassesGroup.add(templeL);
+  var templeR = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.006, 0.18, 4), MAT_glasses);
+  templeR.rotation.x = Math.PI / 2;
+  templeR.position.set(0.14, 0, 0.08);
+  glassesGroup.add(templeR);
   glassesGroup.position.set(0, 1.55, -0.22);
   father.add(glassesGroup);
 
-  /* Torso */
-  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 0.5, 4, 8), MAT.fatherBody);
+  /* Torso（更自然的體型） */
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 0.5, 6, 12), MAT.fatherBody);
   torso.position.y = 1.05;
   torso.castShadow = true;
   father.add(torso);
 
+  /* 衣領 */
+  var collarMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.6 });
+  var collar = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.03, 6, 12, Math.PI), collarMat);
+  collar.rotation.x = Math.PI / 2;
+  collar.rotation.z = Math.PI;
+  collar.position.set(0, 1.32, -0.08);
+  father.add(collar);
+
   /* Belly */
-  const belly = new THREE.Mesh(new THREE.SphereGeometry(0.32, 8, 8), MAT.fatherBody);
+  const belly = new THREE.Mesh(new THREE.SphereGeometry(0.32, 12, 12), MAT.fatherBody);
   belly.position.set(0, 0.85, -0.2);
   belly.castShadow = true;
   father.add(belly);
@@ -804,6 +1745,10 @@ function buildFather() {
   const armL = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.06, 0.55, 6), MAT.skin);
   armL.position.set(0, -0.2, 0);
   fatherLeftArm.add(armL);
+  /* 左手掌 */
+  const handL = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 8), MAT.skin);
+  handL.position.set(0, -0.5, 0);
+  fatherLeftArm.add(handL);
   fatherLeftArm.position.set(-0.38, 1.25, 0);
   fatherLeftArm.rotation.z = 0.15;
   father.add(fatherLeftArm);
@@ -812,6 +1757,10 @@ function buildFather() {
   const armR = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.06, 0.55, 6), MAT.skin);
   armR.position.set(0, -0.2, 0);
   fatherRightArm.add(armR);
+  /* 右手掌 */
+  const handR = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 8), MAT.skin);
+  handR.position.set(0, -0.5, 0);
+  fatherRightArm.add(handR);
   fatherRightArm.position.set(0.38, 1.25, 0);
   fatherRightArm.rotation.z = -0.15;
   father.add(fatherRightArm);
@@ -862,141 +1811,370 @@ function buildFather() {
 }
 
 function buildDaughter() {
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 10), MAT.skin);
+  /* 精緻小女孩膚色 */
+  var childSkinMat = new THREE.MeshStandardMaterial({ color: 0xf0c8a0, roughness: 0.75 });
+
+  /* Head（更高面數、更圓潤可愛） */
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.17, 16, 16), childSkinMat);
   head.position.y = 0.78;
   head.castShadow = true;
   daughter.add(head);
 
-  const hairTop = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), MAT.hair);
-  hairTop.position.y = 0.86;
-  hairTop.scale.set(1.05, 0.6, 1.05);
+  /* 臉頰紅暈 */
+  var blushMat = new THREE.MeshStandardMaterial({ color: 0xffaaaa, roughness: 0.9, transparent: true, opacity: 0.3 });
+  var blushL = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), blushMat);
+  blushL.scale.set(1, 0.6, 0.3);
+  blushL.position.set(-0.1, 0.74, -0.14);
+  daughter.add(blushL);
+  var blushR = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), blushMat);
+  blushR.scale.set(1, 0.6, 0.3);
+  blushR.position.set(0.1, 0.74, -0.14);
+  daughter.add(blushR);
+
+  /* 大眼睛（可愛） */
+  var dEyeWhiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 });
+  var dEyePupilMat = new THREE.MeshStandardMaterial({ color: 0x2a1a0a, roughness: 0.2 });
+  var dEyeHighlightMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.5, roughness: 0.1 });
+  for (var dei = 0; dei < 2; dei++) {
+    var dex = dei === 0 ? -0.06 : 0.06;
+    var dEyeW = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 10), dEyeWhiteMat);
+    dEyeW.scale.z = 0.5;
+    dEyeW.position.set(dex, 0.78, -0.14);
+    daughter.add(dEyeW);
+    var dEyeP = new THREE.Mesh(new THREE.SphereGeometry(0.022, 10, 10), dEyePupilMat);
+    dEyeP.position.set(dex, 0.78, -0.16);
+    daughter.add(dEyeP);
+    /* 眼睛高光 */
+    var dEyeH = new THREE.Mesh(new THREE.SphereGeometry(0.008, 6, 6), dEyeHighlightMat);
+    dEyeH.position.set(dex + 0.01, 0.79, -0.17);
+    daughter.add(dEyeH);
+  }
+
+  /* 小嘴巴 */
+  var dMouthMat = new THREE.MeshStandardMaterial({ color: 0xee8888, roughness: 0.8 });
+  var dMouth = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), dMouthMat);
+  dMouth.scale.set(1.5, 0.5, 0.5);
+  dMouth.position.set(0, 0.71, -0.15);
+  daughter.add(dMouth);
+
+  /* 小鼻子 */
+  var dNose = new THREE.Mesh(new THREE.SphereGeometry(0.015, 6, 6), childSkinMat);
+  dNose.position.set(0, 0.75, -0.16);
+  daughter.add(dNose);
+
+  /* 頭髮（更精緻的瀏海 + 馬尾） */
+  const hairTop = new THREE.Mesh(new THREE.SphereGeometry(0.155, 12, 12), MAT.hair);
+  hairTop.position.y = 0.88;
+  hairTop.scale.set(1.08, 0.55, 1.08);
   daughter.add(hairTop);
 
-  const ponytail = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), MAT.hair);
-  ponytail.position.set(0, 0.82, -0.16);
-  ponytail.scale.set(0.7, 1.4, 0.7);
-  daughter.add(ponytail);
+  /* 瀏海 */
+  var bangsMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.85 });
+  var bangs = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.06, 0.1), bangsMat);
+  bangs.position.set(0, 0.86, -0.12);
+  daughter.add(bangs);
 
-  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.14, 0.25, 4, 8), MAT.pinkDress);
+  /* 馬尾 + 髮圈 */
+  const ponytail = new THREE.Mesh(new THREE.SphereGeometry(0.09, 10, 10), MAT.hair);
+  ponytail.position.set(0, 0.82, 0.16);
+  ponytail.scale.set(0.6, 1.5, 0.6);
+  daughter.add(ponytail);
+  /* 粉紅髮圈 */
+  var hairTie = new THREE.Mesh(new THREE.TorusGeometry(0.04, 0.015, 6, 12), new THREE.MeshStandardMaterial({ color: 0xff69b4, roughness: 0.5 }));
+  hairTie.position.set(0, 0.86, 0.14);
+  hairTie.rotation.x = Math.PI / 2;
+  daughter.add(hairTie);
+
+  /* 粉色洋裝（更精緻） */
+  var dressMat = new THREE.MeshStandardMaterial({ color: 0xffb6c1, roughness: 0.55 });
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.14, 0.25, 6, 12), dressMat);
   body.position.y = 0.45;
   body.castShadow = true;
   daughter.add(body);
+  /* 裙擺 */
+  var skirt = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.2, 0.18, 12), dressMat);
+  skirt.position.y = 0.28;
+  daughter.add(skirt);
+  /* 蝴蝶結裝飾 */
+  var bowMat = new THREE.MeshStandardMaterial({ color: 0xff4488, roughness: 0.4 });
+  var bowL = new THREE.Mesh(new THREE.SphereGeometry(0.03, 6, 6), bowMat);
+  bowL.scale.set(1.5, 0.8, 0.5);
+  bowL.position.set(-0.04, 0.58, -0.13);
+  daughter.add(bowL);
+  var bowR = new THREE.Mesh(new THREE.SphereGeometry(0.03, 6, 6), bowMat);
+  bowR.scale.set(1.5, 0.8, 0.5);
+  bowR.position.set(0.04, 0.58, -0.13);
+  daughter.add(bowR);
 
-  const armL = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.035, 0.28, 6), MAT.skin);
+  /* 手臂 */
+  const armL = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.035, 0.28, 8), childSkinMat);
   armL.position.set(-0.2, 0.5, 0);
   armL.rotation.z = 0.2;
   daughter.add(armL);
-  const armR = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.035, 0.28, 6), MAT.skin);
+  const armR = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.035, 0.28, 8), childSkinMat);
   armR.position.set(0.2, 0.5, 0);
   armR.rotation.z = -0.2;
   daughter.add(armR);
+  /* 小手掌 */
+  var handMat = new THREE.MeshStandardMaterial({ color: 0xf0c8a0, roughness: 0.7 });
+  var handL = new THREE.Mesh(new THREE.SphereGeometry(0.025, 6, 6), handMat);
+  handL.position.set(-0.23, 0.34, 0);
+  daughter.add(handL);
+  var handR = new THREE.Mesh(new THREE.SphereGeometry(0.025, 6, 6), handMat);
+  handR.position.set(0.23, 0.34, 0);
+  daughter.add(handR);
 
-  const legL = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.04, 0.25, 6), MAT.skin);
+  /* 腿 + 白色短襪 + 粉色小鞋 */
+  const legL = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.04, 0.2, 8), childSkinMat);
   legL.position.set(-0.07, 0.2, 0);
   daughter.add(legL);
-  const legR = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.04, 0.25, 6), MAT.skin);
+  const legR = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.04, 0.2, 8), childSkinMat);
   legR.position.set(0.07, 0.2, 0);
   daughter.add(legR);
+  var sockMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.6 });
+  var sockL = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.06, 8), sockMat);
+  sockL.position.set(-0.07, 0.1, 0);
+  daughter.add(sockL);
+  var sockR = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.06, 8), sockMat);
+  sockR.position.set(0.07, 0.1, 0);
+  daughter.add(sockR);
+  var shoeDMat = new THREE.MeshStandardMaterial({ color: 0xff6699, roughness: 0.5 });
+  var shoeL = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.05, 0.12), shoeDMat);
+  shoeL.position.set(-0.07, 0.05, -0.02);
+  daughter.add(shoeL);
+  var shoeR = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.05, 0.12), shoeDMat);
+  shoeR.position.set(0.07, 0.05, -0.02);
+  daughter.add(shoeR);
 
-  const dbp = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.3, 0.15), MAT.pinkBag);
-  dbp.position.set(0, 0.45, -0.15);
+  /* 粉紅小背包 */
+  const dbp = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.28, 0.12), MAT.pinkBag);
+  dbp.position.set(0, 0.45, 0.15);
   daughter.add(dbp);
+  /* 背包蓋 */
+  var flapMat = new THREE.MeshStandardMaterial({ color: 0xff5599, roughness: 0.5 });
+  var flap = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.08, 0.13), flapMat);
+  flap.position.set(0, 0.6, 0.15);
+  daughter.add(flap);
 
-  const beacon = new THREE.PointLight(0xff69b4, 2, 15);
+  /* 接近時的粉紅光芒（引導玩家） */
+  const beacon = new THREE.PointLight(0xff69b4, 2.5, 18);
   beacon.position.y = 1.2;
   daughter.add(beacon);
+
+  /* Contact shadow */
+  var dShadow = new THREE.Mesh(
+    new THREE.CircleGeometry(0.3, 12),
+    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.2 })
+  );
+  dShadow.rotation.x = -Math.PI / 2;
+  dShadow.position.y = 0.01;
+  daughter.add(dShadow);
 
   daughter.position.set(1, 0, DAUGHTER_Z);
   scene.add(daughter);
 }
 
 /* ════════════════════════════════════════════════
-   Enhanced NPC humanoid builder
+   Enhanced NPC humanoid builder — 多樣化旅客
    ════════════════════════════════════════════════ */
+
+/* NPC 原型定義（8 種不同類型旅客） */
+var NPC_ARCHETYPES = [
+  { name: "上班族", shirtColors: [0x1a2a4a, 0x2a3a5a, 0x333344], pantsColors: [0x1a1a2a, 0x2a2a3a], hairStyle: "short", hasGlasses: 0.3, hasTie: true, bagType: "briefcase", hRange: [1.65, 1.8] },
+  { name: "學生", shirtColors: [0xffffff, 0xf0f0f0, 0xe8e8ff], pantsColors: [0x1a1a3a, 0x2a2a4a], hairStyle: "medium", hasGlasses: 0.15, hasTie: false, bagType: "backpack", hRange: [1.5, 1.7] },
+  { name: "長輩", shirtColors: [0x8b7355, 0x7a6a55, 0x9a8a6a], pantsColors: [0x4a4a3a, 0x5a5a4a], hairStyle: "grey", hasGlasses: 0.5, hasTie: false, bagType: "none", hRange: [1.5, 1.65], hatChance: 0.4 },
+  { name: "觀光客", shirtColors: [0xcc3333, 0x33aa33, 0x3366cc, 0xcc6600], pantsColors: [0x4a6a4a, 0x5a5a3a, 0x6a5a4a], hairStyle: "random", hasGlasses: 0.4, hasTie: false, bagType: "suitcase", hRange: [1.55, 1.8], hatChance: 0.5 },
+  { name: "媽媽", shirtColors: [0xaa6677, 0x778899, 0x668877, 0x886677], pantsColors: [0x3a3a4a, 0x2a3a3a], hairStyle: "long", hasGlasses: 0.15, hasTie: false, bagType: "handbag", hRange: [1.5, 1.65], female: true },
+  { name: "年輕女性", shirtColors: [0xff8888, 0x88aaff, 0xffcc88, 0xaa88ff, 0x88ffaa], pantsColors: [0x2a2a3a, 0x3a2a3a, 0x4a3a4a], hairStyle: "long", hasGlasses: 0.1, hasTie: false, bagType: "tote", hRange: [1.5, 1.65], female: true },
+  { name: "運動男", shirtColors: [0x334455, 0x445566, 0x223344], pantsColors: [0x223344, 0x334455], hairStyle: "short", hasGlasses: 0, hasTie: false, bagType: "sportbag", hRange: [1.7, 1.85] },
+  { name: "小孩", shirtColors: [0xff6633, 0x33ccff, 0xffcc33, 0x66ff66], pantsColors: [0x2a3a5a, 0x3a2a4a, 0x5a3a2a], hairStyle: "short", hasGlasses: 0, hasTie: false, bagType: "none", hRange: [0.9, 1.2], child: true },
+];
+
 function makeHumanoid(bodyColor, h, w, headSize) {
-  const g = new THREE.Group();
-  const scale = h / 1.7;
+  var g = new THREE.Group();
+  var scale = h / 1.7;
+  var archetype = NPC_ARCHETYPES[Math.floor(Math.random() * NPC_ARCHETYPES.length)];
 
-  const shirtColors = [0x555555, 0x666677, 0x776655, 0x557766, 0x886655, 0x556688, 0x778855, 0x887766, 0x993333, 0x336699, 0x669933, 0x996633];
-  const pantsColors = [0x2a2a3a, 0x333344, 0x3a3a2a, 0x222233, 0x1a1a2a, 0x2a3a2a, 0x443322];
-  const hairColors  = [0x1a1a1a, 0x3a2a1a, 0x2a1a0a, 0x5a3a2a, 0x1a0a0a, 0x4a3a2a];
-  const shoeColors  = [0x1a1a1a, 0x2a2a2a, 0x3a2a1a, 0xf0f0f0, 0x555555];
+  var shirtColor = bodyColor || archetype.shirtColors[Math.floor(Math.random() * archetype.shirtColors.length)];
+  var pantsColor = archetype.pantsColors[Math.floor(Math.random() * archetype.pantsColors.length)];
+  var hairColors = archetype.hairStyle === "grey" ? [0x888888, 0x999999, 0xaaaaaa] : [0x1a1a1a, 0x3a2a1a, 0x2a1a0a, 0x5a3a2a, 0x1a0a0a, 0x4a3a2a];
+  var shoeColors = [0x1a1a1a, 0x2a2a2a, 0x3a2a1a, 0xf0f0f0, 0x555555, 0x8B4513];
 
-  const shirtMat = new THREE.MeshStandardMaterial({ color: bodyColor || shirtColors[Math.floor(Math.random() * shirtColors.length)], roughness: 0.7 });
-  const pantsMat = new THREE.MeshStandardMaterial({ color: pantsColors[Math.floor(Math.random() * pantsColors.length)], roughness: 0.7 });
-  const hairMat  = new THREE.MeshStandardMaterial({ color: hairColors[Math.floor(Math.random() * hairColors.length)], roughness: 0.9 });
-  const shoeMat  = new THREE.MeshStandardMaterial({ color: shoeColors[Math.floor(Math.random() * shoeColors.length)], roughness: 0.8 });
+  var shirtMat = new THREE.MeshStandardMaterial({ color: shirtColor, roughness: 0.65 });
+  var pantsMat = new THREE.MeshStandardMaterial({ color: pantsColor, roughness: 0.65 });
+  var hairMat  = new THREE.MeshStandardMaterial({ color: hairColors[Math.floor(Math.random() * hairColors.length)], roughness: 0.85 });
+  var shoeMat  = new THREE.MeshStandardMaterial({ color: shoeColors[Math.floor(Math.random() * shoeColors.length)], roughness: 0.7 });
+  var skinTone = archetype.female ? 0xf0c8a0 : 0xdeb887;
+  var npcSkinMat = new THREE.MeshStandardMaterial({ color: skinTone, roughness: 0.75 });
 
-  const headMesh = new THREE.Mesh(new THREE.SphereGeometry(headSize, 8, 8), MAT.skin);
+  /* 頭 */
+  var headMesh = new THREE.Mesh(new THREE.SphereGeometry(headSize, 12, 12), npcSkinMat);
   headMesh.position.y = h * 0.82;
   headMesh.castShadow = true;
   g.add(headMesh);
 
-  const hairMesh = new THREE.Mesh(new THREE.SphereGeometry(headSize * 0.85, 6, 6), hairMat);
-  hairMesh.position.y = h * 0.82 + headSize * 0.55;
-  hairMesh.scale.set(1.1, 0.5, 1.1);
-  g.add(hairMesh);
+  /* 頭髮（依類型變化） */
+  if (archetype.hairStyle === "long" || archetype.female) {
+    var hairTop2 = new THREE.Mesh(new THREE.SphereGeometry(headSize * 0.9, 8, 8), hairMat);
+    hairTop2.position.y = h * 0.82 + headSize * 0.45;
+    hairTop2.scale.set(1.1, 0.55, 1.1);
+    g.add(hairTop2);
+    var hairBack = new THREE.Mesh(new THREE.SphereGeometry(headSize * 0.7, 8, 8), hairMat);
+    hairBack.position.set(0, h * 0.75, headSize * 0.5);
+    hairBack.scale.set(0.7, 1.3, 0.5);
+    g.add(hairBack);
+  } else {
+    var hairMesh2 = new THREE.Mesh(new THREE.SphereGeometry(headSize * 0.85, 8, 8), hairMat);
+    hairMesh2.position.y = h * 0.82 + headSize * 0.5;
+    hairMesh2.scale.set(1.05, 0.45, 1.05);
+    g.add(hairMesh2);
+  }
 
-  const torsoH = h * 0.3;
-  const torsoMesh = new THREE.Mesh(new THREE.CapsuleGeometry(w * 0.5, torsoH, 4, 8), shirtMat);
+  /* 帽子（觀光客/長輩有機會戴） */
+  if (archetype.hatChance && Math.random() < archetype.hatChance) {
+    var hatColors = [0x8b4513, 0x2c3e50, 0xcc6622, 0x556b2f, 0xf5f5dc];
+    var hatMat2 = new THREE.MeshStandardMaterial({ color: hatColors[Math.floor(Math.random() * hatColors.length)], roughness: 0.6 });
+    var hatBrim = new THREE.Mesh(new THREE.CylinderGeometry(headSize * 1.4, headSize * 1.4, 0.03, 12), hatMat2);
+    hatBrim.position.y = h * 0.82 + headSize * 0.9;
+    g.add(hatBrim);
+    var hatTop = new THREE.Mesh(new THREE.CylinderGeometry(headSize * 0.7, headSize * 0.9, headSize * 0.5, 12), hatMat2);
+    hatTop.position.y = h * 0.82 + headSize * 1.1;
+    g.add(hatTop);
+  }
+
+  /* 眼鏡 */
+  if (Math.random() < (archetype.hasGlasses || 0)) {
+    var npcGlassesMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.3 });
+    var npcGlassL = new THREE.Mesh(new THREE.TorusGeometry(headSize * 0.3, 0.008, 6, 10), npcGlassesMat);
+    npcGlassL.position.set(-headSize * 0.4, h * 0.82, -(headSize + 0.01));
+    g.add(npcGlassL);
+    var npcGlassR = new THREE.Mesh(new THREE.TorusGeometry(headSize * 0.3, 0.008, 6, 10), npcGlassesMat);
+    npcGlassR.position.set(headSize * 0.4, h * 0.82, -(headSize + 0.01));
+    g.add(npcGlassR);
+  }
+
+  /* 軀幹 */
+  var torsoH = h * 0.3;
+  var torsoMesh = new THREE.Mesh(new THREE.CapsuleGeometry(w * 0.5, torsoH, 4, 10), shirtMat);
   torsoMesh.position.y = h * 0.52;
   torsoMesh.castShadow = true;
   g.add(torsoMesh);
 
-  const armLen = h * 0.25;
-  const npcLeftArm = new THREE.Group();
-  const armLMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.04 * scale, 0.035 * scale, armLen, 6), shirtMat);
+  /* 領帶（上班族） */
+  if (archetype.hasTie && Math.random() < 0.6) {
+    var tieColors = [0xcc2222, 0x2222cc, 0x882288, 0x228888];
+    var tieMat = new THREE.MeshStandardMaterial({ color: tieColors[Math.floor(Math.random() * tieColors.length)], roughness: 0.5 });
+    var tie = new THREE.Mesh(new THREE.BoxGeometry(0.04, torsoH * 0.8, 0.02), tieMat);
+    tie.position.set(0, h * 0.52, -(w * 0.5 + 0.01));
+    g.add(tie);
+  }
+
+  /* 手臂 */
+  var armLen = h * 0.25;
+  var npcLeftArm = new THREE.Group();
+  var armLMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.04 * scale, 0.035 * scale, armLen, 8), shirtMat);
   armLMesh.position.y = -armLen * 0.4;
   npcLeftArm.add(armLMesh);
+  /* 手掌 */
+  var npcHandL = new THREE.Mesh(new THREE.SphereGeometry(0.025 * scale, 6, 6), npcSkinMat);
+  npcHandL.position.y = -armLen * 0.85;
+  npcLeftArm.add(npcHandL);
   npcLeftArm.position.set(-(w * 0.5 + 0.06), h * 0.62, 0);
   npcLeftArm.rotation.z = 0.12;
   g.add(npcLeftArm);
   g.userData.leftArm = npcLeftArm;
 
-  const npcRightArm = new THREE.Group();
-  const armRMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.04 * scale, 0.035 * scale, armLen, 6), shirtMat);
+  var npcRightArm = new THREE.Group();
+  var armRMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.04 * scale, 0.035 * scale, armLen, 8), shirtMat);
   armRMesh.position.y = -armLen * 0.4;
   npcRightArm.add(armRMesh);
+  var npcHandR = new THREE.Mesh(new THREE.SphereGeometry(0.025 * scale, 6, 6), npcSkinMat);
+  npcHandR.position.y = -armLen * 0.85;
+  npcRightArm.add(npcHandR);
   npcRightArm.position.set(w * 0.5 + 0.06, h * 0.62, 0);
   npcRightArm.rotation.z = -0.12;
   g.add(npcRightArm);
   g.userData.rightArm = npcRightArm;
 
-  const legLen = h * 0.22;
-  const npcLeftLeg = new THREE.Group();
-  const legLMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.055 * scale, 0.045 * scale, legLen, 6), pantsMat);
+  /* 腿 */
+  var legLen = h * 0.22;
+  var npcLeftLeg = new THREE.Group();
+  var legLMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.055 * scale, 0.045 * scale, legLen, 8), pantsMat);
   legLMesh.position.y = -legLen * 0.4;
   npcLeftLeg.add(legLMesh);
-  const shoeLMesh = new THREE.Mesh(new THREE.BoxGeometry(0.1 * scale, 0.06 * scale, 0.16 * scale), shoeMat);
+  var shoeLMesh = new THREE.Mesh(new THREE.BoxGeometry(0.1 * scale, 0.06 * scale, 0.16 * scale), shoeMat);
   shoeLMesh.position.set(0, -legLen * 0.85, -0.02);
   npcLeftLeg.add(shoeLMesh);
   npcLeftLeg.position.set(-w * 0.22, h * 0.24, 0);
   g.add(npcLeftLeg);
   g.userData.leftLeg = npcLeftLeg;
 
-  const npcRightLeg = new THREE.Group();
-  const legRMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.055 * scale, 0.045 * scale, legLen, 6), pantsMat);
+  var npcRightLeg = new THREE.Group();
+  var legRMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.055 * scale, 0.045 * scale, legLen, 8), pantsMat);
   legRMesh.position.y = -legLen * 0.4;
   npcRightLeg.add(legRMesh);
-  const shoeRMesh = new THREE.Mesh(new THREE.BoxGeometry(0.1 * scale, 0.06 * scale, 0.16 * scale), shoeMat);
+  var shoeRMesh = new THREE.Mesh(new THREE.BoxGeometry(0.1 * scale, 0.06 * scale, 0.16 * scale), shoeMat);
   shoeRMesh.position.set(0, -legLen * 0.85, -0.02);
   npcRightLeg.add(shoeRMesh);
   npcRightLeg.position.set(w * 0.22, h * 0.24, 0);
   g.add(npcRightLeg);
   g.userData.rightLeg = npcRightLeg;
 
-  if (Math.random() < 0.3) {
-    const bagColors = [0x8b4513, 0x2a2a2a, 0x556b2f, 0x4a3728, 0xcc6622];
-    const bagMat = new THREE.MeshStandardMaterial({ color: bagColors[Math.floor(Math.random() * bagColors.length)], roughness: 0.7 });
-    const bagW = 0.15 + Math.random() * 0.1;
-    const bagH = 0.2 + Math.random() * 0.1;
-    const bagD = 0.08 + Math.random() * 0.06;
-    const bag = new THREE.Mesh(new THREE.BoxGeometry(bagW, bagH, bagD), bagMat);
-    const side = Math.random() > 0.5 ? 1 : -1;
-    bag.position.set(side * (w * 0.5 + 0.12), h * 0.35, 0);
-    g.add(bag);
+  /* 行李/包包（依類型變化） */
+  var bagType = archetype.bagType;
+  if (bagType === "briefcase") {
+    var briefMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.5 });
+    var brief = new THREE.Mesh(new THREE.BoxGeometry(0.25 * scale, 0.18 * scale, 0.06 * scale), briefMat);
+    brief.position.set((Math.random() > 0.5 ? 1 : -1) * (w * 0.5 + 0.15), h * 0.3, 0);
+    g.add(brief);
+  } else if (bagType === "backpack") {
+    var bpColors = [0x2a5a2a, 0x2a2a5a, 0x5a2a2a, 0x3a3a3a, 0xcc6622];
+    var bpMat = new THREE.MeshStandardMaterial({ color: bpColors[Math.floor(Math.random() * bpColors.length)], roughness: 0.7 });
+    var bp = new THREE.Mesh(new THREE.BoxGeometry(0.2 * scale, 0.3 * scale, 0.12 * scale), bpMat);
+    bp.position.set(0, h * 0.5, w * 0.5 + 0.06);
+    g.add(bp);
+  } else if (bagType === "suitcase") {
+    var scColors = [0x8b4513, 0x2a2a5a, 0x5a2a2a, 0x1a4a1a];
+    var scMat = new THREE.MeshStandardMaterial({ color: scColors[Math.floor(Math.random() * scColors.length)], roughness: 0.6 });
+    var sc = new THREE.Mesh(new THREE.BoxGeometry(0.25 * scale, 0.35 * scale, 0.12 * scale), scMat);
+    sc.position.set((Math.random() > 0.5 ? 1 : -1) * (w * 0.5 + 0.18), h * 0.18, 0);
+    g.add(sc);
+    /* 行李箱輪子 */
+    var scWheel1 = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.03, 6), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+    scWheel1.rotation.z = Math.PI / 2;
+    scWheel1.position.set(sc.position.x - 0.08, 0.02, 0);
+    g.add(scWheel1);
+    var scWheel2 = scWheel1.clone();
+    scWheel2.position.set(sc.position.x + 0.08, 0.02, 0);
+    g.add(scWheel2);
+  } else if (bagType === "handbag" && Math.random() < 0.7) {
+    var hbMat = new THREE.MeshStandardMaterial({ color: [0x8b4513, 0xaa3333, 0x2a2a5a][Math.floor(Math.random() * 3)], roughness: 0.5 });
+    var hb = new THREE.Mesh(new THREE.BoxGeometry(0.15 * scale, 0.12 * scale, 0.06 * scale), hbMat);
+    hb.position.set((Math.random() > 0.5 ? 1 : -1) * (w * 0.5 + 0.12), h * 0.38, 0);
+    g.add(hb);
+  } else if (bagType === "tote" && Math.random() < 0.6) {
+    var toteMat = new THREE.MeshStandardMaterial({ color: [0xcc9966, 0xf5f5dc, 0x88aacc][Math.floor(Math.random() * 3)], roughness: 0.6 });
+    var tote = new THREE.Mesh(new THREE.BoxGeometry(0.18 * scale, 0.22 * scale, 0.04 * scale), toteMat);
+    tote.position.set((Math.random() > 0.5 ? 1 : -1) * (w * 0.5 + 0.12), h * 0.35, 0);
+    g.add(tote);
+  } else if (bagType === "sportbag" && Math.random() < 0.5) {
+    var sbMat = new THREE.MeshStandardMaterial({ color: [0x1a1a1a, 0x2a3a5a][Math.floor(Math.random() * 2)], roughness: 0.6 });
+    var sb = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.3 * scale, 8), sbMat);
+    sb.rotation.z = Math.PI / 2;
+    sb.position.set((Math.random() > 0.5 ? 1 : -1) * (w * 0.5 + 0.12), h * 0.35, 0);
+    g.add(sb);
   }
 
+  /* Contact shadow */
+  var npcShadow = new THREE.Mesh(
+    new THREE.CircleGeometry(0.25 * scale, 8),
+    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.15 })
+  );
+  npcShadow.rotation.x = -Math.PI / 2;
+  npcShadow.position.y = 0.01;
+  g.add(npcShadow);
+
+  g.userData.archetype = archetype.name;
   return g;
 }
 
@@ -1142,11 +2320,12 @@ function spawnLuggage() {
   const zEnd = DAUGHTER_Z + 15;
   const totalRunDist = zStart - zEnd;
 
-  /* Spawn 2 barrier walls at 1/3 and 2/3 of distance */
-  const barrier1Z = zStart - totalRunDist * (1 / 3);
-  const barrier2Z = zStart - totalRunDist * (2 / 3);
-  spawnBarrierWall(barrier1Z);
-  spawnBarrierWall(barrier2Z);
+  /* Level-based barrier count: 2 base + (level-1) extra */
+  var barrierCount = 2 + (state.currentLevel - 1);
+  for (var bi = 0; bi < barrierCount; bi++) {
+    var barrierZ = zStart - totalRunDist * ((bi + 1) / (barrierCount + 1));
+    spawnBarrierWall(barrierZ);
+  }
 
   /* Spawn scattered individual luggage (avoiding barrier zones) */
   for (let i = 0; i < LUGGAGE_COUNT; i++) {
@@ -1455,11 +2634,12 @@ var ultimateTrailTimer = 0;
 var ultimateScreenPhase = 0;
 
 function activateUltimate() {
-  if (state.ultimateUsed) return;
+  if (state.ultimateCharges <= 0) return;
   if (state.phase !== "running" && state.phase !== "sprint2") return;
 
-  state.ultimateUsed = true;
+  state.ultimateCharges--;
   state.ultimateTimer = 5;
+  updateUltimateUI();
   ultimateScreenPhase = 0;
 
   /* === Sound === */
@@ -1471,7 +2651,6 @@ function activateUltimate() {
   father.add(fatherGlowLight);
 
   showNarrative("\u300C\u628A\u62D4\uFF0C\u6211\u4E5F\u6703\u60F3\u59B3\u7684\u3002\u300D", 3);
-  dom.ultimateBtn.classList.add("used");
 
   /* === Screen effect phase 1: Full white flash (0-0.3s) === */
   dom.goldFlash.style.transition = "opacity 0.05s";
@@ -2221,6 +3400,7 @@ function detectMobile() {
     dom.sprintBtn.style.display = "block";
     dom.jumpBtn.style.display = "block";
     dom.ultimateBtn.style.display = "block";
+    dom.ultimateCount.style.display = "block";
     dom.breathHint.textContent = "\u5DE6\u624B\u6416\u687F\u79FB\u52D5 \u00B7 \u53F3\u624B\u885D\u523A \u00B7 \u8DF3\u8E8D \u00B7 \u5FC5\u6BBA\u6280[E]";
   } else {
     dom.breathHint.textContent = "WAD \u79FB\u52D5 \u00B7 Shift \u885D\u523A \u00B7 Space \u8DF3\u8E8D \u00B7 E \u5FC5\u6BBA\u6280";
@@ -2283,14 +3463,19 @@ function updateNarrative(dt) {
    碰撞偵測
    ════════════════════════════════════════════════ */
 function checkCollisions() {
-  for (const npc of npcs) {
-    const dx = father.position.x - npc.position.x;
-    const dz = father.position.z - npc.position.z;
-    const dist = Math.sqrt(dx * dx + dz * dz);
-    if (dist < 0.8) {
-      const push = (0.8 - dist) * 0.7;
+  /* 玩家 vs NPC 碰撞（推開） */
+  for (var ci = 0; ci < npcs.length; ci++) {
+    var npc = npcs[ci];
+    var dx = father.position.x - npc.position.x;
+    var dz = father.position.z - npc.position.z;
+    var dist = Math.sqrt(dx * dx + dz * dz);
+    if (dist < 0.8 && dist > 0.001) {
+      var push = (0.8 - dist) * 0.7;
       father.position.x += (dx / dist) * push;
       father.position.z += (dz / dist) * push;
+      /* 被推的 NPC 也要後退（真實碰撞） */
+      npc.position.x -= (dx / dist) * push * 0.3;
+      npc.position.z -= (dz / dist) * push * 0.3;
 
       if (state.collisionSlowTimer <= 0) {
         state.collisionSlowTimer = 1.0;
@@ -2299,10 +3484,25 @@ function checkCollisions() {
       }
     }
   }
-  const halfW = PLATFORM_W / 2 - 0.5;
+
+  /* 玩家 vs 警衛碰撞（推開，不穿透） */
+  for (var gi = 0; gi < guards.length; gi++) {
+    var guard = guards[gi];
+    var gdx = father.position.x - guard.position.x;
+    var gdz = father.position.z - guard.position.z;
+    var gdist = Math.sqrt(gdx * gdx + gdz * gdz);
+    if (gdist < 0.6 && gdist > 0.001) {
+      var gpush = (0.6 - gdist) * 0.8;
+      father.position.x += (gdx / gdist) * gpush;
+      father.position.z += (gdz / gdist) * gpush;
+    }
+  }
+
+  /* 月台邊界 — 絕不超出月台、絕不踩上軌道或火車 */
+  var halfW = PLATFORM_W / 2 - 0.5;
   father.position.x = Math.max(-halfW, Math.min(halfW, father.position.x));
 
-  const halfZ = PLATFORM_LEN / 2 - 2;
+  var halfZ = PLATFORM_LEN / 2 - 2;
   father.position.z = Math.max(-halfZ, Math.min(halfZ, father.position.z));
 }
 
@@ -2386,9 +3586,16 @@ function updateIntro(dt) {
     dom.sprintWrap.style.display = "block";
     dom.buffIndicators.style.display = "block";
     dom.breathHint.style.opacity = "1";
+    dom.levelText.textContent = "\u7B2C " + state.currentLevel + " \u95DC";
+    updateUltimateUI();
+    if (isMobile) dom.ultimateCount.style.display = "block";
     setTimeout(function() { dom.breathHint.style.opacity = "0"; }, 4000);
     document.body.classList.remove("letterbox-on");
-    showNarrative("\u8DD1\uFF01", 1.5);
+    if (state.currentLevel === 1) {
+      showNarrative("\u8DD1\uFF01", 1.5);
+    } else {
+      showNarrative("\u7B2C " + state.currentLevel + " \u95DC\u958B\u59CB\uFF01", 2);
+    }
     if (audioCtx) playDoorChime();
     startAmbientSounds();
   }
@@ -2397,8 +3604,8 @@ function updateIntro(dt) {
 /* ════════════════════════════════════════════════
    門動畫
    ════════════════════════════════════════════════ */
-function updateDoors() {
-  const dt = 0.016;
+function updateDoors(frameDt) {
+  const dt = frameDt || 0.016;
   if (state.trainNorthDoorOpen && state.doorPhase < 1) {
     state.doorPhase = Math.min(1, state.doorPhase + dt * 1.5);
   }
@@ -2454,6 +3661,20 @@ function updateBuffIndicators() {
     el.className = "buff-item";
     el.style.color = "#e74c3c";
     el.textContent = "\u26A0 \u8ACB\u52FF\u8DE8\u8D8A\u9EC3\u7DDA " + state.guardSlowTimer.toFixed(1) + "s";
+    dom.buffIndicators.appendChild(el);
+  }
+  /* Desktop ultimate charges display */
+  if (state.ultimateCharges > 0) {
+    const el = document.createElement("div");
+    el.className = "buff-item";
+    el.style.color = "#ffd700";
+    el.textContent = "\u2728 \u5FC5\u6BBA\u6280 [E] \u00D7" + state.ultimateCharges;
+    dom.buffIndicators.appendChild(el);
+  } else {
+    const el = document.createElement("div");
+    el.className = "buff-item";
+    el.style.color = "#666";
+    el.textContent = "\u5FC5\u6BBA\u6280 \u5DF2\u7528\u5B8C";
     dom.buffIndicators.appendChild(el);
   }
 }
@@ -2664,9 +3885,9 @@ function updateGame(dt) {
 }
 
 /* ════════════════════════════════════════════════
-   排行榜 — localStorage TOP 10
+   排行榜 — localStorage TOP 10 (10關制)
    ════════════════════════════════════════════════ */
-const LB_KEY = "platformRunLeaderboard";
+const LB_KEY = "platformRunLeaderboard_v2";
 
 function loadLeaderboard() {
   try {
@@ -2682,15 +3903,23 @@ function saveLeaderboard(entries) {
   try { localStorage.setItem(LB_KEY, JSON.stringify(entries)); } catch (e) { /* quota */ }
 }
 
-function addScore(name, timeLeft, items) {
-  const entries = loadLeaderboard();
-  entries.push({ name: name, time: Math.round(timeLeft * 10) / 10, items: items });
-  /* Sort: timeLeft desc, then items desc */
-  entries.sort(function(a, b) {
-    if (b.time !== a.time) return b.time - a.time;
-    return b.items - a.items;
+/* Score = A(totalTimeBank) + B(totalItemsBank) = C */
+function addScore(name, levelReached, levelTimes, totalTime, totalItems) {
+  var entries = loadLeaderboard();
+  var fastest = levelTimes.length > 0 ? Math.min.apply(null, levelTimes) : 0;
+  var avg = levelTimes.length > 0 ? totalTime / levelTimes.length : 0;
+  var score = Math.round((totalTime + totalItems) * 10) / 10;
+  entries.push({
+    name: name,
+    level: levelReached,
+    fastest: Math.round(fastest * 10) / 10,
+    totalTime: Math.round(totalTime * 10) / 10,
+    avgTime: Math.round(avg * 10) / 10,
+    items: totalItems,
+    score: score
   });
-  /* Keep top 10 */
+  /* Sort by score descending */
+  entries.sort(function(a, b) { return b.score - a.score; });
   if (entries.length > 10) entries.length = 10;
   saveLeaderboard(entries);
   return entries;
@@ -2698,63 +3927,73 @@ function addScore(name, timeLeft, items) {
 
 function renderLeaderboard(highlightIndex) {
   dom.lbBody.textContent = "";
-  const entries = loadLeaderboard();
+  var entries = loadLeaderboard();
   if (entries.length === 0) {
-    const empty = document.createElement("div");
+    var empty = document.createElement("div");
     empty.textContent = "\u9084\u6C92\u6709\u7D00\u9304\uFF0C\u5FEB\u4F86\u6311\u6230\uFF01";
     empty.style.color = "#8a7560";
     empty.style.padding = "20px";
     dom.lbBody.appendChild(empty);
     return;
   }
-  const table = document.createElement("table");
+  var table = document.createElement("table");
   table.className = "lb-table";
-  /* Header */
-  const thead = document.createElement("thead");
-  const hrow = document.createElement("tr");
-  ["\u540D\u6B21", "\u540D\u5B57", "\u5269\u9918\u79D2\u6578", "\u5BF6\u7269"].forEach(function(txt) {
-    const th = document.createElement("th");
+  var thead = document.createElement("thead");
+  var hrow = document.createElement("tr");
+  ["\u540D\u6B21", "\u540D\u5B57", "\u904E\u95DC", "\u6700\u5FEB", "\u7E3D\u79D2", "\u5E73\u5747", "\u5BF6\u7269", "\u5206\u6578"].forEach(function(txt) {
+    var th = document.createElement("th");
     th.textContent = txt;
+    th.style.fontSize = "clamp(9px,1.2vw,12px)";
     hrow.appendChild(th);
   });
   thead.appendChild(hrow);
   table.appendChild(thead);
-  /* Body — assign rank with ties */
-  const tbody = document.createElement("tbody");
-  let rank = 1;
-  for (let i = 0; i < entries.length; i++) {
-    const e = entries[i];
-    /* Determine rank: same rank if same time AND items */
-    if (i > 0) {
-      const prev = entries[i - 1];
-      if (e.time !== prev.time || e.items !== prev.items) rank = i + 1;
-    }
-    const tr = document.createElement("tr");
+  var tbody = document.createElement("tbody");
+  var rank = 1;
+  for (var i = 0; i < entries.length; i++) {
+    var e = entries[i];
+    if (i > 0 && entries[i - 1].score !== e.score) rank = i + 1;
+    var tr = document.createElement("tr");
     if (i === highlightIndex) tr.className = "highlight";
-    const tdRank = document.createElement("td");
-    tdRank.textContent = rank;
-    const tdName = document.createElement("td");
-    tdName.textContent = e.name;
-    const tdTime = document.createElement("td");
-    tdTime.textContent = e.time.toFixed(1) + "s";
-    const tdItems = document.createElement("td");
-    tdItems.textContent = e.items;
-    tr.appendChild(tdRank);
-    tr.appendChild(tdName);
-    tr.appendChild(tdTime);
-    tr.appendChild(tdItems);
+    var cells = [
+      rank,
+      e.name,
+      "\u7B2C" + e.level + "\u95DC",
+      e.fastest + "s",
+      e.totalTime + "s",
+      e.avgTime + "s",
+      e.items,
+      e.score
+    ];
+    cells.forEach(function(val) {
+      var td = document.createElement("td");
+      td.textContent = val;
+      td.style.fontSize = "clamp(9px,1.2vw,12px)";
+      tr.appendChild(td);
+    });
     tbody.appendChild(tr);
   }
   table.appendChild(tbody);
   dom.lbBody.appendChild(table);
 }
 
-let lastSavedHighlight = -1;
+var lastSavedHighlight = -1;
 
 /* ════════════════════════════════════════════════
    勝利 / 失敗 — BGM NEVER INTERRUPTED
    ════════════════════════════════════════════════ */
 function victory() {
+  /* Record this level's time remaining */
+  var levelTimeLeft = Math.max(0, state.timeLeft);
+  state.levelTimes.push(Math.round(levelTimeLeft * 10) / 10);
+  state.totalTimeBank += levelTimeLeft;
+  state.totalItemsBank += state.itemsCollected;
+
+  /* Save carry-over state */
+  state.carryRiceBall = state.riceBallTimer;
+  state.carryCoffee = state.coffeeTimer;
+  state.carryUltimate = state.ultimateTimer;
+
   state.phase = "victory";
   state.victoryTimer = 0;
   state.victoryPhase = 0;
@@ -2768,6 +4007,7 @@ function victory() {
     dom.sprintBtn.style.display = "none";
     dom.jumpBtn.style.display = "none";
     dom.ultimateBtn.style.display = "none";
+    dom.ultimateCount.style.display = "none";
   }
   playSuccess();
   stopAmbientSounds();
@@ -2786,10 +4026,7 @@ function victory() {
   state.victoryDoorX = PLATFORM_W / 2 - 1;
   state.victoryDoorZ = nearestDoorZ;
 
-  /* Phase 1 starts: walk toward door */
   showNarrative("\u300C\u6211\u8D95\u4E0A\u4E86\u3002\u300D", 3);
-
-  /* BGM continues — do NOT fade or pause */
 }
 
 function updateVictoryAnimation(dt) {
@@ -2849,39 +4086,264 @@ function updateVictoryAnimation(dt) {
     }
   }
 
-  /* Phase 4 (7s+): Show result screen */
+  /* Phase 4 (7s+): Level transition or final result */
   if (state.victoryPhase === 3) {
-    /* Train keeps moving away */
     if (state.trainNorthLeaving) {
       trainNorth.position.z += dt * 25;
     }
 
-    if (state.victoryPhase === 3 && t >= 7.5 && !dom.result.classList.contains("show")) {
-      dom.result.classList.add("show");
-      dom.resultTitle.textContent = "\u6211\u8D95\u4E0A\u4E86\u3002";
-      dom.resultBody.textContent = "";
-      var lines = [
-        "\u5728\u90A3\u500B\u64C1\u62B1\u88E1\uFF0C\u6211\u770B\u5230\u4ED6\u5FC3\u88E1\u771F\u6B63\u60F3\u7684\u662F\uFF1A",
-        "\u4E0D\u7BA1\u591A\u8D95\u3001\u591A\u7D2F\uFF0C\u4ED6\u90FD\u8981\u300C\u6BCF\u4E00\u6B21\u90FD\u8D95\u4E0A\u300D\u3002",
-        "",
-        "\u53EA\u8981\u4ED6\u9084\u9858\u610F\u5728\u6708\u53F0\u4E0A\u90A3\u6A23\u7528\u529B\u5954\u8DD1\uFF0C",
-        "\u6211\u5011\u4E4B\u9593\uFF0C\u5C31\u9084\u6709\u4E00\u689D",
-        "\u62C9\u5F97\u518D\u9577\u4E5F\u4E0D\u6703\u65B7\u7684\u7DDA\u3002"
-      ];
-      lines.forEach(function(line) {
-        var el = document.createElement("div");
-        el.textContent = line || "\u00A0";
-        dom.resultBody.appendChild(el);
-      });
-      /* Show name input + leaderboard on victory */
-      dom.nameInputWrap.classList.add("show");
-      dom.nameInput.value = "";
-      dom.nameInput.readOnly = false;
-      dom.saveScoreBtn.disabled = false;
-      dom.saveScoreBtn.textContent = "\u8A18\u9304\u6210\u7E3E";
-      lastSavedHighlight = -1;
+    if (t >= 7.5 && !state._victoryHandled) {
+      state._victoryHandled = true;
+
+      if (state.currentLevel < state.maxLevel) {
+        /* === LEVEL TRANSITION === */
+        showLevelTransition();
+      } else {
+        /* === LEVEL 10 CLEARED: HIDDEN ENDING === */
+        startHiddenEnding();
+      }
     }
   }
+}
+
+/* ════════════════════════════════════════════════
+   關卡過渡：顯示過關畫面，自動進入下一關
+   ════════════════════════════════════════════════ */
+function showLevelTransition() {
+  dom.levelClearText.textContent = "\u7B2C " + state.currentLevel + " \u95DC \u904E\u95DC\uFF01";
+  dom.levelNextText.textContent = "\u5373\u5C07\u9032\u5165\u7B2C " + (state.currentLevel + 1) + " \u95DC...";
+  /* Re-trigger animation by cloning */
+  var clearClone = dom.levelClearText.cloneNode(true);
+  dom.levelClearText.parentNode.replaceChild(clearClone, dom.levelClearText);
+  dom.levelClearText = clearClone;
+  var nextClone = dom.levelNextText.cloneNode(true);
+  dom.levelNextText.parentNode.replaceChild(nextClone, dom.levelNextText);
+  dom.levelNextText = nextClone;
+
+  dom.levelTransition.classList.add("show");
+  document.body.classList.remove("letterbox-on");
+
+  setTimeout(function() {
+    dom.levelTransition.classList.remove("show");
+    advanceToNextLevel();
+  }, 3000);
+}
+
+function advanceToNextLevel() {
+  state.currentLevel++;
+  /* Grant +1 ultimate charge per level */
+  state.ultimateCharges++;
+
+  /* Reset per-level state but keep carry-overs */
+  state.phase = "title";
+  state.clock = 0;
+  state.timeLeft = GAME_TIME;
+  state.sprint = SPRINT_MAX;
+  state.playerZ = PLATFORM_LEN / 2 - 10;
+  state.playerX = 0;
+  state.sprinting = false;
+  state.gotDaughter = false;
+  state.introTimer = 0;
+  state.narrTimer = 0;
+  state.cameraShake = 0;
+  state.heartRate = 60;
+  state.trainSouthArrived = false;
+  state.trainNorthArrived = false;
+  state.trainNorthDoorOpen = false;
+  state.trainNorthLeaving = false;
+  state.doorPhase = 0;
+
+  /* Carry over buff timers */
+  state.riceBallTimer = state.carryRiceBall;
+  state.coffeeTimer = state.carryCoffee;
+  state.ultimateTimer = state.carryUltimate;
+  state.collisionSlowTimer = 0;
+  state.pickupNotifyTimer = 0;
+  sprint2HintShown = false;
+
+  /* Reset per-level items counter */
+  state.itemsCollected = 0;
+
+  /* Jump reset */
+  state.jumpY = 0;
+  state.jumpVel = 0;
+  state.isJumping = false;
+  state.wasJumping = false;
+  state.luggageSlowTimer = 0;
+  state.barrierHintShown = false;
+
+  /* Victory reset */
+  state.victoryTimer = 0;
+  state.victoryPhase = 0;
+  state.victoryDoorX = 0;
+  state.victoryDoorZ = 0;
+  state._victoryHandled = false;
+  father.visible = true;
+
+  /* Audio */
+  nextBeat = 0;
+  stopAmbientSounds();
+
+  /* Ultimate effects cleanup */
+  if (fatherGlowLight && fatherGlowLight.parent) { father.remove(fatherGlowLight); fatherGlowLight = null; }
+  for (var upi = ultimateParticles.length - 1; upi >= 0; upi--) {
+    if (ultimateParticles[upi].parent) scene.remove(ultimateParticles[upi]);
+    ultimateParticles[upi].geometry.dispose();
+    ultimateParticles[upi].material.dispose();
+  }
+  ultimateParticles = [];
+  if (ultimateShockwave && ultimateShockwave.parent) {
+    scene.remove(ultimateShockwave);
+    ultimateShockwave.geometry.dispose();
+    ultimateShockwave.material.dispose();
+    ultimateShockwave = null;
+  }
+  dom.goldFlash.style.opacity = "0";
+  dom.goldFlash.style.background = "radial-gradient(ellipse at center,rgba(255,215,0,0.5) 0%,transparent 70%)";
+  document.body.style.filter = "";
+  ultimateScreenPhase = 0;
+  ultimateTrailTimer = 0;
+
+  /* Position resets */
+  father.position.set(0, FATHER_BASE_Y, state.playerZ);
+  father.rotation.set(0, 0, 0);
+  if (daughter.parent === father) { father.remove(daughter); scene.add(daughter); }
+  daughter.position.set(1, 0, DAUGHTER_Z);
+
+  /* Train positions */
+  trainSouth.position.z = PLATFORM_LEN;
+  trainNorth.position.z = -PLATFORM_LEN;
+
+  /* Reset NPCs */
+  for (var ni = 0; ni < npcs.length; ni++) {
+    npcs[ni].position.x = npcs[ni].userData.baseX;
+    npcs[ni].position.z = npcs[ni].userData.baseZ;
+    npcs[ni].userData.wobblePhase = Math.random() * Math.PI * 2;
+  }
+
+  /* Rebuild guards with new level count */
+  state.guardSlowTimer = 0;
+  createGuards();
+
+  /* Recreate power-ups and luggage with new barrier count */
+  resetPowerups();
+  resetLuggage();
+
+  if (doorMarker) doorMarker.visible = false;
+
+  /* Clear inputs */
+  for (var key in keys) keys[key] = false;
+  touchJoyX = 0; touchJoyY = 0; touchSprinting = false; touchJumping = false;
+  dom.joystickKnob.style.transform = "translate(-50%,-50%)";
+
+  /* DOM resets */
+  dom.result.classList.remove("show");
+  dom.resultBody.textContent = "";
+  dom.vignette.style.opacity = "0";
+  dom.timerText.style.color = "#c0392b";
+  dom.narrText.classList.remove("show");
+  dom.pickupNotify.classList.remove("show");
+  dom.goldFlash.style.opacity = "0";
+  dom.buffIndicators.style.display = "none";
+  dom.buffIndicators.textContent = "";
+  dom.nameInputWrap.classList.remove("show");
+  dom.leaderboardPanel.classList.remove("show");
+  document.body.classList.remove("letterbox-on");
+
+  /* Update level display */
+  dom.levelText.textContent = "\u7B2C " + state.currentLevel + " \u95DC";
+  updateUltimateUI();
+
+  footstepTimer = 0;
+  introScreechPlayed = false;
+
+  /* Skip title screen — go directly to intro */
+  dom.title.style.display = "none";
+  startIntro();
+}
+
+/* ════════════════════════════════════════════════
+   隱藏結局（第10關通過後）
+   ════════════════════════════════════════════════ */
+function startHiddenEnding() {
+  state.phase = "hidden_ending";
+  state.hiddenEndingPhase = 0;
+  state.hiddenEndingTimer = 0;
+  document.body.classList.remove("letterbox-on");
+}
+
+function updateHiddenEnding(dt) {
+  state.hiddenEndingTimer += dt;
+  var t = state.hiddenEndingTimer;
+
+  /* Phase 0 (0-3s): Fade to black */
+  if (state.hiddenEndingPhase === 0) {
+    dom.hiddenEnding.classList.add("show");
+    dom.hiddenEnding.style.opacity = Math.min(1, t / 2);
+    if (t >= 3) {
+      state.hiddenEndingPhase = 1;
+      state.hiddenEndingTimer = 0;
+      dom.hiddenEnding.style.opacity = "1";
+      dom.hiddenEndingText.textContent = "\u3105\u3122\u02C7 \u3105\u3122\u02CA \u3128\u3121\u02C7 \u3124\u3128\u3127\u02CC \u3129\u3127\u3122\u02C7 \u3123\u3127\u02C7 \u3109\u3120\u02D9";
+    }
+  }
+
+  /* Phase 1 (0-10s): Yellow text fade in, hold, fade out */
+  if (state.hiddenEndingPhase === 1) {
+    t = state.hiddenEndingTimer;
+    if (t < 2) {
+      /* Fade in */
+      dom.hiddenEndingText.style.opacity = Math.min(1, t / 2);
+      dom.hiddenEndingText.classList.add("show");
+    } else if (t < 8) {
+      /* Hold */
+      dom.hiddenEndingText.style.opacity = "1";
+    } else if (t < 10) {
+      /* Fade out */
+      dom.hiddenEndingText.style.opacity = Math.max(0, 1 - (t - 8) / 2);
+    }
+
+    if (t >= 10) {
+      state.hiddenEndingPhase = 2;
+      state.hiddenEndingTimer = 0;
+      dom.hiddenEndingText.style.opacity = "0";
+      dom.hiddenEnding.classList.remove("show");
+      /* Show result screen */
+      showFinalResult();
+    }
+  }
+}
+
+function showFinalResult() {
+  state.phase = "final_result";
+  dom.result.classList.add("show");
+  dom.resultTitle.textContent = "\u5168\u90E8\u904E\u95DC\uFF01";
+  dom.resultBody.textContent = "";
+  var totalAvg = state.levelTimes.length > 0 ? (state.totalTimeBank / state.levelTimes.length) : 0;
+  var fastest = state.levelTimes.length > 0 ? Math.min.apply(null, state.levelTimes) : 0;
+  var scoreC = Math.round((state.totalTimeBank + state.totalItemsBank) * 10) / 10;
+  var lines = [
+    "\u904E\u95DC\u7D00\u9304\uFF1A\u7B2C " + state.currentLevel + " \u95DC",
+    "\u6700\u5FEB\u904E\u95DC\uFF1A" + fastest.toFixed(1) + " \u79D2",
+    "\u7E3D\u5269\u9918\u79D2\u6578\uFF1A" + state.totalTimeBank.toFixed(1) + " \u79D2",
+    "\u5E73\u5747\u904E\u95DC\uFF1A" + totalAvg.toFixed(1) + " \u79D2",
+    "\u7E3D\u5BF6\u7269\uFF1A" + state.totalItemsBank,
+    "\u7E3D\u5206\uFF1A" + scoreC
+  ];
+  lines.forEach(function(line) {
+    var el = document.createElement("div");
+    el.textContent = line;
+    dom.resultBody.appendChild(el);
+  });
+  /* Name input for leaderboard */
+  dom.nameInputWrap.classList.add("show");
+  dom.nameInput.value = "";
+  dom.nameInput.readOnly = false;
+  dom.saveScoreBtn.disabled = false;
+  dom.saveScoreBtn.textContent = "\u8A18\u9304\u6210\u7E3E";
+  lastSavedHighlight = -1;
+  /* Change retry text */
+  dom.resultRetry.textContent = "\u518D\u73A9\u4E00\u6B21";
 }
 
 function failure() {
@@ -2897,6 +4359,7 @@ function failure() {
     dom.sprintBtn.style.display = "none";
     dom.jumpBtn.style.display = "none";
     dom.ultimateBtn.style.display = "none";
+    dom.ultimateCount.style.display = "none";
   }
   showNarrative("\u8ECA\u9580\u95DC\u4E0A\u4E86\u2026\u2026", 4);
   stopAmbientSounds();
@@ -2907,20 +4370,35 @@ function failure() {
     dom.result.classList.add("show");
     dom.resultTitle.textContent = "\u4F86\u4E0D\u53CA\u4E86";
     dom.resultBody.textContent = "";
-    const lines = [
+    var failLines = [
+      "\u7B2C " + state.currentLevel + " \u95DC\u5931\u6557",
+      state.levelTimes.length > 0 ? "\u5DF2\u904E " + state.levelTimes.length + " \u95DC" : "",
+      "",
       "\u53EF\u662F\u4ED6\u5F9E\u4E0D\u653E\u68C4\u3002",
       "\u6BCF\u4E00\u6B21\uFF0C\u4ED6\u90FD\u6703\u518D\u8A66\u4E00\u6B21\u3002",
       "",
       "\u56E0\u70BA\u6708\u53F0\u7684\u53E6\u4E00\u7AEF\uFF0C",
       "\u6709\u4ED6\u6700\u60F3\u8D95\u4E0A\u7684\u4EBA\u3002"
     ];
-    lines.forEach(function(line) {
-      const el = document.createElement("div");
+    failLines.forEach(function(line) {
+      var el = document.createElement("div");
       el.textContent = line || "\u00A0";
       dom.resultBody.appendChild(el);
     });
-    /* Hide name input on failure — only victories get recorded */
-    dom.nameInputWrap.classList.remove("show");
+    /* On failure: show name input for partial record */
+    if (state.levelTimes.length > 0) {
+      /* Player cleared at least 1 level — record it */
+      dom.nameInputWrap.classList.add("show");
+      dom.nameInput.value = "";
+      dom.nameInput.readOnly = false;
+      dom.saveScoreBtn.disabled = false;
+      dom.saveScoreBtn.textContent = "\u8A18\u9304\u6210\u7E3E";
+      lastSavedHighlight = -1;
+    } else {
+      dom.nameInputWrap.classList.remove("show");
+    }
+    /* Retry resets to level 1 */
+    dom.resultRetry.textContent = "\u91CD\u65B0\u6311\u6230";
   }, 4000);
 }
 
@@ -2994,16 +4472,76 @@ function updateCamera(dt) {
    NPC 微動 + idle animation
    ════════════════════════════════════════════════ */
 function updateNPCs(dt) {
-  for (const npc of npcs) {
-    const d = npc.userData;
-    d.wobblePhase += d.wobbleSpeed * dt;
-    npc.position.x = d.baseX + Math.sin(d.wobblePhase) * 0.15;
+  /* Level-based NPC roaming: from level 2+, NPCs move freely
+     Range = 0.2 * (level - 1) person widths per axis */
+  var npcRoamRange = state.currentLevel >= 2 ? 0.2 * (state.currentLevel - 1) : 0;
 
-    const sway = Math.sin(d.wobblePhase * 1.5) * 0.08;
-    if (d.leftLeg) d.leftLeg.rotation.x = sway;
-    if (d.rightLeg) d.rightLeg.rotation.x = -sway;
-    if (d.leftArm) d.leftArm.rotation.x = -sway * 0.5;
-    if (d.rightArm) d.rightArm.rotation.x = sway * 0.5;
+  for (var ni = 0; ni < npcs.length; ni++) {
+    var npc = npcs[ni];
+    var d = npc.userData;
+    d.wobblePhase += d.wobbleSpeed * dt;
+
+    if (npcRoamRange > 0) {
+      /* Free roaming: wander around baseX/baseZ within range */
+      if (!d.roamTargetX) {
+        d.roamTargetX = d.baseX;
+        d.roamTargetZ = d.baseZ;
+        d.roamTimer = 0;
+      }
+      d.roamTimer -= dt;
+      if (d.roamTimer <= 0) {
+        d.roamTargetX = d.baseX + (Math.random() - 0.5) * 2 * npcRoamRange;
+        d.roamTargetZ = d.baseZ + (Math.random() - 0.5) * 2 * npcRoamRange;
+        /* Clamp to platform bounds */
+        var halfW = PLATFORM_W / 2 - 1;
+        d.roamTargetX = Math.max(-halfW, Math.min(halfW, d.roamTargetX));
+        d.roamTimer = 2 + Math.random() * 4;
+      }
+      npc.position.x += (d.roamTargetX - npc.position.x) * dt * 1.5;
+      npc.position.z += (d.roamTargetZ - npc.position.z) * dt * 1.5;
+
+      /* 月台邊界限制：NPC 絕不超出月台 */
+      var npcHalfW = PLATFORM_W / 2 - 0.8;
+      var npcHalfZ = PLATFORM_LEN / 2 - 3;
+      npc.position.x = Math.max(-npcHalfW, Math.min(npcHalfW, npc.position.x));
+      npc.position.z = Math.max(-npcHalfZ, Math.min(npcHalfZ, npc.position.z));
+
+      /* Walking leg animation when moving */
+      var isNpcMoving = Math.abs(d.roamTargetX - npc.position.x) > 0.05 || Math.abs(d.roamTargetZ - npc.position.z) > 0.05;
+      var sway = isNpcMoving ? Math.sin(d.wobblePhase * 3) * 0.2 : Math.sin(d.wobblePhase * 1.5) * 0.08;
+      if (d.leftLeg) d.leftLeg.rotation.x = sway;
+      if (d.rightLeg) d.rightLeg.rotation.x = -sway;
+      if (d.leftArm) d.leftArm.rotation.x = -sway * 0.5;
+      if (d.rightArm) d.rightArm.rotation.x = sway * 0.5;
+    } else {
+      /* Original idle wobble */
+      npc.position.x = d.baseX + Math.sin(d.wobblePhase) * 0.15;
+      var sway2 = Math.sin(d.wobblePhase * 1.5) * 0.08;
+      if (d.leftLeg) d.leftLeg.rotation.x = sway2;
+      if (d.rightLeg) d.rightLeg.rotation.x = -sway2;
+      if (d.leftArm) d.leftArm.rotation.x = -sway2 * 0.5;
+      if (d.rightArm) d.rightArm.rotation.x = sway2 * 0.5;
+
+      /* 閒置模式也要限制月台邊界 */
+      var idleHalfW = PLATFORM_W / 2 - 0.8;
+      npc.position.x = Math.max(-idleHalfW, Math.min(idleHalfW, npc.position.x));
+    }
+  }
+
+  /* NPC 之間互相推開（簡易分離力） */
+  for (var a = 0; a < npcs.length; a++) {
+    for (var b = a + 1; b < npcs.length; b++) {
+      var ddx = npcs[a].position.x - npcs[b].position.x;
+      var ddz = npcs[a].position.z - npcs[b].position.z;
+      var dd = Math.sqrt(ddx * ddx + ddz * ddz);
+      if (dd < 0.7 && dd > 0.001) {
+        var sepForce = (0.7 - dd) * 0.3;
+        npcs[a].position.x += (ddx / dd) * sepForce;
+        npcs[a].position.z += (ddz / dd) * sepForce;
+        npcs[b].position.x -= (ddx / dd) * sepForce;
+        npcs[b].position.z -= (ddz / dd) * sepForce;
+      }
+    }
   }
 }
 
@@ -3095,29 +4633,32 @@ function animate() {
   switch (state.phase) {
     case "intro":
       updateIntro(dt);
-      updateDoors();
+      updateDoors(dt);
       break;
     case "running":
     case "sprint2":
       updateGame(dt);
-      updateDoors();
+      updateDoors(dt);
       updateNPCs(dt);
       updateGuards(dt);
       updateCamera(dt);
       break;
     case "grabbed":
-      updateDoors();
+      updateDoors(dt);
       updateCamera(dt);
       break;
     case "victory":
       updateVictoryAnimation(dt);
       updateCamera(dt);
-      updateDoors();
+      updateDoors(dt);
       break;
     case "fail":
       updateTrainLeave(dt);
-      updateDoors();
+      updateDoors(dt);
       updateCamera(dt);
+      break;
+    case "hidden_ending":
+      updateHiddenEnding(dt);
       break;
   }
 
@@ -3130,6 +4671,7 @@ function animate() {
    ════════════════════════════════════════════════ */
 function init() {
   buildPlatform();
+  buildBackground();
   setupTrains();
   buildCharacters();
   createGuards();
@@ -3141,7 +4683,26 @@ function init() {
   animate();
 }
 
-function resetGame() {
+function resetGame(keepCarryState) {
+  /* Level system reset */
+  if (!keepCarryState) {
+    state.currentLevel = 1;
+    state.totalTimeBank = 0;
+    state.totalItemsBank = 0;
+    state.levelTimes = [];
+    state.ultimateCharges = 1;
+    state.carryRiceBall = 0;
+    state.carryCoffee = 0;
+    state.carryUltimate = 0;
+  } else {
+    /* After full clear (10 levels), restart from level 1 but keep carry state */
+    state.currentLevel = 1;
+    state.totalTimeBank = 0;
+    state.totalItemsBank = 0;
+    state.levelTimes = [];
+    /* Keep ultimateCharges and carry buffs */
+  }
+
   /* Core state reset */
   state.phase = "title";
   state.clock = 0;
@@ -3162,11 +4723,10 @@ function resetGame() {
   state.doorPhase = 0;
 
   /* Power-up state reset */
-  state.riceBallTimer = 0;
-  state.coffeeTimer = 0;
+  state.riceBallTimer = keepCarryState ? state.carryRiceBall : 0;
+  state.coffeeTimer = keepCarryState ? state.carryCoffee : 0;
   state.collisionSlowTimer = 0;
-  state.ultimateUsed = false;
-  state.ultimateTimer = 0;
+  state.ultimateTimer = keepCarryState ? state.carryUltimate : 0;
   state.pickupNotifyTimer = 0;
   sprint2HintShown = false;
 
@@ -3185,6 +4745,9 @@ function resetGame() {
   state.victoryPhase = 0;
   state.victoryDoorX = 0;
   state.victoryDoorZ = 0;
+  state._victoryHandled = false;
+  state.hiddenEndingPhase = 0;
+  state.hiddenEndingTimer = 0;
   father.visible = true;
 
   /* Leaderboard state reset */
@@ -3290,11 +4853,20 @@ function resetGame() {
   document.body.classList.remove("letterbox-on");
 
   /* Ultimate button reset */
-  dom.ultimateBtn.classList.remove("used");
+  updateUltimateUI();
+
+  /* Level UI reset */
+  dom.levelText.textContent = "\u7B2C " + state.currentLevel + " \u95DC";
+  dom.levelTransition.classList.remove("show");
+  dom.hiddenEnding.classList.remove("show");
+  dom.hiddenEndingText.style.opacity = "0";
+
+  /* Rebuild guards for current level */
+  createGuards();
 
   /* Leaderboard DOM reset */
   dom.nameInputWrap.classList.remove("show");
-  dom.nameInputWrap.style.opacity = "0";
+  dom.nameInputWrap.style.opacity = "";
   dom.nameInput.value = "";
   dom.nameInput.readOnly = false;
   dom.leaderboardPanel.classList.remove("show");
@@ -3305,6 +4877,7 @@ function resetGame() {
     dom.sprintBtn.style.display = "block";
     dom.ultimateBtn.style.display = "block";
     dom.jumpBtn.style.display = "block";
+    dom.ultimateCount.style.display = "block";
   }
 
   /* Title screen reset */
@@ -3341,25 +4914,32 @@ dom.title.addEventListener("click", function() {
 });
 
 dom.resultRetry.addEventListener("click", function() {
-  resetGame();
+  /* After level 10 clear: restart with carry state */
+  if (state.phase === "final_result") {
+    resetGame(true);
+  } else {
+    resetGame(false);
+  }
 });
 
 /* ── 排行榜事件 ── */
 /* Name input: only allow A-Z a-z and space */
 dom.nameInput.addEventListener("input", function() {
-  dom.nameInput.value = dom.nameInput.value.replace(/[^A-Za-z ]/g, "").slice(0, 10);
+  dom.nameInput.value = dom.nameInput.value.replace(/[^\u4e00-\u9fff\u3400-\u4dbfA-Za-z0-9 ]/g, "").slice(0, 10);
 });
 
 /* Save score button */
 dom.saveScoreBtn.addEventListener("click", function() {
-  if (state.phase !== "victory") return;
-  let name = dom.nameInput.value.replace(/[^A-Za-z ]/g, "").trim().slice(0, 10);
-  if (!name) name = "PLAYER";
-  const entries = addScore(name, state.timeLeft, state.itemsCollected);
-  /* Find the entry we just added to highlight it */
+  if (state.phase !== "victory" && state.phase !== "fail" && state.phase !== "final_result") return;
+  var name = dom.nameInput.value.replace(/[^\u4e00-\u9fff\u3400-\u4dbfA-Za-z0-9 ]/g, "").trim().slice(0, 10);
+  if (!name) name = "\u73A9\u5BB6";
+  /* For failure: record partial progress */
+  var levelReached = state.currentLevel;
+  var entries = addScore(name, levelReached, state.levelTimes, state.totalTimeBank, state.totalItemsBank);
   lastSavedHighlight = -1;
-  for (let i = 0; i < entries.length; i++) {
-    if (entries[i].name === name && entries[i].time === Math.round(state.timeLeft * 10) / 10 && entries[i].items === state.itemsCollected) {
+  var scoreC = Math.round((state.totalTimeBank + state.totalItemsBank) * 10) / 10;
+  for (var i = 0; i < entries.length; i++) {
+    if (entries[i].name === name && entries[i].score === scoreC) {
       lastSavedHighlight = i;
       break;
     }
