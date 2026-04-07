@@ -4,3 +4,5 @@
 .pycache/
 node_modules/
 Backup/
+*.docx
+*.doc
