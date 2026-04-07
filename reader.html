@@ -3001,6 +3001,89 @@
       body.day-mode #hero-canvas {
         opacity: 0.3;
       }
+      /* ── Day-mode: 桌面閱讀區 ─────────────── */
+      @media (min-width: 768px) {
+        body.day-mode #main-col {
+          background:
+            linear-gradient(
+              180deg,
+              rgba(244, 238, 216, 0.97),
+              rgba(244, 238, 216, 0.92) 12%,
+              rgba(240, 234, 210, 0.88)
+            ),
+            radial-gradient(
+              ellipse 72% 44% at 50% 0%,
+              rgba(13, 96, 48, 0.04),
+              transparent 64%
+            );
+        }
+        body.day-mode #desktop-topbar {
+          background: rgba(244, 238, 216, 0.94);
+          border-bottom-color: var(--line);
+        }
+        body.day-mode .dsk-btn {
+          background: rgba(0, 0, 0, 0.04);
+          border-color: var(--line);
+          color: var(--t2);
+        }
+        body.day-mode .dsk-btn:hover {
+          background: rgba(0, 0, 0, 0.07);
+          color: var(--t1);
+        }
+        body.day-mode #main-col::-webkit-scrollbar-thumb {
+          background: rgba(0, 0, 0, 0.13);
+        }
+        body.day-mode #main-col::-webkit-scrollbar-thumb:hover {
+          background: rgba(0, 0, 0, 0.22);
+        }
+      }
+      /* ── Day-mode: 手機導覽列 & 工具列 ────── */
+      body.day-mode #topnav-mobile {
+        background: rgba(244, 238, 216, 0.95);
+        border-bottom-color: var(--line);
+      }
+      body.day-mode .nav-btn {
+        background: rgba(0, 0, 0, 0.04);
+        border-color: var(--line);
+        color: var(--t2);
+      }
+      body.day-mode .nav-btn:active {
+        background: rgba(0, 0, 0, 0.08);
+        color: var(--t1);
+      }
+      body.day-mode #fab-bar {
+        background: rgba(244, 238, 216, 0.96);
+        border-top-color: var(--line);
+      }
+      body.day-mode .fab-icon {
+        color: var(--t2);
+      }
+      body.day-mode .fab-label {
+        color: var(--t3);
+      }
+      body.day-mode .fab-item:hover {
+        background: rgba(0, 0, 0, 0.04);
+      }
+      body.day-mode .fab-item.active .fab-icon {
+        color: var(--jade);
+      }
+      /* ── Day-mode: 內文輔助元素 ───────────── */
+      body.day-mode .ep-note-toggle {
+        color: var(--t2);
+      }
+      body.day-mode .ep-note-body {
+        color: var(--t2);
+      }
+      body.day-mode .ep-granny {
+        border-color: rgba(144, 64, 240, 0.18);
+        background: rgba(144, 64, 240, 0.05);
+      }
+      body.day-mode .ep-granny-toggle:active {
+        background: rgba(144, 64, 240, 0.08);
+      }
+      body.day-mode #main {
+        background: none;
+      }
 
       /* ═══ 命運阿嬤 ══════════════════════════════ */
       .ep-granny {
@@ -4583,6 +4666,9 @@
             <span class="ui-glyph btn-icon" data-ui-icon="egg"></span
             ><span>彩蛋</span>
           </button>
+          <a class="dsk-btn dsk-home-btn" href="lm402.html"
+            ><span>LM402</span></a
+          >
           <a class="dsk-btn dsk-home-btn" href="demos/platform-run/index.html"
             ><span>🏃</span
             ><span>月台上的狂奔</span></a
@@ -4595,6 +4681,8 @@
             <a class="nav-btn nav-home-btn" href="index.html"
               ><span class="ui-glyph nav-icon" data-ui-icon="home"></span
             ></a>
+            <a class="nav-btn" href="lm402.html"
+              style="font-size:11px;text-decoration:none;font-weight:700">LM402</a>
             <a class="nav-btn" href="demos/platform-run/index.html"
               style="font-size:14px;text-decoration:none">🏃</a>
             <button class="nav-btn" onclick="cycleFont()" id="mob-font-btn">
