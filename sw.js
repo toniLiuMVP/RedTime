@@ -1,10 +1,9 @@
 // RedTime Service Worker
-// 策略：HTML 用 network-first，靜態資源用 cache-first
-// 更新版本號即可清除舊快取
+// 策略：全部 network-first（有網路永遠拿最新，離線才用快取）
 
-const CACHE_NAME = 'redtime-v1';
+const CACHE_NAME = 'redtime-v2';
 
-// 預快取核心資源（install 時立即下載）
+// 預快取核心資源（install 時立即下載，供離線使用）
 const PRECACHE_URLS = [
   '/RedTime/',
   '/RedTime/index.html',
@@ -46,34 +45,16 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
-  // HTML 頁面：network-first，確保使用者看到最新版本
-  if (event.request.mode === 'navigate' ||
-      event.request.destination === 'document') {
-    event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-          return response;
-        })
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
-  // 其他靜態資源（字體、JS、CSS、GLB、圖片）：cache-first
-  // 完全繞過 GitHub Pages max-age=600 限制
+  // 全部 network-first：有網路拿最新，離線回退快取
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      if (cached) return cached;
-      return fetch(event.request).then(response => {
-        // 只快取同源且成功的回應
+    fetch(event.request)
+      .then(response => {
         if (response.ok && url.origin === location.origin) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         }
         return response;
-      });
-    })
+      })
+      .catch(() => caches.match(event.request))
   );
 });
