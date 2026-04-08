@@ -21,6 +21,8 @@ const PRECACHE_URLS = [
   '/RedTime/assets/lm402/characters/junior/exports/junior_2005_runtime.glb',
   '/RedTime/assets/lm402/characters/junior/exports/junior_2005_runtime_mobile.glb',
   '/RedTime/assets/og-image.jpg',
+  '/RedTime/assets/pwa-icon-192.png',
+  '/RedTime/assets/pwa-icon-512.png',
   '/RedTime/favicon.svg',
 ];
 
