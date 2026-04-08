@@ -3222,10 +3222,10 @@ function bindUI() {
     if (sel) {
       sel.hidden = !sel.hidden;
       if (!sel.hidden) audioSystem.syncSongUI();
-      dom.audioToggleValue.textContent = sel.hidden ? "開啟音樂" : "關閉音樂";
+      dom.audioToggleValue.textContent = sel.hidden ? "開啟音樂選單" : "關閉音樂選單";
     }
   });
-  /* 音樂選單預設收合：玩家點擊「開啟音樂」後展開 */
+  /* 音樂選單預設收合：玩家點擊「開啟音樂選單」後展開 */
   { const selInit = document.getElementById("song-selector");
     if (selInit) { selInit.hidden = true; }
   }
