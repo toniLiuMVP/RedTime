@@ -77,7 +77,7 @@ if (!sitemap) {
   if (sitemap.includes('<urlset')) pass('sitemap.xml 格式正確');
   else fail('sitemap.xml 缺少 <urlset> 根元素');
 
-  const expectedUrls = ['/RedTime/', '/RedTime/reader.html', '/RedTime/lm402.html', '/RedTime/demos/platform-run/'];
+  const expectedUrls = ['/RedTime/', '/RedTime/reader.html', '/RedTime/lm402.html', '/RedTime/demos/platform-run/index.html'];
   for (const u of expectedUrls) {
     if (sitemap.includes(u)) pass(`sitemap 包含 ${u}`);
     else warn(`sitemap 未包含 ${u}`);
