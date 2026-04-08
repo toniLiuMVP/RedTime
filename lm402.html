@@ -22,9 +22,10 @@
       property="og:description"
       content="你是女兒，沿著紅線飛進利瑪竇四樓，走過前門的電話聲、後門的等待，親眼看見那一眼瞬間。"
     />
+    <!-- og-image: 自託管版本；備用來源：https://img.youtube.com/vi/eACPFC4K89o/maxresdefault.jpg -->
     <meta
       property="og:image"
-      content="https://img.youtube.com/vi/eACPFC4K89o/maxresdefault.jpg"
+      content="https://toniliumvp.github.io/RedTime/assets/og-image.jpg"
     />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="LM402 一眼瞬間 · 時間裡的兩個妳" />
@@ -34,7 +35,7 @@
     />
     <meta
       name="twitter:image"
-      content="https://img.youtube.com/vi/eACPFC4K89o/maxresdefault.jpg"
+      content="https://toniliumvp.github.io/RedTime/assets/og-image.jpg"
     />
     <title>LM402 一眼瞬間 · 時間裡的兩個妳</title>
     <link rel="stylesheet" href="fonts/fonts.css" />
@@ -48,7 +49,7 @@
         <div class="lm402-loader-quote">「一眼只有一秒，卻用了二十年才讀懂它為什麼亮著。」</div>
         <div class="lm402-loader-bar"><div class="lm402-loader-fill" id="loader-fill"></div></div>
         <div class="lm402-loader-pct" id="loader-pct"></div>
-        <div class="lm402-loader-tip" id="loader-tip"></div>
+        <div class="lm402-loader-tip" id="loader-tip" role="status" aria-live="polite"></div>
       </div>
       <noscript>
         <div style="position:fixed;inset:0;z-index:1000;background:#06080d;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;gap:16px">
@@ -216,14 +217,14 @@
           <div class="time-watch-display" id="time-watch-display">10:40</div>
         </div>
 
-        <section id="font-widget" class="font-widget">
+        <section id="font-widget" class="font-widget" role="toolbar" aria-label="字體大小">
           <button id="font-toggle" class="font-toggle" type="button">
             <span class="font-toggle-label">字體大小</span>
             <span id="font-toggle-value" class="font-toggle-value">標準</span>
           </button>
         </section>
 
-        <section id="quality-widget" class="quality-widget">
+        <section id="quality-widget" class="quality-widget" role="radiogroup" aria-label="畫質選擇">
           <button id="quality-toggle" class="quality-toggle" type="button">
             <span class="quality-toggle-label">畫質</span>
             <span id="quality-toggle-value" class="quality-toggle-value">高級</span>

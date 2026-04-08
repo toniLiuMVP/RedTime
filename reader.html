@@ -22,9 +22,10 @@
       property="og:description"
       content="一眼只有一秒，卻用了二十年才讀懂。EP0 至 EP40 全集免費閱讀，支援日夜模式與章節跳轉。"
     />
+    <!-- og-image: 自託管版本；備用來源：https://img.youtube.com/vi/eACPFC4K89o/maxresdefault.jpg -->
     <meta
       property="og:image"
-      content="https://img.youtube.com/vi/eACPFC4K89o/maxresdefault.jpg"
+      content="https://toniliumvp.github.io/RedTime/assets/og-image.jpg"
     />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="時間裡的兩個妳 · 全集閱讀" />
@@ -34,7 +35,7 @@
     />
     <meta
       name="twitter:image"
-      content="https://img.youtube.com/vi/eACPFC4K89o/maxresdefault.jpg"
+      content="https://toniliumvp.github.io/RedTime/assets/og-image.jpg"
     />
     <title>時間裡的兩個妳</title>
     <link rel="stylesheet" href="fonts/fonts.css" />
@@ -4744,9 +4745,9 @@
       </div>
 
       <!-- Main reading column -->
-      <div id="main-col">
+      <div id="main-col" role="main">
         <!-- Desktop top bar -->
-        <div id="desktop-topbar">
+        <div id="desktop-topbar" role="navigation" aria-label="閱讀導覽（桌面版）">
           <div id="desktop-ep-title">時間裡的兩個妳</div>
           <a class="dsk-btn dsk-home-btn" href="index.html"
             ><span class="ui-glyph btn-icon" data-ui-icon="home"></span
@@ -4796,7 +4797,7 @@
           >
         </div>
         <!-- Mobile top nav -->
-        <div id="topnav-mobile">
+        <div id="topnav-mobile" role="navigation" aria-label="閱讀導覽（手機版）">
           <div class="nav-title" id="nav-ep-title">時間裡的兩個妳</div>
           <div class="nav-actions">
             <a class="nav-btn nav-home-btn" href="index.html"
@@ -4814,7 +4815,7 @@
           <span id="story-progress-label">0%</span>
         </div>
         <!-- Episodes -->
-        <div id="main"><div id="episodes"></div></div>
+        <div id="main" role="article" aria-label="故事內容"><div id="episodes"></div></div>
       </div>
     </div>
 
