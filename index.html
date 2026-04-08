@@ -10,6 +10,7 @@
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="google-site-verification" content="X-GIGIVwll5mriPBn8nqDETFsmZnqIWp2WSbUGzot8w" />
     <link rel="canonical" href="https://toniliumvp.github.io/RedTime/" />
+    <link rel="manifest" href="manifest.json" />
     <!-- Security headers such as CSP / X-Frame-Options should be sent by the host, not meta tags. -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <meta
@@ -3016,6 +3017,11 @@
         draw();
         window.addEventListener("resize", resize, { passive: true });
       })();
+    </script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/RedTime/sw.js').catch(() => {});
+      }
     </script>
   </body>
 </html>

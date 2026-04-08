@@ -1,0 +1,19 @@
+{
+  "name": "時間裡的兩個妳",
+  "short_name": "時間裡的兩個妳",
+  "description": "一眼只有一秒，卻用了二十年才讀懂。",
+  "start_url": "/RedTime/",
+  "scope": "/RedTime/",
+  "display": "standalone",
+  "background_color": "#06060a",
+  "theme_color": "#06060a",
+  "lang": "zh-TW",
+  "icons": [
+    {
+      "src": "assets/og-image.jpg",
+      "sizes": "1200x630",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}

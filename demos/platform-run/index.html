@@ -16,6 +16,7 @@
 <meta name="twitter:title" content="月台上的狂奔 — 三十秒偶像劇" />
 <meta name="twitter:description" content="三十秒，追回那一秒。來自「時間裡的兩個妳」的互動小遊戲。" />
 <link rel="canonical" href="https://toniliumvp.github.io/RedTime/demos/platform-run/index.html" />
+<link rel="manifest" href="../../manifest.json" />
 <title>月台上的狂奔 — 三十秒偶像劇</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -4999,6 +5000,11 @@ window.addEventListener("resize", function() {
 
 init();
 
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/RedTime/sw.js').catch(() => {});
+}
 </script>
 </body>
 </html>
