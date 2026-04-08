@@ -157,6 +157,36 @@ if (!platformRun) {
   }
 }
 
+// ─── 6.5 platform-run 外部依賴檢查（供應鏈透明化）───
+console.log('\n\x1b[1m[6.5] platform-run 外部依賴檢查\x1b[0m');
+if (platformRun) {
+  if (platformRun.includes('cdn.jsdelivr.net') || platformRun.includes('unpkg.com') || platformRun.includes('cdnjs.cloudflare.com')) {
+    warn('platform-run 使用第三方 CDN（請確認版本鎖定與必要性）');
+  } else {
+    pass('platform-run 未檢出第三方 CDN 依賴（已 self-host）');
+  }
+}
+
+// ─── 6.6 platform-run SEO meta 檢查 ───
+console.log('\n\x1b[1m[6.6] platform-run SEO meta\x1b[0m');
+if (platformRun) {
+  if (platformRun.includes('name="description"')) {
+    pass('platform-run 有 meta description');
+  } else {
+    fail('platform-run 缺少 meta description');
+  }
+  if (platformRun.includes('og:title') && platformRun.includes('og:description')) {
+    pass('platform-run 有 Open Graph 標籤');
+  } else {
+    fail('platform-run 缺少 Open Graph 標籤');
+  }
+  if (platformRun.includes('twitter:card')) {
+    pass('platform-run 有 Twitter Card 標籤');
+  } else {
+    warn('platform-run 缺少 Twitter Card 標籤');
+  }
+}
+
 // ─── 7. .docx/.doc git 追蹤 ───
 console.log('\n\x1b[1m[7] 敏感檔案 git 追蹤檢查\x1b[0m');
 try {

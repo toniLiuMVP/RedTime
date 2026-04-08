@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <meta name="google-site-verification" content="X-GIGIVwll5mriPBn8nqDETFsmZnqIWp2WSbUGzot8w" />
+<meta name="description" content="月台上的狂奔：三十秒偶像劇。用你的反應，替那一秒追回來。" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="月台上的狂奔 — 三十秒偶像劇" />
+<meta property="og:description" content="三十秒，追回那一秒。來自「時間裡的兩個妳」的互動小遊戲。" />
+<meta property="og:url" content="https://toniliumvp.github.io/RedTime/demos/platform-run/index.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="月台上的狂奔 — 三十秒偶像劇" />
+<meta name="twitter:description" content="三十秒，追回那一秒。來自「時間裡的兩個妳」的互動小遊戲。" />
 <link rel="canonical" href="https://toniliumvp.github.io/RedTime/demos/platform-run/index.html" />
 <title>月台上的狂奔 — 三十秒偶像劇</title>
 <style>
@@ -50,7 +58,7 @@ canvas{display:block;width:100%;height:100%}
 #sprint-bar-wrap{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:20;display:none;width:clamp(120px,30vw,200px)}
 #sprint-bar{width:100%;height:4px;background:rgba(0,0,0,0.15);border-radius:2px;overflow:hidden}
 #sprint-fill{width:100%;height:100%;background:linear-gradient(90deg,#3498db,#1abc9c);border-radius:2px;transition:width 0.15s}
-#sprint-label{text-align:center;color:#2c5f8a;font-size:11px;margin-top:4px;text-shadow:0 1px 2px rgba(255,255,255,0.4)}
+#sprint-label{text-align:center;color:#1a3d5c;font-size:12px;font-weight:600;margin-top:4px;text-shadow:0 1px 3px rgba(255,255,255,0.6),0 0 6px rgba(255,255,255,0.3)}
 
 /* ── 敘事文字 ── */
 #narrative{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:30;text-align:center;pointer-events:none;width:clamp(280px,80vw,600px)}
@@ -104,13 +112,13 @@ canvas{display:block;width:100%;height:100%}
 #touch-controls{position:fixed;bottom:30px;left:20px;z-index:40;display:none}
 #joystick-area{width:120px;height:120px;border-radius:50%;background:rgba(0,0,0,0.08);border:2px solid rgba(0,0,0,0.15);position:relative}
 #joystick-knob{width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,0.18);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transition:none}
-#sprint-btn{position:fixed;bottom:60px;right:30px;z-index:40;display:none;width:64px;height:64px;border-radius:50%;background:rgba(243,156,18,0.2);border:2px solid rgba(243,156,18,0.4);color:#f39c12;font-size:12px;font-weight:700;line-height:64px;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#sprint-btn{position:fixed;bottom:60px;right:30px;z-index:40;display:none;width:64px;height:64px;border-radius:50%;background:rgba(243,156,18,0.3);border:2px solid rgba(243,156,18,0.6);color:#fff;font-size:14px;font-weight:700;line-height:64px;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;text-shadow:0 1px 4px rgba(0,0,0,0.5),0 0 8px rgba(243,156,18,0.6)}
 
 /* ── 跳躍按鈕（手機）── */
-#jump-btn{position:fixed;bottom:140px;right:30px;z-index:40;display:none;width:64px;height:64px;border-radius:50%;background:rgba(46,204,113,0.2);border:2px solid rgba(46,204,113,0.4);color:#2ecc71;font-size:12px;font-weight:700;line-height:64px;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#jump-btn{position:fixed;bottom:140px;right:30px;z-index:40;display:none;width:64px;height:64px;border-radius:50%;background:rgba(46,204,113,0.3);border:2px solid rgba(46,204,113,0.6);color:#fff;font-size:14px;font-weight:700;line-height:64px;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;text-shadow:0 1px 4px rgba(0,0,0,0.5),0 0 8px rgba(46,204,113,0.6)}
 
 /* ── 必殺技按鈕 ── */
-#ultimate-btn{position:fixed;bottom:220px;right:30px;z-index:40;display:none;width:64px;height:64px;border-radius:50%;background:rgba(255,215,0,0.15);border:2px solid rgba(255,215,0,0.5);color:#ffd700;font-size:10px;font-weight:700;line-height:1.2;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;padding-top:18px}
+#ultimate-btn{position:fixed;bottom:220px;right:30px;z-index:40;display:none;width:64px;height:64px;border-radius:50%;background:rgba(255,215,0,0.25);border:2px solid rgba(255,215,0,0.65);color:#fff;font-size:12px;font-weight:700;line-height:1.2;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;padding-top:18px;text-shadow:0 1px 4px rgba(0,0,0,0.5),0 0 8px rgba(255,215,0,0.6)}
 #ultimate-btn.used{opacity:0.3;border-color:rgba(255,215,0,0.15);pointer-events:none}
 
 /* ── 道具拾取通知 ── */
@@ -234,7 +242,7 @@ canvas{display:block;width:100%;height:100%}
 <div id="breath-hint"></div>
 
 <script type="importmap">
-{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+{"imports":{"three":"./three.module.js"}}
 </script>
 <script type="module">
 import * as THREE from "three";
