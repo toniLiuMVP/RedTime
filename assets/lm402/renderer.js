@@ -1,57 +1,33 @@
-// ============================================================================
-// renderer.js - 3D Scene Renderer for LM402 Classroom (Three.js)
-// ============================================================================
-// This module builds and renders the interactive 3D classroom scene for
-// "時間裡的兩個妳" (RedTime). It handles:
-//   - Scene geometry (walls, floor, windows, desks, stairs)
-//   - Character construction (procedural mesh bodies + optional GLTF models)
-//   - Lighting (hemisphere, ambient, directional sun, point lights, spotlights)
-//   - Camera control (first-person, cinematic orbits, intro sequence)
-//   - Animation (walk cycles, idle breathing, blinking, hair physics)
-//   - Collision detection and hotspot raycasting
-//   - Intro red-thread sequence and ending cinematics
-// ============================================================================
-
-import * as THREE from "./vendor-three.module.js";
+import * as e from "./vendor-three.module.js";
 import { GLTFLoader } from "./GLTFLoader.js";
-import { WORLD as WORLD_DATA, CINEMATIC_TIMELINE as CINEMATIC } from "./data.js";
-
-// ── Constants & Shared Temporaries ────────────────────────────────────────
+import { WORLD as t, CINEMATIC_TIMELINE as o } from "./data.js";
 export const WORLD_SCALE = 1 / 80;
-const a = new THREE.Vector3(),
-  n = new THREE.Vector3(),
-  s = new THREE.Vector3(),
-  r = (new THREE.Box3(), new THREE.Vector2()),
-  i = new THREE.Vector2(),
-  l = new THREE.Vector3(0, 0.32, -0.18),
-  c = new THREE.Vector3(-0.2, 0.34, -0.48),
-  h = new THREE.Vector3(-0.14, 0.22, -0.74),
-  d = new THREE.Vector3(0.1, 0.14, -0.56),
-  p = new THREE.Color("#e0d8ff"),
-  m = new THREE.Color("#ffd8a0"),
-  w = new THREE.Vector3(0, 1.5, 0),
-  M = new THREE.Vector3(0.03, 1.57, 0.04),
-  f = new THREE.Vector3(0.18, 0.08, -0.12),
-  u = new THREE.Vector3(0.02, 0.012, 0.004),
-  y = new THREE.Vector3(0.008, 0.006, 0);
-new THREE.Vector3(0.004, 0.018, 0);
-
-// ── Utility Functions ──────────────────────────────────────────────────────
-
-/** Convert world-space coordinate to scene-space (multiply by 1/80). */
-function worldToScene(val) {
-  return 0.0125 * val;
+const a = new e.Vector3(),
+  n = new e.Vector3(),
+  s = new e.Vector3(),
+  r = (new e.Box3(), new e.Vector2()),
+  i = new e.Vector2(),
+  l = new e.Vector3(0, 0.32, -0.18),
+  c = new e.Vector3(-0.2, 0.34, -0.48),
+  h = new e.Vector3(-0.14, 0.22, -0.74),
+  d = new e.Vector3(0.1, 0.14, -0.56),
+  p = new e.Color("#e0d8ff"),
+  m = new e.Color("#ffd8a0"),
+  w = new e.Vector3(0, 1.5, 0),
+  M = new e.Vector3(0.03, 1.57, 0.04),
+  f = new e.Vector3(0.18, 0.08, -0.12),
+  u = new e.Vector3(0.02, 0.012, 0.004),
+  y = new e.Vector3(0.008, 0.006, 0);
+new e.Vector3(0.004, 0.018, 0);
+function g(e) {
+  return 0.0125 * e;
 }
-
-/** Enable/disable shadow casting and receiving on all meshes in a group. */
-function applyShadows(obj, cast = true, receive = true) {
-  obj.traverse((child) => {
-    child.isMesh && ((child.castShadow = cast), (child.receiveShadow = receive));
+function x(e, t = !0, o = !0) {
+  e.traverse((e) => {
+    e.isMesh && ((e.castShadow = t), (e.receiveShadow = o));
   });
 }
-
-/** Create a radial-gradient glow plane (used for intro and light effects). */
-function createGlowPlane(t, o, a, n = 0.35) {
+function b(t, o, a, n = 0.35) {
   const s = document.createElement("canvas");
   ((s.width = 256), (s.height = 256));
   const r = s.getContext("2d"),
@@ -61,20 +37,16 @@ function createGlowPlane(t, o, a, n = 0.35) {
     i.addColorStop(1, t.replace("1)", "0)")),
     (r.fillStyle = i),
     r.fillRect(0, 0, 256, 256));
-  const l = new THREE.CanvasTexture(s);
-  l.colorSpace = THREE.SRGBColorSpace;
-  const c = new THREE.MeshBasicMaterial({
+  const l = new e.CanvasTexture(s);
+  l.colorSpace = e.SRGBColorSpace;
+  const c = new e.MeshBasicMaterial({
     map: l,
     transparent: !0,
     depthWrite: !1,
-    side: THREE.DoubleSide,
+    side: e.DoubleSide,
   });
-  return new THREE.Mesh(new THREE.PlaneGeometry(o, a), c);
+  return new e.Mesh(new e.PlaneGeometry(o, a), c);
 }
-
-// ── Junior (學妹) Hair Construction ─────────────────────────────────────────
-
-/** Build alpha texture for the junior character's hair ribbon strands. */
 function buildJuniorHairRibbonAlpha() {
   const t = document.createElement("canvas");
   ((t.width = 128), (t.height = 512));
@@ -107,30 +79,30 @@ function buildJuniorHairRibbonAlpha() {
       o.stroke());
   }
   (o.globalCompositeOperation = "source-over");
-  const n = new THREE.CanvasTexture(t);
-  return ((n.colorSpace = THREE.SRGBColorSpace), n);
+  const n = new e.CanvasTexture(t);
+  return ((n.colorSpace = e.SRGBColorSpace), n);
 }
 const juniorHairRibbonAlpha = buildJuniorHairRibbonAlpha();
 function buildJuniorHairRibbon(t, o, a, n = {}) {
-  const s = new THREE.PlaneGeometry(o, a, 1, n.segments ?? 8),
+  const s = new e.PlaneGeometry(o, a, 1, n.segments ?? 8),
     r = s.attributes.position;
   for (let t = 0; t < r.count; t += 1) {
     const o = r.getY(t),
       a = o / Math.max(0.001, 0.5 * s.parameters.height),
-      i = THREE.MathUtils.mapLinear(a, -1, 1, n.bottomWidth ?? 0.8, n.topWidth ?? 0.46),
+      i = e.MathUtils.mapLinear(a, -1, 1, n.bottomWidth ?? 0.8, n.topWidth ?? 0.46),
       l = Math.sin((0.5 * (a + 1)) * Math.PI) * (n.curve ?? 0.016);
     (r.setX(t, r.getX(t) * i), r.setZ(t, l));
   }
   (r.needsUpdate = !0, s.computeVertexNormals());
-  const i = new THREE.Mesh(
+  const i = new e.Mesh(
     s,
-    new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color(t),
+    new e.MeshPhysicalMaterial({
+      color: new e.Color(t),
       alphaMap: juniorHairRibbonAlpha,
       transparent: !0,
       opacity: n.opacity ?? 0.96,
       alphaTest: n.alphaTest ?? 0.18,
-      side: THREE.DoubleSide,
+      side: e.DoubleSide,
       depthWrite: !1,
       roughness: n.roughness ?? 0.44,
       metalness: 0.03,
@@ -138,32 +110,28 @@ function buildJuniorHairRibbon(t, o, a, n = {}) {
       clearcoatRoughness: 0.34,
       sheen: 0.3,
       sheenRoughness: 0.34,
-      sheenColor: new THREE.Color("#a77f5d"),
+      sheenColor: new e.Color("#a77f5d"),
     }),
   );
   return ((i.renderOrder = n.renderOrder ?? 18), i);
 }
-
-// ── Reference Junior Hero Head (Procedural Close-up) ─────────────────────
-
-/** Build a detailed procedural head mesh for the junior hero close-up view. */
 function buildReferenceJuniorHeroHead(t = {}) {
-  const o = new THREE.Group();
+  const o = new e.Group();
   (o.position.set(0.01, 1.55, 0.008), o.scale.set(0.62, 0.64, 0.62));
   o.visible = !1;
   o.userData.kind = "procedural_hero_head";
   o.userData.ready = !0;
   o.userData.heroAnchor = {
-    center: new THREE.Vector3(0.01, 1.548, 0.008),
-    face: new THREE.Vector3(0.01, 1.602, 0.106),
-    chest: new THREE.Vector3(0.01, 1.468, 0.072),
-    eyes: new THREE.Vector3(0.01, 1.592, 0.102),
-    shoulder: new THREE.Vector3(0.01, 1.428, 0.036),
+    center: new e.Vector3(0.01, 1.548, 0.008),
+    face: new e.Vector3(0.01, 1.602, 0.106),
+    chest: new e.Vector3(0.01, 1.468, 0.072),
+    eyes: new e.Vector3(0.01, 1.592, 0.102),
+    shoulder: new e.Vector3(0.01, 1.428, 0.036),
   };
-  const a = new THREE.Color(t.skinColor ?? "#f9e7da"),
-    n = new THREE.Color(t.hairColor ?? "#3c2a22"),
-    s = new THREE.Color(t.irisColor ?? "#5d4334"),
-    r = new THREE.MeshPhysicalMaterial({
+  const a = new e.Color(t.skinColor ?? "#f9e7da"),
+    n = new e.Color(t.hairColor ?? "#3c2a22"),
+    s = new e.Color(t.irisColor ?? "#5d4334"),
+    r = new e.MeshPhysicalMaterial({
       color: a.clone(),
       roughness: 0.56,
       metalness: 0,
@@ -171,17 +139,17 @@ function buildReferenceJuniorHeroHead(t = {}) {
       clearcoatRoughness: 0.7,
       sheen: 0.12,
       sheenRoughness: 0.5,
-      sheenColor: new THREE.Color("#ffd5bf"),
+      sheenColor: new e.Color("#ffd5bf"),
     }),
-    i = new THREE.MeshPhysicalMaterial({
-      color: a.clone().lerp(new THREE.Color("#f4cdbd"), 0.18),
+    i = new e.MeshPhysicalMaterial({
+      color: a.clone().lerp(new e.Color("#f4cdbd"), 0.18),
       roughness: 0.62,
       metalness: 0,
       clearcoat: 0.04,
       clearcoatRoughness: 0.74,
       sheen: 0.08,
     }),
-    l = new THREE.MeshPhysicalMaterial({
+    l = new e.MeshPhysicalMaterial({
       color: n.clone(),
       roughness: 0.38,
       metalness: 0.03,
@@ -189,28 +157,28 @@ function buildReferenceJuniorHeroHead(t = {}) {
       clearcoatRoughness: 0.46,
       sheen: 0.26,
       sheenRoughness: 0.34,
-      sheenColor: new THREE.Color("#9c7b5e"),
+      sheenColor: new e.Color("#9c7b5e"),
     }),
-    c = new THREE.MeshPhysicalMaterial({
+    c = new e.MeshPhysicalMaterial({
       color: "#fffdfa",
       roughness: 0.22,
       metalness: 0,
       clearcoat: 0.06,
       clearcoatRoughness: 0.28,
     }),
-    h = new THREE.MeshPhysicalMaterial({
+    h = new e.MeshPhysicalMaterial({
       color: s.clone(),
       roughness: 0.36,
       metalness: 0.03,
       clearcoat: 0.06,
       clearcoatRoughness: 0.2,
     }),
-    d = new THREE.MeshStandardMaterial({
-      color: n.clone().lerp(new THREE.Color("#120d0d"), 0.35),
+    d = new e.MeshStandardMaterial({
+      color: n.clone().lerp(new e.Color("#120d0d"), 0.35),
       roughness: 0.74,
       metalness: 0.02,
     }),
-    p = new THREE.MeshPhysicalMaterial({
+    p = new e.MeshPhysicalMaterial({
       color: "#bf8f8f",
       roughness: 0.54,
       metalness: 0,
@@ -219,39 +187,39 @@ function buildReferenceJuniorHeroHead(t = {}) {
       transparent: !0,
       opacity: 0.96,
     }),
-    m = new THREE.MeshStandardMaterial({
+    m = new e.MeshStandardMaterial({
       color: "#c79395",
       roughness: 0.58,
       metalness: 0,
       transparent: !0,
       opacity: 0.72,
     });
-  const w = new THREE.Mesh(new THREE.SphereGeometry(0.114, 48, 48), r);
+  const w = new e.Mesh(new e.SphereGeometry(0.114, 48, 48), r);
   (w.position.set(0, -0.004, -0.01), w.scale.set(0.72, 0.92, 0.68), o.add(w));
-  const M = new THREE.Mesh(new THREE.SphereGeometry(0.086, 44, 44), i);
+  const M = new e.Mesh(new e.SphereGeometry(0.086, 44, 44), i);
   (M.position.set(0, -0.076, 0.012), M.scale.set(0.52, 0.46, 0.5), o.add(M));
-  const f = new THREE.Mesh(new THREE.SphereGeometry(0.018, 20, 20), i);
+  const f = new e.Mesh(new e.SphereGeometry(0.018, 20, 20), i);
   (f.position.set(0, -0.132, 0.044), f.scale.set(0.8, 0.42, 0.82), o.add(f));
-  const u = new THREE.Mesh(new THREE.SphereGeometry(0.026, 20, 20), i);
+  const u = new e.Mesh(new e.SphereGeometry(0.026, 20, 20), i);
   (u.position.set(-0.046, -0.02, 0.04), u.scale.set(0.82, 0.58, 0.54), o.add(u));
   const y = u.clone();
   ((y.position.x = 0.052), o.add(y));
-  const g = new THREE.Mesh(
-    new THREE.CapsuleGeometry(0.0038, 0.032, 4, 10),
+  const g = new e.Mesh(
+    new e.CapsuleGeometry(0.0038, 0.032, 4, 10),
     i,
   );
   (g.position.set(0, -0.018, 0.078),
     g.scale.set(0.46, 0.68, 0.56),
     o.add(g));
-  const x = new THREE.Mesh(new THREE.SphereGeometry(0.013, 24, 24), i);
+  const x = new e.Mesh(new e.SphereGeometry(0.013, 24, 24), i);
   (x.position.set(0, -0.048, 0.088), x.scale.set(0.72, 0.52, 0.84), o.add(x));
-  const b = new THREE.Mesh(new THREE.SphereGeometry(0.0048, 18, 18), i);
+  const b = new e.Mesh(new e.SphereGeometry(0.0048, 18, 18), i);
   (b.position.set(-0.008, -0.056, 0.088), b.scale.set(0.72, 0.46, 0.7), o.add(b));
   const S = b.clone();
   ((S.position.x = 0.009), o.add(S));
-  const P = new THREE.Mesh(
-    new THREE.CapsuleGeometry(0.0022, 0.014, 4, 6),
-    new THREE.MeshStandardMaterial({
+  const P = new e.Mesh(
+    new e.CapsuleGeometry(0.0022, 0.014, 4, 6),
+    new e.MeshStandardMaterial({
       color: "#c89b95",
       roughness: 0.62,
       metalness: 0,
@@ -260,44 +228,44 @@ function buildReferenceJuniorHeroHead(t = {}) {
     }),
   );
   (P.position.set(0, -0.078, 0.088), o.add(P));
-  const v = new THREE.Mesh(new THREE.PlaneGeometry(0.036, 0.01), m);
+  const v = new e.Mesh(new e.PlaneGeometry(0.036, 0.01), m);
   (v.position.set(0, -0.094, 0.096), (v.renderOrder = 17), o.add(v));
-  const G = new THREE.Mesh(new THREE.CapsuleGeometry(0.0026, 0.026, 4, 10), p);
+  const G = new e.Mesh(new e.CapsuleGeometry(0.0026, 0.026, 4, 10), p);
   (G.position.set(0, -0.09, 0.098), (G.rotation.z = Math.PI / 2), o.add(G));
-  const z = new THREE.Mesh(new THREE.CapsuleGeometry(0.0032, 0.03, 4, 10), p.clone());
+  const z = new e.Mesh(new e.CapsuleGeometry(0.0032, 0.03, 4, 10), p.clone());
   ((z.material.opacity = 0.88),
     z.position.set(0, -0.1, 0.096),
     (z.rotation.z = Math.PI / 2),
     o.add(z));
   const eyeGroup = (t) => {
-      const o = new THREE.Group();
+      const o = new e.Group();
       o.position.set(0.041 * t, -0.002, 0.082);
-      const a = new THREE.Mesh(new THREE.SphereGeometry(0.017, 24, 24), c);
+      const a = new e.Mesh(new e.SphereGeometry(0.017, 24, 24), c);
       (a.scale.set(1.14, 0.6, 0.34), o.add(a));
-      const n = new THREE.Mesh(new THREE.SphereGeometry(0.0086, 20, 20), h);
+      const n = new e.Mesh(new e.SphereGeometry(0.0086, 20, 20), h);
       (n.position.set(0, 0, 0.016),
         n.scale.set(0.76, 0.84, 0.42),
         o.add(n));
-      const s = new THREE.Mesh(
-        new THREE.SphereGeometry(0.0036, 16, 16),
-        new THREE.MeshBasicMaterial({ color: "#161113" }),
+      const s = new e.Mesh(
+        new e.SphereGeometry(0.0036, 16, 16),
+        new e.MeshBasicMaterial({ color: "#161113" }),
       );
       (s.position.set(0, 0, 0.022), s.scale.set(0.76, 0.82, 0.32), o.add(s));
-      const r = new THREE.Mesh(new THREE.CapsuleGeometry(0.0026, 0.028, 4, 10), i);
+      const r = new e.Mesh(new e.CapsuleGeometry(0.0026, 0.028, 4, 10), i);
       (r.position.set(0, 0.008, 0.008), (r.rotation.z = Math.PI / 2), o.add(r));
-      const l = new THREE.Mesh(new THREE.CapsuleGeometry(0.0016, 0.026, 4, 10), i);
+      const l = new e.Mesh(new e.CapsuleGeometry(0.0016, 0.026, 4, 10), i);
       (l.position.set(0, -0.011, 0.006),
         (l.rotation.z = Math.PI / 2),
         l.scale.set(0.92, 0.74, 0.72),
         o.add(l));
-      const p = new THREE.Mesh(new THREE.CapsuleGeometry(0.0016, 0.03, 4, 10), d);
+      const p = new e.Mesh(new e.CapsuleGeometry(0.0016, 0.03, 4, 10), d);
       (p.position.set(0, 0.007, 0.016),
         (p.rotation.z = Math.PI / 2),
         p.scale.set(0.84, 0.82, 0.68),
         o.add(p));
-      const m = new THREE.Mesh(
-        new THREE.SphereGeometry(0.0028, 12, 12),
-        new THREE.MeshBasicMaterial({
+      const m = new e.Mesh(
+        new e.SphereGeometry(0.0028, 12, 12),
+        new e.MeshBasicMaterial({
           color: "#ffffff",
           transparent: !0,
           opacity: 0.82,
@@ -315,28 +283,28 @@ function buildReferenceJuniorHeroHead(t = {}) {
     eyeL = eyeGroup(-1),
     eyeR = eyeGroup(1);
   o.add(eyeL.root, eyeR.root);
-  const T = new THREE.Mesh(new THREE.CapsuleGeometry(0.002, 0.028, 4, 10), d);
+  const T = new e.Mesh(new e.CapsuleGeometry(0.002, 0.028, 4, 10), d);
   (T.position.set(-0.046, 0.032, 0.084),
     T.scale.set(0.72, 0.8, 0.68),
     T.rotation.set(0.03, 0.05, 0.12),
     o.add(T));
   const R = T.clone();
   ((R.position.x = 0.048), (R.rotation.z = -0.12), (R.rotation.y = -0.05), o.add(R));
-  const I = new THREE.Mesh(
-    new THREE.SphereGeometry(0.118, 48, 48, 0, 2 * Math.PI, 0, 0.76 * Math.PI),
+  const I = new e.Mesh(
+    new e.SphereGeometry(0.118, 48, 48, 0, 2 * Math.PI, 0, 0.76 * Math.PI),
     l,
   );
   (I.position.set(0, 0.036, -0.04),
     I.scale.set(0.74, 0.74, 0.68),
     (I.rotation.x = -0.12),
     o.add(I));
-  const A = new THREE.Mesh(new THREE.SphereGeometry(0.092, 40, 40), l);
+  const A = new e.Mesh(new e.SphereGeometry(0.092, 40, 40), l);
   (A.position.set(0, -0.012, -0.11), A.scale.set(0.68, 0.84, 0.56), o.add(A));
-  const C = new THREE.Mesh(new THREE.SphereGeometry(0.028, 20, 20), l);
+  const C = new e.Mesh(new e.SphereGeometry(0.028, 20, 20), l);
   (C.position.set(0.024, 0.086, -0.13), C.scale.set(0.88, 0.78, 0.76), o.add(C));
-  const E = new THREE.Mesh(
-    new THREE.TorusGeometry(0.03, 0.011, 10, 24),
-    new THREE.MeshStandardMaterial({
+  const E = new e.Mesh(
+    new e.TorusGeometry(0.03, 0.011, 10, 24),
+    new e.MeshStandardMaterial({
       color: "#19161a",
       roughness: 0.76,
       metalness: 0.02,
@@ -376,22 +344,22 @@ function buildReferenceJuniorHeroHead(t = {}) {
       a.rotation.set(-0.02, t.ry, t.rz),
       o.add(a));
   });
-  const W = new THREE.Group();
+  const W = new e.Group();
   (W.position.set(0.026, 0.066, -0.134), o.add(W));
   [
     { y: -0.018, z: -0.008, r: 0.02, len: 0.074, rotX: -0.16, rotZ: -0.06 },
     { y: -0.082, z: 0, r: 0.018, len: 0.088, rotX: -0.1, rotZ: -0.08 },
     { y: -0.152, z: 0.01, r: 0.015, len: 0.072, rotX: -0.06, rotZ: -0.08 },
   ].forEach((t) => {
-    const o = new THREE.Mesh(new THREE.CapsuleGeometry(t.r, t.len, 6, 10), l);
+    const o = new e.Mesh(new e.CapsuleGeometry(t.r, t.len, 6, 10), l);
     (o.position.set(0.01, t.y, t.z),
       o.rotation.set(t.rotX, 0.08, t.rotZ),
       o.scale.set(0.84, 0.9, 0.64),
       W.add(o));
   });
-  const D = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.16, 0.11),
-    new THREE.MeshBasicMaterial({
+  const D = new e.Mesh(
+    new e.PlaneGeometry(0.16, 0.11),
+    new e.MeshBasicMaterial({
       color: "#1e1514",
       transparent: !0,
       opacity: 0.02,
@@ -420,34 +388,26 @@ function buildReferenceJuniorHeroHead(t = {}) {
     }
   );
 }
-
-// ── Character Body Construction ────────────────────────────────────────────
-
-/**
- * Build a complete character body from a configuration object.
- * Constructs torso, arms, legs, head, hair, eyes, and optional accessories.
- * @param {Object} t - Character configuration (colors, gender, features)
- */
-function buildCharacterBody(t) {
-  const o = new THREE.Group();
+function S(t) {
+  const o = new e.Group();
   o.userData.baseY = 0;
   const a = Boolean(t.referenceJunior),
     n = t.female && a,
-    s = new THREE.MeshPhysicalMaterial({
+    s = new e.MeshPhysicalMaterial({
       color: t.torso,
       roughness: t.female ? 0.42 : 0.5,
       metalness: 0.02,
       clearcoat: t.female ? 0.14 : 0.06,
       clearcoatRoughness: 0.52,
     }),
-    r = new THREE.MeshPhysicalMaterial({
+    r = new e.MeshPhysicalMaterial({
       color: t.torsoAccent ?? t.torso,
       roughness: t.female ? 0.36 : 0.42,
       metalness: 0.03,
       clearcoat: t.female ? 0.18 : 0.08,
       clearcoatRoughness: 0.44,
     }),
-    i = new THREE.MeshPhysicalMaterial({
+    i = new e.MeshPhysicalMaterial({
       color: t.legs,
       roughness: n ? 0.72 : t.female ? 0.44 : 0.54,
       metalness: 0.02,
@@ -455,9 +415,9 @@ function buildCharacterBody(t) {
       clearcoatRoughness: 0.4,
     }),
     l = n
-      ? new THREE.Color(t.skin).lerp(new THREE.Color("#ffe4d0"), 0.15)
-      : new THREE.Color(t.skin),
-    c = new THREE.MeshPhysicalMaterial({
+      ? new e.Color(t.skin).lerp(new e.Color("#ffe4d0"), 0.15)
+      : new e.Color(t.skin),
+    c = new e.MeshPhysicalMaterial({
       color: l,
       roughness: n ? 0.18 : 0.36,
       metalness: 0,
@@ -465,9 +425,9 @@ function buildCharacterBody(t) {
       clearcoatRoughness: n ? 0.28 : 0.56,
       sheen: n ? 0.85 : 0.18,
       sheenRoughness: n ? 0.2 : 0.65,
-      sheenColor: new THREE.Color(n ? "#ffc8a8" : t.female ? "#ffcfb8" : "#e8b8a4"),
+      sheenColor: new e.Color(n ? "#ffc8a8" : t.female ? "#ffcfb8" : "#e8b8a4"),
     }),
-    h = new THREE.MeshPhysicalMaterial({
+    h = new e.MeshPhysicalMaterial({
       color: t.female ? "#f3c3bc" : "#d7a18f",
       roughness: 0.56,
       metalness: 0,
@@ -475,7 +435,7 @@ function buildCharacterBody(t) {
       opacity: t.female ? 0.26 : 0.14,
       sheen: 0.1,
     }),
-    d = new THREE.MeshPhysicalMaterial({
+    d = new e.MeshPhysicalMaterial({
       color: t.hair,
       roughness: n ? 0.12 : 0.34,
       metalness: n ? 0.06 : 0.08,
@@ -483,24 +443,24 @@ function buildCharacterBody(t) {
       clearcoatRoughness: n ? 0.14 : 0.3,
       sheen: n ? 0.32 : 0,
       sheenRoughness: n ? 0.28 : 1,
-      sheenColor: new THREE.Color(n ? "#7a5a3a" : "#000"),
+      sheenColor: new e.Color(n ? "#7a5a3a" : "#000"),
     }),
-    p = new THREE.MeshPhysicalMaterial({
+    p = new e.MeshPhysicalMaterial({
       color: t.shoes,
       roughness: 0.56,
       metalness: 0.1,
       clearcoat: 0.12,
       clearcoatRoughness: 0.4,
     }),
-    m = new THREE.MeshPhysicalMaterial({
+    m = new e.MeshPhysicalMaterial({
       color: "#f6ede3",
       roughness: 0.42,
       metalness: 0.06,
       clearcoat: 0.16,
       clearcoatRoughness: 0.28,
     }),
-    w = new THREE.Mesh(
-      new THREE.CapsuleGeometry(
+    w = new e.Mesh(
+      new e.CapsuleGeometry(
         t.female ? (n ? 0.118 : 0.126) : 0.132,
         0.18,
         5,
@@ -523,14 +483,14 @@ function buildCharacterBody(t) {
     c.clearcoatRoughness = 0.14;
     c.sheen = 0.95;
     c.sheenRoughness = 0.12;
-    c.sheenColor = new THREE.Color("#ffc4a0");
+    c.sheenColor = new e.Color("#ffc4a0");
     d.roughness = 0.06;
     d.metalness = 0.1;
     d.clearcoat = 0.88;
     d.clearcoatRoughness = 0.06;
     d.sheen = 0.45;
     d.sheenRoughness = 0.12;
-    d.sheenColor = new THREE.Color("#8a6a42");
+    d.sheenColor = new e.Color("#8a6a42");
     p.roughness = 0.44;
     p.clearcoat = 0.16;
     m.roughness = 0.3;
@@ -539,8 +499,8 @@ function buildCharacterBody(t) {
   (w.position.set(0, 0.84, 0),
     w.scale.set(t.female ? (n ? 0.88 : 1.04) : 1.14, n ? 1.04 : 1.02, n ? 0.76 : 0.86),
     o.add(w));
-  const M = new THREE.Mesh(
-    new THREE.CapsuleGeometry(
+  const M = new e.Mesh(
+    new e.CapsuleGeometry(
       t.female ? (n ? 0.148 : 0.172) : 0.166,
       t.female ? (n ? 0.54 : 0.62) : 0.6,
       8,
@@ -551,8 +511,8 @@ function buildCharacterBody(t) {
   (M.position.set(0, 1.08, 0),
     M.scale.set(t.female ? (n ? 0.86 : 0.98) : 1.1, 1.04, t.female ? (n ? 0.74 : 0.82) : 0.9),
     o.add(M));
-  const f = new THREE.Mesh(
-    new THREE.SphereGeometry(t.female ? (n ? 0.148 : 0.172) : 0.158, 22, 22),
+  const f = new e.Mesh(
+    new e.SphereGeometry(t.female ? (n ? 0.148 : 0.172) : 0.158, 22, 22),
     r,
   );
   let u;
@@ -562,7 +522,7 @@ function buildCharacterBody(t) {
     o.add(f),
     n)
   ) {
-    u = new THREE.CylinderGeometry(0.166, 0.19, 0.16, 24, 1, !1);
+    u = new e.CylinderGeometry(0.166, 0.19, 0.16, 24, 1, !1);
     const t = u.getAttribute("position");
     for (let e = 0; e < t.count; e++) {
       const o = t.getY(e);
@@ -574,35 +534,35 @@ function buildCharacterBody(t) {
     }
     ((t.needsUpdate = !0), u.computeVertexNormals());
   } else
-    u = new THREE.CylinderGeometry(
+    u = new e.CylinderGeometry(
       t.female ? 0.166 : 0.158,
       t.female ? 0.208 : 0.174,
       t.female ? 0.24 : 0.22,
       16,
     );
-  const y = new THREE.Mesh(u, i);
+  const y = new e.Mesh(u, i);
   if (
     (y.position.set(0, n ? 0.75 : t.female ? 0.71 : 0.74, 0),
     o.add(y),
     t.female)
   ) {
-    const a = new THREE.MeshPhysicalMaterial({
+    const a = new e.MeshPhysicalMaterial({
         color: t.legs,
         roughness: 0.38,
         metalness: 0.03,
         clearcoat: 0.16,
         clearcoatRoughness: 0.3,
       }),
-      n = new THREE.Mesh(new THREE.TorusGeometry(0.138, 0.014, 8, 24), a);
+      n = new e.Mesh(new e.TorusGeometry(0.138, 0.014, 8, 24), a);
     (n.position.set(0, 0.83, 0), (n.rotation.x = Math.PI / 2), o.add(n));
   }
-  const g = new THREE.CapsuleGeometry(
+  const g = new e.CapsuleGeometry(
       t.female ? (n ? 0.05 : 0.064) : 0.072,
       t.female ? (n ? 0.68 : 0.74) : 0.68,
       6,
       12,
     ),
-    S = new THREE.Mesh(g, c);
+    S = new e.Mesh(g, c);
   (S.position.set(t.female ? (n ? -0.072 : -0.085) : -0.092, t.female ? 0.36 : 0.34, 0.01),
     (S.rotation.z = 0.02));
   const z = S.clone();
@@ -610,19 +570,19 @@ function buildCharacterBody(t) {
     (z.rotation.z = -0.02),
     o.add(S, z));
   if (n) {
-    var collarMat = new THREE.MeshPhysicalMaterial({color:"#fcfcfa",roughness:0.34,metalness:0.01,clearcoat:0.2,clearcoatRoughness:0.2});
-    var collarL = new THREE.Mesh(new THREE.BoxGeometry(0.07,0.05,0.02), collarMat);
+    var collarMat = new e.MeshPhysicalMaterial({color:"#fcfcfa",roughness:0.34,metalness:0.01,clearcoat:0.2,clearcoatRoughness:0.2});
+    var collarL = new e.Mesh(new e.BoxGeometry(0.07,0.05,0.02), collarMat);
     collarL.position.set(-0.04, 1.38, 0.12); collarL.rotation.set(-0.3, -0.15, -0.2);
-    var collarR = new THREE.Mesh(new THREE.BoxGeometry(0.07,0.05,0.02), collarMat);
+    var collarR = new e.Mesh(new e.BoxGeometry(0.07,0.05,0.02), collarMat);
     collarR.position.set(0.04, 1.38, 0.12); collarR.rotation.set(-0.3, 0.15, 0.2);
     o.add(collarL, collarR);
-    var cuffMat = new THREE.MeshPhysicalMaterial({color:"#faf8f5",roughness:0.38,metalness:0.01,clearcoat:0.14});
-    var cuffL = new THREE.Mesh(new THREE.TorusGeometry(0.032, 0.008, 6, 16), cuffMat);
+    var cuffMat = new e.MeshPhysicalMaterial({color:"#faf8f5",roughness:0.38,metalness:0.01,clearcoat:0.14});
+    var cuffL = new e.Mesh(new e.TorusGeometry(0.032, 0.008, 6, 16), cuffMat);
     cuffL.position.set(-0.085, -0.04, 0.01); cuffL.rotation.x = Math.PI/2; o.add(cuffL);
     var cuffR = cuffL.clone(); cuffR.position.x = 0.085; o.add(cuffR);
   }
-  const P = new THREE.Mesh(
-    new THREE.BoxGeometry(
+  const P = new e.Mesh(
+    new e.BoxGeometry(
       t.female ? 0.34 : 0.38,
       t.female ? 0.34 : 0.22,
       t.female ? 0.26 : 0.27,
@@ -633,27 +593,27 @@ function buildCharacterBody(t) {
     t.female && (function(){
       var legMat = n ? c : i;
       var legGeo = n
-        ? new THREE.CapsuleGeometry(0.065, 0.36, 6, 12)
-        : new THREE.CapsuleGeometry(0.072, 0.40, 6, 12);
-      var legL = new THREE.Mesh(legGeo, legMat);
+        ? new e.CapsuleGeometry(0.065, 0.36, 6, 12)
+        : new e.CapsuleGeometry(0.072, 0.40, 6, 12);
+      var legL = new e.Mesh(legGeo, legMat);
       legL.position.set(-0.085, n ? 0.46 : 0.44, 0.008); o.add(legL);
       var legR = legL.clone(); legR.position.x = 0.085; o.add(legR);
-      var wb = new THREE.MeshPhysicalMaterial({color:"#1e3a56",roughness:0.46,metalness:0.04,clearcoat:0.14,clearcoatRoughness:0.3});
-      var wm = new THREE.Mesh(new THREE.BoxGeometry(0.35,0.05,0.27), wb);
+      var wb = new e.MeshPhysicalMaterial({color:"#1e3a56",roughness:0.46,metalness:0.04,clearcoat:0.14,clearcoatRoughness:0.3});
+      var wm = new e.Mesh(new e.BoxGeometry(0.35,0.05,0.27), wb);
       wm.position.set(0,0.80,0.01); o.add(wm);
-      var cuffGeo = new THREE.CylinderGeometry(n ? 0.078 : 0.085, n ? 0.076 : 0.083, 0.03, 12);
-      var cuff = new THREE.Mesh(cuffGeo, wb);
+      var cuffGeo = new e.CylinderGeometry(n ? 0.078 : 0.085, n ? 0.076 : 0.083, 0.03, 12);
+      var cuff = new e.Mesh(cuffGeo, wb);
       cuff.position.set(-0.085, n ? 0.62 : 0.62, 0.008); o.add(cuff);
       var cuffR = cuff.clone(); cuffR.position.x = 0.085; o.add(cuffR);
     })(),
     !t.female)) {
-    const t = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.66, 0.18), i);
+    const t = new e.Mesh(new e.BoxGeometry(0.13, 0.66, 0.18), i);
     t.position.set(-0.095, 0.36, 0.008);
     const a = t.clone();
     a.position.x = 0.095;
-    const n = new THREE.Mesh(
-      new THREE.BoxGeometry(0.34, 0.05, 0.18),
-      new THREE.MeshStandardMaterial({
+    const n = new e.Mesh(
+      new e.BoxGeometry(0.34, 0.05, 0.18),
+      new e.MeshStandardMaterial({
         color: "#181a20",
         roughness: 0.58,
         metalness: 0.06,
@@ -661,32 +621,32 @@ function buildCharacterBody(t) {
     );
     (n.position.set(0, 0.72, 0.016), o.add(t, a, n));
   }
-  const v = new THREE.BoxGeometry(n ? 0.1 : 0.13, n ? 0.05 : 0.06, n ? 0.2 : 0.25),
-    G = new THREE.Mesh(v, p);
+  const v = new e.BoxGeometry(n ? 0.1 : 0.13, n ? 0.05 : 0.06, n ? 0.2 : 0.25),
+    G = new e.Mesh(v, p);
   (G.position.set(t.female ? (n ? -0.078 : -0.094) : -0.102, 0.042, 0.055),
     (G.rotation.x = 0.04));
   const C = G.clone();
   ((C.position.x = t.female ? (n ? 0.078 : 0.094) : 0.102), o.add(G, C));
-  const B = new THREE.Mesh(
-    new THREE.SphereGeometry(t.female ? (n ? 0.068 : 0.086) : 0.102, 18, 18),
+  const B = new e.Mesh(
+    new e.SphereGeometry(t.female ? (n ? 0.068 : 0.086) : 0.102, 18, 18),
     s,
   );
   B.position.set(t.female ? (n ? -0.158 : -0.188) : -0.252, 1.18, 0);
   const k = B.clone();
   if (((k.position.x = t.female ? (n ? 0.158 : 0.188) : 0.236), o.add(B, k), n)) {
     const t = c.clone(),
-      a = new THREE.Mesh(new THREE.SphereGeometry(0.036, 14, 14), t);
+      a = new e.Mesh(new e.SphereGeometry(0.036, 14, 14), t);
     (a.position.set(-0.206, 1.2, 0.01), a.scale.set(1.1, 0.9, 0.85));
     const n = a.clone();
     ((n.position.x = 0.206), o.add(a, n));
   }
-  const T = new THREE.CapsuleGeometry(
+  const T = new e.CapsuleGeometry(
       t.female ? (n ? 0.042 : 0.048) : 0.056,
       t.female ? 0.42 : 0.46,
       5,
       10,
     ),
-    I = new THREE.Mesh(T, c);
+    I = new e.Mesh(T, c);
   (I.position.set(t.female ? -0.228 : -0.266, 1, 0.02),
     (I.rotation.z = t.female ? 0.12 : 0.15));
   const R = I.clone();
@@ -696,20 +656,20 @@ function buildCharacterBody(t) {
     o.add(I, R),
     n)
   ) {
-    const t = new THREE.MeshPhysicalMaterial({
+    const t = new e.MeshPhysicalMaterial({
         color: l,
         roughness: 0.18,
         metalness: 0,
         clearcoat: 0.4,
         clearcoatRoughness: 0.2,
       }),
-      a = new THREE.Mesh(new THREE.TorusGeometry(0.034, 0.006, 8, 16), t);
+      a = new e.Mesh(new e.TorusGeometry(0.034, 0.006, 8, 16), t);
     (a.position.set(-0.252, 0.75, 0.035), (a.rotation.z = 0.12));
     const n = a.clone();
     ((n.position.x = 0.252), (n.rotation.z = -0.12), o.add(a, n));
   }
-  const D = new THREE.SphereGeometry(t.female ? (n ? 0.038 : 0.048) : 0.054, 18, 18),
-    V = new THREE.Mesh(D, c);
+  const D = new e.SphereGeometry(t.female ? (n ? 0.038 : 0.048) : 0.054, 18, 18),
+    V = new e.Mesh(D, c);
   V.position.set(t.female ? (n ? -0.242 : -0.264) : -0.302, 0.71, 0.04);
   const E = V.clone();
   if (
@@ -719,29 +679,29 @@ function buildCharacterBody(t) {
     n)
   ) {
     const t = c.clone(),
-      a = new THREE.CylinderGeometry(0.008, 0.006, 0.06, 8),
-      n = new THREE.Mesh(a, t);
+      a = new e.CylinderGeometry(0.008, 0.006, 0.06, 8),
+      n = new e.Mesh(a, t);
     (n.position.set(-0.264, 0.676, 0.06), (n.rotation.x = 0.38 * Math.PI));
     const s = n.clone();
     ((s.position.x = 0.264), o.add(n, s));
   }
-  const U = new THREE.CylinderGeometry(
+  const U = new e.CylinderGeometry(
       t.female ? (n ? 0.056 : 0.072) : 0.078,
       t.female ? (n ? 0.062 : 0.078) : 0.084,
       n ? 0.16 : 0.2,
       14,
     ),
-    W = new THREE.Mesh(U, r);
+    W = new e.Mesh(U, r);
   (W.position.set(t.female ? (n ? -0.166 : -0.18) : -0.2, 1.1, 0.02), (W.rotation.z = 1.06));
   const q = W.clone();
   ((q.position.x = t.female ? (n ? 0.166 : 0.18) : 0.2), (q.rotation.z = -1.06), o.add(W, q));
   const _ = c.clone();
-  _.color = new THREE.Color(t.skin).lerp(new THREE.Color("#e8b89c"), 0.12);
-  const A = new THREE.Mesh(new THREE.CylinderGeometry(n ? 0.052 : 0.065, n ? 0.066 : 0.08, n ? 0.12 : 0.14, 18), _);
+  _.color = new e.Color(t.skin).lerp(new e.Color("#e8b89c"), 0.12);
+  const A = new e.Mesh(new e.CylinderGeometry(n ? 0.052 : 0.065, n ? 0.066 : 0.08, n ? 0.12 : 0.14, 18), _);
   (A.position.set(0, n ? 1.34 : 1.33, 0.02), o.add(A));
-  const Z = new THREE.Mesh(
-    new THREE.TorusGeometry(0.082, 0.01, 8, 24),
-    new THREE.MeshPhysicalMaterial({
+  const Z = new e.Mesh(
+    new e.TorusGeometry(0.082, 0.01, 8, 24),
+    new e.MeshPhysicalMaterial({
       color: t.female ? "#fffdf6" : "#e6ebf0",
       roughness: 0.52,
       metalness: 0.01,
@@ -749,8 +709,8 @@ function buildCharacterBody(t) {
     }),
   );
   (Z.position.set(0, 1.26, 0.02), (Z.rotation.x = Math.PI / 2), o.add(Z));
-  const L = new THREE.Mesh(
-    new THREE.SphereGeometry(t.female ? 0.168 : 0.182, 48, 48),
+  const L = new e.Mesh(
+    new e.SphereGeometry(t.female ? 0.168 : 0.182, 48, 48),
     c,
   );
   (L.position.set(0, 1.56, 0),
@@ -761,8 +721,8 @@ function buildCharacterBody(t) {
     ),
     o.add(L),
     n && (L.position.set(0, 1.555, 0.01), L.scale.set(0.82, 1.12, 0.8)));
-  const X = new THREE.Mesh(
-    new THREE.SphereGeometry(t.female ? 0.14 : 0.154, 36, 36),
+  const X = new e.Mesh(
+    new e.SphereGeometry(t.female ? 0.14 : 0.154, 36, 36),
     c,
   );
   (X.position.set(0, t.female ? 1.47 : 1.48, 0.02),
@@ -773,8 +733,8 @@ function buildCharacterBody(t) {
     ),
     o.add(X),
     n && (X.position.set(0, 1.462, 0.032), X.scale.set(0.44, 0.34, 0.52)));
-  const j = new THREE.SphereGeometry(0.032, 16, 16),
-    $ = new THREE.Mesh(j, c);
+  const j = new e.SphereGeometry(0.032, 16, 16),
+    $ = new e.Mesh(j, c);
   ($.position.set(-0.165, 1.55, 0.01), $.scale.set(0.72, 1.02, 0.56));
   const H = $.clone();
   ((H.position.x = 0.165),
@@ -784,8 +744,8 @@ function buildCharacterBody(t) {
       H.position.set(0.128, 1.514, 0.01),
       $.scale.set(0.44, 0.66, 0.42),
       H.scale.copy($.scale)));
-  const F = new THREE.Mesh(
-    new THREE.ConeGeometry(
+  const F = new e.Mesh(
+    new e.ConeGeometry(
       t.female ? (a ? 0.007 : 0.024) : 0.026,
       t.female ? (a ? 0.026 : 0.062) : 0.07,
       12,
@@ -795,9 +755,9 @@ function buildCharacterBody(t) {
   (F.position.set(0, a ? 1.538 : 1.54, a ? 0.149 : 0.154),
     (F.rotation.x = 0.5 * Math.PI),
     o.add(F));
-  const N = new THREE.Mesh(
-    new THREE.CapsuleGeometry(a ? 0.004 : 0.006, a ? 0.04 : 0.08, 4, 10),
-    new THREE.MeshPhysicalMaterial({
+  const N = new e.Mesh(
+    new e.CapsuleGeometry(a ? 0.004 : 0.006, a ? 0.04 : 0.08, 4, 10),
+    new e.MeshPhysicalMaterial({
       color: "#fff8f2",
       roughness: 0.28,
       metalness: 0,
@@ -810,15 +770,15 @@ function buildCharacterBody(t) {
   (N.position.set(0, a ? 1.553 : 1.57, a ? 0.145 : 0.135),
     a && (N.rotation.x = Math.PI / 2),
     o.add(N));
-  const O = new THREE.Mesh(
-    new THREE.TorusGeometry(
+  const O = new e.Mesh(
+    new e.TorusGeometry(
       t.female && a ? 0.038 : 0.045,
       t.female && a ? 0.0065 : 0.009,
       8,
       18,
       Math.PI,
     ),
-    new THREE.MeshStandardMaterial({
+    new e.MeshStandardMaterial({
       color: t.female ? "#cc7282" : "#ae7670",
       roughness: 0.5,
       metalness: 0.03,
@@ -830,9 +790,9 @@ function buildCharacterBody(t) {
     o.add(O),
     n)
   ) {
-    const t = new THREE.Mesh(
-      new THREE.SphereGeometry(0.024, 14, 14),
-      new THREE.MeshStandardMaterial({
+    const t = new e.Mesh(
+      new e.SphereGeometry(0.024, 14, 14),
+      new e.MeshStandardMaterial({
         color: "#f3b6bc",
         roughness: 0.48,
         metalness: 0.02,
@@ -842,15 +802,15 @@ function buildCharacterBody(t) {
     );
     (t.position.set(0, 1.433, 0.153), t.scale.set(1.64, 0.42, 0.42), o.add(t));
   }
-  const J = new THREE.MeshStandardMaterial({
+  const J = new e.MeshStandardMaterial({
       color: t.female ? "#3a2422" : "#31201e",
       roughness: 0.7,
       metalness: 0.02,
     }),
-    K = new THREE.Mesh(
+    K = new e.Mesh(
       a
-        ? new THREE.CapsuleGeometry(0.0038, 0.045, 4, 8)
-        : new THREE.BoxGeometry(0.08, 0.012, 0.02),
+        ? new e.CapsuleGeometry(0.0038, 0.045, 4, 8)
+        : new e.BoxGeometry(0.08, 0.012, 0.02),
       J,
     );
   (K.position.set(a ? -0.061 : -0.074, a ? 1.596 : 1.62, a ? 0.148 : 0.136),
@@ -861,24 +821,24 @@ function buildCharacterBody(t) {
     o.add(K, Q),
     n &&
       (K.position.set(-0.06, 1.592, 0.152), Q.position.set(0.06, 1.592, 0.152)));
-  const ee = new THREE.TorusGeometry(
+  const ee = new e.TorusGeometry(
       t.female && a ? 0.034 : 0.032,
       0.004,
       6,
       18,
       Math.PI,
     ),
-    te = new THREE.MeshStandardMaterial({
+    te = new e.MeshStandardMaterial({
       color: t.female ? "#3a1f20" : "#2f1d1e",
       roughness: 0.54,
       metalness: 0.02,
     }),
-    oe = new THREE.Mesh(ee, te);
+    oe = new e.Mesh(ee, te);
   (oe.position.set(a ? -0.068 : -0.062, 1.57, 0.168),
     (oe.rotation.z = Math.PI));
   const ae = oe.clone();
   ((ae.position.x = a ? 0.064 : 0.062), o.add(oe, ae));
-  const ne = new THREE.MeshPhysicalMaterial({
+  const ne = new e.MeshPhysicalMaterial({
       color: n ? "#fdfeff" : "#fcfcfd",
       roughness: n ? 0.08 : 0.18,
       metalness: 0.01,
@@ -886,25 +846,25 @@ function buildCharacterBody(t) {
       clearcoatRoughness: n ? 0.06 : 0.12,
       sheen: n ? 0.3 : 0,
       sheenRoughness: n ? 0.15 : 1,
-      sheenColor: n ? new THREE.Color("#e8f0ff") : new THREE.Color("#000"),
+      sheenColor: n ? new e.Color("#e8f0ff") : new e.Color("#000"),
     }),
-    se = new THREE.MeshPhysicalMaterial({
+    se = new e.MeshPhysicalMaterial({
       color: t.iris ?? (t.female ? "#3a261f" : "#2b1c18"),
       roughness: n ? 0.16 : 0.34,
       metalness: n ? 0.04 : 0.02,
       clearcoat: n ? 0.62 : 0.12,
       clearcoatRoughness: n ? 0.08 : 0.2,
     }),
-    re = new THREE.Mesh(
-      new THREE.SphereGeometry(t.female && a ? 0.025 : 0.022, 12, 12),
+    re = new e.Mesh(
+      new e.SphereGeometry(t.female && a ? 0.025 : 0.022, 12, 12),
       ne,
     );
   (re.position.set(a ? -0.068 : -0.062, 1.56, a ? 0.158 : 0.15),
     re.scale.set(t.female && a ? 1.56 : 1.35, t.female && a ? 1.02 : 0.9, 0.5));
   const ie = re.clone();
   ie.position.x = a ? 0.068 : 0.062;
-  const le = new THREE.Mesh(
-    new THREE.SphereGeometry(t.female && a ? 0.0122 : 0.011, 10, 10),
+  const le = new e.Mesh(
+    new e.SphereGeometry(t.female && a ? 0.0122 : 0.011, 10, 10),
     se,
   );
   le.position.set(a ? -0.068 : -0.062, a ? 1.558 : 1.56, a ? 0.175 : 0.166);
@@ -923,12 +883,12 @@ function buildCharacterBody(t) {
       ce.scale.copy(le.scale)),
     t.female)
   ) {
-    const t = new THREE.MeshStandardMaterial({
+    const t = new e.MeshStandardMaterial({
         color: "#241618",
         roughness: 0.52,
         metalness: 0.02,
       }),
-      n = new THREE.Mesh(new THREE.BoxGeometry(a ? 0.064 : 0.058, a ? 0.012 : 0.01, a ? 0.016 : 0.014), t);
+      n = new e.Mesh(new e.BoxGeometry(a ? 0.064 : 0.058, a ? 0.012 : 0.01, a ? 0.016 : 0.014), t);
     (n.position.set(a ? -0.068 : -0.062, a ? 1.585 : 1.586, 0.174),
       (n.rotation.z = a ? -0.012 : -0.03));
     const s = n.clone();
@@ -936,7 +896,7 @@ function buildCharacterBody(t) {
       (s.rotation.z = a ? 0.012 : 0.03),
       o.add(n, s));
     if (a) {
-      var lashTipL = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.008, 0.012), t);
+      var lashTipL = new e.Mesh(new e.BoxGeometry(0.02, 0.008, 0.012), t);
       lashTipL.position.set(-0.098, 1.582, 0.168); lashTipL.rotation.z = -0.2;
       var lashTipR = lashTipL.clone(); lashTipR.position.x = 0.098; lashTipR.rotation.z = 0.2;
       o.add(lashTipL, lashTipR);
@@ -946,43 +906,43 @@ function buildCharacterBody(t) {
   ie.userData.baseScale = ie.scale.clone();
   le.userData.baseScale = le.scale.clone();
   ce.userData.baseScale = ce.scale.clone();
-  const he = new THREE.SphereGeometry(0.028, 12, 12),
-    de = new THREE.Mesh(he, h);
+  const he = new e.SphereGeometry(0.028, 12, 12),
+    de = new e.Mesh(he, h);
   (de.position.set(a ? -0.076 : -0.094, a ? 1.476 : 1.488, 0.146),
     de.scale.set(a ? 0.92 : 1.7, a ? 0.62 : 1.2, 0.32));
   const pe = de.clone();
   ((pe.position.x = a ? 0.084 : 0.094), o.add(de, pe));
   if (n) {
-    var blushMat = new THREE.MeshStandardMaterial({color:"#f4a0a8",roughness:0.7,metalness:0,transparent:!0,opacity:0.18});
-    var blushL = new THREE.Mesh(new THREE.SphereGeometry(0.022, 10, 10), blushMat);
+    var blushMat = new e.MeshStandardMaterial({color:"#f4a0a8",roughness:0.7,metalness:0,transparent:!0,opacity:0.18});
+    var blushL = new e.Mesh(new e.SphereGeometry(0.022, 10, 10), blushMat);
     blushL.position.set(-0.082, 1.48, 0.152); blushL.scale.set(1.4, 0.7, 0.3);
     var blushR = blushL.clone(); blushR.position.x = 0.082;
     o.add(blushL, blushR);
   }
-  const me = new THREE.MeshStandardMaterial({
+  const me = new e.MeshStandardMaterial({
       color: "#ffffff",
       emissive: "#ffffff",
       emissiveIntensity: n ? 0.38 : 0.12,
       roughness: n ? 0.06 : 0.2,
       metalness: n ? 0.05 : 0.02,
     }),
-    we = new THREE.Mesh(new THREE.SphereGeometry(n ? 0.007 : 0.004, 8, 8), me);
+    we = new e.Mesh(new e.SphereGeometry(n ? 0.007 : 0.004, 8, 8), me);
   we.position.set(a ? -0.058 : -0.055, n ? 1.573 : 1.568, n ? 0.188 : 0.176);
   n && we.scale.set(1.3, 1.3, 1.0);
   const Me = we.clone();
   ((Me.position.x = a ? 0.072 : 0.069), o.add(we, Me));
   if (n) {
-    var spark2L = new THREE.Mesh(new THREE.SphereGeometry(0.004, 8, 8), me);
+    var spark2L = new e.Mesh(new e.SphereGeometry(0.004, 8, 8), me);
     spark2L.position.set(-0.072, 1.564, 0.185);
     var spark2R = spark2L.clone(); spark2R.position.x = 0.058;
-    var spark3Mat = new THREE.MeshStandardMaterial({color:"#ffffff",emissive:"#f0f4ff",emissiveIntensity:0.22,roughness:0.08,metalness:0.03});
-    var spark3L = new THREE.Mesh(new THREE.SphereGeometry(0.0025, 6, 6), spark3Mat);
+    var spark3Mat = new e.MeshStandardMaterial({color:"#ffffff",emissive:"#f0f4ff",emissiveIntensity:0.22,roughness:0.08,metalness:0.03});
+    var spark3L = new e.Mesh(new e.SphereGeometry(0.0025, 6, 6), spark3Mat);
     spark3L.position.set(-0.054, 1.57, 0.186);
     var spark3R = spark3L.clone(); spark3R.position.x = 0.076;
     o.add(spark2L, spark2R, spark3L, spark3R);
   }
-  const fe = new THREE.Mesh(
-    new THREE.SphereGeometry(
+  const fe = new e.Mesh(
+    new e.SphereGeometry(
       t.female ? (n ? 0.202 : 0.194) : 0.188,
       28,
       28,
@@ -994,8 +954,8 @@ function buildCharacterBody(t) {
     d,
   );
   (fe.position.set(0, 1.62, -0.01), (fe.rotation.x = -0.1), !t.pompadour && o.add(fe));
-  const ue = new THREE.Mesh(
-    new THREE.SphereGeometry(t.female ? 0.214 : 0.182, 28, 28),
+  const ue = new e.Mesh(
+    new e.SphereGeometry(t.female ? 0.214 : 0.182, 28, 28),
     d,
   );
   (ue.position.set(0, t.female ? 1.5 : 1.61, t.female ? -0.08 : -0.1),
@@ -1010,38 +970,38 @@ function buildCharacterBody(t) {
   if (t.ponytail && t.female) {
     const ptLen = t.ponytailLength ?? 0.36;
     const ptCurve = t.ponytailCurve ?? 0.1;
-    const ptMat = new THREE.MeshPhysicalMaterial({
+    const ptMat = new e.MeshPhysicalMaterial({
       color: t.hair, roughness: 0.14, metalness: 0.05,
       clearcoat: 0.62, clearcoatRoughness: 0.12,
       sheen: 0.4, sheenRoughness: 0.2,
-      sheenColor: new THREE.Color("#6a4a30"),
+      sheenColor: new e.Color("#6a4a30"),
     });
-    const bandMat = new THREE.MeshPhysicalMaterial({
+    const bandMat = new e.MeshPhysicalMaterial({
       color: "#e8d0b8", roughness: 0.52, metalness: 0.02,
       clearcoat: 0.18, clearcoatRoughness: 0.3,
     });
-    const ptBand = new THREE.Mesh(new THREE.TorusGeometry(0.028, 0.006, 8, 16), bandMat);
+    const ptBand = new e.Mesh(new e.TorusGeometry(0.028, 0.006, 8, 16), bandMat);
     ptBand.position.set(0, 1.52, -0.12);
     ptBand.rotation.x = Math.PI * 0.38;
     ptBand.name = "scrunchie";
     o.add(ptBand);
-    const ptCurveObj = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0, 1.52, -0.12),
-      new THREE.Vector3(0, 1.48 - ptCurve * 0.3, -0.14 - ptLen * 0.3),
-      new THREE.Vector3(0, 1.42 - ptCurve, -0.16 - ptLen * 0.6),
-      new THREE.Vector3(0, 1.36 - ptCurve * 1.4, -0.15 - ptLen * 0.8),
+    const ptCurveObj = new e.CatmullRomCurve3([
+      new e.Vector3(0, 1.52, -0.12),
+      new e.Vector3(0, 1.48 - ptCurve * 0.3, -0.14 - ptLen * 0.3),
+      new e.Vector3(0, 1.42 - ptCurve, -0.16 - ptLen * 0.6),
+      new e.Vector3(0, 1.36 - ptCurve * 1.4, -0.15 - ptLen * 0.8),
     ]);
-    const ptGeo = new THREE.TubeGeometry(ptCurveObj, 24, 0.024, 10, !1);
-    const ptMesh = new THREE.Mesh(ptGeo, ptMat);
+    const ptGeo = new e.TubeGeometry(ptCurveObj, 24, 0.024, 10, !1);
+    const ptMesh = new e.Mesh(ptGeo, ptMat);
     ptMesh.name = "ponytail-main";
     o.add(ptMesh);
-    const ptTipCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0, 1.36 - ptCurve * 1.4, -0.15 - ptLen * 0.8),
-      new THREE.Vector3(0.01, 1.3 - ptCurve * 1.6, -0.13 - ptLen * 0.9),
-      new THREE.Vector3(0.005, 1.24 - ptCurve * 1.8, -0.1 - ptLen),
+    const ptTipCurve = new e.CatmullRomCurve3([
+      new e.Vector3(0, 1.36 - ptCurve * 1.4, -0.15 - ptLen * 0.8),
+      new e.Vector3(0.01, 1.3 - ptCurve * 1.6, -0.13 - ptLen * 0.9),
+      new e.Vector3(0.005, 1.24 - ptCurve * 1.8, -0.1 - ptLen),
     ]);
-    const ptTip = new THREE.Mesh(
-      new THREE.TubeGeometry(ptTipCurve, 16, 0.016, 8, !1),
+    const ptTip = new e.Mesh(
+      new e.TubeGeometry(ptTipCurve, 16, 0.016, 8, !1),
       ptMat.clone()
     );
     ptTip.material.opacity = 0.85; ptTip.material.transparent = !0;
@@ -1049,21 +1009,21 @@ function buildCharacterBody(t) {
     o.add(ptTip);
     for (let si = 0; si < 3; si++) {
       const xOff = (si - 1) * 0.012;
-      const sCurve = new THREE.CatmullRomCurve3([
-        new THREE.Vector3(xOff, 1.52, -0.12),
-        new THREE.Vector3(xOff + 0.004, 1.46 - ptCurve * 0.5, -0.15 - ptLen * 0.4),
-        new THREE.Vector3(xOff - 0.002, 1.38 - ptCurve * 1.2, -0.14 - ptLen * 0.7),
+      const sCurve = new e.CatmullRomCurve3([
+        new e.Vector3(xOff, 1.52, -0.12),
+        new e.Vector3(xOff + 0.004, 1.46 - ptCurve * 0.5, -0.15 - ptLen * 0.4),
+        new e.Vector3(xOff - 0.002, 1.38 - ptCurve * 1.2, -0.14 - ptLen * 0.7),
       ]);
       const sMat = ptMat.clone();
       sMat.opacity = 0.6 + si * 0.1; sMat.transparent = !0;
-      const sMesh = new THREE.Mesh(new THREE.TubeGeometry(sCurve, 18, 0.004, 6, !1), sMat);
+      const sMesh = new e.Mesh(new e.TubeGeometry(sCurve, 18, 0.004, 6, !1), sMat);
       o.add(sMesh);
     }
   }
-  const ye = new THREE.Mesh(
+  const ye = new e.Mesh(
     a
-      ? new THREE.CapsuleGeometry(0.018, 0.056, 4, 8)
-      : new THREE.BoxGeometry(0.2, 0.08, 0.05),
+      ? new e.CapsuleGeometry(0.018, 0.056, 4, 8)
+      : new e.BoxGeometry(0.2, 0.08, 0.05),
     d,
   );
   (ye.position.set(0, a ? 1.622 : 1.612, a ? 0.134 : 0.12),
@@ -1074,10 +1034,10 @@ function buildCharacterBody(t) {
       ye.scale.set(0.84, 0.92, 0.82),
       (ye.rotation.z = -0.04),
       (ye.rotation.x = 0.18)));
-  const ge = new THREE.Mesh(
+  const ge = new e.Mesh(
     a
-      ? new THREE.CapsuleGeometry(0.012, 0.2, 4, 10)
-      : new THREE.BoxGeometry(0.076, 0.42, 0.06),
+      ? new e.CapsuleGeometry(0.012, 0.2, 4, 10)
+      : new e.BoxGeometry(0.076, 0.42, 0.06),
     d,
   );
   ge.position.set(a ? -0.126 : -0.14, a ? 1.454 : t.female ? 1.458 : 1.49, 0.05);
@@ -1094,8 +1054,8 @@ function buildCharacterBody(t) {
   // ── Natural short male hair + black-frame glasses (senior only) ──────────
   if (t.pompadour) {
     // Main hair cap — full coverage on top of head
-    const pBase = new THREE.Mesh(
-      new THREE.SphereGeometry(0.196, 28, 28, 0, 2 * Math.PI, 0, 0.72 * Math.PI),
+    const pBase = new e.Mesh(
+      new e.SphereGeometry(0.196, 28, 28, 0, 2 * Math.PI, 0, 0.72 * Math.PI),
       d,
     );
     pBase.position.set(0, 1.618, -0.006);
@@ -1103,12 +1063,12 @@ function buildCharacterBody(t) {
     pBase.scale.set(0.96, 0.78, 0.94);
     o.add(pBase);
     // Back hair volume
-    const pBack = new THREE.Mesh(new THREE.SphereGeometry(0.186, 22, 22), d);
+    const pBack = new e.Mesh(new e.SphereGeometry(0.186, 22, 22), d);
     pBack.position.set(0, 1.604, -0.082);
     pBack.scale.set(0.86, 0.50, 0.62);
     o.add(pBack);
     // Left side hair — tapered but clearly visible
-    const pSideL = new THREE.Mesh(new THREE.BoxGeometry(0.048, 0.15, 0.11), d);
+    const pSideL = new e.Mesh(new e.BoxGeometry(0.048, 0.15, 0.11), d);
     pSideL.position.set(-0.152, 1.51, 0.012);
     pSideL.rotation.z = 0.05;
     o.add(pSideL);
@@ -1118,37 +1078,37 @@ function buildCharacterBody(t) {
     pSideR.rotation.z = -0.05;
     o.add(pSideR);
     // Top volume — natural body swept slightly to the right
-    const slickPath = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0.012, 1.638, 0.088),
-      new THREE.Vector3(0.008, 1.662, 0.044),
-      new THREE.Vector3(0.004, 1.668, -0.004),
-      new THREE.Vector3(0.000, 1.660, -0.050),
-      new THREE.Vector3(-0.002, 1.645, -0.088),
+    const slickPath = new e.CatmullRomCurve3([
+      new e.Vector3(0.012, 1.638, 0.088),
+      new e.Vector3(0.008, 1.662, 0.044),
+      new e.Vector3(0.004, 1.668, -0.004),
+      new e.Vector3(0.000, 1.660, -0.050),
+      new e.Vector3(-0.002, 1.645, -0.088),
     ]);
-    const pSlick = new THREE.Mesh(
-      new THREE.TubeGeometry(slickPath, 24, 0.064, 10, false),
+    const pSlick = new e.Mesh(
+      new e.TubeGeometry(slickPath, 24, 0.064, 10, false),
       d,
     );
     o.add(pSlick);
     // Width fill — broadens the top volume
-    const pTopFill = new THREE.Mesh(new THREE.BoxGeometry(0.148, 0.054, 0.182), d);
+    const pTopFill = new e.Mesh(new e.BoxGeometry(0.148, 0.054, 0.182), d);
     pTopFill.position.set(0.006, 1.656, -0.002);
     pTopFill.rotation.x = -0.06;
     o.add(pTopFill);
     // Front fringe — natural hairline across forehead
-    const fringePath = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(-0.072, 1.622, 0.098),
-      new THREE.Vector3(-0.024, 1.636, 0.112),
-      new THREE.Vector3(0.028, 1.640, 0.114),
-      new THREE.Vector3(0.076, 1.626, 0.100),
+    const fringePath = new e.CatmullRomCurve3([
+      new e.Vector3(-0.072, 1.622, 0.098),
+      new e.Vector3(-0.024, 1.636, 0.112),
+      new e.Vector3(0.028, 1.640, 0.114),
+      new e.Vector3(0.076, 1.626, 0.100),
     ]);
-    const pFringe = new THREE.Mesh(
-      new THREE.TubeGeometry(fringePath, 18, 0.032, 8, false),
+    const pFringe = new e.Mesh(
+      new e.TubeGeometry(fringePath, 18, 0.032, 8, false),
       d,
     );
     o.add(pFringe);
     // ── Thick black-frame glasses ──────────────────────────────────────────
-    const glassesMat = new THREE.MeshPhysicalMaterial({
+    const glassesMat = new e.MeshPhysicalMaterial({
       color: "#0a0a0a",
       roughness: 0.28,
       metalness: 0.38,
@@ -1156,7 +1116,7 @@ function buildCharacterBody(t) {
       clearcoatRoughness: 0.18,
     });
     // Left lens frame (thick torus)
-    const lensL = new THREE.Mesh(new THREE.TorusGeometry(0.026, 0.007, 8, 20), glassesMat);
+    const lensL = new e.Mesh(new e.TorusGeometry(0.026, 0.007, 8, 20), glassesMat);
     lensL.position.set(-0.055, 1.569, 0.162);
     lensL.rotation.x = Math.PI / 2 - 0.12;
     lensL.scale.set(1.1, 1.0, 1.0);
@@ -1166,11 +1126,11 @@ function buildCharacterBody(t) {
     lensR.position.x = 0.055;
     o.add(lensR);
     // Nose bridge
-    const bridge = new THREE.Mesh(new THREE.BoxGeometry(0.024, 0.007, 0.006), glassesMat);
+    const bridge = new e.Mesh(new e.BoxGeometry(0.024, 0.007, 0.006), glassesMat);
     bridge.position.set(0, 1.572, 0.163);
     o.add(bridge);
     // Left temple arm (goes back toward ear)
-    const templeL = new THREE.Mesh(new THREE.BoxGeometry(0.007, 0.007, 0.096), glassesMat);
+    const templeL = new e.Mesh(new e.BoxGeometry(0.007, 0.007, 0.096), glassesMat);
     templeL.position.set(-0.084, 1.569, 0.12);
     o.add(templeL);
     // Right temple arm
@@ -1180,9 +1140,9 @@ function buildCharacterBody(t) {
   }
   let closeupRefinement = null,
     heroCloseupHead = null;
-  const be = new THREE.Mesh(
-    new THREE.SphereGeometry(t.female ? 0.16 : 0.15, 20, 20),
-    new THREE.MeshStandardMaterial({
+  const be = new e.Mesh(
+    new e.SphereGeometry(t.female ? 0.16 : 0.15, 20, 20),
+    new e.MeshStandardMaterial({
       color: "#ffffff",
       roughness: 0.2,
       metalness: 0.02,
@@ -1196,7 +1156,7 @@ function buildCharacterBody(t) {
     o.add(be),
     a)
   ) {
-    const a = new THREE.MeshPhysicalMaterial({
+    const a = new e.MeshPhysicalMaterial({
         color: t.hair,
         roughness: 0.12,
         metalness: 0.04,
@@ -1206,10 +1166,10 @@ function buildCharacterBody(t) {
         opacity: 0.14,
         sheen: 0.34,
         sheenRoughness: 0.26,
-        sheenColor: new THREE.Color("#8b6b4a"),
+        sheenColor: new e.Color("#8b6b4a"),
       }),
-      n = new THREE.Mesh(
-        new THREE.SphereGeometry(
+      n = new e.Mesh(
+        new e.SphereGeometry(
           t.female ? 0.148 : 0.192,
           28,
           28,
@@ -1229,9 +1189,9 @@ function buildCharacterBody(t) {
       ue.scale.set(0.92 * ue.scale.x, 0.96 * ue.scale.y, 0.9 * ue.scale.z),
       (ue.position.y -= 0.01),
       (ue.position.z -= 0.008));
-    closeupRefinement = new THREE.Group();
+    closeupRefinement = new e.Group();
     closeupRefinement.visible = !1;
-    const strandBaseMaterial = new THREE.MeshPhysicalMaterial({
+    const strandBaseMaterial = new e.MeshPhysicalMaterial({
       color: t.hair,
       roughness: 0.22,
       metalness: 0.03,
@@ -1248,11 +1208,11 @@ function buildCharacterBody(t) {
     ) => {
       const material = strandBaseMaterial.clone();
       material.opacity = opacity;
-      const curve = new THREE.CatmullRomCurve3(
-        points.map((t) => (t.clone ? t.clone() : new THREE.Vector3(...t))),
+      const curve = new e.CatmullRomCurve3(
+        points.map((t) => (t.clone ? t.clone() : new e.Vector3(...t))),
       );
-      const strand = new THREE.Mesh(
-        new THREE.TubeGeometry(curve, tubularSegments, radius, 7, !1),
+      const strand = new e.Mesh(
+        new e.TubeGeometry(curve, tubularSegments, radius, 7, !1),
         material,
       );
       return (
@@ -1263,11 +1223,11 @@ function buildCharacterBody(t) {
     };
     const hairlineArc = createCloseupStrand(
       [
-        new THREE.Vector3(-0.118, 1.604, 0.07),
-        new THREE.Vector3(-0.07, 1.624, 0.082),
-        new THREE.Vector3(0, 1.632, 0.086),
-        new THREE.Vector3(0.072, 1.622, 0.082),
-        new THREE.Vector3(0.118, 1.602, 0.07),
+        new e.Vector3(-0.118, 1.604, 0.07),
+        new e.Vector3(-0.07, 1.624, 0.082),
+        new e.Vector3(0, 1.632, 0.086),
+        new e.Vector3(0.072, 1.622, 0.082),
+        new e.Vector3(0.118, 1.602, 0.07),
       ],
       0.0084,
       0.82,
@@ -1376,15 +1336,15 @@ function buildCharacterBody(t) {
         tubularSegments: 24,
       },
     ];
-    const cheekShadowMaterial = new THREE.MeshStandardMaterial({
+    const cheekShadowMaterial = new e.MeshStandardMaterial({
       color: "#2b1618",
       roughness: 0.64,
       metalness: 0.01,
       transparent: !0,
       opacity: 0.22,
     });
-    const leftTemple = new THREE.Mesh(
-      new THREE.SphereGeometry(0.024, 12, 12),
+    const leftTemple = new e.Mesh(
+      new e.SphereGeometry(0.024, 12, 12),
       cheekShadowMaterial,
     );
     leftTemple.position.set(-0.09, 1.52, 0.092);
@@ -1411,13 +1371,13 @@ function buildCharacterBody(t) {
     o.add(heroCloseupHead.root);
   }
   const Se = (function (t, o = 1) {
-    const a = new THREE.MeshBasicMaterial({
+    const a = new e.MeshBasicMaterial({
         map: t,
         transparent: !0,
         opacity: o,
         depthWrite: !1,
       }),
-      n = new THREE.Mesh(new THREE.PlaneGeometry(0.27, 0.3), a);
+      n = new e.Mesh(new e.PlaneGeometry(0.27, 0.3), a);
     return (n.position.set(0, 0.01, 0.176), n);
   })(
     (function ({ female: t = !1, referenceJunior: o = !1 } = {}) {
@@ -1716,8 +1676,8 @@ function buildCharacterBody(t) {
         n.moveTo(o ? 136 : 126, 234),
         n.quadraticCurveTo(160, o ? 238 : 248, o ? 184 : 194, 234),
         n.stroke());
-      const r = new THREE.CanvasTexture(a);
-      return ((r.colorSpace = THREE.SRGBColorSpace), r);
+      const r = new e.CanvasTexture(a);
+      return ((r.colorSpace = e.SRGBColorSpace), r);
     })({ female: t.female, referenceJunior: a }),
     n ? 0.5 : 0.86,
   );
@@ -1726,9 +1686,9 @@ function buildCharacterBody(t) {
     Se.scale.setScalar(n ? 0.84 : t.female ? 0.95 : 0.92),
     o.add(Se),
     n && (Se.position.set(0, 1.554, 0.194), Se.scale.setScalar(0.87)));
-  const ze = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.18, 0.06),
-    new THREE.MeshBasicMaterial({
+  const ze = new e.Mesh(
+    new e.PlaneGeometry(0.18, 0.06),
+    new e.MeshBasicMaterial({
       color: "#5a3d3c",
       transparent: !0,
       opacity: 0.08,
@@ -1742,9 +1702,9 @@ function buildCharacterBody(t) {
     hairCurtainL = null,
     hairCurtainR = null;
   if ((ze.position.set(0, 1.59, 0.17), o.add(ze), t.female)) {
-    const s = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.64, 0.08), d);
+    const s = new e.Mesh(new e.BoxGeometry(0.16, 0.64, 0.08), d);
     (s.position.set(0, 1.22, -0.11), s.scale.set(1, 1.06, 0.82), o.add(s));
-    const r = new THREE.Mesh(new THREE.BoxGeometry(0.028, n ? 0.32 : 0.26, 0.028), d);
+    const r = new e.Mesh(new e.BoxGeometry(0.028, n ? 0.32 : 0.26, 0.028), d);
     (r.position.set(n ? -0.102 : -0.112, n ? 1.44 : 1.46, n ? 0.124 : 0.118),
       (r.rotation.z = -0.12));
     const i = r.clone();
@@ -1756,7 +1716,7 @@ function buildCharacterBody(t) {
       o.add(r, i),
       n)
     ) {
-      const t = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.28, 0.02), d);
+      const t = new e.Mesh(new e.BoxGeometry(0.022, 0.28, 0.02), d);
       (t.position.set(-0.052, 1.502, 0.16), (t.rotation.z = -0.02));
       const a = t.clone();
       ((a.position.x = 0.056),
@@ -1765,7 +1725,7 @@ function buildCharacterBody(t) {
         (frontHairInnerR = a));
       /* 瀏海已移除：統一為妹妹頭造型，不加入場景 */
     }
-    const l = new THREE.Mesh(new THREE.BoxGeometry(0.034, 0.34, 0.032), d);
+    const l = new e.Mesh(new e.BoxGeometry(0.034, 0.34, 0.032), d);
     (l.position.set(-0.152, 1.36, 0.02), (l.rotation.z = -0.08));
     const c = l.clone();
     ((c.position.x = 0.152),
@@ -1773,9 +1733,9 @@ function buildCharacterBody(t) {
       (hairCurtainL = l),
       (hairCurtainR = c),
       o.add(l, c));
-    const h = new THREE.Mesh(
-      new THREE.TorusGeometry(0.1, 0.018, 8, 20, Math.PI),
-      new THREE.MeshStandardMaterial({
+    const h = new e.Mesh(
+      new e.TorusGeometry(0.1, 0.018, 8, 20, Math.PI),
+      new e.MeshStandardMaterial({
         color: "#fffef8",
         roughness: 0.76,
         metalness: 0.01,
@@ -1787,35 +1747,35 @@ function buildCharacterBody(t) {
       o.add(h),
       n)
     ) {
-      const t = new THREE.MeshPhysicalMaterial({
+      const t = new e.MeshPhysicalMaterial({
           color: "#ffffff",
           roughness: 0.42,
           metalness: 0.01,
           clearcoat: 0.16,
           clearcoatRoughness: 0.2,
         }),
-        a = new THREE.BufferGeometry(),
+        a = new e.BufferGeometry(),
         n = new Float32Array([0, 0, 0, -0.06, 0.04, 0, -0.05, -0.02, 0]);
-      (a.setAttribute("position", new THREE.BufferAttribute(n, 3)),
+      (a.setAttribute("position", new e.BufferAttribute(n, 3)),
         a.computeVertexNormals());
-      const s = new THREE.Mesh(a, t);
+      const s = new e.Mesh(a, t);
       (s.position.set(-0.01, 1.22, 0.14),
         (s.rotation.y = 0.3),
         (s.rotation.z = -0.1),
         o.add(s));
-      const r = new THREE.BufferGeometry(),
+      const r = new e.BufferGeometry(),
         i = new Float32Array([0, 0, 0, 0.06, 0.04, 0, 0.05, -0.02, 0]);
-      (r.setAttribute("position", new THREE.BufferAttribute(i, 3)),
+      (r.setAttribute("position", new e.BufferAttribute(i, 3)),
         r.computeVertexNormals());
-      const l = new THREE.Mesh(r, t);
+      const l = new e.Mesh(r, t);
       (l.position.set(0.01, 1.22, 0.14),
         (l.rotation.y = -0.3),
         (l.rotation.z = 0.1),
         o.add(l));
     }
-    const p = new THREE.Mesh(
-      new THREE.CapsuleGeometry(0.164, 0.48, 8, 16),
-      new THREE.MeshPhysicalMaterial({
+    const p = new e.Mesh(
+      new e.CapsuleGeometry(0.164, 0.48, 8, 16),
+      new e.MeshPhysicalMaterial({
         color: "#fffdfa",
         roughness: 0.3,
         metalness: 0.01,
@@ -1826,11 +1786,11 @@ function buildCharacterBody(t) {
     (p.position.set(0, 1.06, 0.02),
       p.scale.set(a ? 0.92 : 0.94, a ? 1.05 : 0.92, 0.8),
       o.add(p));
-    const w = new THREE.Mesh(new THREE.TorusGeometry(0.146, 0.012, 8, 20), m);
+    const w = new e.Mesh(new e.TorusGeometry(0.146, 0.012, 8, 20), m);
     (w.position.set(0, 0.84, 0.02), (w.rotation.x = Math.PI / 2), o.add(w));
-    const M = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.12, 0.34),
-      new THREE.MeshPhysicalMaterial({
+    const M = new e.Mesh(
+      new e.PlaneGeometry(0.12, 0.34),
+      new e.MeshPhysicalMaterial({
         color: "#efe7dc",
         roughness: 0.54,
         metalness: 0,
@@ -1842,39 +1802,39 @@ function buildCharacterBody(t) {
     );
     (M.position.set(0, 1.02, 0.2), o.add(M));
     (n ? [-0.02, 0.08, 0.16, 0.24] : [-0.02, 0.1, 0.22]).forEach((t) => {
-      const a = new THREE.Mesh(new THREE.SphereGeometry(n ? 0.01 : 0.012, 10, 10), m);
+      const a = new e.Mesh(new e.SphereGeometry(n ? 0.01 : 0.012, 10, 10), m);
       (a.position.set(0, 1.12 - t, 0.2), o.add(a));
     });
-    const f = new THREE.CapsuleGeometry(0.054, 0.34, 5, 10),
-      u = new THREE.MeshPhysicalMaterial({
+    const f = new e.CapsuleGeometry(0.054, 0.34, 5, 10),
+      u = new e.MeshPhysicalMaterial({
         color: "#fffdfa",
         roughness: 0.32,
         metalness: 0.01,
         clearcoat: 0.18,
         clearcoatRoughness: 0.24,
       }),
-      y = new THREE.Mesh(f, u);
+      y = new e.Mesh(f, u);
     (y.position.set(-0.246, 0.88, 0.03), (y.rotation.z = 0.12));
     const g = y.clone();
     ((g.position.x = 0.246), (g.rotation.z = -0.12), o.add(y, g));
-    const x = new THREE.Mesh(new THREE.TorusGeometry(0.046, 0.012, 8, 18), m);
+    const x = new e.Mesh(new e.TorusGeometry(0.046, 0.012, 8, 18), m);
     (x.position.set(-0.254, 0.74, 0.03), (x.rotation.z = 1.52));
     const b = x.clone();
     ((b.position.x = 0.254), o.add(x, b));
-    const S = new THREE.MeshStandardMaterial({
+    const S = new e.MeshStandardMaterial({
         color: "#faf7f1",
         roughness: 0.76,
         metalness: 0.01,
       }),
-      z = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.072, 0.14, 14), S);
+      z = new e.Mesh(new e.CylinderGeometry(0.07, 0.072, 0.14, 14), S);
     z.position.set(-0.085, 0.11, 0.008);
     const P = z.clone();
     ((P.position.x = 0.085), o.add(z, P));
-    const v = new THREE.Mesh(new THREE.SphereGeometry(0.056, 18, 18), d);
+    const v = new e.Mesh(new e.SphereGeometry(0.056, 18, 18), d);
     (v.position.set(0.028, 1.698, -0.17), o.add(v));
-    const G = new THREE.Mesh(
-      new THREE.TorusGeometry(0.052, 0.016, 8, 20),
-      new THREE.MeshStandardMaterial({
+    const G = new e.Mesh(
+      new e.TorusGeometry(0.052, 0.016, 8, 20),
+      new e.MeshStandardMaterial({
         color: "#1f1a22",
         roughness: 0.7,
         metalness: 0.04,
@@ -1886,7 +1846,7 @@ function buildCharacterBody(t) {
       o.add(G),
       n)
     ) {
-      const a = new THREE.MeshPhysicalMaterial({
+      const a = new e.MeshPhysicalMaterial({
         color: t.hair,
         roughness: 0.08,
         metalness: 0.05,
@@ -1894,13 +1854,13 @@ function buildCharacterBody(t) {
         clearcoatRoughness: 0.08,
         sheen: 0.48,
         sheenRoughness: 0.2,
-        sheenColor: new THREE.Color("#7a5a3a"),
+        sheenColor: new e.Color("#7a5a3a"),
       });
       (v.position.set(0.02, 1.692, -0.164),
         G.position.set(0.02, 1.692, -0.164));
-      const n = new THREE.Mesh(
-        new THREE.TorusGeometry(0.038, 0.01, 12, 24),
-        new THREE.MeshPhysicalMaterial({
+      const n = new e.Mesh(
+        new e.TorusGeometry(0.038, 0.01, 12, 24),
+        new e.MeshPhysicalMaterial({
           color: "#2a1418",
           roughness: 0.3,
           metalness: 0.08,
@@ -1911,38 +1871,38 @@ function buildCharacterBody(t) {
         (n.rotation.x = 0.35 * Math.PI),
         (n.rotation.z = -0.05),
         o.add(n));
-      const s = new THREE.Mesh(new THREE.CapsuleGeometry(0.042, 0.22, 8, 14), a);
+      const s = new e.Mesh(new e.CapsuleGeometry(0.042, 0.22, 8, 14), a);
       (s.position.set(0.04, 1.52, -0.22),
         (s.rotation.x = 0.35),
         (s.rotation.z = -0.04),
         s.scale.set(0.82, 1, 0.72),
         o.add(s));
-      const r = new THREE.Mesh(new THREE.CapsuleGeometry(0.036, 0.22, 8, 14), a);
+      const r = new e.Mesh(new e.CapsuleGeometry(0.036, 0.22, 8, 14), a);
       (r.position.set(0.08, 1.32, -0.2),
         (r.rotation.x = 0.15),
         (r.rotation.z = -0.06),
         r.scale.set(0.78, 1, 0.68),
         o.add(r));
-      const i = new THREE.Mesh(new THREE.CapsuleGeometry(0.03, 0.2, 8, 12), a);
+      const i = new e.Mesh(new e.CapsuleGeometry(0.03, 0.2, 8, 12), a);
       (i.position.set(0.12, 1.14, -0.14),
         (i.rotation.x = -0.12),
         (i.rotation.z = -0.04),
         i.scale.set(0.76, 1, 0.66),
         o.add(i));
-      const l = new THREE.Mesh(new THREE.CapsuleGeometry(0.022, 0.18, 8, 10), a);
+      const l = new e.Mesh(new e.CapsuleGeometry(0.022, 0.18, 8, 10), a);
       (l.position.set(0.15, 0.97, -0.08),
         (l.rotation.x = -0.28),
         (l.rotation.z = -0.03),
         l.scale.set(0.74, 1, 0.62),
         o.add(l));
     } else {
-      const t = new THREE.Mesh(new THREE.CapsuleGeometry(0.05, 0.62, 6, 12), d);
+      const t = new e.Mesh(new e.CapsuleGeometry(0.05, 0.62, 6, 12), d);
       (t.position.set(0.092, 1.24, -0.24),
         (t.rotation.z = -0.18),
         (t.rotation.x = 0.1),
         t.scale.set(0.86, 1.24, 0.8),
         o.add(t));
-      const a = new THREE.Mesh(new THREE.CapsuleGeometry(0.036, 0.42, 6, 10), d);
+      const a = new e.Mesh(new e.CapsuleGeometry(0.036, 0.42, 6, 10), d);
       (a.position.set(0.14, 0.92, -0.16),
         (a.rotation.z = -0.22),
         (a.rotation.x = -0.04),
@@ -1951,9 +1911,9 @@ function buildCharacterBody(t) {
     }
   }
   if (!t.female) {
-    const t = new THREE.Mesh(
-      new THREE.BoxGeometry(0.11, 0.52, 0.03),
-      new THREE.MeshPhysicalMaterial({
+    const t = new e.Mesh(
+      new e.BoxGeometry(0.11, 0.52, 0.03),
+      new e.MeshPhysicalMaterial({
         color: "#5f7893",
         roughness: 0.42,
         metalness: 0.03,
@@ -1964,9 +1924,9 @@ function buildCharacterBody(t) {
       }),
     );
     (t.position.set(0, 1.08, 0.19), o.add(t));
-    const a = new THREE.Mesh(
-      new THREE.CapsuleGeometry(0.162, 0.52, 8, 16),
-      new THREE.MeshPhysicalMaterial({
+    const a = new e.Mesh(
+      new e.CapsuleGeometry(0.162, 0.52, 8, 16),
+      new e.MeshPhysicalMaterial({
         color: "#eef2f7",
         roughness: 0.38,
         metalness: 0.02,
@@ -1975,9 +1935,9 @@ function buildCharacterBody(t) {
       }),
     );
     (a.position.set(0, 1.06, 0.02), a.scale.set(1.08, 0.94, 0.88), o.add(a));
-    const n = new THREE.Mesh(
-      new THREE.TorusGeometry(0.092, 0.016, 8, 20, Math.PI),
-      new THREE.MeshPhysicalMaterial({
+    const n = new e.Mesh(
+      new e.TorusGeometry(0.092, 0.016, 8, 20, Math.PI),
+      new e.MeshPhysicalMaterial({
         color: "#e4ebf2",
         roughness: 0.44,
         metalness: 0.02,
@@ -1986,26 +1946,26 @@ function buildCharacterBody(t) {
       }),
     );
     (n.position.set(0, 1.2, 0.08), (n.rotation.x = 0.54 * Math.PI), o.add(n));
-    const s = new THREE.BoxGeometry(0.06, 0.04, 0.03),
-      r = new THREE.MeshPhysicalMaterial({
+    const s = new e.BoxGeometry(0.06, 0.04, 0.03),
+      r = new e.MeshPhysicalMaterial({
         color: "#e8edf4",
         roughness: 0.42,
         metalness: 0.02,
         clearcoat: 0.1,
       }),
-      i = new THREE.Mesh(s, r);
+      i = new e.Mesh(s, r);
     (i.position.set(-0.06, 1.22, 0.12),
       (i.rotation.z = -0.3),
       (i.rotation.x = -0.2));
     const l = i.clone();
     ((l.position.x = 0.06), (l.rotation.z = 0.3), o.add(i, l));
-    const c = new THREE.Mesh(new THREE.BoxGeometry(0.136, 0.084, 0.054), d);
+    const c = new e.Mesh(new e.BoxGeometry(0.136, 0.084, 0.054), d);
     (c.position.set(0, 1.616, 0.122), o.add(c));
-    const h = new THREE.Mesh(new THREE.BoxGeometry(0.032, 0.18, 0.028), d);
+    const h = new e.Mesh(new e.BoxGeometry(0.032, 0.18, 0.028), d);
     (h.position.set(-0.132, 1.5, 0.06), (h.rotation.z = -0.06));
     const p = h.clone();
     ((p.position.x = 0.128), (p.rotation.z = 0.06));
-    const m = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.07, 0.06), d);
+    const m = new e.Mesh(new e.BoxGeometry(0.18, 0.07, 0.06), d);
     (m.position.set(0, 1.52, -0.164), o.add(h, p, m));
   }
   if (t.phone) {
@@ -2016,9 +1976,9 @@ function buildCharacterBody(t) {
       (q.rotation.z = -0.78),
       (q.rotation.x = -0.46),
       E.position.set(0.19, 1.24, 0.08));
-    const t = new THREE.Mesh(
-      new THREE.BoxGeometry(0.05, 0.12, 0.018),
-      new THREE.MeshStandardMaterial({
+    const t = new e.Mesh(
+      new e.BoxGeometry(0.05, 0.12, 0.018),
+      new e.MeshStandardMaterial({
         color: "#141518",
         roughness: 0.38,
         metalness: 0.28,
@@ -2029,7 +1989,7 @@ function buildCharacterBody(t) {
       o.add(t));
   }
   if (t.highlight) {
-    const e = createGlowPlane("rgba(255,234,184,1)", 1.2, 1.8, 0.28);
+    const e = b("rgba(255,234,184,1)", 1.2, 1.8, 0.28);
     (e.position.set(0.12, 1.16, -0.08), o.add(e), (o.userData.glow = e));
   }
   return (
@@ -2042,7 +2002,7 @@ function buildCharacterBody(t) {
           o.material.emissive && o.material.emissive.set
             ? (o.material.emissive.set(t.echoColor ?? "#ffcfb1"),
                (o.material.emissiveIntensity = 0.16))
-            : (o.material.emissive = new THREE.Color(t.echoColor ?? "#ffcfb1"),
+            : (o.material.emissive = new e.Color(t.echoColor ?? "#ffcfb1"),
                (o.material.emissiveIntensity = 0.16),
                (o.material.needsUpdate = !0)));
       }),
@@ -2109,15 +2069,11 @@ function buildCharacterBody(t) {
       hasPhone: Boolean(t.phone),
       referenceJunior: a,
     }),
-    applyShadows(o),
+    x(o),
     o
   );
 }
-
-// ── Pose & Animation Functions ──────────────────────────────────────────────
-
-/** Reset a character's pose to the default standing position. */
-function resetPose(e) {
+function z(e) {
   const t = e.userData.pose;
   t &&
     (t.waist.rotation.set(0, 0, 0),
@@ -2149,9 +2105,7 @@ function resetPose(e) {
       t.heroIrisR.scale.copy(t.heroIrisR.userData.baseScale),
     (e.position.y = 0));
 }
-
-/** Apply walk-cycle animation to a character's limbs and body. */
-function applyWalkCycle(e, t, o = 1) {
+function P(e, t, o = 1) {
   const a = e.userData.pose;
   if (!a) return;
   const n = Math.max(-1, Math.min(1, t)),
@@ -2206,9 +2160,7 @@ function applyWalkCycle(e, t, o = 1) {
     m = 0.014 * n * o;
   ((e.position.y = p), (e.position.x += m));
 }
-
-/** Apply idle breathing/swaying animation to a character. */
-function applyIdleCycle(e, t, o = 1) {
+function v(e, t, o = 1) {
   const a = e.userData.pose;
   if (!a) return;
   const n = 0.022 * Math.sin(1.4 * t) * o,
@@ -2297,27 +2249,21 @@ function applyIdleCycle(e, t, o = 1) {
       );
   }
 }
-
-// ── Texture Generation ──────────────────────────────────────────────────────
-
-/** Create a repeating canvas texture with a custom draw callback. */
-function createCanvasTexture(t, o, a, n = 1, s = 1) {
+function G(t, o, a, n = 1, s = 1) {
   const r = document.createElement("canvas");
   ((r.width = t), (r.height = o));
   a(r.getContext("2d"), t, o);
-  const i = new THREE.CanvasTexture(r);
+  const i = new e.CanvasTexture(r);
   return (
-    (i.colorSpace = THREE.SRGBColorSpace),
-    (i.wrapS = THREE.RepeatWrapping),
-    (i.wrapT = THREE.RepeatWrapping),
+    (i.colorSpace = e.SRGBColorSpace),
+    (i.wrapS = e.RepeatWrapping),
+    (i.wrapT = e.RepeatWrapping),
     i.repeat.set(n, s),
     i
   );
 }
-
-/** Generate a wall surface texture with subtle grain lines. */
-function createWallTexture({ base: e, accent: t, line: o, warm: a = !1 } = {}) {
-  return createCanvasTexture(
+function C({ base: e, accent: t, line: o, warm: a = !1 } = {}) {
+  return G(
     512,
     512,
     (n, s, r) => {
@@ -2346,10 +2292,8 @@ function createWallTexture({ base: e, accent: t, line: o, warm: a = !1 } = {}) {
     3.5,
   );
 }
-
-/** Generate a floor/tile surface texture with speckle detail. */
-function createFloorTexture({ base: e, line: t, speck: o } = {}) {
-  return createCanvasTexture(
+function B({ base: e, line: t, speck: o } = {}) {
+  return G(
     512,
     512,
     (a, n, s) => {
@@ -2367,10 +2311,8 @@ function createFloorTexture({ base: e, line: t, speck: o } = {}) {
     6,
   );
 }
-
-/** Generate a wood-grain texture for desks and furniture. */
-function createWoodTexture({ base: e, dark: t, highlight: o } = {}) {
-  return createCanvasTexture(
+function k({ base: e, dark: t, highlight: o } = {}) {
+  return G(
     512,
     512,
     (a, n, s) => {
@@ -2418,9 +2360,7 @@ function createWoodTexture({ base: e, dark: t, highlight: o } = {}) {
     6,
   );
 }
-
-/** Create a text label plane (used for room signs like "LM402"). */
-function createLabelPlane(
+function T(
   t,
   o = 0.82,
   a = 0.26,
@@ -2436,57 +2376,47 @@ function createLabelPlane(
     (i.textAlign = "center"),
     (i.textBaseline = "middle"),
     i.fillText(t, 256, 88));
-  const l = new THREE.CanvasTexture(r);
-  l.colorSpace = THREE.SRGBColorSpace;
-  const c = new THREE.MeshStandardMaterial({
+  const l = new e.CanvasTexture(r);
+  l.colorSpace = e.SRGBColorSpace;
+  const c = new e.MeshStandardMaterial({
     map: l,
     roughness: 0.7,
     metalness: 0.02,
   });
-  return new THREE.Mesh(new THREE.PlaneGeometry(o, a), c);
+  return new e.Mesh(new e.PlaneGeometry(o, a), c);
 }
-
-/** Register an axis-aligned bounding box for collision detection. */
-function addCollider(e, t, o, a, n, s) {
+function I(e, t, o, a, n, s) {
   e.push({ minX: t, maxX: o, minZ: a, maxZ: n, label: s });
 }
-
-/** Create a mesh, add it to a parent group, and optionally register a collider. */
-function addBoxToScene(t, o, a, n, s, r, i, l, c = !0, h = !0) {
-  const d = new THREE.Mesh(a, n);
+function R(t, o, a, n, s, r, i, l, c = !0, h = !0) {
+  const d = new e.Mesh(a, n);
   return (
     d.position.copy(s),
     r && d.rotation.set(r.x, r.y, r.z),
     (d.castShadow = c),
     (d.receiveShadow = h),
     t.add(d),
-    l && addCollider(i, l.minX, l.maxX, l.minZ, l.maxZ, l.label),
+    l && I(i, l.minX, l.maxX, l.minZ, l.maxZ, l.label),
     d.material.transparent || o.push(d),
     d
   );
 }
-
-// ── Texture & Model Loading ───────────────────────────────────────────────
-
-/** Load a texture and set its color space to SRGB. Returns a Promise. */
 function loadLm402Texture(t, o) {
   return new Promise((a, n) => {
     t.load(
       o,
       (t) => {
-        ((t.colorSpace = THREE.SRGBColorSpace), a(t));
+        ((t.colorSpace = e.SRGBColorSpace), a(t));
       },
       void 0,
       n,
     );
   });
 }
-
-/** Build a curved portrait display plane for the junior character's close-up. */
 function buildCurvedPortraitPlane(t, o = {}) {
   const a = o.width ?? 1,
     n = o.height ?? 1.8,
-    s = new THREE.PlaneGeometry(a, n, 28, 40),
+    s = new e.PlaneGeometry(a, n, 28, 40),
     r = s.getAttribute("position"),
     i = a / 2,
     l = o.curveDepth ?? 0.08;
@@ -2506,28 +2436,26 @@ function buildCurvedPortraitPlane(t, o = {}) {
         o.mapOffset.x ?? c0.offset.x,
         o.mapOffset.y ?? c0.offset.y,
       ));
-  const c = new THREE.MeshStandardMaterial({
+  const c = new e.MeshStandardMaterial({
       map: c0,
       alphaMap: h0,
       transparent: !0,
       alphaTest: h0 ? 0.02 : (o.alphaTest ?? 0.18),
-      side: THREE.DoubleSide,
+      side: e.DoubleSide,
       depthWrite: !1,
       roughness: o.roughness ?? 0.72,
       metalness: o.metalness ?? 0.02,
-      emissive: new THREE.Color(o.emissive ?? "#fff3ea"),
+      emissive: new e.Color(o.emissive ?? "#fff3ea"),
       emissiveIntensity: o.emissiveIntensity ?? 0.06,
     }),
-    h = new THREE.Mesh(s, c);
+    h = new e.Mesh(s, c);
   return (
-    h.position.copy(o.position ?? new THREE.Vector3()),
+    h.position.copy(o.position ?? new e.Vector3()),
     o.rotation && h.rotation.set(o.rotation.x, o.rotation.y, o.rotation.z),
     o.scale && h.scale.copy(o.scale),
     h
   );
 }
-
-/** Build a feathered alpha mask for soft portrait edges. */
 function buildPortraitFeatherMap(t = {}) {
   const o = document.createElement("canvas");
   ((o.width = 512), (o.height = 512));
@@ -2552,23 +2480,21 @@ function buildPortraitFeatherMap(t = {}) {
     a.arc(0, 0, c, 0, 2 * Math.PI),
     a.fill(),
     a.restore()),
-    new THREE.CanvasTexture(o)
+    new e.CanvasTexture(o)
   );
 }
-const juniorPortraitCameraWorld = new THREE.Vector3(),
-  juniorPortraitCameraLocal = new THREE.Vector3(),
-  juniorHeroAnchorBox = new THREE.Box3(),
-  juniorHeroAnchorCenter = new THREE.Vector3(),
-  juniorHeroAnchorFace = new THREE.Vector3(),
-  juniorHeroAnchorChest = new THREE.Vector3(),
-  juniorHeroAnchorEyes = new THREE.Vector3();
+const juniorPortraitCameraWorld = new e.Vector3(),
+  juniorPortraitCameraLocal = new e.Vector3(),
+  juniorHeroAnchorBox = new e.Box3(),
+  juniorHeroAnchorCenter = new e.Vector3(),
+  juniorHeroAnchorFace = new e.Vector3(),
+  juniorHeroAnchorChest = new e.Vector3(),
+  juniorHeroAnchorEyes = new e.Vector3();
 function angularDistance(t, o) {
   return Math.abs(Math.atan2(Math.sin(t - o), Math.cos(t - o)));
 }
-
-/** Assemble the complete portrait shell from loaded textures. */
 function buildJuniorPortraitShell(t, o = {}) {
-  const a = new THREE.Group(),
+  const a = new e.Group(),
     n = [
       {
         texture: t.frontClose ?? t.front ?? null,
@@ -2576,7 +2502,7 @@ function buildJuniorPortraitShell(t, o = {}) {
         blendWidth: 0.92,
         width: 0.88,
         height: 1.08,
-        position: new THREE.Vector3(0.015, 1.57, 0.19),
+        position: new e.Vector3(0.015, 1.57, 0.19),
         opacity: 1,
         emissiveIntensity: 0.06,
       },
@@ -2586,7 +2512,7 @@ function buildJuniorPortraitShell(t, o = {}) {
         blendWidth: 0.76,
         width: 0.86,
         height: 1.06,
-        position: new THREE.Vector3(0.02, 1.57, 0.17),
+        position: new e.Vector3(0.02, 1.57, 0.17),
         opacity: 0.96,
         emissiveIntensity: 0.052,
       },
@@ -2601,7 +2527,7 @@ function buildJuniorPortraitShell(t, o = {}) {
         blendWidth: 0.76,
         width: 0.86,
         height: 1.06,
-        position: new THREE.Vector3(0.02, 1.57, 0.17),
+        position: new e.Vector3(0.02, 1.57, 0.17),
         opacity: 0.96,
         emissiveIntensity: 0.052,
         mirror: !t.rightFrontClose && Boolean(t.leftFrontClose),
@@ -2612,7 +2538,7 @@ function buildJuniorPortraitShell(t, o = {}) {
         blendWidth: 0.58,
         width: 0.8,
         height: 1.04,
-        position: new THREE.Vector3(0.02, 1.56, 0.1),
+        position: new e.Vector3(0.02, 1.56, 0.1),
         opacity: 0.8,
         emissiveIntensity: 0.04,
       },
@@ -2622,7 +2548,7 @@ function buildJuniorPortraitShell(t, o = {}) {
         blendWidth: 0.58,
         width: 0.8,
         height: 1.04,
-        position: new THREE.Vector3(0.02, 1.56, 0.1),
+        position: new e.Vector3(0.02, 1.56, 0.1),
         opacity: 0.8,
         emissiveIntensity: 0.04,
         mirror: !0,
@@ -2633,7 +2559,7 @@ function buildJuniorPortraitShell(t, o = {}) {
         blendWidth: 0.7,
         width: 0.84,
         height: 1.08,
-        position: new THREE.Vector3(0.01, 1.58, -0.02),
+        position: new e.Vector3(0.01, 1.58, -0.02),
         opacity: 0.86,
         emissiveIntensity: 0.03,
       },
@@ -2651,7 +2577,7 @@ function buildJuniorPortraitShell(t, o = {}) {
       emissive: "#fff4eb",
       emissiveIntensity: n.emissiveIntensity,
       position: n.position.clone(),
-      scale: new THREE.Vector3(
+      scale: new e.Vector3(
         (n.mirror ? -1 : 1) * (o.scaleX ?? 1),
         o.scaleY ?? 1,
         1,
@@ -2682,9 +2608,9 @@ function buildJuniorPortraitShell(t, o = {}) {
       roughness: 0.92,
       emissive: "#fff6ef",
       emissiveIntensity: 0.04,
-      position: new THREE.Vector3(0.008, 1.576, 0.164),
-      mapRepeat: new THREE.Vector2(0.24, 0.4),
-      mapOffset: new THREE.Vector2(0.38, 0.38),
+      position: new e.Vector3(0.008, 1.576, 0.164),
+      mapRepeat: new e.Vector2(0.24, 0.4),
+      mapOffset: new e.Vector2(0.38, 0.38),
     });
     ((t.renderOrder = 16),
       (t.visible = !1),
@@ -2693,7 +2619,7 @@ function buildJuniorPortraitShell(t, o = {}) {
       a.add(t),
       (a.userData.heroFaceCard = t));
   }
-  const r = createGlowPlane("rgba(255,244,218,1)", 1.04, 1.18, 0.12);
+  const r = b("rgba(255,244,218,1)", 1.04, 1.18, 0.12);
   return (
     (r.position.set(0.02, 1.58, 0.1), (r.renderOrder = 13)),
     a.add(r),
@@ -2775,10 +2701,6 @@ function updateJuniorPortraitShell(t, o, a, n = 1) {
     (l.rotation.y = Math.atan2(c, Math.abs(h) < 0.001 ? 0.001 : h)),
     (l.rotation.x = 0.08 * Math.atan2(d, Math.max(0.22, Math.hypot(c, h)))));
 }
-
-// ── Junior Runtime Asset Resolution ────────────────────────────────────────
-
-/** Resolve the junior character's runtime manifest (model URLs, delivery mode). */
 function resolveJuniorRuntimeManifest(t = {}) {
   const o = t.runtimeModelUrl ?? t.modelUrl ?? t.runtimeUrl ?? null,
     a = t.heroCloseupModelUrl ?? t.closeupModelUrl ?? o ?? null;
@@ -2806,7 +2728,7 @@ function loadJuniorGltfModel(t, o = {}) {
   }
   return new Promise((n, s) => {
     try {
-      const r = new a(o.manager ?? new THREE.LoadingManager());
+      const r = new a(o.manager ?? new e.LoadingManager());
       o.crossOrigin && (r.crossOrigin = o.crossOrigin);
       r.load(t, n, void 0, s);
     } catch (t) {
@@ -2826,14 +2748,14 @@ function attachJuniorGltfModel(t, o, a = {}) {
     t.add(n),
     t.updateMatrixWorld(!0),
     n.updateMatrixWorld(!0);
-  const s = new THREE.Box3().setFromObject(n),
-    r = s.getSize(new THREE.Vector3()),
-    i = s.getCenter(new THREE.Vector3()),
+  const s = new e.Box3().setFromObject(n),
+    r = s.getSize(new e.Vector3()),
+    i = s.getCenter(new e.Vector3()),
     l = (o) => t.worldToLocal(o.clone()),
     c = (o) => {
       const a = n.getObjectByName(o);
       if (!a) return null;
-      return t.worldToLocal(a.getWorldPosition(new THREE.Vector3()));
+      return t.worldToLocal(a.getWorldPosition(new e.Vector3()));
     },
     h = {
       center: c("hero_center_anchor"),
@@ -2846,16 +2768,16 @@ function attachJuniorGltfModel(t, o, a = {}) {
       center: h.center ?? l(i.clone()),
       face:
         h.face ??
-        l(new THREE.Vector3(i.x, s.max.y - 0.24 * r.y, i.z + 0.09 * r.z)),
+        l(new e.Vector3(i.x, s.max.y - 0.24 * r.y, i.z + 0.09 * r.z)),
       chest:
         h.chest ??
-        l(new THREE.Vector3(i.x, s.max.y - 0.45 * r.y, i.z + 0.04 * r.z)),
+        l(new e.Vector3(i.x, s.max.y - 0.45 * r.y, i.z + 0.04 * r.z)),
       eyes:
         h.eyes ??
-        l(new THREE.Vector3(i.x, s.max.y - 0.2 * r.y, i.z + 0.11 * r.z)),
+        l(new e.Vector3(i.x, s.max.y - 0.2 * r.y, i.z + 0.11 * r.z)),
       shoulder:
         h.shoulder ??
-        l(new THREE.Vector3(i.x, s.max.y - 0.38 * r.y, i.z + 0.05 * r.z)),
+        l(new e.Vector3(i.x, s.max.y - 0.38 * r.y, i.z + 0.05 * r.z)),
     };
   return (
     (t.userData.heroAnchor = d),
@@ -2868,7 +2790,7 @@ function attachJuniorGltfModel(t, o, a = {}) {
     (t.userData.basePosition ??= t.position.clone()),
     (t.userData.baseScale ??= t.scale.clone()),
     (t.userData.baseRotation ??= t.rotation.clone()),
-    applyShadows(n, a.castShadow ?? !0, a.receiveShadow ?? !0),
+    x(n, a.castShadow ?? !0, a.receiveShadow ?? !0),
     n
   );
 }
@@ -3035,10 +2957,10 @@ function resolveJuniorHeroAnchor(t, o = {}) {
           : "runtime_glb");
   const h = i?.userData?.kind ?? c,
     d = i
-      ? i.getWorldPosition(new THREE.Vector3())
+      ? i.getWorldPosition(new e.Vector3())
       : t
-        ? t.getWorldPosition(new THREE.Vector3())
-        : new THREE.Vector3(),
+        ? t.getWorldPosition(new e.Vector3())
+        : new e.Vector3(),
     p =
       "runtime" === h || "hero_closeup" === h
         ? (i.updateMatrixWorld(!0),
@@ -3070,9 +2992,9 @@ function resolveJuniorHeroAnchor(t, o = {}) {
               p(anchor.eyes ?? anchor.face ?? anchor.center ?? null),
             )))
       : ((juniorHeroAnchorCenter.copy(d),
-        juniorHeroAnchorFace.copy(d).add(o.faceOffset ?? new THREE.Vector3(0, 0.46, 0.14)),
-        juniorHeroAnchorChest.copy(d).add(o.chestOffset ?? new THREE.Vector3(0, 0.24, 0.08)),
-        juniorHeroAnchorEyes.copy(d).add(o.eyeOffset ?? new THREE.Vector3(0, 0.5, 0.16))),
+        juniorHeroAnchorFace.copy(d).add(o.faceOffset ?? new e.Vector3(0, 0.46, 0.14)),
+        juniorHeroAnchorChest.copy(d).add(o.chestOffset ?? new e.Vector3(0, 0.24, 0.08)),
+        juniorHeroAnchorEyes.copy(d).add(o.eyeOffset ?? new e.Vector3(0, 0.5, 0.16))),
         c === "procedural_hero_head" &&
           (juniorHeroAnchorFace.set(d.x, d.y + 0.02, d.z + 0.1),
           juniorHeroAnchorChest.set(d.x, d.y - 0.06, d.z + 0.06),
@@ -3087,10 +3009,6 @@ function resolveJuniorHeroAnchor(t, o = {}) {
     }
   );
 }
-
-// ── Scene Graph Utilities ──────────────────────────────────────────────────
-
-/** Check if a Three.js object has a specific ancestor in its parent chain. */
 function hasAncestor(e, t) {
   for (let o = e; o; o = o.parent) if (o === t) return !0;
   return !1;
@@ -3134,39 +3052,26 @@ function resolveJuniorAssetUrls(e, t = "desktop") {
     heroCloseupUrl: s,
   };
 }
-
-// ============================================================================
-// Main Scene Factory
-// ============================================================================
-
-/**
- * Create and return the complete LM402 classroom scene.
- * This is the main entry point called by app.js.
- *
- * @param {HTMLCanvasElement} canvasEl - The canvas element for WebGL rendering
- * @param {Object} runtimeOptions - Quality settings, character assets, etc.
- * @returns {Object} Scene API with render(), resize(), resolveMotion(), etc.
- */
-export function createLm402Scene(canvasEl, runtimeOptions = {}) {
-  const isMobileDevice = window.matchMedia("(pointer: coarse)").matches,
+export function createLm402Scene(D, runtimeOptions = {}) {
+  const V = window.matchMedia("(pointer: coarse)").matches,
     juniorRuntimeManifest = resolveJuniorRuntimeManifest(
       runtimeOptions.characterAssets?.junior2005 ?? {},
     ),
     runtimeState = {
-      qualityTier: runtimeOptions.qualityTier ?? (isMobileDevice ? "mobile" : "desktop"),
+      qualityTier: runtimeOptions.qualityTier ?? (V ? "mobile" : "desktop"),
       qualityTiers: runtimeOptions.qualityTiers ?? {},
       characterAssets: runtimeOptions.characterAssets ?? {},
     };
   let renderTuning = {
     shadowMapSize:
       runtimeState.qualityTiers?.[runtimeState.qualityTier]?.shadowMapSize ??
-      (isMobileDevice ? 896 : 2048),
+      (V ? 896 : 2048),
     maxPixelRatio:
       runtimeState.qualityTiers?.[runtimeState.qualityTier]?.maxPixelRatio ??
-      (isMobileDevice ? 1 : 1.5),
+      (V ? 1 : 1.5),
     dustCount:
       runtimeState.qualityTiers?.[runtimeState.qualityTier]?.dustCount ??
-      (isMobileDevice ? 48 : 96),
+      (V ? 48 : 96),
     mirrorOpacity:
       runtimeState.qualityTiers?.[runtimeState.qualityTier]?.mirrorOpacity ??
       0.1,
@@ -3189,7 +3094,7 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
       loadedModels: [],
       lastError: null,
     },
-    renderer = (function (t, o) {
+    U = (function (t, o) {
       const a = [
           {
             label: "webgl2-hq",
@@ -3237,7 +3142,7 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
         }
         if (r)
           try {
-            const a = new THREE.WebGLRenderer({
+            const a = new e.WebGLRenderer({
               canvas: t,
               context: r,
               antialias: o.antialias,
@@ -3254,7 +3159,7 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
           }
       }
       try {
-        const o = new THREE.WebGLRenderer({
+        const o = new e.WebGLRenderer({
           canvas: t,
           antialias: !1,
           alpha: !1,
@@ -3265,21 +3170,21 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
         s = e;
       }
       throw s || new Error("Unable to create WebGL renderer.");
-    })(canvasEl, isMobileDevice);
-  ((renderer.outputColorSpace = THREE.SRGBColorSpace),
-    (renderer.toneMapping = THREE.ACESFilmicToneMapping),
-    (renderer.toneMappingExposure = 1.14),
-    (renderer.shadowMap.enabled = !0),
-    (renderer.shadowMap.type = THREE.PCFSoftShadowMap));
-  const scene = new THREE.Scene();
-  ((scene.background = new THREE.Color("#ccd8e4")),
-    (scene.fog = new THREE.Fog("#d0dce6", 12, 65)));
-  const camera = new THREE.PerspectiveCamera(74, 1, 0.03, 180);
-  camera.rotation.order = "YXZ";
-  const raycaster = new THREE.Raycaster(),
-    occluderMeshes = [],
-    colliderBoxes = [],
-    hotspotMap = new Map(),
+    })(D, V);
+  ((U.outputColorSpace = e.SRGBColorSpace),
+    (U.toneMapping = e.ACESFilmicToneMapping),
+    (U.toneMappingExposure = 1.14),
+    (U.shadowMap.enabled = !0),
+    (U.shadowMap.type = e.PCFSoftShadowMap));
+  const W = new e.Scene();
+  ((W.background = new e.Color("#ccd8e4")),
+    (W.fog = new e.Fog("#d0dce6", 12, 65)));
+  const q = new e.PerspectiveCamera(74, 1, 0.03, 180);
+  q.rotation.order = "YXZ";
+  const _ = new e.Raycaster(),
+    A = [],
+    Z = [],
+    L = new Map(),
     stairLayouts = [];
   let X = {
     camera: { x: 0, y: 0, z: 0, yaw: 0, pitch: 0 },
@@ -3290,16 +3195,16 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
     colliders: 0,
     mobileBlackRegionDetected: !1,
   };
-  const worldGroup = new THREE.Group(),
-    $ = new THREE.Group(),
-    introGroup = new THREE.Group(),
-    hotspotGroup = new THREE.Group();
-  scene.add(worldGroup, $, introGroup, hotspotGroup);
-  const N = worldToScene(t.minX),
-    O = worldToScene(t.maxX),
-    Y = worldToScene(t.minZ),
-    J = worldToScene(t.maxZ),
-    K = worldToScene(t.dividerX),
+  const j = new e.Group(),
+    $ = new e.Group(),
+    H = new e.Group(),
+    F = new e.Group();
+  W.add(j, $, H, F);
+  const N = g(t.minX),
+    O = g(t.maxX),
+    Y = g(t.minZ),
+    J = g(t.maxZ),
+    K = g(t.dividerX),
     Q = N,
     ee = K,
     te = O,
@@ -3310,31 +3215,31 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
     re = (Y + J) / 2,
     ie = 2.92,
     le = 0.12,
-    ce = worldToScene(t.corridor.parapetHeight),
-    he = worldToScene(t.board.z),
-    de = worldToScene(t.board.x1),
-    pe = worldToScene(t.board.x2),
+    ce = g(t.corridor.parapetHeight),
+    he = g(t.board.z),
+    de = g(t.board.x1),
+    pe = g(t.board.x2),
     me = (de + pe) / 2,
-    we = worldToScene(t.frontDoor.z1),
-    Me = worldToScene(t.frontDoor.z2),
-    fe = worldToScene(t.backDoor.z1),
-    ue = worldToScene(t.backDoor.z2),
+    we = g(t.frontDoor.z1),
+    Me = g(t.frontDoor.z2),
+    fe = g(t.backDoor.z1),
+    ue = g(t.backDoor.z2),
     ye = t.floorRooms.find((e) => e.interactive) ?? t.floorRooms[0],
-    ge = worldToScene(ye.z1),
-    xe = worldToScene(ye.z2),
-    be = worldToScene(t.stairs.front.z1),
-    Se = worldToScene(t.stairs.front.z2),
-    ze = worldToScene(t.stairs.back.z1),
-    Pe = worldToScene(t.stairs.back.z2),
-    ve = (t, o, a) => new THREE.Vector3(worldToScene(t), worldToScene(o), worldToScene(a)),
-    parseWindowSpec = (e, t) => ({
+    ge = g(ye.z1),
+    xe = g(ye.z2),
+    be = g(t.stairs.front.z1),
+    Se = g(t.stairs.front.z2),
+    ze = g(t.stairs.back.z1),
+    Pe = g(t.stairs.back.z2),
+    ve = (t, o, a) => new e.Vector3(g(t), g(o), g(a)),
+    Ge = (e, t) => ({
       side: t,
-      z1: worldToScene(e.z - e.width / 2 + 18),
-      z2: worldToScene(e.z + e.width / 2 - 18),
-      y1: worldToScene(e.y1 + 6),
-      y2: worldToScene(e.y2 - 4),
+      z1: g(e.z - e.width / 2 + 18),
+      z2: g(e.z + e.width / 2 - 18),
+      y1: g(e.y1 + 6),
+      y2: g(e.y2 - 4),
     }),
-    buildWallWithOpenings = ({ x: t, zStart: o, zEnd: a, openings: n, material: s, label: r }) => {
+    Ce = ({ x: t, zStart: o, zEnd: a, openings: n, material: s, label: r }) => {
       const i = [o, a];
       n.forEach((e) => {
         e.z2 <= o || e.z1 >= a || i.push(Math.max(o, e.z1), Math.min(a, e.z2));
@@ -3361,12 +3266,12 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
           if (l - n <= 0.01) continue;
           const c = (n + l) / 2;
           h.some((e) => c > e.y1 && c < e.y2) ||
-            addBoxToScene(
-      worldGroup,
+            R(
+              j,
               A,
-              new THREE.BoxGeometry(le, l - n, i - a),
+              new e.BoxGeometry(le, l - n, i - a),
               s,
-              new THREE.Vector3(t, n + (l - n) / 2, a + (i - a) / 2),
+              new e.Vector3(t, n + (l - n) / 2, a + (i - a) / 2),
               null,
               Z,
               { minX: t - 0.06, maxX: t + 0.06, minZ: a, maxZ: i, label: r },
@@ -3374,67 +3279,67 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
         }
       }
     },
-    hemisphereLight = new THREE.HemisphereLight(8900331, 9139029, 1);
-  scene.add(hemisphereLight);
-  const ambientLight = new THREE.AmbientLight(16775408, 0.22);
-  scene.add(ambientLight);
-  const sunLight = new THREE.DirectionalLight(16772034, 2.8);
-  (sunLight.position.set(-11.2, 10.8, 5.4),
-    sunLight.target.position.set(0, 0, re),
-    scene.add(sunLight.target),
-    (sunLight.castShadow = !0),
-    sunLight.shadow.mapSize.set(
+    Be = new e.HemisphereLight(8900331, 9139029, 1);
+  W.add(Be);
+  const ke = new e.AmbientLight(16775408, 0.22);
+  W.add(ke);
+  const Te = new e.DirectionalLight(16772034, 2.8);
+  (Te.position.set(-11.2, 10.8, 5.4),
+    Te.target.position.set(0, 0, re),
+    W.add(Te.target),
+    (Te.castShadow = !0),
+    Te.shadow.mapSize.set(
       renderTuning.shadowMapSize,
       renderTuning.shadowMapSize,
     ),
-    (sunLight.shadow.camera.near = 0.5),
-    (sunLight.shadow.camera.far = 52),
-    (sunLight.shadow.camera.left = -18),
-    (sunLight.shadow.camera.right = 14),
-    (sunLight.shadow.camera.top = 14),
-    (sunLight.shadow.camera.bottom = -14),
-    (sunLight.shadow.bias = -3e-4),
-    (sunLight.shadow.normalBias = 0.026),
-    (sunLight.shadow.radius = 4),
-    scene.add(sunLight));
-  const Ie = new THREE.PointLight(14215156, 1.28, 58, 2);
-  (Ie.position.set(Q + 2.42, 3.64, worldToScene(t.frontDoor.center.z - 122)), scene.add(Ie));
-  const Re = new THREE.PointLight(16771512, 1.72, 68, 2);
-  (Re.position.set(N - 1.72, 6.42, worldToScene(t.frontDoor.center.z - 8)), scene.add(Re));
-  const De = new THREE.PointLight(16767403, 2.2, 46, 2);
-  (De.position.set(te - 1.46, 2.78, worldToScene(t.classroom.lightWellZ + 64)), scene.add(De));
-  const Ve = new THREE.PointLight(16773071, 1.9, 36, 2);
-  (Ve.position.set(ee + 1.56, 2.44, worldToScene(t.backDoor.center.z + 28)), scene.add(Ve));
-  const Ee = new THREE.PointLight(16774368, 1.8, 38, 2);
-  (Ee.position.set((ee + te) / 2, 1.82, ge + 1.6), scene.add(Ee));
-  const Ue = new THREE.PointLight(16775915, 1.6, 34, 2);
-  (Ue.position.set((ee + te) / 2, 1.82, xe - 1.6), scene.add(Ue));
-  const We = new THREE.PointLight(16772829, 0.8, 12, 2);
-  (We.position.set(worldToScene(200), 2.8, worldToScene(t.backDoor.center.z + 100)), scene.add(We));
-  const woodTexture = k({ base: "#856549", dark: "#5c422d", highlight: "#b18a63" }),
-    corridorFloorTex = B({
+    (Te.shadow.camera.near = 0.5),
+    (Te.shadow.camera.far = 52),
+    (Te.shadow.camera.left = -18),
+    (Te.shadow.camera.right = 14),
+    (Te.shadow.camera.top = 14),
+    (Te.shadow.camera.bottom = -14),
+    (Te.shadow.bias = -3e-4),
+    (Te.shadow.normalBias = 0.026),
+    (Te.shadow.radius = 4),
+    W.add(Te));
+  const Ie = new e.PointLight(14215156, 1.28, 58, 2);
+  (Ie.position.set(Q + 2.42, 3.64, g(t.frontDoor.center.z - 122)), W.add(Ie));
+  const Re = new e.PointLight(16771512, 1.72, 68, 2);
+  (Re.position.set(N - 1.72, 6.42, g(t.frontDoor.center.z - 8)), W.add(Re));
+  const De = new e.PointLight(16767403, 2.2, 46, 2);
+  (De.position.set(te - 1.46, 2.78, g(t.classroom.lightWellZ + 64)), W.add(De));
+  const Ve = new e.PointLight(16773071, 1.9, 36, 2);
+  (Ve.position.set(ee + 1.56, 2.44, g(t.backDoor.center.z + 28)), W.add(Ve));
+  const Ee = new e.PointLight(16774368, 1.8, 38, 2);
+  (Ee.position.set((ee + te) / 2, 1.82, ge + 1.6), W.add(Ee));
+  const Ue = new e.PointLight(16775915, 1.6, 34, 2);
+  (Ue.position.set((ee + te) / 2, 1.82, xe - 1.6), W.add(Ue));
+  const We = new e.PointLight(16772829, 0.8, 12, 2);
+  (We.position.set(g(200), 2.8, g(t.backDoor.center.z + 100)), W.add(We));
+  const qe = k({ base: "#856549", dark: "#5c422d", highlight: "#b18a63" }),
+    _e = B({
       base: "#bcc3cb",
       line: "rgba(245,245,250,.65)",
       speck: "rgba(120,130,140,",
     }),
-    warmWallTex = C({
+    Ae = C({
       base: "#e8e1d7",
       accent: "rgba(255,255,255,.12)",
       line: "rgba(174,162,145,.22)",
       warm: !0,
     }),
-    coolWallTex = C({
+    Ze = C({
       base: "#cbd4dd",
       accent: "rgba(255,255,255,.12)",
       line: "rgba(132,145,160,.22)",
     }),
-    parapetWallTex = C({
+    Le = C({
       base: "#ddd7cf",
       accent: "rgba(255,255,255,.12)",
       line: "rgba(126,118,104,.2)",
       warm: !0,
     }),
-    deskWoodTex = k({ base: "#96704a", dark: "#5c3e26", highlight: "#b8925e" }),
+    Xe = k({ base: "#96704a", dark: "#5c3e26", highlight: "#b8925e" }),
     je = G(
       512,
       512,
@@ -3473,48 +3378,48 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
       line: "rgba(248,248,252,.68)",
       speck: "rgba(134,142,152,",
     }),
-    classroomFloorMat = new THREE.MeshPhysicalMaterial({
+    Fe = new e.MeshPhysicalMaterial({
       color: "#8a6848",
-      map: woodTexture,
+      map: qe,
       roughness: 0.65,
       metalness: 0.06,
       clearcoat: 0.08,
       clearcoatRoughness: 0.5,
     }),
-    corridorFloorMat = new THREE.MeshPhysicalMaterial({
+    Ne = new e.MeshPhysicalMaterial({
       color: "#b8c0ca",
-      map: corridorFloorTex,
+      map: _e,
       roughness: 0.68,
       metalness: 0.05,
       clearcoat: 0.10,
       clearcoatRoughness: 0.45,
     }),
-    outerWallMat = new THREE.MeshStandardMaterial({
+    Oe = new e.MeshStandardMaterial({
       color: "#f0eeea",
-      map: warmWallTex,
+      map: Ae,
       roughness: 0.92,
       metalness: 0.02,
     }),
-    dividerWallMat = new THREE.MeshStandardMaterial({
+    Ye = new e.MeshStandardMaterial({
       color: "#edecea",
-      map: coolWallTex,
+      map: Ze,
       roughness: 0.90,
       metalness: 0.03,
     }),
-    deskMat = new THREE.MeshPhysicalMaterial({
+    Je = new e.MeshPhysicalMaterial({
       color: "#9a6e42",
-      map: deskWoodTex,
+      map: Xe,
       roughness: 0.58,
       metalness: 0.06,
       clearcoat: 0.15,
       clearcoatRoughness: 0.35,
     }),
-    metalMat = new THREE.MeshStandardMaterial({
+    Ke = new e.MeshStandardMaterial({
       color: "#7e868e",
       roughness: 0.42,
       metalness: 0.52,
     }),
-    blackboardMat = new THREE.MeshPhysicalMaterial({
+    Qe = new e.MeshPhysicalMaterial({
       color: "#1a3828",
       map: je,
       roughness: 0.68,
@@ -3523,41 +3428,41 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
       clearcoatRoughness: 0.3,
     }),
     et =
-      (new THREE.MeshStandardMaterial({
+      (new e.MeshStandardMaterial({
         color: "#e2dcd2",
-        map: parapetWallTex,
+        map: Le,
         roughness: 0.88,
         metalness: 0.03,
       }),
-      new THREE.MeshStandardMaterial({
+      new e.MeshStandardMaterial({
         color: "#f5ede0",
-        map: warmWallTex,
+        map: Ae,
         roughness: 0.84,
         metalness: 0.02,
       })),
     tt =
-      (new THREE.MeshStandardMaterial({
+      (new e.MeshStandardMaterial({
         color: "#7a9a64",
         map: $e,
         roughness: 0.96,
         metalness: 0.01,
       }),
-      new THREE.MeshStandardMaterial({
+      new e.MeshStandardMaterial({
         color: "#cdd3d9",
         map: He,
         roughness: 0.9,
         metalness: 0.02,
       })),
-    ot = worldToScene(t.corridor.campusDepth),
+    ot = g(t.corridor.campusDepth),
     at = -12,
-    nt = new THREE.MeshStandardMaterial({
+    nt = new e.MeshStandardMaterial({
       color: "#ccc7be",
       roughness: 0.92,
       metalness: 0.03,
     }),
-    st = new THREE.Mesh(new THREE.BoxGeometry(0.15, 9, se), nt);
-  (st.position.set(N - 0.08, -4.5, re), worldGroup.add(st));
-  const rt = new THREE.MeshStandardMaterial({
+    st = new e.Mesh(new e.BoxGeometry(0.15, 9, se), nt);
+  (st.position.set(N - 0.08, -4.5, re), j.add(st));
+  const rt = new e.MeshStandardMaterial({
     color: "#8ab4d6",
     emissive: "#4a6a8a",
     emissiveIntensity: 0.15,
@@ -3567,52 +3472,52 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
     const o = 0 - 3 * (t + 1) + 1.5;
     for (let t = 0; t < 12; t++) {
       const a = Y + (t + 0.5) * (se / 12),
-        n = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.5), rt);
-      (n.position.set(N - 0.16, o, a), (n.rotation.y = -Math.PI / 2), worldGroup.add(n));
+        n = new e.Mesh(new e.PlaneGeometry(1.2, 1.5), rt);
+      (n.position.set(N - 0.16, o, a), (n.rotation.y = -Math.PI / 2), j.add(n));
     }
   }
-  const it = new THREE.Mesh(new THREE.BoxGeometry(0.44 * ot, 0.06, 0.92 * se), tt);
+  const it = new e.Mesh(new e.BoxGeometry(0.44 * ot, 0.06, 0.92 * se), tt);
   (it.position.set(N - 0.26 * ot, -11.97, re + 0.26),
     (it.receiveShadow = !0),
-    worldGroup.add(it));
-  const lt = createGlowPlane("rgba(255,233,192,1)", 9.6, 6.2, 0.34);
-  (lt.position.set(N - 0.5 * ot, 4.2, worldToScene(720)),
+    j.add(it));
+  const lt = b("rgba(255,233,192,1)", 9.6, 6.2, 0.34);
+  (lt.position.set(N - 0.5 * ot, 4.2, g(720)),
     (lt.rotation.y = Math.PI / 2),
-    worldGroup.add(lt));
-  const ct = createGlowPlane("rgba(255,240,210,1)", 8.4, 4.8, 0.18);
-  (ct.position.set(N - 0.5 * ot, -4, worldToScene(1740)),
+    j.add(lt));
+  const ct = b("rgba(255,240,210,1)", 8.4, 4.8, 0.18);
+  (ct.position.set(N - 0.5 * ot, -4, g(1740)),
     (ct.rotation.y = Math.PI / 2),
-    worldGroup.add(ct),
-    addBoxToScene(
-      worldGroup,
+    j.add(ct),
+    R(
+      j,
       A,
-      new THREE.BoxGeometry(oe, 0.08, se),
-      corridorFloorMat,
-      new THREE.Vector3(ae, -0.04, re),
+      new e.BoxGeometry(oe, 0.08, se),
+      Ne,
+      new e.Vector3(ae, -0.04, re),
       null,
       Z,
       null,
       !1,
       !0,
     ),
-    addBoxToScene(
-      worldGroup,
+    R(
+      j,
       A,
-      new THREE.BoxGeometry(ne, 0.08, se),
-      classroomFloorMat,
-      new THREE.Vector3((ee + te) / 2, -0.04, re),
+      new e.BoxGeometry(ne, 0.08, se),
+      Fe,
+      new e.Vector3((ee + te) / 2, -0.04, re),
       null,
       Z,
       null,
       !1,
       !0,
     ),
-    addBoxToScene(
-      worldGroup,
+    R(
+      j,
       A,
-      new THREE.BoxGeometry(O - N, ie, le),
-      outerWallMat,
-      new THREE.Vector3((N + O) / 2, 1.46, Y),
+      new e.BoxGeometry(O - N, ie, le),
+      Oe,
+      new e.Vector3((N + O) / 2, 1.46, Y),
       null,
       Z,
       {
@@ -3623,89 +3528,89 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
         label: "floor_front",
       },
     ),
-    addBoxToScene(
-      worldGroup,
+    R(
+      j,
       A,
-      new THREE.BoxGeometry(O - N, ie, le),
-      outerWallMat,
-      new THREE.Vector3((N + O) / 2, 1.46, J),
+      new e.BoxGeometry(O - N, ie, le),
+      Oe,
+      new e.Vector3((N + O) / 2, 1.46, J),
       null,
       Z,
       { minX: N, maxX: O, minZ: J - 0.06, maxZ: J + 0.06, label: "floor_back" },
     ),
-    addBoxToScene(
-      worldGroup,
+    R(
+      j,
       A,
-      new THREE.BoxGeometry(le, ce, se),
-      new THREE.MeshStandardMaterial({
+      new e.BoxGeometry(le, ce, se),
+      new e.MeshStandardMaterial({
         color: "#a8a29e",
-        map: parapetWallTex,
+        map: Le,
         roughness: 0.92,
         metalness: 0.02,
       }),
-      new THREE.Vector3(N, ce / 2, re),
+      new e.Vector3(N, ce / 2, re),
       null,
       Z,
       { minX: N - 0.06, maxX: N + 0.06, minZ: Y, maxZ: J, label: "parapet" },
     ),
-    addBoxToScene(
-      worldGroup,
+    R(
+      j,
       A,
-      new THREE.BoxGeometry(0.18, 0.1, se),
+      new e.BoxGeometry(0.18, 0.1, se),
       et,
-      new THREE.Vector3(N + 0.06, ce + 0.06, re),
+      new e.Vector3(N + 0.06, ce + 0.06, re),
       null,
       Z,
       null,
     ),
-    addBoxToScene(
-      worldGroup,
+    R(
+      j,
       [],
-      new THREE.BoxGeometry(0.92, 0.012, 0.98 * se),
-      new THREE.MeshBasicMaterial({
+      new e.BoxGeometry(0.92, 0.012, 0.98 * se),
+      new e.MeshBasicMaterial({
         color: "#fff1cf",
         transparent: !0,
         opacity: 0.1,
       }),
-      new THREE.Vector3(N + 0.48, 0.014, re),
+      new e.Vector3(N + 0.48, 0.014, re),
       { x: -Math.PI / 2, y: 0, z: 0 },
       null,
       null,
       !1,
       !1,
     ));
-  const floorMirror = new THREE.Mesh(
-    new THREE.PlaneGeometry(1.96, 0.98 * se),
-    new THREE.MeshBasicMaterial({
+  const ht = new e.Mesh(
+    new e.PlaneGeometry(1.96, 0.98 * se),
+    new e.MeshBasicMaterial({
       color: "#8694a4",
       transparent: !0,
       opacity: renderTuning.mirrorOpacity,
-      side: THREE.DoubleSide,
+      side: e.DoubleSide,
     }),
   );
-  (floorMirror.position.set(N + 1.02, 0.018, re),
-    (floorMirror.rotation.x = -Math.PI / 2),
-    worldGroup.add(floorMirror));
-  const dt = new THREE.MeshPhysicalMaterial({
+  (ht.position.set(N + 1.02, 0.018, re),
+    (ht.rotation.x = -Math.PI / 2),
+    j.add(ht));
+  const dt = new e.MeshPhysicalMaterial({
       color: "#8a7a6a",
-      map: deskWoodTex,
+      map: Xe,
       roughness: 0.62,
       metalness: 0.06,
       clearcoat: 0.12,
       clearcoatRoughness: 0.4,
     }),
-    pt = new THREE.MeshPhysicalMaterial({
+    pt = new e.MeshPhysicalMaterial({
       color: "#ded4c2",
       roughness: 0.56,
       metalness: 0.06,
       clearcoat: 0.14,
     }),
-    mt = new THREE.MeshStandardMaterial({
+    mt = new e.MeshStandardMaterial({
       color: "#c8c0b2",
       roughness: 0.82,
       metalness: 0.02,
     }),
-    wt = new THREE.MeshPhysicalMaterial({
+    wt = new e.MeshPhysicalMaterial({
       color: "#b0a898",
       roughness: 0.38,
       metalness: 0.14,
@@ -3718,8 +3623,8 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
   ].forEach((t) => {
     const o = (t.z1 + t.z2) / 2,
       a = t.z2 - t.z1,
-      n = new THREE.Mesh(new THREE.BoxGeometry(oe - 0.28, 0.06, a), mt);
-    (n.position.set(ae, -0.03, o), (n.receiveShadow = !0), worldGroup.add(n));
+      n = new e.Mesh(new e.BoxGeometry(oe - 0.28, 0.06, a), mt);
+    (n.position.set(ae, -0.03, o), (n.receiveShadow = !0), j.add(n));
     const s = ee - 1.08,
       r = Q + 0.92,
       i = s - r,
@@ -3734,7 +3639,7 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
       f = Math.max(0.78, Math.min(1.08, 0.26 * i)),
       u = s - f / 2 + 0.08,
       y = (s + r) / 2 - 0.12,
-      g = new THREE.Mesh(new THREE.BoxGeometry(f, 0.08, p), mt);
+      g = new e.Mesh(new e.BoxGeometry(f, 0.08, p), mt);
     stairLayouts.push({
       id: t.id,
       z1: t.z1,
@@ -3748,93 +3653,93 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
       landing: { z1: o - p / 2 - 0.08, z2: o + p / 2 + 0.08 },
       lowerFlight: { z1: M - m / 2 - 0.04, z2: M + m / 2 + 0.08 },
     });
-    (g.position.set(u, 0, o), (g.receiveShadow = !0), worldGroup.add(g));
-    const x = new THREE.Mesh(new THREE.BoxGeometry(0.22, ie, a), dividerWallMat);
+    (g.position.set(u, 0, o), (g.receiveShadow = !0), j.add(g));
+    const x = new e.Mesh(new e.BoxGeometry(0.22, ie, a), Ye);
     (x.position.set(ee, 1.46, o),
       (x.castShadow = !0),
       (x.receiveShadow = !0),
-      worldGroup.add(x),
-      addCollider(colliderBoxes, ee - 0.11, ee + 0.11, t.z1, t.z2, `${t.id}_wall`));
+      j.add(x),
+      I(Z, ee - 0.11, ee + 0.11, t.z1, t.z2, `${t.id}_wall`));
     const b = (o, a, n) => {
       for (let g = 0; g < l; g += 1) {
         const x = (g + 0.5) / l,
           b = s - x * i,
           S = n * (g + 0.5) * c,
-          z = new THREE.Mesh(new THREE.BoxGeometry(h + 0.04, 0.10, o), dt);
-        (z.position.set(b, S, a), (z.castShadow = !0), (z.receiveShadow = !0), worldGroup.add(z));
-        const P = new THREE.Mesh(new THREE.BoxGeometry(h + 0.02, c, o - 0.06), mt);
-        (P.position.set(b + 0.02, n * (g + 0.5) * c - 0.07 * n, a), (P.receiveShadow = !0), worldGroup.add(P));
+          z = new e.Mesh(new e.BoxGeometry(h + 0.04, 0.10, o), dt);
+        (z.position.set(b, S, a), (z.castShadow = !0), (z.receiveShadow = !0), j.add(z));
+        const P = new e.Mesh(new e.BoxGeometry(h + 0.02, c, o - 0.06), mt);
+        (P.position.set(b + 0.02, n * (g + 0.5) * c - 0.07 * n, a), (P.receiveShadow = !0), j.add(P));
       }
-      const g = new THREE.Mesh(new THREE.BoxGeometry(0.92, 0.08, o + 0.04), mt);
+      const g = new e.Mesh(new e.BoxGeometry(0.92, 0.08, o + 0.04), mt);
       (g.position.set(r + 0.38, n * (l * c + 0.02), a),
         (g.receiveShadow = !0),
-        worldGroup.add(g));
-      const x = new THREE.Mesh(new THREE.BoxGeometry(i + 0.32, 0.06, 0.05), wt);
+        j.add(g));
+      const x = new e.Mesh(new e.BoxGeometry(i + 0.32, 0.06, 0.05), wt);
       x.position.set(y, 0.92, a - o / 2 - 0.06);
       const b = x.clone();
       b.position.z = a + o / 2 + 0.06;
-      worldGroup.add(x, b);
-      const hrPost = new THREE.BoxGeometry(0.04, 0.92, 0.04);
-      const hrEndA = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.96, 0.06), wt);
+      j.add(x, b);
+      const hrPost = new e.BoxGeometry(0.04, 0.92, 0.04);
+      const hrEndA = new e.Mesh(new e.BoxGeometry(0.06, 0.96, 0.06), wt);
       hrEndA.position.set(s - 0.08, 0.46 * n, a - o / 2 - 0.06);
-      (hrEndA.castShadow = !0), worldGroup.add(hrEndA);
+      (hrEndA.castShadow = !0), j.add(hrEndA);
       const hrEndA2 = hrEndA.clone();
       hrEndA2.position.z = a + o / 2 + 0.06;
-      worldGroup.add(hrEndA2);
-      const hrEndB = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.96, 0.06), wt);
+      j.add(hrEndA2);
+      const hrEndB = new e.Mesh(new e.BoxGeometry(0.06, 0.96, 0.06), wt);
       hrEndB.position.set(r + 0.16, n * l * c + 0.46 * n, a - o / 2 - 0.06);
-      (hrEndB.castShadow = !0), worldGroup.add(hrEndB);
+      (hrEndB.castShadow = !0), j.add(hrEndB);
       const hrEndB2 = hrEndB.clone();
       hrEndB2.position.z = a + o / 2 + 0.06;
-      worldGroup.add(hrEndB2);
+      j.add(hrEndB2);
       const S = Math.max(3, Math.floor(i / 0.42));
       for (let o = 0; o <= S; o += 1) {
         const l = r + 0.16 + (o / S) * (i - 0.16),
-          d = new THREE.Mesh(hrPost, wt),
+          d = new e.Mesh(hrPost, wt),
           p0 = d.clone();
         (d.position.set(l, 0.43, a - m / 2 - 0.06),
           p0.position.set(l, 0.43, a + m / 2 + 0.06),
-          worldGroup.add(d, p0));
+          j.add(d, p0));
       }
     };
-    (createGlowPlane(m, w, 1), createGlowPlane(m, M, -1));
+    (b(m, w, 1), b(m, M, -1));
     const _floorThick = 0.12, _ceilH = ie, _hallW = oe + ne + 0.2, _hallCX = (Q + te) / 2;
     /* 5F 不建模（畫面美觀優先），上樓仍由蟲洞送回 4F */
 
     /* ── 真實 3F 樓層（在 4F 地板之下） ── */
     const _3fY = -_ceilH;
-    const _3fFloor = new THREE.Mesh(new THREE.BoxGeometry(_hallW, _floorThick, se * 0.7), nt);
+    const _3fFloor = new e.Mesh(new e.BoxGeometry(_hallW, _floorThick, se * 0.7), nt);
     _3fFloor.position.set(_hallCX, _3fY - _ceilH, re);
-    (_3fFloor.receiveShadow = !0), worldGroup.add(_3fFloor);
-    const _3fCeil = new THREE.Mesh(new THREE.BoxGeometry(_hallW, _floorThick, se * 0.7), nt);
+    (_3fFloor.receiveShadow = !0), j.add(_3fFloor);
+    const _3fCeil = new e.Mesh(new e.BoxGeometry(_hallW, _floorThick, se * 0.7), nt);
     _3fCeil.position.set(_hallCX, _3fY - _floorThick / 2, re);
-    (_3fCeil.receiveShadow = !0), worldGroup.add(_3fCeil);
-    const _3fWallBack = new THREE.Mesh(new THREE.BoxGeometry(_hallW, _ceilH - _floorThick, 0.08), outerWallMat);
+    (_3fCeil.receiveShadow = !0), j.add(_3fCeil);
+    const _3fWallBack = new e.Mesh(new e.BoxGeometry(_hallW, _ceilH - _floorThick, 0.08), Oe);
     _3fWallBack.position.set(_hallCX, _3fY - _ceilH / 2, re - se * 0.35);
-    (_3fWallBack.castShadow = !0), worldGroup.add(_3fWallBack);
-    const _3fWallFront = new THREE.Mesh(new THREE.BoxGeometry(_hallW, _ceilH - _floorThick, 0.08), outerWallMat);
+    (_3fWallBack.castShadow = !0), j.add(_3fWallBack);
+    const _3fWallFront = new e.Mesh(new e.BoxGeometry(_hallW, _ceilH - _floorThick, 0.08), Oe);
     _3fWallFront.position.set(_hallCX, _3fY - _ceilH / 2, re + se * 0.35);
-    (_3fWallFront.castShadow = !0), worldGroup.add(_3fWallFront);
-    const _3fWallL = new THREE.Mesh(new THREE.BoxGeometry(0.08, _ceilH - _floorThick, se * 0.7), outerWallMat);
+    (_3fWallFront.castShadow = !0), j.add(_3fWallFront);
+    const _3fWallL = new e.Mesh(new e.BoxGeometry(0.08, _ceilH - _floorThick, se * 0.7), Oe);
     _3fWallL.position.set(_hallCX - _hallW / 2, _3fY - _ceilH / 2, re);
-    worldGroup.add(_3fWallL);
-    const _3fWallR = new THREE.Mesh(new THREE.BoxGeometry(0.08, _ceilH - _floorThick, se * 0.7), outerWallMat);
+    j.add(_3fWallL);
+    const _3fWallR = new e.Mesh(new e.BoxGeometry(0.08, _ceilH - _floorThick, se * 0.7), Oe);
     _3fWallR.position.set(_hallCX + _hallW / 2, _3fY - _ceilH / 2, re);
-    worldGroup.add(_3fWallR);
+    j.add(_3fWallR);
 
     /* ── 3F 光源 ── */
-    const _3fLight = new THREE.PointLight("#e8eeff", 0.4, 8);
+    const _3fLight = new e.PointLight("#e8eeff", 0.4, 8);
     _3fLight.position.set(_hallCX, _3fY - 0.3, re);
-    worldGroup.add(_3fLight);
+    j.add(_3fLight);
 
     /* ── 樓層標示 ── */
     [
       { text: "3F", y: _3fY - _ceilH + 1.5, z: re },
     ].forEach((a) => {
-      const n = createLabelPlane(a.text, 0.5, 0.2, { bg: "#5c6672", fg: "#f7f0de" });
+      const n = T(a.text, 0.5, 0.2, { bg: "#5c6672", fg: "#f7f0de" });
       (n.position.set(r + 0.74, a.y, a.z),
         (n.rotation.y = Math.PI / 2),
-        worldGroup.add(n));
+        j.add(n));
     });
   });
   const Mt = ge,
@@ -3845,17 +3750,17 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
       { ...t.frontDoor, kind: "front", z1: we, z2: Me },
       { ...t.backDoor, kind: "back", z1: fe, z2: ue },
     ].sort((e, t) => e.z1 - t.z1),
-    xt = worldToScene(84),
+    xt = g(84),
     bt = ie,
     St = bt - xt,
     zt = (xt + bt) / 2,
     Pt = 0.1,
     vt = (t, o, a, n, s) => {
-      const r = new THREE.Mesh(new THREE.BoxGeometry(n, s, le), outerWallMat);
+      const r = new e.Mesh(new e.BoxGeometry(n, s, le), Oe);
       (r.position.set(t, o, a),
         (r.castShadow = !0),
         (r.receiveShadow = !0),
-        worldGroup.add(r));
+        j.add(r));
     },
     Gt = (t, o, a, n, s) => {
       const r = (n - a - Pt * (s + 1)) / s;
@@ -3866,26 +3771,26 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
       }
       for (let o = 0; o <= s; o++) {
         const n = a + 0.05 + (r + Pt) * o,
-          s = new THREE.Mesh(new THREE.BoxGeometry(Pt, ie, le), outerWallMat);
-        (s.position.set(n, 1.46, t), worldGroup.add(s));
+          s = new e.Mesh(new e.BoxGeometry(Pt, ie, le), Oe);
+        (s.position.set(n, 1.46, t), j.add(s));
       }
-      addCollider(colliderBoxes, a, n, t - 0.06, t + 0.06, "end_wall");
+      I(Z, a, n, t - 0.06, t + 0.06, "end_wall");
     };
   (/* 前端牆改為實牆(不設窗戶) */
-    addBoxToScene(worldGroup, A, new THREE.BoxGeometry(te - ee + 0.22, ie, le), outerWallMat,
-      new THREE.Vector3((ee + te) / 2, ie / 2, Mt), null, Z,
+    R(j, A, new e.BoxGeometry(te - ee + 0.22, ie, le), Oe,
+      new e.Vector3((ee + te) / 2, ie / 2, Mt), null, Z,
       { minX: ee - 0.12, maxX: te + 0.12, minZ: Mt - 0.06, maxZ: Mt + 0.06, label: "end_wall" }),
     /* 黑板牆兩側也改為實牆(不設窗戶) — Gt(ft,...) 已移除 */
     void 0);
-  const Ct = t.leftWallWindows.map((e) => parseWindowSpec(e, "left")),
-    Bt = t.rightWallWindows.map((e) => parseWindowSpec(e, "right")),
+  const Ct = t.leftWallWindows.map((e) => Ge(e, "left")),
+    Bt = t.rightWallWindows.map((e) => Ge(e, "right")),
     kt = gt.map((e) => ({ z1: e.z1 - 0.15, z2: e.z2 + 0.15, y1: 0, y2: ie }));
-  buildWallWithOpenings({
+  Ce({
     x: te,
     zStart: Mt,
     zEnd: ft,
     openings: Bt,
-    material: outerWallMat,
+    material: Oe,
     label: "right_wall",
   });
   const Tt = [];
@@ -3893,12 +3798,12 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
     ft < J && Tt.push([ft, J]),
     Tt.forEach(([t, o]) => {
       o <= t ||
-        addBoxToScene(
-      worldGroup,
+        R(
+          j,
           A,
-          new THREE.BoxGeometry(le, ie, o - t),
-          dividerWallMat,
-          new THREE.Vector3(ee, 1.46, t + (o - t) / 2),
+          new e.BoxGeometry(le, ie, o - t),
+          Ye,
+          new e.Vector3(ee, 1.46, t + (o - t) / 2),
           null,
           Z,
           {
@@ -3910,54 +3815,54 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
           },
         );
     }),
-    buildWallWithOpenings({
+    Ce({
       x: ee,
       zStart: Mt,
       zEnd: ft,
       openings: [...kt, ...Ct],
-      material: dividerWallMat,
+      material: Ye,
       label: "divider_wall",
     }));
-  const plaqueMesh = createLabelPlane("LM402", 1.72, 0.42, { bg: "#4a5562", fg: "#fff6de" });
-  (plaqueMesh.position.set(worldToScene(t.plaque.x), worldToScene(t.plaque.y), worldToScene(t.plaque.z)),
-    (plaqueMesh.rotation.y = -Math.PI / 2),
-    (plaqueMesh.material = plaqueMesh.material.clone()),
-    (plaqueMesh.material.emissive = new THREE.Color("#8a7959")),
-    (plaqueMesh.material.emissiveIntensity = 0.56),
-    worldGroup.add(plaqueMesh));
-  const Rt = new THREE.Mesh(
-    new THREE.BoxGeometry(0.08, 0.58, 1.54),
-    new THREE.MeshStandardMaterial({
+  const It = T("LM402", 1.72, 0.42, { bg: "#4a5562", fg: "#fff6de" });
+  (It.position.set(g(t.plaque.x), g(t.plaque.y), g(t.plaque.z)),
+    (It.rotation.y = -Math.PI / 2),
+    (It.material = It.material.clone()),
+    (It.material.emissive = new e.Color("#8a7959")),
+    (It.material.emissiveIntensity = 0.56),
+    j.add(It));
+  const Rt = new e.Mesh(
+    new e.BoxGeometry(0.08, 0.58, 1.54),
+    new e.MeshStandardMaterial({
       color: "#ded6cb",
-      map: warmWallTex,
+      map: Ae,
       roughness: 0.9,
       metalness: 0.01,
     }),
   );
-  (Rt.position.set(ee + 0.012, worldToScene(t.plaque.y) - 0.06, worldToScene(t.plaque.z)), worldGroup.add(Rt));
-  const Dt = new THREE.PointLight(16773583, 0.34, 6, 2);
-  (Dt.position.set(ee + 0.54, worldToScene(t.plaque.y) + 0.08, worldToScene(t.plaque.z)), worldGroup.add(Dt));
-  var Rt2 = new THREE.Mesh(
-    new THREE.BoxGeometry(0.1, 0.58, 1.54),
-    new THREE.MeshStandardMaterial({
+  (Rt.position.set(ee + 0.012, g(t.plaque.y) - 0.06, g(t.plaque.z)), j.add(Rt));
+  const Dt = new e.PointLight(16773583, 0.34, 6, 2);
+  (Dt.position.set(ee + 0.54, g(t.plaque.y) + 0.08, g(t.plaque.z)), j.add(Dt));
+  var Rt2 = new e.Mesh(
+    new e.BoxGeometry(0.1, 0.58, 1.54),
+    new e.MeshStandardMaterial({
       color: "#ded6cb",
       roughness: 0.9,
       metalness: 0.01,
     }),
   );
-  Rt2.position.set(ee + 0.16, 1.6, worldToScene(t.plaque.z));
-  worldGroup.add(Rt2);
-  var It2 = createLabelPlane("LM402", 1.72, 0.42, { bg: "#4a5562", fg: "#fff6de" });
-  It2.position.set(ee + 0.12, worldToScene(t.plaque.y), worldToScene(t.plaque.z));
+  Rt2.position.set(ee + 0.16, 1.6, g(t.plaque.z));
+  j.add(Rt2);
+  var It2 = T("LM402", 1.72, 0.42, { bg: "#4a5562", fg: "#fff6de" });
+  It2.position.set(ee + 0.12, g(t.plaque.y), g(t.plaque.z));
   It2.rotation.y = Math.PI / 2;
   It2.material = It2.material.clone();
-  It2.material.emissive = new THREE.Color("#8a7959");
+  It2.material.emissive = new e.Color("#8a7959");
   It2.material.emissiveIntensity = 0.56;
-  worldGroup.add(It2);
-  var It2L = new THREE.PointLight(16773583, 0.5, 6, 2);
-  It2L.position.set(ee + 0.5, worldToScene(t.plaque.y) + 0.08, worldToScene(t.plaque.z));
-  worldGroup.add(It2L);
-  const Vt = new THREE.MeshPhysicalMaterial({
+  j.add(It2);
+  var It2L = new e.PointLight(16773583, 0.5, 6, 2);
+  It2L.position.set(ee + 0.5, g(t.plaque.y) + 0.08, g(t.plaque.z));
+  j.add(It2L);
+  const Vt = new e.MeshPhysicalMaterial({
       color: "#dce8f2",
       roughness: 0.03,
       metalness: 0.01,
@@ -3970,72 +3875,72 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
       clearcoatRoughness: 0.01,
       envMapIntensity: 0.5,
       reflectivity: 0.6,
-      side: THREE.DoubleSide,
+      side: e.DoubleSide,
       depthWrite: !1,
     }),
-    Et = new THREE.MeshStandardMaterial({
+    Et = new e.MeshStandardMaterial({
       color: "#beb5a5",
       roughness: 0.62,
       metalness: 0.14,
     });
   (t.leftWallWindows.forEach((t) => {
-    const o = parseWindowSpec(t, "left"),
+    const o = Ge(t, "left"),
       a = o.z2 - o.z1,
       n = o.y2 - o.y1,
       s = (o.z1 + o.z2) / 2,
       r = (o.y1 + o.y2) / 2,
-      i = new THREE.Mesh(new THREE.PlaneGeometry(a - 0.04, n - 0.04), Vt);
-    (i.position.set(ee, r, s), (i.rotation.y = Math.PI / 2), worldGroup.add(i));
-    const l = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.03, a + 0.02), Et);
+      i = new e.Mesh(new e.PlaneGeometry(a - 0.04, n - 0.04), Vt);
+    (i.position.set(ee, r, s), (i.rotation.y = Math.PI / 2), j.add(i));
+    const l = new e.Mesh(new e.BoxGeometry(0.04, 0.03, a + 0.02), Et);
     l.position.set(ee, o.y2 + 0.01, s);
-    const c = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.05, a + 0.02), Et);
+    const c = new e.Mesh(new e.BoxGeometry(0.04, 0.05, a + 0.02), Et);
     c.position.set(ee, o.y1 - 0.02, s);
-    const h = new THREE.Mesh(new THREE.BoxGeometry(0.04, n + 0.06, 0.03), Et);
+    const h = new e.Mesh(new e.BoxGeometry(0.04, n + 0.06, 0.03), Et);
     h.position.set(ee, r, o.z1 - 0.01);
     const d = h.clone();
     d.position.z = o.z2 + 0.01;
-    const p = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.025, a - 0.02), Et);
-    (p.position.set(ee, r, s), worldGroup.add(l, c, h, d, p));
+    const p = new e.Mesh(new e.BoxGeometry(0.04, 0.025, a - 0.02), Et);
+    (p.position.set(ee, r, s), j.add(l, c, h, d, p));
   }),
     t.rightWallWindows.forEach((t) => {
-      const o = parseWindowSpec(t, "right"),
+      const o = Ge(t, "right"),
         a = o.z2 - o.z1,
         n = o.y2 - o.y1,
         s = (o.z1 + o.z2) / 2,
         r = (o.y1 + o.y2) / 2,
-        i = new THREE.Mesh(new THREE.PlaneGeometry(a - 0.04, n - 0.04), Vt);
-      (i.position.set(te, r, s), (i.rotation.y = Math.PI / 2), worldGroup.add(i));
-      const l = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.03, a + 0.02), Et);
+        i = new e.Mesh(new e.PlaneGeometry(a - 0.04, n - 0.04), Vt);
+      (i.position.set(te, r, s), (i.rotation.y = Math.PI / 2), j.add(i));
+      const l = new e.Mesh(new e.BoxGeometry(0.04, 0.03, a + 0.02), Et);
       l.position.set(te, o.y2 + 0.01, s);
-      const c = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.05, a + 0.02), Et);
+      const c = new e.Mesh(new e.BoxGeometry(0.04, 0.05, a + 0.02), Et);
       c.position.set(te, o.y1 - 0.02, s);
-      const h = new THREE.Mesh(new THREE.BoxGeometry(0.04, n + 0.06, 0.03), Et);
+      const h = new e.Mesh(new e.BoxGeometry(0.04, n + 0.06, 0.03), Et);
       h.position.set(te, r, o.z1 - 0.01);
       const d = h.clone();
       d.position.z = o.z2 + 0.01;
-      const p = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.025, a - 0.02), Et);
-      (p.position.set(te, r, s), worldGroup.add(l, c, h, d, p));
+      const p = new e.Mesh(new e.BoxGeometry(0.04, 0.025, a - 0.02), Et);
+      (p.position.set(te, r, s), j.add(l, c, h, d, p));
     }));
   const Ut = (t, o, a, n) => {
     const s = (a - o - Pt * (n + 1)) / n;
     for (let a = 0; a < n; a++) {
       const n = o + Pt + (s + Pt) * a + s / 2,
-        r = new THREE.Mesh(new THREE.PlaneGeometry(s - 0.04, St - 0.04), Vt);
-      (r.position.set(n, zt, t), worldGroup.add(r));
-      const i = new THREE.Mesh(new THREE.BoxGeometry(s + 0.02, 0.03, 0.04), Et);
+        r = new e.Mesh(new e.PlaneGeometry(s - 0.04, St - 0.04), Vt);
+      (r.position.set(n, zt, t), j.add(r));
+      const i = new e.Mesh(new e.BoxGeometry(s + 0.02, 0.03, 0.04), Et);
       i.position.set(n, bt + 0.01, t);
-      const l = new THREE.Mesh(new THREE.BoxGeometry(s + 0.02, 0.05, 0.04), Et);
-      (l.position.set(n, xt - 0.02, t), worldGroup.add(i, l));
+      const l = new e.Mesh(new e.BoxGeometry(s + 0.02, 0.05, 0.04), Et);
+      (l.position.set(n, xt - 0.02, t), j.add(i, l));
     }
   };
   (/* 前端牆與黑板牆皆改為實牆，不建窗玻璃 */
     void 0,
-    addBoxToScene(
-      worldGroup,
+    R(
+      j,
       A,
-      new THREE.BoxGeometry(te - ee + 0.22, ie, le),
-      outerWallMat,
-      new THREE.Vector3((ee + te) / 2, ie / 2, ft),
+      new e.BoxGeometry(te - ee + 0.22, ie, le),
+      Oe,
+      new e.Vector3((ee + te) / 2, ie / 2, ft),
       null,
       Z,
       {
@@ -4046,31 +3951,31 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
         label: "board_wall",
       },
     ),
-    addBoxToScene(
-      worldGroup,
+    R(
+      j,
       A,
-      new THREE.BoxGeometry(pe - de, worldToScene(t.board.y2 - t.board.y1), 0.06),
-      blackboardMat,
-      new THREE.Vector3(me, worldToScene((t.board.y1 + t.board.y2) / 2), he - 0.02),
+      new e.BoxGeometry(pe - de, g(t.board.y2 - t.board.y1), 0.06),
+      Qe,
+      new e.Vector3(me, g((t.board.y1 + t.board.y2) / 2), he - 0.02),
       null,
       Z,
       null,
     ),
-    addBoxToScene(
-      worldGroup,
+    R(
+      j,
       A,
-      new THREE.BoxGeometry(pe - de + 0.18, 0.07, 0.16),
+      new e.BoxGeometry(pe - de + 0.18, 0.07, 0.16),
       et,
-      new THREE.Vector3(me, worldToScene(t.board.y1) - 0.12, he - 0.1),
+      new e.Vector3(me, g(t.board.y1) - 0.12, he - 0.1),
       null,
       Z,
       null,
     ));
-  const Wt = new THREE.Mesh(new THREE.BoxGeometry(0.96, 0.98, 0.72), deskMat);
+  const Wt = new e.Mesh(new e.BoxGeometry(0.96, 0.98, 0.72), Je);
   (Wt.position.set(me - 4.2, 0.49, he - 0.86),
     (Wt.castShadow = !0),
     (Wt.receiveShadow = !0),
-    worldGroup.add(Wt),
+    j.add(Wt),
     I(
       Z,
       Wt.position.x - 0.36,
@@ -4079,9 +3984,9 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
       Wt.position.z + 0.31,
       "lectern",
     ));
-  const qt = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.22, 0.22, 0.05, 32),
-    new THREE.MeshStandardMaterial({
+  const qt = new e.Mesh(
+    new e.CylinderGeometry(0.22, 0.22, 0.05, 32),
+    new e.MeshStandardMaterial({
       color: "#f6efe5",
       roughness: 0.9,
       metalness: 0.02,
@@ -4089,78 +3994,78 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
   );
   ((qt.rotation.z = Math.PI / 2),
     qt.position.set(me + 6.1, 2.14, he - 0.02),
-    worldGroup.add(qt),
+    j.add(qt),
     t.lightBeams.forEach((t, o) => {
-      const a = new THREE.MeshBasicMaterial({
+      const a = new e.MeshBasicMaterial({
           color: "right" === t.side ? "#ffd79f" : "#f7e2be",
           transparent: !0,
           opacity: 1.25 * t.alpha,
           depthWrite: !1,
-          side: THREE.DoubleSide,
+          side: e.DoubleSide,
         }),
-        n = new THREE.Mesh(new THREE.PlaneGeometry(worldToScene(t.width), worldToScene(t.reach)), a);
+        n = new e.Mesh(new e.PlaneGeometry(g(t.width), g(t.reach)), a);
       ("right" === t.side
-        ? (n.position.set(te - 0.18, 1.3, worldToScene(t.z)),
+        ? (n.position.set(te - 0.18, 1.3, g(t.z)),
           (n.rotation.x = -Math.PI / 2.76),
           (n.rotation.z = 0.12))
-        : (n.position.set(ee + 0.44, 1.24, worldToScene(t.z)),
+        : (n.position.set(ee + 0.44, 1.24, g(t.z)),
           (n.rotation.x = Math.PI / 2.7),
           (n.rotation.z = -0.12)),
         (n.rotation.y = o % 2 ? 0.06 : -0.06),
-        worldGroup.add(n));
+        j.add(n));
     }));
-  const lightBeamR1 = createGlowPlane("rgba(255,228,168,1)", 9.2, 4.4, 0.76);
-  (lightBeamR1.position.set(N + 1.96, 0.018, worldToScene(t.frontDoor.center.z - 28)),
-    (lightBeamR1.rotation.x = -Math.PI / 2),
-    (lightBeamR1.rotation.z = 0.12),
-    worldGroup.add(lightBeamR1));
-  const lightBeamR2 = createGlowPlane("rgba(255,236,195,1)", 9.6, 4.8, 0.66);
-  (lightBeamR2.position.set(N + 0.72, 1.56, worldToScene(t.frontDoor.center.z + 44)),
-    (lightBeamR2.rotation.y = Math.PI / 2),
-    (lightBeamR2.rotation.z = 0.04),
-    worldGroup.add(lightBeamR2));
-  const Zt = createGlowPlane("rgba(255,232,182,1)", 4.8, 3.2, 0.44);
-  (Zt.position.set(ee + 0.12, 1.74, worldToScene(t.frontDoor.center.z - 32)),
+  const _t = b("rgba(255,228,168,1)", 9.2, 4.4, 0.76);
+  (_t.position.set(N + 1.96, 0.018, g(t.frontDoor.center.z - 28)),
+    (_t.rotation.x = -Math.PI / 2),
+    (_t.rotation.z = 0.12),
+    j.add(_t));
+  const At = b("rgba(255,236,195,1)", 9.6, 4.8, 0.66);
+  (At.position.set(N + 0.72, 1.56, g(t.frontDoor.center.z + 44)),
+    (At.rotation.y = Math.PI / 2),
+    (At.rotation.z = 0.04),
+    j.add(At));
+  const Zt = b("rgba(255,232,182,1)", 4.8, 3.2, 0.44);
+  (Zt.position.set(ee + 0.12, 1.74, g(t.frontDoor.center.z - 32)),
     (Zt.rotation.y = Math.PI / 2),
-    worldGroup.add(Zt));
-  const Lt = createGlowPlane("rgba(255,241,210,1)", 3.6, 2.8, 0.46);
-  (Lt.position.set(ee + 0.48, 1.52, worldToScene(t.frontDoor.center.z + 8)),
+    j.add(Zt));
+  const Lt = b("rgba(255,241,210,1)", 3.6, 2.8, 0.46);
+  (Lt.position.set(ee + 0.48, 1.52, g(t.frontDoor.center.z + 8)),
     (Lt.rotation.y = Math.PI / 2),
-    worldGroup.add(Lt));
-  const lightBeamL1 = createGlowPlane("rgba(255,220,162,1)", 9.4, 4, 0.66);
-  (lightBeamL1.position.set(te - 3.18, 0.019, worldToScene(t.classroom.lightWellZ + 84)),
-    (lightBeamL1.rotation.x = -Math.PI / 2),
-    (lightBeamL1.rotation.z = -0.16),
-    worldGroup.add(lightBeamL1));
-  const lightBeamL2 = createGlowPlane("rgba(255,232,186,1)", 7, 3.4, 0.48);
-  (lightBeamL2.position.set(ee + 2.16, 0.018, worldToScene(t.classroom.lightWellZ - 104)),
-    (lightBeamL2.rotation.x = -Math.PI / 2),
-    (lightBeamL2.rotation.z = 0.14),
-    worldGroup.add(lightBeamL2));
-  const lightBeamC2 = createGlowPlane("rgba(255,240,198,1)", 3.8, 2.1, 0.34);
-  (lightBeamC2.position.set(ee + 1.12, 0.018, worldToScene(t.backDoor.center.z)),
-    (lightBeamC2.rotation.x = -Math.PI / 2),
-    (lightBeamC2.rotation.z = 0.08),
-    worldGroup.add(lightBeamC2));
-  const lightBeamC1 = createGlowPlane("rgba(255,220,172,1)", 5.2, 2.8, 0.50);
-  (lightBeamC1.position.set(worldToScene(1896), 0.02, worldToScene(2058)),
-    (lightBeamC1.rotation.x = -Math.PI / 2),
-    (lightBeamC1.rotation.z = -0.22),
-    worldGroup.add(lightBeamC1),
+    j.add(Lt));
+  const Xt = b("rgba(255,220,162,1)", 9.4, 4, 0.66);
+  (Xt.position.set(te - 3.18, 0.019, g(t.classroom.lightWellZ + 84)),
+    (Xt.rotation.x = -Math.PI / 2),
+    (Xt.rotation.z = -0.16),
+    j.add(Xt));
+  const jt = b("rgba(255,232,186,1)", 7, 3.4, 0.48);
+  (jt.position.set(ee + 2.16, 0.018, g(t.classroom.lightWellZ - 104)),
+    (jt.rotation.x = -Math.PI / 2),
+    (jt.rotation.z = 0.14),
+    j.add(jt));
+  const $t = b("rgba(255,240,198,1)", 3.8, 2.1, 0.34);
+  ($t.position.set(ee + 1.12, 0.018, g(t.backDoor.center.z)),
+    ($t.rotation.x = -Math.PI / 2),
+    ($t.rotation.z = 0.08),
+    j.add($t));
+  const Ht = b("rgba(255,220,172,1)", 5.2, 2.8, 0.50);
+  (Ht.position.set(g(1896), 0.02, g(2058)),
+    (Ht.rotation.x = -Math.PI / 2),
+    (Ht.rotation.z = -0.22),
+    j.add(Ht),
     t.desks.forEach((t, o) => {
-      const a = worldToScene(t.x),
-        n = worldToScene(t.z),
-        s = new THREE.Group();
+      const a = g(t.x),
+        n = g(t.z),
+        s = new e.Group();
       s.position.set(a, 0, n);
-      const r = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.08, 0.84), deskMat);
+      const r = new e.Mesh(new e.BoxGeometry(0.68, 0.08, 0.84), Je);
       r.position.set(0, 0.78, 0.08);
-      const i = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.05, 0.24), deskMat);
+      const i = new e.Mesh(new e.BoxGeometry(0.38, 0.05, 0.24), Je);
       i.position.set(0, 0.48, 0.1);
-      const l = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.24, 0.04), deskMat);
+      const l = new e.Mesh(new e.BoxGeometry(0.46, 0.24, 0.04), Je);
       l.position.set(0, 0.64, -0.16);
-      const c = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.05, 0.3), deskMat);
+      const c = new e.Mesh(new e.BoxGeometry(0.28, 0.05, 0.3), Je);
       c.position.set(0, 0.49, -0.42);
-      const h = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.44, 0.05), deskMat);
+      const h = new e.Mesh(new e.BoxGeometry(0.28, 0.44, 0.05), Je);
       if (
         (h.position.set(0, 0.78, -0.56),
         s.add(r, i, l, c, h),
@@ -4170,7 +4075,7 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
           [-0.24, 0.28],
           [0.24, 0.28],
         ].forEach(([t, o]) => {
-          const a = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.78, 0.06), metalMat);
+          const a = new e.Mesh(new e.BoxGeometry(0.06, 0.78, 0.06), Ke);
           (a.position.set(t, 0.39, o), s.add(a));
         }),
         [
@@ -4179,14 +4084,14 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
           [-0.12, -0.3],
           [0.12, -0.3],
         ].forEach(([t, o]) => {
-          const a = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.46, 0.04), metalMat);
+          const a = new e.Mesh(new e.BoxGeometry(0.04, 0.46, 0.04), Ke);
           (a.position.set(t, 0.23, o), s.add(a));
         }),
         o % 4 == 2)
       ) {
-        const t = new THREE.Mesh(
-          new THREE.BoxGeometry(0.19, 0.018, 0.14),
-          new THREE.MeshStandardMaterial({
+        const t = new e.Mesh(
+          new e.BoxGeometry(0.19, 0.018, 0.14),
+          new e.MeshStandardMaterial({
             color: "#f2eee8",
             roughness: 0.94,
             metalness: 0.01,
@@ -4194,39 +4099,39 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
         );
         (t.position.set(0.1, 0.83, 0.14), (t.rotation.y = 0.26), s.add(t));
       }
-      (applyShadows(s, !1, !0),
-        worldGroup.add(s),
-        addCollider(colliderBoxes, a - 0.38, a + 0.38, n - 0.66, n + 0.5, `desk_${o}`));
+      (x(s, !1, !0),
+        j.add(s),
+        I(Z, a - 0.38, a + 0.38, n - 0.66, n + 0.5, `desk_${o}`));
     }),
     t.notes.forEach((t) => {
-      const o = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.22, 0.18),
-        new THREE.MeshStandardMaterial({
+      const o = new e.Mesh(
+        new e.PlaneGeometry(0.22, 0.18),
+        new e.MeshStandardMaterial({
           color: "#f4efe6",
           roughness: 0.96,
           metalness: 0.01,
-          side: THREE.DoubleSide,
+          side: e.DoubleSide,
         }),
       );
       ((o.rotation.x = -Math.PI / 2),
-        o.position.set(worldToScene(t.x), worldToScene(t.y) + 0.01, worldToScene(t.z)),
-        worldGroup.add(o));
+        o.position.set(g(t.x), g(t.y) + 0.01, g(t.z)),
+        j.add(o));
     }),
     t.campusTrees.forEach((t, o) => {
       const a = (function ({ scale: t = 1, colorVariant: o = 0 }) {
-        const a = new THREE.Group(),
-          n = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.07 * t, 0.22 * t, 2.4 * t, 14),
-            new THREE.MeshStandardMaterial({
+        const a = new e.Group(),
+          n = new e.Mesh(
+            new e.CylinderGeometry(0.07 * t, 0.22 * t, 2.4 * t, 14),
+            new e.MeshStandardMaterial({
               color: "#5e3f28",
               roughness: 0.94,
               metalness: 0.02,
             }),
           );
         ((n.position.y = 1.2 * t), a.add(n));
-        const s = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.05 * t, 0.08 * t, 1.9 * t, 10),
-          new THREE.MeshStandardMaterial({
+        const s = new e.Mesh(
+          new e.CylinderGeometry(0.05 * t, 0.08 * t, 1.9 * t, 10),
+          new e.MeshStandardMaterial({
             color: "#7a5638",
             roughness: 0.84,
             metalness: 0.02,
@@ -4235,20 +4140,20 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
           }),
         );
         (s.position.set(-0.02 * t, 1.24 * t, 0.08 * t), a.add(s));
-        const r = new THREE.MeshStandardMaterial({
+        const r = new e.MeshStandardMaterial({
             color: "#5e3f28",
             roughness: 0.92,
             metalness: 0.02,
           }),
-          i = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.02 * t, 0.04 * t, 0.8 * t, 6),
+          i = new e.Mesh(
+            new e.CylinderGeometry(0.02 * t, 0.04 * t, 0.8 * t, 6),
             r,
           );
         (i.position.set(0.2 * t, 1.9 * t, 0.1 * t),
           (i.rotation.z = -0.7),
           a.add(i));
-        const l = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.018 * t, 0.035 * t, 0.7 * t, 6),
+        const l = new e.Mesh(
+          new e.CylinderGeometry(0.018 * t, 0.035 * t, 0.7 * t, 6),
           r,
         );
         (l.position.set(-0.18 * t, 2.1 * t, -0.12 * t),
@@ -4274,17 +4179,17 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
             .toString(16)
             .padStart(2, "0")}`,
           f = [
-            new THREE.MeshStandardMaterial({
+            new e.MeshStandardMaterial({
               color: h,
               roughness: 0.94,
               metalness: 0.01,
             }),
-            new THREE.MeshStandardMaterial({
+            new e.MeshStandardMaterial({
               color: w,
               roughness: 0.92,
               metalness: 0.01,
             }),
-            new THREE.MeshStandardMaterial({
+            new e.MeshStandardMaterial({
               color: M,
               roughness: 0.96,
               metalness: 0.01,
@@ -4299,23 +4204,23 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
             [-0.56, 2.76, -0.2, 0.8, 0.84, 0.7, 2],
             [0.12, 3.56, 0.08, 0.58, 0.6, 0.52, 0],
           ].forEach(([o, n, s, r, i, l, c]) => {
-            const h = new THREE.Mesh(new THREE.SphereGeometry(0.52 * t, 10, 10), f[c]);
+            const h = new e.Mesh(new e.SphereGeometry(0.52 * t, 10, 10), f[c]);
             (h.position.set(o * t, n * t, s * t),
               h.scale.set(r, i, l),
               a.add(h));
           }),
-          applyShadows(a),
+          x(a),
           a
         );
       })({ scale: 2.5 * t.scale, colorVariant: o });
-      (a.position.set(worldToScene(t.x), at, worldToScene(t.z)),
+      (a.position.set(g(t.x), at, g(t.z)),
         (a.rotation.y = 0.6 * o),
-        applyShadows(a, !1, !0),
-        worldGroup.add(a));
+        x(a, !1, !0),
+        j.add(a));
     }));
-  const Ft = new THREE.Mesh(
-    new THREE.BoxGeometry(4.8, 6, 0.54 * se),
-    new THREE.MeshStandardMaterial({
+  const Ft = new e.Mesh(
+    new e.BoxGeometry(4.8, 6, 0.54 * se),
+    new e.MeshStandardMaterial({
       color: "#b7bec7",
       roughness: 0.95,
       metalness: 0.02,
@@ -4323,7 +4228,7 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
   );
   (Ft.position.set(N - 0.34 * ot, -9, re + 0.2),
     (Ft.receiveShadow = !0),
-    worldGroup.add(Ft));
+    j.add(Ft));
   const Nt = document.createElement("canvas");
   ((Nt.width = 512), (Nt.height = 512));
   const Ot = Nt.getContext("2d");
@@ -4383,27 +4288,27 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
         ][n % 3]),
         Ot.fill());
   });
-  const Jt = new THREE.CanvasTexture(Nt);
-  ((Jt.colorSpace = THREE.SRGBColorSpace),
-    (Jt.wrapS = THREE.RepeatWrapping),
-    (Jt.wrapT = THREE.RepeatWrapping),
+  const Jt = new e.CanvasTexture(Nt);
+  ((Jt.colorSpace = e.SRGBColorSpace),
+    (Jt.wrapS = e.RepeatWrapping),
+    (Jt.wrapT = e.RepeatWrapping),
     Jt.repeat.set(3, 3));
-  const Kt = new THREE.MeshStandardMaterial({
+  const Kt = new e.MeshStandardMaterial({
       color: "#5a7a48",
       map: Jt,
       roughness: 0.92,
       metalness: 0.01,
     }),
-    Qt = new THREE.Mesh(new THREE.PlaneGeometry(4 * ot, 3 * se), Kt);
+    Qt = new e.Mesh(new e.PlaneGeometry(4 * ot, 3 * se), Kt);
   ((Qt.rotation.x = -Math.PI / 2),
     Qt.position.set(N - 0.8 * ot, at, re),
     (Qt.receiveShadow = !0),
-    worldGroup.add(Qt));
+    j.add(Qt));
   [
     {
       wall: "#c4bfb6",
       w: 3.6,
-      h: worldToScene(520),
+      h: g(520),
       d: 8.4,
       px: 0.72,
       pz: 900,
@@ -4414,7 +4319,7 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
     {
       wall: "#b8c2ca",
       w: 5.2,
-      h: worldToScene(440),
+      h: g(440),
       d: 6.8,
       px: 0.88,
       pz: 1800,
@@ -4425,7 +4330,7 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
     {
       wall: "#d2ccc4",
       w: 4.4,
-      h: worldToScene(280),
+      h: g(280),
       d: 10.2,
       px: 0.64,
       pz: 2700,
@@ -4436,7 +4341,7 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
     {
       wall: "#c8bfb0",
       w: 3,
-      h: worldToScene(480),
+      h: g(480),
       d: 5.6,
       px: 0.82,
       pz: 1350,
@@ -4447,7 +4352,7 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
     {
       wall: "#d4c8bc",
       w: 6,
-      h: worldToScene(240),
+      h: g(240),
       d: 7.4,
       px: 0.56,
       pz: 3200,
@@ -4490,8 +4395,8 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
                 ((i.fillStyle = "rgba(255,255,255,0.15)"),
                 i.fillRect(o + 1, a + 1, 0.3 * p, 0.4 * m)));
           }
-        const w = new THREE.CanvasTexture(r);
-        return ((w.colorSpace = THREE.SRGBColorSpace), w);
+        const w = new e.CanvasTexture(r);
+        return ((w.colorSpace = e.SRGBColorSpace), w);
       })(t.wall, t.wr, t.wc, 192, 128),
       a = t.px,
       n = parseInt(t.wall.slice(1, 3), 16),
@@ -4501,51 +4406,51 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
       l = Math.round(s + (232 - s) * a * 0.3),
       c = Math.round(r + (240 - r) * a * 0.3),
       h = `#${i.toString(16).padStart(2, "0")}${l.toString(16).padStart(2, "0")}${c.toString(16).padStart(2, "0")}`,
-      d = new THREE.MeshStandardMaterial({
+      d = new e.MeshStandardMaterial({
         color: h,
         map: o,
         roughness: 0.9,
         metalness: 0.03,
       }),
-      p = new THREE.Mesh(new THREE.BoxGeometry(t.w, t.h, t.d), d);
+      p = new e.Mesh(new e.BoxGeometry(t.w, t.h, t.d), d);
     if (
-      (p.position.set(N - ot * t.px, at + t.h / 2, worldToScene(t.pz)),
+      (p.position.set(N - ot * t.px, at + t.h / 2, g(t.pz)),
       (p.receiveShadow = !0),
       (p.castShadow = !0),
-      worldGroup.add(p),
+      j.add(p),
       "ledge" === t.roof)
     ) {
-      const o = new THREE.Mesh(
-        new THREE.BoxGeometry(t.w + 0.2, 0.08, t.d + 0.2),
-        new THREE.MeshStandardMaterial({
+      const o = new e.Mesh(
+        new e.BoxGeometry(t.w + 0.2, 0.08, t.d + 0.2),
+        new e.MeshStandardMaterial({
           color: "#a0988e",
           roughness: 0.88,
           metalness: 0.04,
         }),
       );
-      (o.position.set(N - ot * t.px, at + t.h + 0.04, worldToScene(t.pz)), worldGroup.add(o));
-      const a = new THREE.Mesh(
-        new THREE.BoxGeometry(t.w + 0.16, 0.18, t.d + 0.16),
-        new THREE.MeshStandardMaterial({
+      (o.position.set(N - ot * t.px, at + t.h + 0.04, g(t.pz)), j.add(o));
+      const a = new e.Mesh(
+        new e.BoxGeometry(t.w + 0.16, 0.18, t.d + 0.16),
+        new e.MeshStandardMaterial({
           color: "#b8b0a6",
           roughness: 0.9,
           metalness: 0.02,
         }),
       );
-      (a.position.set(N - ot * t.px, at + t.h + 0.12, worldToScene(t.pz)), worldGroup.add(a));
+      (a.position.set(N - ot * t.px, at + t.h + 0.12, g(t.pz)), j.add(a));
     } else {
-      const o = new THREE.Mesh(
-        new THREE.BoxGeometry(t.w + 0.1, 0.06, t.d + 0.1),
-        new THREE.MeshStandardMaterial({
+      const o = new e.Mesh(
+        new e.BoxGeometry(t.w + 0.1, 0.06, t.d + 0.1),
+        new e.MeshStandardMaterial({
           color: "#8a8480",
           roughness: 0.92,
           metalness: 0.03,
         }),
       );
-      (o.position.set(N - ot * t.px, at + t.h + 0.03, worldToScene(t.pz)), worldGroup.add(o));
+      (o.position.set(N - ot * t.px, at + t.h + 0.03, g(t.pz)), j.add(o));
     }
   });
-  const eo = new THREE.SphereGeometry(120, 32, 16, 0, 2 * Math.PI, 0, Math.PI / 2),
+  const eo = new e.SphereGeometry(120, 32, 16, 0, 2 * Math.PI, 0, Math.PI / 2),
     to = document.createElement("canvas");
   ((to.width = 512), (to.height = 512));
   const oo = to.getContext("2d"),
@@ -4604,24 +4509,24 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
         oo.ellipse(e, t, o, a, 0, 0, 2 * Math.PI),
         oo.fill());
     }));
-  const lo = new THREE.CanvasTexture(to);
-  lo.colorSpace = THREE.SRGBColorSpace;
-  const co = new THREE.MeshBasicMaterial({
+  const lo = new e.CanvasTexture(to);
+  lo.colorSpace = e.SRGBColorSpace;
+  const co = new e.MeshBasicMaterial({
       map: lo,
-      side: THREE.BackSide,
+      side: e.BackSide,
       fog: !1,
       depthWrite: !1,
     }),
-    ho = new THREE.Mesh(eo, co);
-  (ho.position.set(N - 0.3 * ot, at, re), worldGroup.add(ho));
-  const po = new THREE.Mesh(
-    new THREE.SphereGeometry(3.6, 24, 24),
-    new THREE.MeshBasicMaterial({ color: "#fffbe8", fog: !1 }),
+    ho = new e.Mesh(eo, co);
+  (ho.position.set(N - 0.3 * ot, at, re), j.add(ho));
+  const po = new e.Mesh(
+    new e.SphereGeometry(3.6, 24, 24),
+    new e.MeshBasicMaterial({ color: "#fffbe8", fog: !1 }),
   );
-  (po.position.set(-11.2, 10.8, 5.4), worldGroup.add(po));
-  const mo = new THREE.Mesh(
-    new THREE.SphereGeometry(6, 16, 16),
-    new THREE.MeshBasicMaterial({
+  (po.position.set(-11.2, 10.8, 5.4), j.add(po));
+  const mo = new e.Mesh(
+    new e.SphereGeometry(6, 16, 16),
+    new e.MeshBasicMaterial({
       color: "#fff4d0",
       transparent: !0,
       opacity: 0.25,
@@ -4629,10 +4534,10 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
       depthWrite: !1,
     }),
   );
-  (mo.position.copy(po.position), worldGroup.add(mo));
+  (mo.position.copy(po.position), j.add(mo));
   const wo = N - 0.3 * ot,
     Mo = re,
-    clouds = [];
+    fo = [];
   [
     { x: -20, y: 38, z: -30, w: 12, h: 4 },
     { x: 15, y: 42, z: -20, w: 10, h: 3 },
@@ -4663,16 +4568,16 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
           a.arc(e, t, o, 0, 2 * Math.PI),
           a.fill());
       }));
-    const s = new THREE.CanvasTexture(o);
-    s.colorSpace = THREE.SRGBColorSpace;
-    const r = new THREE.Mesh(
-      new THREE.PlaneGeometry(t.w, t.h),
-      new THREE.MeshBasicMaterial({
+    const s = new e.CanvasTexture(o);
+    s.colorSpace = e.SRGBColorSpace;
+    const r = new e.Mesh(
+      new e.PlaneGeometry(t.w, t.h),
+      new e.MeshBasicMaterial({
         map: s,
         transparent: !0,
         opacity: 0.6,
         depthWrite: !1,
-        side: THREE.DoubleSide,
+        side: e.DoubleSide,
         fog: !1,
       }),
     );
@@ -4680,20 +4585,20 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
       (r.rotation.x = -0.15),
       (r.userData.startX = r.position.x),
       (r.userData.speed = 0.15 + 0.2 * Math.random()),
-      worldGroup.add(r),
-      clouds.push(r));
+      j.add(r),
+      fo.push(r));
   });
-  const birds = [];
+  const uo = [];
   for (let t = 0; t < 4; t++) {
-    const o = new THREE.Group(),
-      a = new THREE.MeshBasicMaterial({
+    const o = new e.Group(),
+      a = new e.MeshBasicMaterial({
         color: "#2a2a2a",
-        side: THREE.DoubleSide,
+        side: e.DoubleSide,
         fog: !1,
       }),
-      n = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.08), a);
+      n = new e.Mesh(new e.PlaneGeometry(0.4, 0.08), a);
     (n.position.set(-0.18, 0, 0), (n.rotation.z = 0.3));
-    const s = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.08), a);
+    const s = new e.Mesh(new e.PlaneGeometry(0.4, 0.08), a);
     (s.position.set(0.18, 0, 0),
       (s.rotation.z = -0.3),
       o.add(n, s),
@@ -4704,48 +4609,48 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
       (o.userData.wingR = s),
       (o.userData.speed = 0.6 + 0.4 * Math.random()),
       (o.userData.phase = Math.random() * Math.PI * 2),
-      worldGroup.add(o),
-      birds.push(o));
+      j.add(o),
+      uo.push(o));
   }
-  const yo = new THREE.BufferGeometry(),
+  const yo = new e.BufferGeometry(),
     go = [];
   for (let t = 0; t < renderTuning.dustCount; t += 1)
     go.push(
-      THREE.MathUtils.lerp(N + 0.24, O - 0.2, Math.random()),
-      THREE.MathUtils.lerp(0.26, 2.84, Math.random()),
-      THREE.MathUtils.lerp(Y + 0.2, J - 0.2, Math.random()),
+      e.MathUtils.lerp(N + 0.24, O - 0.2, Math.random()),
+      e.MathUtils.lerp(0.26, 2.84, Math.random()),
+      e.MathUtils.lerp(Y + 0.2, J - 0.2, Math.random()),
     );
-  yo.setAttribute("position", new THREE.Float32BufferAttribute(go, 3));
-  const xo = new THREE.PointsMaterial({
+  yo.setAttribute("position", new e.Float32BufferAttribute(go, 3));
+  const xo = new e.PointsMaterial({
       color: "#ffe8b0",
       size: 0.055,
       transparent: !0,
       opacity: 0.36,
       depthWrite: !1,
     }),
-    skyDome = new THREE.Points(yo, xo);
-  worldGroup.add(skyDome);
-  const So = new THREE.Mesh(
-    new THREE.BoxGeometry(ne, 0.08, ut),
-    new THREE.MeshStandardMaterial({ color: "#f3f1ed", roughness: 0.94, metalness: 0.01 }),
+    bo = new e.Points(yo, xo);
+  j.add(bo);
+  const So = new e.Mesh(
+    new e.BoxGeometry(ne, 0.08, ut),
+    new e.MeshStandardMaterial({ color: "#f3f1ed", roughness: 0.94, metalness: 0.01 }),
   );
   (So.position.set((ee + te) / 2, 2.88, yt),
     (So.receiveShadow = !0),
-    worldGroup.add(So));
-  const zo = new THREE.MeshStandardMaterial({
+    j.add(So));
+  const zo = new e.MeshStandardMaterial({
       color: "#ffffff",
       emissive: "#ffffff",
       emissiveIntensity: 0.5,
     }),
-    Po = new THREE.BoxGeometry(0.3, 0.04, 0.3);
+    Po = new e.BoxGeometry(0.3, 0.04, 0.3);
   t.desks.forEach((t, o) => {
     if (o % 4 != 0) return;
-    const a = new THREE.Mesh(Po, zo);
-    (a.position.set(worldToScene(t.x), 2.86, worldToScene(t.z)), worldGroup.add(a));
+    const a = new e.Mesh(Po, zo);
+    (a.position.set(g(t.x), 2.86, g(t.z)), j.add(a));
   });
-  const worldAnchors = {
-      senior: new THREE.Vector3(),
-      junior: new THREE.Vector3(),
+  const vo = {
+      senior: new e.Vector3(),
+      junior: new e.Vector3(),
       frontDoor: ve(
         t.frontDoor.center.x,
         t.frontDoor.center.y,
@@ -4757,14 +4662,14 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
         t.backDoor.center.z,
       ),
       doorPlaque: ve(t.plaque.x, t.plaque.y, t.plaque.z),
-      parapetBand: new THREE.Vector3(
+      parapetBand: new e.Vector3(
         N + 0.22,
-        worldToScene(t.corridor.parapetHeight) + 0.32,
-        worldToScene(t.frontDoor.center.z - 8),
+        g(t.corridor.parapetHeight) + 0.32,
+        g(t.frontDoor.center.z - 8),
       ),
-      boardWall: new THREE.Vector3(me, worldToScene((t.board.y1 + t.board.y2) / 2), he - 0.02),
+      boardWall: new e.Vector3(me, g((t.board.y1 + t.board.y2) / 2), he - 0.02),
     },
-    seniorChar = buildCharacterBody({
+    Go = S({
       torso: "#f8f8f8",
       torsoAccent: "#f2f2f2",
       legs: "#3d5c8a",
@@ -4778,7 +4683,7 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
       scale: 1.08,
       pompadour: !0,
     }),
-    juniorChar = buildCharacterBody({
+    Co = S({
       torso: "#f6f4f0",
       torsoAccent: "#faf8f4",
       legs: "#1c2e46",
@@ -4796,7 +4701,7 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
       skinGlow: 0.22,
       hairSheen: 0.35,
     }),
-    fatherEcho = buildCharacterBody({
+    Bo = S({
       torso: "#f2c49e",
       torsoAccent: "#ffd8b8",
       legs: "#ffe9d5",
@@ -4809,7 +4714,7 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
       echoColor: "#ffd5b0",
       scale: 0.98,
     }),
-    auntEcho = buildCharacterBody({
+    ko = S({
       torso: "#ffd8e4",
       torsoAccent: "#ffe8ef",
       legs: "#ffd8e4",
@@ -4822,10 +4727,10 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
       echoColor: "#ffc0d6",
       scale: 1,
   });
-  characterGroup.add(seniorChar, juniorChar, fatherEcho, auntEcho);
-  juniorChar.userData.legacyChildren = [...juniorChar.children];
-  const juniorRuntimeModelRoot = new THREE.Group(),
-    juniorHeroCloseupModelRoot = new THREE.Group();
+  $.add(Go, Co, Bo, ko);
+  Co.userData.legacyChildren = [...Co.children];
+  const juniorRuntimeModelRoot = new e.Group(),
+    juniorHeroCloseupModelRoot = new e.Group();
   (juniorRuntimeModelRoot.name = "junior-runtime-model-root",
     (juniorRuntimeModelRoot.visible = !1),
     (juniorRuntimeModelRoot.userData.ready = !1),
@@ -4834,34 +4739,34 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
     (juniorHeroCloseupModelRoot.visible = !1),
     (juniorHeroCloseupModelRoot.userData.ready = !1),
     (juniorHeroCloseupModelRoot.userData.kind = "hero_closeup"),
-    juniorChar.add(juniorRuntimeModelRoot, juniorHeroCloseupModelRoot));
-  juniorChar.userData.runtimeModelRoot = juniorRuntimeModelRoot;
-  juniorChar.userData.heroCloseupModelRoot = juniorHeroCloseupModelRoot;
-  juniorChar.userData.pose &&
-    ((juniorChar.userData.pose.runtimeModelRoot = juniorRuntimeModelRoot),
-    (juniorChar.userData.pose.heroCloseupModelRoot = juniorHeroCloseupModelRoot));
-  const juniorHeroLight = new THREE.SpotLight(16772596, 3.2, 22, 0.38, 0.45, 0.9);
-  (juniorHeroLight.position.set(ee + 3.8, 4.3, worldToScene(t.backDoor.center.z + 96)),
+    Co.add(juniorRuntimeModelRoot, juniorHeroCloseupModelRoot));
+  Co.userData.runtimeModelRoot = juniorRuntimeModelRoot;
+  Co.userData.heroCloseupModelRoot = juniorHeroCloseupModelRoot;
+  Co.userData.pose &&
+    ((Co.userData.pose.runtimeModelRoot = juniorRuntimeModelRoot),
+    (Co.userData.pose.heroCloseupModelRoot = juniorHeroCloseupModelRoot));
+  const juniorHeroLight = new e.SpotLight(16772596, 3.2, 22, 0.38, 0.45, 0.9);
+  (juniorHeroLight.position.set(ee + 3.8, 4.3, g(t.backDoor.center.z + 96)),
     juniorHeroLight.target.position.set(
-      worldToScene(120),
+      g(120),
       1.44,
-      worldToScene(t.backDoor.center.z + 6),
+      g(t.backDoor.center.z + 6),
     ),
-    scene.add(juniorHeroLight.target),
-    scene.add(juniorHeroLight));
-  const juniorRimLight = new THREE.PointLight(16774134, 2.2, 18, 1.6);
-  (juniorRimLight.position.set(ee + 0.84, 2.08, worldToScene(t.backDoor.center.z + 14)),
-    scene.add(juniorRimLight));
-  const juniorPortraitShell = new THREE.Group();
+    W.add(juniorHeroLight.target),
+    W.add(juniorHeroLight));
+  const juniorRimLight = new e.PointLight(16774134, 2.2, 18, 1.6);
+  (juniorRimLight.position.set(ee + 0.84, 2.08, g(t.backDoor.center.z + 14)),
+    W.add(juniorRimLight));
+  const juniorPortraitShell = new e.Group();
   ((juniorPortraitShell.name = "junior-portrait-shell"),
     (juniorPortraitShell.visible = !1),
     (juniorPortraitShell.userData.loaded = !1),
-    juniorChar.add(juniorPortraitShell),
-    (juniorChar.userData.portraitShell = juniorPortraitShell));
+    Co.add(juniorPortraitShell),
+    (Co.userData.portraitShell = juniorPortraitShell));
   (function () {
     const t = runtimeState.characterAssets?.junior2005;
     if (!t?.textures?.front && !t?.textures?.frontClose) return;
-    const o = new THREE.TextureLoader();
+    const o = new e.TextureLoader();
     assetState.textureStatus = "loading";
     Promise.all(
       Object.entries(t.textures ?? {})
@@ -4992,7 +4897,7 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
             t instanceof Error ? t.message : String(t).slice(0, 180)));
       });
   })();
-  const hotspotColors = { scene: 16507832, memory: 10148095 };
+  const To = { scene: 16507832, memory: 10148095 };
   [
     { id: "front_call", type: "scene" },
     { id: "plaque", type: "memory" },
@@ -5003,15 +4908,15 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
     { id: "backdoor", type: "scene" },
   ].forEach((t) => {
     const o = (function (t = 16507832) {
-      const o = new THREE.Group(),
-        a = new THREE.Mesh(
-          new THREE.TorusGeometry(0.18, 0.014, 12, 32),
-          new THREE.MeshBasicMaterial({ color: t, transparent: !0, opacity: 0.14 }),
+      const o = new e.Group(),
+        a = new e.Mesh(
+          new e.TorusGeometry(0.18, 0.014, 12, 32),
+          new e.MeshBasicMaterial({ color: t, transparent: !0, opacity: 0.14 }),
         );
       a.rotation.x = Math.PI / 2;
-      const n = new THREE.Mesh(
-        new THREE.SphereGeometry(0.05, 12, 12),
-        new THREE.MeshStandardMaterial({
+      const n = new e.Mesh(
+        new e.SphereGeometry(0.05, 12, 12),
+        new e.MeshStandardMaterial({
           color: 16777215,
           emissive: t,
           emissiveIntensity: 0.6,
@@ -5020,26 +4925,26 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
         }),
       );
       return (o.add(a, n), (o.visible = !1), o);
-    })(hotspotColors[t.type]);
-    (hotspotMap.set(t.id, o), hotspotGroup.add(o));
+    })(To[t.type]);
+    (L.set(t.id, o), F.add(o));
   });
-  const redThreadCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(N - 0.74 * ot, 12.2, worldToScene(3050)),
-      new THREE.Vector3(N - 0.62 * ot, 11, worldToScene(2820)),
-      new THREE.Vector3(N - 0.52 * ot, 9.8, worldToScene(2520)),
-      new THREE.Vector3(N - 0.42 * ot, 8.8, worldToScene(2140)),
-      new THREE.Vector3(N - 0.32 * ot, 7.6, worldToScene(1780)),
-      new THREE.Vector3(N - 0.2 * ot, 6.6, worldToScene(1430)),
-      new THREE.Vector3(N - 0.1 * ot, 5.6, worldToScene(1100)),
-      new THREE.Vector3(N + 0.08, 4.7, worldToScene(860)),
-      new THREE.Vector3(N + 0.62, 3.94, worldToScene(1380)),
-      new THREE.Vector3(Q + 1.42, 3.14, worldToScene(1780)),
-      new THREE.Vector3(Q + 2.28, 2.42, worldToScene(t.frontDoor.center.z - 214)),
-      new THREE.Vector3(Q + 2.06, 2.06, worldToScene(t.frontDoor.center.z - 146)),
+  const Io = new e.CatmullRomCurve3([
+      new e.Vector3(N - 0.74 * ot, 12.2, g(3050)),
+      new e.Vector3(N - 0.62 * ot, 11, g(2820)),
+      new e.Vector3(N - 0.52 * ot, 9.8, g(2520)),
+      new e.Vector3(N - 0.42 * ot, 8.8, g(2140)),
+      new e.Vector3(N - 0.32 * ot, 7.6, g(1780)),
+      new e.Vector3(N - 0.2 * ot, 6.6, g(1430)),
+      new e.Vector3(N - 0.1 * ot, 5.6, g(1100)),
+      new e.Vector3(N + 0.08, 4.7, g(860)),
+      new e.Vector3(N + 0.62, 3.94, g(1380)),
+      new e.Vector3(Q + 1.42, 3.14, g(1780)),
+      new e.Vector3(Q + 2.28, 2.42, g(t.frontDoor.center.z - 214)),
+      new e.Vector3(Q + 2.06, 2.06, g(t.frontDoor.center.z - 146)),
     ]),
-    redThreadMesh = new THREE.Mesh(
-      new THREE.TubeGeometry(redThreadCurve, 220, 0.074, 12, !1),
-      new THREE.MeshStandardMaterial({
+    Ro = new e.Mesh(
+      new e.TubeGeometry(Io, 220, 0.074, 12, !1),
+      new e.MeshStandardMaterial({
         color: "#f1627d",
         emissive: "#f1627d",
         emissiveIntensity: 1.72,
@@ -5049,40 +4954,40 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
         opacity: 0.96,
       }),
     );
-  introGroup.add(redThreadMesh);
-  const glowClose = createGlowPlane("rgba(255,116,142,1)", 1.8, 2.4, 0.44),
-    glowWarm = createGlowPlane("rgba(255,223,176,1)", 5.8, 4.6, 0.28),
-    glowSphere = new THREE.Mesh(
-      new THREE.SphereGeometry(0.1, 16, 16),
-      new THREE.MeshBasicMaterial({ color: "#ffd8e6" }),
+  H.add(Ro);
+  const Do = b("rgba(255,116,142,1)", 1.8, 2.4, 0.44),
+    Vo = b("rgba(255,223,176,1)", 5.8, 4.6, 0.28),
+    Eo = new e.Mesh(
+      new e.SphereGeometry(0.1, 16, 16),
+      new e.MeshBasicMaterial({ color: "#ffd8e6" }),
     ),
-    glowPink = createGlowPlane("rgba(255,157,182,1)", 3.2, 1.8, 0.22);
-  introGroup.add(glowClose, glowWarm, glowSphere, glowPink);
-  const glowRed = createGlowPlane("rgba(255,100,136,1)", 4.8, 2.2, 0.18);
-  function handleResize() {
-    const e = (canvasEl.parentElement ?? canvasEl).getBoundingClientRect(),
+    Uo = b("rgba(255,157,182,1)", 3.2, 1.8, 0.22);
+  H.add(Do, Vo, Eo, Uo);
+  const Wo = b("rgba(255,100,136,1)", 4.8, 2.2, 0.18);
+  function qo() {
+    const e = (D.parentElement ?? D).getBoundingClientRect(),
       t = Math.max(
         1,
-        Math.round(e.width || canvasEl.clientWidth || window.innerWidth || 1),
+        Math.round(e.width || D.clientWidth || window.innerWidth || 1),
       ),
       o = Math.max(
         1,
-        Math.round(e.height || canvasEl.clientHeight || window.innerHeight || 1),
+        Math.round(e.height || D.clientHeight || window.innerHeight || 1),
       );
-    (renderer.setPixelRatio(
+    (U.setPixelRatio(
       Math.min(window.devicePixelRatio || 1, renderTuning.maxPixelRatio),
     ),
-      renderer.setSize(t, o, !1),
-      renderer.setViewport(0, 0, t, o),
-      renderer.setScissor(0, 0, t, o),
-      renderer.setScissorTest(!1),
-      (renderer.domElement.style.width = `${t}px`),
-      (renderer.domElement.style.height = `${o}px`),
-      (camera.aspect = t / o),
-      camera.updateProjectionMatrix());
+      U.setSize(t, o, !1),
+      U.setViewport(0, 0, t, o),
+      U.setScissor(0, 0, t, o),
+      U.setScissorTest(!1),
+      (U.domElement.style.width = `${t}px`),
+      (U.domElement.style.height = `${o}px`),
+      (q.aspect = t / o),
+      q.updateProjectionMatrix());
   }
   const _isMobile = () => window.innerWidth <= 1080;
-  function applyCameraBobbing(e, t = 0, o = !0) {
+  function _o(e, t = 0, o = !0) {
     const a = Math.hypot(e.velocity?.x || 0, e.velocity?.z || 0),
       mobScale = _isMobile() ? 0.5 : 1,
       n = o ? Math.min(0.048, 0.014 * a) * mobScale : 0,
@@ -5092,12 +4997,12 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
       idleAmp = o && a < 0.02 ? 0.006 * mobScale : 0,
       idleY = idleAmp * Math.sin(1.4 * t),
       idleR = idleAmp * 0.3 * Math.sin(0.9 * t + 0.5);
-    (camera.position.set(e.x + r, 1.62 + s + idleY + (e.stairY || 0), e.z),
-      (camera.rotation.y = e.yaw),
-      (camera.rotation.x = e.pitch),
-      (camera.rotation.z = i + idleR));
+    (q.position.set(e.x + r, 1.62 + s + idleY + (e.stairY || 0), e.z),
+      (q.rotation.y = e.yaw),
+      (q.rotation.x = e.pitch),
+      (q.rotation.z = i + idleR));
   }
-  function getPerfectPhase(e) {
+  function Ao(e) {
     return e < (o.perfectOrbitEnd ?? 14.2)
       ? "orbit"
       : e < (o.perfectTransitionEnd ?? 17.4)
@@ -5108,9 +5013,9 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
             ? "eyes"
             : "overlay";
   }
-  function projectWorldToScreen(e, t, o, a) {
+  function Zo(e, t, o, a) {
     return (
-      s.copy(t).project(camera),
+      s.copy(t).project(q),
       {
         name: e,
         visible:
@@ -5122,27 +5027,27 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
       }
     );
   }
-  function computeHotspotLOS(t) {
+  function Lo(t) {
     const o = {};
     return (
       (t.hotspots || []).forEach((t) => {
         t.visible
           ? (o[t.id] = (function (e) {
-              n.copy(e).sub(camera.position);
+              n.copy(e).sub(q.position);
               const t = n.length(),
                 o = n.normalize();
-              raycaster.set(camera.position, o);
-              const a = raycaster.intersectObjects(occluderMeshes, !1);
+              _.set(q.position, o);
+              const a = _.intersectObjects(A, !1);
               return !a.length || a[0].distance >= t - 0.12;
-            })(new THREE.Vector3(t.x, t.y, t.z)))
+            })(new e.Vector3(t.x, t.y, t.z)))
           : (o[t.id] = !1);
       }),
       o
     );
   }
-  introGroup.add(glowRed);
-  let hologramInstance = null,
-    hologramSpawnTime = 0;
+  H.add(Wo);
+  let Xo = null,
+    jo = 0;
   /* ── 光線隧道蟲洞系統 ── */
   var _wormholeActive = false,
     _wormholeTime = 0,
@@ -5150,18 +5055,18 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
     _wormholeGroup = null;
   function initWormhole() {
     if (_wormholeGroup) return;
-    _wormholeGroup = new THREE.Group();
+    _wormholeGroup = new e.Group();
     _wormholeGroup.visible = false;
     /* 隧道圓柱體 — 從外觀看是一個向前拉伸的光管 */
-    var tunnelGeo = new THREE.CylinderGeometry(0.38, 0.52, 12, 24, 1, true);
-    var tunnelMat = new THREE.MeshBasicMaterial({
+    var tunnelGeo = new e.CylinderGeometry(0.38, 0.52, 12, 24, 1, true);
+    var tunnelMat = new e.MeshBasicMaterial({
       color: 0xaaddff,
       transparent: true,
       opacity: 0,
-      side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending,
+      side: e.DoubleSide,
+      blending: e.AdditiveBlending,
     });
-    var tunnel = new THREE.Mesh(tunnelGeo, tunnelMat);
+    var tunnel = new e.Mesh(tunnelGeo, tunnelMat);
     tunnel.rotation.x = Math.PI / 2;
     tunnel.userData.isTunnel = true;
     _wormholeGroup.add(tunnel);
@@ -5172,50 +5077,50 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
       var radius = 0.18 + Math.random() * 0.32;
       var streakLen = 1.4 + Math.random() * 2.2;
       var pts = [
-        new THREE.Vector3(Math.cos(angle) * radius, Math.sin(angle) * radius, 0),
-        new THREE.Vector3(Math.cos(angle) * radius * 0.4, Math.sin(angle) * radius * 0.4, -streakLen),
+        new e.Vector3(Math.cos(angle) * radius, Math.sin(angle) * radius, 0),
+        new e.Vector3(Math.cos(angle) * radius * 0.4, Math.sin(angle) * radius * 0.4, -streakLen),
       ];
-      var streakGeo = new THREE.BufferGeometry().setFromPoints(pts);
+      var streakGeo = new e.BufferGeometry().setFromPoints(pts);
       var hue = 0.54 + si * 0.012;
-      var streakMat = new THREE.LineBasicMaterial({
-        color: new THREE.Color().setHSL(hue % 1, 1, 0.82),
+      var streakMat = new e.LineBasicMaterial({
+        color: new e.Color().setHSL(hue % 1, 1, 0.82),
         transparent: true,
         opacity: 0,
-        blending: THREE.AdditiveBlending,
+        blending: e.AdditiveBlending,
         linewidth: 1,
       });
-      var streak = new THREE.Line(streakGeo, streakMat);
+      var streak = new e.Line(streakGeo, streakMat);
       streak.userData.isStreak = true;
       streak.userData.baseOpacity = 0.5 + Math.random() * 0.4;
       streak.userData.phase = Math.random() * Math.PI * 2;
       _wormholeGroup.add(streak);
     }
     /* 中央爆發光核 */
-    var coreGeo = new THREE.SphereGeometry(0.12, 12, 12);
-    var coreMat = new THREE.MeshBasicMaterial({
+    var coreGeo = new e.SphereGeometry(0.12, 12, 12);
+    var coreMat = new e.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
       opacity: 0,
-      blending: THREE.AdditiveBlending,
+      blending: e.AdditiveBlending,
     });
-    var core = new THREE.Mesh(coreGeo, coreMat);
+    var core = new e.Mesh(coreGeo, coreMat);
     core.userData.isCore = true;
     _wormholeGroup.add(core);
     /* 外圍光暈環 */
     for (var ri = 0; ri < 3; ri++) {
-      var haloGeo = new THREE.TorusGeometry(0.28 + ri * 0.22, 0.014, 8, 32);
-      var haloMat = new THREE.MeshBasicMaterial({
-        color: new THREE.Color().setHSL(0.56 + ri * 0.06, 1, 0.7),
+      var haloGeo = new e.TorusGeometry(0.28 + ri * 0.22, 0.014, 8, 32);
+      var haloMat = new e.MeshBasicMaterial({
+        color: new e.Color().setHSL(0.56 + ri * 0.06, 1, 0.7),
         transparent: true,
         opacity: 0,
-        blending: THREE.AdditiveBlending,
+        blending: e.AdditiveBlending,
       });
-      var halo = new THREE.Mesh(haloGeo, haloMat);
+      var halo = new e.Mesh(haloGeo, haloMat);
       halo.userData.isHalo = true;
       halo.userData.haloIdx = ri;
       _wormholeGroup.add(halo);
     }
-    worldGroup.add(_wormholeGroup);
+    j.add(_wormholeGroup);
   }
   function triggerWormhole(px, py, pz) {
     initWormhole();
@@ -5238,8 +5143,8 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
     peak = Math.max(0, Math.min(1, peak));
     /* 讓整個群組面向攝影機 (billboard Y) */
     _wormholeGroup.rotation.y = Math.atan2(
-      camera.position.x - _wormholeGroup.position.x,
-      camera.position.z - _wormholeGroup.position.z,
+      q.position.x - _wormholeGroup.position.x,
+      q.position.z - _wormholeGroup.position.z,
     );
     _wormholeGroup.children.forEach(function (c) {
       if (c.userData.isTunnel) {
@@ -5279,63 +5184,63 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
       if (t < stair.xOuter || t > stair.xInner || o < stair.z1 || o > stair.z2)
         continue;
       if (o >= stair.landing.z1 && o <= stair.landing.z2) return 0;
-      const a = THREE.MathUtils.clamp(
+      const a = e.MathUtils.clamp(
           (stair.xEntry - t) / Math.max(0.001, stair.xEntry - stair.xExit),
           0,
           1,
         ),
-        n = THREE.MathUtils.smoothstep(a, 0, 1);
+        n = e.MathUtils.smoothstep(a, 0, 1);
       return o < stair.landing.z1 ? stair.totalRise * n : -stair.totalRise * n;
     }
     return 0;
   }
   /* D1: atmosphere time-shift — progress 0 (10:40 cool morning) → 1 (11:00+ warm) */
   const _atmosBase = {
-    fogColor: new THREE.Color("#d0dce6"),
-    bgColor: new THREE.Color("#ccd8e4"),
-    dirColor: new THREE.Color(16772034),
+    fogColor: new e.Color("#d0dce6"),
+    bgColor: new e.Color("#ccd8e4"),
+    dirColor: new e.Color(16772034),
     dirIntensity: 2.8,
-    hemiSky: new THREE.Color(8900331),
-    hemiGround: new THREE.Color(9139029),
-    ambColor: new THREE.Color(16775408),
+    hemiSky: new e.Color(8900331),
+    hemiGround: new e.Color(9139029),
+    ambColor: new e.Color(16775408),
     ambIntensity: 0.22,
     exposure: 1.14,
   };
   const _atmosWarm = {
-    fogColor: new THREE.Color("#e2d0b8"),
-    bgColor: new THREE.Color("#dcc8b0"),
-    dirColor: new THREE.Color("#ffd080"),
+    fogColor: new e.Color("#e2d0b8"),
+    bgColor: new e.Color("#dcc8b0"),
+    dirColor: new e.Color("#ffd080"),
     dirIntensity: 3.6,
-    hemiSky: new THREE.Color("#b8d4e8"),
-    hemiGround: new THREE.Color("#d8c8a0"),
-    ambColor: new THREE.Color("#ffe8b8"),
+    hemiSky: new e.Color("#b8d4e8"),
+    hemiGround: new e.Color("#d8c8a0"),
+    ambColor: new e.Color("#ffe8b8"),
     ambIntensity: 0.32,
     exposure: 1.28,
   };
-  const _tmpColor = new THREE.Color();
+  const _tmpColor = new e.Color();
   function updateAtmosphere(progress) {
-    const p = THREE.MathUtils.clamp(progress, 0, 1);
-    scene.fog.color.copy(_atmosBase.fogColor).lerp(_atmosWarm.fogColor, p);
-    scene.background.copy(_atmosBase.bgColor).lerp(_atmosWarm.bgColor, p);
-    sunLight.color.copy(_atmosBase.dirColor).lerp(_atmosWarm.dirColor, p);
-    sunLight.intensity = THREE.MathUtils.lerp(_atmosBase.dirIntensity, _atmosWarm.dirIntensity, p);
-    hemisphereLight.color.copy(_atmosBase.hemiSky).lerp(_atmosWarm.hemiSky, p);
-    hemisphereLight.groundColor.copy(_atmosBase.hemiGround).lerp(_atmosWarm.hemiGround, p);
-    ambientLight.color.copy(_atmosBase.ambColor).lerp(_atmosWarm.ambColor, p);
-    ambientLight.intensity = THREE.MathUtils.lerp(_atmosBase.ambIntensity, _atmosWarm.ambIntensity, p);
-    renderer.toneMappingExposure = THREE.MathUtils.lerp(_atmosBase.exposure, _atmosWarm.exposure, p);
+    const p = e.MathUtils.clamp(progress, 0, 1);
+    W.fog.color.copy(_atmosBase.fogColor).lerp(_atmosWarm.fogColor, p);
+    W.background.copy(_atmosBase.bgColor).lerp(_atmosWarm.bgColor, p);
+    Te.color.copy(_atmosBase.dirColor).lerp(_atmosWarm.dirColor, p);
+    Te.intensity = e.MathUtils.lerp(_atmosBase.dirIntensity, _atmosWarm.dirIntensity, p);
+    Be.color.copy(_atmosBase.hemiSky).lerp(_atmosWarm.hemiSky, p);
+    Be.groundColor.copy(_atmosBase.hemiGround).lerp(_atmosWarm.hemiGround, p);
+    ke.color.copy(_atmosBase.ambColor).lerp(_atmosWarm.ambColor, p);
+    ke.intensity = e.MathUtils.lerp(_atmosBase.ambIntensity, _atmosWarm.ambIntensity, p);
+    U.toneMappingExposure = e.MathUtils.lerp(_atmosBase.exposure, _atmosWarm.exposure, p);
   }
   return {
     getStairY: getStairY,
     triggerWormhole: triggerWormhole,
     updateAtmosphere: updateAtmosphere,
-    _worldGroup: worldGroup,
-    _scene: scene,
+    _worldGroup: j,
+    _scene: W,
     render: function (s) {
-      handleResize();
+      qo();
       const sceneTime = s.time ?? 0;
       const perfectType = s.endingSequence?.type ?? s.ending,
-        perfectPhase = "perfect" === perfectType ? getPerfectPhase(s.endingSequence?.time ?? 0) : null,
+        perfectPhase = "perfect" === perfectType ? Ao(s.endingSequence?.time ?? 0) : null,
         juniorHeroLead =
           "rear_wait" === s.phase ||
           "eye_contact" === s.phase ||
@@ -5346,45 +5251,45 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
       (!(function (t) {
         const isIntro = "intro" === t.mode;
         if (
-          ((seniorChar.visible = !isIntro && (t.characters.senior.alpha ?? 1) > 0.02),
-          (juniorChar.visible = !isIntro),
-          (fatherEcho.visible = !isIntro && t.characters.fatherEcho.alpha > 0.02),
-          (auntEcho.visible = !isIntro && t.characters.auntEcho.alpha > 0.02),
-          (glowClose.visible = isIntro),
-          (glowWarm.visible = isIntro),
-          (glowSphere.visible = isIntro),
-          (glowPink.visible = isIntro),
-          (glowRed.visible = isIntro),
-          seniorChar.position.set(t.characters.senior.x, 0, t.characters.senior.z),
-          (seniorChar.rotation.y = t.characters.senior.rotationY ?? 0),
+          ((Go.visible = !isIntro && (t.characters.senior.alpha ?? 1) > 0.02),
+          (Co.visible = !isIntro),
+          (Bo.visible = !isIntro && t.characters.fatherEcho.alpha > 0.02),
+          (ko.visible = !isIntro && t.characters.auntEcho.alpha > 0.02),
+          (Do.visible = isIntro),
+          (Vo.visible = isIntro),
+          (Eo.visible = isIntro),
+          (Uo.visible = isIntro),
+          (Wo.visible = isIntro),
+          Go.position.set(t.characters.senior.x, 0, t.characters.senior.z),
+          (Go.rotation.y = t.characters.senior.rotationY ?? 0),
           (t.characters.senior.alpha ?? 1) < 1 &&
-            seniorChar.traverse((e) => {
+            Go.traverse((e) => {
               e.material && (e.material.opacity = t.characters.senior.alpha);
             }),
-          juniorChar.position.set(t.characters.junior.x, 0, t.characters.junior.z),
-          (juniorChar.rotation.y = t.characters.junior.rotationY ?? 0),
-          juniorHeroLight.position.set(juniorChar.position.x + 3.8, 4.3, juniorChar.position.z),
-          juniorRimLight.position.set(juniorChar.position.x + 0.84, 2.08, juniorChar.position.z + worldToScene(8)),
+          Co.position.set(t.characters.junior.x, 0, t.characters.junior.z),
+          (Co.rotation.y = t.characters.junior.rotationY ?? 0),
+          juniorHeroLight.position.set(Co.position.x + 3.8, 4.3, Co.position.z),
+          juniorRimLight.position.set(Co.position.x + 0.84, 2.08, Co.position.z + g(8)),
           juniorHeroLight.target.position.set(
-            juniorChar.position.x + 0.03,
+            Co.position.x + 0.03,
             1.54,
-            juniorChar.position.z + 0.06,
+            Co.position.z + 0.06,
           ),
-          fatherEcho.position.set(
+          Bo.position.set(
             t.characters.fatherEcho.x,
             0,
             t.characters.fatherEcho.z,
           ),
-          auntEcho.position.set(t.characters.auntEcho.x, 0, t.characters.auntEcho.z),
-          fatherEcho.traverse((e) => {
+          ko.position.set(t.characters.auntEcho.x, 0, t.characters.auntEcho.z),
+          Bo.traverse((e) => {
             e.material && (e.material.opacity = t.characters.fatherEcho.alpha);
           }),
-	          auntEcho.traverse((e) => {
+	          ko.traverse((e) => {
 	            e.material && (e.material.opacity = t.characters.auntEcho.alpha);
 	          }),
           (() => {
-            const e = juniorChar.userData.runtimeModelRoot ?? null,
-              o = juniorChar.userData.heroCloseupModelRoot ?? null,
+            const e = Co.userData.runtimeModelRoot ?? null,
+              o = Co.userData.heroCloseupModelRoot ?? null,
               a = Boolean(e?.userData?.ready),
               s = !1,
               r = a,
@@ -5397,7 +5302,7 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
 	              (o.userData.basePosition ??= o.position.clone(),
 	              o.userData.baseScale ??= o.scale.clone(),
 	              o.userData.baseRotation ??= o.rotation.clone());
-	            juniorChar.userData.legacyChildren?.forEach((e) => {
+	            Co.userData.legacyChildren?.forEach((e) => {
 	              e.visible = !i;
 	            }),
 	              e &&
@@ -5433,17 +5338,17 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
                 ? "runtime_glb"
                 : "procedural_fallback");
           })(),
-	          juniorChar.userData.glow &&
-	            (juniorChar.userData.glow.material.opacity =
+	          Co.userData.glow &&
+	            (Co.userData.glow.material.opacity =
 	              "eye_contact" === t.phase ||
 	              "perfect" === (t.endingSequence?.type ?? t.ending)
 	                ? 0.5 + 0.2 * t.cinematicGlow
 	                : 0.18),
-	          juniorChar.userData.pose?.referenceJunior &&
+	          Co.userData.pose?.referenceJunior &&
 	            (() => {
-              const e = juniorChar.userData.pose,
+              const e = Co.userData.pose,
                 o = "perfect" === (t.endingSequence?.type ?? t.ending),
-                s = o ? getPerfectPhase(t.endingSequence?.time ?? 0) : null,
+                s = o ? Ao(t.endingSequence?.time ?? 0) : null,
                 a =
                   "rear_wait" === t.phase ||
                   "eye_contact" === t.phase ||
@@ -5480,17 +5385,17 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
               e.blushR?.material &&
                 (e.blushR.material.opacity = a ? 0.1 : e.blushR.material.userData.baseOpacity ?? e.blushR.material.opacity);
             })(),
-          juniorChar.userData.portraitShell &&
+          Co.userData.portraitShell &&
             (() => {
-              const a = juniorChar.userData.portraitShell,
+              const a = Co.userData.portraitShell,
                 n = Boolean(a.userData.loaded) && !isIntro,
                 p = "perfect" === (t.endingSequence?.type ?? t.ending),
                 s =
                   p
-                    ? THREE.MathUtils.lerp(
+                    ? e.MathUtils.lerp(
                         0.46,
                         0.94,
-                        THREE.MathUtils.smoothstep(
+                        e.MathUtils.smoothstep(
                           t.endingSequence?.time ?? 0,
                           o.perfectTransitionEnd ?? 17.4,
                           o.perfectEyesEnd ?? 35,
@@ -5516,50 +5421,50 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
                 a.userData.glow && (a.userData.glow.visible = r),
                 a.userData.heroFaceCard &&
                   updateJuniorHeroFaceCard(
-                    juniorChar,
+                    Co,
                     a,
-                    camera,
+                    q,
                     i ? Math.min(0.92, Math.max(0.68, 0.72 * s)) : 0,
                   ),
                 (a.visible = r && !p),
-                r && updateJuniorPortraitShell(juniorChar, a, camera, s);
+                r && updateJuniorPortraitShell(Co, a, q, s);
             })(),
-          resetPose(seniorChar),
-          resetPose(juniorChar),
+          z(Go),
+          z(Co),
           isIntro)
         )
-          applyIdleCycle(juniorChar, 0.4 * t.time, 0.4);
+          v(Co, 0.4 * t.time, 0.4);
         else if ("perfect" === t.endingSequence?.type) {
-          const a = THREE.MathUtils.smoothstep(
+          const a = e.MathUtils.smoothstep(
               t.endingSequence.time,
               0.24,
               o.perfectSeniorPovEnd ?? 27.6,
             ),
-            n = THREE.MathUtils.smoothstep(
+            n = e.MathUtils.smoothstep(
               t.endingSequence.time,
               0.48,
               o.perfectOrbitEnd ?? 14.2,
             );
           (t.endingSequence.time < (o.perfectSeniorPovEnd ?? 27.6)
-            ? applyWalkCycle(seniorChar, 0.9 * Math.sin(3.53 * t.endingSequence.time), 0.9)
-            : applyIdleCycle(seniorChar, t.time, 0.8),
+            ? P(Go, 0.9 * Math.sin(3.53 * t.endingSequence.time), 0.9)
+            : v(Go, t.time, 0.8),
             t.endingSequence.time < (o.perfectOrbitEnd ?? 14.2)
-              ? applyWalkCycle(juniorChar, 0.84 * Math.sin(3.23 * t.endingSequence.time + 0.8), 0.7)
-              : applyIdleCycle(juniorChar, 0.84 * t.time, 0.92),
-            (seniorChar.position.y += 0.01 * a),
-            (juniorChar.position.y += 0.014 * n));
+              ? P(Co, 0.84 * Math.sin(3.23 * t.endingSequence.time + 0.8), 0.7)
+              : v(Co, 0.84 * t.time, 0.92),
+            (Go.position.y += 0.01 * a),
+            (Co.position.y += 0.014 * n));
         } else if ("front_call" === t.phase)
           (t.phaseClock < 7.2
-            ? applyWalkCycle(seniorChar, 0.82 * Math.sin(7.4 * t.time), 0.82)
-            : applyIdleCycle(seniorChar, 0.9 * t.time, 0.76),
-            applyIdleCycle(juniorChar, 0.72 * t.time, 0.9));
+            ? P(Go, 0.82 * Math.sin(7.4 * t.time), 0.82)
+            : v(Go, 0.9 * t.time, 0.76),
+            v(Co, 0.72 * t.time, 0.9));
         else if ("rear_wait" === t.phase) {
           const e = Math.sin(7.1 * t.time);
-          (applyWalkCycle(seniorChar, 0.76 * e, 0.8),
-            applyWalkCycle(juniorChar, 0.68 * Math.sin(6.4 * t.time + 0.7), 0.66),
-            applyIdleCycle(juniorChar, t.time, 0.58));
+          (P(Go, 0.76 * e, 0.8),
+            P(Co, 0.68 * Math.sin(6.4 * t.time + 0.7), 0.66),
+            v(Co, t.time, 0.58));
         } else
-          (applyWalkCycle(seniorChar, 0.34 * Math.sin(6.2 * t.time), 0.5), applyIdleCycle(juniorChar, 0.9 * t.time, 1));
+          (P(Go, 0.34 * Math.sin(6.2 * t.time), 0.5), v(Co, 0.9 * t.time, 1));
         ((juniorHeroLight.intensity =
           "perfect" === (t.endingSequence?.type ?? t.ending)
             ? 3.6
@@ -5574,12 +5479,12 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
               : "eye_contact" === t.phase
                 ? 1.98
                 : 1.32));
-        (worldAnchors.senior.copy(seniorChar.position).add(new THREE.Vector3(0, 1.34, 0)),
-          worldAnchors.junior.copy(juniorChar.position).add(new THREE.Vector3(0, 1.34, 0)));
+        (vo.senior.copy(Go.position).add(new e.Vector3(0, 1.34, 0)),
+          vo.junior.copy(Co.position).add(new e.Vector3(0, 1.34, 0)));
       })(s),
         (function (e, t, o) {
           e.forEach((e) => {
-            const a = hotspotMap.get(e.id);
+            const a = L.get(e.id);
             a &&
               ((a.visible = e.visible),
               a.position.set(e.x, e.y, e.z),
@@ -5595,7 +5500,7 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
       const x = "intro" === s.mode;
       if (x)
         !(function (t) {
-          const o = THREE.MathUtils.clamp(t.progress, 0, 1),
+          const o = e.MathUtils.clamp(t.progress, 0, 1),
             a = 0.5 + 0.5 * Math.sin(o * Math.PI * 2.6 - 0.5 * Math.PI),
             s =
               o < 0.18
@@ -5603,27 +5508,27 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
                 : o < 0.46
                   ? 0.2196 + 0.96 * (o - 0.18)
                   : 0.4884 + 0.9 * (o - 0.46),
-            r = THREE.MathUtils.clamp(s, 0, 1),
-            i = THREE.MathUtils.smoothstep(
-              THREE.MathUtils.clamp(r * (0.7 + 0.3 * a), 0, 1),
+            r = e.MathUtils.clamp(s, 0, 1),
+            i = e.MathUtils.smoothstep(
+              e.MathUtils.clamp(r * (0.7 + 0.3 * a), 0, 1),
               0.02,
               0.98,
             ),
-            w = redThreadCurve.getPoint(i),
-            M = redThreadCurve.getPoint(THREE.MathUtils.clamp(i + 0.12, 0, 1)),
+            w = Io.getPoint(i),
+            M = Io.getPoint(e.MathUtils.clamp(i + 0.12, 0, 1)),
             f = Math.sin(o * Math.PI * 4.2) * Math.exp(2.0 * -o) * 2.5,
-            u = THREE.MathUtils.lerp(
+            u = e.MathUtils.lerp(
               104,
               42,
-              THREE.MathUtils.smoothstep(o, 0.02, 0.88),
+              e.MathUtils.smoothstep(o, 0.02, 0.88),
             ),
             y =
               o > 0.3 && o < 0.4
                 ? 12 * Math.sin(((o - 0.3) / 0.1) * Math.PI)
                 : 0;
-          ((camera.fov = u + f + y),
-            camera.updateProjectionMatrix(),
-            camera.position
+          ((q.fov = u + f + y),
+            q.updateProjectionMatrix(),
+            q.position
               .copy(w)
               .add(
                 n.set(
@@ -5633,170 +5538,170 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
                   -0.64 * (1 - o) * (0.3 + 0.7 * o),
                 ),
               ));
-          const g = new THREE.Vector3(
-              0.22 * worldAnchors.senior.x +
-                0.38 * worldAnchors.doorPlaque.x +
-                0.18 * worldAnchors.frontDoor.x +
-                0.22 * worldAnchors.parapetBand.x,
-              THREE.MathUtils.lerp(3.8, 1.46, o),
-              0.22 * worldAnchors.senior.z +
-                0.34 * worldAnchors.doorPlaque.z +
-                0.18 * worldAnchors.frontDoor.z +
-                0.26 * worldAnchors.parapetBand.z,
+          const g = new e.Vector3(
+              0.22 * vo.senior.x +
+                0.38 * vo.doorPlaque.x +
+                0.18 * vo.frontDoor.x +
+                0.22 * vo.parapetBand.x,
+              e.MathUtils.lerp(3.8, 1.46, o),
+              0.22 * vo.senior.z +
+                0.34 * vo.doorPlaque.z +
+                0.18 * vo.frontDoor.z +
+                0.26 * vo.parapetBand.z,
             ),
-            x = THREE.MathUtils.smoothstep(o, 0.12, 0.78),
-            b = new THREE.Vector3(
-              THREE.MathUtils.lerp(M.x + THREE.MathUtils.lerp(1.8, 0.12, o), g.x, x),
-              THREE.MathUtils.lerp(4.02, g.y, x),
-              THREE.MathUtils.lerp(M.z - THREE.MathUtils.lerp(0.42, 0.1, o), g.z, x),
+            x = e.MathUtils.smoothstep(o, 0.12, 0.78),
+            b = new e.Vector3(
+              e.MathUtils.lerp(M.x + e.MathUtils.lerp(1.8, 0.12, o), g.x, x),
+              e.MathUtils.lerp(4.02, g.y, x),
+              e.MathUtils.lerp(M.z - e.MathUtils.lerp(0.42, 0.1, o), g.z, x),
             );
-          camera.lookAt(b);
+          q.lookAt(b);
           const S =
-              Math.sin(o * Math.PI * 1.8) * THREE.MathUtils.lerp(0.24, 0.002, o),
+              Math.sin(o * Math.PI * 1.8) * e.MathUtils.lerp(0.24, 0.002, o),
             z =
-              Math.sin(o * Math.PI * 10) * THREE.MathUtils.lerp(0.01, 0, o) * 0.2,
+              Math.sin(o * Math.PI * 10) * e.MathUtils.lerp(0.01, 0, o) * 0.2,
             P =
               o > 0.24 && o < 0.34
                 ? 0.004 * Math.sin(80 * (o - 0.24)) * (1 - (o - 0.24) / 0.1)
                 : 0;
-          (camera.rotateZ(S + z + P), (introGroup.visible = !0));
+          (q.rotateZ(S + z + P), (H.visible = !0));
           const v = 0.5 + 0.5 * Math.sin(o * Math.PI * 6.2),
             G =
               o > 0.28 && o < 0.36
                 ? 1.4 + 0.6 * Math.sin(((o - 0.28) / 0.08) * Math.PI * 4)
                 : 1;
-          ((redThreadMesh.material.opacity =
-            THREE.MathUtils.lerp(1, 0.2, o) * (0.9 + 0.18 * v) * G),
-            (redThreadMesh.material.emissiveIntensity =
-              THREE.MathUtils.lerp(4.2, 0.72, o) * (0.88 + 0.24 * v) * G));
-          const C = THREE.MathUtils.clamp(r + 0.03, 0, 1),
-            B = redThreadCurve.getPoint(C);
-          (glowClose.position.copy(B).add(l),
-            glowClose.lookAt(camera.position),
-            (glowClose.material.opacity =
-              THREE.MathUtils.lerp(0.96, 0.22, o) * (0.8 + 0.2 * v)),
-            glowWarm.position.copy(B).add(c),
-            glowWarm.lookAt(camera.position));
+          ((Ro.material.opacity =
+            e.MathUtils.lerp(1, 0.2, o) * (0.9 + 0.18 * v) * G),
+            (Ro.material.emissiveIntensity =
+              e.MathUtils.lerp(4.2, 0.72, o) * (0.88 + 0.24 * v) * G));
+          const C = e.MathUtils.clamp(r + 0.03, 0, 1),
+            B = Io.getPoint(C);
+          (Do.position.copy(B).add(l),
+            Do.lookAt(q.position),
+            (Do.material.opacity =
+              e.MathUtils.lerp(0.96, 0.22, o) * (0.8 + 0.2 * v)),
+            Vo.position.copy(B).add(c),
+            Vo.lookAt(q.position));
           const k = o > 0.29 && o < 0.37 ? 1.6 : 1;
-          ((glowWarm.material.opacity = THREE.MathUtils.lerp(0.72, 0.16, o) * k),
-            glowRed.position.copy(B).add(h),
-            glowRed.lookAt(camera.position),
-            (glowRed.material.opacity = THREE.MathUtils.lerp(0.48, 0.04, o)),
-            glowSphere.position.copy(redThreadCurve.getPoint(THREE.MathUtils.clamp(r + 0.08, 0, 1))),
-            glowSphere.scale.setScalar(1 + 0.5 * Math.sin(o * Math.PI * 6)),
-            glowSphere.material.color.lerpColors(
+          ((Vo.material.opacity = e.MathUtils.lerp(0.72, 0.16, o) * k),
+            Wo.position.copy(B).add(h),
+            Wo.lookAt(q.position),
+            (Wo.material.opacity = e.MathUtils.lerp(0.48, 0.04, o)),
+            Eo.position.copy(Io.getPoint(e.MathUtils.clamp(r + 0.08, 0, 1))),
+            Eo.scale.setScalar(1 + 0.5 * Math.sin(o * Math.PI * 6)),
+            Eo.material.color.lerpColors(
               p,
               m,
-              THREE.MathUtils.smoothstep(o, 0.5, 0.9),
+              e.MathUtils.smoothstep(o, 0.5, 0.9),
             ),
-            glowPink.position.copy(B).add(d),
-            glowPink.lookAt(camera.position),
-            (glowPink.material.opacity = THREE.MathUtils.lerp(0.46, 0.06, o)));
+            Uo.position.copy(B).add(d),
+            Uo.lookAt(q.position),
+            (Uo.material.opacity = e.MathUtils.lerp(0.46, 0.06, o)));
         })(s.intro);
       else if ("perfect" === s.endingSequence?.type)
         /* ── perfect：跟拍學妹 → 停門口拍臉 5 秒 → 金句 ── */
-        ((introGroup.visible = !1),
+        ((H.visible = !1),
           (function (t) {
             const et = t.endingSequence?.time ?? 0;
             const WALK_END = 45.0;            // 學妹走路 45 秒到達後門
             const FACE_TRANS_END = WALK_END + 1.0; // 1 秒過渡到拍臉鏡頭
-            const heroAnchor = resolveJuniorHeroAnchor(juniorChar, {
-              forceRoot: juniorChar.userData.runtimeModelRoot ?? null,
+            const heroAnchor = resolveJuniorHeroAnchor(Co, {
+              forceRoot: Co.userData.runtimeModelRoot ?? null,
               allowLegacyFallback: !1,
             });
             const facePos = heroAnchor.face;
             const eyePos  = heroAnchor.eyes;
-            const fwd = new THREE.Vector3(Math.sin(juniorChar.rotation.y), 0, Math.cos(juniorChar.rotation.y));
+            const fwd = new e.Vector3(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y));
             // ── 跟拍鏡頭：位在學妹背後偏上，望著學妹上半身 ──
-            const followPos = juniorChar.position.clone()
+            const followPos = Co.position.clone()
               .add(fwd.clone().multiplyScalar(-2.5))
-              .add(new THREE.Vector3(0, 1.8, 0));
-            const lookTgt = juniorChar.position.clone().add(new THREE.Vector3(0, 1.4, 0));
+              .add(new e.Vector3(0, 1.8, 0));
+            const lookTgt = Co.position.clone().add(new e.Vector3(0, 1.4, 0));
             if (et < WALK_END) {
-              camera.position.copy(followPos);
-              camera.fov = 46;
-              camera.updateProjectionMatrix();
-              camera.lookAt(lookTgt);
+              q.position.copy(followPos);
+              q.fov = 46;
+              q.updateProjectionMatrix();
+              q.lookAt(lookTgt);
               return;
             }
             // ── 拍臉鏡頭：過渡到學妹正前方，對準眼睛 ──
-            const tFace = THREE.MathUtils.smoothstep(et, WALK_END, FACE_TRANS_END);
-            const faceShot = new THREE.Vector3(
-              juniorChar.position.x + fwd.x * 0.9,
+            const tFace = e.MathUtils.smoothstep(et, WALK_END, FACE_TRANS_END);
+            const faceShot = new e.Vector3(
+              Co.position.x + fwd.x * 0.9,
               eyePos.y + 3e-4 * Math.sin(0.5 * et),
-              juniorChar.position.z + fwd.z * 0.9
+              Co.position.z + fwd.z * 0.9
             );
             const camPos = followPos.clone().lerp(faceShot, tFace);
-            camera.position.copy(camPos);
-            camera.fov = THREE.MathUtils.lerp(46, 36, tFace);
-            camera.updateProjectionMatrix();
-            camera.lookAt(facePos.x, facePos.y, facePos.z);
+            q.position.copy(camPos);
+            q.fov = e.MathUtils.lerp(46, 36, tFace);
+            q.updateProjectionMatrix();
+            q.lookAt(facePos.x, facePos.y, facePos.z);
           })(s));
       else if ("perfect_eye" === s.endingSequence?.type)
         /* ── perfect_eye：靜態臉部特寫，攝影機在學妹正前方 ── */
-        ((introGroup.visible = false),
+        ((H.visible = false),
           (function(t) {
-            const heroAnchor = resolveJuniorHeroAnchor(juniorChar, {
-              forceRoot: juniorChar.userData.runtimeModelRoot?.visible ? juniorChar.userData.runtimeModelRoot : null,
+            const heroAnchor = resolveJuniorHeroAnchor(Co, {
+              forceRoot: Co.userData.runtimeModelRoot?.visible ? Co.userData.runtimeModelRoot : null,
               allowLegacyFallback: !0,
             });
             const facePos = heroAnchor.face;
-            const eyeY = heroAnchor.eyes.y > juniorChar.position.y + 1.0 ? heroAnchor.eyes.y : juniorChar.position.y + 1.52;
-            const fwd = new THREE.Vector3(Math.sin(juniorChar.rotation.y), 0, Math.cos(juniorChar.rotation.y));
-            camera.position.set(
-              juniorChar.position.x + fwd.x * 0.9,
+            const eyeY = heroAnchor.eyes.y > Co.position.y + 1.0 ? heroAnchor.eyes.y : Co.position.y + 1.52;
+            const fwd = new e.Vector3(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y));
+            q.position.set(
+              Co.position.x + fwd.x * 0.9,
               eyeY,
-              juniorChar.position.z + fwd.z * 0.9
+              Co.position.z + fwd.z * 0.9
             );
-            camera.fov = 36;
-            camera.updateProjectionMatrix();
-            const lookY = facePos.y > juniorChar.position.y + 1.0 ? facePos.y : juniorChar.position.y + 1.53;
-            camera.lookAt(facePos.x, lookY, facePos.z);
+            q.fov = 36;
+            q.updateProjectionMatrix();
+            const lookY = facePos.y > Co.position.y + 1.0 ? facePos.y : Co.position.y + 1.53;
+            q.lookAt(facePos.x, lookY, facePos.z);
           })(s))
       else if ("one_gaze" === s.endingSequence?.type)
         /* ── one_gaze：學妹臉部正前方靜態特寫（同 perfect_eye 角度） ── */
-        ((introGroup.visible = false),
+        ((H.visible = false),
           (function(t) {
-            const heroAnchor = resolveJuniorHeroAnchor(juniorChar, {
-              forceRoot: juniorChar.userData.runtimeModelRoot?.visible ? juniorChar.userData.runtimeModelRoot : null,
+            const heroAnchor = resolveJuniorHeroAnchor(Co, {
+              forceRoot: Co.userData.runtimeModelRoot?.visible ? Co.userData.runtimeModelRoot : null,
               allowLegacyFallback: !0,
             });
             const facePos = heroAnchor.face;
-            const eyeY = heroAnchor.eyes.y > juniorChar.position.y + 1.0 ? heroAnchor.eyes.y : juniorChar.position.y + 1.52;
-            const fwd = new THREE.Vector3(Math.sin(juniorChar.rotation.y), 0, Math.cos(juniorChar.rotation.y));
-            camera.position.set(
-              juniorChar.position.x + fwd.x * 0.9,
+            const eyeY = heroAnchor.eyes.y > Co.position.y + 1.0 ? heroAnchor.eyes.y : Co.position.y + 1.52;
+            const fwd = new e.Vector3(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y));
+            q.position.set(
+              Co.position.x + fwd.x * 0.9,
               eyeY,
-              juniorChar.position.z + fwd.z * 0.9
+              Co.position.z + fwd.z * 0.9
             );
-            camera.fov = 36;
-            camera.updateProjectionMatrix();
-            const lookY2 = facePos.y > juniorChar.position.y + 1.0 ? facePos.y : juniorChar.position.y + 1.53;
-            camera.lookAt(facePos.x, lookY2, facePos.z);
+            q.fov = 36;
+            q.updateProjectionMatrix();
+            const lookY2 = facePos.y > Co.position.y + 1.0 ? facePos.y : Co.position.y + 1.53;
+            q.lookAt(facePos.x, lookY2, facePos.z);
           })(s));
       else if ("rear_wait" === s.phase && s.phaseClock > 3.0 && "ghost" === s.controlMode) {
         // rear_wait 過場：跟拍鏡頭跟著學妹走向後門（腳本模式）
-        introGroup.visible = !1;
-        const fwd = new THREE.Vector3(Math.sin(juniorChar.rotation.y), 0, Math.cos(juniorChar.rotation.y));
-        const followPos = juniorChar.position.clone()
+        H.visible = !1;
+        const fwd = new e.Vector3(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y));
+        const followPos = Co.position.clone()
           .add(fwd.clone().multiplyScalar(-2.5))
-          .add(new THREE.Vector3(0, 1.8, 0));
-        camera.fov = 46;
-        camera.updateProjectionMatrix();
-        camera.position.copy(followPos);
-        camera.lookAt(juniorChar.position.clone().add(new THREE.Vector3(0, 1.4, 0)));
+          .add(new e.Vector3(0, 1.8, 0));
+        q.fov = 46;
+        q.updateProjectionMatrix();
+        q.position.copy(followPos);
+        q.lookAt(Co.position.clone().add(new e.Vector3(0, 1.4, 0)));
       } else {
-        introGroup.visible = !1;
+        H.visible = !1;
         /* 第一人稱控制學妹時隱藏學妹模型（攝影機在模型內部） */
-        juniorChar.visible = "junior" !== s.controlMode;
+        Co.visible = "junior" !== s.controlMode;
         const fov =
           "front_call" === s.phase ? 42 : "eye_contact" === s.phase ? 46 : 56;
-        (camera.fov !== fov && ((camera.fov = fov), camera.updateProjectionMatrix()),
-          applyCameraBobbing(s.player, sceneTime, !0));
+        (q.fov !== fov && ((q.fov = fov), q.updateProjectionMatrix()),
+          _o(s.player, sceneTime, !0));
       }
-      const b = x ? THREE.MathUtils.lerp(0.34, 1, s.intro.progress) : 1;
+      const b = x ? e.MathUtils.lerp(0.34, 1, s.intro.progress) : 1;
       if (
-        ((sunLight.intensity =
+        ((Te.intensity =
           1.96 * b +
           ("eye_contact" === s.phase ||
           "perfect" === (s.endingSequence?.type ?? s.ending)
@@ -5804,7 +5709,7 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
             : "front_call" === s.phase
               ? 0.26
               : 0.12)),
-        (ambientLight.intensity = 0.28 + 0.2 * b),
+        (ke.intensity = 0.28 + 0.2 * b),
         (Ie.intensity = x ? 0.66 : 0.98),
         (Re.intensity =
           "perfect" === s.ending
@@ -5820,48 +5725,48 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
               : 1.18),
         (Ve.intensity =
           "eye_contact" === s.phase || "perfect" === s.ending ? 1.34 : 0.8),
-        (lightBeamR1.material.opacity =
+        (_t.material.opacity =
           "perfect" === s.ending
             ? 0.72
             : "front_call" === s.phase
               ? 0.94
               : 0.36),
-        (lightBeamR2.material.opacity =
+        (At.material.opacity =
           "front_call" === s.phase
             ? 0.82
             : "perfect" === s.ending
               ? 0.54
               : 0.24),
-        (lightBeamL1.material.opacity =
+        (Xt.material.opacity =
           "eye_contact" === s.phase || "perfect" === s.ending ? 0.86 : 0.54),
-        (lightBeamL2.material.opacity =
+        (jt.material.opacity =
           "eye_contact" === s.phase || "perfect" === s.ending ? 0.66 : 0.34),
-        (lightBeamC1.material.opacity =
+        (Ht.material.opacity =
           "perfect" === s.ending
             ? 0.72
             : "eye_contact" === s.phase
               ? 0.48
               : 0.26),
-        (lightBeamC2.material.opacity =
+        ($t.material.opacity =
           "perfect" === s.ending
             ? 0.58
             : "eye_contact" === s.phase
               ? 0.4
               : 0.2),
-        scene.background.setStyle(x ? "#090d16" : "#dde8f2"),
-        scene.fog.color.setStyle(x ? "#121722" : "#d6e1eb"),
-        (scene.fog.near = x ? 3 : 16),
-        (scene.fog.far = x ? 20 : 68),
-        (skyDome.visible = "perfect" !== s.endingSequence?.type),
-        (skyDome.rotation.y = 0.018 * sceneTime),
-        (skyDome.position.x = 0.08 * Math.sin(0.12 * sceneTime)),
-        clouds.forEach((e) => {
+        W.background.setStyle(x ? "#090d16" : "#dde8f2"),
+        W.fog.color.setStyle(x ? "#121722" : "#d6e1eb"),
+        (W.fog.near = x ? 3 : 16),
+        (W.fog.far = x ? 20 : 68),
+        (bo.visible = "perfect" !== s.endingSequence?.type),
+        (bo.rotation.y = 0.018 * sceneTime),
+        (bo.position.x = 0.08 * Math.sin(0.12 * sceneTime)),
+        fo.forEach((e) => {
           e.position.x =
             e.userData.startX +
             8 * Math.sin(0.02 * sceneTime * e.userData.speed) +
             sceneTime * e.userData.speed * 0.1;
         }),
-        birds.forEach((e) => {
+        uo.forEach((e) => {
           const t = sceneTime * e.userData.speed;
           ((e.position.x = e.userData.startX + 2 * t),
             (e.position.z =
@@ -5874,9 +5779,9 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
             e.position.x > e.userData.startX + 120 &&
               (e.position.x = e.userData.startX - 40));
         }),
-        hologramInstance)
+        Xo)
       ) {
-        const e = sceneTime - hologramSpawnTime;
+        const e = sceneTime - jo;
         let t = 0;
         (e > 5 && e <= 6
           ? (t = 0.8 * (6 - e))
@@ -5884,98 +5789,98 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
             ? (t = 0.8 + 0.12 * Math.sin(4 * sceneTime))
             : e >= 0 && e <= 1
               ? (t = 0.8 * e)
-              : e > 6 && (scene.remove(hologramInstance), (hologramInstance = null)),
-          hologramInstance &&
-            ((hologramInstance.position.y = 0.02 * Math.sin(2 * sceneTime)),
-            hologramInstance.traverse((e) => {
+              : e > 6 && (W.remove(Xo), (Xo = null)),
+          Xo &&
+            ((Xo.position.y = 0.02 * Math.sin(2 * sceneTime)),
+            Xo.traverse((e) => {
               e.material && (e.material.opacity = t);
             })));
       }
-      const S = (canvasEl.parentElement ?? canvasEl).getBoundingClientRect(),
-        G = canvasEl.getBoundingClientRect(),
-        C = renderer.getSize(r),
-        B = renderer.getDrawingBufferSize(i),
-        k = renderer.domElement.width || B.x || 0,
-        T = renderer.domElement.height || B.y || 0,
+      const S = (D.parentElement ?? D).getBoundingClientRect(),
+        G = D.getBoundingClientRect(),
+        C = U.getSize(r),
+        B = U.getDrawingBufferSize(i),
+        k = U.domElement.width || B.x || 0,
+        T = U.domElement.height || B.y || 0,
         I = Math.round(G.width),
         R = Math.round(G.height),
-        isMobileDevice = Math.round(S.width),
+        V = Math.round(S.width),
         E = Math.round(S.height),
         _ =
-          (isMobileDevice > 0 && I > 0 && Math.abs(isMobileDevice - I) > 4) ||
+          (V > 0 && I > 0 && Math.abs(V - I) > 4) ||
           (E > 0 && R > 0 && Math.abs(E - R) > 4) ||
-          Math.abs(I - canvasEl.clientWidth) > 4 ||
-          Math.abs(R - canvasEl.clientHeight) > 4 ||
-          Math.abs(Math.round(C.x) - isMobileDevice) > 4 ||
+          Math.abs(I - D.clientWidth) > 4 ||
+          Math.abs(R - D.clientHeight) > 4 ||
+          Math.abs(Math.round(C.x) - V) > 4 ||
           Math.abs(Math.round(C.y) - E) > 4;
       ((X = {
         camera: {
-          x: Number(camera.position.x.toFixed(3)),
-          y: Number(camera.position.y.toFixed(3)),
-          z: Number(camera.position.z.toFixed(3)),
-          yaw: Number(camera.rotation.y.toFixed(3)),
-          pitch: Number(camera.rotation.x.toFixed(3)),
+          x: Number(q.position.x.toFixed(3)),
+          y: Number(q.position.y.toFixed(3)),
+          z: Number(q.position.z.toFixed(3)),
+          yaw: Number(q.rotation.y.toFixed(3)),
+          pitch: Number(q.rotation.x.toFixed(3)),
         },
         viewport: { width: k, height: T },
         cssViewport: { width: I, height: R },
-        stageViewport: { width: isMobileDevice, height: E },
+        stageViewport: { width: V, height: E },
         webglViewport: { width: Math.round(C.x), height: Math.round(C.y) },
         projectedNodes: {
-          senior: projectWorldToScreen("senior", worldAnchors.senior, k, T),
-          junior: projectWorldToScreen("junior", worldAnchors.junior, k, T),
-          frontDoor: projectWorldToScreen("frontDoor", worldAnchors.frontDoor, k, T),
-          backDoor: projectWorldToScreen("backDoor", worldAnchors.backDoor, k, T),
-          doorPlaque: projectWorldToScreen("doorPlaque", worldAnchors.doorPlaque, k, T),
-          parapetBand: projectWorldToScreen("parapetBand", worldAnchors.parapetBand, k, T),
-          boardWall: projectWorldToScreen("boardWall", worldAnchors.boardWall, k, T),
+          senior: Zo("senior", vo.senior, k, T),
+          junior: Zo("junior", vo.junior, k, T),
+          frontDoor: Zo("frontDoor", vo.frontDoor, k, T),
+          backDoor: Zo("backDoor", vo.backDoor, k, T),
+          doorPlaque: Zo("doorPlaque", vo.doorPlaque, k, T),
+          parapetBand: Zo("parapetBand", vo.parapetBand, k, T),
+          boardWall: Zo("boardWall", vo.boardWall, k, T),
         },
-        hotspotLOS: computeHotspotLOS(s),
+        hotspotLOS: Lo(s),
         currentRoomIds: t.floorRooms.map((e) => e.id),
         endingShotPhase:
           "perfect" === s.endingSequence?.type
-            ? getPerfectPhase(s.endingSequence.time)
+            ? Ao(s.endingSequence.time)
             : null,
-        heroCloseupTarget: juniorChar.userData.heroCloseupTarget ?? null,
+        heroCloseupTarget: Co.userData.heroCloseupTarget ?? null,
         portraitShellVisible: juniorPortraitShell?.visible ?? null,
         juniorGrounded: (() => {
-          const rm = juniorChar.userData.runtimeModelRoot;
+          const rm = Co.userData.runtimeModelRoot;
           if (!rm?.visible || !rm.userData?.ready) return null;
           rm.updateMatrixWorld(!0);
-          const bb = new THREE.Box3().setFromObject(rm);
+          const bb = new e.Box3().setFromObject(rm);
           return Number.isFinite(bb.min.y) ? Math.abs(bb.min.y) < 0.05 : null;
         })(),
         heroCloseupRoots: {
-          runtime: juniorChar.userData.runtimeModelRoot
+          runtime: Co.userData.runtimeModelRoot
             ? {
-                visible: juniorChar.userData.runtimeModelRoot.visible,
-                ready: juniorChar.userData.runtimeModelRoot.userData?.ready ?? !1,
-                kind: juniorChar.userData.runtimeModelRoot.userData?.kind ?? null,
+                visible: Co.userData.runtimeModelRoot.visible,
+                ready: Co.userData.runtimeModelRoot.userData?.ready ?? !1,
+                kind: Co.userData.runtimeModelRoot.userData?.kind ?? null,
               }
             : null,
-          closeup: juniorChar.userData.heroCloseupModelRoot
+          closeup: Co.userData.heroCloseupModelRoot
             ? {
-                visible: juniorChar.userData.heroCloseupModelRoot.visible,
-                ready: juniorChar.userData.heroCloseupModelRoot.userData?.ready ?? !1,
-                kind: juniorChar.userData.heroCloseupModelRoot.userData?.kind ?? null,
+                visible: Co.userData.heroCloseupModelRoot.visible,
+                ready: Co.userData.heroCloseupModelRoot.userData?.ready ?? !1,
+                kind: Co.userData.heroCloseupModelRoot.userData?.kind ?? null,
               }
             : null,
-          procedural: juniorChar.userData.pose?.heroHeadRoot
+          procedural: Co.userData.pose?.heroHeadRoot
             ? {
-                visible: juniorChar.userData.pose.heroHeadRoot.visible,
+                visible: Co.userData.pose.heroHeadRoot.visible,
                 kind: "procedural_hero_head",
               }
             : null,
         },
-        colliders: colliderBoxes.length,
+        colliders: Z.length,
         mobileBlackRegionDetected: _,
         qualityTier: runtimeState.qualityTier,
-        rendererProfile: renderer.__lm402RendererProfile ?? "unknown",
+        rendererProfile: U.__lm402RendererProfile ?? "unknown",
         assetState: { ...assetState },
       }),
         updateWormhole(0.016),
-        renderer.render(scene, camera));
+        U.render(W, q));
     },
-    resize: handleResize,
+    resize: qo,
     resolveMotion: function (t, o, a = 0.28) {
       let n = o.x,
         s = o.z,
@@ -5986,12 +5891,12 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
         h = Y + 0.22,
         d = J - 0.22;
       ((n < l || n > c || s < h || s > d) && ((r = !0), (i = "boundary_wall")),
-        (n = THREE.MathUtils.clamp(n, l, c)),
-        (s = THREE.MathUtils.clamp(s, h, d)));
+        (n = e.MathUtils.clamp(n, l, c)),
+        (s = e.MathUtils.clamp(s, h, d)));
       for (let t = 0; t < 2; t += 1)
-        (colliderBoxes.forEach((t) => {
-          const o = THREE.MathUtils.clamp(n, t.minX, t.maxX),
-            l = THREE.MathUtils.clamp(s, t.minZ, t.maxZ),
+        (Z.forEach((t) => {
+          const o = e.MathUtils.clamp(n, t.minX, t.maxX),
+            l = e.MathUtils.clamp(s, t.minZ, t.maxZ),
             c = n - o,
             h = s - l,
             d = c * c + h * h;
@@ -6012,25 +5917,25 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
               ? (n = t.maxX + a)
               : (s = f === w ? t.minZ - a : t.maxZ + a);
         }),
-          (n = THREE.MathUtils.clamp(n, l, c)),
-          (s = THREE.MathUtils.clamp(s, h, d)));
+          (n = e.MathUtils.clamp(n, l, c)),
+          (s = e.MathUtils.clamp(s, h, d)));
       return { x: n, z: s, collided: r, label: i };
     },
     pickHotspot: function (e, t, o) {
-      (applyCameraBobbing(t), camera.updateMatrixWorld());
-      const s = camera.getWorldDirection(a);
+      (_o(t), q.updateMatrixWorld());
+      const s = q.getWorldDirection(a);
       let r = null;
       return (
         e.forEach((e) => {
-          const t = hotspotMap.get(e.id);
+          const t = L.get(e.id);
           if (!t || !e.visible) return;
-          const a = camera.position.distanceTo(t.position);
+          const a = q.position.distanceTo(t.position);
           if (a > e.radius) return;
-          const i = n.copy(t.position).sub(camera.position).normalize(),
+          const i = n.copy(t.position).sub(q.position).normalize(),
             l = s.dot(i);
           if (l < 0.75) return;
-          raycaster.set(camera.position, i);
-          const c = raycaster.intersectObjects(occluderMeshes, !1);
+          _.set(q.position, i);
+          const c = _.intersectObjects(A, !1);
           if (c.length && c[0].distance < a - 0.16) return;
           const h = 2.12 * l - a;
           (!r || h > r.score || (e.id === o && h > r.score - 0.18)) &&
@@ -6077,24 +5982,24 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
         (assetState.loaderAvailable = Boolean(resolveJuniorGltfLoaderCtor())),
         !assetState.loaderAvailable &&
           (assetState.status = "procedural_fallback"),
-        floorMirror.material && (floorMirror.material.opacity = renderTuning.mirrorOpacity),
-        juniorChar.userData.portraitShell?.scale.setScalar(renderTuning.portraitBoost),
-        juniorChar.userData.runtimeModelRoot?.scale.setScalar(renderTuning.portraitBoost),
-        juniorChar.userData.heroCloseupModelRoot?.scale.setScalar(
+        ht.material && (ht.material.opacity = renderTuning.mirrorOpacity),
+        Co.userData.portraitShell?.scale.setScalar(renderTuning.portraitBoost),
+        Co.userData.runtimeModelRoot?.scale.setScalar(renderTuning.portraitBoost),
+        Co.userData.heroCloseupModelRoot?.scale.setScalar(
           renderTuning.portraitBoost,
         ),
-        sunLight.shadow.mapSize.set(
+        Te.shadow.mapSize.set(
           renderTuning.shadowMapSize,
           renderTuning.shadowMapSize,
         ),
-        handleResize());
+        qo());
     },
     getDebugSnapshot: function () {
       return X;
     },
     spawnHologram: function (t, o) {
-      (hologramInstance &&
-        (hologramInstance.traverse((e) => {
+      (Xo &&
+        (Xo.traverse((e) => {
           (e.geometry && e.geometry.dispose(),
             e.material &&
               (Array.isArray(e.material) ? e.material : [e.material]).forEach(
@@ -6103,23 +6008,23 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
                 },
               ));
         }),
-        scene.remove(hologramInstance),
-        (hologramInstance = null)),
+        W.remove(Xo),
+        (Xo = null)),
         "seat" === t || "notes" === t
-          ? ((hologramInstance = (function () {
-              const t = new THREE.Group();
+          ? ((Xo = (function () {
+              const t = new e.Group();
               t.userData.baseY = 0;
-              const o = new THREE.MeshPhysicalMaterial({
+              const o = new e.MeshPhysicalMaterial({
                 color: 16777215,
                 metalness: 0.1,
                 roughness: 0.2,
                 transparent: !0,
                 opacity: 0.85,
-                blending: THREE.AdditiveBlending,
+                blending: e.AdditiveBlending,
                 emissive: 2250154,
                 emissiveIntensity: 0.6,
                 clearcoat: 1,
-                side: THREE.DoubleSide,
+                side: e.DoubleSide,
               });
               o.onBeforeCompile = (e) => {
                 ((e.fragmentShader = e.fragmentShader.replace(
@@ -6143,17 +6048,17 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
               (r.color.setHex(2045005), (r.opacity = 0.95));
               const i = o.clone();
               i.color.setHex(15658734);
-              const l = new THREE.Group();
+              const l = new e.Group();
               l.position.set(0, 1.54, 0);
-              const c = new THREE.Mesh(new THREE.SphereGeometry(0.105, 32, 32), n);
+              const c = new e.Mesh(new e.SphereGeometry(0.105, 32, 32), n);
               (c.scale.set(1, 1.15, 1.05), l.add(c));
-              const h = new THREE.Mesh(new THREE.SphereGeometry(0.11, 32, 32), a);
+              const h = new e.Mesh(new e.SphereGeometry(0.11, 32, 32), a);
               (h.scale.set(1.02, 1.1, 1.05),
                 h.position.set(0, 0.02, -0.01),
                 l.add(h));
               for (let t = 0; t < 8; t++) {
-                const o = new THREE.Mesh(
-                  new THREE.CapsuleGeometry(0.015, 0.06, 8, 8),
+                const o = new e.Mesh(
+                  new e.CapsuleGeometry(0.015, 0.06, 8, 8),
                   a,
                 );
                 (o.position.set(
@@ -6165,82 +6070,82 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
                   (o.rotation.x = 0.2),
                   l.add(o));
               }
-              const d = new THREE.Mesh(
-                new THREE.CapsuleGeometry(0.035, 0.25, 16, 16),
+              const d = new e.Mesh(
+                new e.CapsuleGeometry(0.035, 0.25, 16, 16),
                 a,
               );
               (d.position.set(0, -0.05, -0.15), (d.rotation.x = 0.3));
-              const p = new THREE.Mesh(new THREE.TorusGeometry(0.04, 0.015, 16, 32), r);
+              const p = new e.Mesh(new e.TorusGeometry(0.04, 0.015, 16, 32), r);
               (p.position.set(0, 0.05, -0.12),
                 (p.rotation.x = 1.2),
                 l.add(d, p),
                 t.add(l),
                 (t.userData.head = l));
-              const m = new THREE.Group();
+              const m = new e.Group();
               m.position.set(0, 1.15, 0);
-              const w = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.11, 0.1, 0.25, 32),
+              const w = new e.Mesh(
+                new e.CylinderGeometry(0.11, 0.1, 0.25, 32),
                 s,
               );
               (w.position.set(0, 0.15, 0), w.scale.set(1, 1, 0.7), m.add(w));
-              const M = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.1, 0.12, 0.2, 32),
+              const M = new e.Mesh(
+                new e.CylinderGeometry(0.1, 0.12, 0.2, 32),
                 s,
               );
               (M.position.set(0, -0.05, 0), M.scale.set(1, 1, 0.75), m.add(M));
-              const f = new THREE.Mesh(
-                new THREE.TorusGeometry(0.065, 0.015, 16, 32),
+              const f = new e.Mesh(
+                new e.TorusGeometry(0.065, 0.015, 16, 32),
                 s,
               );
               (f.position.set(0, 0.27, 0.02),
                 (f.rotation.x = 1.3),
                 m.add(f),
                 t.add(m));
-              const u = new THREE.Group();
+              const u = new e.Group();
               u.position.set(0, 0.95, 0);
-              const y = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.125, 0.135, 0.18, 32),
+              const y = new e.Mesh(
+                new e.CylinderGeometry(0.125, 0.135, 0.18, 32),
                 r,
               );
-              function worldToScene(t, o, a, n) {
-                const s = new THREE.Mesh(new THREE.CylinderGeometry(t, o, a, 32), n);
+              function g(t, o, a, n) {
+                const s = new e.Mesh(new e.CylinderGeometry(t, o, a, 32), n);
                 s.position.y = -a / 2;
-                const r = new THREE.Group();
+                const r = new e.Group();
                 return (r.add(s), { pivot: r, mesh: s });
               }
               (y.scale.set(1, 1, 0.8), u.add(y), t.add(u));
-              const x = worldToScene(0.035, 0.025, 0.25, s);
+              const x = g(0.035, 0.025, 0.25, s);
               (x.pivot.position.set(-0.15, 1.35, 0),
                 (x.pivot.rotation.z = 0.2));
-              const b = worldToScene(0.025, 0.02, 0.22, n);
+              const b = g(0.025, 0.02, 0.22, n);
               (b.pivot.position.set(0, -0.25, 0),
                 (b.pivot.rotation.x = -0.1),
                 x.mesh.add(b.pivot),
                 t.add(x.pivot),
                 (t.userData.armL = x.pivot));
-              const S = worldToScene(0.035, 0.025, 0.25, s);
+              const S = g(0.035, 0.025, 0.25, s);
               (S.pivot.position.set(0.15, 1.35, 0),
                 (S.pivot.rotation.z = -0.2));
-              const z = worldToScene(0.025, 0.02, 0.22, n);
+              const z = g(0.025, 0.02, 0.22, n);
               (z.pivot.position.set(0, -0.25, 0),
                 (z.pivot.rotation.x = -0.1),
                 S.mesh.add(z.pivot),
                 t.add(S.pivot),
                 (t.userData.armR = S.pivot));
-              const P = worldToScene(0.06, 0.045, 0.45, n);
+              const P = g(0.06, 0.045, 0.45, n);
               P.pivot.position.set(-0.06, 0.85, 0);
-              const v = worldToScene(0.04, 0.03, 0.4, n);
+              const v = g(0.04, 0.03, 0.4, n);
               (v.pivot.position.set(0, -0.45, 0), P.mesh.add(v.pivot));
-              const G = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.05, 0.11), i);
+              const G = new e.Mesh(new e.BoxGeometry(0.06, 0.05, 0.11), i);
               (G.position.set(0, -0.4, 0.02),
                 v.mesh.add(G),
                 t.add(P.pivot),
                 (t.userData.legL = P.pivot));
-              const C = worldToScene(0.06, 0.045, 0.45, n);
+              const C = g(0.06, 0.045, 0.45, n);
               C.pivot.position.set(0.06, 0.85, 0);
-              const B = worldToScene(0.04, 0.03, 0.4, n);
+              const B = g(0.04, 0.03, 0.4, n);
               (B.pivot.position.set(0, -0.45, 0), C.mesh.add(B.pivot));
-              const k = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.05, 0.11), i);
+              const k = new e.Mesh(new e.BoxGeometry(0.06, 0.05, 0.11), i);
               return (
                 k.position.set(0, -0.4, 0.02),
                 B.mesh.add(k),
@@ -6250,15 +6155,15 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
               );
             })()),
             "seat" === t
-              ? (hologramInstance.position.set(23.7, 0, 25.72),
-                (hologramInstance.rotation.y = 0.03),
-                applyIdleCycle(hologramInstance, 0, 1))
+              ? (Xo.position.set(23.7, 0, 25.72),
+                (Xo.rotation.y = 0.03),
+                v(Xo, 0, 1))
               : "notes" === t &&
-                (hologramInstance.position.set(23.7, 0, 25.72),
-                (hologramInstance.rotation.y = -Math.PI / 2),
-                applyIdleCycle(hologramInstance, 0, 1)))
+                (Xo.position.set(23.7, 0, 25.72),
+                (Xo.rotation.y = -Math.PI / 2),
+                v(Xo, 0, 1)))
           : "board" === t &&
-            ((hologramInstance = createSilhouette({
+            ((Xo = createSilhouette({
               phone: !0,
               hairColor: "#11100f",
               shirtColor: "#323846",
@@ -6269,10 +6174,10 @@ export function createLm402Scene(canvasEl, runtimeOptions = {}) {
               echoColor: "#88ccff",
               scale: 1.05,
             })),
-            hologramInstance.position.set(-4.2, 0, 28.65),
-            (hologramInstance.rotation.y = Math.PI / 2),
-            applyIdleCycle(hologramInstance, 0, 1)),
-        hologramInstance && (scene.add(hologramInstance), (hologramSpawnTime = o)));
+            Xo.position.set(-4.2, 0, 28.65),
+            (Xo.rotation.y = Math.PI / 2),
+            v(Xo, 0, 1)),
+        Xo && (W.add(Xo), (jo = o)));
     },
     worldBounds: {
       minX: N + 0.26,
