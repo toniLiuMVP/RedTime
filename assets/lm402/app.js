@@ -1164,6 +1164,13 @@ function currentControlBounds() {
   };
 }
 
+function supportsPointerLock() {
+  return (
+    "pointerLockElement" in document &&
+    typeof HTMLElement.prototype.requestPointerLock === "function"
+  );
+}
+
 function updatePointerHint() {
   if (isMobileLayout()) {
     dom.pointerPill.hidden = true;
@@ -1173,6 +1180,14 @@ function updatePointerHint() {
   const locked = document.pointerLockElement === canvas;
   state.pointerLockState = locked ? "locked" : state.pointerLockPending ? "pending" : "free";
   dom.pointerPill.hidden = false;
+  if (!supportsPointerLock()) {
+    // 瀏覽器不支援 Pointer Lock（部分 iPad 接外接滑鼠、舊版瀏覽器）
+    // 改用拖曳模式，給讀者故事感的提示而非技術錯誤訊息
+    dom.pointerPill.textContent = "按住左鍵拖曳，探索這一秒";
+    dom.pointerPill.classList.remove("locked");
+    canvas.classList.remove("pointer-locked");
+    return;
+  }
   dom.pointerPill.textContent = locked
     ? "視角已鎖定 · 右鍵或 Esc 退出"
     : state.pointerLockPending
@@ -2983,7 +2998,8 @@ function togglePointerLock() {
   }
   const requestLockFn = canvas.requestPointerLock || canvas.webkitRequestPointerLock || canvas.mozRequestPointerLock;
   if (typeof requestLockFn !== "function") {
-    revealHint("這個瀏覽器目前不支援視角鎖定。");
+    // 不支援 Pointer Lock — 已在 updatePointerHint 顯示拖曳提示，這裡給一次額外提醒
+    revealHint("按住左鍵拖曳，探索這一秒的空間。");
     updatePointerHint();
     return;
   }
@@ -3005,8 +3021,8 @@ function togglePointerLock() {
   const p = tryWithOptions() ?? plain();
   p.catch(() => {
     state.pointerLockPending = false;
-    // Safari may silently deny — fall back to drag-look mode silently.
-    revealHint("視角鎖定不可用，改用按住左鍵拖曳看四周。");
+    // Safari 及部分環境可能拒絕 — 退回拖曳模式，給讀者故事感的提示
+    revealHint("這裡的空間需要你用左鍵按住拖曳來探索。");
     updatePointerHint();
   });
   window.setTimeout(() => {
@@ -3145,7 +3161,7 @@ function bindPointerLook() {
   };
   const onLockError = () => {
     state.pointerLockPending = false;
-    revealHint("瀏覽器沒有成功鎖定視角。");
+    revealHint("視角無法鎖定，改用左鍵按住拖曳探索這一秒。");
     logDebug("pointerlock", "error");
     updatePointerHint();
   };
