@@ -3692,6 +3692,9 @@ body.cinematic-mode .letterbox-bar {
   bottom: auto !important;
   width: 300px;
   max-height: 88vh;
+  /* C9: ui-float 模式下，top:60px 已經避開頂部 HUD，原本的 96px padding 變雙重偏移 */
+  padding-top: 14px;
+  padding-bottom: 20px;
   overflow-y: auto;
   border-radius: 12px;
   cursor: default;
@@ -3718,6 +3721,108 @@ body.cinematic-mode .letterbox-bar {
   border-radius: 2px;
   background: rgba(255,255,255,0.14);
   margin: 0 auto 6px;
+}
+
+/* ═══════════════════════════════════════════
+   C9: side-panel 收合切換（手動隱藏）
+   ═══════════════════════════════════════════ */
+/* 收合按鈕：貼在第一張卡片右上角 */
+.side-panel-collapse {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid rgba(217, 179, 106, 0.28);
+  border-radius: 8px;
+  background: rgba(10, 14, 22, 0.78);
+  color: rgba(217, 179, 106, 0.82);
+  font: 600 14px/1 "Noto Sans TC", system-ui, sans-serif;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease, transform 180ms ease;
+  z-index: 3;
+}
+.side-panel-collapse:hover {
+  background: rgba(217, 179, 106, 0.14);
+  color: #ffe8b8;
+  border-color: rgba(217, 179, 106, 0.6);
+}
+.side-panel-collapse:focus-visible {
+  outline: 2px solid rgba(217, 179, 106, 0.6);
+  outline-offset: 2px;
+}
+/* 收合後的面板狀態 — 用 transform 滑出避免 CLS、避免影響 canvas resize */
+.side-panel.ui-float.is-collapsed {
+  transform: translateX(calc(100% + 24px));
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 360ms cubic-bezier(0.4, 0.0, 0.2, 1), opacity 300ms ease;
+}
+.side-panel.ui-float {
+  transition: transform 360ms cubic-bezier(0.4, 0.0, 0.2, 1), opacity 300ms ease, box-shadow 200ms ease;
+}
+/* 收合後的叫回把手 — 預設隱藏，面板收起時才顯示 */
+#side-panel-reveal {
+  position: fixed;
+  top: 96px;
+  right: 0;
+  width: 28px;
+  height: 72px;
+  padding: 0;
+  border: 1px solid rgba(217, 179, 106, 0.32);
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  background: linear-gradient(270deg, rgba(22, 18, 28, 0.92), rgba(10, 14, 22, 0.78));
+  color: rgba(217, 179, 106, 0.88);
+  font: 500 10px/1.2 "Noto Sans TC", system-ui, sans-serif;
+  letter-spacing: 0.12em;
+  writing-mode: vertical-rl;
+  cursor: pointer;
+  z-index: 201;
+  opacity: 0;
+  transform: translateX(100%);
+  pointer-events: none;
+  transition: transform 360ms cubic-bezier(0.4, 0.0, 0.2, 1) 60ms, opacity 240ms ease 60ms, background 180ms ease, border-color 180ms ease;
+  box-shadow: -4px 2px 16px rgba(0, 0, 0, 0.42);
+}
+#side-panel-reveal.is-visible {
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+#side-panel-reveal:hover {
+  background: linear-gradient(270deg, rgba(32, 26, 40, 0.96), rgba(18, 22, 32, 0.88));
+  border-color: rgba(217, 179, 106, 0.6);
+  color: #ffe8b8;
+}
+#side-panel-reveal:focus-visible {
+  outline: 2px solid rgba(217, 179, 106, 0.6);
+  outline-offset: 2px;
+}
+/* 手機／窄螢幕不顯示收合按鈕（面板已經被 display:none） */
+@media (max-width: 768px) {
+  .side-panel-collapse,
+  #side-panel-reveal {
+    display: none !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .side-panel.ui-float,
+  .side-panel.ui-float.is-collapsed,
+  #side-panel-reveal {
+    transition-duration: 80ms;
+  }
+}
+/* 收合時 stage 應該撐滿 — 用 :has() 與 class 雙保險 */
+.game-shell:has(> .side-panel.ui-float.is-collapsed),
+body.side-panel-collapsed .game-shell {
+  grid-template-columns: minmax(0, 1fr) 0 !important;
+  gap: 0 !important;
+  padding-right: 0 !important;
 }
 
 /* ═══════════════════════════════════════════
@@ -3749,4 +3854,217 @@ body.cinematic-mode .letterbox-bar {
   background: rgba(4,6,12,0.72);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
+}
+
+/* ═══════════════════════════════════════════
+   C9: Cinematic Gate（韓劇導演風·點擊進入）
+   — 黑幕、呼吸光暈、字體柔邊、淡入淡出
+   — 解除瀏覽器自動播放限制 + 延後載入 Three.js
+   ═══════════════════════════════════════════ */
+.cinematic-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(
+      ellipse 70% 60% at 50% 46%,
+      rgba(22, 18, 28, 0.98),
+      rgba(6, 8, 13, 0.99) 70%
+    ),
+    radial-gradient(circle at 22% 78%, rgba(217, 179, 106, 0.06), transparent 42%),
+    radial-gradient(circle at 78% 22%, rgba(239, 111, 128, 0.045), transparent 40%),
+    #06080d;
+  opacity: 0;
+  animation: cinematic-gate-in 1.4s 0.05s ease forwards;
+  cursor: default;
+  -webkit-tap-highlight-color: transparent;
+  contain: layout paint size;
+}
+@keyframes cinematic-gate-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.cinematic-gate.gate-exiting {
+  animation: cinematic-gate-out 1.1s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  pointer-events: none;
+}
+@keyframes cinematic-gate-out {
+  0% { opacity: 1; transform: scale(1); filter: blur(0); }
+  100% { opacity: 0; transform: scale(1.025); filter: blur(3px); }
+}
+.cinematic-gate-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.35;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+    radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+    radial-gradient(circle at 40% 60%, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+  background-size: 3px 3px, 4px 4px, 5px 5px;
+}
+.cinematic-gate-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 42%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+  pointer-events: none;
+}
+.cinematic-gate-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  padding: 0 24px;
+  max-width: 640px;
+  text-align: center;
+  z-index: 2;
+  opacity: 0;
+  transform: translateY(14px);
+  animation: cinematic-gate-inner-in 1.8s 0.55s cubic-bezier(0.22, 0.61, 0.36, 1)
+    forwards;
+}
+@keyframes cinematic-gate-inner-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.cinematic-gate-kicker {
+  font: 400 clamp(10px, 1vw, 12px) / 1.6 "DM Mono", "Noto Sans TC", monospace;
+  color: rgba(217, 179, 106, 0.55);
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+.cinematic-gate-quote {
+  font: 300 clamp(15px, 1.85vw, 20px) / 1.95 "Noto Serif TC", serif;
+  color: rgba(238, 232, 222, 0.7);
+  max-width: 520px;
+  letter-spacing: 0.04em;
+}
+.cinematic-gate-enter {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px 44px;
+  margin-top: 12px;
+  border: 1px solid rgba(217, 179, 106, 0.35);
+  border-radius: 2px;
+  background: linear-gradient(
+    180deg,
+    rgba(22, 18, 28, 0) 0%,
+    rgba(217, 179, 106, 0.035) 100%
+  );
+  color: rgba(255, 244, 224, 0.95);
+  font-family: "Cormorant Garamond", "Noto Serif TC", serif;
+  font-weight: 300;
+  font-size: clamp(17px, 2vw, 22px);
+  line-height: 1.4;
+  letter-spacing: 0.09em;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    border-color 0.6s ease,
+    color 0.6s ease,
+    background 0.6s ease,
+    transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+  animation: cinematic-gate-breath 4.5s 1.8s ease-in-out infinite;
+}
+@keyframes cinematic-gate-breath {
+  0%, 100% {
+    box-shadow:
+      0 0 0 0 rgba(217, 179, 106, 0),
+      inset 0 0 0 0 rgba(217, 179, 106, 0);
+    border-color: rgba(217, 179, 106, 0.35);
+  }
+  50% {
+    box-shadow:
+      0 0 42px 2px rgba(217, 179, 106, 0.12),
+      inset 0 0 24px 0 rgba(217, 179, 106, 0.04);
+    border-color: rgba(217, 179, 106, 0.52);
+  }
+}
+.cinematic-gate-enter:hover {
+  border-color: rgba(217, 179, 106, 0.75) !important;
+  color: #fff4e0;
+  background: linear-gradient(
+    180deg,
+    rgba(22, 18, 28, 0) 0%,
+    rgba(217, 179, 106, 0.08) 100%
+  );
+  transform: translateY(-1px);
+}
+.cinematic-gate-enter:focus-visible {
+  outline: none;
+  border-color: rgba(217, 179, 106, 0.9) !important;
+  box-shadow: 0 0 0 3px rgba(217, 179, 106, 0.18) !important;
+}
+.cinematic-gate-enter:active {
+  transform: translateY(0) scale(0.995);
+}
+.cinematic-gate-enter-halo {
+  position: absolute;
+  inset: -30%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(217, 179, 106, 0.14),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+.cinematic-gate-enter:hover .cinematic-gate-enter-halo {
+  opacity: 1;
+}
+.cinematic-gate-enter-text {
+  position: relative;
+  z-index: 1;
+  white-space: nowrap;
+}
+.cinematic-gate-enter-em {
+  font-style: italic;
+  letter-spacing: 0.03em;
+  color: #d9b36a;
+  margin-left: 0.15em;
+}
+.cinematic-gate-hint {
+  font: 300 clamp(10px, 1vw, 12px) / 1.8 "Noto Sans TC", sans-serif;
+  color: rgba(238, 232, 222, 0.34);
+  letter-spacing: 0.08em;
+  margin-top: 4px;
+}
+@media (max-width: 640px) {
+  .cinematic-gate-inner {
+    gap: 22px;
+    padding: 0 20px;
+  }
+  .cinematic-gate-quote {
+    font-size: 15px;
+    line-height: 1.9;
+  }
+  .cinematic-gate-enter {
+    padding: 18px 26px;
+    font-size: 16px;
+    letter-spacing: 0.06em;
+  }
+  .cinematic-gate-enter-text {
+    white-space: normal;
+  }
+  .cinematic-gate-hint {
+    font-size: 10.5px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cinematic-gate { animation-duration: 0.3s; }
+  .cinematic-gate-inner { animation-duration: 0.3s; animation-delay: 0.1s; }
+  .cinematic-gate-enter { animation: none; }
+  .cinematic-gate.gate-exiting { animation-duration: 0.3s; }
 }

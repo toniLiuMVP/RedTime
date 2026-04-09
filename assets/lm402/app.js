@@ -368,7 +368,10 @@ function loadLookSetting() {
 }
 
 const initialLookSetting = loadLookSetting();
-const initialAudioEnabled = localStorage.getItem(STORAGE_KEYS.audioEnabled) === "1";
+// C9: 若使用者透過玄關按鈕進入，視為已授權播放音樂（gesture primed）
+const initialAudioEnabled =
+  localStorage.getItem(STORAGE_KEYS.audioEnabled) === "1" ||
+  (typeof window !== "undefined" && window.__lm402AutoplayPrimed === true);
 
 function isMobileLayout() {
   return window.matchMedia("(max-width: 1080px)").matches || window.matchMedia("(pointer: coarse)").matches;
@@ -3311,10 +3314,11 @@ function bindUI() {
     if (!panel) return;
     // 只在桌機上啟用浮動拖移
     if (window.innerWidth < 800) return;
-    panel.classList.add("ui-float");
-    // 加入拖把手提示
+    // HTML 已預先寫入 ui-float，避免 CLS；此處僅做守門
+    if (!panel.classList.contains("ui-float")) panel.classList.add("ui-float");
+    // 加入拖把手提示（HTML 已預埋，僅在舊結構下補上）
     const firstCard = panel.querySelector(".panel-card");
-    if (firstCard) {
+    if (firstCard && !firstCard.querySelector(".ui-drag-handle-hint")) {
       const hint = document.createElement("div");
       hint.className = "ui-drag-handle-hint";
       firstCard.insertBefore(hint, firstCard.firstChild);
@@ -3436,7 +3440,12 @@ syncTranscriptUI();
 syncObjectiveChip();
 updatePointerHint();
 updateActionButtons();
-void audioSystem.tryPlay("startup");
+// C9: gate 進入者直接 unlock（resume AC + tryPlay），其他人照舊 tryPlay
+if (typeof window !== "undefined" && window.__lm402AutoplayPrimed) {
+  audioSystem.unlock();
+} else {
+  void audioSystem.tryPlay("startup");
+}
 
 /* ── WebGL Context Loss Detection ── */
 canvas.addEventListener("webglcontextlost", (e) => {

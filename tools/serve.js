@@ -19,7 +19,15 @@ const mime = {
 };
 
 http.createServer((req, res) => {
-  let fp = path.join(root, req.url.split("?")[0]);
+  let urlPath;
+  try {
+    urlPath = decodeURIComponent(req.url.split("?")[0]);
+  } catch (e) {
+    res.writeHead(400); res.end("Bad request"); return;
+  }
+  let fp = path.join(root, urlPath);
+  // 防止 path traversal
+  if (!fp.startsWith(root)) { res.writeHead(403); res.end("Forbidden"); return; }
   if (fs.existsSync(fp) && fs.statSync(fp).isDirectory()) fp = path.join(fp, "index.html");
   fs.readFile(fp, (err, data) => {
     if (err) { res.writeHead(404); res.end("Not found"); return; }
