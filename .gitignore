@@ -8,3 +8,6 @@ Backup/
 *.doc
 tools/lighthouse-baseline/**/*.report.html
 tools/lighthouse-baseline/**/*.report.json
+output/
+test-results/
+.playwright-cli/
