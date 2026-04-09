@@ -6,3 +6,5 @@ node_modules/
 Backup/
 *.docx
 *.doc
+tools/lighthouse-baseline/**/*.report.html
+tools/lighthouse-baseline/**/*.report.json
