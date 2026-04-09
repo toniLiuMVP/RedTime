@@ -463,6 +463,7 @@ if (preset.shadowType) renderer.shadowMap.type = preset.shadowType;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.1;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.domElement.setAttribute("aria-label", "平台跑酷遊戲畫面");
 document.body.prepend(renderer.domElement);
 
 const scene  = new THREE.Scene();
