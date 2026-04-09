@@ -1,43 +1,63 @@
-# Playwright 三瀏覽器 Smoke Test 報告
+# Playwright 三瀏覽器 Smoke Test 報告（更新版）
 
-**執行日期**：2026-04-09  
+**第一次執行**：2026-04-09（發現問題）  
+**最終執行**：2026-04-09（修復後驗證）  
 **Playwright 版本**：1.58.2  
 **目標網址**：https://toniliumvp.github.io/RedTime/  
 **瀏覽器版本**：Chromium 145.0.7632.6 / Firefox 146.0.1 / WebKit 26.0  
 
 ---
 
-## Pass/Fail 矩陣
+## 最終 Pass/Fail 矩陣（修復後）
 
 | 頁面 | Chromium | Firefox | WebKit |
 |------|:--------:|:-------:|:------:|
 | 首頁 `/` | ✅ | ✅ | ✅ |
 | `/reader.html` | ✅ | ✅ | ✅ |
-| `/lm402.html` | ❌ | ❌ | ❌ |
-| `/demos/platform-run/index.html` | ❌ | ✅ | ⚠️ 閃爍 |
+| `/lm402.html` | ❌ | ✅ | ✅ |
+| `/demos/platform-run/index.html` | ❌ | ✅ | ✅ |
 
-**總計**：7 通過 / 4 失敗 / 1 閃爍（初次 timeout，retry 通過）
+**最終**：10 通過 / 2 失敗（均為 Chromium headless WebGL 環境限制，非生產 bug）
+
+> **對比昨天首次結果**：7通過/4失敗/1閃爍 → **10通過/2失敗/0閃爍**
+> Firefox lm402 ✅、WebKit lm402 ✅、WebKit platform-run 穩定 ✅
 
 ---
 
-## 各頁面詳細結果
+## 修復歷程
+
+### 修復項目 1：`t is not defined`（Firefox + WebKit lm402 壞掉）
+- **commit** `fb4d98d` — Revert "refactor: renderer.js 去壓縮化（變數與函數語意化命名）"
+- **原因**：`2a9c4bb` 的 renderer.js 去壓縮化操作，在 Firefox 和 WebKit 下引發 `t is not defined` pageerror，導致 lm402 整頁崩潰
+- **做法**：完整 revert 整個 refactor commit，回到原本正常運作的壓縮版
+
+### 修復項目 2：WebKit index `allow-presentation` sandbox 警告
+- **commit** `6bd0f7b` — fix: 移除 iframe sandbox 中無效的 allow-presentation 旗標
+- **原因**：index.html 的 iframe sandbox 屬性含 `allow-presentation`，WebKit 不接受此旗標
+- **做法**：從 sandbox 屬性移除 `allow-presentation`
+
+### 優化項目：LCP 相關保守優化
+- **Task 3-A**：fonts.css 全部 790 個 `@font-face` 已有 `font-display: swap`，無需改動
+- **Task 3-B**：`perf(lm402): 修正字體 preload`（commit `aa752fe`）
+  - 原 preload 指向 Cormorant Garamond（lm402 完全未使用）
+  - 改為 Noto Sans TC `.119.woff2`（w300/400 共用，覆蓋 ASCII + 常用 CJK）+ DM Mono（w500 latin）
+- **Task 3-C**：`<script type="module">` 預設即為 defer，無需額外修改
+- **Task 3-D**：Loader skeleton 純 CSS/HTML，不依賴 Three.js，無需修改
+
+---
+
+## 各頁面詳細結果（最終版）
 
 ### 首頁 `/`
 
 | 項目 | Chromium | Firefox | WebKit |
 |------|:--------:|:-------:|:------:|
-| console error 無 | ✅ | ✅ | ⚠️ |
+| console error 無 | ✅ | ✅ | ✅ |
 | 導覽連結可見 | ✅ | ✅ | ✅ |
 | Service Worker 已註冊 | ✅ | ✅ | ✅ |
 | 截圖 | ✅ | ✅ | ✅ |
 
-**WebKit 首頁 console error（非 pageerror，不影響通過）**：
-```
-Error while parsing the 'sandbox' attribute: 'allow-presentation' is an invalid sandbox flag.
-```
-- 來源：頁面中某個 `<iframe sandbox>` 屬性含 `allow-presentation`，Safari/WebKit 不接受此旗標
-- 嚴重度：低（警告等級，不影響功能）
-- 待確認：找出哪個 iframe 使用了此屬性，考慮移除 `allow-presentation`
+**全部通過。** `allow-presentation` 修復後 WebKit 首頁無 console error。
 
 ---
 
@@ -51,7 +71,7 @@ Error while parsing the 'sandbox' attribute: 'allow-presentation' is an invalid 
 | `.nav-home-btn` 存在 + aria-label | ✅ | ✅ | ✅ |
 | 截圖 | ✅ | ✅ | ✅ |
 
-**全部通過。** A11y 修正（`#ap-slider` aria-label、`.nav-home-btn` aria-label）在三瀏覽器均有效。
+**三瀏覽器全部通過。**
 
 ---
 
@@ -62,42 +82,29 @@ Error while parsing the 'sandbox' attribute: 'allow-presentation' is an invalid 
 | Three.js canvas 存在 | ✅ | ✅ | ✅ |
 | Pointer Lock API 偵測 | ✅ 支援 | ✅ 支援 | ✅ 支援 |
 | Web Audio API 偵測 | ✅ | ✅ | ✅ |
-| pageerror 無 | ❌ | ❌ | ❌ |
-| 截圖 | ✅（有錯但仍截圖） | ✅ | ✅ |
+| pageerror 無 | ❌ WebGL | ✅ | ✅ |
+| 截圖 | ✅（有錯） | ✅ | ✅ |
 
-#### Fail 原因
+**Firefox 和 WebKit 已全數通過（revert 後 `t is not defined` 消失）。**
 
-**Chromium：WebGL context 建立失敗**
+#### Chromium 剩餘問題（環境限制，非生產 bug）
+
 ```
 THREE.WebGLRenderer: A WebGL context could not be created.
 Reason: BindToCurrentSequence failed (SwiftShader software renderer)
 pageerror: Error creating WebGL context.
 ```
-- **根本原因**：Playwright headless Chromium 使用 SwiftShader 軟體渲染器，在此環境下 WebGL context 建立失敗。這是 **CI/headless 環境限制**，非生產 bug。
-- **真實瀏覽器行為**：有 GPU 的真實 Chrome 上 WebGL 正常運作。
-- **建議**：若要在 Chromium CI 中測試 WebGL，需加 `--use-gl=egl` 或改用 `chromium --use-angle=swiftshader-webgl` 旗標。此問題**不需要修 production code**。
 
-**Firefox + WebKit：`t is not defined` / `Can't find variable: t`**
-```
-[firefox] pageerror: t is not defined
-[webkit]  pageerror: Can't find variable: t
-```
-- **根本原因**：lm402.html 載入的某個 JS 腳本中，有一個名為 `t` 的變數未定義。從錯誤模式判斷，可能是 `vendor-three.module.js` 或其他仍為壓縮狀態的檔案中，短變數名 `t` 在某個閉包外被引用。
-- **嚴重度**：中高（Firefox + WebKit 下 lm402 功能可能受損）
-- **待確認**：在 Firefox/Safari 真實瀏覽器中開啟 lm402.html，查看 DevTools 中 `t is not defined` 的堆疊追蹤，定位到哪個檔案哪一行。
-- **Chromium 不受影響**：因為 WebGL 早先失敗，pageerror 是 WebGL 而非 `t`。
+- **根本原因**：Playwright headless Chromium 使用 SwiftShader 軟體渲染器，WebGL context 建立失敗
+- **真實瀏覽器行為**：有 GPU 的 Chrome 正常運作，不影響生產環境
 
 #### Pointer Lock 分支確認
 
-三個瀏覽器的 Pointer Lock API 偵測結果：
-
-| 瀏覽器 | `pointerLockElement in document` | `requestPointerLock` 函數 | 判斷 |
+| 瀏覽器 | API 存在 | requestPointerLock 函數 | 判斷 |
 |--------|:---:|:---:|:---|
-| Chromium | `true` | `true` | 走鎖定分支 |
-| Firefox | `true` | `true` | 走鎖定分支 |
-| WebKit | `true` | `true` | 走鎖定分支 |
-
-> ⚠️ **注意**：WebKit (Safari) 雖然 API 存在，但 `requestPointerLock()` 在 headless 環境下無法真正鎖定（需要用戶手勢）。Headless 測試無法驗證實際的鎖定行為或降級提示是否觸發。需要在真實 Safari 中手動確認降級提示文字是否正確出現。
+| Chromium | ✅ | ✅ | 走鎖定分支（WebGL 先崩，未真正執行） |
+| Firefox | ✅ | ✅ | 走鎖定分支，功能正常 |
+| WebKit | ✅ | ✅ | 走鎖定分支（headless 無法驗證實際鎖定行為） |
 
 ---
 
@@ -108,49 +115,27 @@ pageerror: Error creating WebGL context.
 | console error 無 | ❌（WebGL 失敗） | ✅ | ✅ |
 | canvas 存在 | ❌（未出現） | ✅ | ✅ |
 | canvas aria-label | N/A | ✅ `"平台跑酷遊戲畫面"` | ✅ `"平台跑酷遊戲畫面"` |
-| 截圖 | ❌ | ✅ | ✅（retry） |
+| 截圖 | ❌ | ✅ | ✅ |
 
-**Chromium fail 原因**：WebGL context 建立失敗（同 lm402），且 canvas 元素在 10 秒內未出現（pageerror 導致遊戲初始化中斷）。同樣是 **headless 環境限制**，非生產 bug。
-
-**WebKit 閃爍原因**：第一次跑時截圖 timeout（60 秒），retry 時 2.2 秒內通過。推測是 GitHub Pages CDN 延遲或 WebKit headless 冷啟動問題，非穩定性 bug。
+**Firefox 和 WebKit 全通過。Chromium 因 WebGL headless 問題失敗（環境限制）。**
 
 ---
 
-## 跨瀏覽器差異彙整
+## 跨瀏覽器差異彙整（最終）
 
-| 差異項目 | Chromium | Firefox | WebKit | 備註 |
+| 差異項目 | Chromium | Firefox | WebKit | 狀態 |
 |---------|---------|---------|--------|------|
-| Service Worker | ✅ | ✅ | ✅ | 三者均正常 |
-| WebGL (headless) | ❌ | ✅ | ✅ | Chromium SwiftShader 問題 |
-| `t is not defined` JS error | 不觸發 | ❌ | ❌ | 真實 bug，需查堆疊 |
-| `allow-presentation` sandbox | 無影響 | 無影響 | ⚠️ console error | WebKit 特有，低嚴重度 |
-| Pointer Lock API 存在 | ✅ | ✅ | ✅ | 三者均有 API |
+| Service Worker | ✅ | ✅ | ✅ | 無問題 |
+| WebGL (headless) | ❌ | ✅ | ✅ | Chromium SwiftShader 環境限制 |
+| `t is not defined` JS error | - | ✅已修 | ✅已修 | ✅ revert 後消失 |
+| `allow-presentation` sandbox | 無影響 | 無影響 | ✅已修 | ✅ 移除後 WebKit 無警告 |
+| Pointer Lock API 存在 | ✅ | ✅ | ✅ | 三者均有 |
 | Web Audio API 存在 | ✅ | ✅ | ✅ | 三者均有 |
-| platform-run canvas aria-label | N/A | `"平台跑酷遊戲畫面"` | `"平台跑酷遊戲畫面"` | A11y 修正有效 |
+| platform-run canvas aria-label | N/A | ✅ | ✅ | A11y 修正有效 |
 
 ---
 
-## 需要後續處理的 Bug 清單
-
-> ⛔ 本次 smoke test 不修 bug，僅記錄，等 toni 確認後處理。
-
-### Bug 1（中高）：Firefox + WebKit 的 `t is not defined`
-- **影響**：Firefox + WebKit 下 lm402 頁面 pageerror
-- **症狀**：JS pageerror，推測影響 Three.js 場景或渲染器
-- **下一步**：在真實 Firefox 或 Safari 開啟 lm402.html → DevTools Console → 查 `t is not defined` 的 call stack
-
-### Bug 2（低）：WebKit index 頁 `allow-presentation` sandbox 警告  
-- **影響**：Safari console error（非 pageerror，不中斷功能）
-- **症狀**：`Error while parsing the 'sandbox' attribute: 'allow-presentation' is an invalid sandbox flag.`
-- **下一步**：搜尋 index.html 中的 `allow-presentation`，移除或換成有效值
-
-### 環境限制備忘（不是 bug）
-- Chromium headless WebGL 失敗：CI/headless 環境問題，非生產 bug
-- WebKit platform-run 閃爍：CDN 延遲或冷啟動，retry 可通過
-
----
-
-## 截圖清單
+## 截圖清單（最終）
 
 ```
 output/smoke/
@@ -158,16 +143,26 @@ output/smoke/
 │   ├── index.png        ✅
 │   ├── reader.png       ✅
 │   └── lm402.png        ✅（有 WebGL 錯誤）
-│   └── platform-run.png ❌（未生成，測試失敗）
+│   └── platform-run.png ❌（未生成，WebGL 失敗）
 ├── firefox/
 │   ├── index.png        ✅
 │   ├── reader.png       ✅
-│   ├── lm402.png        ✅（有 JS 錯誤）
+│   ├── lm402.png        ✅
 │   └── platform-run.png ✅
 ├── webkit/
 │   ├── index.png        ✅
 │   ├── reader.png       ✅
-│   ├── lm402.png        ✅（有 JS 錯誤）
-│   └── platform-run.png ✅（retry 通過）
-└── console-log.json     ✅（所有 error/pageerror 記錄）
+│   ├── lm402.png        ✅
+│   └── platform-run.png ✅
+└── console-log.json     ✅（24 筆，均為 Chromium WebGL 環境錯誤）
 ```
+
+---
+
+## 結論
+
+原本壞掉的兩個問題已全部修復：
+1. **Firefox + WebKit lm402 `t is not defined`** → revert renderer.js refactor ✅
+2. **WebKit 首頁 `allow-presentation` sandbox 警告** → 移除無效屬性 ✅
+
+剩餘的 2 個 fail 均是 **Chromium headless SwiftShader 環境限制**，不影響真實瀏覽器（Chrome）正常使用。
