@@ -3830,8 +3830,6 @@
         #story-progress-slider input[type="range"] {
           writing-mode: vertical-lr;
           direction: rtl;
-          appearance: slider-vertical;
-          -webkit-appearance: slider-vertical;
           width: 4px;
           height: 540px;
           accent-color: var(--jade);
@@ -4705,7 +4703,7 @@
               class="hero-resume"
               id="resume-card"
               onclick="resumeReading()"
-              aria-label="繼續上次閱讀進度"
+              aria-label="繼續閱讀 — 上次閱讀進度"
             >
               <span class="resume-eyebrow">繼續閱讀</span>
               <span class="resume-title" id="resume-title">繼續上次閱讀</span>
@@ -4816,7 +4814,7 @@
         <div id="topnav-mobile" role="navigation" aria-label="閱讀導覽（手機版）">
           <div class="nav-title" id="nav-ep-title">時間裡的兩個妳</div>
           <div class="nav-actions">
-            <a class="nav-btn nav-home-btn" href="index.html"
+            <a class="nav-btn nav-home-btn" href="index.html" aria-label="回到首頁"
               ><span class="ui-glyph nav-icon" data-ui-icon="home"></span
             ></a>
             <a class="nav-btn" href="lm402.html"
@@ -4920,6 +4918,7 @@
           max="10"
           value="3"
           oninput="setAutoSpeed(+this.value)"
+          aria-label="自動播放速度"
         />
         <span class="ap-speed-val" id="ap-speed-num">3</span>
       </div>
