@@ -115,6 +115,49 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 .brief-skip:hover{background:#c8a063;color:#0b0d08}
 .brief-vignette{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.5) 100%)}
 
+/* timing bar (artillery) */
+.timing-bar{position:fixed;bottom:120px;left:50%;transform:translateX(-50%);z-index:15;width:min(320px,80vw);height:32px;border:2px solid #c8a063;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);border-radius:4px;overflow:hidden;display:none}
+.timing-bar.show{display:block}
+.timing-zone{position:absolute;top:0;height:100%;background:rgba(127,176,105,.35);border-left:2px solid #7fb069;border-right:2px solid #7fb069}
+.timing-needle{position:absolute;top:0;width:4px;height:100%;background:#f0e6d2;border-radius:2px;transition:none}
+.timing-label{position:fixed;bottom:158px;left:50%;transform:translateX(-50%);z-index:15;font-family:"Courier New",monospace;font-size:11px;color:#c8a063;letter-spacing:.2em;display:none}
+.timing-label.show{display:block}
+
+/* coin display */
+.coin-display{position:fixed;top:50px;right:14px;z-index:20;font-family:"Courier New",monospace;font-size:13px;color:#ffd700;letter-spacing:.1em;display:none;padding:6px 12px;border:1px solid rgba(255,215,0,.3);background:rgba(0,0,0,.4);border-radius:4px}
+.coin-display.show{display:block}
+
+/* shell shop */
+.shop-wrap{max-width:480px;width:100%;text-align:center;background:rgba(11,13,8,.8);padding:32px 24px;backdrop-filter:blur(8px);border-radius:6px}
+.shop-title{font-family:"Courier New",monospace;color:#c8a063;letter-spacing:.3em;font-size:12px;margin-bottom:8px}
+.shop-coins{color:#ffd700;font-size:18px;font-family:"Courier New",monospace;margin-bottom:20px}
+.shop-grid{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:24px}
+.shop-item{padding:14px 16px;border:1px solid #5a6d42;background:rgba(0,0,0,.3);min-width:120px;cursor:pointer;transition:all .2s;text-align:center}
+.shop-item:hover{border-color:#c8a063;background:rgba(200,160,99,.1)}
+.shop-item.selected{border-color:#ffd700;background:rgba(255,215,0,.15)}
+.shop-item.disabled{opacity:.35;pointer-events:none}
+.shop-item-name{color:#f0e6d2;font-size:14px;margin-bottom:4px}
+.shop-item-desc{color:#cdbf99;font-size:11px;margin-bottom:6px}
+.shop-item-price{color:#ffd700;font-family:"Courier New",monospace;font-size:12px}
+
+/* rhythm game (running) */
+.rhythm-lane{position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:15;width:min(280px,72vw);height:70vh;pointer-events:none;display:none;overflow:hidden}
+.rhythm-lane.show{display:block;pointer-events:auto}
+.rhythm-judge{position:absolute;bottom:60px;left:0;right:0;height:3px;background:#c8a063;opacity:.6}
+.rhythm-cols{position:absolute;inset:0;display:flex}
+.rhythm-col{flex:1;border-right:1px solid rgba(200,160,99,.08)}
+.rhythm-col:last-child{border-right:none}
+.rhythm-hint{position:absolute;bottom:40px;left:0;right:0;display:flex;justify-content:center;gap:0}
+.rhythm-hint span{flex:1;text-align:center;font-family:"Courier New",monospace;font-size:16px;color:rgba(200,160,99,.4);line-height:1}
+.rhythm-note{position:absolute;width:25%;text-align:center;font-size:22px;color:#f0e6d2;text-shadow:0 0 8px rgba(200,160,99,.5);pointer-events:none;transition:none}
+.rhythm-note.hit{color:#7fb069;text-shadow:0 0 12px rgba(127,176,105,.8)}
+.rhythm-note.miss{color:#d94832;opacity:.4}
+.rhythm-fb{position:fixed;bottom:calc(60px + 30px);left:50%;transform:translateX(-50%);z-index:16;font-size:14px;font-family:"Courier New",monospace;letter-spacing:.15em;opacity:0;transition:opacity .2s;pointer-events:none}
+.rhythm-fb.show{opacity:1}
+.rhythm-fb.perfect{color:#ffd700}
+.rhythm-fb.good{color:#7fb069}
+.rhythm-fb.miss{color:#d94832}
+
 /* end */
 .end-roll{max-width:560px;text-align:center;line-height:2.6;font-size:clamp(15px,4vw,19px);letter-spacing:.08em;animation:endIn 2s ease .3s both}
 .end-mark{margin-top:40px;color:#c8a063;letter-spacing:.4em;font-family:"Courier New",monospace;font-size:12px;opacity:.7}
@@ -137,6 +180,11 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 <button class="fire-btn" id="fire-btn">F I R E</button>
 <button class="tap-area" id="tap-btn">踏 · 踏 · 踏</button>
 <div id="fb"></div>
+<div class="timing-label" id="timing-label">瞄準中…</div>
+<div class="timing-bar" id="timing-bar"><div class="timing-zone" id="timing-zone"></div><div class="timing-needle" id="timing-needle"></div></div>
+<div class="coin-display" id="coin-display">0</div>
+<div class="rhythm-lane" id="rhythm-lane"><div class="rhythm-cols"><div class="rhythm-col"></div><div class="rhythm-col"></div><div class="rhythm-col"></div><div class="rhythm-col"></div></div><div class="rhythm-judge"></div><div class="rhythm-hint"><span>←</span><span>↓</span><span>↑</span><span>→</span></div></div>
+<div class="rhythm-fb" id="rhythm-fb"></div>
 
 <script type="importmap">{"imports":{"three":"../platform-run/three.module.js"}}</script>
 <script type="module">
@@ -151,7 +199,15 @@ const HUD = $('hud');
 const FIRE = $('fire-btn');
 const TAP = $('tap-btn');
 const FB = $('fb');
+const TBAR = $('timing-bar');
+const TZONE = $('timing-zone');
+const TNEEDLE = $('timing-needle');
+const TLABEL = $('timing-label');
+const COINDISP = $('coin-display');
+const RLANE = $('rhythm-lane');
+const RFB = $('rhythm-fb');
 const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+let playerCoins = 0;
 
 function el(tag, cls, txt) {
   const e = document.createElement(tag);
@@ -249,6 +305,15 @@ function toggleBGM() {
   }
 }
 musicBtn.addEventListener('click', toggleBGM);
+
+function restartBGM() {
+  bgm.currentTime = 0;
+  bgm.play().then(() => {
+    bgmPlaying = true;
+    musicBtn.classList.add('show');
+    musicBtn.classList.remove('off');
+  }).catch(() => {});
+}
 
 function sfxRadarTick() {
   if (!audioCtx) return;
@@ -412,16 +477,16 @@ function sfxMoo() {
    DIARY DATA (canon-safe)
    ══════════════════════════════════════════ */
 const DIARY = [
-  { date:'1994 · 07 · 01', loc:'新訓中心', body:['第一天。','剃了頭。','班長說，想家的人最容易出事。','','我沒想家。','我只想起，妳看我最後一眼的那一秒。','','一秒。','我用一整個夏天去數，還沒數完。']},
-  { date:'1994 · 08 · 14', loc:'砲兵連', body:['報數、舉手、起立、坐下。','通通比不上妳走出我生活的那一天安靜。','','明天考砲兵射擊。','數字，是我現在唯一聽得清楚的聲音。']},
-  { date:'1994 · 08 · 22', loc:'聯合演習區', body:['第一名。','','營長說，砲兵射擊滿分的人，','要負責一項重大任務。','','我以為是指揮彈著。','是顧一頭牛。','','牛的眼睛，比我想的還像妳。','溫的，黑的。','看過我一眼，就低頭吃草。']},
-  { date:'1995 · 03 · 09', loc:'營區操場', body:['明天 3000。','全連都在睡，我在跑。','','跑步的時候不用想，','只要一直往前。','','妳離開那天，我沒有跑。','我站著，站到路燈熄掉。','','這一次，我要跑得夠快。','快到能把那一秒的空白，','追回來。']},
-  { date:'1995 · 03 · 10', loc:'連部', body:['12 分整。','','連長說，原本明早 08:00 放的假，','提早到今晚 21:00。','','榮譽假。','我第一次覺得，','跑步是會變成時間的。','','我賺了 11 個小時。','11 個小時能做什麼？']},
-  { date:'1995 · 05 · 17', loc:'高雄車站 → 新竹', body:['高雄出發，往北。','車誤點，月台空了。','','我看著火車尾燈越來越遠，','像妳那天的背影。','','哥哥從市區開車過來，','說「上車，我比火車快。」','','從高雄到新竹，','他把油門踩到底。','我沒說話。','心裡只有一句：','讓我趕上，讓我趕上。']},
-  { date:'1995 · 07 · 02', loc:'中山室', body:['中山室的燈還亮著。','弟兄們在比腕力，笑聲很大。','','我沒說話，走過去坐下。','他們說：「學長，來一局。」','','我把右手放上桌。','','不是為了贏。','是為了知道，','這隻手還有沒有力氣。','','還有沒有力氣，','握住一個已經不在眼前的人。']},
-  { date:'1995 · 11 · 03', loc:'哨所', body:['02:30。','全營都在睡。','只有我，一支槍，一盞燈。','','月亮很薄，','薄得像快要撕破的紙。','','黑暗裡有聲音。','風？還是記憶？','我不敢想。','','一想，','就是妳那一秒。']},
-  { date:'1996 · 02 · 19', loc:'屏東 · 農忙支援', body:['下部隊後第一次支援農忙。','屏東。','洋蔥田一望無際。','','太陽很大，土很鬆。','洋蔥皮薄得像信紙。','','弟兄們邊拔邊唱歌。','我跟著笑。','','這是我當兵以來，','第一次覺得，','時間可以不用數。']},
-  { date:'1996 · 06 · 28', loc:'退伍前夜', body:['日記本快寫完了。','最後一頁，我沒有寫。','','留給妳。','','如果有一天，','妳看到這一頁，','請妳相信——','','那一秒，','我已經記了整整兩年。','','而這兩年，不是浪費。','','是我，','替未來的我們，','把時間先存起來。']}
+  { date:'2007 · 07 · 01', loc:'新訓中心', body:['第一天。','剃了頭。','班長說，想家的人最容易出事。','','我沒想家。','我只想起，妳看我最後一眼的那一秒。','','一秒。','我用一整個夏天去數，還沒數完。']},
+  { date:'2007 · 08 · 14', loc:'砲兵連', body:['報數、舉手、起立、坐下。','通通比不上妳走出我生活的那一天安靜。','','明天考砲兵射擊。','數字，是我現在唯一聽得清楚的聲音。']},
+  { date:'2007 · 08 · 22', loc:'聯合演習區', body:['第一名。','','營長說，砲兵射擊滿分的人，','要負責一項重大任務。','','我以為是指揮彈著。','是顧一頭牛。','','牛的眼睛，比我想的還像妳。','溫的，黑的。','看過我一眼，就低頭吃草。']},
+  { date:'2008 · 01 · 09', loc:'營區操場', body:['明天 3000。','全連都在睡，我在跑。','','跑步的時候不用想，','只要一直往前。','','妳離開那天，我沒有跑。','我站著，站到路燈熄掉。','','這一次，我要跑得夠快。','快到能把那一秒的空白，','追回來。']},
+  { date:'2008 · 01 · 10', loc:'連部', body:['12 分整。','','連長說，原本明早 08:00 放的假，','提早到今晚 21:00。','','榮譽假。','我第一次覺得，','跑步是會變成時間的。','','我賺了 11 個小時。','11 個小時能做什麼？']},
+  { date:'2008 · 02 · 17', loc:'高雄車站 → 新竹', body:['高雄出發，往北。','車誤點，月台空了。','','我看著火車尾燈越來越遠，','像妳那天的背影。','','哥哥從市區開車過來，','說「上車，我比火車快。」','','從高雄到新竹，','他把油門踩到底。','我沒說話。','心裡只有一句：','讓我趕上，讓我趕上。']},
+  { date:'2008 · 03 · 02', loc:'中山室', body:['中山室的燈還亮著。','弟兄們在比腕力，笑聲很大。','','我沒說話，走過去坐下。','他們說：「學長，來一局。」','','我把右手放上桌。','','不是為了贏。','是為了知道，','這隻手還有沒有力氣。','','還有沒有力氣，','握住一個已經不在眼前的人。']},
+  { date:'2007 · 11 · 03', loc:'哨所', body:['02:30。','全營都在睡。','只有我，一支槍，一盞燈。','','月亮很薄，','薄得像快要撕破的紙。','','黑暗裡有聲音。','風？還是記憶？','我不敢想。','','一想，','就是妳那一秒。']},
+  { date:'2008 · 04 · 19', loc:'屏東 · 農忙支援', body:['下部隊後第一次支援農忙。','屏東。','洋蔥田一望無際。','','太陽很大，土很鬆。','洋蔥皮薄得像信紙。','','弟兄們邊拔邊唱歌。','我跟著笑。','','這是我當兵以來，','第一次覺得，','時間可以不用數。']},
+  { date:'2008 · 06 · 28', loc:'退伍前夜', body:['日記本快寫完了。','最後一頁，我沒有寫。','','留給妳。','','如果有一天，','妳看到這一頁，','請妳相信——','','那一秒，','我已經記了整整兩年。','','而這兩年，不是浪費。','','是我，','替未來的我們，','把時間先存起來。']}
 ];
 
 /* ══════════════════════════════════════════
@@ -808,7 +873,7 @@ function showEnd() {
     roll.appendChild(el('div', null, t || '\u00a0'));
   });
   OV.appendChild(roll);
-  OV.appendChild(el('div', 'end-mark', '695T · 1994 — 1996'));
+  OV.appendChild(el('div', 'end-mark', '695T · 2007 — 2008'));
   const act = el('div', 'r-action');
   act.style.marginTop = '36px';
   const b1 = el('button', 'btn', '再讀一次');
@@ -1026,8 +1091,55 @@ function addFog(scene, color, density) {
 }
 
 /* ══════════════════════════════════════════
-   L1 — ARTILLERY (full 3D with shell arc)
+   L1 — ARTILLERY (timing bar + reward + shop)
    ══════════════════════════════════════════ */
+// shell types for shop system
+const SHELL_TYPES = [
+  { id:'standard', name:'標準榴彈', desc:'基本砲彈', price: 0, blastR: 2.5, color: 0x1a1a0a },
+  { id:'heavy',    name:'重型穿甲彈', desc:'爆炸範圍 +40%', price: 30, blastR: 3.5, color: 0x4a1a0a },
+  { id:'cluster',  name:'子母彈',   desc:'爆炸範圍 +80%', price: 60, blastR: 4.5, color: 0x6a2a0a }
+];
+let selectedShell = SHELL_TYPES[0];
+
+function showShop(onDone) {
+  clear(OV);
+  const wrap = el('div', 'shop-wrap');
+  wrap.appendChild(el('div', 'shop-title', '砲 彈 補 給 站'));
+  const coins = el('div', 'shop-coins');
+  coins.textContent = '軍餉：' + playerCoins;
+  wrap.appendChild(coins);
+  const grid = el('div', 'shop-grid');
+  let chosen = selectedShell;
+  const items = [];
+  SHELL_TYPES.forEach(sh => {
+    const item = el('div', 'shop-item');
+    if (sh.price > playerCoins) item.classList.add('disabled');
+    if (sh.id === chosen.id) item.classList.add('selected');
+    item.appendChild(el('div', 'shop-item-name', sh.name));
+    item.appendChild(el('div', 'shop-item-desc', sh.desc));
+    item.appendChild(el('div', 'shop-item-price', sh.price === 0 ? '免費' : sh.price + ' 軍餉'));
+    item.addEventListener('click', () => {
+      if (sh.price > playerCoins) return;
+      chosen = sh;
+      items.forEach(it => it.classList.remove('selected'));
+      item.classList.add('selected');
+    });
+    grid.appendChild(item);
+    items.push(item);
+  });
+  wrap.appendChild(grid);
+  const btn = el('button', 'btn primary', '出擊');
+  btn.addEventListener('click', () => {
+    if (chosen.price > 0) playerCoins -= chosen.price;
+    selectedShell = chosen;
+    COINDISP.textContent = playerCoins;
+    onDone();
+  });
+  wrap.appendChild(btn);
+  OV.appendChild(wrap);
+  OV.classList.add('active');
+}
+
 function buildArtillery() {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x5a6a48);
@@ -1041,12 +1153,14 @@ function buildArtillery() {
   if (!isMobile) { sun.shadow.mapSize.set(1024, 1024); sun.shadow.camera.far = 80; }
   scene.add(sun);
 
-  // terrain — rolling hills
+  // terrain — rolling hills, flat near cannon/soldier area
   const terrainGeo = new THREE.PlaneGeometry(120, 120, 48, 48);
   const posArr = terrainGeo.attributes.position.array;
   for (let i = 0; i < posArr.length; i += 3) {
     const x = posArr[i], y = posArr[i + 1];
-    posArr[i + 2] = Math.sin(x * 0.08) * 1.2 + Math.cos(y * 0.06) * 0.8 + Math.random() * 0.2;
+    const distFromCannon = Math.sqrt((x - 3) * (x - 3) + (y - 4) * (y - 4));
+    const dampen = Math.min(1, distFromCannon / 15);
+    posArr[i + 2] = (Math.sin(x * 0.08) * 1.2 + Math.cos(y * 0.06) * 0.8 + Math.random() * 0.2) * dampen;
   }
   terrainGeo.computeVertexNormals();
   const terrain = new THREE.Mesh(terrainGeo, new THREE.MeshStandardMaterial({ color: 0x5a7a3a, roughness: 1 }));
@@ -1108,13 +1222,10 @@ function buildArtillery() {
     scene.add(t);
   }
 
-  // HUD radar (mini on screen via 3D plane at corner) — keep simple overlay approach
-  // We use a small radar plane in screen space via CSS overlay. The 3D scene IS the battlefield.
-
   // shell projectile
   const shellMesh = new THREE.Mesh(
     new THREE.SphereGeometry(0.1, 8, 8),
-    new THREE.MeshBasicMaterial({ color: 0x1a1a0a })
+    new THREE.MeshBasicMaterial({ color: selectedShell.color })
   );
   shellMesh.visible = false;
   scene.add(shellMesh);
@@ -1151,13 +1262,38 @@ function buildArtillery() {
     smokes.push(s);
   }
 
-  // state
+  // timing bar state
+  const NEEDLE_SPEED_BASE = 2.0; // oscillations per second
   const st = {
     score: 0, life: 3, alive: true, locked: false,
-    shell: null, // { start, end, progress, hit }
+    shell: null,
     targetPos: new THREE.Vector3(0, 0, -25),
-    explosionTime: 0
+    explosionTime: 0,
+    needlePos: 0, needleDir: 1, needleSpeed: NEEDLE_SPEED_BASE,
+    // hit zone: center 35-65% of bar width, shrinks each round
+    zoneStart: 0.35, zoneEnd: 0.65,
+    aiming: false
   };
+
+  function updateTimingZone() {
+    // zone gets narrower as score increases (harder each hit)
+    const width = Math.max(0.12, 0.30 - st.score * 0.03);
+    st.zoneStart = 0.5 - width / 2;
+    st.zoneEnd = 0.5 + width / 2;
+    st.needleSpeed = NEEDLE_SPEED_BASE + st.score * 0.35;
+    TZONE.style.left = (st.zoneStart * 100) + '%';
+    TZONE.style.width = (width * 100) + '%';
+  }
+
+  function startAiming() {
+    st.aiming = true;
+    st.needlePos = 0;
+    st.needleDir = 1;
+    updateTimingZone();
+    TBAR.classList.add('show');
+    TLABEL.classList.add('show');
+    TLABEL.textContent = '按 FIRE 開砲！';
+  }
 
   function newTarget() {
     const x = (Math.random() - 0.5) * 30;
@@ -1167,12 +1303,20 @@ function buildArtillery() {
     targetRing.position.set(x, 0.15, z);
     st.locked = false;
     flag.material.color.setHex(0xff2200);
+    startAiming();
   }
 
   function fireShell() {
-    if (!st.alive || st.locked || st.shell) return;
+    if (!st.alive || st.locked || st.shell || !st.aiming) return;
     st.locked = true;
+    st.aiming = false;
+    TBAR.classList.remove('show');
+    TLABEL.classList.remove('show');
     sfxCannon();
+
+    // determine hit based on needle position in zone
+    const inZone = st.needlePos >= st.zoneStart && st.needlePos <= st.zoneEnd;
+    const perfectCenter = Math.abs(st.needlePos - 0.5) < 0.04;
 
     // muzzle flash
     smokes.forEach((s, i) => {
@@ -1183,50 +1327,51 @@ function buildArtillery() {
       setTimeout(() => { s.visible = false; }, 400 + i * 50);
     });
 
-    // calculate hit/miss based on timing (random aim quality)
-    const aimError = Math.random() * 8 - 4; // -4 to 4
+    // calculate hit position — if in zone, much closer to target
+    const aimError = inZone ? (Math.random() - 0.5) * 1.0 : (Math.random() * 8 - 4) * 1.5;
     const hitX = st.targetPos.x + aimError;
-    const hitZ = st.targetPos.z + (Math.random() - 0.5) * 4;
-    const dist = Math.sqrt(aimError * aimError);
-    const hit = dist < 2.5;
+    const hitZ = st.targetPos.z + (inZone ? (Math.random() - 0.5) * 0.5 : (Math.random() - 0.5) * 6);
+    const hit = inZone;
 
     const start = new THREE.Vector3(3 - 1.5, 1.0, 4 - 0.6);
     const end = new THREE.Vector3(hitX, 0, hitZ);
 
-    st.shell = { start, end, progress: 0, hit, trailIdx: 0 };
+    st.shell = { start, end, progress: 0, hit, perfect: perfectCenter, trailIdx: 0 };
     shellMesh.visible = true;
     trail.visible = true;
-    // reset trail
     const tp = trail.geometry.attributes.position.array;
     for (let i = 0; i < tp.length; i++) tp[i] = 0;
   }
 
-  function explode(pos, hit) {
+  function explode(pos, hit, perfect) {
     sfxExplosion();
     st.explosionTime = Date.now();
-    // scatter particles
+    const blastScale = selectedShell.blastR / 2.5;
     particles.forEach(p => {
       p.mesh.visible = true;
       p.mesh.position.copy(pos);
-      p.vel.set((Math.random() - 0.5) * 8, 3 + Math.random() * 5, (Math.random() - 0.5) * 8);
+      p.vel.set((Math.random() - 0.5) * 8 * blastScale, 3 + Math.random() * 5 * blastScale, (Math.random() - 0.5) * 8 * blastScale);
       p.life = 0.8 + Math.random() * 0.5;
-      p.mesh.scale.setScalar(1);
+      p.mesh.scale.setScalar(blastScale);
     });
 
     if (hit) {
+      const reward = perfect ? 20 : 10;
+      playerCoins += reward;
+      COINDISP.textContent = playerCoins;
       sfxHit();
-      showFB('命中！', 'ok');
+      showFB(perfect ? '完美命中！+20' : '命中！+10', 'ok');
       st.score++;
       flag.material.color.setHex(0x44ff44);
-      showHud(st.score + ' / 5', 'MISSION 01', '●'.repeat(st.life));
+      showHud(st.score + ' / 5', 'MISSION 01', '●'.repeat(st.life) + '  💰' + playerCoins);
       if (st.score >= 5) {
         st.alive = false;
-        // build cow meadow scene for result bg
+        COINDISP.classList.remove('show');
         const meadow = buildMeadowBg();
         setTimeout(() => finishLevel({
           code: 'MISSION 01 · 達成', title: '全連第一名',
           sub: [['','滿分通過砲兵射擊。'],['em','結果任務 —— 顧一頭牛。'],['','你對著牛，數她的睫毛。']],
-          stats: [['命中','5 / 5'],['剩餘','●'.repeat(st.life)],['任務','牛 × 1']]
+          stats: [['命中','5 / 5'],['剩餘','●'.repeat(st.life)],['軍餉',playerCoins+'']]
         }, meadow), 1500);
         return;
       }
@@ -1235,7 +1380,7 @@ function buildArtillery() {
       sfxMiss();
       showFB('偏離目標。', 'ng');
       st.life--;
-      showHud(st.score + ' / 5', 'MISSION 01', '●'.repeat(Math.max(0, st.life)));
+      showHud(st.score + ' / 5', 'MISSION 01', '●'.repeat(Math.max(0, st.life)) + '  💰' + playerCoins);
       if (st.life <= 0) {
         st.life = 3; st.score = 0;
         showHud('0 / 5', '', '● ● ●');
@@ -1251,27 +1396,51 @@ function buildArtillery() {
       cam.lookAt(0, 0, -10);
     },
     start() {
-      showHud('0 / 5', 'MISSION 01', '● ● ●');
-      FIRE.classList.add('show');
-      FIRE.onclick = fireShell;
-      document.onkeydown = e => { if (e.code === 'Space') { e.preventDefault(); fireShell(); } };
-      newTarget();
-      levelInputs.push(() => { FIRE.onclick = null; });
+      // show shop if second round, else go straight
+      const begin = () => {
+        showHud('0 / 5', 'MISSION 01', '● ● ●  💰' + playerCoins);
+        FIRE.textContent = 'F I R E';
+        FIRE.style.left = '50%';
+        FIRE.classList.add('show');
+        COINDISP.classList.add('show');
+        COINDISP.textContent = playerCoins;
+        FIRE.onclick = fireShell;
+        document.onkeydown = e => { if (e.code === 'Space') { e.preventDefault(); fireShell(); } };
+        newTarget();
+        levelInputs.push(() => {
+          FIRE.onclick = null;
+          TBAR.classList.remove('show');
+          TLABEL.classList.remove('show');
+          COINDISP.classList.remove('show');
+        });
+      };
+      if (playerCoins > 0) {
+        showShop(() => { clear(OV); OV.classList.remove('active'); begin(); });
+      } else {
+        begin();
+      }
     },
     update(dt) {
       if (!st.alive && !st.shell) return;
 
+      // animate timing bar needle
+      if (st.aiming) {
+        st.needlePos += st.needleDir * st.needleSpeed * dt;
+        if (st.needlePos >= 1) { st.needlePos = 1; st.needleDir = -1; }
+        if (st.needlePos <= 0) { st.needlePos = 0; st.needleDir = 1; }
+        TNEEDLE.style.left = (st.needlePos * 100) + '%';
+      }
+
       // animate shell
       if (st.shell) {
-        st.shell.progress += dt * 0.7; // ~1.4s flight time
+        st.shell.progress += dt * 0.7;
         const t = Math.min(1, st.shell.progress);
         const s = st.shell.start, e = st.shell.end;
         const x = s.x + (e.x - s.x) * t;
         const z = s.z + (e.z - s.z) * t;
-        const y = s.y + (e.y - s.y) * t + 12 * Math.sin(Math.PI * t); // parabolic arc peaking at 12m
+        const y = s.y + (e.y - s.y) * t + 12 * Math.sin(Math.PI * t);
         shellMesh.position.set(x, y, z);
 
-        // update trail
         const tp = trail.geometry.attributes.position.array;
         const idx = Math.min(39, Math.floor(t * 39));
         for (let i = idx; i >= 0; i--) {
@@ -1286,7 +1455,7 @@ function buildArtillery() {
         if (t >= 1) {
           shellMesh.visible = false;
           trail.visible = false;
-          explode(st.shell.end, st.shell.hit);
+          explode(st.shell.end, st.shell.hit, st.shell.perfect);
           st.shell = null;
         }
       }
@@ -1296,7 +1465,7 @@ function buildArtillery() {
         if (!p.mesh.visible) return;
         p.life -= dt;
         if (p.life <= 0) { p.mesh.visible = false; return; }
-        p.vel.y -= 12 * dt; // gravity
+        p.vel.y -= 12 * dt;
         p.mesh.position.addScaledVector(p.vel, dt);
         p.mesh.scale.setScalar(Math.max(0.1, p.life));
         p.mesh.material.opacity = Math.max(0, p.life);
@@ -1318,7 +1487,7 @@ function buildArtillery() {
       // camera slight sway
       camera.position.x = 8 + Math.sin(Date.now() * 0.0004) * 0.3;
     },
-    stop() { st.alive = false; }
+    stop() { st.alive = false; TBAR.classList.remove('show'); TLABEL.classList.remove('show'); COINDISP.classList.remove('show'); }
   };
 }
 
@@ -1368,11 +1537,14 @@ function buildCowScene() {
   sun.castShadow = !isMobile;
   scene.add(sun);
 
-  // rolling green hills
+  // rolling green hills — gentle near center so cow/soldier stay above ground
   const hillGeo = new THREE.PlaneGeometry(120, 120, 40, 40);
   const hp = hillGeo.attributes.position.array;
   for (let i = 0; i < hp.length; i += 3) {
-    hp[i + 2] = Math.sin(hp[i] * 0.04) * 2 + Math.cos(hp[i + 1] * 0.05) * 1.5;
+    const x = hp[i], y = hp[i + 1];
+    const distFromCenter = Math.sqrt(x * x + y * y);
+    const dampen = Math.min(1, distFromCenter / 20); // flat near center
+    hp[i + 2] = (Math.sin(x * 0.04) * 2 + Math.cos(y * 0.05) * 1.5) * dampen;
   }
   hillGeo.computeVertexNormals();
   const hills = new THREE.Mesh(hillGeo, new THREE.MeshStandardMaterial({ color: 0x55aa33, roughness: 1 }));
@@ -1382,15 +1554,15 @@ function buildCowScene() {
 
   makeGrass(scene, 300, 50, 0x4a8a2a);
 
-  // cow
+  // cow — raised above ground plane
   const cow = makeCow();
-  cow.position.set(-1, 0, -2);
+  cow.position.set(-1, 0.05, -2);
   cow.rotation.y = 0.8;
   scene.add(cow);
 
   // soldier (you) sitting on a rock
   const me = makeSoldier();
-  me.position.set(2.5, 0, 0);
+  me.position.set(2.5, 0.05, 0);
   me.rotation.y = -0.6;
   scene.add(me);
 
@@ -1399,7 +1571,7 @@ function buildCowScene() {
     new THREE.DodecahedronGeometry(0.5, 0),
     new THREE.MeshStandardMaterial({ color: 0x888878, roughness: 0.95 })
   );
-  rock.position.set(2.5, 0.15, 0.2);
+  rock.position.set(2.5, 0.2, 0.2);
   rock.scale.set(1.2, 0.6, 1);
   scene.add(rock);
 
@@ -1486,43 +1658,85 @@ function buildCowScene() {
 }
 
 /* ══════════════════════════════════════════
-   L2 — 3000m RUN
+   L2 — 3000m RUN (rhythm game + oval track)
    ══════════════════════════════════════════ */
 function buildRun() {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x2a3040);
-  addFog(scene, 0x2a3040, 0.006);
+  addFog(scene, 0x2a3040, 0.008);
   scene.add(new THREE.HemisphereLight(0x445566, 0x332211, 0.5));
   const sun = new THREE.DirectionalLight(0xffe0b0, 1.5);
   sun.position.set(20, 30, 10);
   sun.castShadow = !isMobile;
   scene.add(sun);
 
-  // track surface (red clay)
-  const track = new THREE.Mesh(
-    new THREE.PlaneGeometry(10, 400),
-    new THREE.MeshStandardMaterial({ color: 0x884422, roughness: 0.95 })
-  );
-  track.rotation.x = -Math.PI / 2;
-  track.position.z = -150;
-  scene.add(track);
+  // oval track (ellipse: semi-major 30, semi-minor 15)
+  const A = 30, B = 15, TRACK_W = 6;
+  const trackShape = new THREE.Shape();
+  const SEGS = 64;
+  // outer edge
+  for (let i = 0; i <= SEGS; i++) {
+    const a = (i / SEGS) * Math.PI * 2;
+    const x = (A + TRACK_W / 2) * Math.cos(a);
+    const z = (B + TRACK_W / 2) * Math.sin(a);
+    if (i === 0) trackShape.moveTo(x, z); else trackShape.lineTo(x, z);
+  }
+  // inner edge (hole)
+  const hole = new THREE.Path();
+  for (let i = 0; i <= SEGS; i++) {
+    const a = (i / SEGS) * Math.PI * 2;
+    const x = (A - TRACK_W / 2) * Math.cos(a);
+    const z = (B - TRACK_W / 2) * Math.sin(a);
+    if (i === 0) hole.moveTo(x, z); else hole.lineTo(x, z);
+  }
+  trackShape.holes.push(hole);
+  const trackGeo = new THREE.ShapeGeometry(trackShape, 1);
+  const trackMesh = new THREE.Mesh(trackGeo, new THREE.MeshStandardMaterial({ color: 0x884422, roughness: 0.95 }));
+  trackMesh.rotation.x = -Math.PI / 2;
+  trackMesh.position.y = 0.01;
+  scene.add(trackMesh);
 
-  // lane lines
-  for (let lane = -4; lane <= 4; lane++) {
-    const line = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.04, 400),
-      new THREE.MeshBasicMaterial({ color: 0xffffff })
-    );
-    line.rotation.x = -Math.PI / 2;
-    line.position.set(lane * 1.2, 0.01, -150);
+  // lane lines (3 lines on the oval)
+  for (let laneOff = -2; laneOff <= 2; laneOff += 2) {
+    const pts = [];
+    for (let i = 0; i <= SEGS; i++) {
+      const a = (i / SEGS) * Math.PI * 2;
+      pts.push(new THREE.Vector3((A + laneOff) * Math.cos(a), 0.02, (B + laneOff) * Math.sin(a)));
+    }
+    const lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
+    const line = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.4 }));
     scene.add(line);
   }
 
-  // distance markers every 500m
-  for (let d = 500; d <= 3000; d += 500) {
-    const marker = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.2, 0.1), new THREE.MeshStandardMaterial({ color: 0xcccccc }));
-    marker.position.set(5.5, 0.6, -(d / 3000) * 350);
-    scene.add(marker);
+  // infield (grass)
+  const infieldGeo = new THREE.CircleGeometry(B - TRACK_W / 2 - 0.5, 48);
+  const infield = new THREE.Mesh(infieldGeo, new THREE.MeshStandardMaterial({ color: 0x3a6a20, roughness: 1 }));
+  infield.rotation.x = -Math.PI / 2;
+  infield.scale.set(A / B, 1, 1);
+  scene.add(infield);
+
+  // ground outside track
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: 0x2a3a1a, roughness: 1 }));
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.01;
+  scene.add(ground);
+
+  // barracks
+  const barrackMat = new THREE.MeshStandardMaterial({ color: 0x888877, roughness: 0.9 });
+  for (let i = 0; i < 3; i++) {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(8, 3, 4), barrackMat);
+    b.position.set(-42, 1.5, -10 + i * 12); b.castShadow = true; scene.add(b);
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(9, 0.3, 5), new THREE.MeshStandardMaterial({ color: 0x665544 }));
+    roof.position.set(-42, 3.15, -10 + i * 12); scene.add(roof);
+  }
+
+  // trees around
+  for (let i = 0; i < 30; i++) {
+    const t = makeTree(2 + Math.random() * 2);
+    const a = Math.random() * Math.PI * 2;
+    const r = 40 + Math.random() * 15;
+    t.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+    scene.add(t);
   }
 
   // runner (you)
@@ -1533,110 +1747,227 @@ function buildRun() {
   const others = [];
   for (let i = 0; i < 5; i++) {
     const o = makeSoldier();
-    o.position.set(-2.4 + i * 1.2 + (i >= 3 ? 1.2 : 0), 0, -3 - i * 4);
     scene.add(o);
-    others.push({ mesh: o, speed: 0.6 + Math.random() * 0.4, dist: 0 });
+    others.push({ mesh: o, speed: 0.5 + Math.random() * 0.4, angle: -(i + 1) * 0.15 });
   }
 
-  // barracks in background
-  const barrackMat = new THREE.MeshStandardMaterial({ color: 0x888877, roughness: 0.9 });
-  for (let i = 0; i < 3; i++) {
-    const b = new THREE.Mesh(new THREE.BoxGeometry(8, 3, 4), barrackMat);
-    b.position.set(-14, 1.5, -20 - i * 25);
-    b.castShadow = true;
-    scene.add(b);
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(9, 0.3, 5), new THREE.MeshStandardMaterial({ color: 0x665544 }));
-    roof.position.set(-14, 3.15, -20 - i * 25);
-    scene.add(roof);
+  // ellipse perimeter ≈ Ramanujan approximation
+  const h = ((A - B) * (A - B)) / ((A + B) * (A + B));
+  const trackPerimeter = Math.PI * (A + B) * (1 + (3 * h) / (10 + Math.sqrt(4 - 3 * h)));
+  const lapsNeeded = 3000 / trackPerimeter; // ~3000m
+
+  function posOnTrack(angle) {
+    return new THREE.Vector3(A * Math.cos(angle), 0, B * Math.sin(angle));
   }
 
-  // trees along track
-  for (let i = 0; i < 30; i++) {
-    const t = makeTree(2 + Math.random() * 2);
-    t.position.set(8 + Math.random() * 4, 0, -i * 12);
-    scene.add(t);
+  // rhythm note system
+  const DIRS = ['ArrowLeft', 'ArrowDown', 'ArrowUp', 'ArrowRight'];
+  const DIR_SYMBOLS = ['←', '↓', '↑', '→'];
+  const DIR_COL = { ArrowLeft: 0, ArrowDown: 1, ArrowUp: 2, ArrowRight: 3 };
+  const BPM = 130; // approximate BPM for the BGM
+  const BEAT_INTERVAL = 60 / BPM; // seconds per beat
+  const FALL_TIME = 1.5; // seconds for note to fall from top to judge line
+  const JUDGE_Y = 60; // px from bottom of rhythm lane
+
+  const notes = []; // { dir, spawnTime, element, judged }
+  let nextNoteTime = 0;
+  let rhythmFbTimer = null;
+
+  function spawnNote(gameTime) {
+    const dir = DIRS[Math.floor(Math.random() * 4)];
+    const col = DIR_COL[dir];
+    const noteEl = el('div', 'rhythm-note', DIR_SYMBOLS[col]);
+    noteEl.style.left = (col * 25) + '%';
+    noteEl.style.top = '-30px';
+    RLANE.appendChild(noteEl);
+    notes.push({ dir, spawnTime: gameTime, element: noteEl, judged: false });
   }
 
-  const st = { dist: 0, time: 720, taps: 0, hr: 72, alive: true, lastTap: 0, elapsed: 0, nextHb: 0, runPhase: 0 };
+  function showRhythmFB(text, cls) {
+    RFB.textContent = text;
+    RFB.className = 'rhythm-fb show ' + cls;
+    clearTimeout(rhythmFbTimer);
+    rhythmFbTimer = setTimeout(() => { RFB.className = 'rhythm-fb'; }, 400);
+  }
+
+  function judgeNote(dir) {
+    const now = st.gameTime;
+    const judgeTime = FALL_TIME; // note should be at judge line at spawnTime + FALL_TIME
+    let best = null, bestDiff = Infinity;
+    for (const n of notes) {
+      if (n.judged || n.dir !== dir) continue;
+      const diff = Math.abs((n.spawnTime + judgeTime) - now);
+      if (diff < bestDiff) { bestDiff = diff; best = n; }
+    }
+    if (!best) return;
+    if (bestDiff < 0.08) {
+      // PERFECT
+      best.judged = true;
+      best.element.classList.add('hit');
+      showRhythmFB('PERFECT', 'perfect');
+      st.dist += 18;
+      st.combo++;
+      st.runPhase += 0.5;
+      sfxFootstep();
+    } else if (bestDiff < 0.18) {
+      // GOOD
+      best.judged = true;
+      best.element.classList.add('hit');
+      showRhythmFB('GOOD', 'good');
+      st.dist += 12;
+      st.combo++;
+      st.runPhase += 0.5;
+      sfxFootstep();
+    } else if (bestDiff < 0.35) {
+      // MISS (early press)
+      best.judged = true;
+      best.element.classList.add('miss');
+      showRhythmFB('MISS', 'miss');
+      st.combo = 0;
+    }
+  }
+
+  const st = { dist: 0, time: 720, hr: 72, alive: true, gameTime: 0, combo: 0, maxCombo: 0, runPhase: 0, angle: 0 };
   let timer;
-
-  function tap() {
-    if (!st.alive) return;
-    const now = performance.now();
-    if (now - st.lastTap < 80) return;
-    st.lastTap = now;
-    st.dist += 4.5 + Math.random() * 1.5;
-    st.taps++;
-    st.hr = Math.min(180, 72 + Math.floor(st.taps / 3));
-    sfxFootstep();
-    st.runPhase += 0.5;
-  }
 
   function tick() {
     if (!st.alive) return;
     st.time--;
-    st.elapsed = 720 - st.time;
     const mm = Math.floor(st.time / 60);
     const ss = st.time % 60;
-    showHud(Math.floor(st.dist) + 'm', 'MISSION 02', mm + ':' + (ss < 10 ? '0' : '') + ss);
+    const comboStr = st.combo > 3 ? '  x' + st.combo : '';
+    showHud(Math.floor(st.dist) + 'm / 3000m', 'MISSION 02', mm + ':' + (ss < 10 ? '0' : '') + ss + comboStr);
     if (st.dist >= 3000) {
       st.alive = false; clearInterval(timer);
-      const em = Math.floor(st.elapsed / 60), es = st.elapsed % 60;
+      const elapsed = 720 - st.time;
+      const em = Math.floor(elapsed / 60), es = elapsed % 60;
+      RLANE.classList.remove('show');
       finishLevel({
         code: 'MISSION 02 · 達成', title: '3000m · ' + em + '分' + (es < 10 ? '0' : '') + es + '秒',
         sub: [['','12 分鐘內完成。'],['em','榮譽假提早到今晚 21:00。'],['','你賺了 11 個小時。']],
-        stats: [['距離','3000m'],['時間',em+':'+(es<10?'0':'')+es],['心跳',st.hr+'']]
+        stats: [['距離','3000m'],['時間',em+':'+(es<10?'0':'')+es],['最高連擊',st.maxCombo+'']]
       });
     } else if (st.time <= 0) {
       st.alive = false; clearInterval(timer);
+      RLANE.classList.remove('show');
       finishLevel({
         code: 'MISSION 02 · 未達成', title: '時間到',
         sub: [['','距離不足。'],['em','但班長沒有處罰你。'],['','他只說：「明天再跑一次。」']],
-        stats: [['距離',Math.floor(st.dist)+'m'],['時間','12:00'],['心跳',st.hr+'']]
+        stats: [['距離',Math.floor(st.dist)+'m'],['時間','12:00'],['最高連擊',st.maxCombo+'']]
       });
     }
   }
 
   return {
     scene,
-    cameraSetup(cam) { cam.position.set(2, 3, 8); cam.lookAt(0, 1, -5); },
+    cameraSetup(cam) { cam.position.set(0, 25, 35); cam.lookAt(0, 0, 0); },
     start() {
-      showHud('0m', 'MISSION 02', '12:00');
-      TAP.classList.add('show');
-      TAP.onclick = tap;
-      document.onkeydown = e => { if (e.code === 'Space') { e.preventDefault(); tap(); } };
+      showHud('0m / 3000m', 'MISSION 02', '12:00');
+      RLANE.classList.add('show');
+      // remove any leftover note elements
+      RLANE.querySelectorAll('.rhythm-note').forEach(n => n.remove());
+      restartBGM();
+      nextNoteTime = BEAT_INTERVAL;
+      st.gameTime = 0;
+
+      document.onkeydown = e => {
+        if (DIRS.includes(e.code)) { e.preventDefault(); judgeNote(e.code); }
+      };
+      // mobile: tap columns
+      RLANE.onpointerdown = e => {
+        const rect = RLANE.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const col = Math.floor((x / rect.width) * 4);
+        if (col >= 0 && col < 4) judgeNote(DIRS[col]);
+      };
+
       timer = setInterval(tick, 1000);
-      levelInputs.push(() => { clearInterval(timer); TAP.onclick = null; });
+      levelInputs.push(() => {
+        clearInterval(timer);
+        RLANE.classList.remove('show');
+        RLANE.onpointerdown = null;
+        notes.forEach(n => { if (n.element.parentNode) n.element.remove(); });
+        notes.length = 0;
+      });
     },
     update(dt) {
       if (!st.alive) return;
-      const pct = st.dist / 3000;
-      // runner position
-      runner.position.z = -pct * 350;
-      runner.position.y = 0;
+      st.gameTime += dt;
+
+      // spawn notes on beat
+      while (st.gameTime >= nextNoteTime) {
+        spawnNote(nextNoteTime);
+        // sometimes spawn double notes for variety
+        if (Math.random() < 0.25) {
+          const extraDir = DIRS[Math.floor(Math.random() * 4)];
+          const lastNote = notes[notes.length - 1];
+          if (lastNote.dir !== extraDir) spawnNote(nextNoteTime);
+        }
+        nextNoteTime += BEAT_INTERVAL;
+      }
+
+      // update note positions
+      const laneH = RLANE.offsetHeight || 500;
+      for (let i = notes.length - 1; i >= 0; i--) {
+        const n = notes[i];
+        const elapsed = st.gameTime - n.spawnTime;
+        const pct = elapsed / FALL_TIME;
+        const topPx = pct * (laneH - JUDGE_Y) - 30;
+        n.element.style.top = topPx + 'px';
+
+        // auto-miss: note passed judge line
+        if (!n.judged && pct > 1.25) {
+          n.judged = true;
+          n.element.classList.add('miss');
+          showRhythmFB('MISS', 'miss');
+          st.combo = 0;
+        }
+        // cleanup old notes
+        if (pct > 1.8) {
+          if (n.element.parentNode) n.element.remove();
+          notes.splice(i, 1);
+        }
+      }
+
+      // track max combo
+      if (st.combo > st.maxCombo) st.maxCombo = st.combo;
+
+      // update runner position on oval
+      const pctDone = st.dist / 3000;
+      st.angle = pctDone * lapsNeeded * Math.PI * 2;
+      const pos = posOnTrack(st.angle);
+      runner.position.copy(pos);
+      runner.position.y = Math.abs(Math.sin(st.runPhase * 2)) * 0.08;
+      // face tangent direction
+      const tangent = new THREE.Vector3(-A * Math.sin(st.angle), 0, B * Math.cos(st.angle)).normalize();
+      runner.lookAt(pos.x + tangent.x, 0, pos.z + tangent.z);
+
       // leg animation
       if (runner.userData.leftLeg && runner.userData.rightLeg) {
         runner.userData.leftLeg.rotation.x = Math.sin(st.runPhase) * 0.5;
         runner.userData.rightLeg.rotation.x = -Math.sin(st.runPhase) * 0.5;
       }
-      // runner bob
-      runner.position.y = Math.abs(Math.sin(st.runPhase * 2)) * 0.08;
-      // camera follow
-      camera.position.set(2, 3, runner.position.z + 8);
-      camera.lookAt(0, 1, runner.position.z - 5);
+
       // other runners
       others.forEach(o => {
-        o.dist += o.speed * dt * 4;
-        o.mesh.position.z = -3 - (o.dist / 3000) * 350 + o.mesh.position.z * 0;
-        o.mesh.position.z = -(o.dist / 3000) * 350;
+        o.angle += o.speed * dt * 0.08;
+        const op = posOnTrack(o.angle);
+        o.mesh.position.copy(op);
+        const ot = new THREE.Vector3(-A * Math.sin(o.angle), 0, B * Math.cos(o.angle)).normalize();
+        o.mesh.lookAt(op.x + ot.x, 0, op.z + ot.z);
       });
-      // heartbeat
-      if (st.hr > 120 && Date.now() > st.nextHb) {
-        sfxHeartbeat();
-        st.nextHb = Date.now() + (60000 / st.hr);
-      }
+
+      // camera: follow from above-behind
+      const camDist = 20;
+      const camAngle = st.angle - 0.3;
+      camera.position.set(A * Math.cos(camAngle) * 0.5, 12, B * Math.sin(camAngle) * 0.5 + camDist * 0.4);
+      camera.lookAt(runner.position);
+
+      // heartbeat at high HR
+      st.hr = Math.min(180, 72 + Math.floor(st.dist / 50));
+      if (st.hr > 140 && st.gameTime % (60 / st.hr) < dt) sfxHeartbeat();
     },
-    stop() { st.alive = false; clearInterval(timer); }
+    stop() { st.alive = false; clearInterval(timer); RLANE.classList.remove('show'); }
   };
 }
 
