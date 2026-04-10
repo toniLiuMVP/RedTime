@@ -2,1724 +2,1374 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; font-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none';">
-<title>695T · 時間裡的兩個妳 番外</title>
-<meta name="description" content="海軍陸戰隊 695T 的六個片段，六個小遊戲，一本寫不完的日記。一秒，我記了整整兩年。">
-<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; font-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none';">
 <meta name="theme-color" content="#0b0d08">
+<title>695T · 時間裡的兩個妳 番外</title>
+<meta name="description" content="海軍陸戰隊 695T 的六個片段，六個小遊戲，一本寫不完的日記。">
+<meta name="robots" content="noindex,nofollow">
 <meta property="og:title" content="695T — 時間裡的兩個妳 番外">
 <meta property="og:type" content="website">
-<meta property="og:description" content="海軍陸戰隊 695T 的六個片段。一本寫不完的日記。">
+<meta property="og:description" content="海軍陸戰隊 695T。六個片段。一本寫不完的日記。">
 <link rel="icon" href="data:,">
 <style>
-/* ---------- reset ---------- */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden}
-body{
-  font-family:"Noto Serif TC","Songti TC","Songti SC","PingFang TC","Microsoft JhengHei",serif;
-  background:#0b0d08;
-  color:#f0e6d2;
-  -webkit-font-smoothing:antialiased;
-  touch-action:manipulation;
-  user-select:none;
-  -webkit-tap-highlight-color:transparent;
-}
+html,body{width:100%;height:100%;overflow:hidden;background:#0b0d08;font-family:"Noto Serif TC","Songti TC","PingFang TC",serif;color:#f0e6d2}
+canvas{display:block;position:fixed;inset:0;z-index:0}
 button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit}
 
-/* ---------- theme ---------- */
-:root{
-  --night:#0b0d08;
-  --olive:#3d4e2c;
-  --olive-d:#1d2513;
-  --olive-l:#5a6d42;
-  --bronze:#c8a063;
-  --bronze-d:#8a6a3d;
-  --paper:#f0e6d2;
-  --paper-d:#cdbf99;
-  --ink:#1a1a1a;
-  --alert:#d94832;
-  --peace:#7fb069;
-  --dawn:#e6b06a;
-}
+/* overlay */
+#overlay{position:fixed;inset:0;z-index:10;pointer-events:none;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:24px;overflow-y:auto}
+#overlay.active{pointer-events:auto}
 
-/* ---------- app ---------- */
-#app{position:fixed;inset:0;overflow:hidden}
-.scene{position:absolute;inset:0;display:none;opacity:0;transition:opacity .8s ease}
-.scene.show{display:flex;opacity:1}
-.scene.fit{align-items:center;justify-content:center;flex-direction:column;padding:24px;overflow-y:auto}
+/* intro */
+.intro-wrap{text-align:center}
+.intro-mark{font-family:"Courier New",monospace;font-size:clamp(48px,12vw,96px);letter-spacing:.1em;color:#c8a063;text-shadow:0 0 30px rgba(200,160,99,.4)}
+.intro-sub{margin-top:14px;color:#cdbf99;font-size:clamp(12px,3vw,16px);letter-spacing:.3em;opacity:.7}
+.intro-tagline{margin-top:48px;font-size:clamp(14px,3.8vw,18px);line-height:2;text-align:center;max-width:520px;letter-spacing:.05em}
+.intro-btn{margin-top:48px;padding:14px 48px;border:1px solid #c8a063;color:#c8a063;font-size:14px;letter-spacing:.4em;background:rgba(0,0,0,.3);transition:all .3s}
+.intro-btn:hover{background:#c8a063;color:#0b0d08}
 
-/* ---------- intro ---------- */
-#intro{background:linear-gradient(180deg,#0b0d08 0%,#1a1f10 60%,#0b0d08 100%)}
-.intro-mark{
-  font-family:"Courier New",monospace;
-  font-size:clamp(48px,12vw,96px);
-  letter-spacing:.1em;
-  color:var(--bronze);
-  text-shadow:0 0 24px rgba(200,160,99,.3);
-}
-.intro-sub{
-  margin-top:16px;
-  color:var(--paper-d);
-  font-size:clamp(12px,3vw,16px);
-  letter-spacing:.3em;
-  opacity:.7;
-}
-.intro-tagline{
-  margin-top:48px;
-  color:var(--paper);
-  font-size:clamp(14px,3.8vw,18px);
-  line-height:2;
-  text-align:center;
-  max-width:520px;
-  letter-spacing:.05em;
-}
-.intro-btn{
-  margin-top:56px;
-  padding:14px 48px;
-  border:1px solid var(--bronze);
-  color:var(--bronze);
-  font-size:14px;
-  letter-spacing:.4em;
-  transition:all .3s;
-  background:rgba(0,0,0,.2);
-}
-.intro-btn:hover{background:var(--bronze);color:var(--night)}
-
-/* ---------- diary ---------- */
-#diary{background:#120c06;background-image:radial-gradient(ellipse at center,#2a1e0f 0%,#0b0804 70%)}
-.diary-paper{
-  max-width:540px;
-  width:100%;
-  padding:40px 32px;
-  background:linear-gradient(180deg,#c9b48c 0%,#b59d6f 100%);
-  color:#2a1e0f;
-  box-shadow:0 20px 60px rgba(0,0,0,.6),inset 0 0 40px rgba(120,80,40,.15);
-  border-radius:2px;
-  position:relative;
-}
-.diary-head{
-  display:flex;
-  justify-content:space-between;
-  border-bottom:1px solid #7a5a2e;
-  padding-bottom:8px;
-  margin-bottom:18px;
-  font-family:"Courier New",monospace;
-  font-size:11px;
-  letter-spacing:.15em;
-  color:#5a3e18;
-}
-.diary-body{
-  line-height:2.2;
-  font-size:clamp(15px,3.6vw,17px);
-  letter-spacing:.04em;
-  min-height:220px;
-}
+/* diary */
+.diary-paper{max-width:540px;width:100%;padding:40px 32px;background:linear-gradient(180deg,#c9b48c 0%,#b59d6f 100%);color:#2a1e0f;box-shadow:0 20px 60px rgba(0,0,0,.6),inset 0 0 40px rgba(120,80,40,.15);border-radius:2px;position:relative}
+.diary-head{display:flex;justify-content:space-between;border-bottom:1px solid #7a5a2e;padding-bottom:8px;margin-bottom:18px;font-family:"Courier New",monospace;font-size:11px;letter-spacing:.15em;color:#5a3e18}
+.diary-body{line-height:2.2;font-size:clamp(15px,3.6vw,17px);letter-spacing:.04em;min-height:200px}
 .diary-line{opacity:0;animation:lineIn .6s ease forwards}
 .diary-blank{height:.6em}
 @keyframes lineIn{to{opacity:1}}
-.diary-foot{
-  margin-top:24px;
-  text-align:right;
-  font-size:10px;
-  color:#7a5a2e;
-  letter-spacing:.2em;
-  font-family:"Courier New",monospace;
-}
+.diary-foot{margin-top:24px;text-align:right;font-size:10px;color:#7a5a2e;letter-spacing:.2em;font-family:"Courier New",monospace}
 .diary-next{margin-top:22px;text-align:center}
-.diary-next button{
-  padding:10px 32px;
-  border:1px solid #5a3e18;
-  color:#5a3e18;
-  font-size:12px;
-  letter-spacing:.3em;
-  background:transparent;
-  opacity:0;
-  animation:lineIn .6s ease 1.4s forwards;
-  transition:all .2s;
-}
+.diary-next button{padding:10px 32px;border:1px solid #5a3e18;color:#5a3e18;font-size:12px;letter-spacing:.3em;background:transparent;opacity:0;animation:lineIn .6s ease 1.2s forwards;transition:all .2s}
 .diary-next button:hover{background:#5a3e18;color:#c9b48c}
 
-/* ---------- level common ---------- */
-.lv-brief{
-  text-align:center;
-  max-width:520px;
-  margin-bottom:16px;
-}
-.lv-code{
-  font-family:"Courier New",monospace;
-  color:var(--bronze);
-  letter-spacing:.3em;
-  font-size:11px;
-  margin-bottom:8px;
-}
-.lv-title{
-  font-size:clamp(22px,5.5vw,30px);
-  color:var(--paper);
-  letter-spacing:.15em;
-  margin-bottom:12px;
-}
-.lv-goal{
-  color:var(--paper-d);
-  font-size:13px;
-  line-height:1.8;
-  margin-bottom:10px;
-  padding:0 10px;
-}
-.lv-stage{
-  width:100%;
-  max-width:620px;
-  min-height:300px;
-  border:1px solid var(--olive-l);
-  background:rgba(10,14,6,.6);
-}
-.lv-hud{
-  display:flex;
-  justify-content:space-between;
-  padding:10px 16px;
-  background:rgba(0,0,0,.4);
-  font-family:"Courier New",monospace;
-  font-size:11px;
-  letter-spacing:.1em;
-  color:var(--bronze);
-  border-bottom:1px solid var(--olive-l);
-}
-.lv-main{
-  padding:22px 18px;
-  min-height:260px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-}
-.btn{
-  padding:12px 28px;
-  border:1px solid var(--bronze);
-  color:var(--bronze);
-  font-size:13px;
-  letter-spacing:.2em;
-  background:rgba(0,0,0,.2);
-  transition:all .2s;
-}
-.btn:hover{background:var(--bronze);color:var(--night)}
-.btn.primary{background:var(--bronze);color:var(--night)}
-.btn.primary:hover{background:var(--dawn)}
-.btn:disabled{opacity:.3;cursor:default}
+/* HUD */
+#hud{position:fixed;top:0;left:0;right:0;z-index:20;display:none;padding:12px 18px;font-family:"Courier New",monospace;font-size:11px;letter-spacing:.12em;color:#c8a063;background:linear-gradient(180deg,rgba(0,0,0,.6) 0%,transparent 100%)}
+#hud.show{display:flex;justify-content:space-between}
+.hud-l,.hud-r{display:flex;gap:18px}
 
-/* ---------- L1 artillery ---------- */
-#level-artillery{background:radial-gradient(ellipse at center,#1a2410 0%,#0b0d08 80%)}
-.arty-radar{
-  width:150px;
-  height:150px;
-  margin:0 auto 14px;
-  border:1px solid var(--olive-l);
-  border-radius:50%;
-  position:relative;
-  background:radial-gradient(circle,rgba(122,160,80,.1) 0%,transparent 70%);
-}
-.arty-radar::before,.arty-radar::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  border:1px solid rgba(122,160,80,.3);
-  border-radius:50%;
-}
-.arty-radar::before{inset:20%}
-.arty-radar::after{inset:40%}
-.arty-sweep{
-  position:absolute;
-  inset:0;
-  border-radius:50%;
-  background:conic-gradient(from 0deg,rgba(122,160,80,.55),rgba(122,160,80,.25) 30deg,transparent 60deg);
-  transform:rotate(0deg);
-  will-change:transform;
-}
-.arty-target{
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:12px;
-  height:12px;
-  margin:-6px 0 0 -6px;
-  border-radius:50%;
-  background:var(--alert);
-  box-shadow:0 0 14px var(--alert),0 0 4px #fff;
-  animation:artyPulse 1s ease-in-out infinite;
-  display:none;
-  pointer-events:none;
-  z-index:2;
-}
-.arty-target.on{display:block}
-@keyframes artyPulse{
-  0%,100%{transform:scale(1);opacity:1}
-  50%{transform:scale(1.5);opacity:.55}
-}
-.arty-data{
-  font-family:"Courier New",monospace;
-  color:var(--peace);
-  font-size:13px;
-  letter-spacing:.12em;
-  line-height:1.9;
-  text-align:center;
-  margin-bottom:6px;
-}
-.arty-fb{
-  margin-top:8px;
-  min-height:20px;
-  font-size:13px;
-  letter-spacing:.15em;
-  text-align:center;
-}
-.arty-fb.ok{color:var(--peace)}
-.arty-fb.ng{color:var(--alert)}
-.arty-fire{
-  margin-top:14px;
-  padding:16px 52px;
-  font-size:15px;
-  letter-spacing:.5em;
-}
-.arty-fire:active{transform:scale(.96)}
+/* level brief */
+.lv-brief{text-align:center;max-width:520px;padding:0 16px}
+.lv-code{font-family:"Courier New",monospace;color:#c8a063;letter-spacing:.3em;font-size:11px;margin-bottom:8px}
+.lv-title{font-size:clamp(22px,5.5vw,30px);letter-spacing:.15em;margin-bottom:12px}
+.lv-goal{color:#cdbf99;font-size:13px;line-height:1.8;margin-bottom:18px}
 
-/* ---------- L2 run ---------- */
-#level-run{background:linear-gradient(180deg,#1a2024 0%,#3a3026 100%)}
-.run-track{
-  width:100%;
-  height:56px;
-  background:rgba(0,0,0,.5);
-  border:1px solid var(--olive-l);
-  position:relative;
-  margin:16px 0;
-  overflow:hidden;
-}
-.run-track::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  background-image:repeating-linear-gradient(90deg,transparent 0,transparent 48px,rgba(200,160,99,.3) 48px,rgba(200,160,99,.3) 50px);
-  animation:runstripe .4s linear infinite;
-  animation-play-state:paused;
-}
-.run-track.go::before{animation-play-state:running}
-@keyframes runstripe{to{transform:translateX(-50px)}}
-.run-runner{
-  position:absolute;
-  left:2%;
-  top:50%;
-  width:16px;
-  height:16px;
-  margin-top:-8px;
-  border-radius:50%;
-  background:var(--bronze);
-  box-shadow:0 0 16px var(--bronze);
-  transition:left .15s linear;
-}
-.run-stats{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:8px;
-  text-align:center;
-  font-family:"Courier New",monospace;
-  color:var(--paper-d);
-  font-size:11px;
-  letter-spacing:.1em;
-  width:100%;
-  max-width:340px;
-  margin:0 auto;
-}
-.run-stat-v{color:var(--bronze);font-size:18px;margin-top:4px}
-.run-tap{
-  margin-top:18px;
-  width:100%;
-  max-width:240px;
-  padding:20px;
-  border:1px solid var(--bronze);
-  color:var(--bronze);
-  font-size:14px;
-  letter-spacing:.3em;
-  text-align:center;
-  background:rgba(0,0,0,.3);
-  transition:all .05s;
-}
-.run-tap:active{background:var(--bronze);color:var(--night);transform:scale(.97)}
+/* buttons */
+.btn{padding:12px 28px;border:1px solid #c8a063;color:#c8a063;font-size:13px;letter-spacing:.2em;background:rgba(0,0,0,.3);transition:all .2s}
+.btn:hover{background:#c8a063;color:#0b0d08}
+.btn.primary{background:#c8a063;color:#0b0d08}
+.btn.primary:hover{background:#e6b06a}
+.btn:active{transform:scale(.96)}
 
-/* ---------- L3 train ---------- */
-#level-train{background:linear-gradient(180deg,#1a1410 0%,#4a2818 50%,#1a1410 100%)}
-.train-scene{
-  position:relative;
-  width:100%;
-  height:200px;
-  background:linear-gradient(180deg,#2a1808 0%,#5a3828 50%,#1a1008 100%);
-  overflow:hidden;
-  margin-bottom:14px;
-  border:1px solid rgba(200,160,99,.3);
-}
-.train-horizon{
-  position:absolute;
-  left:0;
-  right:0;
-  top:42%;
-  height:1px;
-  background:rgba(230,176,106,.4);
-}
-.train-car{
-  position:absolute;
-  bottom:28px;
-  left:10%;
-  width:52px;
-  height:20px;
-  background:var(--bronze);
-  transition:left .1s linear;
-  box-shadow:0 -4px 10px rgba(200,160,99,.3);
-}
-.train-car::before{
-  content:"";
-  position:absolute;
-  left:6px;
-  right:6px;
-  top:-10px;
-  height:10px;
-  background:var(--bronze);
-}
-.train-train{
-  position:absolute;
-  bottom:66px;
-  left:0;
-  width:120px;
-  height:12px;
-  background:#888;
-  transition:left .1s linear;
-}
-.train-train::before{
-  content:"";
-  position:absolute;
-  inset:-5px 10px -5px 10px;
-  background:#aaa;
-}
-.train-bar{
-  width:100%;
-  height:8px;
-  background:rgba(0,0,0,.4);
-  border:1px solid var(--olive-l);
-  margin-bottom:12px;
-}
-.train-bar > div{
-  height:100%;
-  background:linear-gradient(90deg,var(--alert),var(--bronze),var(--peace));
-  width:50%;
-  transition:width .1s linear;
-}
+/* fire */
+.fire-btn{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:15;padding:18px 56px;border:2px solid #c8a063;color:#c8a063;font-family:"Courier New",monospace;font-size:16px;letter-spacing:.5em;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;pointer-events:auto}
+.fire-btn.show{display:block}
+.fire-btn:active{background:#c8a063;color:#0b0d08;transform:translateX(-50%) scale(.95)}
 
-/* ---------- L4 arm ---------- */
-#level-arm{background:radial-gradient(ellipse at center,#3a2812 0%,#0b0804 85%)}
-.arm-room{
-  position:relative;
-  width:100%;
-  height:160px;
-  background:radial-gradient(ellipse at center top,rgba(230,176,106,.2) 0%,transparent 70%);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.arm-tilt{
-  width:240px;
-  height:90px;
-  position:relative;
-}
-.arm-pivot{
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:10px;
-  height:10px;
-  margin:-5px 0 0 -5px;
-  background:var(--bronze);
-  border-radius:50%;
-  z-index:2;
-}
-.arm-lever{
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:220px;
-  height:5px;
-  margin:-2px 0 0 -110px;
-  background:var(--paper);
-  transform-origin:center;
-  transition:transform .12s ease-out;
-  box-shadow:0 0 10px rgba(240,230,210,.3);
-}
-.arm-gauge{
-  margin-top:12px;
-  width:100%;
-  max-width:320px;
-  height:12px;
-  background:rgba(0,0,0,.5);
-  border:1px solid var(--bronze-d);
-  position:relative;
-  overflow:hidden;
-}
-.arm-gauge-fill{
-  position:absolute;
-  left:50%;
-  top:0;
-  bottom:0;
-  width:0;
-  background:linear-gradient(90deg,var(--alert),var(--bronze));
-  transition:all .12s;
-}
-.arm-opp{
-  margin-top:10px;
-  text-align:center;
-  font-family:"Courier New",monospace;
-  color:var(--paper-d);
-  font-size:12px;
-  letter-spacing:.15em;
-}
-.arm-keys{
-  margin-top:14px;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  width:100%;
-  max-width:320px;
-}
-.arm-key{
-  padding:18px;
-  border:1px solid var(--bronze);
-  color:var(--bronze);
-  font-size:18px;
-  letter-spacing:.2em;
-  text-align:center;
-  background:rgba(0,0,0,.3);
-  font-family:"Courier New",monospace;
-  transition:all .05s;
-}
-.arm-key:active{background:var(--bronze);color:var(--night);transform:scale(.95)}
+/* tap area */
+.tap-area{position:fixed;bottom:40px;left:50%;transform:translateX(-50%);z-index:15;padding:22px 48px;border:1px solid #c8a063;color:#c8a063;font-size:14px;letter-spacing:.3em;background:rgba(0,0,0,.3);display:none;pointer-events:auto}
+.tap-area.show{display:block}
+.tap-area:active{background:#c8a063;color:#0b0d08;transform:translateX(-50%) scale(.95)}
 
-/* ---------- L5 guard ---------- */
-#level-guard{background:#050608}
-.guard-dark{
-  width:100%;
-  height:230px;
-  background:radial-gradient(ellipse at 50% 60%,rgba(230,230,250,.05) 0%,transparent 70%);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  position:relative;
-  border:1px solid #1a1d14;
-}
-.guard-moon{
-  position:absolute;
-  top:22px;
-  right:30px;
-  width:28px;
-  height:28px;
-  border-radius:50%;
-  background:rgba(240,230,210,.3);
-  box-shadow:0 0 40px rgba(240,230,210,.15);
-}
-.guard-event{
-  color:var(--paper-d);
-  font-size:15px;
-  letter-spacing:.15em;
-  text-align:center;
-  min-height:48px;
-  padding:0 18px;
-  line-height:1.8;
-  animation:fadeInUp .5s ease;
-}
-@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.guard-clock{
-  position:absolute;
-  top:16px;
-  left:16px;
-  font-family:"Courier New",monospace;
-  color:var(--paper-d);
-  font-size:10px;
-  letter-spacing:.2em;
-  opacity:.5;
-}
-.guard-keys{
-  margin-top:16px;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  width:100%;
-  max-width:380px;
-}
+/* feedback */
+#fb{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:25;font-size:clamp(18px,5vw,28px);letter-spacing:.2em;opacity:0;transition:opacity .3s;pointer-events:none;text-shadow:0 0 20px rgba(0,0,0,.8)}
+#fb.show{opacity:1}
+#fb.ok{color:#7fb069}
+#fb.ng{color:#d94832}
 
-/* ---------- L6 onion ---------- */
-#level-onion{background:linear-gradient(180deg,#d4a552 0%,#c8a063 50%,#8a6a3d 100%)}
-#level-onion .lv-title{color:#2a1e0f}
-#level-onion .lv-code{color:#5a3e18}
-#level-onion .lv-goal{color:#3a2810}
-#level-onion .lv-stage{border-color:#5a3e18;background:rgba(90,62,24,.2)}
-#level-onion .lv-hud{background:rgba(42,30,15,.3);color:#3a2810;border-bottom-color:#5a3e18}
-.onion-field{
-  width:100%;
-  max-width:480px;
-  aspect-ratio:5/3;
-  background:linear-gradient(180deg,#7a5a2e 0%,#5a3e18 60%,#3a2810 100%);
-  position:relative;
-  border:2px solid #3a2810;
-  box-shadow:inset 0 0 40px rgba(0,0,0,.4);
-  overflow:hidden;
-}
-.onion{
-  position:absolute;
-  width:30px;
-  height:30px;
-  margin:-15px 0 0 -15px;
-  border-radius:50%;
-  background:radial-gradient(circle at 30% 30%,#f0e6d2,#c8a063 55%,#7a5a2e 100%);
-  transform:scale(0);
-  transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .3s;
-  cursor:pointer;
-  box-shadow:0 2px 8px rgba(0,0,0,.3);
-}
-.onion.pop{transform:scale(1)}
-.onion.picked{opacity:0;transform:scale(1.6)}
-.onion-hud{
-  display:flex;
-  justify-content:space-between;
-  width:100%;
-  max-width:480px;
-  margin:0 auto 10px;
-  font-family:"Courier New",monospace;
-  color:#2a1e0f;
-  font-size:12px;
-  letter-spacing:.15em;
-  font-weight:600;
-}
-
-/* ---------- result ---------- */
-#result{background:linear-gradient(180deg,#0b0d08 0%,#1a1a1a 100%)}
+/* result */
 .r-box{max-width:480px;text-align:center;width:100%}
-.r-code{
-  font-family:"Courier New",monospace;
-  color:var(--bronze);
-  letter-spacing:.3em;
-  font-size:11px;
-}
-.r-title{
-  margin-top:8px;
-  font-size:clamp(20px,5vw,28px);
-  color:var(--paper);
-  letter-spacing:.15em;
-}
-.r-sub{
-  margin-top:18px;
-  color:var(--paper-d);
-  font-size:14px;
-  line-height:2;
-  letter-spacing:.05em;
-}
-.r-sub em{
-  color:var(--bronze);
-  font-style:normal;
-  letter-spacing:.08em;
-}
-.r-stats{
-  margin-top:24px;
-  display:flex;
-  justify-content:center;
-  gap:12px;
-  flex-wrap:wrap;
-}
-.r-stat{
-  padding:10px 16px;
-  border:1px solid var(--olive-l);
-  background:rgba(0,0,0,.3);
-  min-width:90px;
-}
-.r-stat-lbl{
-  font-family:"Courier New",monospace;
-  font-size:10px;
-  color:var(--paper-d);
-  letter-spacing:.2em;
-}
-.r-stat-val{
-  margin-top:4px;
-  color:var(--bronze);
-  font-size:18px;
-  font-family:"Courier New",monospace;
-}
+.r-code{font-family:"Courier New",monospace;color:#c8a063;letter-spacing:.3em;font-size:11px}
+.r-title{margin-top:8px;font-size:clamp(20px,5vw,28px);letter-spacing:.15em}
+.r-sub{margin-top:18px;color:#cdbf99;font-size:14px;line-height:2}
+.r-sub em{color:#c8a063;font-style:normal}
+.r-stats{margin-top:24px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+.r-stat{padding:10px 16px;border:1px solid #5a6d42;background:rgba(0,0,0,.3);min-width:90px}
+.r-stat-lbl{font-family:"Courier New",monospace;font-size:10px;color:#cdbf99;letter-spacing:.2em}
+.r-stat-val{margin-top:4px;color:#c8a063;font-size:18px;font-family:"Courier New",monospace}
 .r-action{margin-top:32px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 
-/* ---------- end ---------- */
-#end{background:#000}
-.end-roll{
-  max-width:560px;
-  text-align:center;
-  color:var(--paper);
-  line-height:2.6;
-  font-size:clamp(15px,4vw,19px);
-  padding:20px;
-  letter-spacing:.08em;
-  animation:endIn 2s ease .3s both;
-}
-.end-mark{
-  margin-top:40px;
-  color:var(--bronze);
-  letter-spacing:.4em;
-  font-family:"Courier New",monospace;
-  font-size:12px;
-  opacity:.7;
-}
-.end-action{margin-top:36px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+/* end */
+.end-roll{max-width:560px;text-align:center;line-height:2.6;font-size:clamp(15px,4vw,19px);letter-spacing:.08em;animation:endIn 2s ease .3s both}
+.end-mark{margin-top:40px;color:#c8a063;letter-spacing:.4em;font-family:"Courier New",monospace;font-size:12px;opacity:.7}
 @keyframes endIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
 
-/* ---------- motion ---------- */
-@media (prefers-reduced-motion: reduce){
-  *,*::before,*::after{animation:none !important;transition:none !important}
-  .diary-line,.diary-next button{opacity:1}
-}
-
-/* ---------- mobile ---------- */
-@media (max-width:520px){
-  .lv-main{padding:16px 12px}
-  .diary-paper{padding:32px 22px}
-  .arty-fire{padding:14px 40px}
-}
+/* motion */
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.diary-line,.diary-next button{opacity:1}}
+@media(max-width:520px){.diary-paper{padding:32px 22px}}
 </style>
 </head>
 <body>
-<div id="app">
 
-  <!-- INTRO -->
-  <section id="intro" class="scene fit show">
-    <div class="intro-mark">695T</div>
-    <div class="intro-sub">NO.695 · 海軍陸戰隊</div>
-    <div class="intro-tagline">
-      這是一本，寫不完的日記。<br>
-      六個片段，六個關卡，兩年的時間。<br>
-      一秒 —— 我用二十年才讀懂。
-    </div>
-    <button class="intro-btn" data-action="start">開始任務</button>
-  </section>
-
-  <!-- DIARY -->
-  <section id="diary" class="scene fit">
-    <div class="diary-paper">
-      <div class="diary-head">
-        <span id="d-date"></span>
-        <span id="d-loc"></span>
-      </div>
-      <div class="diary-body" id="d-body"></div>
-      <div class="diary-foot">— 兵 · 695T</div>
-      <div class="diary-next" id="d-next"></div>
-    </div>
-  </section>
-
-  <!-- L1 ARTILLERY -->
-  <section id="level-artillery" class="scene fit">
-    <div class="lv-brief">
-      <div class="lv-code">MISSION 01 · 砲兵射擊</div>
-      <div class="lv-title">全連第一的那一發</div>
-      <div class="lv-goal">掃描線掃過紅色目標的瞬間，按下 FIRE（或 Space）。命中 5 發通過。</div>
-    </div>
-    <div class="lv-stage">
-      <div class="lv-hud"><span id="arty-prog">0 / 5</span><span id="arty-life">● ● ●</span></div>
-      <div class="lv-main">
-        <div class="arty-radar">
-          <div class="arty-sweep" id="arty-sweep"></div>
-          <div class="arty-target" id="arty-target"></div>
-        </div>
-        <div class="arty-data" id="arty-data">方位 — — —</div>
-        <div class="arty-fb" id="arty-fb"></div>
-        <button class="btn primary arty-fire" id="arty-fire">F I R E</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- L2 RUN -->
-  <section id="level-run" class="scene fit">
-    <div class="lv-brief">
-      <div class="lv-code">MISSION 02 · 3000 公尺測驗</div>
-      <div class="lv-title">用 12 分鐘換一張榮譽假</div>
-      <div class="lv-goal">持續點擊（或 Space）跟上節奏，在 12 分鐘內跑完 3000 公尺。</div>
-    </div>
-    <div class="lv-stage">
-      <div class="lv-hud"><span id="run-dist">0 m</span><span id="run-time">12:00</span></div>
-      <div class="lv-main">
-        <div class="run-track" id="run-track"><div class="run-runner" id="run-runner"></div></div>
-        <div class="run-stats">
-          <div>距離<div class="run-stat-v" id="run-d">0</div></div>
-          <div>配速<div class="run-stat-v" id="run-p">--</div></div>
-          <div>心跳<div class="run-stat-v" id="run-h">72</div></div>
-        </div>
-        <button class="run-tap" id="run-tap">踏 · 踏 · 踏</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- L3 TRAIN -->
-  <section id="level-train" class="scene fit">
-    <div class="lv-brief">
-      <div class="lv-code">MISSION 03 · 新竹攔截</div>
-      <div class="lv-title">我哥的車比火車快</div>
-      <div class="lv-goal">按住油門（或 Space），讓車子保持在火車前方。撐 30 秒抵達新竹站。</div>
-    </div>
-    <div class="lv-stage">
-      <div class="lv-hud"><span id="train-t">30</span><span id="train-s">60 km/h</span></div>
-      <div class="lv-main">
-        <div class="train-scene">
-          <div class="train-horizon"></div>
-          <div class="train-train" id="train-train"></div>
-          <div class="train-car" id="train-car"></div>
-        </div>
-        <div class="train-bar"><div id="train-bar-fill"></div></div>
-        <button class="btn primary" id="train-gas">按住加速</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- L4 ARM -->
-  <section id="level-arm" class="scene fit">
-    <div class="lv-brief">
-      <div class="lv-code">MISSION 04 · 中山室 · 腕力</div>
-      <div class="lv-title">這隻手裡還有沒有力氣</div>
-      <div class="lv-goal">交替按左右鍵（或 A / D）累積力量，連勝五位弟兄。</div>
-    </div>
-    <div class="lv-stage">
-      <div class="lv-hud"><span id="arm-round">Round 1 / 5</span><span id="arm-name">—</span></div>
-      <div class="lv-main">
-        <div class="arm-room">
-          <div class="arm-tilt">
-            <div class="arm-lever" id="arm-lever"></div>
-            <div class="arm-pivot"></div>
-          </div>
-        </div>
-        <div class="arm-gauge"><div class="arm-gauge-fill" id="arm-fill"></div></div>
-        <div class="arm-opp" id="arm-opp">準備開始</div>
-        <div class="arm-keys">
-          <button class="arm-key" id="arm-l">← A</button>
-          <button class="arm-key" id="arm-r">D →</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- L5 GUARD -->
-  <section id="level-guard" class="scene fit">
-    <div class="lv-brief">
-      <div class="lv-code">MISSION 05 · 半夜站哨</div>
-      <div class="lv-title">02:30 — 05:00</div>
-      <div class="lv-goal">判斷聲響：真實威脅 → 舉槍；風聲雜音 → 不動。十次中失誤不超過兩次即通過。</div>
-    </div>
-    <div class="lv-stage">
-      <div class="lv-hud"><span id="guard-t">02:30</span><span id="guard-p">0 / 10</span></div>
-      <div class="lv-main">
-        <div class="guard-dark">
-          <div class="guard-clock">哨所 · 695T</div>
-          <div class="guard-moon"></div>
-          <div class="guard-event" id="guard-event">夜還沒開始。</div>
-        </div>
-        <div class="guard-keys">
-          <button class="btn" id="guard-hold">不動</button>
-          <button class="btn primary" id="guard-aim">舉槍</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- L6 ONION -->
-  <section id="level-onion" class="scene fit">
-    <div class="lv-brief">
-      <div class="lv-code">MISSION 06 · 屏東洋蔥田</div>
-      <div class="lv-title">一顆一顆，拔起日子</div>
-      <div class="lv-goal">點擊浮出的洋蔥，60 秒內拔滿 30 顆。</div>
-    </div>
-    <div class="lv-stage">
-      <div class="lv-hud"><span id="onion-t">60</span><span id="onion-c">0 / 30</span></div>
-      <div class="lv-main">
-        <div class="onion-hud">
-          <span>屏東 · 農忙支援</span>
-          <span>陽光 · 很大</span>
-        </div>
-        <div class="onion-field" id="onion-field"></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- RESULT -->
-  <section id="result" class="scene fit">
-    <div class="r-box">
-      <div class="r-code" id="r-code"></div>
-      <div class="r-title" id="r-title"></div>
-      <div class="r-sub" id="r-sub"></div>
-      <div class="r-stats" id="r-stats"></div>
-      <div class="r-action">
-        <button class="btn primary" id="r-next">下一頁日記 ›</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- END -->
-  <section id="end" class="scene fit">
-    <div class="end-roll" id="end-roll"></div>
-    <div class="end-mark">695T · 1994 — 1996</div>
-    <div class="end-action">
-      <button class="btn" data-action="replay">再讀一次</button>
-      <button class="btn" data-action="home">返回主站</button>
-    </div>
-  </section>
-
+<div id="overlay" class="active">
+  <!-- filled dynamically -->
 </div>
 
-<script>
-(function(){
-'use strict';
+<div id="hud">
+  <div class="hud-l"><span id="hud-l1"></span><span id="hud-l2"></span></div>
+  <div class="hud-r"><span id="hud-r1"></span></div>
+</div>
 
-/* ---------- safe DOM helpers ---------- */
-function $(id){return document.getElementById(id);}
-function el(tag, cls, txt){
-  var e = document.createElement(tag);
+<button class="fire-btn" id="fire-btn">F I R E</button>
+<button class="tap-area" id="tap-btn">踏 · 踏 · 踏</button>
+<div id="fb"></div>
+
+<script type="importmap">{"imports":{"three":"../platform-run/three.module.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+
+/* ══════════════════════════════════════════
+   UTIL
+   ══════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const OV = $('overlay');
+const HUD = $('hud');
+const FIRE = $('fire-btn');
+const TAP = $('tap-btn');
+const FB = $('fb');
+const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+function el(tag, cls, txt) {
+  const e = document.createElement(tag);
   if (cls) e.className = cls;
   if (txt != null) e.textContent = txt;
   return e;
 }
-function clear(node){
-  while (node && node.firstChild) node.removeChild(node.firstChild);
+function clear(n) { while (n && n.firstChild) n.removeChild(n.firstChild); }
+
+function showFB(text, type) {
+  FB.textContent = text;
+  FB.className = 'show ' + type;
+  setTimeout(() => { FB.className = ''; }, 1200);
 }
 
-/* ---------- canon-safe diary (literary master pass) ---------- */
-var DIARY = [
-  { date:'1994 · 07 · 01', loc:'新訓中心', body:[
-    '第一天。',
-    '剃了頭。',
-    '班長說，想家的人最容易出事。',
-    '',
-    '我沒想家。',
-    '我只想起，妳看我最後一眼的那一秒。',
-    '',
-    '一秒。',
-    '我用一整個夏天去數，還沒數完。'
-  ]},
-  { date:'1994 · 08 · 14', loc:'砲兵連', body:[
-    '報數、舉手、起立、坐下。',
-    '通通比不上妳走出我生活的那一天安靜。',
-    '',
-    '明天考砲兵射擊。',
-    '數字，是我現在唯一聽得清楚的聲音。'
-  ]},
-  { date:'1994 · 08 · 22', loc:'聯合演習區', body:[
-    '第一名。',
-    '',
-    '營長說，砲兵射擊滿分的人，',
-    '要負責一項重大任務。',
-    '',
-    '我以為是指揮彈著。',
-    '是顧一頭牛。',
-    '',
-    '牛的眼睛，比我想的還像妳。',
-    '溫的，黑的。',
-    '看過我一眼，就低頭吃草。'
-  ]},
-  { date:'1995 · 03 · 09', loc:'營區操場', body:[
-    '明天 3000。',
-    '全連都在睡，我在跑。',
-    '',
-    '跑步的時候不用想，',
-    '只要一直往前。',
-    '',
-    '妳離開那天，我沒有跑。',
-    '我站著，站到路燈熄掉。',
-    '',
-    '這一次，我要跑得夠快。',
-    '快到能把那一秒的空白，',
-    '追回來。'
-  ]},
-  { date:'1995 · 03 · 10', loc:'連部', body:[
-    '12 分整。',
-    '',
-    '連長說，原本明早 08:00 放的假，',
-    '提早到今晚 21:00。',
-    '',
-    '榮譽假。',
-    '我第一次覺得，',
-    '跑步是會變成時間的。',
-    '',
-    '我賺了 11 個小時。',
-    '11 個小時能做什麼？'
-  ]},
-  { date:'1995 · 05 · 17', loc:'高雄車站 → 新竹', body:[
-    '高雄出發，往北。',
-    '車誤點，月台空了。',
-    '',
-    '我看著火車尾燈越來越遠，',
-    '像妳那天的背影。',
-    '',
-    '哥哥從市區開車過來，',
-    '說「上車，我比火車快。」',
-    '',
-    '從高雄到新竹，',
-    '他把油門踩到底。',
-    '我沒說話。',
-    '心裡只有一句：',
-    '讓我趕上，讓我趕上。'
-  ]},
-  { date:'1995 · 07 · 02', loc:'中山室', body:[
-    '中山室的燈還亮著。',
-    '弟兄們在比腕力，笑聲很大。',
-    '',
-    '我沒說話，走過去坐下。',
-    '他們說：「學長，來一局。」',
-    '',
-    '我把右手放上桌。',
-    '',
-    '不是為了贏。',
-    '是為了知道，',
-    '這隻手還有沒有力氣。',
-    '',
-    '還有沒有力氣，',
-    '握住一個已經不在眼前的人。'
-  ]},
-  { date:'1995 · 11 · 03', loc:'哨所', body:[
-    '02:30。',
-    '全營都在睡。',
-    '只有我，一支槍，一盞燈。',
-    '',
-    '月亮很薄，',
-    '薄得像快要撕破的紙。',
-    '',
-    '黑暗裡有聲音。',
-    '風？還是記憶？',
-    '我不敢想。',
-    '',
-    '一想，',
-    '就是妳那一秒。'
-  ]},
-  { date:'1996 · 02 · 19', loc:'屏東 · 農忙支援', body:[
-    '下部隊後第一次支援農忙。',
-    '屏東。',
-    '洋蔥田一望無際。',
-    '',
-    '太陽很大，土很鬆。',
-    '洋蔥皮薄得像信紙。',
-    '',
-    '弟兄們邊拔邊唱歌。',
-    '我跟著笑。',
-    '',
-    '這是我當兵以來，',
-    '第一次覺得，',
-    '時間可以不用數。'
-  ]},
-  { date:'1996 · 06 · 28', loc:'退伍前夜', body:[
-    '日記本快寫完了。',
-    '最後一頁，我沒有寫。',
-    '',
-    '留給妳。',
-    '',
-    '如果有一天，',
-    '妳看到這一頁，',
-    '請妳相信——',
-    '',
-    '那一秒，',
-    '我已經記了整整兩年。',
-    '',
-    '而這兩年，不是浪費。',
-    '',
-    '是我，',
-    '替未來的我們，',
-    '把時間先存起來。'
-  ]}
-];
+function showHud(l1, l2, r1) {
+  $('hud-l1').textContent = l1 || '';
+  $('hud-l2').textContent = l2 || '';
+  $('hud-r1').textContent = r1 || '';
+  HUD.classList.add('show');
+}
+function hideHud() { HUD.classList.remove('show'); }
 
-/* ---------- flow ---------- */
-var FLOW = [
-  { t:'diary', i:0 },
-  { t:'diary', i:1 },
-  { t:'level', n:'artillery' },
-  { t:'diary', i:2 },
-  { t:'diary', i:3 },
-  { t:'level', n:'run' },
-  { t:'diary', i:4 },
-  { t:'diary', i:5 },
-  { t:'level', n:'train' },
-  { t:'diary', i:6 },
-  { t:'level', n:'arm' },
-  { t:'diary', i:7 },
-  { t:'level', n:'guard' },
-  { t:'diary', i:8 },
-  { t:'level', n:'onion' },
-  { t:'diary', i:9 },
-  { t:'end' }
-];
-var flowIdx = -1;
+/* ══════════════════════════════════════════
+   THREE.js SETUP
+   ══════════════════════════════════════════ */
+const clock = new THREE.Clock();
+const renderer = new THREE.WebGLRenderer({ antialias: !isMobile, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = !isMobile;
+if (!isMobile) renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.prepend(renderer.domElement);
 
-/* ---------- scenes ---------- */
-var SCENES = ['intro','diary','level-artillery','level-run','level-train','level-arm','level-guard','level-onion','result','end'];
-function show(id){
-  SCENES.forEach(function(s){
-    var n = $(s);
-    if (n) n.classList.toggle('show', s === id);
-  });
+const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 500);
+camera.position.set(0, 5, 12);
+camera.lookAt(0, 0, 0);
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// default dark scene
+const darkScene = new THREE.Scene();
+darkScene.background = new THREE.Color(0x0b0d08);
+let activeScene = darkScene;
+
+/* ══════════════════════════════════════════
+   WEB AUDIO SFX
+   ══════════════════════════════════════════ */
+let audioCtx = null;
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 }
 
-function resetInputs(){
+function sfxRadarTick() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = 'sine'; o.frequency.value = 1200;
+  g.gain.setValueAtTime(0.06, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(t); o.stop(t + 0.06);
+}
+
+function sfxCannon() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  // boom
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.15, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.04));
+  const src = audioCtx.createBufferSource(); src.buffer = buf;
+  const g = audioCtx.createGain(); g.gain.setValueAtTime(0.25, t); g.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+  const f = audioCtx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 400;
+  src.connect(f); f.connect(g); g.connect(audioCtx.destination);
+  src.start(t);
+  // thud
+  const o = audioCtx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(80, t); o.frequency.exponentialRampToValueAtTime(20, t + 0.2);
+  const g2 = audioCtx.createGain(); g2.gain.setValueAtTime(0.3, t); g2.gain.exponentialRampToValueAtTime(0.01, t + 0.25);
+  o.connect(g2); g2.connect(audioCtx.destination); o.start(t); o.stop(t + 0.3);
+}
+
+function sfxHit() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(880, t); o.frequency.setValueAtTime(1320, t + 0.08);
+  const g = audioCtx.createGain(); g.gain.setValueAtTime(0.12, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+  o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.25);
+}
+
+function sfxMiss() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator(); o.type = 'square'; o.frequency.setValueAtTime(200, t); o.frequency.exponentialRampToValueAtTime(100, t + 0.15);
+  const g = audioCtx.createGain(); g.gain.setValueAtTime(0.08, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+  o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.25);
+}
+
+function sfxFootstep() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const buf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.04), audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.01));
+  const src = audioCtx.createBufferSource(); src.buffer = buf;
+  const g = audioCtx.createGain(); g.gain.value = 0.1;
+  const f = audioCtx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 900;
+  src.connect(f); f.connect(g); g.connect(audioCtx.destination); src.start(t);
+}
+
+function sfxHeartbeat() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(55, t); o.frequency.exponentialRampToValueAtTime(30, t + 0.15);
+  const g = audioCtx.createGain(); g.gain.setValueAtTime(0.2, t); g.gain.exponentialRampToValueAtTime(0.01, t + 0.25);
+  o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.3);
+}
+
+function sfxEngine() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = 65;
+  const g = audioCtx.createGain(); g.gain.setValueAtTime(0.04, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+  o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.15);
+}
+
+function sfxSlam() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const buf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.08), audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.02));
+  const src = audioCtx.createBufferSource(); src.buffer = buf;
+  const g = audioCtx.createGain(); g.gain.value = 0.2;
+  src.connect(g); g.connect(audioCtx.destination); src.start(t);
+  const o = audioCtx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(100, t); o.frequency.exponentialRampToValueAtTime(30, t + 0.1);
+  const g2 = audioCtx.createGain(); g2.gain.setValueAtTime(0.25, t); g2.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+  o.connect(g2); g2.connect(audioCtx.destination); o.start(t); o.stop(t + 0.2);
+}
+
+function sfxWind() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const buf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.5), audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.03 * (1 + Math.sin(i / 800));
+  const src = audioCtx.createBufferSource(); src.buffer = buf;
+  const f = audioCtx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 400; f.Q.value = 0.5;
+  const g = audioCtx.createGain(); g.gain.value = 0.15;
+  src.connect(f); f.connect(g); g.connect(audioCtx.destination); src.start(t);
+}
+
+function sfxCricket() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  for (let i = 0; i < 3; i++) {
+    const o = audioCtx.createOscillator(); o.type = 'sine'; o.frequency.value = 4200 + Math.random() * 400;
+    const g = audioCtx.createGain(); g.gain.setValueAtTime(0.03, t + i * 0.07); g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.07 + 0.04);
+    o.connect(g); g.connect(audioCtx.destination); o.start(t + i * 0.07); o.stop(t + i * 0.07 + 0.05);
+  }
+}
+
+function sfxOnionPop() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(600, t); o.frequency.exponentialRampToValueAtTime(1200, t + 0.04);
+  const g = audioCtx.createGain(); g.gain.setValueAtTime(0.15, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+  o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.12);
+}
+
+function sfxDiaryPage() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const buf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.08), audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.025)) * 0.5;
+  const src = audioCtx.createBufferSource(); src.buffer = buf;
+  const f = audioCtx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 2000;
+  const g = audioCtx.createGain(); g.gain.value = 0.06;
+  src.connect(f); f.connect(g); g.connect(audioCtx.destination); src.start(t);
+}
+
+/* ══════════════════════════════════════════
+   DIARY DATA (canon-safe)
+   ══════════════════════════════════════════ */
+const DIARY = [
+  { date:'1994 · 07 · 01', loc:'新訓中心', body:['第一天。','剃了頭。','班長說，想家的人最容易出事。','','我沒想家。','我只想起，妳看我最後一眼的那一秒。','','一秒。','我用一整個夏天去數，還沒數完。']},
+  { date:'1994 · 08 · 14', loc:'砲兵連', body:['報數、舉手、起立、坐下。','通通比不上妳走出我生活的那一天安靜。','','明天考砲兵射擊。','數字，是我現在唯一聽得清楚的聲音。']},
+  { date:'1994 · 08 · 22', loc:'聯合演習區', body:['第一名。','','營長說，砲兵射擊滿分的人，','要負責一項重大任務。','','我以為是指揮彈著。','是顧一頭牛。','','牛的眼睛，比我想的還像妳。','溫的，黑的。','看過我一眼，就低頭吃草。']},
+  { date:'1995 · 03 · 09', loc:'營區操場', body:['明天 3000。','全連都在睡，我在跑。','','跑步的時候不用想，','只要一直往前。','','妳離開那天，我沒有跑。','我站著，站到路燈熄掉。','','這一次，我要跑得夠快。','快到能把那一秒的空白，','追回來。']},
+  { date:'1995 · 03 · 10', loc:'連部', body:['12 分整。','','連長說，原本明早 08:00 放的假，','提早到今晚 21:00。','','榮譽假。','我第一次覺得，','跑步是會變成時間的。','','我賺了 11 個小時。','11 個小時能做什麼？']},
+  { date:'1995 · 05 · 17', loc:'高雄車站 → 新竹', body:['高雄出發，往北。','車誤點，月台空了。','','我看著火車尾燈越來越遠，','像妳那天的背影。','','哥哥從市區開車過來，','說「上車，我比火車快。」','','從高雄到新竹，','他把油門踩到底。','我沒說話。','心裡只有一句：','讓我趕上，讓我趕上。']},
+  { date:'1995 · 07 · 02', loc:'中山室', body:['中山室的燈還亮著。','弟兄們在比腕力，笑聲很大。','','我沒說話，走過去坐下。','他們說：「學長，來一局。」','','我把右手放上桌。','','不是為了贏。','是為了知道，','這隻手還有沒有力氣。','','還有沒有力氣，','握住一個已經不在眼前的人。']},
+  { date:'1995 · 11 · 03', loc:'哨所', body:['02:30。','全營都在睡。','只有我，一支槍，一盞燈。','','月亮很薄，','薄得像快要撕破的紙。','','黑暗裡有聲音。','風？還是記憶？','我不敢想。','','一想，','就是妳那一秒。']},
+  { date:'1996 · 02 · 19', loc:'屏東 · 農忙支援', body:['下部隊後第一次支援農忙。','屏東。','洋蔥田一望無際。','','太陽很大，土很鬆。','洋蔥皮薄得像信紙。','','弟兄們邊拔邊唱歌。','我跟著笑。','','這是我當兵以來，','第一次覺得，','時間可以不用數。']},
+  { date:'1996 · 06 · 28', loc:'退伍前夜', body:['日記本快寫完了。','最後一頁，我沒有寫。','','留給妳。','','如果有一天，','妳看到這一頁，','請妳相信——','','那一秒，','我已經記了整整兩年。','','而這兩年，不是浪費。','','是我，','替未來的我們，','把時間先存起來。']}
+];
+
+/* ══════════════════════════════════════════
+   FLOW
+   ══════════════════════════════════════════ */
+const FLOW = [
+  {t:'diary',i:0},{t:'diary',i:1},{t:'level',n:'artillery'},{t:'diary',i:2},
+  {t:'diary',i:3},{t:'level',n:'run'},{t:'diary',i:4},
+  {t:'diary',i:5},{t:'level',n:'train'},{t:'diary',i:6},
+  {t:'level',n:'arm'},{t:'diary',i:7},
+  {t:'level',n:'guard'},{t:'diary',i:8},
+  {t:'level',n:'onion'},{t:'diary',i:9},{t:'end'}
+];
+let flowIdx = -1;
+let currentLevel = null;
+let levelInputs = []; // cleanup handlers
+
+function advance() {
+  stopLevel();
+  flowIdx++;
+  if (flowIdx >= FLOW.length) { showEnd(); return; }
+  const step = FLOW[flowIdx];
+  if (step.t === 'diary') showDiary(step.i);
+  else if (step.t === 'level') showLevel(step.n);
+  else showEnd();
+}
+
+function stopLevel() {
+  hideHud();
+  FIRE.classList.remove('show');
+  TAP.classList.remove('show');
+  levelInputs.forEach(fn => fn());
+  levelInputs = [];
+  if (currentLevel && currentLevel.stop) currentLevel.stop();
+  currentLevel = null;
   document.onkeydown = null;
   document.onkeyup = null;
 }
 
-function advance(){
-  resetInputs();
-  flowIdx++;
-  if (flowIdx >= FLOW.length) { showEnd(); return; }
-  var step = FLOW[flowIdx];
-  if (step.t === 'diary') showDiary(step.i);
-  else if (step.t === 'level') showLevel(step.n);
-  else if (step.t === 'end') showEnd();
-}
-
-/* ---------- diary ---------- */
-function showDiary(i){
-  var d = DIARY[i];
-  $('d-date').textContent = d.date;
-  $('d-loc').textContent = d.loc;
-  var body = $('d-body');
-  clear(body);
-  d.body.forEach(function(line, k){
-    var row;
-    if (line === '') {
-      row = el('div', 'diary-line diary-blank');
-    } else {
-      row = el('div', 'diary-line', line);
-    }
-    row.style.animationDelay = (k * 0.18) + 's';
+/* ══════════════════════════════════════════
+   DIARY (DOM overlay)
+   ══════════════════════════════════════════ */
+function showDiary(i) {
+  sfxDiaryPage();
+  activeScene = darkScene;
+  const d = DIARY[i];
+  clear(OV);
+  const paper = el('div', 'diary-paper');
+  const head = el('div', 'diary-head');
+  head.appendChild(el('span', null, d.date));
+  head.appendChild(el('span', null, d.loc));
+  paper.appendChild(head);
+  const body = el('div', 'diary-body');
+  d.body.forEach((line, k) => {
+    const row = el('div', line === '' ? 'diary-line diary-blank' : 'diary-line', line || '\u00a0');
+    row.style.animationDelay = (k * 0.16) + 's';
     body.appendChild(row);
   });
-  var nextBox = $('d-next');
-  clear(nextBox);
-  var btn = el('button', null, '繼續 ›');
+  paper.appendChild(body);
+  paper.appendChild(el('div', 'diary-foot', '— 兵 · 695T'));
+  const next = el('div', 'diary-next');
+  const btn = el('button', null, '繼續 ›');
   btn.addEventListener('click', advance);
-  nextBox.appendChild(btn);
-  show('diary');
+  next.appendChild(btn);
+  paper.appendChild(next);
+  OV.appendChild(paper);
+  OV.classList.add('active');
 }
 
-/* ---------- level dispatch ---------- */
-function showLevel(name){
-  show('level-' + name);
-  if (name === 'artillery') startArtillery();
-  else if (name === 'run') startRun();
-  else if (name === 'train') startTrain();
-  else if (name === 'arm') startArm();
-  else if (name === 'guard') startGuard();
-  else if (name === 'onion') startOnion();
+/* ══════════════════════════════════════════
+   LEVEL DISPATCH
+   ══════════════════════════════════════════ */
+function showLevel(name) {
+  clear(OV);
+  OV.classList.remove('active');
+  const builders = {
+    artillery: buildArtillery,
+    run: buildRun,
+    train: buildTrain,
+    arm: buildArm,
+    guard: buildGuard,
+    onion: buildOnion
+  };
+  const builder = builders[name];
+  if (!builder) { advance(); return; }
+  currentLevel = builder();
+  activeScene = currentLevel.scene;
+  if (currentLevel.cameraSetup) currentLevel.cameraSetup(camera);
+  if (currentLevel.start) currentLevel.start();
 }
 
-/* ---------- L1 artillery · radar-sweep timing shot ---------- */
-var artyState;
-var artySweepTimer;
-function startArtillery(){
-  if (artySweepTimer) { clearInterval(artySweepTimer); artySweepTimer = null; }
-  artyState = {
-    score: 0,
-    life: 3,
-    angle: 0,
-    target: 0,
-    alive: true,
-    locked: false,
-    speed: 3.0 // deg per tick, tick = 33ms → ~90 deg/s (full rotation in 4s)
-  };
-  $('arty-prog').textContent = '0 / 5';
-  artyUpdateLife();
-  var fb = $('arty-fb');
-  fb.textContent = '';
-  fb.className = 'arty-fb';
-  $('arty-fire').onclick = artyFire;
-  document.onkeydown = function(e){
-    if (e.code === 'Space' || e.code === 'Enter') {
-      e.preventDefault();
-      artyFire();
-    }
-  };
-  artyNewTarget();
-  artySweepTimer = setInterval(artySweepTick, 33);
-}
-function artySweepTick(){
-  if (!artyState || !artyState.alive) {
-    if (artySweepTimer) { clearInterval(artySweepTimer); artySweepTimer = null; }
-    return;
-  }
-  artyState.angle = (artyState.angle + artyState.speed) % 360;
-  var sw = $('arty-sweep');
-  if (sw) sw.style.transform = 'rotate(' + artyState.angle + 'deg)';
-}
-function artyNewTarget(){
-  // spawn at a random angle, ideally not too close to current sweep head
-  var t;
-  do {
-    t = Math.floor(Math.random() * 360);
-  } while (Math.abs(((t - artyState.angle + 540) % 360) - 180) < 40);
-  artyState.target = t;
-  artyState.locked = false;
-  // polar → cartesian, radius ~42% of radar
-  var rad = (t - 90) * Math.PI / 180;
-  var cx = 50 + 42 * Math.cos(rad);
-  var cy = 50 + 42 * Math.sin(rad);
-  var tgt = $('arty-target');
-  if (tgt) {
-    tgt.style.left = cx + '%';
-    tgt.style.top = cy + '%';
-    tgt.classList.add('on');
-  }
-  var bearingStr = (t < 100 ? '0' : '') + (t < 10 ? '0' : '') + t;
-  $('arty-data').textContent = '目標方位 ' + bearingStr + '° · 等待掃描線';
-}
-function artyFire(){
-  if (!artyState || !artyState.alive || artyState.locked) return;
-  artyState.locked = true;
-  // sweep wedge goes from (angle - 60) to angle (trailing brightness).
-  // tightest hit zone: within ±18 of the sweep HEAD when it passes the target.
-  // compute the minimum angular distance between sweep head and target.
-  var diff = ((artyState.angle - artyState.target) + 720) % 360;
-  // sweep just crossed target when diff is small (0 to ~18); this is a "hit"
-  var hit = diff <= 18 || diff >= 342;
-  var fb = $('arty-fb');
-  var tgt = $('arty-target');
-  if (hit) {
-    artyState.score++;
-    fb.textContent = '命中。';
-    fb.className = 'arty-fb ok';
-    $('arty-prog').textContent = artyState.score + ' / 5';
-    if (tgt) tgt.classList.remove('on');
-    if (artyState.score >= 5) {
-      artyState.alive = false;
-      if (artySweepTimer) { clearInterval(artySweepTimer); artySweepTimer = null; }
-      setTimeout(function(){
-        finishLevel({
-          code: 'MISSION 01 · 達成',
-          title: '全連第一名',
-          sub: [
-            ['', '滿分通過砲兵射擊。'],
-            ['em', '結果任務 —— 顧一頭牛。'],
-            ['', '你對著牛，數她的睫毛。']
-          ],
-          stats: [['命中','5 / 5'],['剩餘','●'.repeat(artyState.life)],['任務','牛 × 1']]
-        });
-      }, 750);
-      return;
-    }
-    // speed up each round slightly, capped
-    artyState.speed = Math.min(4.8, artyState.speed + 0.3);
-    setTimeout(function(){
-      if (artyState.alive) {
-        fb.textContent = '';
-        artyNewTarget();
-      }
-    }, 650);
-  } else {
-    fb.textContent = '偏離目標。';
-    fb.className = 'arty-fb ng';
-    artyState.life--;
-    artyUpdateLife();
-    if (tgt) tgt.classList.remove('on');
-    if (artyState.life <= 0) {
-      // reset progress but stay alive
-      artyState.life = 3;
-      artyState.score = 0;
-      artyState.speed = 3.0;
-      $('arty-prog').textContent = '0 / 5';
-      setTimeout(function(){
-        if (artyState.alive) {
-          artyUpdateLife();
-          fb.textContent = '';
-          artyNewTarget();
-        }
-      }, 900);
-    } else {
-      setTimeout(function(){
-        if (artyState.alive) {
-          fb.textContent = '';
-          artyNewTarget();
-        }
-      }, 700);
-    }
-  }
-}
-function artyUpdateLife(){
-  if (!artyState) return;
-  var str = '';
-  for (var k = 0; k < artyState.life; k++) str += '● ';
-  $('arty-life').textContent = str.trim();
-}
-
-/* ---------- L2 run ---------- */
-var runState;
-var runTimer;
-function startRun(){
-  runState = { dist:0, time:720, hr:72, taps:0, last:0, alive:true };
-  $('run-track').classList.add('go');
-  runUpdate();
-  var tapHandler = function(){
-    if (!runState.alive) return;
-    var now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-    if (now - runState.last < 80) return;
-    runState.last = now;
-    runState.dist += 4.5 + Math.random() * 1.5;
-    runState.taps++;
-    runState.hr = Math.min(180, 72 + Math.floor(runState.taps / 3));
-    runUpdate();
-  };
-  $('run-tap').onclick = tapHandler;
-  document.onkeydown = function(e){
-    if (e.code === 'Space' || e.code === 'Enter') {
-      e.preventDefault();
-      tapHandler();
-    }
-  };
-  runTimer = setInterval(function(){
-    if (!runState.alive) { clearInterval(runTimer); return; }
-    runState.time--;
-    if (runState.dist >= 3000) {
-      runState.alive = false;
-      clearInterval(runTimer);
-      $('run-track').classList.remove('go');
-      var elapsed = 720 - runState.time;
-      var mm = Math.floor(elapsed / 60);
-      var ss = elapsed % 60;
-      finishLevel({
-        code:'MISSION 02 · 達成',
-        title:'3000m · ' + mm + '分' + (ss < 10 ? '0' : '') + ss + '秒',
-        sub:[
-          ['', '12 分鐘內完成。'],
-          ['em', '榮譽假提早到今晚 21:00。'],
-          ['', '你賺了 11 個小時。']
-        ],
-        stats:[['距離','3000m'],['時間', mm + ':' + (ss < 10 ? '0' : '') + ss],['心跳', runState.hr + '']]
-      });
-      return;
-    }
-    if (runState.time <= 0) {
-      runState.alive = false;
-      clearInterval(runTimer);
-      $('run-track').classList.remove('go');
-      finishLevel({
-        code:'MISSION 02 · 未達成',
-        title:'時間到',
-        sub:[
-          ['', '距離不足。'],
-          ['em', '但班長沒有處罰你。'],
-          ['', '他只說：「明天再跑一次。」']
-        ],
-        stats:[['距離', Math.floor(runState.dist) + 'm'],['時間','12:00'],['心跳', runState.hr + '']]
-      });
-      return;
-    }
-    runUpdate();
-  }, 1000);
-}
-function runUpdate(){
-  $('run-d').textContent = Math.floor(runState.dist);
-  var mm = Math.floor(runState.time / 60);
-  var ss = runState.time % 60;
-  $('run-time').textContent = mm + ':' + (ss < 10 ? '0' : '') + ss;
-  $('run-dist').textContent = Math.floor(runState.dist) + ' m';
-  var elapsed = 720 - runState.time;
-  var paceStr = '--';
-  if (runState.dist > 50) {
-    var pace = elapsed / (runState.dist / 1000);
-    var pm = Math.floor(pace / 60);
-    var ps = Math.floor(pace % 60);
-    paceStr = pm + "'" + (ps < 10 ? '0' : '') + ps;
-  }
-  $('run-p').textContent = paceStr;
-  $('run-h').textContent = runState.hr;
-  var pct = Math.min(100, runState.dist / 3000 * 100);
-  $('run-runner').style.left = (2 + pct * 0.94) + '%';
-}
-
-/* ---------- L3 train ---------- */
-var trainState;
-var trainTimer;
-var trainRaf;
-function startTrain(){
-  trainState = { carX:12, trainX:0, speed:60, time:30, alive:true, hold:false };
-  var gas = $('train-gas');
-  var press = function(){ trainState.hold = true; };
-  var release = function(){ trainState.hold = false; };
-  gas.onmousedown = press;
-  gas.onmouseup = release;
-  gas.onmouseleave = release;
-  gas.ontouchstart = function(e){ e.preventDefault(); press(); };
-  gas.ontouchend = function(e){ e.preventDefault(); release(); };
-  document.onkeydown = function(e){
-    if (e.code === 'Space') { e.preventDefault(); press(); }
-  };
-  document.onkeyup = function(e){
-    if (e.code === 'Space') { e.preventDefault(); release(); }
-  };
-  var tick = function(){
-    if (!trainState.alive) return;
-    if (trainState.hold) trainState.speed = Math.min(160, trainState.speed + 2.4);
-    else trainState.speed = Math.max(50, trainState.speed - 1.4);
-    trainState.carX += (trainState.speed - 100) * 0.002;
-    trainState.carX = Math.max(4, Math.min(86, trainState.carX));
-    trainState.trainX += 0.07;
-    if (trainState.trainX > 85) trainState.trainX = 85;
-    var scene = document.querySelector('#level-train .train-scene');
-    if (scene) {
-      var w = scene.clientWidth || 420;
-      $('train-car').style.left = (trainState.carX / 100 * w) + 'px';
-      $('train-train').style.left = (trainState.trainX / 100 * w - 20) + 'px';
-    }
-    $('train-s').textContent = Math.floor(trainState.speed) + ' km/h';
-    var gap = trainState.carX - trainState.trainX;
-    var barPct = Math.max(0, Math.min(100, (gap + 10) * 5));
-    $('train-bar-fill').style.width = barPct + '%';
-    if (gap < -4) {
-      trainState.alive = false;
-      clearInterval(trainTimer);
-      finishLevel({
-        code:'MISSION 03 · 未達成',
-        title:'火車追過去了',
-        sub:[
-          ['', '車速掉下來。'],
-          ['em', '但哥哥沒說什麼。'],
-          ['', '他只說：「下次，早點出門。」']
-        ],
-        stats:[['最高時速', Math.floor(trainState.speed) + ''],['撐過', (30 - trainState.time) + 's'],['距離差','—']]
-      });
-      return;
-    }
-    trainRaf = requestAnimationFrame(tick);
-  };
-  trainRaf = requestAnimationFrame(tick);
-  trainTimer = setInterval(function(){
-    if (!trainState.alive) { clearInterval(trainTimer); return; }
-    trainState.time--;
-    $('train-t').textContent = trainState.time;
-    if (trainState.time <= 0) {
-      trainState.alive = false;
-      clearInterval(trainTimer);
-      finishLevel({
-        code:'MISSION 03 · 達成',
-        title:'新竹月台 · 準時抵達',
-        sub:[
-          ['', '哥哥把油門踩到底。'],
-          ['em', '火車剛進月台。'],
-          ['', '他揮了揮手，沒下車，直接走。']
-        ],
-        stats:[['最高時速', Math.floor(trainState.speed) + ''],['撐過','30s'],['攔截','成功']]
-      });
-    }
-  }, 1000);
-}
-
-/* ---------- L4 arm ---------- */
-var ARM_OPPS = [
-  { name:'阿忠 · 一兵', power:0.85 },
-  { name:'大胖 · 下士', power:1.10 },
-  { name:'阿榮 · 上兵', power:1.35 },
-  { name:'瘦皮 · 班長', power:1.60 },
-  { name:'老虎 · 副排', power:1.90 }
-];
-var armState;
-var armDrain;
-function startArm(){
-  armState = { round:0, value:0, last:'', alive:true };
-  nextArmRound();
-  var L = $('arm-l'), R = $('arm-r');
-  var push = function(side){
-    if (!armState.alive) return;
-    if (armState.last === side) return;
-    armState.last = side;
-    armState.value += 4;
-    armUpdate();
-  };
-  L.onclick = function(){ push('L'); };
-  R.onclick = function(){ push('R'); };
-  document.onkeydown = function(e){
-    if (e.code === 'KeyA' || e.code === 'ArrowLeft') { e.preventDefault(); push('L'); }
-    if (e.code === 'KeyD' || e.code === 'ArrowRight') { e.preventDefault(); push('R'); }
-  };
-  armDrain = setInterval(function(){
-    if (!armState.alive) { clearInterval(armDrain); return; }
-    var opp = ARM_OPPS[armState.round];
-    armState.value -= opp.power * 0.9;
-    armUpdate();
-    if (armState.value <= -50) {
-      armState.alive = false;
-      clearInterval(armDrain);
-      finishLevel({
-        code:'MISSION 04 · 未達成',
-        title:'被壓了下去',
-        sub:[
-          ['', '右手還在發燙。'],
-          ['em', '但你沒有鬆開。'],
-          ['', '班長說：「明晚再來。」']
-        ],
-        stats:[['過關','Round ' + armState.round + ' / 5'],['對手', opp.name],['右手','還在']]
-      });
-    } else if (armState.value >= 50) {
-      armState.value = 0;
-      armState.last = '';
-      armState.round++;
-      if (armState.round >= 5) {
-        armState.alive = false;
-        clearInterval(armDrain);
-        finishLevel({
-          code:'MISSION 04 · 達成',
-          title:'全連皆輸',
-          sub:[
-            ['', '五輪。'],
-            ['em', '全連都笑不出來了。'],
-            ['', '班長拍拍你的肩，沒問。']
-          ],
-          stats:[['連勝','5 / 5'],['剩餘力氣','█ █ █'],['右手','還在']]
-        });
-      } else {
-        nextArmRound();
-      }
-    }
-  }, 50);
-}
-function nextArmRound(){
-  if (!armState || armState.round >= 5) return;
-  var opp = ARM_OPPS[armState.round];
-  $('arm-round').textContent = 'Round ' + (armState.round + 1) + ' / 5';
-  $('arm-name').textContent = opp.name;
-  $('arm-opp').textContent = 'vs. ' + opp.name;
-  armState.value = 0;
-  armUpdate();
-}
-function armUpdate(){
-  var pct = Math.max(-100, Math.min(100, armState.value));
-  var lever = $('arm-lever');
-  if (lever) lever.style.transform = 'rotate(' + (-pct * 0.4) + 'deg)';
-  var fill = $('arm-fill');
-  if (fill) {
-    if (pct >= 0) {
-      fill.style.left = '50%';
-      fill.style.right = 'auto';
-      fill.style.width = pct + '%';
-    } else {
-      fill.style.right = '50%';
-      fill.style.left = 'auto';
-      fill.style.width = (-pct) + '%';
-    }
-  }
-}
-
-/* ---------- L5 guard ---------- */
-var GUARD_EVENTS = [
-  { txt:'風從林子裡吹過。', real:false },
-  { txt:'遠處狗叫了兩聲。', real:false },
-  { txt:'腳步聲 —— 從圍牆外。', real:true },
-  { txt:'蟲鳴停了一拍。', real:false },
-  { txt:'有人翻過鐵絲網的聲音。', real:true },
-  { txt:'樹葉落在哨所屋頂。', real:false },
-  { txt:'雨，開始下了。', real:false },
-  { txt:'金屬輕響 —— 鐵門方向。', real:true },
-  { txt:'貓從彈藥庫旁跑過。', real:false },
-  { txt:'兩百公尺外，有一道手電筒光。', real:true }
-];
-var guardState;
-function startGuard(){
-  guardState = { i:0, score:0, mistakes:0, alive:true, waiting:false, clock:150 };
-  $('guard-event').textContent = '夜還沒開始。';
-  $('guard-t').textContent = '02:30';
-  $('guard-p').textContent = '0 / 10';
-  var aim = $('guard-aim'), hold = $('guard-hold');
-  aim.onclick = function(){ guardAns(true); };
-  hold.onclick = function(){ guardAns(false); };
-  document.onkeydown = function(e){
-    if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); guardAns(true); }
-    if (e.code === 'KeyX' || e.code === 'ArrowDown') { e.preventDefault(); guardAns(false); }
-  };
-  setTimeout(nextGuard, 900);
-}
-function nextGuard(){
-  if (!guardState.alive) return;
-  if (guardState.i >= 10) { endGuard(); return; }
-  guardState.waiting = true;
-  guardState.clock += 15;
-  var mm = Math.floor(guardState.clock / 60);
-  var ss = guardState.clock % 60;
-  $('guard-t').textContent = (mm < 10 ? '0' : '') + mm + ':' + (ss < 10 ? '0' : '') + ss;
-  $('guard-p').textContent = guardState.i + ' / 10';
-  var ev = GUARD_EVENTS[guardState.i];
-  var node = $('guard-event');
-  node.textContent = ev.txt;
-  node.style.animation = 'none';
-  void node.offsetWidth;
-  node.style.animation = '';
-}
-function guardAns(aimed){
-  if (!guardState.waiting) return;
-  guardState.waiting = false;
-  var ev = GUARD_EVENTS[guardState.i];
-  if (ev.real === aimed) {
-    guardState.score++;
-    $('guard-event').textContent = ev.real ? '—— 確認狀況，上報。' : '—— 靜。';
-  } else {
-    guardState.mistakes++;
-    $('guard-event').textContent = ev.real ? '—— 你遲了半秒。' : '—— 空槍口。';
-  }
-  guardState.i++;
-  setTimeout(nextGuard, 950);
-}
-function endGuard(){
-  guardState.alive = false;
-  if (guardState.mistakes <= 2) {
-    finishLevel({
-      code:'MISSION 05 · 達成',
-      title:'05:00 天亮了',
-      sub:[
-        ['', '你還活著。'],
-        ['em', '心跳也還活著。'],
-        ['', '那個名字，也還活著。']
-      ],
-      stats:[['正確', guardState.score + ' / 10'],['失誤', guardState.mistakes + ''],['撐過','2.5h']]
-    });
-  } else {
-    finishLevel({
-      code:'MISSION 05 · 勉強過關',
-      title:'天亮以前',
-      sub:[
-        ['', '失誤太多，下一班要補一次。'],
-        ['em', '班長沒罵你。'],
-        ['', '他說：「想太多，就這樣。」']
-      ],
-      stats:[['正確', guardState.score + ' / 10'],['失誤', guardState.mistakes + ''],['補哨','1']]
-    });
-  }
-}
-
-/* ---------- L6 onion ---------- */
-var onionState;
-var onionTimer;
-function startOnion(){
-  onionState = { picked:0, time:60, alive:true };
-  var field = $('onion-field');
-  clear(field);
-  $('onion-t').textContent = '60';
-  $('onion-c').textContent = '0 / 30';
-  var spawn = function(){
-    if (!onionState.alive) return;
-    var o = el('div', 'onion');
-    var x = Math.random() * 86 + 7;
-    var y = Math.random() * 80 + 10;
-    o.style.left = x + '%';
-    o.style.top = y + '%';
-    field.appendChild(o);
-    requestAnimationFrame(function(){ o.classList.add('pop'); });
-    var picked = false;
-    o.addEventListener('click', function(){
-      if (picked || !onionState.alive) return;
-      picked = true;
-      o.classList.add('picked');
-      onionState.picked++;
-      $('onion-c').textContent = onionState.picked + ' / 30';
-      setTimeout(function(){ if (o.parentNode) o.parentNode.removeChild(o); }, 350);
-      if (onionState.picked >= 30) {
-        onionState.alive = false;
-        clearInterval(onionTimer);
-        finishLevel({
-          code:'MISSION 06 · 達成',
-          title:'30 顆洋蔥 · 30 個日子',
-          sub:[
-            ['', '弟兄們邊拔邊唱歌。'],
-            ['em', '你跟著笑。'],
-            ['', '原來平凡，也是一種原諒。']
-          ],
-          stats:[['拔起','30'],['剩時', onionState.time + 's'],['心情','光']]
-        });
-      }
-    });
-    setTimeout(function(){
-      if (!picked && o.parentNode) {
-        o.style.opacity = '0';
-        setTimeout(function(){ if (o.parentNode) o.parentNode.removeChild(o); }, 400);
-      }
-    }, 3200);
-    if (onionState.alive) setTimeout(spawn, 380 + Math.random() * 480);
-  };
-  spawn(); spawn(); spawn();
-  onionTimer = setInterval(function(){
-    if (!onionState.alive) { clearInterval(onionTimer); return; }
-    onionState.time--;
-    $('onion-t').textContent = onionState.time;
-    if (onionState.time <= 0) {
-      onionState.alive = false;
-      clearInterval(onionTimer);
-      finishLevel({
-        code:'MISSION 06 · 未達成',
-        title:'收工',
-        sub:[
-          ['', '日頭下山了。'],
-          ['em', '你手上還抓著半顆洋蔥。'],
-          ['', '班長說：「明天再拔。」']
-        ],
-        stats:[['拔起', onionState.picked + ''],['剩時','0'],['心情','—']]
-      });
-    }
-  }, 1000);
-}
-
-/* ---------- result (safe DOM build) ---------- */
-function finishLevel(obj){
-  resetInputs();
-  $('r-code').textContent = obj.code;
-  $('r-title').textContent = obj.title;
-  var subBox = $('r-sub');
-  clear(subBox);
-  obj.sub.forEach(function(pair, idx){
-    if (idx > 0) subBox.appendChild(el('br'));
-    var kind = pair[0], text = pair[1];
-    if (kind === 'em') {
-      subBox.appendChild(el('em', null, text));
-    } else {
-      subBox.appendChild(document.createTextNode(text));
-    }
+/* ══════════════════════════════════════════
+   RESULT
+   ══════════════════════════════════════════ */
+function finishLevel(obj) {
+  stopLevel();
+  activeScene = darkScene;
+  clear(OV);
+  const box = el('div', 'r-box');
+  box.appendChild(el('div', 'r-code', obj.code));
+  box.appendChild(el('div', 'r-title', obj.title));
+  const sub = el('div', 'r-sub');
+  obj.sub.forEach((pair, idx) => {
+    if (idx > 0) sub.appendChild(el('br'));
+    if (pair[0] === 'em') sub.appendChild(el('em', null, pair[1]));
+    else sub.appendChild(document.createTextNode(pair[1]));
   });
-  var statsBox = $('r-stats');
-  clear(statsBox);
-  (obj.stats || []).forEach(function(s){
-    var wrap = el('div', 'r-stat');
-    wrap.appendChild(el('div', 'r-stat-lbl', s[0]));
-    wrap.appendChild(el('div', 'r-stat-val', s[1]));
-    statsBox.appendChild(wrap);
+  box.appendChild(sub);
+  const stats = el('div', 'r-stats');
+  (obj.stats || []).forEach(s => {
+    const w = el('div', 'r-stat');
+    w.appendChild(el('div', 'r-stat-lbl', s[0]));
+    w.appendChild(el('div', 'r-stat-val', s[1]));
+    stats.appendChild(w);
   });
-  show('result');
+  box.appendChild(stats);
+  const act = el('div', 'r-action');
+  const btn = el('button', 'btn primary', '下一頁日記 ›');
+  btn.addEventListener('click', advance);
+  act.appendChild(btn);
+  box.appendChild(act);
+  OV.appendChild(box);
+  OV.classList.add('active');
 }
 
-/* ---------- end ---------- */
-function showEnd(){
-  resetInputs();
-  var roll = $('end-roll');
-  clear(roll);
-  var lines = [
-    '時間存起來了。',
-    '',
-    '兩年，六個片段，',
-    '一本寫滿了妳的日記。',
-    '',
-    '一秒 ——',
-    '我用二十年，',
-    '才讀懂。'
+/* ══════════════════════════════════════════
+   INTRO
+   ══════════════════════════════════════════ */
+function showIntro() {
+  activeScene = darkScene;
+  clear(OV);
+  const wrap = el('div', 'intro-wrap');
+  wrap.appendChild(el('div', 'intro-mark', '695T'));
+  wrap.appendChild(el('div', 'intro-sub', 'NO.695 · 海軍陸戰隊'));
+  const tag = el('div', 'intro-tagline');
+  tag.appendChild(document.createTextNode('這是一本，寫不完的日記。'));
+  tag.appendChild(el('br'));
+  tag.appendChild(document.createTextNode('六個片段，六個關卡，兩年的時間。'));
+  tag.appendChild(el('br'));
+  tag.appendChild(document.createTextNode('一秒 —— 我用二十年才讀懂。'));
+  wrap.appendChild(tag);
+  const btn = el('button', 'intro-btn', '開始任務');
+  btn.addEventListener('click', () => { initAudio(); advance(); });
+  wrap.appendChild(btn);
+  OV.appendChild(wrap);
+  OV.classList.add('active');
+}
+
+/* ══════════════════════════════════════════
+   END
+   ══════════════════════════════════════════ */
+function showEnd() {
+  stopLevel();
+  activeScene = darkScene;
+  clear(OV);
+  const roll = el('div', 'end-roll');
+  ['時間存起來了。','','兩年，六個片段，','一本寫滿了妳的日記。','','一秒 ——','我用二十年，','才讀懂。'].forEach(t => {
+    roll.appendChild(el('div', null, t || '\u00a0'));
+  });
+  OV.appendChild(roll);
+  OV.appendChild(el('div', 'end-mark', '695T · 1994 — 1996'));
+  const act = el('div', 'r-action');
+  act.style.marginTop = '36px';
+  const b1 = el('button', 'btn', '再讀一次');
+  b1.addEventListener('click', () => { flowIdx = -1; advance(); });
+  act.appendChild(b1);
+  const b2 = el('button', 'btn', '返回主站');
+  b2.addEventListener('click', () => { location.href = '../../index.html'; });
+  act.appendChild(b2);
+  OV.appendChild(act);
+  OV.classList.add('active');
+}
+
+/* ══════════════════════════════════════════
+   SHARED 3D HELPERS
+   ══════════════════════════════════════════ */
+function makeGround(scene, color, y) {
+  const g = new THREE.Mesh(
+    new THREE.PlaneGeometry(200, 200),
+    new THREE.MeshStandardMaterial({ color, roughness: 1 })
+  );
+  g.rotation.x = -Math.PI / 2;
+  g.position.y = y || 0;
+  g.receiveShadow = true;
+  scene.add(g);
+  return g;
+}
+
+function addFog(scene, color, density) {
+  scene.fog = new THREE.FogExp2(color, density || 0.02);
+}
+
+/* ══════════════════════════════════════════
+   L1 — ARTILLERY (3D radar sweep)
+   ══════════════════════════════════════════ */
+function buildArtillery() {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a1208);
+  addFog(scene, 0x0a1208, 0.03);
+
+  // ambient + point light
+  scene.add(new THREE.AmbientLight(0x223322, 0.4));
+  const glow = new THREE.PointLight(0x44ff44, 0.6, 30);
+  glow.position.set(0, 6, 0);
+  scene.add(glow);
+
+  // ground
+  makeGround(scene, 0x1a2010, -0.1);
+
+  // radar base
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 0.3, 32), new THREE.MeshStandardMaterial({ color: 0x2a3a1a, metalness: 0.5, roughness: 0.6 }));
+  base.position.y = 0.15;
+  scene.add(base);
+
+  // grid lines on base
+  const gridMat = new THREE.MeshBasicMaterial({ color: 0x336633, transparent: true, opacity: 0.3 });
+  for (let r = 1; r <= 3; r++) {
+    const ring = new THREE.Mesh(new THREE.RingGeometry(r - 0.02, r + 0.02, 64), gridMat);
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.y = 0.32;
+    scene.add(ring);
+  }
+
+  // sweep beam (a thin wedge)
+  const sweepGeo = new THREE.ConeGeometry(3, 0.05, 3, 1, false, 0, Math.PI * 0.15);
+  const sweepMat = new THREE.MeshBasicMaterial({ color: 0x44ff44, transparent: true, opacity: 0.5 });
+  const sweep = new THREE.Mesh(sweepGeo, sweepMat);
+  sweep.rotation.x = -Math.PI / 2;
+  sweep.position.y = 0.35;
+  scene.add(sweep);
+
+  // target sphere
+  const targetMat = new THREE.MeshBasicMaterial({ color: 0xff3333, transparent: true, opacity: 0.8 });
+  const target = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), targetMat);
+  target.position.y = 0.5;
+  target.visible = false;
+  scene.add(target);
+
+  // shell arc (shown on hit)
+  const arcPts = [];
+  for (let i = 0; i <= 20; i++) {
+    const t = i / 20;
+    arcPts.push(new THREE.Vector3(0, 4 * Math.sin(Math.PI * t), -6 * t));
+  }
+  const arcGeo = new THREE.BufferGeometry().setFromPoints(arcPts);
+  const arc = new THREE.Line(arcGeo, new THREE.LineBasicMaterial({ color: 0xffaa33, transparent: true, opacity: 0.6 }));
+  arc.visible = false;
+  scene.add(arc);
+
+  // state
+  const st = { angle: 0, speed: 2.5, targetAngle: 0, score: 0, life: 3, alive: true, locked: false };
+
+  function newTarget() {
+    let a; do { a = Math.random() * 360; } while (Math.abs(((a - st.angle + 540) % 360) - 180) < 50);
+    st.targetAngle = a;
+    st.locked = false;
+    const rad = (a - 90) * Math.PI / 180;
+    target.position.x = Math.cos(rad) * 2.4;
+    target.position.z = Math.sin(rad) * 2.4;
+    target.visible = true;
+    arc.visible = false;
+  }
+
+  function fire() {
+    if (!st.alive || st.locked) return;
+    st.locked = true;
+    sfxCannon();
+    const diff = ((st.angle - st.targetAngle) + 720) % 360;
+    const hit = diff <= 20 || diff >= 340;
+    if (hit) {
+      sfxHit();
+      showFB('命中。', 'ok');
+      st.score++;
+      target.visible = false;
+      // show arc towards target
+      const rad = (st.targetAngle - 90) * Math.PI / 180;
+      arc.position.set(0, 0.3, 0);
+      arc.rotation.y = -rad - Math.PI / 2;
+      arc.visible = true;
+      showHud(st.score + ' / 5', '', '●'.repeat(st.life));
+      if (st.score >= 5) {
+        st.alive = false;
+        setTimeout(() => finishLevel({
+          code: 'MISSION 01 · 達成', title: '全連第一名',
+          sub: [['','滿分通過砲兵射擊。'],['em','結果任務 —— 顧一頭牛。'],['','你對著牛，數她的睫毛。']],
+          stats: [['命中','5 / 5'],['剩餘','●'.repeat(st.life)],['任務','牛 × 1']]
+        }), 800);
+        return;
+      }
+      st.speed = Math.min(4.5, st.speed + 0.3);
+      setTimeout(() => { if (st.alive) newTarget(); }, 700);
+    } else {
+      sfxMiss();
+      showFB('偏離目標。', 'ng');
+      st.life--;
+      showHud(st.score + ' / 5', '', '●'.repeat(Math.max(0, st.life)));
+      target.visible = false;
+      if (st.life <= 0) {
+        st.life = 3; st.score = 0; st.speed = 2.5;
+        showHud('0 / 5', '', '● ● ●');
+      }
+      setTimeout(() => { if (st.alive) newTarget(); }, 700);
+    }
+  }
+
+  return {
+    scene,
+    cameraSetup(cam) { cam.position.set(0, 8, 6); cam.lookAt(0, 0, 0); },
+    start() {
+      showHud('0 / 5', 'MISSION 01', '● ● ●');
+      FIRE.classList.add('show');
+      FIRE.onclick = fire;
+      newTarget();
+      const kd = e => { if (e.code === 'Space') { e.preventDefault(); fire(); } };
+      document.onkeydown = kd;
+      levelInputs.push(() => { FIRE.onclick = null; });
+    },
+    update(dt) {
+      if (!st.alive) return;
+      st.angle = (st.angle + st.speed) % 360;
+      sweep.rotation.z = -st.angle * Math.PI / 180;
+      // pulse target
+      if (target.visible) {
+        target.scale.setScalar(1 + Math.sin(Date.now() * 0.006) * 0.3);
+      }
+      // radar tick sound every 90 degrees
+      if (Math.floor(st.angle / 90) !== Math.floor((st.angle - st.speed) / 90)) sfxRadarTick();
+    },
+    stop() { st.alive = false; }
+  };
+}
+
+/* ══════════════════════════════════════════
+   L2 — 3000m RUN
+   ══════════════════════════════════════════ */
+function buildRun() {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x2a3040);
+  addFog(scene, 0x2a3040, 0.008);
+  scene.add(new THREE.HemisphereLight(0x445566, 0x332211, 0.5));
+  const sun = new THREE.DirectionalLight(0xffe0b0, 1.5);
+  sun.position.set(20, 30, 10);
+  scene.add(sun);
+
+  // track surface
+  const track = new THREE.Mesh(
+    new THREE.PlaneGeometry(8, 300),
+    new THREE.MeshStandardMaterial({ color: 0x884422, roughness: 0.95 })
+  );
+  track.rotation.x = -Math.PI / 2;
+  scene.add(track);
+
+  // lane lines
+  for (let lane = -3; lane <= 3; lane++) {
+    const line = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.05, 300),
+      new THREE.MeshBasicMaterial({ color: 0xffffff })
+    );
+    line.rotation.x = -Math.PI / 2;
+    line.position.set(lane * 1.2, 0.01, 0);
+    scene.add(line);
+  }
+
+  // runner (capsule shape)
+  const runnerGroup = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 0.8, 4, 8), new THREE.MeshStandardMaterial({ color: 0x3d4e2c, roughness: 0.8 }));
+  body.position.y = 1.0;
+  runnerGroup.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8), new THREE.MeshStandardMaterial({ color: 0xdeb887, roughness: 0.8 }));
+  head.position.y = 1.8;
+  runnerGroup.add(head);
+  runnerGroup.position.set(0, 0, 0);
+  scene.add(runnerGroup);
+
+  // other runners (silhouettes)
+  for (let i = 0; i < 4; i++) {
+    const other = new THREE.Mesh(new THREE.CapsuleGeometry(0.25, 0.7, 4, 8), new THREE.MeshStandardMaterial({ color: 0x556644 }));
+    other.position.set(-2.4 + i * 1.2 + (i >= 2 ? 1.2 : 0), 1, -2 - i * 3);
+    scene.add(other);
+  }
+
+  const st = { dist: 0, time: 720, taps: 0, hr: 72, alive: true, lastTap: 0, elapsed: 0, nextHb: 0 };
+  let timer;
+
+  function tap() {
+    if (!st.alive) return;
+    const now = performance.now();
+    if (now - st.lastTap < 80) return;
+    st.lastTap = now;
+    st.dist += 4.5 + Math.random() * 1.5;
+    st.taps++;
+    st.hr = Math.min(180, 72 + Math.floor(st.taps / 3));
+    sfxFootstep();
+    runnerGroup.position.y = 0.1; // bob
+    setTimeout(() => { runnerGroup.position.y = 0; }, 80);
+  }
+
+  function tick() {
+    if (!st.alive) return;
+    st.time--;
+    st.elapsed = 720 - st.time;
+    const mm = Math.floor(st.time / 60);
+    const ss = st.time % 60;
+    showHud(Math.floor(st.dist) + 'm', 'MISSION 02', mm + ':' + (ss < 10 ? '0' : '') + ss);
+    if (st.dist >= 3000) {
+      st.alive = false; clearInterval(timer);
+      const em = Math.floor(st.elapsed / 60), es = st.elapsed % 60;
+      finishLevel({
+        code: 'MISSION 02 · 達成', title: '3000m · ' + em + '分' + (es < 10 ? '0' : '') + es + '秒',
+        sub: [['','12 分鐘內完成。'],['em','榮譽假提早到今晚 21:00。'],['','你賺了 11 個小時。']],
+        stats: [['距離','3000m'],['時間',em+':'+(es<10?'0':'')+es],['心跳',st.hr+'']]
+      });
+    } else if (st.time <= 0) {
+      st.alive = false; clearInterval(timer);
+      finishLevel({
+        code: 'MISSION 02 · 未達成', title: '時間到',
+        sub: [['','距離不足。'],['em','但班長沒有處罰你。'],['','他只說：「明天再跑一次。」']],
+        stats: [['距離',Math.floor(st.dist)+'m'],['時間','12:00'],['心跳',st.hr+'']]
+      });
+    }
+  }
+
+  return {
+    scene,
+    cameraSetup(cam) { cam.position.set(0, 4, 8); cam.lookAt(0, 1, -5); },
+    start() {
+      showHud('0m', 'MISSION 02', '12:00');
+      TAP.classList.add('show');
+      TAP.onclick = tap;
+      document.onkeydown = e => { if (e.code === 'Space') { e.preventDefault(); tap(); } };
+      timer = setInterval(tick, 1000);
+      levelInputs.push(() => { clearInterval(timer); TAP.onclick = null; });
+    },
+    update(dt) {
+      if (!st.alive) return;
+      // camera follow
+      camera.position.z = 8 - (st.dist / 3000) * 6;
+      runnerGroup.position.z = -(st.dist / 3000) * 290;
+      camera.lookAt(runnerGroup.position.x, 1, runnerGroup.position.z - 5);
+      // heartbeat
+      if (st.hr > 120 && Date.now() > st.nextHb) {
+        sfxHeartbeat();
+        st.nextHb = Date.now() + (60000 / st.hr);
+      }
+    },
+    stop() { st.alive = false; clearInterval(timer); }
+  };
+}
+
+/* ══════════════════════════════════════════
+   L3 — TRAIN CHASE
+   ══════════════════════════════════════════ */
+function buildTrain() {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x4a2818);
+  addFog(scene, 0x4a2818, 0.01);
+  scene.add(new THREE.HemisphereLight(0xffa060, 0x331808, 0.6));
+  const sun = new THREE.DirectionalLight(0xffaa44, 1.8);
+  sun.position.set(-20, 20, 10);
+  scene.add(sun);
+
+  // road
+  const road = new THREE.Mesh(new THREE.PlaneGeometry(6, 300), new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.95 }));
+  road.rotation.x = -Math.PI / 2;
+  road.position.set(-4, 0, -100);
+  scene.add(road);
+  // road center line
+  const center = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 300), new THREE.MeshBasicMaterial({ color: 0xffff66, transparent: true, opacity: 0.5 }));
+  center.rotation.x = -Math.PI / 2;
+  center.position.set(-4, 0.01, -100);
+  scene.add(center);
+
+  // rail tracks
+  for (const xOff of [-0.3, 0.3]) {
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 300), new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.8, roughness: 0.3 }));
+    rail.position.set(4 + xOff, 0.04, -100);
+    scene.add(rail);
+  }
+  // sleepers
+  for (let z = 0; z < 300; z += 2) {
+    const sleeper = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.06, 0.2), new THREE.MeshStandardMaterial({ color: 0x5a3e18, roughness: 0.9 }));
+    sleeper.position.set(4, 0.02, -z);
+    scene.add(sleeper);
+  }
+
+  // car
+  const car = new THREE.Group();
+  const carBody = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.8, 3.5), new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.4, metalness: 0.3 }));
+  carBody.position.y = 0.6;
+  car.add(carBody);
+  const carRoof = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.4, 2.8), new THREE.MeshStandardMaterial({ color: 0xbbbbbb }));
+  carRoof.position.y = 1.2;
+  car.add(carRoof);
+  // headlights
+  const hl = new THREE.PointLight(0xffffcc, 1, 15);
+  hl.position.set(0, 0.6, -2);
+  car.add(hl);
+  car.position.set(-4, 0, 0);
+  scene.add(car);
+
+  // train
+  const train = new THREE.Group();
+  for (let i = 0; i < 4; i++) {
+    const wagon = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 5), new THREE.MeshStandardMaterial({ color: 0x556677, metalness: 0.4, roughness: 0.5 }));
+    wagon.position.set(0, 1.2, -i * 5.5);
+    train.add(wagon);
+  }
+  train.position.set(4, 0, -8);
+  scene.add(train);
+
+  // trees
+  const treeMat = new THREE.MeshStandardMaterial({ color: 0x2a4a18 });
+  const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5a3e18 });
+  for (let z = 0; z < 200; z += 8) {
+    for (const x of [-10, 10]) {
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 2), trunkMat);
+      trunk.position.set(x + Math.random() * 2 - 1, 1, -z);
+      scene.add(trunk);
+      const crown = new THREE.Mesh(new THREE.ConeGeometry(1.2, 3, 6), treeMat);
+      crown.position.set(trunk.position.x, 3, -z);
+      scene.add(crown);
+    }
+  }
+
+  const st = { speed: 60, time: 30, alive: true, hold: false, carZ: 0, trainZ: -8 };
+  let timer;
+
+  function press() { st.hold = true; }
+  function release() { st.hold = false; }
+
+  return {
+    scene,
+    cameraSetup(cam) { cam.position.set(-2, 5, 12); cam.lookAt(-2, 1, -10); },
+    start() {
+      showHud('30', 'MISSION 03', '60 km/h');
+      const gas = TAP;
+      gas.textContent = '按住加速';
+      gas.classList.add('show');
+      gas.onmousedown = press; gas.onmouseup = release; gas.onmouseleave = release;
+      gas.ontouchstart = e => { e.preventDefault(); press(); };
+      gas.ontouchend = e => { e.preventDefault(); release(); };
+      document.onkeydown = e => { if (e.code === 'Space') { e.preventDefault(); press(); } };
+      document.onkeyup = e => { if (e.code === 'Space') { e.preventDefault(); release(); } };
+      timer = setInterval(() => {
+        if (!st.alive) return;
+        st.time--;
+        showHud(st.time + '', 'MISSION 03', Math.floor(st.speed) + ' km/h');
+        if (st.time <= 0) {
+          st.alive = false; clearInterval(timer);
+          finishLevel({
+            code: 'MISSION 03 · 達成', title: '新竹月台 · 準時抵達',
+            sub: [['','哥哥把油門踩到底。'],['em','火車剛進月台。'],['','他揮了揮手，沒下車，直接走。']],
+            stats: [['最高時速',Math.floor(st.speed)+''],['撐過','30s'],['攔截','成功']]
+          });
+        }
+      }, 1000);
+      levelInputs.push(() => {
+        clearInterval(timer);
+        gas.onmousedown = null; gas.onmouseup = null; gas.onmouseleave = null;
+        gas.ontouchstart = null; gas.ontouchend = null;
+        gas.textContent = '踏 · 踏 · 踏';
+      });
+    },
+    update(dt) {
+      if (!st.alive) return;
+      if (st.hold) { st.speed = Math.min(180, st.speed + 80 * dt); sfxEngine(); }
+      else st.speed = Math.max(50, st.speed - 30 * dt);
+      // move forward
+      const carMove = st.speed * dt * 0.5;
+      const trainMove = 100 * dt * 0.5; // train at constant 100 km/h equivalent
+      st.carZ -= carMove;
+      st.trainZ -= trainMove;
+      car.position.z = st.carZ;
+      train.position.z = st.trainZ;
+      camera.position.z = st.carZ + 14;
+      camera.lookAt(-2, 1, st.carZ - 10);
+      // check if train passes car
+      if (st.trainZ < st.carZ - 5) {
+        st.alive = false; clearInterval(timer);
+        finishLevel({
+          code: 'MISSION 03 · 未達成', title: '火車追過去了',
+          sub: [['','車速掉下來。'],['em','但哥哥沒說什麼。'],['','他只說：「下次，早點出門。」']],
+          stats: [['最高時速',Math.floor(st.speed)+''],['撐過',(30-st.time)+'s'],['距離差','—']]
+        });
+      }
+    },
+    stop() { st.alive = false; clearInterval(timer); }
+  };
+}
+
+/* ══════════════════════════════════════════
+   L4 — ARM WRESTLING
+   ══════════════════════════════════════════ */
+function buildArm() {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x1a1008);
+  scene.add(new THREE.AmbientLight(0x332211, 0.3));
+  const lamp = new THREE.PointLight(0xffcc88, 1.5, 20);
+  lamp.position.set(0, 5, 0);
+  lamp.castShadow = !isMobile;
+  scene.add(lamp);
+
+  // table
+  const table = new THREE.Mesh(new THREE.BoxGeometry(3, 0.15, 2), new THREE.MeshStandardMaterial({ color: 0x8b7355, roughness: 0.8 }));
+  table.position.y = 1;
+  table.receiveShadow = true;
+  scene.add(table);
+
+  // two arms (cylinders)
+  const armMat1 = new THREE.MeshStandardMaterial({ color: 0xdeb887, roughness: 0.7 });
+  const armMat2 = new THREE.MeshStandardMaterial({ color: 0xc8a070, roughness: 0.7 });
+  const arm1 = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.18, 1.2, 8), armMat1);
+  const arm2 = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.18, 1.2, 8), armMat2);
+  arm1.position.set(-0.3, 1.7, 0);
+  arm2.position.set(0.3, 1.7, 0);
+  // pivot point
+  const pivot = new THREE.Group();
+  pivot.position.set(0, 1.7, 0);
+  pivot.add(arm1); arm1.position.set(-0.6, 0, 0);
+  pivot.add(arm2); arm2.position.set(0.6, 0, 0);
+  scene.add(pivot);
+
+  // crowd silhouettes
+  for (let i = 0; i < 6; i++) {
+    const sil = new THREE.Mesh(
+      new THREE.CapsuleGeometry(0.25, 0.7, 4, 8),
+      new THREE.MeshBasicMaterial({ color: 0x0a0806 })
+    );
+    const angle = (i / 6) * Math.PI * 2;
+    sil.position.set(Math.cos(angle) * 3, 1, Math.sin(angle) * 3);
+    scene.add(sil);
+  }
+
+  const OPPS = [
+    { name:'阿忠 · 一兵', power: 0.8 },
+    { name:'大胖 · 下士', power: 1.0 },
+    { name:'阿榮 · 上兵', power: 1.3 },
+    { name:'瘦皮 · 班長', power: 1.6 },
+    { name:'老虎 · 副排', power: 1.9 }
   ];
-  lines.forEach(function(t){
-    var d = el('div', null, t || '\u00a0');
-    roll.appendChild(d);
-  });
-  show('end');
+  const st = { round: 0, value: 0, last: '', alive: true };
+  let drain;
+
+  function push(side) {
+    if (!st.alive || st.last === side) return;
+    st.last = side;
+    st.value += 4;
+    sfxSlam();
+  }
+
+  function nextRound() {
+    const opp = OPPS[st.round];
+    showHud('Round ' + (st.round + 1) + ' / 5', 'MISSION 04', opp.name);
+    st.value = 0;
+  }
+
+  return {
+    scene,
+    cameraSetup(cam) { cam.position.set(0, 4, 3.5); cam.lookAt(0, 1.5, 0); },
+    start() {
+      nextRound();
+      // two buttons for L/R
+      FIRE.textContent = '← A';
+      FIRE.classList.add('show');
+      FIRE.style.left = '25%';
+      const tap2 = TAP;
+      tap2.textContent = 'D →';
+      tap2.classList.add('show');
+      tap2.style.left = '75%';
+      tap2.style.transform = 'translateX(-50%)';
+      FIRE.onclick = () => push('L');
+      tap2.onclick = () => push('R');
+      document.onkeydown = e => {
+        if (e.code === 'KeyA' || e.code === 'ArrowLeft') { e.preventDefault(); push('L'); }
+        if (e.code === 'KeyD' || e.code === 'ArrowRight') { e.preventDefault(); push('R'); }
+      };
+      drain = setInterval(() => {
+        if (!st.alive) return;
+        const opp = OPPS[st.round];
+        st.value -= opp.power * 0.9;
+        // check win/lose
+        if (st.value <= -50) {
+          st.alive = false; clearInterval(drain);
+          finishLevel({
+            code: 'MISSION 04 · 未達成', title: '被壓了下去',
+            sub: [['','右手還在發燙。'],['em','但你沒有鬆開。'],['','班長說：「明晚再來。」']],
+            stats: [['過關','Round ' + st.round + ' / 5'],['對手',opp.name],['右手','還在']]
+          });
+        } else if (st.value >= 50) {
+          sfxSlam();
+          st.value = 0; st.last = ''; st.round++;
+          if (st.round >= 5) {
+            st.alive = false; clearInterval(drain);
+            finishLevel({
+              code: 'MISSION 04 · 達成', title: '全連皆輸',
+              sub: [['','五輪。'],['em','全連都笑不出來了。'],['','班長拍拍你的肩，沒問。']],
+              stats: [['連勝','5 / 5'],['剩餘力氣','█ █ █'],['右手','還在']]
+            });
+          } else {
+            nextRound();
+          }
+        }
+      }, 50);
+      levelInputs.push(() => {
+        clearInterval(drain);
+        FIRE.textContent = 'F I R E';
+        FIRE.style.left = '50%';
+        tap2.textContent = '踏 · 踏 · 踏';
+        tap2.style.left = '50%';
+      });
+    },
+    update(dt) {
+      if (!st.alive) return;
+      const pct = Math.max(-100, Math.min(100, st.value));
+      pivot.rotation.z = pct * 0.008;
+      // lamp flicker on strong push
+      lamp.intensity = 1.5 + Math.sin(Date.now() * 0.01) * 0.1;
+    },
+    stop() { st.alive = false; clearInterval(drain); }
+  };
 }
 
-/* ---------- init ---------- */
-document.addEventListener('click', function(e){
-  var t = e.target;
-  if (!t || !t.getAttribute) return;
-  var a = t.getAttribute('data-action');
-  if (!a) return;
-  if (a === 'start') { advance(); }
-  else if (a === 'replay') { flowIdx = -1; advance(); }
-  else if (a === 'home') { location.href = '../../index.html'; }
-});
-$('r-next').addEventListener('click', advance);
+/* ══════════════════════════════════════════
+   L5 — MIDNIGHT GUARD
+   ══════════════════════════════════════════ */
+function buildGuard() {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x020304);
+  addFog(scene, 0x020304, 0.04);
 
-})();
+  // moonlight
+  const moon = new THREE.Mesh(new THREE.SphereGeometry(0.8, 16, 16), new THREE.MeshBasicMaterial({ color: 0xeeeedd }));
+  moon.position.set(15, 25, -20);
+  scene.add(moon);
+  const moonLight = new THREE.DirectionalLight(0x445566, 0.15);
+  moonLight.position.copy(moon.position);
+  scene.add(moonLight);
+  scene.add(new THREE.AmbientLight(0x111118, 0.1));
+
+  // flashlight
+  const flashlight = new THREE.SpotLight(0xffffcc, 3, 30, Math.PI * 0.15, 0.5, 1.5);
+  flashlight.position.set(0, 2, 0);
+  flashlight.target.position.set(0, 0, -10);
+  scene.add(flashlight);
+  scene.add(flashlight.target);
+
+  // ground
+  makeGround(scene, 0x0a0c06, -0.1);
+
+  // guard post
+  const post = new THREE.Group();
+  const wall = new THREE.Mesh(new THREE.BoxGeometry(2, 2.5, 2), new THREE.MeshStandardMaterial({ color: 0x3a3a2a, roughness: 0.9 }));
+  wall.position.y = 1.25;
+  post.add(wall);
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.1, 2.5), new THREE.MeshStandardMaterial({ color: 0x555544 }));
+  roof.position.y = 2.6;
+  post.add(roof);
+  post.position.set(-3, 0, 2);
+  scene.add(post);
+
+  // distant trees
+  const treeSil = new THREE.MeshBasicMaterial({ color: 0x050806 });
+  for (let i = 0; i < 20; i++) {
+    const t = new THREE.Mesh(new THREE.ConeGeometry(0.8 + Math.random(), 3 + Math.random() * 2, 5), treeSil);
+    t.position.set(-15 + i * 1.8 + Math.random(), 1.5, -15 - Math.random() * 5);
+    scene.add(t);
+  }
+
+  const EVENTS = [
+    { txt:'風從林子裡吹過。', real: false },
+    { txt:'遠處狗叫了兩聲。', real: false },
+    { txt:'腳步聲 —— 從圍牆外。', real: true },
+    { txt:'蟲鳴停了一拍。', real: false },
+    { txt:'有人翻過鐵絲網的聲音。', real: true },
+    { txt:'樹葉落在哨所屋頂。', real: false },
+    { txt:'雨，開始下了。', real: false },
+    { txt:'金屬輕響 —— 鐵門方向。', real: true },
+    { txt:'貓從彈藥庫旁跑過。', real: false },
+    { txt:'兩百公尺外，有一道手電筒光。', real: true }
+  ];
+
+  // threat silhouette
+  const threat = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 1, 4, 8), new THREE.MeshBasicMaterial({ color: 0x1a1a1a }));
+  threat.visible = false;
+  threat.position.y = 0.8;
+  scene.add(threat);
+
+  const st = { i: 0, score: 0, mistakes: 0, alive: true, waiting: false, clock: 150, windTimer: 0 };
+
+  function nextEvent() {
+    if (st.i >= 10) { endGuard(); return; }
+    st.waiting = true;
+    st.clock += 15;
+    const mm = Math.floor(st.clock / 60), ss = st.clock % 60;
+    showHud((mm < 10 ? '0' : '') + mm + ':' + (ss < 10 ? '0' : '') + ss, 'MISSION 05', st.i + ' / 10');
+    const ev = EVENTS[st.i];
+    showFB(ev.txt, '');
+    // show threat silhouette for real threats
+    if (ev.real) {
+      const a = Math.random() * Math.PI - Math.PI / 2;
+      threat.position.set(Math.sin(a) * 12, 0.8, -8 + Math.cos(a) * 5);
+      threat.visible = true;
+    } else {
+      threat.visible = false;
+    }
+    // ambient sound
+    sfxWind();
+    if (Math.random() > 0.6) sfxCricket();
+  }
+
+  function guardAns(aimed) {
+    if (!st.waiting) return;
+    st.waiting = false;
+    const ev = EVENTS[st.i];
+    threat.visible = false;
+    if (ev.real === aimed) {
+      st.score++;
+      showFB(ev.real ? '—— 確認狀況，上報。' : '—— 靜。', 'ok');
+      sfxHit();
+    } else {
+      st.mistakes++;
+      showFB(ev.real ? '—— 你遲了半秒。' : '—— 空槍口。', 'ng');
+      sfxMiss();
+    }
+    st.i++;
+    setTimeout(nextEvent, 1200);
+  }
+
+  function endGuard() {
+    st.alive = false;
+    if (st.mistakes <= 2) {
+      finishLevel({
+        code: 'MISSION 05 · 達成', title: '05:00 天亮了',
+        sub: [['','你還活著。'],['em','心跳也還活著。'],['','那個名字，也還活著。']],
+        stats: [['正確',st.score+' / 10'],['失誤',st.mistakes+''],['撐過','2.5h']]
+      });
+    } else {
+      finishLevel({
+        code: 'MISSION 05 · 勉強過關', title: '天亮以前',
+        sub: [['','失誤太多，下一班要補一次。'],['em','班長沒罵你。'],['','他說：「想太多，就這樣。」']],
+        stats: [['正確',st.score+' / 10'],['失誤',st.mistakes+''],['補哨','1']]
+      });
+    }
+  }
+
+  return {
+    scene,
+    cameraSetup(cam) { cam.position.set(0, 3, 5); cam.lookAt(0, 0.5, -8); },
+    start() {
+      showHud('02:30', 'MISSION 05', '0 / 10');
+      // two buttons
+      FIRE.textContent = '舉槍';
+      FIRE.classList.add('show');
+      FIRE.style.left = '65%';
+      TAP.textContent = '不動';
+      TAP.classList.add('show');
+      TAP.style.left = '35%';
+      TAP.style.transform = 'translateX(-50%)';
+      FIRE.onclick = () => guardAns(true);
+      TAP.onclick = () => guardAns(false);
+      document.onkeydown = e => {
+        if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); guardAns(true); }
+        if (e.code === 'KeyX' || e.code === 'ArrowDown') { e.preventDefault(); guardAns(false); }
+      };
+      setTimeout(nextEvent, 1000);
+      levelInputs.push(() => {
+        FIRE.textContent = 'F I R E';
+        FIRE.style.left = '50%';
+        TAP.textContent = '踏 · 踏 · 踏';
+        TAP.style.left = '50%';
+      });
+    },
+    update(dt) {
+      if (!st.alive) return;
+      // flashlight sway
+      const t = Date.now() * 0.001;
+      flashlight.target.position.x = Math.sin(t * 0.5) * 3;
+      flashlight.target.position.z = -10 + Math.cos(t * 0.3) * 2;
+      // moon glow pulse
+      moon.material.color.setHSL(0.15, 0.05, 0.85 + Math.sin(t) * 0.05);
+    },
+    stop() { st.alive = false; }
+  };
+}
+
+/* ══════════════════════════════════════════
+   L6 — ONION PICKING
+   ══════════════════════════════════════════ */
+function buildOnion() {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xc8a050);
+  addFog(scene, 0xc8a050, 0.008);
+  scene.add(new THREE.HemisphereLight(0xffffdd, 0x886622, 0.8));
+  const sun = new THREE.DirectionalLight(0xffffff, 2.0);
+  sun.position.set(10, 30, 5);
+  sun.castShadow = !isMobile;
+  scene.add(sun);
+
+  // dirt field
+  const dirt = new THREE.Mesh(
+    new THREE.PlaneGeometry(40, 40),
+    new THREE.MeshStandardMaterial({ color: 0x7a5a2e, roughness: 1 })
+  );
+  dirt.rotation.x = -Math.PI / 2;
+  dirt.receiveShadow = true;
+  scene.add(dirt);
+
+  // furrow rows
+  for (let z = -15; z <= 15; z += 2) {
+    const row = new THREE.Mesh(new THREE.BoxGeometry(40, 0.15, 0.4), new THREE.MeshStandardMaterial({ color: 0x5a3e18, roughness: 1 }));
+    row.position.set(0, 0.08, z);
+    scene.add(row);
+  }
+
+  // onion meshes
+  const onionMat = new THREE.MeshStandardMaterial({ color: 0xf0e6d2, roughness: 0.6 });
+  const leafMat = new THREE.MeshStandardMaterial({ color: 0x558833, roughness: 0.8 });
+  const onions = [];
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+
+  function spawnOnion() {
+    const g = new THREE.Group();
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), onionMat.clone());
+    bulb.position.y = 0.1;
+    g.add(bulb);
+    const leaf = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.05, 0.5, 4), leafMat);
+    leaf.position.y = 0.45;
+    g.add(leaf);
+    g.position.set((Math.random() - 0.5) * 30, 0, (Math.random() - 0.5) * 20);
+    g.userData.picked = false;
+    g.userData.age = 0;
+    scene.add(g);
+    onions.push(g);
+    return g;
+  }
+
+  const st = { picked: 0, time: 60, alive: true };
+  let timer, spawnTimer;
+
+  function pickOnion(g) {
+    if (g.userData.picked || !st.alive) return;
+    g.userData.picked = true;
+    st.picked++;
+    sfxOnionPop();
+    showHud(st.picked + ' / 30', 'MISSION 06', st.time + 's');
+    // pop animation
+    const startY = g.position.y;
+    const popStart = Date.now();
+    const popAnim = setInterval(() => {
+      const t = (Date.now() - popStart) / 400;
+      if (t >= 1) { clearInterval(popAnim); scene.remove(g); return; }
+      g.position.y = startY + 3 * Math.sin(Math.PI * t);
+      g.scale.setScalar(1 + t * 0.5);
+      g.children[0].material.opacity = 1 - t;
+      g.children[0].material.transparent = true;
+    }, 16);
+    if (st.picked >= 30) {
+      st.alive = false; clearInterval(timer); clearInterval(spawnTimer);
+      setTimeout(() => finishLevel({
+        code: 'MISSION 06 · 達成', title: '30 顆洋蔥 · 30 個日子',
+        sub: [['','弟兄們邊拔邊唱歌。'],['em','你跟著笑。'],['','原來平凡，也是一種原諒。']],
+        stats: [['拔起','30'],['剩時',st.time+'s'],['心情','光']]
+      }), 500);
+    }
+  }
+
+  function onClick(e) {
+    if (!st.alive) return;
+    const rect = renderer.domElement.getBoundingClientRect();
+    pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera);
+    for (const o of onions) {
+      if (o.userData.picked) continue;
+      const hits = raycaster.intersectObjects(o.children, true);
+      if (hits.length > 0) { pickOnion(o); return; }
+    }
+  }
+
+  return {
+    scene,
+    cameraSetup(cam) { cam.position.set(0, 12, 12); cam.lookAt(0, 0, -2); },
+    start() {
+      showHud('0 / 30', 'MISSION 06', '60s');
+      // spawn initial onions
+      for (let i = 0; i < 8; i++) spawnOnion();
+      // spawn more over time
+      spawnTimer = setInterval(() => {
+        if (!st.alive) return;
+        if (onions.filter(o => !o.userData.picked).length < 12) spawnOnion();
+      }, 500);
+      renderer.domElement.addEventListener('pointerdown', onClick);
+      timer = setInterval(() => {
+        if (!st.alive) return;
+        st.time--;
+        showHud(st.picked + ' / 30', 'MISSION 06', st.time + 's');
+        if (st.time <= 0) {
+          st.alive = false; clearInterval(timer); clearInterval(spawnTimer);
+          finishLevel({
+            code: 'MISSION 06 · 未達成', title: '收工',
+            sub: [['','日頭下山了。'],['em','你手上還抓著半顆洋蔥。'],['','班長說：「明天再拔。」']],
+            stats: [['拔起',st.picked+''],['剩時','0'],['心情','—']]
+          });
+        }
+      }, 1000);
+      levelInputs.push(() => {
+        clearInterval(timer); clearInterval(spawnTimer);
+        renderer.domElement.removeEventListener('pointerdown', onClick);
+      });
+    },
+    update(dt) {
+      // age onions — wilt old unpicked ones
+      for (const o of onions) {
+        if (o.userData.picked) continue;
+        o.userData.age += dt;
+        if (o.userData.age > 4) {
+          o.userData.picked = true;
+          scene.remove(o);
+        }
+      }
+    },
+    stop() { st.alive = false; clearInterval(timer); clearInterval(spawnTimer); }
+  };
+}
+
+/* ══════════════════════════════════════════
+   GAME LOOP
+   ══════════════════════════════════════════ */
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  if (currentLevel && currentLevel.update) currentLevel.update(dt);
+  renderer.render(activeScene, camera);
+}
+
+animate();
+showIntro();
 </script>
 </body>
 </html>
