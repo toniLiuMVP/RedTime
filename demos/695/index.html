@@ -230,10 +230,30 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
   position:absolute;
   inset:0;
   border-radius:50%;
-  background:conic-gradient(from 0deg,rgba(122,160,80,.5),transparent 45deg);
-  animation:sweep 3s linear infinite;
+  background:conic-gradient(from 0deg,rgba(122,160,80,.55),rgba(122,160,80,.25) 30deg,transparent 60deg);
+  transform:rotate(0deg);
+  will-change:transform;
 }
-@keyframes sweep{to{transform:rotate(360deg)}}
+.arty-target{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:12px;
+  height:12px;
+  margin:-6px 0 0 -6px;
+  border-radius:50%;
+  background:var(--alert);
+  box-shadow:0 0 14px var(--alert),0 0 4px #fff;
+  animation:artyPulse 1s ease-in-out infinite;
+  display:none;
+  pointer-events:none;
+  z-index:2;
+}
+.arty-target.on{display:block}
+@keyframes artyPulse{
+  0%,100%{transform:scale(1);opacity:1}
+  50%{transform:scale(1.5);opacity:.55}
+}
 .arty-data{
   font-family:"Courier New",monospace;
   color:var(--peace);
@@ -241,25 +261,10 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
   letter-spacing:.12em;
   line-height:1.9;
   text-align:center;
-  margin-bottom:14px;
+  margin-bottom:6px;
 }
-.arty-q{
-  color:var(--paper);
-  font-size:15px;
-  margin-bottom:12px;
-  letter-spacing:.1em;
-}
-.arty-choices{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:10px;
-  width:100%;
-  max-width:340px;
-  margin:0 auto;
-}
-.arty-choices .btn{padding:14px 8px;font-family:"Courier New",monospace;letter-spacing:.08em;font-size:13px}
 .arty-fb{
-  margin-top:12px;
+  margin-top:8px;
   min-height:20px;
   font-size:13px;
   letter-spacing:.15em;
@@ -267,6 +272,13 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 }
 .arty-fb.ok{color:var(--peace)}
 .arty-fb.ng{color:var(--alert)}
+.arty-fire{
+  margin-top:14px;
+  padding:16px 52px;
+  font-size:15px;
+  letter-spacing:.5em;
+}
+.arty-fire:active{transform:scale(.96)}
 
 /* ---------- L2 run ---------- */
 #level-run{background:linear-gradient(180deg,#1a2024 0%,#3a3026 100%)}
@@ -667,7 +679,7 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 @media (max-width:520px){
   .lv-main{padding:16px 12px}
   .diary-paper{padding:32px 22px}
-  .arty-choices{gap:8px}
+  .arty-fire{padding:14px 40px}
 }
 </style>
 </head>
@@ -702,18 +714,20 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
   <!-- L1 ARTILLERY -->
   <section id="level-artillery" class="scene fit">
     <div class="lv-brief">
-      <div class="lv-code">MISSION 01 · 炮兵計算</div>
-      <div class="lv-title">全連第一的那一題</div>
-      <div class="lv-goal">判讀方位角、距離與風速，選出正確彈著座標。答對 5 題通過。</div>
+      <div class="lv-code">MISSION 01 · 砲兵射擊</div>
+      <div class="lv-title">全連第一的那一發</div>
+      <div class="lv-goal">掃描線掃過紅色目標的瞬間，按下 FIRE（或 Space）。命中 5 發通過。</div>
     </div>
     <div class="lv-stage">
       <div class="lv-hud"><span id="arty-prog">0 / 5</span><span id="arty-life">● ● ●</span></div>
       <div class="lv-main">
-        <div class="arty-radar"><div class="arty-sweep"></div></div>
-        <div class="arty-data" id="arty-data"></div>
-        <div class="arty-q">正確彈著座標？</div>
-        <div class="arty-choices" id="arty-choices"></div>
+        <div class="arty-radar">
+          <div class="arty-sweep" id="arty-sweep"></div>
+          <div class="arty-target" id="arty-target"></div>
+        </div>
+        <div class="arty-data" id="arty-data">方位 — — —</div>
         <div class="arty-fb" id="arty-fb"></div>
+        <button class="btn primary arty-fire" id="arty-fire">F I R E</button>
       </div>
     </div>
   </section>
@@ -882,17 +896,17 @@ var DIARY = [
     '一秒。',
     '我用一整個夏天去數，還沒數完。'
   ]},
-  { date:'1994 · 08 · 14', loc:'炮兵連', body:[
+  { date:'1994 · 08 · 14', loc:'砲兵連', body:[
     '報數、舉手、起立、坐下。',
     '通通比不上妳走出我生活的那一天安靜。',
     '',
-    '明天考炮兵計算。',
+    '明天考砲兵射擊。',
     '數字，是我現在唯一聽得清楚的聲音。'
   ]},
   { date:'1994 · 08 · 22', loc:'聯合演習區', body:[
     '第一名。',
     '',
-    '營長說，炮兵計算滿分的人，',
+    '營長說，砲兵射擊滿分的人，',
     '要負責一項重大任務。',
     '',
     '我以為是指揮彈著。',
@@ -1094,76 +1108,141 @@ function showLevel(name){
   else if (name === 'onion') startOnion();
 }
 
-/* ---------- L1 artillery ---------- */
-var ARTY_QS = [
-  { d:'方位 135°  ·  距離 420m  ·  風速 3m/s', c:['A-7','B-4','C-2','D-9'], a:1 },
-  { d:'方位 088°  ·  距離 650m  ·  風速 1m/s', c:['E-3','F-8','G-5','H-1'], a:2 },
-  { d:'方位 212°  ·  距離 380m  ·  風速 4m/s', c:['J-6','K-2','L-9','M-4'], a:0 },
-  { d:'方位 156°  ·  距離 510m  ·  風速 2m/s', c:['N-1','O-7','P-3','Q-8'], a:3 },
-  { d:'方位 043°  ·  距離 720m  ·  風速 0m/s', c:['R-5','S-2','T-6','U-9'], a:2 }
-];
+/* ---------- L1 artillery · radar-sweep timing shot ---------- */
 var artyState;
+var artySweepTimer;
 function startArtillery(){
-  artyState = { i:0, correct:0, life:3 };
-  renderArty();
-}
-function renderArty(){
-  var q = ARTY_QS[artyState.i];
-  $('arty-data').textContent = q.d;
-  $('arty-prog').textContent = artyState.correct + ' / 5';
-  var lifeStr = '';
-  for (var k = 0; k < artyState.life; k++) lifeStr += '● ';
-  $('arty-life').textContent = lifeStr.trim();
+  if (artySweepTimer) { clearInterval(artySweepTimer); artySweepTimer = null; }
+  artyState = {
+    score: 0,
+    life: 3,
+    angle: 0,
+    target: 0,
+    alive: true,
+    locked: false,
+    speed: 3.0 // deg per tick, tick = 33ms → ~90 deg/s (full rotation in 4s)
+  };
+  $('arty-prog').textContent = '0 / 5';
+  artyUpdateLife();
   var fb = $('arty-fb');
   fb.textContent = '';
   fb.className = 'arty-fb';
-  var box = $('arty-choices');
-  clear(box);
-  q.c.forEach(function(label, idx){
-    var b = el('button', 'btn', label);
-    b.addEventListener('click', function(){ artyPick(idx); });
-    box.appendChild(b);
-  });
+  $('arty-fire').onclick = artyFire;
+  document.onkeydown = function(e){
+    if (e.code === 'Space' || e.code === 'Enter') {
+      e.preventDefault();
+      artyFire();
+    }
+  };
+  artyNewTarget();
+  artySweepTimer = setInterval(artySweepTick, 33);
 }
-function artyPick(idx){
-  var q = ARTY_QS[artyState.i];
+function artySweepTick(){
+  if (!artyState || !artyState.alive) {
+    if (artySweepTimer) { clearInterval(artySweepTimer); artySweepTimer = null; }
+    return;
+  }
+  artyState.angle = (artyState.angle + artyState.speed) % 360;
+  var sw = $('arty-sweep');
+  if (sw) sw.style.transform = 'rotate(' + artyState.angle + 'deg)';
+}
+function artyNewTarget(){
+  // spawn at a random angle, ideally not too close to current sweep head
+  var t;
+  do {
+    t = Math.floor(Math.random() * 360);
+  } while (Math.abs(((t - artyState.angle + 540) % 360) - 180) < 40);
+  artyState.target = t;
+  artyState.locked = false;
+  // polar → cartesian, radius ~42% of radar
+  var rad = (t - 90) * Math.PI / 180;
+  var cx = 50 + 42 * Math.cos(rad);
+  var cy = 50 + 42 * Math.sin(rad);
+  var tgt = $('arty-target');
+  if (tgt) {
+    tgt.style.left = cx + '%';
+    tgt.style.top = cy + '%';
+    tgt.classList.add('on');
+  }
+  var bearingStr = (t < 100 ? '0' : '') + (t < 10 ? '0' : '') + t;
+  $('arty-data').textContent = '目標方位 ' + bearingStr + '° · 等待掃描線';
+}
+function artyFire(){
+  if (!artyState || !artyState.alive || artyState.locked) return;
+  artyState.locked = true;
+  // sweep wedge goes from (angle - 60) to angle (trailing brightness).
+  // tightest hit zone: within ±18 of the sweep HEAD when it passes the target.
+  // compute the minimum angular distance between sweep head and target.
+  var diff = ((artyState.angle - artyState.target) + 720) % 360;
+  // sweep just crossed target when diff is small (0 to ~18); this is a "hit"
+  var hit = diff <= 18 || diff >= 342;
   var fb = $('arty-fb');
-  if (idx === q.a) {
+  var tgt = $('arty-target');
+  if (hit) {
+    artyState.score++;
     fb.textContent = '命中。';
     fb.className = 'arty-fb ok';
-    artyState.correct++;
-    artyState.i++;
-    if (artyState.correct >= 5) {
+    $('arty-prog').textContent = artyState.score + ' / 5';
+    if (tgt) tgt.classList.remove('on');
+    if (artyState.score >= 5) {
+      artyState.alive = false;
+      if (artySweepTimer) { clearInterval(artySweepTimer); artySweepTimer = null; }
       setTimeout(function(){
         finishLevel({
-          code:'MISSION 01 · 達成',
-          title:'全連第一名',
-          sub:[
-            ['', '滿分通過炮兵計算。'],
+          code: 'MISSION 01 · 達成',
+          title: '全連第一名',
+          sub: [
+            ['', '滿分通過砲兵射擊。'],
             ['em', '結果任務 —— 顧一頭牛。'],
             ['', '你對著牛，數她的睫毛。']
           ],
-          stats:[['命中','5 / 5'],['剩餘','●'.repeat(artyState.life)],['任務','牛 × 1']]
+          stats: [['命中','5 / 5'],['剩餘','●'.repeat(artyState.life)],['任務','牛 × 1']]
         });
-      }, 850);
-    } else {
-      setTimeout(renderArty, 650);
+      }, 750);
+      return;
     }
+    // speed up each round slightly, capped
+    artyState.speed = Math.min(4.8, artyState.speed + 0.3);
+    setTimeout(function(){
+      if (artyState.alive) {
+        fb.textContent = '';
+        artyNewTarget();
+      }
+    }, 650);
   } else {
     fb.textContent = '偏離目標。';
     fb.className = 'arty-fb ng';
     artyState.life--;
+    artyUpdateLife();
+    if (tgt) tgt.classList.remove('on');
     if (artyState.life <= 0) {
+      // reset progress but stay alive
+      artyState.life = 3;
+      artyState.score = 0;
+      artyState.speed = 3.0;
+      $('arty-prog').textContent = '0 / 5';
       setTimeout(function(){
-        artyState.life = 3;
-        artyState.i = 0;
-        artyState.correct = 0;
-        renderArty();
+        if (artyState.alive) {
+          artyUpdateLife();
+          fb.textContent = '';
+          artyNewTarget();
+        }
       }, 900);
     } else {
-      setTimeout(renderArty, 750);
+      setTimeout(function(){
+        if (artyState.alive) {
+          fb.textContent = '';
+          artyNewTarget();
+        }
+      }, 700);
     }
   }
+}
+function artyUpdateLife(){
+  if (!artyState) return;
+  var str = '';
+  for (var k = 0; k < artyState.life; k++) str += '● ';
+  $('arty-life').textContent = str.trim();
 }
 
 /* ---------- L2 run ---------- */
