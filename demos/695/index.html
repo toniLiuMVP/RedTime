@@ -1,0 +1,2697 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; font-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none';">
+<meta name="theme-color" content="#0b0d08">
+<title>695T · 時間裡的兩個妳 番外</title>
+<meta name="description" content="海軍陸戰隊 695T 的六個片段，六個小遊戲，一本寫不完的日記。">
+<meta name="robots" content="noindex,nofollow">
+<meta property="og:title" content="695T — 時間裡的兩個妳 番外">
+<meta property="og:type" content="website">
+<meta property="og:description" content="海軍陸戰隊 695T。六個片段。一本寫不完的日記。">
+<link rel="icon" href="data:,">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#0b0d08;font-family:"Noto Serif TC","Songti TC","PingFang TC",serif;color:#f0e6d2}
+canvas{display:block;position:fixed;inset:0;z-index:0}
+button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit}
+
+/* overlay */
+#overlay{position:fixed;inset:0;z-index:10;pointer-events:none;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:24px;overflow-y:auto}
+#overlay.active{pointer-events:auto}
+
+/* intro */
+.intro-wrap{text-align:center}
+.intro-mark{font-family:"Courier New",monospace;font-size:clamp(48px,12vw,96px);letter-spacing:.1em;color:#c8a063;text-shadow:0 0 30px rgba(200,160,99,.4)}
+.intro-sub{margin-top:14px;color:#cdbf99;font-size:clamp(12px,3vw,16px);letter-spacing:.3em;opacity:.7}
+.intro-tagline{margin-top:48px;font-size:clamp(14px,3.8vw,18px);line-height:2;text-align:center;max-width:520px;letter-spacing:.05em}
+.intro-btn{margin-top:48px;padding:14px 48px;border:1px solid #c8a063;color:#c8a063;font-size:14px;letter-spacing:.4em;background:rgba(0,0,0,.3);transition:all .3s}
+.intro-btn:hover{background:#c8a063;color:#0b0d08}
+
+/* diary */
+.diary-paper{max-width:540px;width:100%;padding:40px 32px;background:linear-gradient(180deg,#c9b48c 0%,#b59d6f 100%);color:#2a1e0f;box-shadow:0 20px 60px rgba(0,0,0,.6),inset 0 0 40px rgba(120,80,40,.15);border-radius:2px;position:relative}
+.diary-head{display:flex;justify-content:space-between;border-bottom:1px solid #7a5a2e;padding-bottom:8px;margin-bottom:18px;font-family:"Courier New",monospace;font-size:11px;letter-spacing:.15em;color:#5a3e18}
+.diary-body{line-height:2.2;font-size:clamp(15px,3.6vw,17px);letter-spacing:.04em;min-height:200px}
+.diary-line{opacity:0;animation:lineIn .6s ease forwards}
+.diary-blank{height:.6em}
+@keyframes lineIn{to{opacity:1}}
+.diary-foot{margin-top:24px;text-align:right;font-size:10px;color:#7a5a2e;letter-spacing:.2em;font-family:"Courier New",monospace}
+.diary-next{margin-top:22px;text-align:center}
+.diary-next button{padding:10px 32px;border:1px solid #5a3e18;color:#5a3e18;font-size:12px;letter-spacing:.3em;background:transparent;opacity:0;animation:lineIn .6s ease 1.2s forwards;transition:all .2s}
+.diary-next button:hover{background:#5a3e18;color:#c9b48c}
+
+/* HUD */
+#hud{position:fixed;top:0;left:0;right:0;z-index:20;display:none;padding:12px 18px;font-family:"Courier New",monospace;font-size:11px;letter-spacing:.12em;color:#c8a063;background:linear-gradient(180deg,rgba(0,0,0,.6) 0%,transparent 100%)}
+#hud.show{display:flex;justify-content:space-between}
+.hud-l,.hud-r{display:flex;gap:18px}
+
+/* level brief */
+.lv-brief{text-align:center;max-width:520px;padding:0 16px}
+.lv-code{font-family:"Courier New",monospace;color:#c8a063;letter-spacing:.3em;font-size:11px;margin-bottom:8px}
+.lv-title{font-size:clamp(22px,5.5vw,30px);letter-spacing:.15em;margin-bottom:12px}
+.lv-goal{color:#cdbf99;font-size:13px;line-height:1.8;margin-bottom:18px}
+
+/* buttons */
+.btn{padding:12px 28px;border:1px solid #c8a063;color:#c8a063;font-size:13px;letter-spacing:.2em;background:rgba(0,0,0,.3);transition:all .2s}
+.btn:hover{background:#c8a063;color:#0b0d08}
+.btn.primary{background:#c8a063;color:#0b0d08}
+.btn.primary:hover{background:#e6b06a}
+.btn:active{transform:scale(.96)}
+
+/* fire */
+.fire-btn{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:15;padding:18px 56px;border:2px solid #c8a063;color:#c8a063;font-family:"Courier New",monospace;font-size:16px;letter-spacing:.5em;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;pointer-events:auto}
+.fire-btn.show{display:block}
+.fire-btn:active{background:#c8a063;color:#0b0d08;transform:translateX(-50%) scale(.95)}
+
+/* tap area */
+.tap-area{position:fixed;bottom:40px;left:50%;transform:translateX(-50%);z-index:15;padding:22px 48px;border:1px solid #c8a063;color:#c8a063;font-size:14px;letter-spacing:.3em;background:rgba(0,0,0,.3);display:none;pointer-events:auto}
+.tap-area.show{display:block}
+.tap-area:active{background:#c8a063;color:#0b0d08;transform:translateX(-50%) scale(.95)}
+
+/* feedback */
+#fb{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:25;font-size:clamp(18px,5vw,28px);letter-spacing:.2em;opacity:0;transition:opacity .3s;pointer-events:none;text-shadow:0 0 20px rgba(0,0,0,.8)}
+#fb.show{opacity:1}
+#fb.ok{color:#7fb069}
+#fb.ng{color:#d94832}
+
+/* result */
+.r-box{max-width:480px;text-align:center;width:100%;background:rgba(11,13,8,.65);padding:36px 28px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:4px}
+.r-code{font-family:"Courier New",monospace;color:#c8a063;letter-spacing:.3em;font-size:11px}
+.r-title{margin-top:8px;font-size:clamp(20px,5vw,28px);letter-spacing:.15em}
+.r-sub{margin-top:18px;color:#cdbf99;font-size:14px;line-height:2}
+.r-sub em{color:#c8a063;font-style:normal}
+.r-stats{margin-top:24px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+.r-stat{padding:10px 16px;border:1px solid #5a6d42;background:rgba(0,0,0,.3);min-width:90px}
+.r-stat-lbl{font-family:"Courier New",monospace;font-size:10px;color:#cdbf99;letter-spacing:.2em}
+.r-stat-val{margin-top:4px;color:#c8a063;font-size:18px;font-family:"Courier New",monospace}
+.r-action{margin-top:32px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+/* cinematic overlay */
+.cine-text{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:12;text-align:center;font-size:clamp(14px,3.5vw,18px);line-height:2;letter-spacing:.06em;opacity:0;animation:fadeUp 1.5s ease .5s forwards;max-width:480px;text-shadow:0 2px 12px rgba(0,0,0,.8)}
+.cine-skip{position:fixed;bottom:24px;right:24px;z-index:12;font-size:11px;color:#c8a063;letter-spacing:.2em;opacity:0;animation:lineIn .5s ease 2s forwards;cursor:pointer;padding:8px 16px;border:1px solid rgba(200,160,99,.3)}
+@keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* fade transition */
+#fade{position:fixed;inset:0;z-index:55;background:#0b0d08;pointer-events:none;opacity:0;transition:opacity .6s ease}
+#fade.in{opacity:1}
+
+/* music toggle */
+#music-toggle{position:fixed;top:14px;right:14px;z-index:30;width:36px;height:36px;border:1px solid rgba(200,160,99,.35);border-radius:50%;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;cursor:pointer;transition:all .25s;color:#c8a063;font-size:16px;line-height:1}
+#music-toggle.show{display:flex}
+#music-toggle:hover{background:rgba(200,160,99,.15);border-color:#c8a063}
+#music-toggle.off{opacity:.4}
+
+/* brief (cinematic intro before level) */
+.brief-wrap{text-align:center;max-width:520px;width:100%;position:relative}
+.brief-text{margin-bottom:48px;line-height:2.6;font-size:clamp(15px,4vw,19px);letter-spacing:.06em;text-shadow:0 2px 16px rgba(0,0,0,.9)}
+.brief-line{opacity:0;animation:briefIn .8s ease forwards}
+@keyframes briefIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.brief-title-card{opacity:0;animation:briefTitleIn 1.2s ease forwards}
+.brief-mission{font-family:"Courier New",monospace;color:#c8a063;letter-spacing:.6em;font-size:10px;margin-bottom:10px;text-shadow:0 0 20px rgba(200,160,99,.4)}
+.brief-mission-name{font-size:clamp(26px,7vw,40px);letter-spacing:.2em;color:#f0e6d2;text-shadow:0 0 30px rgba(240,230,210,.15)}
+.brief-skip{position:fixed;bottom:28px;right:28px;font-size:11px;color:#c8a063;letter-spacing:.2em;opacity:0;animation:lineIn .5s ease 3s forwards;cursor:pointer;padding:8px 16px;border:1px solid rgba(200,160,99,.25);background:rgba(0,0,0,.3);z-index:12}
+.brief-skip:hover{background:#c8a063;color:#0b0d08}
+.brief-vignette{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.5) 100%)}
+
+/* timing bar (artillery) */
+.timing-bar{position:fixed;bottom:120px;left:50%;transform:translateX(-50%);z-index:15;width:min(320px,80vw);height:32px;border:2px solid #c8a063;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);border-radius:4px;overflow:hidden;display:none}
+.timing-bar.show{display:block}
+.timing-zone{position:absolute;top:0;height:100%;background:rgba(127,176,105,.35);border-left:2px solid #7fb069;border-right:2px solid #7fb069}
+.timing-needle{position:absolute;top:0;width:4px;height:100%;background:#f0e6d2;border-radius:2px;transition:none}
+.timing-label{position:fixed;bottom:158px;left:50%;transform:translateX(-50%);z-index:15;font-family:"Courier New",monospace;font-size:11px;color:#c8a063;letter-spacing:.2em;display:none}
+.timing-label.show{display:block}
+
+/* coin display */
+.coin-display{position:fixed;top:50px;right:14px;z-index:20;font-family:"Courier New",monospace;font-size:13px;color:#ffd700;letter-spacing:.1em;display:none;padding:6px 12px;border:1px solid rgba(255,215,0,.3);background:rgba(0,0,0,.4);border-radius:4px}
+.coin-display.show{display:block}
+
+/* shell shop */
+.shop-wrap{max-width:480px;width:100%;text-align:center;background:rgba(11,13,8,.8);padding:32px 24px;backdrop-filter:blur(8px);border-radius:6px}
+.shop-title{font-family:"Courier New",monospace;color:#c8a063;letter-spacing:.3em;font-size:12px;margin-bottom:8px}
+.shop-coins{color:#ffd700;font-size:18px;font-family:"Courier New",monospace;margin-bottom:20px}
+.shop-grid{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:24px}
+.shop-item{padding:14px 16px;border:1px solid #5a6d42;background:rgba(0,0,0,.3);min-width:120px;cursor:pointer;transition:all .2s;text-align:center}
+.shop-item:hover{border-color:#c8a063;background:rgba(200,160,99,.1)}
+.shop-item.selected{border-color:#ffd700;background:rgba(255,215,0,.15)}
+.shop-item.disabled{opacity:.35;pointer-events:none}
+.shop-item-name{color:#f0e6d2;font-size:14px;margin-bottom:4px}
+.shop-item-desc{color:#cdbf99;font-size:11px;margin-bottom:6px}
+.shop-item-price{color:#ffd700;font-family:"Courier New",monospace;font-size:12px}
+
+/* rhythm game (running) */
+.rhythm-lane{position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:15;width:min(280px,72vw);height:70vh;pointer-events:none;display:none;overflow:hidden}
+.rhythm-lane.show{display:block;pointer-events:auto}
+.rhythm-judge{position:absolute;bottom:60px;left:0;right:0;height:3px;background:#c8a063;opacity:.6}
+.rhythm-cols{position:absolute;inset:0;display:flex}
+.rhythm-col{flex:1;border-right:1px solid rgba(200,160,99,.08)}
+.rhythm-col:last-child{border-right:none}
+.rhythm-hint{position:absolute;bottom:40px;left:0;right:0;display:flex;justify-content:center;gap:0}
+.rhythm-hint span{flex:1;text-align:center;font-family:"Courier New",monospace;font-size:16px;color:rgba(200,160,99,.4);line-height:1}
+.rhythm-note{position:absolute;width:25%;text-align:center;font-size:22px;color:#f0e6d2;text-shadow:0 0 8px rgba(200,160,99,.5);pointer-events:none;transition:none}
+.rhythm-note.hit{color:#7fb069;text-shadow:0 0 12px rgba(127,176,105,.8)}
+.rhythm-note.miss{color:#d94832;opacity:.4}
+.rhythm-fb{position:fixed;bottom:calc(60px + 30px);left:50%;transform:translateX(-50%);z-index:16;font-size:14px;font-family:"Courier New",monospace;letter-spacing:.15em;opacity:0;transition:opacity .2s;pointer-events:none}
+.rhythm-fb.show{opacity:1}
+.rhythm-fb.perfect{color:#ffd700}
+.rhythm-fb.good{color:#7fb069}
+.rhythm-fb.miss{color:#d94832}
+
+/* end */
+.end-roll{max-width:560px;text-align:center;line-height:2.6;font-size:clamp(15px,4vw,19px);letter-spacing:.08em;animation:endIn 2s ease .3s both}
+.end-mark{margin-top:40px;color:#c8a063;letter-spacing:.4em;font-family:"Courier New",monospace;font-size:12px;opacity:.7}
+@keyframes endIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+
+/* motion */
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.diary-line,.diary-next button{opacity:1}}
+@media(max-width:520px){.diary-paper{padding:32px 22px}}
+</style>
+</head>
+<body>
+
+<div id="fade"></div>
+<div id="music-toggle" title="音樂開關"></div>
+<div id="overlay" class="active"></div>
+<div id="hud">
+  <div class="hud-l"><span id="hud-l1"></span><span id="hud-l2"></span></div>
+  <div class="hud-r"><span id="hud-r1"></span></div>
+</div>
+<button class="fire-btn" id="fire-btn">F I R E</button>
+<button class="tap-area" id="tap-btn">踏 · 踏 · 踏</button>
+<div id="fb"></div>
+<div class="timing-label" id="timing-label">瞄準中…</div>
+<div class="timing-bar" id="timing-bar"><div class="timing-zone" id="timing-zone"></div><div class="timing-needle" id="timing-needle"></div></div>
+<div class="coin-display" id="coin-display">0</div>
+<div class="rhythm-lane" id="rhythm-lane"><div class="rhythm-cols"><div class="rhythm-col"></div><div class="rhythm-col"></div><div class="rhythm-col"></div><div class="rhythm-col"></div></div><div class="rhythm-judge"></div><div class="rhythm-hint"><span>←</span><span>↓</span><span>↑</span><span>→</span></div></div>
+<div class="rhythm-fb" id="rhythm-fb"></div>
+
+<script type="importmap">{"imports":{"three":"../platform-run/three.module.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+
+/* ══════════════════════════════════════════
+   UTIL
+   ══════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const OV = $('overlay');
+const HUD = $('hud');
+const FIRE = $('fire-btn');
+const TAP = $('tap-btn');
+const FB = $('fb');
+const TBAR = $('timing-bar');
+const TZONE = $('timing-zone');
+const TNEEDLE = $('timing-needle');
+const TLABEL = $('timing-label');
+const COINDISP = $('coin-display');
+const RLANE = $('rhythm-lane');
+const RFB = $('rhythm-fb');
+const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+let playerCoins = 0;
+
+function el(tag, cls, txt) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (txt != null) e.textContent = txt;
+  return e;
+}
+function clear(n) { while (n && n.firstChild) n.removeChild(n.firstChild); }
+
+function showFB(text, type) {
+  FB.textContent = text;
+  FB.className = 'show ' + type;
+  setTimeout(() => { FB.className = ''; }, 1200);
+}
+
+function showHud(l1, l2, r1) {
+  $('hud-l1').textContent = l1 || '';
+  $('hud-l2').textContent = l2 || '';
+  $('hud-r1').textContent = r1 || '';
+  HUD.classList.add('show');
+}
+function hideHud() { HUD.classList.remove('show'); }
+
+/* fade transition */
+const FADE = $('fade');
+function fadeOut(cb) {
+  FADE.classList.add('in');
+  setTimeout(() => { cb(); setTimeout(() => FADE.classList.remove('in'), 80); }, 650);
+}
+
+/* ══════════════════════════════════════════
+   THREE.js SETUP
+   ══════════════════════════════════════════ */
+const clock = new THREE.Clock();
+const renderer = new THREE.WebGLRenderer({ antialias: !isMobile, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = !isMobile;
+if (!isMobile) renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.prepend(renderer.domElement);
+
+const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 500);
+camera.position.set(0, 5, 12);
+camera.lookAt(0, 0, 0);
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+const darkScene = new THREE.Scene();
+darkScene.background = new THREE.Color(0x0b0d08);
+let activeScene = darkScene;
+
+/* ══════════════════════════════════════════
+   WEB AUDIO SFX
+   ══════════════════════════════════════════ */
+let audioCtx = null;
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+/* BGM */
+const bgm = document.createElement('audio');
+bgm.src = '%E7%9B%B8%E4%BF%A1%E3%80%8C%E7%9B%B8%E4%BF%A1%E7%9A%84%E5%8A%9B%E9%87%8F%E3%80%8D.mp3';
+bgm.loop = true;
+bgm.volume = 0.35;
+let bgmPlaying = false;
+const musicBtn = $('music-toggle');
+musicBtn.textContent = '\u266B';
+
+function startBGM() {
+  bgm.play().then(() => {
+    bgmPlaying = true;
+    musicBtn.classList.add('show');
+    musicBtn.classList.remove('off');
+  }).catch(() => {});
+}
+
+function toggleBGM() {
+  if (bgmPlaying) {
+    bgm.pause();
+    bgmPlaying = false;
+    musicBtn.classList.add('off');
+  } else {
+    bgm.play().then(() => {
+      bgmPlaying = true;
+      musicBtn.classList.remove('off');
+    }).catch(() => {});
+  }
+}
+musicBtn.addEventListener('click', toggleBGM);
+
+function restartBGM() {
+  bgm.currentTime = 0;
+  bgm.play().then(() => {
+    bgmPlaying = true;
+    musicBtn.classList.add('show');
+    musicBtn.classList.remove('off');
+  }).catch(() => {});
+}
+
+function sfxRadarTick() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = 'sine'; o.frequency.value = 1200;
+  g.gain.setValueAtTime(0.06, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(t); o.stop(t + 0.06);
+}
+
+function sfxCannon() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.3, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.06));
+  const src = audioCtx.createBufferSource(); src.buffer = buf;
+  const g = audioCtx.createGain(); g.gain.setValueAtTime(0.35, t); g.gain.exponentialRampToValueAtTime(0.01, t + 0.35);
+  const f = audioCtx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 300;
+  src.connect(f); f.connect(g); g.connect(audioCtx.destination); src.start(t);
+  const o = audioCtx.createOscillator(); o.type = 'sine';
+  o.frequency.setValueAtTime(80, t); o.frequency.exponentialRampToValueAtTime(15, t + 0.35);
+  const g2 = audioCtx.createGain(); g2.gain.setValueAtTime(0.4, t); g2.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+  o.connect(g2); g2.connect(audioCtx.destination); o.start(t); o.stop(t + 0.45);
+}
+
+function sfxExplosion() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const buf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.6), audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.1));
+  const src = audioCtx.createBufferSource(); src.buffer = buf;
+  const g = audioCtx.createGain(); g.gain.setValueAtTime(0.3, t); g.gain.exponentialRampToValueAtTime(0.01, t + 0.6);
+  const f = audioCtx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 500;
+  src.connect(f); f.connect(g); g.connect(audioCtx.destination); src.start(t);
+}
+
+function sfxHit() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(880, t); o.frequency.setValueAtTime(1320, t + 0.08);
+  const g = audioCtx.createGain(); g.gain.setValueAtTime(0.12, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+  o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.25);
+}
+
+function sfxMiss() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator(); o.type = 'square'; o.frequency.setValueAtTime(200, t); o.frequency.exponentialRampToValueAtTime(100, t + 0.15);
+  const g = audioCtx.createGain(); g.gain.setValueAtTime(0.08, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+  o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.25);
+}
+
+function sfxFootstep() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const buf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.04), audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.01));
+  const src = audioCtx.createBufferSource(); src.buffer = buf;
+  const g = audioCtx.createGain(); g.gain.value = 0.1;
+  const f = audioCtx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 900;
+  src.connect(f); f.connect(g); g.connect(audioCtx.destination); src.start(t);
+}
+
+function sfxHeartbeat() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(55, t); o.frequency.exponentialRampToValueAtTime(30, t + 0.15);
+  const g = audioCtx.createGain(); g.gain.setValueAtTime(0.2, t); g.gain.exponentialRampToValueAtTime(0.01, t + 0.25);
+  o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.3);
+}
+
+function sfxEngine() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = 65;
+  const g = audioCtx.createGain(); g.gain.setValueAtTime(0.04, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+  o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.15);
+}
+
+function sfxSlam() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const buf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.08), audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.02));
+  const src = audioCtx.createBufferSource(); src.buffer = buf;
+  const g = audioCtx.createGain(); g.gain.value = 0.2;
+  src.connect(g); g.connect(audioCtx.destination); src.start(t);
+  const o = audioCtx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(100, t); o.frequency.exponentialRampToValueAtTime(30, t + 0.1);
+  const g2 = audioCtx.createGain(); g2.gain.setValueAtTime(0.25, t); g2.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+  o.connect(g2); g2.connect(audioCtx.destination); o.start(t); o.stop(t + 0.2);
+}
+
+function sfxWind() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const buf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.5), audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.03 * (1 + Math.sin(i / 800));
+  const src = audioCtx.createBufferSource(); src.buffer = buf;
+  const f = audioCtx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 400; f.Q.value = 0.5;
+  const g = audioCtx.createGain(); g.gain.value = 0.15;
+  src.connect(f); f.connect(g); g.connect(audioCtx.destination); src.start(t);
+}
+
+function sfxCricket() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  for (let i = 0; i < 3; i++) {
+    const o = audioCtx.createOscillator(); o.type = 'sine'; o.frequency.value = 4200 + Math.random() * 400;
+    const g = audioCtx.createGain(); g.gain.setValueAtTime(0.03, t + i * 0.07); g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.07 + 0.04);
+    o.connect(g); g.connect(audioCtx.destination); o.start(t + i * 0.07); o.stop(t + i * 0.07 + 0.05);
+  }
+}
+
+function sfxOnionPop() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(600, t); o.frequency.exponentialRampToValueAtTime(1200, t + 0.04);
+  const g = audioCtx.createGain(); g.gain.setValueAtTime(0.15, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+  o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.12);
+}
+
+function sfxDiaryPage() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const buf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.08), audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.025)) * 0.5;
+  const src = audioCtx.createBufferSource(); src.buffer = buf;
+  const f = audioCtx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 2000;
+  const g = audioCtx.createGain(); g.gain.value = 0.06;
+  src.connect(f); f.connect(g); g.connect(audioCtx.destination); src.start(t);
+}
+
+function sfxMoo() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator(); o.type = 'sawtooth';
+  o.frequency.setValueAtTime(120, t);
+  o.frequency.linearRampToValueAtTime(95, t + 0.4);
+  o.frequency.linearRampToValueAtTime(110, t + 0.8);
+  o.frequency.linearRampToValueAtTime(80, t + 1.2);
+  const g = audioCtx.createGain();
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(0.06, t + 0.1);
+  g.gain.setValueAtTime(0.06, t + 0.8);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 1.4);
+  const f = audioCtx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 350;
+  o.connect(f); f.connect(g); g.connect(audioCtx.destination);
+  o.start(t); o.stop(t + 1.5);
+}
+
+/* ══════════════════════════════════════════
+   DIARY DATA (canon-safe)
+   ══════════════════════════════════════════ */
+const DIARY = [
+  { date:'2007 · 07 · 01', loc:'新訓中心', body:['第一天。','剃了頭。','班長說，想家的人最容易出事。','','我沒想家。','我只想起，妳看我最後一眼的那一秒。','','一秒。','我用一整個夏天去數，還沒數完。']},
+  { date:'2007 · 08 · 14', loc:'砲兵連', body:['報數、舉手、起立、坐下。','通通比不上妳走出我生活的那一天安靜。','','明天考砲兵射擊。','數字，是我現在唯一聽得清楚的聲音。']},
+  { date:'2007 · 08 · 22', loc:'聯合演習區', body:['第一名。','','營長說，砲兵射擊滿分的人，','要負責一項重大任務。','','我以為是指揮彈著。','是顧一頭牛。','','牛的眼睛，比我想的還像妳。','溫的，黑的。','看過我一眼，就低頭吃草。']},
+  { date:'2008 · 01 · 09', loc:'營區操場', body:['明天 3000。','全連都在睡，我在跑。','','跑步的時候不用想，','只要一直往前。','','妳離開那天，我沒有跑。','我站著，站到路燈熄掉。','','這一次，我要跑得夠快。','快到能把那一秒的空白，','追回來。']},
+  { date:'2008 · 01 · 10', loc:'連部', body:['12 分整。','','連長說，原本明早 08:00 放的假，','提早到今晚 21:00。','','榮譽假。','我第一次覺得，','跑步是會變成時間的。','','我賺了 11 個小時。','11 個小時能做什麼？']},
+  { date:'2008 · 02 · 17', loc:'高雄車站 → 新竹', body:['高雄出發，往北。','車誤點，月台空了。','','我看著火車尾燈越來越遠，','像妳那天的背影。','','哥哥從市區開車過來，','說「上車，我比火車快。」','','從高雄到新竹，','他把油門踩到底。','我沒說話。','心裡只有一句：','讓我趕上，讓我趕上。']},
+  { date:'2008 · 03 · 02', loc:'中山室', body:['中山室的燈還亮著。','弟兄們在比腕力，笑聲很大。','','我沒說話，走過去坐下。','他們說：「學長，來一局。」','','我把右手放上桌。','','不是為了贏。','是為了知道，','這隻手還有沒有力氣。','','還有沒有力氣，','握住一個已經不在眼前的人。']},
+  { date:'2007 · 11 · 03', loc:'哨所', body:['02:30。','全營都在睡。','只有我，一支槍，一盞燈。','','月亮很薄，','薄得像快要撕破的紙。','','黑暗裡有聲音。','風？還是記憶？','我不敢想。','','一想，','就是妳那一秒。']},
+  { date:'2008 · 04 · 19', loc:'屏東 · 農忙支援', body:['下部隊後第一次支援農忙。','屏東。','洋蔥田一望無際。','','太陽很大，土很鬆。','洋蔥皮薄得像信紙。','','弟兄們邊拔邊唱歌。','我跟著笑。','','這是我當兵以來，','第一次覺得，','時間可以不用數。']},
+  { date:'2008 · 06 · 28', loc:'退伍前夜', body:['日記本快寫完了。','最後一頁，我沒有寫。','','留給妳。','','如果有一天，','妳看到這一頁，','請妳相信——','','那一秒，','我已經記了整整兩年。','','而這兩年，不是浪費。','','是我，','替未來的我們，','把時間先存起來。']}
+];
+
+/* ══════════════════════════════════════════
+   BRIEFS — cinematic intros for each level
+   ══════════════════════════════════════════ */
+const BRIEFS = {
+  artillery: {
+    lines: ['明天考砲兵射擊。','','數字，','是我現在唯一聽得清楚的聲音。'],
+    mission: 'MISSION 01', name: '砲 兵 射 擊',
+    camStart: [20, 4, 18], camLook: [0, 0, -15]
+  },
+  run: {
+    lines: ['跑步的時候不用想，','只要一直往前。','','這一次，我要跑得夠快。','快到能把那一秒的空白，追回來。'],
+    mission: 'MISSION 02', name: '3000 公尺',
+    camStart: [-4, 2, 15], camLook: [0, 1, -5]
+  },
+  train: {
+    lines: ['哥哥從市區開車過來，','說「上車，我比火車快。」','','心裡只有一句：','讓我趕上，讓我趕上。'],
+    mission: 'MISSION 03', name: '追 上 那 班 車',
+    camStart: [-8, 2, 22], camLook: [-2, 1, -10]
+  },
+  arm: {
+    lines: ['不是為了贏。','是為了知道，','這隻手還有沒有力氣。','','握住一個已經不在眼前的人。'],
+    mission: 'MISSION 04', name: '腕 力',
+    camStart: [3, 4, 5], camLook: [0, 1.2, 0]
+  },
+  guard: {
+    lines: ['02:30。','全營都在睡。','','只有我，一支槍，一盞燈。'],
+    mission: 'MISSION 05', name: '午 夜 衛 哨',
+    camStart: [6, 4, 12], camLook: [0, 0.5, -8]
+  },
+  onion: {
+    lines: ['屏東。','洋蔥田一望無際。','','太陽很大，土很鬆。','洋蔥皮薄得像信紙。'],
+    mission: 'MISSION 06', name: '拔 洋 蔥',
+    camStart: [0, 18, 22], camLook: [0, 0, -2]
+  }
+};
+
+/* ══════════════════════════════════════════
+   FLOW — diary → brief → level → result/scene → diary
+   ══════════════════════════════════════════ */
+const FLOW = [
+  {t:'diary',i:0},
+  {t:'diary',i:1},
+  {t:'level',n:'artillery'},
+  {t:'scene',n:'cow'},{t:'diary',i:2},
+  {t:'diary',i:3},
+  {t:'level',n:'run'},
+  {t:'diary',i:4},
+  {t:'diary',i:5},
+  {t:'level',n:'train'},
+  {t:'diary',i:6},
+  {t:'level',n:'arm'},
+  {t:'diary',i:7},
+  {t:'level',n:'guard'},
+  {t:'diary',i:8},
+  {t:'level',n:'onion'},
+  {t:'diary',i:9},
+  {t:'end'}
+];
+let flowIdx = -1;
+let currentLevel = null;
+let levelInputs = [];
+
+function advance() {
+  stopLevel();
+  flowIdx++;
+  if (flowIdx >= FLOW.length) { fadeOut(() => showEnd()); return; }
+  const step = FLOW[flowIdx];
+  fadeOut(() => {
+    if (step.t === 'diary') showDiary(step.i);
+    else if (step.t === 'level') showLevel(step.n);
+    else if (step.t === 'scene') showCinematic(step.n);
+    else showEnd();
+  });
+}
+
+function stopLevel() {
+  hideHud();
+  FIRE.classList.remove('show');
+  TAP.classList.remove('show');
+  FIRE.style.left = '50%';
+  TAP.style.left = '50%';
+  TAP.style.transform = 'translateX(-50%)';
+  FIRE.textContent = 'F I R E';
+  TAP.textContent = '踏 · 踏 · 踏';
+  levelInputs.forEach(fn => fn());
+  levelInputs = [];
+  if (currentLevel && currentLevel.stop) currentLevel.stop();
+  currentLevel = null;
+  document.onkeydown = null;
+  document.onkeyup = null;
+}
+
+/* ══════════════════════════════════════════
+   DIARY (DOM overlay)
+   ══════════════════════════════════════════ */
+function showDiary(i) {
+  sfxDiaryPage();
+  activeScene = darkScene;
+  const d = DIARY[i];
+  clear(OV);
+  const paper = el('div', 'diary-paper');
+  const head = el('div', 'diary-head');
+  head.appendChild(el('span', null, d.date));
+  head.appendChild(el('span', null, d.loc));
+  paper.appendChild(head);
+  const body = el('div', 'diary-body');
+  d.body.forEach((line, k) => {
+    const row = el('div', line === '' ? 'diary-line diary-blank' : 'diary-line', line || '\u00a0');
+    row.style.animationDelay = (k * 0.16) + 's';
+    body.appendChild(row);
+  });
+  paper.appendChild(body);
+  paper.appendChild(el('div', 'diary-foot', '— 兵 · 695T'));
+  const next = el('div', 'diary-next');
+  const btn = el('button', null, '繼續 ›');
+  btn.addEventListener('click', advance);
+  next.appendChild(btn);
+  paper.appendChild(next);
+  OV.appendChild(paper);
+  OV.classList.add('active');
+}
+
+/* ══════════════════════════════════════════
+   LEVEL / CINEMATIC DISPATCH
+   ══════════════════════════════════════════ */
+function showLevel(name) {
+  clear(OV); OV.classList.remove('active');
+  const builders = { artillery: buildArtillery, run: buildRun, train: buildTrain, arm: buildArm, guard: buildGuard, onion: buildOnion };
+  const builder = builders[name];
+  if (!builder) { advance(); return; }
+  const level = builder();
+  activeScene = level.scene;
+  currentLevel = level; // update() runs during brief so 3D animates
+
+  const brief = BRIEFS[name];
+  if (brief) {
+    // Cinematic camera angle
+    camera.position.set(...brief.camStart);
+    camera.lookAt(...brief.camLook);
+    showBriefOverlay(brief, () => {
+      // Smooth camera dolly to gameplay position
+      if (level.cameraSetup) {
+        const targetPos = camera.position.clone();
+        level.cameraSetup(camera);
+        const gamePos = camera.position.clone();
+        // Start from cinematic angle, lerp to game angle
+        camera.position.copy(targetPos);
+        const startT = Date.now();
+        const dur = 1200;
+        const dolly = setInterval(() => {
+          const t = Math.min(1, (Date.now() - startT) / dur);
+          const ease = t * t * (3 - 2 * t);
+          camera.position.lerpVectors(targetPos, gamePos, ease);
+          if (t >= 1) clearInterval(dolly);
+        }, 16);
+        levelInputs.push(() => clearInterval(dolly));
+      }
+      if (level.start) level.start();
+    });
+  } else {
+    if (level.cameraSetup) level.cameraSetup(camera);
+    if (level.start) level.start();
+  }
+}
+
+/* ══════════════════════════════════════════
+   BRIEF OVERLAY — cinematic text over 3D scene
+   ══════════════════════════════════════════ */
+function showBriefOverlay(brief, onDone) {
+  clear(OV);
+  const wrap = el('div', 'brief-wrap');
+
+  // vignette
+  const vig = el('div', 'brief-vignette');
+  document.body.appendChild(vig);
+
+  // story text lines
+  const textBlock = el('div', 'brief-text');
+  brief.lines.forEach((line, i) => {
+    const row = el('div', 'brief-line', line || '\u00a0');
+    row.style.animationDelay = (0.8 + i * 0.7) + 's';
+    textBlock.appendChild(row);
+  });
+  wrap.appendChild(textBlock);
+
+  // mission title card
+  const titleCard = el('div', 'brief-title-card');
+  titleCard.appendChild(el('div', 'brief-mission', brief.mission));
+  titleCard.appendChild(el('div', 'brief-mission-name', brief.name));
+  const titleDelay = 0.8 + brief.lines.length * 0.7 + 0.8;
+  titleCard.style.animationDelay = titleDelay + 's';
+  wrap.appendChild(titleCard);
+
+  OV.appendChild(wrap);
+  OV.classList.add('active');
+
+  // skip button
+  const skipBtn = el('div', 'brief-skip', '跳過 ›');
+  document.body.appendChild(skipBtn);
+
+  let done = false;
+  function finish() {
+    if (done) return;
+    done = true;
+    clearTimeout(autoTimer);
+    if (vig.parentNode) vig.remove();
+    if (skipBtn.parentNode) skipBtn.remove();
+    clear(OV); OV.classList.remove('active');
+    onDone();
+  }
+
+  // auto-advance after text + title + 2.5s
+  const totalDelay = (titleDelay + 2.5) * 1000;
+  const autoTimer = setTimeout(finish, totalDelay);
+
+  // skip interactions
+  skipBtn.addEventListener('click', finish);
+  document.onkeydown = e => {
+    if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); finish(); }
+  };
+
+  levelInputs.push(() => {
+    clearTimeout(autoTimer);
+    if (vig.parentNode) vig.remove();
+    if (skipBtn.parentNode) skipBtn.remove();
+  });
+}
+
+function showCinematic(name) {
+  clear(OV); OV.classList.remove('active');
+  const cinematics = { cow: buildCowScene };
+  const builder = cinematics[name];
+  if (!builder) { advance(); return; }
+  currentLevel = builder();
+  activeScene = currentLevel.scene;
+  if (currentLevel.cameraSetup) currentLevel.cameraSetup(camera);
+  if (currentLevel.start) currentLevel.start();
+}
+
+/* ══════════════════════════════════════════
+   RESULT — now with optional 3D bg
+   ══════════════════════════════════════════ */
+function finishLevel(obj, bgScene) {
+  // Keep the level scene as bg if no specific bg provided
+  const keepScene = bgScene || activeScene;
+  stopLevel();
+  activeScene = keepScene;
+  clear(OV);
+  const box = el('div', 'r-box');
+  box.appendChild(el('div', 'r-code', obj.code));
+  box.appendChild(el('div', 'r-title', obj.title));
+  const sub = el('div', 'r-sub');
+  obj.sub.forEach((pair, idx) => {
+    if (idx > 0) sub.appendChild(el('br'));
+    if (pair[0] === 'em') sub.appendChild(el('em', null, pair[1]));
+    else sub.appendChild(document.createTextNode(pair[1]));
+  });
+  box.appendChild(sub);
+  const stats = el('div', 'r-stats');
+  (obj.stats || []).forEach(s => {
+    const w = el('div', 'r-stat');
+    w.appendChild(el('div', 'r-stat-lbl', s[0]));
+    w.appendChild(el('div', 'r-stat-val', s[1]));
+    stats.appendChild(w);
+  });
+  box.appendChild(stats);
+  const act = el('div', 'r-action');
+  const btn = el('button', 'btn primary', '下一頁日記 ›');
+  btn.addEventListener('click', advance);
+  act.appendChild(btn);
+  box.appendChild(act);
+  OV.appendChild(box);
+  OV.classList.add('active');
+}
+
+/* ══════════════════════════════════════════
+   INTRO / END
+   ══════════════════════════════════════════ */
+function buildIntroScene() {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x050810);
+  addFog(scene, 0x050810, 0.02);
+  scene.add(new THREE.AmbientLight(0x111118, 0.1));
+  const moon = new THREE.DirectionalLight(0x334455, 0.15);
+  moon.position.set(10, 20, -15); scene.add(moon);
+  // stars
+  const starGeo = new THREE.BufferGeometry();
+  const sp = [];
+  for (let i = 0; i < 300; i++) sp.push((Math.random() - 0.5) * 120, 15 + Math.random() * 35, -20 - Math.random() * 60);
+  starGeo.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
+  scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.12 })));
+  // ground
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshStandardMaterial({ color: 0x0a0c06, roughness: 1 }));
+  ground.rotation.x = -Math.PI / 2; scene.add(ground);
+  // barracks silhouettes
+  const bMat = new THREE.MeshBasicMaterial({ color: 0x0a0a08 });
+  for (let i = 0; i < 4; i++) {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(6, 2.5, 3), bMat);
+    b.position.set(-12 + i * 8, 1.25, -10 - Math.random() * 5); scene.add(b);
+  }
+  // lonely figure (you)
+  const figure = makeSoldier();
+  figure.traverse(c => { if (c.material) { c.material = c.material.clone(); c.material.color.multiplyScalar(0.15); } });
+  figure.position.set(0, 0, 2);
+  scene.add(figure);
+  // lamp post
+  const lampPole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 4, 4), new THREE.MeshBasicMaterial({ color: 0x333333 }));
+  lampPole.position.set(2, 2, 2); scene.add(lampPole);
+  const lampLight = new THREE.PointLight(0xffcc66, 0.4, 8);
+  lampLight.position.set(2, 4, 2); scene.add(lampLight);
+  const lampBulb = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffdd88 }));
+  lampBulb.position.copy(lampLight.position); scene.add(lampBulb);
+  return scene;
+}
+
+function showIntro() {
+  const introScene = buildIntroScene();
+  activeScene = introScene;
+  camera.position.set(0, 3, 10);
+  camera.lookAt(0, 1, 0);
+  clear(OV);
+  const wrap = el('div', 'intro-wrap');
+  wrap.appendChild(el('div', 'intro-mark', '695T'));
+  wrap.appendChild(el('div', 'intro-sub', 'NO.695 · 海軍陸戰隊'));
+  const tag = el('div', 'intro-tagline');
+  tag.appendChild(document.createTextNode('這是一本，寫不完的日記。'));
+  tag.appendChild(el('br'));
+  tag.appendChild(document.createTextNode('六個片段，六個關卡，兩年的時間。'));
+  tag.appendChild(el('br'));
+  tag.appendChild(document.createTextNode('一秒 —— 我用二十年才讀懂。'));
+  wrap.appendChild(tag);
+  const btn = el('button', 'intro-btn', '開始任務');
+  btn.addEventListener('click', () => { initAudio(); startBGM(); advance(); });
+  wrap.appendChild(btn);
+  OV.appendChild(wrap);
+  OV.classList.add('active');
+  // slow camera drift
+  const introAnim = setInterval(() => {
+    if (activeScene !== introScene) { clearInterval(introAnim); return; }
+    camera.position.x = Math.sin(Date.now() * 0.0002) * 2;
+    camera.position.y = 3 + Math.sin(Date.now() * 0.0003) * 0.3;
+    camera.lookAt(0, 1, 0);
+  }, 16);
+}
+
+function buildEndScene() {
+  const scene = new THREE.Scene();
+  // sunrise gradient
+  scene.background = new THREE.Color(0x1a1830);
+  addFog(scene, 0x2a2040, 0.008);
+  scene.add(new THREE.HemisphereLight(0xffaa66, 0x221133, 0.6));
+  const sun = new THREE.DirectionalLight(0xffcc88, 1.2);
+  sun.position.set(0, 5, -30); scene.add(sun);
+  // ground
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshStandardMaterial({ color: 0x3a4a2a, roughness: 1 }));
+  ground.rotation.x = -Math.PI / 2; scene.add(ground);
+  // dawn sky glow (big sphere behind)
+  const glow = new THREE.Mesh(new THREE.SphereGeometry(3, 16, 16), new THREE.MeshBasicMaterial({ color: 0xff8844, transparent: true, opacity: 0.3 }));
+  glow.position.set(0, 3, -30); scene.add(glow);
+  // soldier walking away
+  const figure = makeSoldier();
+  figure.position.set(0, 0, -5);
+  figure.rotation.y = Math.PI;
+  scene.add(figure);
+  // trees
+  for (let i = 0; i < 15; i++) {
+    const t = makeTree(2 + Math.random() * 2);
+    t.position.set(-15 + Math.random() * 30, 0, -15 - Math.random() * 10); scene.add(t);
+  }
+  return scene;
+}
+
+function showEnd() {
+  stopLevel();
+  const endScene = buildEndScene();
+  activeScene = endScene;
+  camera.position.set(0, 2, 3);
+  camera.lookAt(0, 1.2, -10);
+  clear(OV);
+  const roll = el('div', 'end-roll');
+  ['時間存起來了。','','兩年，六個片段，','一本寫滿了妳的日記。','','一秒 ——','我用二十年，','才讀懂。'].forEach(t => {
+    roll.appendChild(el('div', null, t || '\u00a0'));
+  });
+  OV.appendChild(roll);
+  OV.appendChild(el('div', 'end-mark', '695T · 2007 — 2008'));
+  const act = el('div', 'r-action');
+  act.style.marginTop = '36px';
+  const b1 = el('button', 'btn', '再讀一次');
+  b1.addEventListener('click', () => { flowIdx = -1; advance(); });
+  act.appendChild(b1);
+  const b2 = el('button', 'btn', '返回主站');
+  b2.addEventListener('click', () => { location.href = '../../index.html'; });
+  act.appendChild(b2);
+  OV.appendChild(act);
+  OV.classList.add('active');
+  // slow camera pull back
+  const endAnim = setInterval(() => {
+    if (activeScene !== endScene) { clearInterval(endAnim); return; }
+    camera.position.z += 0.003;
+    camera.position.y += 0.001;
+    camera.lookAt(0, 1.2, -10);
+  }, 16);
+}
+
+/* ══════════════════════════════════════════
+   3D MODEL BUILDERS
+   ══════════════════════════════════════════ */
+const skinMat = new THREE.MeshStandardMaterial({ color: 0xdeb887, roughness: 0.7 });
+const uniformMat = new THREE.MeshStandardMaterial({ color: 0x3d4e2c, roughness: 0.85 });
+const bootMat = new THREE.MeshStandardMaterial({ color: 0x2a1e0f, roughness: 0.9 });
+const helmetMat = new THREE.MeshStandardMaterial({ color: 0x2e3822, roughness: 0.8 });
+
+function makeSoldier() {
+  const g = new THREE.Group();
+  // torso
+  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.7, 0.3), uniformMat);
+  torso.position.y = 1.15; torso.castShadow = true;
+  g.add(torso);
+  // head
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 10), skinMat);
+  head.position.y = 1.68; head.castShadow = true;
+  g.add(head);
+  // helmet
+  const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.6), helmetMat);
+  helmet.position.y = 1.74; helmet.castShadow = true;
+  g.add(helmet);
+  // arms
+  for (const s of [-1, 1]) {
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 0.55, 6), uniformMat);
+    arm.position.set(s * 0.35, 1.1, 0); arm.castShadow = true;
+    g.add(arm);
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), skinMat);
+    hand.position.set(s * 0.35, 0.78, 0);
+    g.add(hand);
+  }
+  // legs
+  const leftLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.09, 0.6, 6), uniformMat);
+  leftLeg.position.set(-0.12, 0.5, 0); leftLeg.castShadow = true;
+  g.add(leftLeg);
+  g.userData.leftLeg = leftLeg;
+  const rightLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.09, 0.6, 6), uniformMat);
+  rightLeg.position.set(0.12, 0.5, 0); rightLeg.castShadow = true;
+  g.add(rightLeg);
+  g.userData.rightLeg = rightLeg;
+  // boots
+  for (const s of [-0.12, 0.12]) {
+    const boot = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.15, 0.2), bootMat);
+    boot.position.set(s, 0.12, 0.03); boot.castShadow = true;
+    g.add(boot);
+  }
+  return g;
+}
+
+function makeCow() {
+  const g = new THREE.Group();
+  const cowBrown = new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.9 });
+  const cowWhite = new THREE.MeshStandardMaterial({ color: 0xf5f0e0, roughness: 0.85 });
+  // body
+  const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.9, 2.2), cowBrown);
+  body.position.y = 1.1; body.castShadow = true;
+  g.add(body);
+  // white patch
+  const patch = new THREE.Mesh(new THREE.BoxGeometry(1.22, 0.5, 0.8), cowWhite);
+  patch.position.set(0, 1.1, 0.3);
+  g.add(patch);
+  // head
+  const headG = new THREE.Group();
+  const headM = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.45, 0.5), cowBrown);
+  headG.add(headM);
+  // snout
+  const snout = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.25, 0.2), new THREE.MeshStandardMaterial({ color: 0xd4a373, roughness: 0.8 }));
+  snout.position.set(0, -0.1, -0.3);
+  headG.add(snout);
+  // eyes
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x1a1008 });
+  for (const s of [-1, 1]) {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 6), eyeMat);
+    eye.position.set(s * 0.2, 0.05, -0.22);
+    headG.add(eye);
+  }
+  // ears
+  for (const s of [-1, 1]) {
+    const ear = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.1, 0.06), cowBrown);
+    ear.position.set(s * 0.33, 0.12, -0.05);
+    ear.rotation.z = s * 0.4;
+    headG.add(ear);
+  }
+  // horns
+  for (const s of [-1, 1]) {
+    const horn = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.2, 6), new THREE.MeshStandardMaterial({ color: 0xd4c09e }));
+    horn.position.set(s * 0.18, 0.28, -0.05);
+    horn.rotation.z = s * 0.5;
+    headG.add(horn);
+  }
+  headG.position.set(0, 1.4, -1.3);
+  g.add(headG);
+  g.userData.head = headG;
+  // legs
+  for (const x of [-0.4, 0.4]) {
+    for (const z of [-0.7, 0.7]) {
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.7, 6), cowBrown);
+      leg.position.set(x, 0.35, z);
+      g.add(leg);
+    }
+  }
+  // tail
+  const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.03, 0.8, 4), cowBrown);
+  tail.position.set(0, 1.2, 1.3);
+  tail.rotation.x = 0.6;
+  g.add(tail);
+  g.userData.tail = tail;
+  // udder
+  const udder = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 6), new THREE.MeshStandardMaterial({ color: 0xf0b0b0, roughness: 0.7 }));
+  udder.position.set(0, 0.55, 0.3);
+  g.add(udder);
+  return g;
+}
+
+function makeCannon() {
+  const g = new THREE.Group();
+  const metalMat = new THREE.MeshStandardMaterial({ color: 0x4a5a3a, metalness: 0.4, roughness: 0.6 });
+  // barrel
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.15, 2.5, 12), metalMat);
+  barrel.rotation.z = Math.PI / 2;
+  barrel.rotation.y = 0.1;
+  barrel.position.set(0, 0.9, -0.6);
+  barrel.castShadow = true;
+  g.add(barrel);
+  g.userData.barrel = barrel;
+  // muzzle
+  const muzzle = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.12, 0.15, 12), metalMat);
+  muzzle.rotation.z = Math.PI / 2;
+  muzzle.position.set(-1.3, 0.92, -0.6);
+  g.add(muzzle);
+  g.userData.muzzlePos = new THREE.Vector3(-1.5, 1.0, -0.6);
+  // breech
+  const breech = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.5), metalMat);
+  breech.position.set(0.8, 0.9, -0.6);
+  g.add(breech);
+  // shield
+  const shield = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.0, 1.4), metalMat);
+  shield.position.set(0.1, 1.0, -0.6);
+  g.add(shield);
+  // wheels
+  const wheelMat = new THREE.MeshStandardMaterial({ color: 0x2a2a1a, roughness: 0.9 });
+  for (const s of [-1, 1]) {
+    const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.06, 8, 16), wheelMat);
+    wheel.position.set(0.3, 0.4, -0.6 + s * 0.8);
+    wheel.rotation.y = Math.PI / 2;
+    g.add(wheel);
+    // spokes
+    for (let i = 0; i < 6; i++) {
+      const spoke = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.65, 4), wheelMat);
+      spoke.rotation.x = (i / 6) * Math.PI;
+      spoke.position.copy(wheel.position);
+      g.add(spoke);
+    }
+  }
+  // trail (legs behind)
+  for (const s of [-1, 1]) {
+    const trail = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.0, 6), metalMat);
+    trail.rotation.x = -0.3;
+    trail.position.set(1.6, 0.3, -0.6 + s * 0.35);
+    g.add(trail);
+  }
+  return g;
+}
+
+function makeTree(height, crownColor) {
+  const g = new THREE.Group();
+  const trunk = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.12, 0.18, height * 0.4, 6),
+    new THREE.MeshStandardMaterial({ color: 0x5a3e18, roughness: 0.95 })
+  );
+  trunk.position.y = height * 0.2;
+  trunk.castShadow = true;
+  g.add(trunk);
+  const crown = new THREE.Mesh(
+    new THREE.ConeGeometry(height * 0.35, height * 0.7, 7),
+    new THREE.MeshStandardMaterial({ color: crownColor || 0x2a5a18, roughness: 0.9 })
+  );
+  crown.position.y = height * 0.65;
+  crown.castShadow = true;
+  g.add(crown);
+  return g;
+}
+
+function makeGrass(scene, count, area, color) {
+  const mat = new THREE.MeshStandardMaterial({ color: color || 0x4a8a2a, roughness: 1 });
+  for (let i = 0; i < count; i++) {
+    const blade = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.3 + Math.random() * 0.2, 3), mat);
+    blade.position.set((Math.random() - 0.5) * area, 0.1, (Math.random() - 0.5) * area);
+    blade.rotation.x = (Math.random() - 0.5) * 0.3;
+    scene.add(blade);
+  }
+}
+
+function addFog(scene, color, density) {
+  scene.fog = new THREE.FogExp2(color, density || 0.02);
+}
+
+/* ══════════════════════════════════════════
+   L1 — ARTILLERY (timing bar + reward + shop)
+   ══════════════════════════════════════════ */
+// shell types for shop system
+const SHELL_TYPES = [
+  { id:'standard', name:'標準榴彈', desc:'基本砲彈', price: 0, blastR: 2.5, color: 0x1a1a0a },
+  { id:'heavy',    name:'重型穿甲彈', desc:'爆炸範圍 +40%', price: 30, blastR: 3.5, color: 0x4a1a0a },
+  { id:'cluster',  name:'子母彈',   desc:'爆炸範圍 +80%', price: 60, blastR: 4.5, color: 0x6a2a0a }
+];
+let selectedShell = SHELL_TYPES[0];
+
+function showShop(onDone) {
+  clear(OV);
+  const wrap = el('div', 'shop-wrap');
+  wrap.appendChild(el('div', 'shop-title', '砲 彈 補 給 站'));
+  const coins = el('div', 'shop-coins');
+  coins.textContent = '軍餉：' + playerCoins;
+  wrap.appendChild(coins);
+  const grid = el('div', 'shop-grid');
+  let chosen = selectedShell;
+  const items = [];
+  SHELL_TYPES.forEach(sh => {
+    const item = el('div', 'shop-item');
+    if (sh.price > playerCoins) item.classList.add('disabled');
+    if (sh.id === chosen.id) item.classList.add('selected');
+    item.appendChild(el('div', 'shop-item-name', sh.name));
+    item.appendChild(el('div', 'shop-item-desc', sh.desc));
+    item.appendChild(el('div', 'shop-item-price', sh.price === 0 ? '免費' : sh.price + ' 軍餉'));
+    item.addEventListener('click', () => {
+      if (sh.price > playerCoins) return;
+      chosen = sh;
+      items.forEach(it => it.classList.remove('selected'));
+      item.classList.add('selected');
+    });
+    grid.appendChild(item);
+    items.push(item);
+  });
+  wrap.appendChild(grid);
+  const btn = el('button', 'btn primary', '出擊');
+  btn.addEventListener('click', () => {
+    if (chosen.price > 0) playerCoins -= chosen.price;
+    selectedShell = chosen;
+    COINDISP.textContent = playerCoins;
+    onDone();
+  });
+  wrap.appendChild(btn);
+  OV.appendChild(wrap);
+  OV.classList.add('active');
+}
+
+function buildArtillery() {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x5a6a48);
+  addFog(scene, 0x5a6a48, 0.008);
+
+  // lighting
+  scene.add(new THREE.HemisphereLight(0x8899aa, 0x443322, 0.4));
+  const sun = new THREE.DirectionalLight(0xffe8c0, 2.0);
+  sun.position.set(-15, 25, 10);
+  sun.castShadow = !isMobile;
+  if (!isMobile) { sun.shadow.mapSize.set(1024, 1024); sun.shadow.camera.far = 80; }
+  scene.add(sun);
+
+  // terrain — rolling hills, flat near cannon/soldier area
+  const terrainGeo = new THREE.PlaneGeometry(120, 120, 48, 48);
+  const posArr = terrainGeo.attributes.position.array;
+  for (let i = 0; i < posArr.length; i += 3) {
+    const x = posArr[i], y = posArr[i + 1];
+    const distFromCannon = Math.sqrt((x - 3) * (x - 3) + (y - 4) * (y - 4));
+    const dampen = Math.min(1, distFromCannon / 15);
+    posArr[i + 2] = (Math.sin(x * 0.08) * 1.2 + Math.cos(y * 0.06) * 0.8 + Math.random() * 0.2) * dampen;
+  }
+  terrainGeo.computeVertexNormals();
+  const terrain = new THREE.Mesh(terrainGeo, new THREE.MeshStandardMaterial({ color: 0x5a7a3a, roughness: 1 }));
+  terrain.rotation.x = -Math.PI / 2;
+  terrain.receiveShadow = true;
+  scene.add(terrain);
+
+  // cannon
+  const cannon = makeCannon();
+  cannon.position.set(3, 0.3, 4);
+  cannon.rotation.y = Math.PI;
+  scene.add(cannon);
+
+  // soldier (you) standing beside cannon
+  const soldier = makeSoldier();
+  soldier.position.set(5, 0.3, 4.5);
+  soldier.rotation.y = -0.3;
+  scene.add(soldier);
+
+  // another soldier (loader)
+  const loader = makeSoldier();
+  loader.position.set(4.5, 0.3, 3);
+  loader.rotation.y = -0.5;
+  scene.add(loader);
+
+  // ammo crates
+  const crateMat = new THREE.MeshStandardMaterial({ color: 0x4a3a1a, roughness: 0.9 });
+  for (let i = 0; i < 3; i++) {
+    const crate = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.35, 0.35), crateMat);
+    crate.position.set(6 + i * 0.6, 0.48, 3.8);
+    crate.castShadow = true;
+    scene.add(crate);
+  }
+
+  // target flag (far field)
+  const targetGroup = new THREE.Group();
+  const flagPole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 2.5, 4), new THREE.MeshBasicMaterial({ color: 0x888888 }));
+  flagPole.position.y = 1.25;
+  targetGroup.add(flagPole);
+  const flag = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.4), new THREE.MeshBasicMaterial({ color: 0xff2200, side: THREE.DoubleSide }));
+  flag.position.set(0.3, 2.3, 0);
+  targetGroup.add(flag);
+  targetGroup.position.set(0, 0, -25);
+  scene.add(targetGroup);
+
+  // target ring on ground
+  const targetRing = new THREE.Mesh(
+    new THREE.RingGeometry(1.5, 2.0, 24),
+    new THREE.MeshBasicMaterial({ color: 0xff3300, transparent: true, opacity: 0.35, side: THREE.DoubleSide })
+  );
+  targetRing.rotation.x = -Math.PI / 2;
+  targetRing.position.set(0, 0.15, -25);
+  scene.add(targetRing);
+
+  // trees in background
+  for (let i = 0; i < 25; i++) {
+    const t = makeTree(2 + Math.random() * 2, 0x2a5a18);
+    t.position.set(-30 + Math.random() * 60, 0, -40 - Math.random() * 15);
+    scene.add(t);
+  }
+
+  // shell projectile
+  const shellMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(0.1, 8, 8),
+    new THREE.MeshBasicMaterial({ color: selectedShell.color })
+  );
+  shellMesh.visible = false;
+  scene.add(shellMesh);
+
+  // shell trail
+  const trailPts = [];
+  for (let i = 0; i < 40; i++) trailPts.push(new THREE.Vector3());
+  const trailGeo = new THREE.BufferGeometry().setFromPoints(trailPts);
+  const trail = new THREE.Line(trailGeo, new THREE.LineBasicMaterial({ color: 0x888866, transparent: true, opacity: 0.5 }));
+  trail.visible = false;
+  scene.add(trail);
+
+  // explosion particles
+  const particles = [];
+  const particleMat = new THREE.MeshBasicMaterial({ color: 0xff6600 });
+  const debrisMat = new THREE.MeshBasicMaterial({ color: 0x5a4a2a });
+  for (let i = 0; i < 30; i++) {
+    const p = new THREE.Mesh(
+      new THREE.SphereGeometry(0.05 + Math.random() * 0.08, 4, 4),
+      i < 15 ? particleMat.clone() : debrisMat.clone()
+    );
+    p.visible = false;
+    scene.add(p);
+    particles.push({ mesh: p, vel: new THREE.Vector3(), life: 0 });
+  }
+
+  // smoke puff
+  const smokeMat = new THREE.MeshBasicMaterial({ color: 0xccccaa, transparent: true, opacity: 0.4 });
+  const smokes = [];
+  for (let i = 0; i < 8; i++) {
+    const s = new THREE.Mesh(new THREE.SphereGeometry(0.3, 6, 6), smokeMat.clone());
+    s.visible = false;
+    scene.add(s);
+    smokes.push(s);
+  }
+
+  // timing bar state
+  const NEEDLE_SPEED_BASE = 2.0; // oscillations per second
+  const st = {
+    score: 0, life: 3, alive: true, locked: false,
+    shell: null,
+    targetPos: new THREE.Vector3(0, 0, -25),
+    explosionTime: 0,
+    needlePos: 0, needleDir: 1, needleSpeed: NEEDLE_SPEED_BASE,
+    // hit zone: center 35-65% of bar width, shrinks each round
+    zoneStart: 0.35, zoneEnd: 0.65,
+    aiming: false
+  };
+
+  function updateTimingZone() {
+    // zone gets narrower as score increases (harder each hit)
+    const width = Math.max(0.12, 0.30 - st.score * 0.03);
+    st.zoneStart = 0.5 - width / 2;
+    st.zoneEnd = 0.5 + width / 2;
+    st.needleSpeed = NEEDLE_SPEED_BASE + st.score * 0.35;
+    TZONE.style.left = (st.zoneStart * 100) + '%';
+    TZONE.style.width = (width * 100) + '%';
+  }
+
+  function startAiming() {
+    st.aiming = true;
+    st.needlePos = 0;
+    st.needleDir = 1;
+    updateTimingZone();
+    TBAR.classList.add('show');
+    TLABEL.classList.add('show');
+    TLABEL.textContent = '按 FIRE 開砲！';
+  }
+
+  function newTarget() {
+    const x = (Math.random() - 0.5) * 30;
+    const z = -20 - Math.random() * 20;
+    st.targetPos.set(x, 0, z);
+    targetGroup.position.set(x, 0, z);
+    targetRing.position.set(x, 0.15, z);
+    st.locked = false;
+    flag.material.color.setHex(0xff2200);
+    startAiming();
+  }
+
+  function fireShell() {
+    if (!st.alive || st.locked || st.shell || !st.aiming) return;
+    st.locked = true;
+    st.aiming = false;
+    TBAR.classList.remove('show');
+    TLABEL.classList.remove('show');
+    sfxCannon();
+
+    // determine hit based on needle position in zone
+    const inZone = st.needlePos >= st.zoneStart && st.needlePos <= st.zoneEnd;
+    const perfectCenter = Math.abs(st.needlePos - 0.5) < 0.04;
+
+    // muzzle flash
+    smokes.forEach((s, i) => {
+      s.visible = true;
+      s.position.set(3 - 1.5 + (Math.random() - 0.5) * 0.5, 1.0 + Math.random() * 0.3, 4 - 0.6 + (Math.random() - 0.5) * 0.3);
+      s.scale.setScalar(0.5 + Math.random() * 0.5);
+      s.material.opacity = 0.5;
+      setTimeout(() => { s.visible = false; }, 400 + i * 50);
+    });
+
+    // calculate hit position — if in zone, much closer to target
+    const aimError = inZone ? (Math.random() - 0.5) * 1.0 : (Math.random() * 8 - 4) * 1.5;
+    const hitX = st.targetPos.x + aimError;
+    const hitZ = st.targetPos.z + (inZone ? (Math.random() - 0.5) * 0.5 : (Math.random() - 0.5) * 6);
+    const hit = inZone;
+
+    const start = new THREE.Vector3(3 - 1.5, 1.0, 4 - 0.6);
+    const end = new THREE.Vector3(hitX, 0, hitZ);
+
+    st.shell = { start, end, progress: 0, hit, perfect: perfectCenter, trailIdx: 0 };
+    shellMesh.visible = true;
+    trail.visible = true;
+    const tp = trail.geometry.attributes.position.array;
+    for (let i = 0; i < tp.length; i++) tp[i] = 0;
+  }
+
+  function explode(pos, hit, perfect) {
+    sfxExplosion();
+    st.explosionTime = Date.now();
+    const blastScale = selectedShell.blastR / 2.5;
+    particles.forEach(p => {
+      p.mesh.visible = true;
+      p.mesh.position.copy(pos);
+      p.vel.set((Math.random() - 0.5) * 8 * blastScale, 3 + Math.random() * 5 * blastScale, (Math.random() - 0.5) * 8 * blastScale);
+      p.life = 0.8 + Math.random() * 0.5;
+      p.mesh.scale.setScalar(blastScale);
+    });
+
+    if (hit) {
+      const reward = perfect ? 20 : 10;
+      playerCoins += reward;
+      COINDISP.textContent = playerCoins;
+      sfxHit();
+      showFB(perfect ? '完美命中！+20' : '命中！+10', 'ok');
+      st.score++;
+      flag.material.color.setHex(0x44ff44);
+      showHud(st.score + ' / 5', 'MISSION 01', '●'.repeat(st.life) + '  💰' + playerCoins);
+      if (st.score >= 5) {
+        st.alive = false;
+        COINDISP.classList.remove('show');
+        const meadow = buildMeadowBg();
+        setTimeout(() => finishLevel({
+          code: 'MISSION 01 · 達成', title: '全連第一名',
+          sub: [['','滿分通過砲兵射擊。'],['em','結果任務 —— 顧一頭牛。'],['','你對著牛，數她的睫毛。']],
+          stats: [['命中','5 / 5'],['剩餘','●'.repeat(st.life)],['軍餉',playerCoins+'']]
+        }, meadow), 1500);
+        return;
+      }
+      setTimeout(() => { newTarget(); }, 1500);
+    } else {
+      sfxMiss();
+      showFB('偏離目標。', 'ng');
+      st.life--;
+      showHud(st.score + ' / 5', 'MISSION 01', '●'.repeat(Math.max(0, st.life)) + '  💰' + playerCoins);
+      if (st.life <= 0) {
+        st.life = 3; st.score = 0;
+        showHud('0 / 5', '', '● ● ●');
+      }
+      setTimeout(() => { newTarget(); }, 1500);
+    }
+  }
+
+  return {
+    scene,
+    cameraSetup(cam) {
+      cam.position.set(8, 5, 10);
+      cam.lookAt(0, 0, -10);
+    },
+    start() {
+      // show shop if second round, else go straight
+      const begin = () => {
+        showHud('0 / 5', 'MISSION 01', '● ● ●  💰' + playerCoins);
+        FIRE.textContent = 'F I R E';
+        FIRE.style.left = '50%';
+        FIRE.classList.add('show');
+        COINDISP.classList.add('show');
+        COINDISP.textContent = playerCoins;
+        FIRE.onclick = fireShell;
+        document.onkeydown = e => { if (e.code === 'Space') { e.preventDefault(); fireShell(); } };
+        newTarget();
+        levelInputs.push(() => {
+          FIRE.onclick = null;
+          TBAR.classList.remove('show');
+          TLABEL.classList.remove('show');
+          COINDISP.classList.remove('show');
+        });
+      };
+      if (playerCoins > 0) {
+        showShop(() => { clear(OV); OV.classList.remove('active'); begin(); });
+      } else {
+        begin();
+      }
+    },
+    update(dt) {
+      if (!st.alive && !st.shell) return;
+
+      // animate timing bar needle
+      if (st.aiming) {
+        st.needlePos += st.needleDir * st.needleSpeed * dt;
+        if (st.needlePos >= 1) { st.needlePos = 1; st.needleDir = -1; }
+        if (st.needlePos <= 0) { st.needlePos = 0; st.needleDir = 1; }
+        TNEEDLE.style.left = (st.needlePos * 100) + '%';
+      }
+
+      // animate shell
+      if (st.shell) {
+        st.shell.progress += dt * 0.7;
+        const t = Math.min(1, st.shell.progress);
+        const s = st.shell.start, e = st.shell.end;
+        const x = s.x + (e.x - s.x) * t;
+        const z = s.z + (e.z - s.z) * t;
+        const y = s.y + (e.y - s.y) * t + 12 * Math.sin(Math.PI * t);
+        shellMesh.position.set(x, y, z);
+
+        const tp = trail.geometry.attributes.position.array;
+        const idx = Math.min(39, Math.floor(t * 39));
+        for (let i = idx; i >= 0; i--) {
+          const tt = i / 39;
+          const tx = s.x + (e.x - s.x) * tt;
+          const tz = s.z + (e.z - s.z) * tt;
+          const ty = s.y + (e.y - s.y) * tt + 12 * Math.sin(Math.PI * tt);
+          tp[i * 3] = tx; tp[i * 3 + 1] = ty; tp[i * 3 + 2] = tz;
+        }
+        trail.geometry.attributes.position.needsUpdate = true;
+
+        if (t >= 1) {
+          shellMesh.visible = false;
+          trail.visible = false;
+          explode(st.shell.end, st.shell.hit, st.shell.perfect);
+          st.shell = null;
+        }
+      }
+
+      // animate particles
+      particles.forEach(p => {
+        if (!p.mesh.visible) return;
+        p.life -= dt;
+        if (p.life <= 0) { p.mesh.visible = false; return; }
+        p.vel.y -= 12 * dt;
+        p.mesh.position.addScaledVector(p.vel, dt);
+        p.mesh.scale.setScalar(Math.max(0.1, p.life));
+        p.mesh.material.opacity = Math.max(0, p.life);
+        p.mesh.material.transparent = true;
+      });
+
+      // muzzle smoke fade
+      smokes.forEach(s => {
+        if (!s.visible) return;
+        s.material.opacity -= dt * 1.5;
+        s.position.y += dt * 0.5;
+        s.scale.multiplyScalar(1 + dt * 2);
+        if (s.material.opacity <= 0) s.visible = false;
+      });
+
+      // flag flutter
+      flag.rotation.y = Math.sin(Date.now() * 0.003) * 0.2;
+
+      // camera slight sway
+      camera.position.x = 8 + Math.sin(Date.now() * 0.0004) * 0.3;
+    },
+    stop() { st.alive = false; TBAR.classList.remove('show'); TLABEL.classList.remove('show'); COINDISP.classList.remove('show'); }
+  };
+}
+
+/* ══════════════════════════════════════════
+   MEADOW BG (for artillery result)
+   ══════════════════════════════════════════ */
+function buildMeadowBg() {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x87ceeb);
+  addFog(scene, 0x87ceeb, 0.015);
+  scene.add(new THREE.HemisphereLight(0xaaddff, 0x557722, 0.7));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.5);
+  sun.position.set(10, 20, 5); scene.add(sun);
+  // green ground
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshStandardMaterial({ color: 0x55aa33, roughness: 1 }));
+  ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+  makeGrass(scene, 200, 40, 0x4a8a2a);
+  const cow = makeCow();
+  cow.position.set(-2, 0, -5);
+  cow.rotation.y = 0.5;
+  scene.add(cow);
+  const me = makeSoldier();
+  me.position.set(2, 0, -3);
+  me.rotation.y = -0.4;
+  scene.add(me);
+  for (let i = 0; i < 10; i++) {
+    const t = makeTree(2.5 + Math.random() * 2);
+    t.position.set(-20 + Math.random() * 40, 0, -15 - Math.random() * 10);
+    scene.add(t);
+  }
+  camera.position.set(0, 3, 6);
+  camera.lookAt(0, 1, -3);
+  return scene;
+}
+
+/* ══════════════════════════════════════════
+   COW CINEMATIC (after artillery result)
+   ══════════════════════════════════════════ */
+function buildCowScene() {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x87ceeb);
+  addFog(scene, 0x87ceeb, 0.012);
+
+  scene.add(new THREE.HemisphereLight(0xaaddff, 0x557722, 0.7));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.8);
+  sun.position.set(10, 25, 5);
+  sun.castShadow = !isMobile;
+  scene.add(sun);
+
+  // rolling green hills — gentle near center so cow/soldier stay above ground
+  const hillGeo = new THREE.PlaneGeometry(120, 120, 40, 40);
+  const hp = hillGeo.attributes.position.array;
+  for (let i = 0; i < hp.length; i += 3) {
+    const x = hp[i], y = hp[i + 1];
+    const distFromCenter = Math.sqrt(x * x + y * y);
+    const dampen = Math.min(1, distFromCenter / 20); // flat near center
+    hp[i + 2] = (Math.sin(x * 0.04) * 2 + Math.cos(y * 0.05) * 1.5) * dampen;
+  }
+  hillGeo.computeVertexNormals();
+  const hills = new THREE.Mesh(hillGeo, new THREE.MeshStandardMaterial({ color: 0x55aa33, roughness: 1 }));
+  hills.rotation.x = -Math.PI / 2;
+  hills.receiveShadow = true;
+  scene.add(hills);
+
+  makeGrass(scene, 300, 50, 0x4a8a2a);
+
+  // cow — raised above ground plane
+  const cow = makeCow();
+  cow.position.set(-1, 0.05, -2);
+  cow.rotation.y = 0.8;
+  scene.add(cow);
+
+  // soldier (you) sitting on a rock
+  const me = makeSoldier();
+  me.position.set(2.5, 0.05, 0);
+  me.rotation.y = -0.6;
+  scene.add(me);
+
+  // rock
+  const rock = new THREE.Mesh(
+    new THREE.DodecahedronGeometry(0.5, 0),
+    new THREE.MeshStandardMaterial({ color: 0x888878, roughness: 0.95 })
+  );
+  rock.position.set(2.5, 0.2, 0.2);
+  rock.scale.set(1.2, 0.6, 1);
+  scene.add(rock);
+
+  // distant trees
+  for (let i = 0; i < 20; i++) {
+    const t = makeTree(3 + Math.random() * 2);
+    t.position.set(-25 + Math.random() * 50, 0, -12 - Math.random() * 15);
+    scene.add(t);
+  }
+
+  // clouds (flat planes)
+  const cloudMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 });
+  for (let i = 0; i < 5; i++) {
+    const cloud = new THREE.Mesh(new THREE.PlaneGeometry(4 + Math.random() * 6, 1.5 + Math.random()), cloudMat);
+    cloud.position.set(-15 + i * 8, 18 + Math.random() * 5, -20 - Math.random() * 10);
+    cloud.lookAt(camera.position);
+    scene.add(cloud);
+  }
+
+  let elapsed = 0;
+  let autoTimer;
+  let mooPlayed = false;
+
+  return {
+    scene,
+    cameraSetup(cam) {
+      cam.position.set(5, 2.5, 6);
+      cam.lookAt(0, 0.8, -1);
+    },
+    start() {
+      // cinematic text overlay
+      const text = el('div', 'cine-text');
+      text.appendChild(document.createTextNode('牛的眼睛，比我想的還像妳。'));
+      text.appendChild(el('br'));
+      text.appendChild(document.createTextNode('溫的，黑的。'));
+      text.appendChild(el('br'));
+      text.appendChild(document.createTextNode('看過我一眼，就低頭吃草。'));
+      document.body.appendChild(text);
+
+      const skip = el('div', 'cine-skip', '繼續 ›');
+      skip.addEventListener('click', goNext);
+      document.body.appendChild(skip);
+
+      autoTimer = setTimeout(goNext, 8000);
+      document.onkeydown = e => { if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); goNext(); } };
+
+      function goNext() {
+        clearTimeout(autoTimer);
+        if (text.parentNode) text.remove();
+        if (skip.parentNode) skip.remove();
+        document.onkeydown = null;
+        advance();
+      }
+      levelInputs.push(() => {
+        clearTimeout(autoTimer);
+        if (text.parentNode) text.remove();
+        if (skip.parentNode) skip.remove();
+      });
+    },
+    update(dt) {
+      elapsed += dt;
+      // cow head bob (eating grass)
+      if (cow.userData.head) {
+        cow.userData.head.rotation.x = Math.sin(elapsed * 0.8) * 0.15 - 0.2;
+      }
+      // tail swish
+      if (cow.userData.tail) {
+        cow.userData.tail.rotation.z = Math.sin(elapsed * 2) * 0.3;
+      }
+      // camera slow orbit
+      const angle = elapsed * 0.05;
+      camera.position.x = 5 * Math.cos(angle);
+      camera.position.z = 6 * Math.sin(angle) + 2;
+      camera.position.y = 2.5 + Math.sin(elapsed * 0.3) * 0.2;
+      camera.lookAt(0, 0.8, -1);
+      // moo
+      if (!mooPlayed && elapsed > 2) {
+        mooPlayed = true;
+        sfxMoo();
+      }
+    },
+    stop() {}
+  };
+}
+
+/* ══════════════════════════════════════════
+   L2 — 3000m RUN (rhythm game + oval track)
+   ══════════════════════════════════════════ */
+function buildRun() {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x2a3040);
+  addFog(scene, 0x2a3040, 0.008);
+  scene.add(new THREE.HemisphereLight(0x445566, 0x332211, 0.5));
+  const sun = new THREE.DirectionalLight(0xffe0b0, 1.5);
+  sun.position.set(20, 30, 10);
+  sun.castShadow = !isMobile;
+  scene.add(sun);
+
+  // oval track (ellipse: semi-major 30, semi-minor 15)
+  const A = 30, B = 15, TRACK_W = 6;
+  const trackShape = new THREE.Shape();
+  const SEGS = 64;
+  // outer edge
+  for (let i = 0; i <= SEGS; i++) {
+    const a = (i / SEGS) * Math.PI * 2;
+    const x = (A + TRACK_W / 2) * Math.cos(a);
+    const z = (B + TRACK_W / 2) * Math.sin(a);
+    if (i === 0) trackShape.moveTo(x, z); else trackShape.lineTo(x, z);
+  }
+  // inner edge (hole)
+  const hole = new THREE.Path();
+  for (let i = 0; i <= SEGS; i++) {
+    const a = (i / SEGS) * Math.PI * 2;
+    const x = (A - TRACK_W / 2) * Math.cos(a);
+    const z = (B - TRACK_W / 2) * Math.sin(a);
+    if (i === 0) hole.moveTo(x, z); else hole.lineTo(x, z);
+  }
+  trackShape.holes.push(hole);
+  const trackGeo = new THREE.ShapeGeometry(trackShape, 1);
+  const trackMesh = new THREE.Mesh(trackGeo, new THREE.MeshStandardMaterial({ color: 0x884422, roughness: 0.95 }));
+  trackMesh.rotation.x = -Math.PI / 2;
+  trackMesh.position.y = 0.01;
+  scene.add(trackMesh);
+
+  // lane lines (3 lines on the oval)
+  for (let laneOff = -2; laneOff <= 2; laneOff += 2) {
+    const pts = [];
+    for (let i = 0; i <= SEGS; i++) {
+      const a = (i / SEGS) * Math.PI * 2;
+      pts.push(new THREE.Vector3((A + laneOff) * Math.cos(a), 0.02, (B + laneOff) * Math.sin(a)));
+    }
+    const lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
+    const line = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.4 }));
+    scene.add(line);
+  }
+
+  // infield (grass)
+  const infieldGeo = new THREE.CircleGeometry(B - TRACK_W / 2 - 0.5, 48);
+  const infield = new THREE.Mesh(infieldGeo, new THREE.MeshStandardMaterial({ color: 0x3a6a20, roughness: 1 }));
+  infield.rotation.x = -Math.PI / 2;
+  infield.scale.set(A / B, 1, 1);
+  scene.add(infield);
+
+  // ground outside track
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: 0x2a3a1a, roughness: 1 }));
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.01;
+  scene.add(ground);
+
+  // barracks
+  const barrackMat = new THREE.MeshStandardMaterial({ color: 0x888877, roughness: 0.9 });
+  for (let i = 0; i < 3; i++) {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(8, 3, 4), barrackMat);
+    b.position.set(-42, 1.5, -10 + i * 12); b.castShadow = true; scene.add(b);
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(9, 0.3, 5), new THREE.MeshStandardMaterial({ color: 0x665544 }));
+    roof.position.set(-42, 3.15, -10 + i * 12); scene.add(roof);
+  }
+
+  // trees around
+  for (let i = 0; i < 30; i++) {
+    const t = makeTree(2 + Math.random() * 2);
+    const a = Math.random() * Math.PI * 2;
+    const r = 40 + Math.random() * 15;
+    t.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+    scene.add(t);
+  }
+
+  // runner (you)
+  const runner = makeSoldier();
+  scene.add(runner);
+
+  // other runners
+  const others = [];
+  for (let i = 0; i < 5; i++) {
+    const o = makeSoldier();
+    scene.add(o);
+    others.push({ mesh: o, speed: 0.5 + Math.random() * 0.4, angle: -(i + 1) * 0.15 });
+  }
+
+  // ellipse perimeter ≈ Ramanujan approximation
+  const h = ((A - B) * (A - B)) / ((A + B) * (A + B));
+  const trackPerimeter = Math.PI * (A + B) * (1 + (3 * h) / (10 + Math.sqrt(4 - 3 * h)));
+  const lapsNeeded = 3000 / trackPerimeter; // ~3000m
+
+  function posOnTrack(angle) {
+    return new THREE.Vector3(A * Math.cos(angle), 0, B * Math.sin(angle));
+  }
+
+  // rhythm note system
+  const DIRS = ['ArrowLeft', 'ArrowDown', 'ArrowUp', 'ArrowRight'];
+  const DIR_SYMBOLS = ['←', '↓', '↑', '→'];
+  const DIR_COL = { ArrowLeft: 0, ArrowDown: 1, ArrowUp: 2, ArrowRight: 3 };
+  const BPM = 130; // approximate BPM for the BGM
+  const BEAT_INTERVAL = 60 / BPM; // seconds per beat
+  const FALL_TIME = 1.5; // seconds for note to fall from top to judge line
+  const JUDGE_Y = 60; // px from bottom of rhythm lane
+
+  const notes = []; // { dir, spawnTime, element, judged }
+  let nextNoteTime = 0;
+  let rhythmFbTimer = null;
+
+  function spawnNote(gameTime) {
+    const dir = DIRS[Math.floor(Math.random() * 4)];
+    const col = DIR_COL[dir];
+    const noteEl = el('div', 'rhythm-note', DIR_SYMBOLS[col]);
+    noteEl.style.left = (col * 25) + '%';
+    noteEl.style.top = '-30px';
+    RLANE.appendChild(noteEl);
+    notes.push({ dir, spawnTime: gameTime, element: noteEl, judged: false });
+  }
+
+  function showRhythmFB(text, cls) {
+    RFB.textContent = text;
+    RFB.className = 'rhythm-fb show ' + cls;
+    clearTimeout(rhythmFbTimer);
+    rhythmFbTimer = setTimeout(() => { RFB.className = 'rhythm-fb'; }, 400);
+  }
+
+  function judgeNote(dir) {
+    const now = st.gameTime;
+    const judgeTime = FALL_TIME; // note should be at judge line at spawnTime + FALL_TIME
+    let best = null, bestDiff = Infinity;
+    for (const n of notes) {
+      if (n.judged || n.dir !== dir) continue;
+      const diff = Math.abs((n.spawnTime + judgeTime) - now);
+      if (diff < bestDiff) { bestDiff = diff; best = n; }
+    }
+    if (!best) return;
+    if (bestDiff < 0.08) {
+      // PERFECT
+      best.judged = true;
+      best.element.classList.add('hit');
+      showRhythmFB('PERFECT', 'perfect');
+      st.dist += 18;
+      st.combo++;
+      st.runPhase += 0.5;
+      sfxFootstep();
+    } else if (bestDiff < 0.18) {
+      // GOOD
+      best.judged = true;
+      best.element.classList.add('hit');
+      showRhythmFB('GOOD', 'good');
+      st.dist += 12;
+      st.combo++;
+      st.runPhase += 0.5;
+      sfxFootstep();
+    } else if (bestDiff < 0.35) {
+      // MISS (early press)
+      best.judged = true;
+      best.element.classList.add('miss');
+      showRhythmFB('MISS', 'miss');
+      st.combo = 0;
+    }
+  }
+
+  const st = { dist: 0, time: 720, hr: 72, alive: true, gameTime: 0, combo: 0, maxCombo: 0, runPhase: 0, angle: 0 };
+  let timer;
+
+  function tick() {
+    if (!st.alive) return;
+    st.time--;
+    const mm = Math.floor(st.time / 60);
+    const ss = st.time % 60;
+    const comboStr = st.combo > 3 ? '  x' + st.combo : '';
+    showHud(Math.floor(st.dist) + 'm / 3000m', 'MISSION 02', mm + ':' + (ss < 10 ? '0' : '') + ss + comboStr);
+    if (st.dist >= 3000) {
+      st.alive = false; clearInterval(timer);
+      const elapsed = 720 - st.time;
+      const em = Math.floor(elapsed / 60), es = elapsed % 60;
+      RLANE.classList.remove('show');
+      finishLevel({
+        code: 'MISSION 02 · 達成', title: '3000m · ' + em + '分' + (es < 10 ? '0' : '') + es + '秒',
+        sub: [['','12 分鐘內完成。'],['em','榮譽假提早到今晚 21:00。'],['','你賺了 11 個小時。']],
+        stats: [['距離','3000m'],['時間',em+':'+(es<10?'0':'')+es],['最高連擊',st.maxCombo+'']]
+      });
+    } else if (st.time <= 0) {
+      st.alive = false; clearInterval(timer);
+      RLANE.classList.remove('show');
+      finishLevel({
+        code: 'MISSION 02 · 未達成', title: '時間到',
+        sub: [['','距離不足。'],['em','但班長沒有處罰你。'],['','他只說：「明天再跑一次。」']],
+        stats: [['距離',Math.floor(st.dist)+'m'],['時間','12:00'],['最高連擊',st.maxCombo+'']]
+      });
+    }
+  }
+
+  return {
+    scene,
+    cameraSetup(cam) { cam.position.set(0, 25, 35); cam.lookAt(0, 0, 0); },
+    start() {
+      showHud('0m / 3000m', 'MISSION 02', '12:00');
+      RLANE.classList.add('show');
+      // remove any leftover note elements
+      RLANE.querySelectorAll('.rhythm-note').forEach(n => n.remove());
+      restartBGM();
+      nextNoteTime = BEAT_INTERVAL;
+      st.gameTime = 0;
+
+      document.onkeydown = e => {
+        if (DIRS.includes(e.code)) { e.preventDefault(); judgeNote(e.code); }
+      };
+      // mobile: tap columns
+      RLANE.onpointerdown = e => {
+        const rect = RLANE.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const col = Math.floor((x / rect.width) * 4);
+        if (col >= 0 && col < 4) judgeNote(DIRS[col]);
+      };
+
+      timer = setInterval(tick, 1000);
+      levelInputs.push(() => {
+        clearInterval(timer);
+        RLANE.classList.remove('show');
+        RLANE.onpointerdown = null;
+        notes.forEach(n => { if (n.element.parentNode) n.element.remove(); });
+        notes.length = 0;
+      });
+    },
+    update(dt) {
+      if (!st.alive) return;
+      st.gameTime += dt;
+
+      // spawn notes on beat
+      while (st.gameTime >= nextNoteTime) {
+        spawnNote(nextNoteTime);
+        // sometimes spawn double notes for variety
+        if (Math.random() < 0.25) {
+          const extraDir = DIRS[Math.floor(Math.random() * 4)];
+          const lastNote = notes[notes.length - 1];
+          if (lastNote.dir !== extraDir) spawnNote(nextNoteTime);
+        }
+        nextNoteTime += BEAT_INTERVAL;
+      }
+
+      // update note positions
+      const laneH = RLANE.offsetHeight || 500;
+      for (let i = notes.length - 1; i >= 0; i--) {
+        const n = notes[i];
+        const elapsed = st.gameTime - n.spawnTime;
+        const pct = elapsed / FALL_TIME;
+        const topPx = pct * (laneH - JUDGE_Y) - 30;
+        n.element.style.top = topPx + 'px';
+
+        // auto-miss: note passed judge line
+        if (!n.judged && pct > 1.25) {
+          n.judged = true;
+          n.element.classList.add('miss');
+          showRhythmFB('MISS', 'miss');
+          st.combo = 0;
+        }
+        // cleanup old notes
+        if (pct > 1.8) {
+          if (n.element.parentNode) n.element.remove();
+          notes.splice(i, 1);
+        }
+      }
+
+      // track max combo
+      if (st.combo > st.maxCombo) st.maxCombo = st.combo;
+
+      // update runner position on oval
+      const pctDone = st.dist / 3000;
+      st.angle = pctDone * lapsNeeded * Math.PI * 2;
+      const pos = posOnTrack(st.angle);
+      runner.position.copy(pos);
+      runner.position.y = Math.abs(Math.sin(st.runPhase * 2)) * 0.08;
+      // face tangent direction
+      const tangent = new THREE.Vector3(-A * Math.sin(st.angle), 0, B * Math.cos(st.angle)).normalize();
+      runner.lookAt(pos.x + tangent.x, 0, pos.z + tangent.z);
+
+      // leg animation
+      if (runner.userData.leftLeg && runner.userData.rightLeg) {
+        runner.userData.leftLeg.rotation.x = Math.sin(st.runPhase) * 0.5;
+        runner.userData.rightLeg.rotation.x = -Math.sin(st.runPhase) * 0.5;
+      }
+
+      // other runners
+      others.forEach(o => {
+        o.angle += o.speed * dt * 0.08;
+        const op = posOnTrack(o.angle);
+        o.mesh.position.copy(op);
+        const ot = new THREE.Vector3(-A * Math.sin(o.angle), 0, B * Math.cos(o.angle)).normalize();
+        o.mesh.lookAt(op.x + ot.x, 0, op.z + ot.z);
+      });
+
+      // camera: follow from above-behind
+      const camDist = 20;
+      const camAngle = st.angle - 0.3;
+      camera.position.set(A * Math.cos(camAngle) * 0.5, 12, B * Math.sin(camAngle) * 0.5 + camDist * 0.4);
+      camera.lookAt(runner.position);
+
+      // heartbeat at high HR
+      st.hr = Math.min(180, 72 + Math.floor(st.dist / 50));
+      if (st.hr > 140 && st.gameTime % (60 / st.hr) < dt) sfxHeartbeat();
+    },
+    stop() { st.alive = false; clearInterval(timer); RLANE.classList.remove('show'); }
+  };
+}
+
+/* ══════════════════════════════════════════
+   L3 — TRAIN CHASE
+   ══════════════════════════════════════════ */
+function buildTrain() {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x4a2818);
+  addFog(scene, 0x4a2818, 0.008);
+  scene.add(new THREE.HemisphereLight(0xffa060, 0x331808, 0.6));
+  const sun = new THREE.DirectionalLight(0xffaa44, 1.8);
+  sun.position.set(-20, 20, 10); scene.add(sun);
+
+  // road
+  const road = new THREE.Mesh(new THREE.PlaneGeometry(6, 400), new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.95 }));
+  road.rotation.x = -Math.PI / 2; road.position.set(-4, 0, -150); scene.add(road);
+  // road dashes
+  for (let z = 0; z < 400; z += 6) {
+    const dash = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 3), new THREE.MeshBasicMaterial({ color: 0xffff66, transparent: true, opacity: 0.5 }));
+    dash.rotation.x = -Math.PI / 2; dash.position.set(-4, 0.01, -z); scene.add(dash);
+  }
+
+  // rail tracks
+  for (const xOff of [-0.3, 0.3]) {
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 400), new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.8, roughness: 0.3 }));
+    rail.position.set(4 + xOff, 0.04, -150); scene.add(rail);
+  }
+  // sleepers
+  for (let z = 0; z < 400; z += 2) {
+    const sleeper = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.06, 0.2), new THREE.MeshStandardMaterial({ color: 0x5a3e18, roughness: 0.9 }));
+    sleeper.position.set(4, 0.02, -z); scene.add(sleeper);
+  }
+
+  // car (detailed)
+  const car = new THREE.Group();
+  const carBody = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.7, 3.5), new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.3, metalness: 0.4 }));
+  carBody.position.y = 0.65; car.add(carBody);
+  // car roof
+  const carRoof = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.15, 3.2), new THREE.MeshStandardMaterial({ color: 0xaaaaaa }));
+  carRoof.position.y = 1.1; car.add(carRoof);
+  // windshield
+  const windshield = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.5), new THREE.MeshStandardMaterial({ color: 0x88ccff, transparent: true, opacity: 0.5, metalness: 0.8 }));
+  windshield.position.set(0, 0.9, -1.76); car.add(windshield);
+  // headlights
+  for (const s of [-0.6, 0.6]) {
+    const hl = new THREE.PointLight(0xffffcc, 2, 20);
+    hl.position.set(s, 0.5, -1.8); car.add(hl);
+    const hlMesh = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffffaa }));
+    hlMesh.position.copy(hl.position); car.add(hlMesh);
+  }
+  // wheels
+  const wheelGeo = new THREE.CylinderGeometry(0.22, 0.22, 0.08, 12);
+  const wheelMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 });
+  for (const z of [-1.2, 1.2]) {
+    for (const x of [-0.9, 0.9]) {
+      const w = new THREE.Mesh(wheelGeo, wheelMat);
+      w.rotation.x = Math.PI / 2; w.position.set(x, 0.22, z); car.add(w);
+    }
+  }
+  // driver and you inside
+  const driver = makeSoldier();
+  driver.scale.setScalar(0.35);
+  driver.position.set(-0.3, 0.6, -0.5);
+  car.add(driver);
+  const passenger = makeSoldier();
+  passenger.scale.setScalar(0.35);
+  passenger.position.set(0.3, 0.6, 0);
+  car.add(passenger);
+  car.position.set(-4, 0, 0);
+  scene.add(car);
+
+  // train (detailed with windows)
+  const train = new THREE.Group();
+  const trainMat = new THREE.MeshStandardMaterial({ color: 0x445566, metalness: 0.5, roughness: 0.4 });
+  const windowMat = new THREE.MeshBasicMaterial({ color: 0xffeeaa });
+  for (let i = 0; i < 5; i++) {
+    const wagon = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.2, 6), trainMat);
+    wagon.position.set(0, 1.3, -i * 6.5);
+    wagon.castShadow = true;
+    train.add(wagon);
+    // windows (lit)
+    for (let w = -2; w <= 2; w++) {
+      for (const s of [-1, 1]) {
+        const win = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.5), windowMat);
+        win.position.set(s * 1.11, 1.6, -i * 6.5 + w * 1.1);
+        win.rotation.y = s * Math.PI / 2;
+        train.add(win);
+      }
+    }
+    // roof
+    const wRoof = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.15, 6.2), new THREE.MeshStandardMaterial({ color: 0x556677 }));
+    wRoof.position.set(0, 2.45, -i * 6.5);
+    train.add(wRoof);
+  }
+  // locomotive at front
+  const loco = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.8, 4), new THREE.MeshStandardMaterial({ color: 0x334455, metalness: 0.6 }));
+  loco.position.set(0, 1.5, 4);
+  train.add(loco);
+  const locoLight = new THREE.PointLight(0xffff88, 2, 25);
+  locoLight.position.set(0, 2, 6.5);
+  train.add(locoLight);
+
+  train.position.set(4, 0, -10);
+  scene.add(train);
+
+  // trees
+  const treeMat2 = new THREE.MeshStandardMaterial({ color: 0x2a4a18 });
+  for (let z = 0; z < 300; z += 6) {
+    for (const x of [-12, 12]) {
+      const t = makeTree(2 + Math.random() * 2);
+      t.position.set(x + Math.random() * 3, 0, -z);
+      scene.add(t);
+    }
+  }
+
+  const st = { speed: 60, time: 30, alive: true, hold: false, carZ: 0, trainZ: -10 };
+  let timer;
+  function press() { st.hold = true; }
+  function release() { st.hold = false; }
+
+  return {
+    scene,
+    cameraSetup(cam) { cam.position.set(-2, 3, 14); cam.lookAt(-2, 1, -10); },
+    start() {
+      showHud('30', 'MISSION 03', '60 km/h');
+      TAP.textContent = '按住加速';
+      TAP.classList.add('show');
+      TAP.onmousedown = press; TAP.onmouseup = release; TAP.onmouseleave = release;
+      TAP.ontouchstart = e => { e.preventDefault(); press(); };
+      TAP.ontouchend = e => { e.preventDefault(); release(); };
+      document.onkeydown = e => { if (e.code === 'Space') { e.preventDefault(); press(); } };
+      document.onkeyup = e => { if (e.code === 'Space') { e.preventDefault(); release(); } };
+      timer = setInterval(() => {
+        if (!st.alive) return;
+        st.time--;
+        showHud(st.time + '', 'MISSION 03', Math.floor(st.speed) + ' km/h');
+        if (st.time <= 0) {
+          st.alive = false; clearInterval(timer);
+          finishLevel({
+            code: 'MISSION 03 · 達成', title: '新竹月台 · 準時抵達',
+            sub: [['','哥哥把油門踩到底。'],['em','火車剛進月台。'],['','他揮了揮手，沒下車，直接走。']],
+            stats: [['最高時速',Math.floor(st.speed)+''],['撐過','30s'],['攔截','成功']]
+          });
+        }
+      }, 1000);
+      levelInputs.push(() => {
+        clearInterval(timer);
+        TAP.onmousedown = null; TAP.onmouseup = null; TAP.onmouseleave = null;
+        TAP.ontouchstart = null; TAP.ontouchend = null;
+      });
+    },
+    update(dt) {
+      if (!st.alive) return;
+      if (st.hold) { st.speed = Math.min(180, st.speed + 80 * dt); sfxEngine(); }
+      else st.speed = Math.max(50, st.speed - 30 * dt);
+      const carMove = st.speed * dt * 0.5;
+      const trainMove = 100 * dt * 0.5;
+      st.carZ -= carMove;
+      st.trainZ -= trainMove;
+      car.position.z = st.carZ;
+      train.position.z = st.trainZ;
+      // car wheel spin
+      car.children.forEach(c => {
+        if (c.geometry && c.geometry.type === 'CylinderGeometry' && c.position.y < 0.3) {
+          c.rotation.z += st.speed * dt * 0.1;
+        }
+      });
+      camera.position.z = st.carZ + 14;
+      camera.position.x = -2 + Math.sin(Date.now() * 0.001) * 0.3;
+      camera.lookAt(-2, 1, st.carZ - 10);
+      if (st.trainZ < st.carZ - 8) {
+        st.alive = false; clearInterval(timer);
+        finishLevel({
+          code: 'MISSION 03 · 未達成', title: '火車追過去了',
+          sub: [['','車速掉下來。'],['em','但哥哥沒說什麼。'],['','他只說：「下次，早點出門。」']],
+          stats: [['最高時速',Math.floor(st.speed)+''],['撐過',(30-st.time)+'s'],['距離差','—']]
+        });
+      }
+    },
+    stop() { st.alive = false; clearInterval(timer); }
+  };
+}
+
+/* ══════════════════════════════════════════
+   L4 — ARM WRESTLING
+   ══════════════════════════════════════════ */
+function buildArm() {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x1a1008);
+  scene.add(new THREE.AmbientLight(0x332211, 0.2));
+  const lamp = new THREE.PointLight(0xffcc88, 2, 20);
+  lamp.position.set(0, 4, 0);
+  lamp.castShadow = !isMobile;
+  scene.add(lamp);
+  // lamp mesh (hanging bulb)
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffdd88 }));
+  bulb.position.set(0, 3.8, 0);
+  scene.add(bulb);
+  const wire = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 1.5, 4), new THREE.MeshBasicMaterial({ color: 0x444444 }));
+  wire.position.set(0, 4.5, 0);
+  scene.add(wire);
+
+  // floor
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), new THREE.MeshStandardMaterial({ color: 0x2a2218, roughness: 1 }));
+  floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+
+  // table
+  const tableMat = new THREE.MeshStandardMaterial({ color: 0x8b7355, roughness: 0.7 });
+  const tableTop = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.12, 1.5), tableMat);
+  tableTop.position.y = 1.0; tableTop.receiveShadow = true; tableTop.castShadow = true;
+  scene.add(tableTop);
+  for (const pos of [[-1, 0, -0.5], [1, 0, -0.5], [-1, 0, 0.5], [1, 0, 0.5]]) {
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 1, 6), tableMat);
+    leg.position.set(pos[0], 0.5, pos[2]); scene.add(leg);
+  }
+
+  // beer bottles on table
+  const bottleMat = new THREE.MeshStandardMaterial({ color: 0x2a5a1a, transparent: true, opacity: 0.7 });
+  for (let i = 0; i < 4; i++) {
+    const bottle = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.25, 8), bottleMat);
+    bottle.position.set(-0.8 + i * 0.3, 1.19, -0.5);
+    scene.add(bottle);
+  }
+
+  // two arms on table (detailed forearms + fists)
+  const armMat1 = new THREE.MeshStandardMaterial({ color: 0xdeb887, roughness: 0.7 });
+  const armMat2 = new THREE.MeshStandardMaterial({ color: 0xc8a070, roughness: 0.7 });
+  const pivot = new THREE.Group();
+  pivot.position.set(0, 1.35, 0);
+  // your arm (left side)
+  const arm1 = new THREE.Group();
+  const forearm1 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.7, 8), armMat1);
+  forearm1.position.y = 0.35;
+  arm1.add(forearm1);
+  const fist1 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), armMat1);
+  fist1.position.y = 0.72;
+  arm1.add(fist1);
+  arm1.position.set(-0.15, 0, 0);
+  pivot.add(arm1);
+  // opponent arm
+  const arm2 = new THREE.Group();
+  const forearm2 = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.11, 0.7, 8), armMat2);
+  forearm2.position.y = 0.35;
+  arm2.add(forearm2);
+  const fist2 = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 8), armMat2);
+  fist2.position.y = 0.72;
+  arm2.add(fist2);
+  arm2.position.set(0.15, 0, 0);
+  pivot.add(arm2);
+  scene.add(pivot);
+
+  // crowd silhouettes (soldiers around table)
+  for (let i = 0; i < 8; i++) {
+    const sil = makeSoldier();
+    const angle = (i / 8) * Math.PI * 2;
+    const r = 2.5 + Math.random() * 0.5;
+    sil.position.set(Math.cos(angle) * r, 0, Math.sin(angle) * r);
+    sil.lookAt(0, 1, 0);
+    // darken them
+    sil.traverse(c => { if (c.material) { c.material = c.material.clone(); c.material.color.multiplyScalar(0.2); } });
+    scene.add(sil);
+  }
+
+  const OPPS = [
+    { name:'阿忠 · 一兵', power: 0.8 },
+    { name:'大胖 · 下士', power: 1.0 },
+    { name:'阿榮 · 上兵', power: 1.3 },
+    { name:'瘦皮 · 班長', power: 1.6 },
+    { name:'老虎 · 副排', power: 1.9 }
+  ];
+  const st = { round: 0, value: 0, last: '', alive: true };
+  let drain;
+
+  function push(side) {
+    if (!st.alive || st.last === side) return;
+    st.last = side;
+    st.value += 4;
+    sfxSlam();
+  }
+
+  function nextRound() {
+    const opp = OPPS[st.round];
+    showHud('Round ' + (st.round + 1) + ' / 5', 'MISSION 04', opp.name);
+    st.value = 0;
+  }
+
+  return {
+    scene,
+    cameraSetup(cam) { cam.position.set(0, 2.8, 2.8); cam.lookAt(0, 1.2, 0); },
+    start() {
+      nextRound();
+      FIRE.textContent = '← A';
+      FIRE.classList.add('show');
+      FIRE.style.left = '25%';
+      TAP.textContent = 'D →';
+      TAP.classList.add('show');
+      TAP.style.left = '75%';
+      TAP.style.transform = 'translateX(-50%)';
+      FIRE.onclick = () => push('L');
+      TAP.onclick = () => push('R');
+      document.onkeydown = e => {
+        if (e.code === 'KeyA' || e.code === 'ArrowLeft') { e.preventDefault(); push('L'); }
+        if (e.code === 'KeyD' || e.code === 'ArrowRight') { e.preventDefault(); push('R'); }
+      };
+      drain = setInterval(() => {
+        if (!st.alive) return;
+        const opp = OPPS[st.round];
+        st.value -= opp.power * 0.9;
+        if (st.value <= -50) {
+          st.alive = false; clearInterval(drain);
+          finishLevel({
+            code: 'MISSION 04 · 未達成', title: '被壓了下去',
+            sub: [['','右手還在發燙。'],['em','但你沒有鬆開。'],['','班長說：「明晚再來。」']],
+            stats: [['過關','Round ' + st.round + ' / 5'],['對手',OPPS[st.round].name],['右手','還在']]
+          });
+        } else if (st.value >= 50) {
+          sfxSlam();
+          st.value = 0; st.last = ''; st.round++;
+          if (st.round >= 5) {
+            st.alive = false; clearInterval(drain);
+            finishLevel({
+              code: 'MISSION 04 · 達成', title: '全連皆輸',
+              sub: [['','五輪。'],['em','全連都笑不出來了。'],['','班長拍拍你的肩，沒問。']],
+              stats: [['連勝','5 / 5'],['剩餘力氣','█ █ █'],['右手','還在']]
+            });
+          } else nextRound();
+        }
+      }, 50);
+      levelInputs.push(() => { clearInterval(drain); FIRE.onclick = null; TAP.onclick = null; });
+    },
+    update(dt) {
+      if (!st.alive) return;
+      const pct = Math.max(-100, Math.min(100, st.value));
+      pivot.rotation.z = pct * 0.008;
+      lamp.intensity = 2 + Math.sin(Date.now() * 0.01) * 0.15;
+      bulb.material.color.setHSL(0.12, 0.8, 0.7 + Math.sin(Date.now() * 0.008) * 0.05);
+      // camera shake on push
+      camera.position.x = Math.sin(Date.now() * 0.02) * Math.abs(pct) * 0.001;
+    },
+    stop() { st.alive = false; clearInterval(drain); }
+  };
+}
+
+/* ══════════════════════════════════════════
+   L5 — MIDNIGHT GUARD
+   ══════════════════════════════════════════ */
+function buildGuard() {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x020408);
+  addFog(scene, 0x020408, 0.03);
+  scene.add(new THREE.AmbientLight(0x111118, 0.08));
+
+  // moon
+  const moon = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 16), new THREE.MeshBasicMaterial({ color: 0xeeeedd }));
+  moon.position.set(20, 30, -25);
+  scene.add(moon);
+  const moonLight = new THREE.DirectionalLight(0x334455, 0.12);
+  moonLight.position.copy(moon.position);
+  scene.add(moonLight);
+
+  // stars
+  const starGeo = new THREE.BufferGeometry();
+  const starPos = [];
+  for (let i = 0; i < 200; i++) {
+    starPos.push((Math.random() - 0.5) * 100, 20 + Math.random() * 30, -30 - Math.random() * 50);
+  }
+  starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+  const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.15 }));
+  scene.add(stars);
+
+  // flashlight
+  const flashlight = new THREE.SpotLight(0xffffcc, 4, 35, Math.PI * 0.12, 0.5, 1.5);
+  flashlight.position.set(0, 2, 0);
+  flashlight.target.position.set(0, 0, -10);
+  scene.add(flashlight);
+  scene.add(flashlight.target);
+
+  // ground
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(80, 80),
+    new THREE.MeshStandardMaterial({ color: 0x0a0c06, roughness: 1 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  // guard post (detailed)
+  const post = new THREE.Group();
+  // walls
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0x3a3a2a, roughness: 0.9 });
+  const wallBack = new THREE.Mesh(new THREE.BoxGeometry(2.5, 2.5, 0.15), wallMat);
+  wallBack.position.set(0, 1.25, 0.9); post.add(wallBack);
+  for (const s of [-1, 1]) {
+    const sideWall = new THREE.Mesh(new THREE.BoxGeometry(0.15, 2.5, 2), wallMat);
+    sideWall.position.set(s * 1.2, 1.25, 0); post.add(sideWall);
+  }
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(3, 0.12, 2.8), new THREE.MeshStandardMaterial({ color: 0x555544 }));
+  roof.position.y = 2.6; post.add(roof);
+  // sandbags
+  const sandbagMat = new THREE.MeshStandardMaterial({ color: 0x5a5a3a, roughness: 1 });
+  for (let row = 0; row < 2; row++) {
+    for (let i = -2; i <= 2; i++) {
+      const bag = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.2, 0.3), sandbagMat);
+      bag.position.set(i * 0.5, row * 0.22 + 0.1, -0.9);
+      post.add(bag);
+    }
+  }
+  post.position.set(-4, 0, 3);
+  scene.add(post);
+
+  // soldier (you) at post
+  const guard = makeSoldier();
+  guard.position.set(-3, 0, 2);
+  guard.rotation.y = 0.3;
+  scene.add(guard);
+
+  // perimeter fence
+  const fenceMat = new THREE.MeshBasicMaterial({ color: 0x333333 });
+  for (let z = -25; z <= 5; z += 3) {
+    const fencePost = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 2, 4), fenceMat);
+    fencePost.position.set(8, 1, z); scene.add(fencePost);
+    // wire
+    for (let h = 0.5; h <= 1.8; h += 0.4) {
+      const wire = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.01, 3), fenceMat);
+      wire.position.set(8, h, z + 1.5); scene.add(wire);
+    }
+  }
+
+  // distant trees
+  const treeSil = new THREE.MeshBasicMaterial({ color: 0x030504 });
+  for (let i = 0; i < 30; i++) {
+    const t = new THREE.Mesh(new THREE.ConeGeometry(0.8 + Math.random(), 3 + Math.random() * 3, 5), treeSil);
+    t.position.set(-20 + i * 1.8 + Math.random(), 1.5, -18 - Math.random() * 8);
+    scene.add(t);
+  }
+
+  const EVENTS = [
+    { txt:'風從林子裡吹過。', real: false },
+    { txt:'遠處狗叫了兩聲。', real: false },
+    { txt:'腳步聲 —— 從圍牆外。', real: true },
+    { txt:'蟲鳴停了一拍。', real: false },
+    { txt:'有人翻過鐵絲網的聲音。', real: true },
+    { txt:'樹葉落在哨所屋頂。', real: false },
+    { txt:'雨，開始下了。', real: false },
+    { txt:'金屬輕響 —— 鐵門方向。', real: true },
+    { txt:'貓從彈藥庫旁跑過。', real: false },
+    { txt:'兩百公尺外，有一道手電筒光。', real: true }
+  ];
+
+  // threat silhouette
+  const threat = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 1.2, 4, 8), new THREE.MeshBasicMaterial({ color: 0x0a0a0a }));
+  threat.visible = false; threat.position.y = 0.9;
+  scene.add(threat);
+
+  const st = { i: 0, score: 0, mistakes: 0, alive: true, waiting: false, clock: 150 };
+
+  function nextEvent() {
+    if (st.i >= 10) { endGuard(); return; }
+    st.waiting = true;
+    st.clock += 15;
+    const mm = Math.floor(st.clock / 60), ss = st.clock % 60;
+    showHud((mm < 10 ? '0' : '') + mm + ':' + (ss < 10 ? '0' : '') + ss, 'MISSION 05', st.i + ' / 10');
+    const ev = EVENTS[st.i];
+    showFB(ev.txt, '');
+    if (ev.real) {
+      const a = Math.random() * Math.PI - Math.PI / 2;
+      threat.position.set(Math.sin(a) * 15, 0.9, -10 + Math.cos(a) * 5);
+      threat.visible = true;
+    } else { threat.visible = false; }
+    sfxWind();
+    if (Math.random() > 0.5) sfxCricket();
+  }
+
+  function guardAns(aimed) {
+    if (!st.waiting) return;
+    st.waiting = false;
+    const ev = EVENTS[st.i];
+    threat.visible = false;
+    if (ev.real === aimed) {
+      st.score++;
+      showFB(ev.real ? '—— 確認狀況，上報。' : '—— 靜。', 'ok');
+      sfxHit();
+    } else {
+      st.mistakes++;
+      showFB(ev.real ? '—— 你遲了半秒。' : '—— 空槍口。', 'ng');
+      sfxMiss();
+    }
+    st.i++;
+    setTimeout(nextEvent, 1200);
+  }
+
+  function endGuard() {
+    st.alive = false;
+    if (st.mistakes <= 2) {
+      finishLevel({
+        code: 'MISSION 05 · 達成', title: '05:00 天亮了',
+        sub: [['','你還活著。'],['em','心跳也還活著。'],['','那個名字，也還活著。']],
+        stats: [['正確',st.score+' / 10'],['失誤',st.mistakes+''],['撐過','2.5h']]
+      });
+    } else {
+      finishLevel({
+        code: 'MISSION 05 · 勉強過關', title: '天亮以前',
+        sub: [['','失誤太多，下一班要補一次。'],['em','班長沒罵你。'],['','他說：「想太多，就這樣。」']],
+        stats: [['正確',st.score+' / 10'],['失誤',st.mistakes+''],['補哨','1']]
+      });
+    }
+  }
+
+  return {
+    scene,
+    cameraSetup(cam) { cam.position.set(-1, 3, 6); cam.lookAt(0, 0.5, -8); },
+    start() {
+      showHud('02:30', 'MISSION 05', '0 / 10');
+      FIRE.textContent = '舉槍';
+      FIRE.classList.add('show');
+      FIRE.style.left = '65%';
+      TAP.textContent = '不動';
+      TAP.classList.add('show');
+      TAP.style.left = '35%';
+      TAP.style.transform = 'translateX(-50%)';
+      FIRE.onclick = () => guardAns(true);
+      TAP.onclick = () => guardAns(false);
+      document.onkeydown = e => {
+        if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); guardAns(true); }
+        if (e.code === 'KeyX' || e.code === 'ArrowDown') { e.preventDefault(); guardAns(false); }
+      };
+      setTimeout(nextEvent, 1000);
+      levelInputs.push(() => { FIRE.onclick = null; TAP.onclick = null; });
+    },
+    update(dt) {
+      if (!st.alive) return;
+      const t = Date.now() * 0.001;
+      flashlight.target.position.x = Math.sin(t * 0.5) * 4;
+      flashlight.target.position.z = -10 + Math.cos(t * 0.3) * 3;
+      moon.material.color.setHSL(0.15, 0.05, 0.85 + Math.sin(t) * 0.05);
+      // slight camera sway (breathing)
+      camera.position.y = 3 + Math.sin(t * 0.8) * 0.05;
+    },
+    stop() { st.alive = false; }
+  };
+}
+
+/* ══════════════════════════════════════════
+   L6 — ONION PICKING
+   ══════════════════════════════════════════ */
+function buildOnion() {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x87c0e8);
+  addFog(scene, 0xc8a050, 0.006);
+  scene.add(new THREE.HemisphereLight(0xffffdd, 0x886622, 0.8));
+  const sun = new THREE.DirectionalLight(0xffffff, 2.0);
+  sun.position.set(10, 30, 5);
+  sun.castShadow = !isMobile;
+  scene.add(sun);
+
+  // dirt field
+  const dirt = new THREE.Mesh(
+    new THREE.PlaneGeometry(60, 60),
+    new THREE.MeshStandardMaterial({ color: 0x7a5a2e, roughness: 1 })
+  );
+  dirt.rotation.x = -Math.PI / 2; dirt.receiveShadow = true; scene.add(dirt);
+
+  // furrow rows
+  for (let z = -25; z <= 25; z += 1.5) {
+    const row = new THREE.Mesh(new THREE.BoxGeometry(60, 0.15, 0.3), new THREE.MeshStandardMaterial({ color: 0x5a3e18, roughness: 1 }));
+    row.position.set(0, 0.08, z);
+    scene.add(row);
+  }
+
+  // distant mountains
+  const mtMat = new THREE.MeshStandardMaterial({ color: 0x5a7a4a, roughness: 1 });
+  for (let i = 0; i < 5; i++) {
+    const mt = new THREE.Mesh(new THREE.ConeGeometry(8 + Math.random() * 6, 10 + Math.random() * 8, 6), mtMat);
+    mt.position.set(-20 + i * 12, 0, -35);
+    scene.add(mt);
+  }
+
+  // workers (other soldiers)
+  for (let i = 0; i < 4; i++) {
+    const worker = makeSoldier();
+    worker.position.set(-8 + i * 5 + Math.random() * 2, 0, -5 + Math.random() * 10);
+    worker.rotation.y = Math.random() * Math.PI;
+    // crouch
+    worker.scale.y = 0.85;
+    scene.add(worker);
+  }
+
+  // onion meshes
+  const onionMat = new THREE.MeshStandardMaterial({ color: 0xf0e6d2, roughness: 0.6 });
+  const leafMat = new THREE.MeshStandardMaterial({ color: 0x558833, roughness: 0.8 });
+  const onions = [];
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+
+  function spawnOnion() {
+    const g = new THREE.Group();
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.25, 10, 8), onionMat.clone());
+    bulb.position.y = 0.08;
+    bulb.castShadow = true;
+    g.add(bulb);
+    // leaves (3 blades)
+    for (let l = 0; l < 3; l++) {
+      const leaf = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.04, 0.5, 4), leafMat);
+      leaf.position.set((l - 1) * 0.04, 0.45, 0);
+      leaf.rotation.z = (l - 1) * 0.15;
+      g.add(leaf);
+    }
+    // roots
+    for (let r = 0; r < 4; r++) {
+      const root = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.005, 0.15, 3), new THREE.MeshBasicMaterial({ color: 0x8a7a5a }));
+      root.position.set((Math.random() - 0.5) * 0.12, -0.08, (Math.random() - 0.5) * 0.12);
+      root.rotation.x = Math.random() * 0.5;
+      g.add(root);
+    }
+    g.position.set((Math.random() - 0.5) * 35, 0, (Math.random() - 0.5) * 25);
+    g.userData.picked = false;
+    g.userData.age = 0;
+    scene.add(g);
+    onions.push(g);
+    return g;
+  }
+
+  const st = { picked: 0, time: 60, alive: true };
+  let timer, spawnTimer;
+
+  function pickOnion(g) {
+    if (g.userData.picked || !st.alive) return;
+    g.userData.picked = true;
+    st.picked++;
+    sfxOnionPop();
+    showHud(st.picked + ' / 30', 'MISSION 06', st.time + 's');
+    // pop-out animation
+    const startY = g.position.y;
+    const popStart = Date.now();
+    const popAnim = setInterval(() => {
+      const t = (Date.now() - popStart) / 500;
+      if (t >= 1) { clearInterval(popAnim); scene.remove(g); return; }
+      g.position.y = startY + 4 * Math.sin(Math.PI * t);
+      g.rotation.z = t * 3;
+      g.scale.setScalar(1 + t * 0.3);
+      g.children[0].material.opacity = 1 - t;
+      g.children[0].material.transparent = true;
+    }, 16);
+    if (st.picked >= 30) {
+      st.alive = false; clearInterval(timer); clearInterval(spawnTimer);
+      setTimeout(() => finishLevel({
+        code: 'MISSION 06 · 達成', title: '30 顆洋蔥 · 30 個日子',
+        sub: [['','弟兄們邊拔邊唱歌。'],['em','你跟著笑。'],['','原來平凡，也是一種原諒。']],
+        stats: [['拔起','30'],['剩時',st.time+'s'],['心情','光']]
+      }), 500);
+    }
+  }
+
+  function onClick(e) {
+    if (!st.alive) return;
+    const rect = renderer.domElement.getBoundingClientRect();
+    pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera);
+    for (const o of onions) {
+      if (o.userData.picked) continue;
+      const hits = raycaster.intersectObjects(o.children, true);
+      if (hits.length > 0) { pickOnion(o); return; }
+    }
+  }
+
+  return {
+    scene,
+    cameraSetup(cam) { cam.position.set(0, 10, 12); cam.lookAt(0, 0, -2); },
+    start() {
+      showHud('0 / 30', 'MISSION 06', '60s');
+      for (let i = 0; i < 10; i++) spawnOnion();
+      spawnTimer = setInterval(() => {
+        if (!st.alive) return;
+        if (onions.filter(o => !o.userData.picked).length < 15) spawnOnion();
+      }, 400);
+      renderer.domElement.addEventListener('pointerdown', onClick);
+      timer = setInterval(() => {
+        if (!st.alive) return;
+        st.time--;
+        showHud(st.picked + ' / 30', 'MISSION 06', st.time + 's');
+        if (st.time <= 0) {
+          st.alive = false; clearInterval(timer); clearInterval(spawnTimer);
+          finishLevel({
+            code: 'MISSION 06 · 未達成', title: '收工',
+            sub: [['','日頭下山了。'],['em','你手上還抓著半顆洋蔥。'],['','班長說：「明天再拔。」']],
+            stats: [['拔起',st.picked+''],['剩時','0'],['心情','—']]
+          });
+        }
+      }, 1000);
+      levelInputs.push(() => {
+        clearInterval(timer); clearInterval(spawnTimer);
+        renderer.domElement.removeEventListener('pointerdown', onClick);
+      });
+    },
+    update(dt) {
+      for (const o of onions) {
+        if (o.userData.picked) continue;
+        o.userData.age += dt;
+        // gentle sway
+        o.rotation.z = Math.sin(Date.now() * 0.002 + o.position.x) * 0.05;
+        if (o.userData.age > 5) {
+          o.userData.picked = true;
+          scene.remove(o);
+        }
+      }
+    },
+    stop() { st.alive = false; clearInterval(timer); clearInterval(spawnTimer); }
+  };
+}
+
+/* ══════════════════════════════════════════
+   GAME LOOP
+   ══════════════════════════════════════════ */
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  if (currentLevel && currentLevel.update) currentLevel.update(dt);
+  renderer.render(activeScene, camera);
+}
+
+animate();
+showIntro();
+</script>
+</body>
+</html>
