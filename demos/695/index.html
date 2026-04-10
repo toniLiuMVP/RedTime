@@ -93,6 +93,22 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 .cine-skip{position:fixed;bottom:24px;right:24px;z-index:12;font-size:11px;color:#c8a063;letter-spacing:.2em;opacity:0;animation:lineIn .5s ease 2s forwards;cursor:pointer;padding:8px 16px;border:1px solid rgba(200,160,99,.3)}
 @keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
+/* fade transition */
+#fade{position:fixed;inset:0;z-index:55;background:#0b0d08;pointer-events:none;opacity:0;transition:opacity .6s ease}
+#fade.in{opacity:1}
+
+/* brief (cinematic intro before level) */
+.brief-wrap{text-align:center;max-width:520px;width:100%;position:relative}
+.brief-text{margin-bottom:48px;line-height:2.6;font-size:clamp(15px,4vw,19px);letter-spacing:.06em;text-shadow:0 2px 16px rgba(0,0,0,.9)}
+.brief-line{opacity:0;animation:briefIn .8s ease forwards}
+@keyframes briefIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.brief-title-card{opacity:0;animation:briefTitleIn 1.2s ease forwards}
+.brief-mission{font-family:"Courier New",monospace;color:#c8a063;letter-spacing:.6em;font-size:10px;margin-bottom:10px;text-shadow:0 0 20px rgba(200,160,99,.4)}
+.brief-mission-name{font-size:clamp(26px,7vw,40px);letter-spacing:.2em;color:#f0e6d2;text-shadow:0 0 30px rgba(240,230,210,.15)}
+.brief-skip{position:fixed;bottom:28px;right:28px;font-size:11px;color:#c8a063;letter-spacing:.2em;opacity:0;animation:lineIn .5s ease 3s forwards;cursor:pointer;padding:8px 16px;border:1px solid rgba(200,160,99,.25);background:rgba(0,0,0,.3);z-index:12}
+.brief-skip:hover{background:#c8a063;color:#0b0d08}
+.brief-vignette{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.5) 100%)}
+
 /* end */
 .end-roll{max-width:560px;text-align:center;line-height:2.6;font-size:clamp(15px,4vw,19px);letter-spacing:.08em;animation:endIn 2s ease .3s both}
 .end-mark{margin-top:40px;color:#c8a063;letter-spacing:.4em;font-family:"Courier New",monospace;font-size:12px;opacity:.7}
@@ -105,6 +121,7 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 </head>
 <body>
 
+<div id="fade"></div>
 <div id="overlay" class="active"></div>
 <div id="hud">
   <div class="hud-l"><span id="hud-l1"></span><span id="hud-l2"></span></div>
@@ -150,6 +167,13 @@ function showHud(l1, l2, r1) {
   HUD.classList.add('show');
 }
 function hideHud() { HUD.classList.remove('show'); }
+
+/* fade transition */
+const FADE = $('fade');
+function fadeOut(cb) {
+  FADE.classList.add('in');
+  setTimeout(() => { cb(); setTimeout(() => FADE.classList.remove('in'), 80); }, 650);
+}
 
 /* ══════════════════════════════════════════
    THREE.js SETUP
@@ -363,16 +387,62 @@ const DIARY = [
 ];
 
 /* ══════════════════════════════════════════
-   FLOW — with cow cinematic after artillery
+   BRIEFS — cinematic intros for each level
+   ══════════════════════════════════════════ */
+const BRIEFS = {
+  artillery: {
+    lines: ['明天考砲兵射擊。','','數字，','是我現在唯一聽得清楚的聲音。'],
+    mission: 'MISSION 01', name: '砲 兵 射 擊',
+    camStart: [20, 4, 18], camLook: [0, 0, -15]
+  },
+  run: {
+    lines: ['跑步的時候不用想，','只要一直往前。','','這一次，我要跑得夠快。','快到能把那一秒的空白，追回來。'],
+    mission: 'MISSION 02', name: '3000 公尺',
+    camStart: [-4, 2, 15], camLook: [0, 1, -5]
+  },
+  train: {
+    lines: ['哥哥從市區開車過來，','說「上車，我比火車快。」','','心裡只有一句：','讓我趕上，讓我趕上。'],
+    mission: 'MISSION 03', name: '追 上 那 班 車',
+    camStart: [-8, 2, 22], camLook: [-2, 1, -10]
+  },
+  arm: {
+    lines: ['不是為了贏。','是為了知道，','這隻手還有沒有力氣。','','握住一個已經不在眼前的人。'],
+    mission: 'MISSION 04', name: '腕 力',
+    camStart: [3, 4, 5], camLook: [0, 1.2, 0]
+  },
+  guard: {
+    lines: ['02:30。','全營都在睡。','','只有我，一支槍，一盞燈。'],
+    mission: 'MISSION 05', name: '午 夜 衛 哨',
+    camStart: [6, 4, 12], camLook: [0, 0.5, -8]
+  },
+  onion: {
+    lines: ['屏東。','洋蔥田一望無際。','','太陽很大，土很鬆。','洋蔥皮薄得像信紙。'],
+    mission: 'MISSION 06', name: '拔 洋 蔥',
+    camStart: [0, 18, 22], camLook: [0, 0, -2]
+  }
+};
+
+/* ══════════════════════════════════════════
+   FLOW — diary → brief → level → result/scene → diary
    ══════════════════════════════════════════ */
 const FLOW = [
-  {t:'diary',i:0},{t:'diary',i:1},{t:'level',n:'artillery'},
+  {t:'diary',i:0},
+  {t:'diary',i:1},
+  {t:'level',n:'artillery'},
   {t:'scene',n:'cow'},{t:'diary',i:2},
-  {t:'diary',i:3},{t:'level',n:'run'},{t:'diary',i:4},
-  {t:'diary',i:5},{t:'level',n:'train'},{t:'diary',i:6},
-  {t:'level',n:'arm'},{t:'diary',i:7},
-  {t:'level',n:'guard'},{t:'diary',i:8},
-  {t:'level',n:'onion'},{t:'diary',i:9},{t:'end'}
+  {t:'diary',i:3},
+  {t:'level',n:'run'},
+  {t:'diary',i:4},
+  {t:'diary',i:5},
+  {t:'level',n:'train'},
+  {t:'diary',i:6},
+  {t:'level',n:'arm'},
+  {t:'diary',i:7},
+  {t:'level',n:'guard'},
+  {t:'diary',i:8},
+  {t:'level',n:'onion'},
+  {t:'diary',i:9},
+  {t:'end'}
 ];
 let flowIdx = -1;
 let currentLevel = null;
@@ -381,12 +451,14 @@ let levelInputs = [];
 function advance() {
   stopLevel();
   flowIdx++;
-  if (flowIdx >= FLOW.length) { showEnd(); return; }
+  if (flowIdx >= FLOW.length) { fadeOut(() => showEnd()); return; }
   const step = FLOW[flowIdx];
-  if (step.t === 'diary') showDiary(step.i);
-  else if (step.t === 'level') showLevel(step.n);
-  else if (step.t === 'scene') showCinematic(step.n);
-  else showEnd();
+  fadeOut(() => {
+    if (step.t === 'diary') showDiary(step.i);
+    else if (step.t === 'level') showLevel(step.n);
+    else if (step.t === 'scene') showCinematic(step.n);
+    else showEnd();
+  });
 }
 
 function stopLevel() {
@@ -444,10 +516,102 @@ function showLevel(name) {
   const builders = { artillery: buildArtillery, run: buildRun, train: buildTrain, arm: buildArm, guard: buildGuard, onion: buildOnion };
   const builder = builders[name];
   if (!builder) { advance(); return; }
-  currentLevel = builder();
-  activeScene = currentLevel.scene;
-  if (currentLevel.cameraSetup) currentLevel.cameraSetup(camera);
-  if (currentLevel.start) currentLevel.start();
+  const level = builder();
+  activeScene = level.scene;
+  currentLevel = level; // update() runs during brief so 3D animates
+
+  const brief = BRIEFS[name];
+  if (brief) {
+    // Cinematic camera angle
+    camera.position.set(...brief.camStart);
+    camera.lookAt(...brief.camLook);
+    showBriefOverlay(brief, () => {
+      // Smooth camera dolly to gameplay position
+      if (level.cameraSetup) {
+        const targetPos = camera.position.clone();
+        level.cameraSetup(camera);
+        const gamePos = camera.position.clone();
+        // Start from cinematic angle, lerp to game angle
+        camera.position.copy(targetPos);
+        const startT = Date.now();
+        const dur = 1200;
+        const dolly = setInterval(() => {
+          const t = Math.min(1, (Date.now() - startT) / dur);
+          const ease = t * t * (3 - 2 * t);
+          camera.position.lerpVectors(targetPos, gamePos, ease);
+          if (t >= 1) clearInterval(dolly);
+        }, 16);
+        levelInputs.push(() => clearInterval(dolly));
+      }
+      if (level.start) level.start();
+    });
+  } else {
+    if (level.cameraSetup) level.cameraSetup(camera);
+    if (level.start) level.start();
+  }
+}
+
+/* ══════════════════════════════════════════
+   BRIEF OVERLAY — cinematic text over 3D scene
+   ══════════════════════════════════════════ */
+function showBriefOverlay(brief, onDone) {
+  clear(OV);
+  const wrap = el('div', 'brief-wrap');
+
+  // vignette
+  const vig = el('div', 'brief-vignette');
+  document.body.appendChild(vig);
+
+  // story text lines
+  const textBlock = el('div', 'brief-text');
+  brief.lines.forEach((line, i) => {
+    const row = el('div', 'brief-line', line || '\u00a0');
+    row.style.animationDelay = (0.8 + i * 0.7) + 's';
+    textBlock.appendChild(row);
+  });
+  wrap.appendChild(textBlock);
+
+  // mission title card
+  const titleCard = el('div', 'brief-title-card');
+  titleCard.appendChild(el('div', 'brief-mission', brief.mission));
+  titleCard.appendChild(el('div', 'brief-mission-name', brief.name));
+  const titleDelay = 0.8 + brief.lines.length * 0.7 + 0.8;
+  titleCard.style.animationDelay = titleDelay + 's';
+  wrap.appendChild(titleCard);
+
+  OV.appendChild(wrap);
+  OV.classList.add('active');
+
+  // skip button
+  const skipBtn = el('div', 'brief-skip', '跳過 ›');
+  document.body.appendChild(skipBtn);
+
+  let done = false;
+  function finish() {
+    if (done) return;
+    done = true;
+    clearTimeout(autoTimer);
+    if (vig.parentNode) vig.remove();
+    if (skipBtn.parentNode) skipBtn.remove();
+    clear(OV); OV.classList.remove('active');
+    onDone();
+  }
+
+  // auto-advance after text + title + 2.5s
+  const totalDelay = (titleDelay + 2.5) * 1000;
+  const autoTimer = setTimeout(finish, totalDelay);
+
+  // skip interactions
+  skipBtn.addEventListener('click', finish);
+  document.onkeydown = e => {
+    if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); finish(); }
+  };
+
+  levelInputs.push(() => {
+    clearTimeout(autoTimer);
+    if (vig.parentNode) vig.remove();
+    if (skipBtn.parentNode) skipBtn.remove();
+  });
 }
 
 function showCinematic(name) {
@@ -465,9 +629,10 @@ function showCinematic(name) {
    RESULT — now with optional 3D bg
    ══════════════════════════════════════════ */
 function finishLevel(obj, bgScene) {
+  // Keep the level scene as bg if no specific bg provided
+  const keepScene = bgScene || activeScene;
   stopLevel();
-  if (bgScene) activeScene = bgScene;
-  else activeScene = darkScene;
+  activeScene = keepScene;
   clear(OV);
   const box = el('div', 'r-box');
   box.appendChild(el('div', 'r-code', obj.code));
@@ -499,8 +664,48 @@ function finishLevel(obj, bgScene) {
 /* ══════════════════════════════════════════
    INTRO / END
    ══════════════════════════════════════════ */
+function buildIntroScene() {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x050810);
+  addFog(scene, 0x050810, 0.02);
+  scene.add(new THREE.AmbientLight(0x111118, 0.1));
+  const moon = new THREE.DirectionalLight(0x334455, 0.15);
+  moon.position.set(10, 20, -15); scene.add(moon);
+  // stars
+  const starGeo = new THREE.BufferGeometry();
+  const sp = [];
+  for (let i = 0; i < 300; i++) sp.push((Math.random() - 0.5) * 120, 15 + Math.random() * 35, -20 - Math.random() * 60);
+  starGeo.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
+  scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.12 })));
+  // ground
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshStandardMaterial({ color: 0x0a0c06, roughness: 1 }));
+  ground.rotation.x = -Math.PI / 2; scene.add(ground);
+  // barracks silhouettes
+  const bMat = new THREE.MeshBasicMaterial({ color: 0x0a0a08 });
+  for (let i = 0; i < 4; i++) {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(6, 2.5, 3), bMat);
+    b.position.set(-12 + i * 8, 1.25, -10 - Math.random() * 5); scene.add(b);
+  }
+  // lonely figure (you)
+  const figure = makeSoldier();
+  figure.traverse(c => { if (c.material) { c.material = c.material.clone(); c.material.color.multiplyScalar(0.15); } });
+  figure.position.set(0, 0, 2);
+  scene.add(figure);
+  // lamp post
+  const lampPole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 4, 4), new THREE.MeshBasicMaterial({ color: 0x333333 }));
+  lampPole.position.set(2, 2, 2); scene.add(lampPole);
+  const lampLight = new THREE.PointLight(0xffcc66, 0.4, 8);
+  lampLight.position.set(2, 4, 2); scene.add(lampLight);
+  const lampBulb = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffdd88 }));
+  lampBulb.position.copy(lampLight.position); scene.add(lampBulb);
+  return scene;
+}
+
 function showIntro() {
-  activeScene = darkScene;
+  const introScene = buildIntroScene();
+  activeScene = introScene;
+  camera.position.set(0, 3, 10);
+  camera.lookAt(0, 1, 0);
   clear(OV);
   const wrap = el('div', 'intro-wrap');
   wrap.appendChild(el('div', 'intro-mark', '695T'));
@@ -517,11 +722,48 @@ function showIntro() {
   wrap.appendChild(btn);
   OV.appendChild(wrap);
   OV.classList.add('active');
+  // slow camera drift
+  const introAnim = setInterval(() => {
+    if (activeScene !== introScene) { clearInterval(introAnim); return; }
+    camera.position.x = Math.sin(Date.now() * 0.0002) * 2;
+    camera.position.y = 3 + Math.sin(Date.now() * 0.0003) * 0.3;
+    camera.lookAt(0, 1, 0);
+  }, 16);
+}
+
+function buildEndScene() {
+  const scene = new THREE.Scene();
+  // sunrise gradient
+  scene.background = new THREE.Color(0x1a1830);
+  addFog(scene, 0x2a2040, 0.008);
+  scene.add(new THREE.HemisphereLight(0xffaa66, 0x221133, 0.6));
+  const sun = new THREE.DirectionalLight(0xffcc88, 1.2);
+  sun.position.set(0, 5, -30); scene.add(sun);
+  // ground
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshStandardMaterial({ color: 0x3a4a2a, roughness: 1 }));
+  ground.rotation.x = -Math.PI / 2; scene.add(ground);
+  // dawn sky glow (big sphere behind)
+  const glow = new THREE.Mesh(new THREE.SphereGeometry(3, 16, 16), new THREE.MeshBasicMaterial({ color: 0xff8844, transparent: true, opacity: 0.3 }));
+  glow.position.set(0, 3, -30); scene.add(glow);
+  // soldier walking away
+  const figure = makeSoldier();
+  figure.position.set(0, 0, -5);
+  figure.rotation.y = Math.PI;
+  scene.add(figure);
+  // trees
+  for (let i = 0; i < 15; i++) {
+    const t = makeTree(2 + Math.random() * 2);
+    t.position.set(-15 + Math.random() * 30, 0, -15 - Math.random() * 10); scene.add(t);
+  }
+  return scene;
 }
 
 function showEnd() {
   stopLevel();
-  activeScene = darkScene;
+  const endScene = buildEndScene();
+  activeScene = endScene;
+  camera.position.set(0, 2, 3);
+  camera.lookAt(0, 1.2, -10);
   clear(OV);
   const roll = el('div', 'end-roll');
   ['時間存起來了。','','兩年，六個片段，','一本寫滿了妳的日記。','','一秒 ——','我用二十年，','才讀懂。'].forEach(t => {
@@ -539,6 +781,13 @@ function showEnd() {
   act.appendChild(b2);
   OV.appendChild(act);
   OV.classList.add('active');
+  // slow camera pull back
+  const endAnim = setInterval(() => {
+    if (activeScene !== endScene) { clearInterval(endAnim); return; }
+    camera.position.z += 0.003;
+    camera.position.y += 0.001;
+    camera.lookAt(0, 1.2, -10);
+  }, 16);
 }
 
 /* ══════════════════════════════════════════
