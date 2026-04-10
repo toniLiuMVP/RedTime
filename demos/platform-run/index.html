@@ -3,18 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="color-scheme" content="dark" />
+<!-- Defense-in-depth CSP（最佳做法仍是 HTTP header，但 GitHub Pages 無法設 header，故以 meta 作為最低防線） -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'self' https:; connect-src 'self' https:; frame-ancestors 'self';" />
 <meta name="google-site-verification" content="X-GIGIVwll5mriPBn8nqDETFsmZnqIWp2WSbUGzot8w" />
-<meta name="description" content="月台上的狂奔：三十秒偶像劇。用你的反應，替那一秒追回來。" />
+<meta name="description" content="一眼只有一秒，卻用了二十年才讀懂。《時間裡的兩個妳》 連載中。" />
 <meta property="og:type" content="website" />
 <meta property="og:title" content="月台上的狂奔 — 三十秒偶像劇" />
-<meta property="og:description" content="三十秒，追回那一秒。來自「時間裡的兩個妳」的互動小遊戲。" />
+<meta property="og:description" content="一眼只有一秒，卻用了二十年才讀懂。《時間裡的兩個妳》 連載中。" />
 <meta property="og:url" content="https://toniliumvp.github.io/RedTime/demos/platform-run/index.html" />
 <meta property="og:image" content="https://toniliumvp.github.io/RedTime/assets/og-image.jpg" />
 <meta name="theme-color" content="#050508" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:image" content="https://toniliumvp.github.io/RedTime/assets/og-image.jpg" />
 <meta name="twitter:title" content="月台上的狂奔 — 三十秒偶像劇" />
-<meta name="twitter:description" content="三十秒，追回那一秒。來自「時間裡的兩個妳」的互動小遊戲。" />
+<meta name="twitter:description" content="一眼只有一秒，卻用了二十年才讀懂。《時間裡的兩個妳》 連載中。" />
 <link rel="canonical" href="https://toniliumvp.github.io/RedTime/demos/platform-run/index.html" />
 <link rel="manifest" href="../../manifest.json" />
 <title>月台上的狂奔 — 三十秒偶像劇</title>
@@ -260,7 +263,7 @@ canvas{display:block;width:100%;height:100%}
   <div class="result-text" id="result-title"></div>
   <div class="result-sub" id="result-body"></div>
   <div id="name-input-wrap">
-    <input type="text" id="name-input" maxlength="10" placeholder="YOUR NAME" autocomplete="off">
+    <input type="text" id="name-input" maxlength="10" placeholder="你的名字" autocomplete="off">
     <button id="save-score-btn">記錄成績</button>
   </div>
   <div class="result-retry" id="result-retry">再來一次</div>

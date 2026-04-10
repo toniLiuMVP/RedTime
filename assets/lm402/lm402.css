@@ -3435,19 +3435,25 @@ body.cinematic-mode .letterbox-bar {
   pointer-events: none;
 }
 .lm402-loader-title {
-  font: 300 clamp(18px, 2.5vw, 28px) / 1.4 "Cormorant Garamond", serif;
+  font: 300 clamp(18px, 2.5vw, 28px) / 1.4 "Cormorant Garamond", Georgia, "Times New Roman", serif;
   color: rgba(238, 232, 222, 0.8);
   letter-spacing: 0.1em;
   text-align: center;
   text-shadow: 0 0 40px rgba(217,179,106,0.08);
+  /* CLS 穩定：固定最小高度避免 fallback → webfont 切換造成 layout shift */
+  min-height: calc(1.4em * 2);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
 }
 .lm402-loader-quote {
-  font: 300 clamp(12px, 1.6vw, 16px) / 1.8 "Noto Serif TC", serif;
+  font: 300 clamp(12px, 1.6vw, 16px) / 1.8 "Noto Serif TC", "PingFang TC", serif;
   color: rgba(238, 232, 222, 0.4);
   max-width: 320px;
   text-align: center;
   opacity: 0;
   animation: loader-quote-in 1s 0.8s ease forwards;
+  /* CLS 穩定：明確 fallback 到系統字體 */
+  font-synthesis: none;
 }
 @keyframes loader-quote-in {
   0% { opacity: 0; }

@@ -1,7 +1,7 @@
 // RedTime Service Worker
 // 策略：全部 network-first（有網路永遠拿最新，離線才用快取）
 
-const CACHE_NAME = 'redtime-v2';
+const CACHE_NAME = 'redtime-20260410101040';
 
 // 預快取核心資源（install 時立即下載，供離線使用）
 const PRECACHE_URLS = [

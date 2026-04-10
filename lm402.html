@@ -7,21 +7,23 @@
       content="width=device-width,initial-scale=1,viewport-fit=cover"
     />
     <meta name="theme-color" content="#050608" />
+    <meta name="color-scheme" content="dark" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="google-site-verification" content="X-GIGIVwll5mriPBn8nqDETFsmZnqIWp2WSbUGzot8w" />
     <link rel="canonical" href="https://toniliumvp.github.io/RedTime/lm402.html" />
     <link rel="manifest" href="manifest.json" />
-    <!-- Security headers such as CSP / X-Frame-Options should be sent by the host, not meta tags. -->
+    <!-- Defense-in-depth CSP（最佳做法仍是 HTTP header，但 GitHub Pages 無法設 header，故以 meta 作為最低防線） -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://youtube.com; worker-src 'self' blob:; img-src 'self' data: blob: https:; media-src 'self' https:; connect-src 'self' https:; frame-ancestors 'self';" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <meta
       name="description"
-      content="你是女兒，沿著紅線飛進 2005 年的利瑪竇大樓 LM402，走過前門的電話聲、後門的等待，親眼看見那一眼瞬間。沉浸式互動場景。"
+      content="一眼只有一秒，卻用了二十年才讀懂。《時間裡的兩個妳》 連載中。"
     />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="LM402 一眼瞬間 · 時間裡的兩個妳" />
     <meta
       property="og:description"
-      content="你是女兒，沿著紅線飛進利瑪竇四樓，走過前門的電話聲、後門的等待，親眼看見那一眼瞬間。"
+      content="一眼只有一秒，卻用了二十年才讀懂。《時間裡的兩個妳》 連載中。"
     />
     <!-- og-image: 自託管版本；備用來源：https://img.youtube.com/vi/eACPFC4K89o/maxresdefault.jpg -->
     <meta
@@ -32,7 +34,7 @@
     <meta name="twitter:title" content="LM402 一眼瞬間 · 時間裡的兩個妳" />
     <meta
       name="twitter:description"
-      content="你是女兒，沿著紅線飛進利瑪竇四樓，走過前門的電話聲、後門的等待，親眼看見那一眼瞬間。"
+      content="一眼只有一秒，卻用了二十年才讀懂。《時間裡的兩個妳》 連載中。"
     />
     <meta
       name="twitter:image"
@@ -44,7 +46,7 @@
       "@context": "https://schema.org",
       "@type": "VideoGame",
       "name": "LM402 一眼瞬間",
-      "description": "你是女兒，沿著紅線飛進 2005 年的利瑪竇大樓 LM402，走過前門的電話聲、後門的等待，親眼看見那一眼瞬間。",
+      "description": "一眼只有一秒，卻用了二十年才讀懂。《時間裡的兩個妳》 連載中。",
       "author": { "@type": "Person", "name": "toni" },
       "url": "https://toniliumvp.github.io/RedTime/lm402.html",
       "inLanguage": "zh-TW",
@@ -538,7 +540,6 @@
         id="side-panel-reveal"
         aria-label="展開關卡進度面板"
         aria-controls="side-panel"
-        title="展開關卡進度"
       >關卡進度 ›</button>
     </main>
 
@@ -676,7 +677,7 @@
     <script>
       // Loading tips — cycle through game hints while loading
       (function () {
-        var tips = [
+        const tips = [
           "轉動視角，每一個角落都藏著 2005 年的痕跡",
           "靠近發光的物件——那些光記得你還沒聽見的事",
           "這裡藏著四種結局，取決於你站在哪裡、記住了什麼",
@@ -684,11 +685,11 @@
           "留意紅線——它從來不會帶你走錯路",
           "光源的方向在暗示你：時間正在往前推"
         ];
-        var tipEl = document.getElementById("loader-tip");
+        const tipEl = document.getElementById("loader-tip");
         if (!tipEl) return;
-        var idx = 0;
+        let idx = 0;
         tipEl.textContent = tips[0];
-        setInterval(function () {
+        const tipTimer = setInterval(function () {
           tipEl.style.opacity = "0";
           setTimeout(function () {
             idx = (idx + 1) % tips.length;
@@ -696,6 +697,8 @@
             tipEl.style.opacity = "1";
           }, 500);
         }, 4000);
+        // 暴露給 app.js — 場景進入、loader 消失後 clearInterval，避免 timer 與 DOM refs 洩漏
+        window.__lm402LoaderTipTimer = tipTimer;
       })();
 
       // Fallback: if ES module fails to load (e.g. file:// protocol), show help after 6s
@@ -749,6 +752,10 @@
         function enterScene() {
           if (entered) return;
           entered = true;
+          // 立刻把按鈕 disable，避免快速連點或 touch+click 雙發造成 race：
+          // 雖然 `entered` flag 已經擋了二次執行，但 disabled 可以更明確地讓 UI 不回應
+          gateBtn.disabled = true;
+          gateBtn.setAttribute("aria-disabled", "true");
           window.__lm402GateEntered = true;
 
           // 1. 在使用者 gesture 內解鎖音訊

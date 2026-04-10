@@ -3465,6 +3465,11 @@ window.__lm402Ready = true;
   if (!loaderEl) return;
   const fillEl = document.getElementById("loader-fill");
   if (fillEl) fillEl.style.width = "100%";
+  // 清掉 lm402.html inline script 的 loading tip rotation（避免 setInterval 一直跑 + DOM ref 洩漏）
+  if (window.__lm402LoaderTipTimer) {
+    clearInterval(window.__lm402LoaderTipTimer);
+    window.__lm402LoaderTipTimer = null;
+  }
   setTimeout(() => {
     loaderEl.style.opacity = "0";
     loaderEl.style.pointerEvents = "none";

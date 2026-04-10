@@ -11,3 +11,6 @@ tools/lighthouse-baseline/**/*.report.json
 output/
 test-results/
 .playwright-cli/
+# 本地 .original.* 備份檔案（只保留在檔案系統，不追蹤）
+assets/lm402/*.original.js
+assets/lm402/*.original.css
