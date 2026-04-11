@@ -148,15 +148,24 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 .rhythm-col{flex:1;border-right:1px solid rgba(200,160,99,.08)}
 .rhythm-col:last-child{border-right:none}
 .rhythm-hint{position:absolute;bottom:40px;left:0;right:0;display:flex;justify-content:center;gap:0}
-.rhythm-hint span{flex:1;text-align:center;font-family:"Courier New",monospace;font-size:16px;color:rgba(200,160,99,.4);line-height:1}
-.rhythm-note{position:absolute;width:25%;text-align:center;font-size:22px;color:#f0e6d2;text-shadow:0 0 8px rgba(200,160,99,.5);pointer-events:none;transition:none}
-.rhythm-note.hit{color:#7fb069;text-shadow:0 0 12px rgba(127,176,105,.8)}
-.rhythm-note.miss{color:#d94832;opacity:.4}
-.rhythm-fb{position:fixed;bottom:calc(60px + 30px);left:50%;transform:translateX(-50%);z-index:16;font-size:14px;font-family:"Courier New",monospace;letter-spacing:.15em;opacity:0;transition:opacity .2s;pointer-events:none}
-.rhythm-fb.show{opacity:1}
-.rhythm-fb.perfect{color:#ffd700}
-.rhythm-fb.good{color:#7fb069}
-.rhythm-fb.miss{color:#d94832}
+.rhythm-hint span{flex:1;text-align:center;font-family:"Courier New",monospace;font-size:32px;font-weight:bold;color:rgba(200,160,99,.5);line-height:1;text-shadow:0 0 10px rgba(200,160,99,.2)}
+.rhythm-note{position:absolute;width:25%;text-align:center;font-size:38px;color:#f0e6d2;text-shadow:0 0 14px rgba(200,160,99,.7),0 0 28px rgba(200,160,99,.3);pointer-events:none;transition:none;font-weight:bold;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5))}
+.rhythm-note::after{content:'';position:absolute;left:25%;right:25%;top:100%;height:24px;background:linear-gradient(180deg,rgba(200,160,99,.25),transparent);border-radius:0 0 50% 50%;pointer-events:none}
+.rhythm-note.hit{color:#7fb069;text-shadow:0 0 18px rgba(127,176,105,1),0 0 36px rgba(127,176,105,.5);transform:scale(1.3);transition:transform .12s,color .12s}
+.rhythm-note.miss{color:#d94832;opacity:.4;transform:scale(0.7);transition:transform .15s,opacity .15s}
+.rhythm-fb{position:fixed;bottom:calc(60px + 40px);left:50%;transform:translateX(-50%);z-index:16;font-size:20px;font-weight:bold;font-family:"Courier New",monospace;letter-spacing:.2em;opacity:0;transition:opacity .15s;pointer-events:none}
+.rhythm-fb.show{opacity:1;animation:rhythmPop .25s ease-out}
+.rhythm-fb.perfect{color:#ffd700;text-shadow:0 0 16px rgba(255,215,0,.8),0 0 32px rgba(255,215,0,.4)}
+.rhythm-fb.good{color:#7fb069;text-shadow:0 0 12px rgba(127,176,105,.6)}
+.rhythm-fb.miss{color:#d94832;text-shadow:0 0 8px rgba(217,72,50,.4)}
+@keyframes rhythmPop{0%{transform:translateX(-50%) scale(1.6);opacity:0}50%{opacity:1}100%{transform:translateX(-50%) scale(1)}}
+.rhythm-flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0}
+.rhythm-flash.fire{background:radial-gradient(ellipse at center bottom,rgba(255,215,0,.25),transparent 70%);animation:rFlash .3s ease-out forwards}
+.rhythm-flash.combo{background:radial-gradient(ellipse at center bottom,rgba(255,100,0,.2),transparent 60%);animation:rFlash .4s ease-out forwards}
+@keyframes rFlash{0%{opacity:1}100%{opacity:0}}
+.rhythm-combo{position:fixed;bottom:calc(60px + 70px);left:50%;transform:translateX(-50%);z-index:16;font-size:28px;font-weight:bold;font-family:"Courier New",monospace;color:#ff8c00;text-shadow:0 0 20px rgba(255,140,0,.6);pointer-events:none;opacity:0;transition:opacity .2s}
+.rhythm-combo.show{opacity:1;animation:comboPulse .4s ease-in-out}
+@keyframes comboPulse{0%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.3)}100%{transform:translateX(-50%) scale(1)}}
 
 /* end */
 .end-roll{max-width:560px;text-align:center;line-height:2.6;font-size:clamp(15px,4vw,19px);letter-spacing:.08em;animation:endIn 2s ease .3s both}
@@ -185,6 +194,8 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 <div class="coin-display" id="coin-display">0</div>
 <div class="rhythm-lane" id="rhythm-lane"><div class="rhythm-cols"><div class="rhythm-col"></div><div class="rhythm-col"></div><div class="rhythm-col"></div><div class="rhythm-col"></div></div><div class="rhythm-judge"></div><div class="rhythm-hint"><span>←</span><span>↓</span><span>↑</span><span>→</span></div></div>
 <div class="rhythm-fb" id="rhythm-fb"></div>
+<div class="rhythm-flash" id="rhythm-flash"></div>
+<div class="rhythm-combo" id="rhythm-combo"></div>
 
 <script type="importmap">{"imports":{"three":"../platform-run/three.module.js"}}</script>
 <script type="module">
@@ -206,6 +217,8 @@ const TLABEL = $('timing-label');
 const COINDISP = $('coin-display');
 const RLANE = $('rhythm-lane');
 const RFB = $('rhythm-fb');
+const RFLASH = $('rhythm-flash');
+const RCOMBO = $('rhythm-combo');
 const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 let playerCoins = 0;
 
@@ -494,8 +507,8 @@ const DIARY = [
    ══════════════════════════════════════════ */
 const BRIEFS = {
   artillery: {
-    lines: ['明天考砲兵射擊。','','數字，','是我現在唯一聽得清楚的聲音。'],
-    mission: 'MISSION 01', name: '砲 兵 射 擊',
+    lines: ['明天考砲兵射擊。','','計算手，負責算出每一發砲彈的落點。','數字，是我現在唯一聽得清楚的聲音。'],
+    mission: 'MISSION 01', name: '計 算 手',
     camStart: [20, 4, 18], camLook: [0, 0, -15]
   },
   run: {
@@ -1095,16 +1108,18 @@ function addFog(scene, color, density) {
    ══════════════════════════════════════════ */
 // shell types for shop system
 const SHELL_TYPES = [
-  { id:'standard', name:'標準榴彈', desc:'基本砲彈', price: 0, blastR: 2.5, color: 0x1a1a0a },
-  { id:'heavy',    name:'重型穿甲彈', desc:'爆炸範圍 +40%', price: 30, blastR: 3.5, color: 0x4a1a0a },
-  { id:'cluster',  name:'子母彈',   desc:'爆炸範圍 +80%', price: 60, blastR: 4.5, color: 0x6a2a0a }
+  { id:'standard', name:'標準榴彈',   desc:'基本砲彈',             price: 0,  blastR: 2.5, speed: 0.7, zoneBonus: 0, color: 0x1a1a0a },
+  { id:'fast',     name:'高速彈',     desc:'飛行速度 ×2',          price: 15, blastR: 2.5, speed: 1.4, zoneBonus: 0, color: 0x2a2a3a },
+  { id:'heavy',    name:'重型穿甲彈', desc:'爆炸範圍 +60%',        price: 30, blastR: 4.0, speed: 0.5, zoneBonus: 0, color: 0x4a1a0a },
+  { id:'guided',   name:'導引彈',     desc:'瞄準區 +50%（更容易命中）', price: 40, blastR: 2.5, speed: 0.7, zoneBonus: 0.5, color: 0x1a3a4a },
+  { id:'cluster',  name:'子母彈',     desc:'爆炸範圍 +120%',       price: 60, blastR: 5.5, speed: 0.6, zoneBonus: 0, color: 0x6a2a0a }
 ];
 let selectedShell = SHELL_TYPES[0];
 
 function showShop(onDone) {
   clear(OV);
   const wrap = el('div', 'shop-wrap');
-  wrap.appendChild(el('div', 'shop-title', '砲 彈 補 給 站'));
+  wrap.appendChild(el('div', 'shop-title', '砲 彈 配 備 站'));
   const coins = el('div', 'shop-coins');
   coins.textContent = '軍餉：' + playerCoins;
   wrap.appendChild(coins);
@@ -1264,23 +1279,25 @@ function buildArtillery() {
 
   // timing bar state
   const NEEDLE_SPEED_BASE = 2.0; // oscillations per second
+  const TARGET_GOAL = 20;
+  const MAX_LIVES = 5;
   const st = {
-    score: 0, life: 3, alive: true, locked: false,
+    score: 0, life: MAX_LIVES, alive: true, locked: false,
     shell: null,
     targetPos: new THREE.Vector3(0, 0, -25),
     explosionTime: 0,
     needlePos: 0, needleDir: 1, needleSpeed: NEEDLE_SPEED_BASE,
-    // hit zone: center 35-65% of bar width, shrinks each round
     zoneStart: 0.35, zoneEnd: 0.65,
     aiming: false
   };
 
   function updateTimingZone() {
     // zone gets narrower as score increases (harder each hit)
-    const width = Math.max(0.12, 0.30 - st.score * 0.03);
+    const baseWidth = 0.30 + (selectedShell.zoneBonus * 0.15);
+    const width = Math.max(0.10, baseWidth - st.score * 0.012);
     st.zoneStart = 0.5 - width / 2;
     st.zoneEnd = 0.5 + width / 2;
-    st.needleSpeed = NEEDLE_SPEED_BASE + st.score * 0.35;
+    st.needleSpeed = NEEDLE_SPEED_BASE + st.score * 0.18;
     TZONE.style.left = (st.zoneStart * 100) + '%';
     TZONE.style.width = (width * 100) + '%';
   }
@@ -1292,7 +1309,7 @@ function buildArtillery() {
     updateTimingZone();
     TBAR.classList.add('show');
     TLABEL.classList.add('show');
-    TLABEL.textContent = '按 FIRE 開砲！';
+    TLABEL.textContent = '計算完成 — 按下發射！';
   }
 
   function newTarget() {
@@ -1343,6 +1360,10 @@ function buildArtillery() {
     for (let i = 0; i < tp.length; i++) tp[i] = 0;
   }
 
+  function hudText() {
+    return '●'.repeat(Math.max(0, st.life)) + '○'.repeat(Math.max(0, MAX_LIVES - st.life)) + '  💰' + playerCoins;
+  }
+
   function explode(pos, hit, perfect) {
     sfxExplosion();
     st.explosionTime = Date.now();
@@ -1360,33 +1381,85 @@ function buildArtillery() {
       playerCoins += reward;
       COINDISP.textContent = playerCoins;
       sfxHit();
-      showFB(perfect ? '完美命中！+20' : '命中！+10', 'ok');
+      showFB(perfect ? '完美命中！+' + reward : '命中！+' + reward, 'ok');
       st.score++;
       flag.material.color.setHex(0x44ff44);
-      showHud(st.score + ' / 5', 'MISSION 01', '●'.repeat(st.life) + '  💰' + playerCoins);
-      if (st.score >= 5) {
+      showHud(st.score + ' / ' + TARGET_GOAL, 'MISSION 01 · 計算手', hudText());
+      if (st.score >= TARGET_GOAL) {
         st.alive = false;
         COINDISP.classList.remove('show');
         const meadow = buildMeadowBg();
         setTimeout(() => finishLevel({
           code: 'MISSION 01 · 達成', title: '全連第一名',
-          sub: [['','滿分通過砲兵射擊。'],['em','結果任務 —— 顧一頭牛。'],['','你對著牛，數她的睫毛。']],
-          stats: [['命中','5 / 5'],['剩餘','●'.repeat(st.life)],['軍餉',playerCoins+'']]
+          sub: [['','射擊諸元全數命中，滿分通過。'],['em','結果任務 —— 顧一頭牛。'],['','你對著牛，數她的睫毛。']],
+          stats: [['命中',TARGET_GOAL + ' / ' + TARGET_GOAL],['剩餘','●'.repeat(st.life)],['軍餉',playerCoins+'']]
         }, meadow), 1500);
         return;
       }
-      setTimeout(() => { newTarget(); }, 1500);
+      setTimeout(() => { newTarget(); }, 1200);
     } else {
       sfxMiss();
-      showFB('偏離目標。', 'ng');
       st.life--;
-      showHud(st.score + ' / 5', 'MISSION 01', '●'.repeat(Math.max(0, st.life)) + '  💰' + playerCoins);
+      showHud(st.score + ' / ' + TARGET_GOAL, 'MISSION 01 · 計算手', hudText());
       if (st.life <= 0) {
-        st.life = 3; st.score = 0;
-        showHud('0 / 5', '', '● ● ●');
+        // 失敗 — 重來但軍餉保留
+        showFB('任務失敗…重新部署', 'ng');
+        st.alive = false;
+        FIRE.classList.remove('show');
+        TBAR.classList.remove('show');
+        TLABEL.classList.remove('show');
+        setTimeout(() => {
+          // show retry screen
+          clear(OV);
+          const box = el('div', 'r-box');
+          box.appendChild(el('div', 'r-code', 'MISSION 01 · 未達成'));
+          box.appendChild(el('div', 'r-title', '射擊中止'));
+          const sub = el('div', 'r-sub');
+          sub.appendChild(document.createTextNode('命中 ' + st.score + ' / ' + TARGET_GOAL + '。'));
+          sub.appendChild(el('br'));
+          const em1 = el('em', null, '軍餉已保留，重新部署。');
+          sub.appendChild(em1);
+          box.appendChild(sub);
+          const retryBtn = el('button', 'btn primary', '重新部署');
+          retryBtn.addEventListener('click', () => {
+            clear(OV); OV.classList.remove('active');
+            st.score = 0; st.life = MAX_LIVES; st.alive = true; st.locked = false; st.shell = null;
+            // show shop if has coins
+            if (playerCoins > 0) {
+              showShop(() => { clear(OV); OV.classList.remove('active'); beginArtillery(); });
+            } else {
+              beginArtillery();
+            }
+          });
+          const actionDiv = el('div', 'r-action');
+          actionDiv.appendChild(retryBtn);
+          box.appendChild(actionDiv);
+          OV.appendChild(box);
+          OV.classList.add('active');
+        }, 1200);
+        return;
       }
-      setTimeout(() => { newTarget(); }, 1500);
+      showFB('偏離目標。', 'ng');
+      setTimeout(() => { newTarget(); }, 1200);
     }
+  }
+
+  function beginArtillery() {
+    showHud('0 / ' + TARGET_GOAL, 'MISSION 01 · 計算手', hudText());
+    FIRE.textContent = '發射諸元';
+    FIRE.style.left = '50%';
+    FIRE.classList.add('show');
+    COINDISP.classList.add('show');
+    COINDISP.textContent = playerCoins;
+    FIRE.onclick = fireShell;
+    document.onkeydown = e => { if (e.code === 'Space') { e.preventDefault(); fireShell(); } };
+    newTarget();
+    levelInputs.push(() => {
+      FIRE.onclick = null;
+      TBAR.classList.remove('show');
+      TLABEL.classList.remove('show');
+      COINDISP.classList.remove('show');
+    });
   }
 
   return {
@@ -1396,28 +1469,10 @@ function buildArtillery() {
       cam.lookAt(0, 0, -10);
     },
     start() {
-      // show shop if second round, else go straight
-      const begin = () => {
-        showHud('0 / 5', 'MISSION 01', '● ● ●  💰' + playerCoins);
-        FIRE.textContent = 'F I R E';
-        FIRE.style.left = '50%';
-        FIRE.classList.add('show');
-        COINDISP.classList.add('show');
-        COINDISP.textContent = playerCoins;
-        FIRE.onclick = fireShell;
-        document.onkeydown = e => { if (e.code === 'Space') { e.preventDefault(); fireShell(); } };
-        newTarget();
-        levelInputs.push(() => {
-          FIRE.onclick = null;
-          TBAR.classList.remove('show');
-          TLABEL.classList.remove('show');
-          COINDISP.classList.remove('show');
-        });
-      };
       if (playerCoins > 0) {
-        showShop(() => { clear(OV); OV.classList.remove('active'); begin(); });
+        showShop(() => { clear(OV); OV.classList.remove('active'); beginArtillery(); });
       } else {
-        begin();
+        beginArtillery();
       }
     },
     update(dt) {
@@ -1433,7 +1488,7 @@ function buildArtillery() {
 
       // animate shell
       if (st.shell) {
-        st.shell.progress += dt * 0.7;
+        st.shell.progress += dt * selectedShell.speed;
         const t = Math.min(1, st.shell.progress);
         const s = st.shell.start, e = st.shell.end;
         const x = s.x + (e.x - s.x) * t;
@@ -1487,7 +1542,7 @@ function buildArtillery() {
       // camera slight sway
       camera.position.x = 8 + Math.sin(Date.now() * 0.0004) * 0.3;
     },
-    stop() { st.alive = false; TBAR.classList.remove('show'); TLABEL.classList.remove('show'); COINDISP.classList.remove('show'); }
+    stop() { st.alive = false; st.shell = null; TBAR.classList.remove('show'); TLABEL.classList.remove('show'); COINDISP.classList.remove('show'); FIRE.classList.remove('show'); }
   };
 }
 
@@ -1790,9 +1845,24 @@ function buildRun() {
     rhythmFbTimer = setTimeout(() => { RFB.className = 'rhythm-fb'; }, 400);
   }
 
+  function rhythmFlash(type) {
+    RFLASH.className = 'rhythm-flash ' + type;
+    setTimeout(() => { RFLASH.className = 'rhythm-flash'; }, 400);
+  }
+
+  function updateComboDisplay() {
+    if (st.combo >= 5) {
+      RCOMBO.textContent = st.combo + ' COMBO';
+      RCOMBO.className = 'rhythm-combo show';
+      rhythmFlash('combo');
+    } else {
+      RCOMBO.className = 'rhythm-combo';
+    }
+  }
+
   function judgeNote(dir) {
     const now = st.gameTime;
-    const judgeTime = FALL_TIME; // note should be at judge line at spawnTime + FALL_TIME
+    const judgeTime = FALL_TIME;
     let best = null, bestDiff = Infinity;
     for (const n of notes) {
       if (n.judged || n.dir !== dir) continue;
@@ -1805,10 +1875,12 @@ function buildRun() {
       best.judged = true;
       best.element.classList.add('hit');
       showRhythmFB('PERFECT', 'perfect');
+      rhythmFlash('fire');
       st.dist += 18;
       st.combo++;
       st.runPhase += 0.5;
       sfxFootstep();
+      updateComboDisplay();
     } else if (bestDiff < 0.18) {
       // GOOD
       best.judged = true;
@@ -1818,12 +1890,14 @@ function buildRun() {
       st.combo++;
       st.runPhase += 0.5;
       sfxFootstep();
+      updateComboDisplay();
     } else if (bestDiff < 0.35) {
       // MISS (early press)
       best.judged = true;
       best.element.classList.add('miss');
       showRhythmFB('MISS', 'miss');
       st.combo = 0;
+      RCOMBO.className = 'rhythm-combo';
     }
   }
 
@@ -1842,6 +1916,8 @@ function buildRun() {
       const elapsed = 720 - st.time;
       const em = Math.floor(elapsed / 60), es = elapsed % 60;
       RLANE.classList.remove('show');
+      RFLASH.className = 'rhythm-flash';
+      RCOMBO.className = 'rhythm-combo';
       finishLevel({
         code: 'MISSION 02 · 達成', title: '3000m · ' + em + '分' + (es < 10 ? '0' : '') + es + '秒',
         sub: [['','12 分鐘內完成。'],['em','榮譽假提早到今晚 21:00。'],['','你賺了 11 個小時。']],
@@ -1850,6 +1926,8 @@ function buildRun() {
     } else if (st.time <= 0) {
       st.alive = false; clearInterval(timer);
       RLANE.classList.remove('show');
+      RFLASH.className = 'rhythm-flash';
+      RCOMBO.className = 'rhythm-combo';
       finishLevel({
         code: 'MISSION 02 · 未達成', title: '時間到',
         sub: [['','距離不足。'],['em','但班長沒有處罰你。'],['','他只說：「明天再跑一次。」']],
@@ -1886,6 +1964,8 @@ function buildRun() {
         clearInterval(timer);
         RLANE.classList.remove('show');
         RLANE.onpointerdown = null;
+        RFLASH.className = 'rhythm-flash';
+        RCOMBO.className = 'rhythm-combo';
         notes.forEach(n => { if (n.element.parentNode) n.element.remove(); });
         notes.length = 0;
       });
@@ -1921,6 +2001,7 @@ function buildRun() {
           n.element.classList.add('miss');
           showRhythmFB('MISS', 'miss');
           st.combo = 0;
+          RCOMBO.className = 'rhythm-combo';
         }
         // cleanup old notes
         if (pct > 1.8) {
