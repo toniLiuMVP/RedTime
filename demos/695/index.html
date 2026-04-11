@@ -139,6 +139,18 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 .shop-item-name{color:#f0e6d2;font-size:14px;margin-bottom:4px}
 .shop-item-desc{color:#cdbf99;font-size:11px;margin-bottom:6px}
 .shop-item-price{color:#ffd700;font-family:"Courier New",monospace;font-size:12px}
+.shop-item-badge{margin-top:4px;color:#7fb069;font-size:11px;font-family:"Courier New",monospace}
+.shop-section{color:#c8a063;font-family:"Courier New",monospace;font-size:11px;letter-spacing:.4em;margin:16px 0 8px;text-align:center}
+.skill-item{cursor:pointer;transition:all .15s}
+.skill-item:active{transform:scale(.95)}
+.skill-bar{position:fixed;bottom:170px;left:50%;transform:translateX(-50%);z-index:15;display:none;gap:8px;flex-wrap:wrap;justify-content:center}
+.skill-bar.show{display:flex}
+.skill-btn{padding:6px 14px;border:1px solid #c8a063;color:#c8a063;font-size:13px;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);border-radius:4px;cursor:pointer;transition:all .2s;font-family:inherit}
+.skill-btn:hover{background:rgba(200,160,99,.15)}
+.skill-btn:active{transform:scale(.93)}
+.skill-btn.used{opacity:.3;pointer-events:none}
+.skill-active-banner{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:25;font-family:"Courier New",monospace;font-size:14px;color:#ffd700;letter-spacing:.2em;text-shadow:0 0 16px rgba(255,215,0,.6);pointer-events:none;opacity:0;transition:opacity .3s}
+.skill-active-banner.show{opacity:1}
 
 /* rhythm game (running) */
 .rhythm-lane{position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:15;width:min(280px,72vw);height:70vh;pointer-events:none;display:none;overflow:hidden}
@@ -192,6 +204,8 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 <div class="timing-label" id="timing-label">瞄準中…</div>
 <div class="timing-bar" id="timing-bar"><div class="timing-zone" id="timing-zone"></div><div class="timing-needle" id="timing-needle"></div></div>
 <div class="coin-display" id="coin-display">0</div>
+<div class="skill-bar" id="skill-bar"></div>
+<div class="skill-active-banner" id="skill-banner"></div>
 <div class="rhythm-lane" id="rhythm-lane"><div class="rhythm-cols"><div class="rhythm-col"></div><div class="rhythm-col"></div><div class="rhythm-col"></div><div class="rhythm-col"></div></div><div class="rhythm-judge"></div><div class="rhythm-hint"><span>←</span><span>↓</span><span>↑</span><span>→</span></div></div>
 <div class="rhythm-fb" id="rhythm-fb"></div>
 <div class="rhythm-flash" id="rhythm-flash"></div>
@@ -219,6 +233,8 @@ const RLANE = $('rhythm-lane');
 const RFB = $('rhythm-fb');
 const RFLASH = $('rhythm-flash');
 const RCOMBO = $('rhythm-combo');
+const SKILLBAR = $('skill-bar');
+const SKILLBANNER = $('skill-banner');
 const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 let playerCoins = 0;
 
@@ -1111,39 +1127,82 @@ const SHELL_TYPES = [
   { id:'standard', name:'標準榴彈',   desc:'基本砲彈',             price: 0,  blastR: 2.5, speed: 0.7, zoneBonus: 0, color: 0x1a1a0a },
   { id:'fast',     name:'高速彈',     desc:'飛行速度 ×2',          price: 15, blastR: 2.5, speed: 1.4, zoneBonus: 0, color: 0x2a2a3a },
   { id:'heavy',    name:'重型穿甲彈', desc:'爆炸範圍 +60%',        price: 30, blastR: 4.0, speed: 0.5, zoneBonus: 0, color: 0x4a1a0a },
-  { id:'guided',   name:'導引彈',     desc:'瞄準區 +50%（更容易命中）', price: 40, blastR: 2.5, speed: 0.7, zoneBonus: 0.5, color: 0x1a3a4a },
+  { id:'guided',   name:'導引彈',     desc:'瞄準區寬 +50%',        price: 40, blastR: 2.5, speed: 0.7, zoneBonus: 0.5, color: 0x1a3a4a },
   { id:'cluster',  name:'子母彈',     desc:'爆炸範圍 +120%',       price: 60, blastR: 5.5, speed: 0.6, zoneBonus: 0, color: 0x6a2a0a }
 ];
 let selectedShell = SHELL_TYPES[0];
 
+// skill types — stackable, activated during gameplay
+const SKILL_TYPES = [
+  { id:'extraCannon', name:'砲兵增援',   desc:'增援一隊砲兵齊射 8 秒',   price: 50,  icon:'🎯', duration: 8  },
+  { id:'airstrike',   name:'空軍轟炸',   desc:'呼叫空軍對目標區轟炸 10 秒', price: 80,  icon:'✈️', duration: 10 },
+  { id:'tank',         name:'戰車支援',   desc:'戰車進場連續砲擊 15 秒',  price: 120, icon:'🔥', duration: 15 },
+  { id:'shield',       name:'防護罩',     desc:'下次失誤不扣命',          price: 35,  icon:'🛡️', duration: 0  },
+  { id:'precision',    name:'精準校正',   desc:'瞄準區永久 +20%（本局）', price: 70,  icon:'📐', duration: 0  }
+];
+const playerSkills = []; // { id, count } — accumulated inventory
+
 function showShop(onDone) {
   clear(OV);
   const wrap = el('div', 'shop-wrap');
-  wrap.appendChild(el('div', 'shop-title', '砲 彈 配 備 站'));
-  const coins = el('div', 'shop-coins');
-  coins.textContent = '軍餉：' + playerCoins;
-  wrap.appendChild(coins);
-  const grid = el('div', 'shop-grid');
+  wrap.appendChild(el('div', 'shop-title', '配 備 站'));
+  const coinsEl = el('div', 'shop-coins');
+  coinsEl.textContent = '軍餉：' + playerCoins;
+  wrap.appendChild(coinsEl);
+
+  // section: shell selection
+  wrap.appendChild(el('div', 'shop-section', '── 砲 彈 ──'));
+  const shellGrid = el('div', 'shop-grid');
   let chosen = selectedShell;
-  const items = [];
+  const shellItems = [];
   SHELL_TYPES.forEach(sh => {
     const item = el('div', 'shop-item');
-    if (sh.price > playerCoins) item.classList.add('disabled');
+    if (sh.price > playerCoins && sh.price > 0) item.classList.add('disabled');
     if (sh.id === chosen.id) item.classList.add('selected');
     item.appendChild(el('div', 'shop-item-name', sh.name));
     item.appendChild(el('div', 'shop-item-desc', sh.desc));
     item.appendChild(el('div', 'shop-item-price', sh.price === 0 ? '免費' : sh.price + ' 軍餉'));
     item.addEventListener('click', () => {
-      if (sh.price > playerCoins) return;
+      if (sh.price > playerCoins && sh.price > 0) return;
       chosen = sh;
-      items.forEach(it => it.classList.remove('selected'));
+      shellItems.forEach(it => it.classList.remove('selected'));
       item.classList.add('selected');
     });
-    grid.appendChild(item);
-    items.push(item);
+    shellGrid.appendChild(item);
+    shellItems.push(item);
   });
-  wrap.appendChild(grid);
-  const btn = el('button', 'btn primary', '出擊');
+  wrap.appendChild(shellGrid);
+
+  // section: skills (stackable)
+  wrap.appendChild(el('div', 'shop-section', '── 技 能（可累計） ──'));
+  const skillGrid = el('div', 'shop-grid');
+  SKILL_TYPES.forEach(sk => {
+    const owned = playerSkills.find(p => p.id === sk.id);
+    const count = owned ? owned.count : 0;
+    const item = el('div', 'shop-item skill-item');
+    if (sk.price > playerCoins) item.classList.add('disabled');
+    item.appendChild(el('div', 'shop-item-name', sk.icon + ' ' + sk.name));
+    item.appendChild(el('div', 'shop-item-desc', sk.desc));
+    const priceRow = el('div', 'shop-item-price', sk.price + ' 軍餉');
+    item.appendChild(priceRow);
+    if (count > 0) {
+      const badge = el('div', 'shop-item-badge', '已持有 ×' + count);
+      item.appendChild(badge);
+    }
+    item.addEventListener('click', () => {
+      if (sk.price > playerCoins) return;
+      playerCoins -= sk.price;
+      coinsEl.textContent = '軍餉：' + playerCoins;
+      COINDISP.textContent = playerCoins;
+      if (owned) { owned.count++; } else { playerSkills.push({ id: sk.id, count: 1 }); }
+      // refresh shop to update badges & disable states
+      showShop(onDone);
+    });
+    skillGrid.appendChild(item);
+  });
+  wrap.appendChild(skillGrid);
+
+  const btn = el('button', 'btn primary', '出 擊');
   btn.addEventListener('click', () => {
     if (chosen.price > 0) playerCoins -= chosen.price;
     selectedShell = chosen;
@@ -1157,31 +1216,55 @@ function showShop(onDone) {
 
 function buildArtillery() {
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x5a6a48);
-  addFog(scene, 0x5a6a48, 0.008);
+  scene.background = new THREE.Color(0x4a5838);
+  addFog(scene, 0x4a5838, 0.006);
 
-  // lighting
-  scene.add(new THREE.HemisphereLight(0x8899aa, 0x443322, 0.4));
-  const sun = new THREE.DirectionalLight(0xffe8c0, 2.0);
+  // lighting — dramatic military
+  scene.add(new THREE.HemisphereLight(0x8899aa, 0x443322, 0.5));
+  const sun = new THREE.DirectionalLight(0xffe8c0, 2.2);
   sun.position.set(-15, 25, 10);
   sun.castShadow = !isMobile;
-  if (!isMobile) { sun.shadow.mapSize.set(1024, 1024); sun.shadow.camera.far = 80; }
+  if (!isMobile) { sun.shadow.mapSize.set(1024, 1024); sun.shadow.camera.far = 80; const sc = sun.shadow.camera; sc.left = -40; sc.right = 40; sc.top = 40; sc.bottom = -40; }
   scene.add(sun);
+  // rim light
+  const rim = new THREE.DirectionalLight(0xffaa44, 0.6);
+  rim.position.set(20, 10, -15); scene.add(rim);
 
-  // terrain — rolling hills, flat near cannon/soldier area
-  const terrainGeo = new THREE.PlaneGeometry(120, 120, 48, 48);
+  // terrain — more detailed rolling hills
+  const terrainGeo = new THREE.PlaneGeometry(160, 160, 64, 64);
   const posArr = terrainGeo.attributes.position.array;
   for (let i = 0; i < posArr.length; i += 3) {
     const x = posArr[i], y = posArr[i + 1];
     const distFromCannon = Math.sqrt((x - 3) * (x - 3) + (y - 4) * (y - 4));
     const dampen = Math.min(1, distFromCannon / 15);
-    posArr[i + 2] = (Math.sin(x * 0.08) * 1.2 + Math.cos(y * 0.06) * 0.8 + Math.random() * 0.2) * dampen;
+    posArr[i + 2] = (Math.sin(x * 0.08) * 1.5 + Math.cos(y * 0.06) * 1.0 + Math.sin(x * 0.03 + y * 0.04) * 2.0 + Math.random() * 0.15) * dampen;
   }
   terrainGeo.computeVertexNormals();
-  const terrain = new THREE.Mesh(terrainGeo, new THREE.MeshStandardMaterial({ color: 0x5a7a3a, roughness: 1 }));
+  const terrain = new THREE.Mesh(terrainGeo, new THREE.MeshStandardMaterial({ color: 0x4a6a2a, roughness: 1 }));
   terrain.rotation.x = -Math.PI / 2;
   terrain.receiveShadow = true;
   scene.add(terrain);
+
+  // sandbag fortification around cannon
+  const sandbagMat = new THREE.MeshStandardMaterial({ color: 0x8a7a5a, roughness: 0.95 });
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 1.3 - Math.PI * 0.15;
+    const r = 3.5;
+    const bag = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 0.4), sandbagMat);
+    bag.position.set(3 + Math.cos(angle) * r, 0.15 + (i % 2) * 0.3, 4 + Math.sin(angle) * r);
+    bag.rotation.y = angle + Math.PI / 2;
+    bag.castShadow = true;
+    scene.add(bag);
+  }
+
+  // trenches (dark grooves in terrain)
+  const trenchMat = new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 1 });
+  for (let i = 0; i < 3; i++) {
+    const trench = new THREE.Mesh(new THREE.BoxGeometry(8, 0.4, 1.2), trenchMat);
+    trench.position.set(-15 + i * 12, -0.1, -8 - i * 5);
+    trench.rotation.y = 0.2 * (i - 1);
+    scene.add(trench);
+  }
 
   // cannon
   const cannon = makeCannon();
@@ -1189,23 +1272,27 @@ function buildArtillery() {
   cannon.rotation.y = Math.PI;
   scene.add(cannon);
 
-  // soldier (you) standing beside cannon
+  // soldier (you — 計算手) standing beside cannon with clipboard
   const soldier = makeSoldier();
   soldier.position.set(5, 0.3, 4.5);
   soldier.rotation.y = -0.3;
   scene.add(soldier);
 
-  // another soldier (loader)
-  const loader = makeSoldier();
-  loader.position.set(4.5, 0.3, 3);
-  loader.rotation.y = -0.5;
-  scene.add(loader);
+  // loader soldiers (2)
+  const loader1 = makeSoldier();
+  loader1.position.set(4.5, 0.3, 3);
+  loader1.rotation.y = -0.5;
+  scene.add(loader1);
+  const loader2 = makeSoldier();
+  loader2.position.set(2, 0.3, 5.5);
+  loader2.rotation.y = 0.3;
+  scene.add(loader2);
 
-  // ammo crates
+  // ammo crates (more)
   const crateMat = new THREE.MeshStandardMaterial({ color: 0x4a3a1a, roughness: 0.9 });
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 5; i++) {
     const crate = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.35, 0.35), crateMat);
-    crate.position.set(6 + i * 0.6, 0.48, 3.8);
+    crate.position.set(6 + (i % 3) * 0.6, 0.48 + Math.floor(i / 3) * 0.36, 3.8 + Math.floor(i / 3) * 0.4);
     crate.castShadow = true;
     scene.add(crate);
   }
@@ -1230,57 +1317,147 @@ function buildArtillery() {
   targetRing.position.set(0, 0.15, -25);
   scene.add(targetRing);
 
-  // trees in background
-  for (let i = 0; i < 25; i++) {
-    const t = makeTree(2 + Math.random() * 2, 0x2a5a18);
-    t.position.set(-30 + Math.random() * 60, 0, -40 - Math.random() * 15);
+  // trees in background (more varied)
+  for (let i = 0; i < 40; i++) {
+    const t = makeTree(1.5 + Math.random() * 3, i % 3 === 0 ? 0x1a4a10 : 0x2a5a18);
+    t.position.set(-40 + Math.random() * 80, 0, -35 - Math.random() * 25);
     scene.add(t);
+  }
+
+  // dust particles floating in air
+  const dustParticles = [];
+  const dustMat = new THREE.MeshBasicMaterial({ color: 0xccbb88, transparent: true, opacity: 0.3 });
+  for (let i = 0; i < 20; i++) {
+    const d = new THREE.Mesh(new THREE.SphereGeometry(0.03, 4, 4), dustMat.clone());
+    d.position.set((Math.random() - 0.5) * 30, 1 + Math.random() * 4, (Math.random() - 0.5) * 30);
+    scene.add(d);
+    dustParticles.push({ mesh: d, baseY: d.position.y, speed: 0.3 + Math.random() * 0.5 });
   }
 
   // shell projectile
   const shellMesh = new THREE.Mesh(
-    new THREE.SphereGeometry(0.1, 8, 8),
+    new THREE.SphereGeometry(0.12, 8, 8),
     new THREE.MeshBasicMaterial({ color: selectedShell.color })
   );
   shellMesh.visible = false;
   scene.add(shellMesh);
 
-  // shell trail
+  // shell trail (thicker)
   const trailPts = [];
   for (let i = 0; i < 40; i++) trailPts.push(new THREE.Vector3());
   const trailGeo = new THREE.BufferGeometry().setFromPoints(trailPts);
-  const trail = new THREE.Line(trailGeo, new THREE.LineBasicMaterial({ color: 0x888866, transparent: true, opacity: 0.5 }));
+  const trail = new THREE.Line(trailGeo, new THREE.LineBasicMaterial({ color: 0xaa9955, transparent: true, opacity: 0.6 }));
   trail.visible = false;
   scene.add(trail);
 
-  // explosion particles
+  // explosion particles (more!)
   const particles = [];
   const particleMat = new THREE.MeshBasicMaterial({ color: 0xff6600 });
   const debrisMat = new THREE.MeshBasicMaterial({ color: 0x5a4a2a });
-  for (let i = 0; i < 30; i++) {
+  const fireMat = new THREE.MeshBasicMaterial({ color: 0xff2200 });
+  for (let i = 0; i < 50; i++) {
+    const mat = i < 20 ? particleMat.clone() : i < 35 ? debrisMat.clone() : fireMat.clone();
     const p = new THREE.Mesh(
-      new THREE.SphereGeometry(0.05 + Math.random() * 0.08, 4, 4),
-      i < 15 ? particleMat.clone() : debrisMat.clone()
+      new THREE.SphereGeometry(0.04 + Math.random() * 0.1, 4, 4), mat
     );
     p.visible = false;
     scene.add(p);
     particles.push({ mesh: p, vel: new THREE.Vector3(), life: 0 });
   }
 
-  // smoke puff
+  // smoke puffs (more)
   const smokeMat = new THREE.MeshBasicMaterial({ color: 0xccccaa, transparent: true, opacity: 0.4 });
   const smokes = [];
-  for (let i = 0; i < 8; i++) {
-    const s = new THREE.Mesh(new THREE.SphereGeometry(0.3, 6, 6), smokeMat.clone());
+  for (let i = 0; i < 12; i++) {
+    const s = new THREE.Mesh(new THREE.SphereGeometry(0.35, 6, 6), smokeMat.clone());
     s.visible = false;
     scene.add(s);
     smokes.push(s);
   }
 
+  // crater marks (reusable)
+  const craterMat = new THREE.MeshStandardMaterial({ color: 0x2a1a0a, roughness: 1, transparent: true, opacity: 0.7 });
+  const craters = [];
+  for (let i = 0; i < 8; i++) {
+    const c = new THREE.Mesh(new THREE.CircleGeometry(1.5, 12), craterMat.clone());
+    c.rotation.x = -Math.PI / 2;
+    c.position.y = 0.02;
+    c.visible = false;
+    scene.add(c);
+    craters.push(c);
+  }
+  let craterIdx = 0;
+
+  // ground fire (persistent flames at crater)
+  const groundFires = [];
+  const gFireMat = new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.6 });
+  for (let i = 0; i < 6; i++) {
+    const f = new THREE.Mesh(new THREE.ConeGeometry(0.3, 1.2, 5), gFireMat.clone());
+    f.visible = false;
+    scene.add(f);
+    groundFires.push({ mesh: f, life: 0 });
+  }
+
+  // === SKILL ANIMATION OBJECTS ===
+
+  // airstrike plane
+  const planeGroup = new THREE.Group();
+  const fuselage = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.2, 4, 6), new THREE.MeshStandardMaterial({ color: 0x556655, metalness: 0.4 }));
+  fuselage.rotation.z = Math.PI / 2;
+  planeGroup.add(fuselage);
+  const wingL = new THREE.Mesh(new THREE.BoxGeometry(3, 0.06, 0.8), new THREE.MeshStandardMaterial({ color: 0x667766 }));
+  wingL.position.set(0, 0, 0);
+  planeGroup.add(wingL);
+  const tailV = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.8, 0.5), new THREE.MeshStandardMaterial({ color: 0x556655 }));
+  tailV.position.set(-1.8, 0.3, 0);
+  planeGroup.add(tailV);
+  planeGroup.visible = false;
+  planeGroup.position.set(60, 25, -30);
+  scene.add(planeGroup);
+
+  // tank
+  const tankGroup = new THREE.Group();
+  const hull = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.8, 4), new THREE.MeshStandardMaterial({ color: 0x4a5a3a, roughness: 0.8 }));
+  hull.position.y = 0.6; tankGroup.add(hull);
+  const turret = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.7, 0.5, 8), new THREE.MeshStandardMaterial({ color: 0x3a4a2a }));
+  turret.position.set(0, 1.2, -0.3); tankGroup.add(turret);
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 2.5, 6), new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.6 }));
+  barrel.rotation.x = Math.PI / 2; barrel.position.set(0, 1.2, -1.8); tankGroup.add(barrel);
+  // tracks
+  for (const s of [-1, 1]) {
+    const track = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.5, 4.2), new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9 }));
+    track.position.set(s * 1.3, 0.3, 0); tankGroup.add(track);
+  }
+  tankGroup.visible = false;
+  tankGroup.position.set(40, 0, 15);
+  scene.add(tankGroup);
+
+  // extra cannon group (for 砲兵增援)
+  const extraCannons = [];
+  for (let i = 0; i < 3; i++) {
+    const ec = makeCannon();
+    ec.position.set(-5 - i * 4, 0.3, 6 + i * 2);
+    ec.rotation.y = Math.PI + 0.1 * (i - 1);
+    ec.visible = false;
+    scene.add(ec);
+    const es = makeSoldier();
+    es.position.set(-4 - i * 4, 0.3, 7 + i * 2);
+    es.rotation.y = Math.PI;
+    es.visible = false;
+    scene.add(es);
+    extraCannons.push({ cannon: ec, soldier: es });
+  }
+
+  // active skill state
+  const activeSkills = []; // { id, endTime, ... }
+
   // timing bar state
-  const NEEDLE_SPEED_BASE = 2.0; // oscillations per second
+  const NEEDLE_SPEED_BASE = 2.0;
   const TARGET_GOAL = 20;
   const MAX_LIVES = 5;
+  let hasShield = false;
+  let precisionBonus = 0;
+  let gameElapsed = 0;
   const st = {
     score: 0, life: MAX_LIVES, alive: true, locked: false,
     shell: null,
@@ -1291,13 +1468,112 @@ function buildArtillery() {
     aiming: false
   };
 
+  // skill activation
+  function activateSkill(skId) {
+    const owned = playerSkills.find(p => p.id === skId);
+    if (!owned || owned.count <= 0) return;
+    owned.count--;
+    const sk = SKILL_TYPES.find(s => s.id === skId);
+
+    if (skId === 'shield') {
+      hasShield = true;
+      showFB('🛡️ 防護罩啟動', 'ok');
+      SKILLBANNER.textContent = '🛡️ 防護罩';
+      SKILLBANNER.classList.add('show');
+      setTimeout(() => SKILLBANNER.classList.remove('show'), 2000);
+    } else if (skId === 'precision') {
+      precisionBonus += 0.20;
+      showFB('📐 精準校正 +20%', 'ok');
+      updateTimingZone();
+    } else if (skId === 'airstrike') {
+      SKILLBANNER.textContent = '✈️ 空軍轟炸中…';
+      SKILLBANNER.classList.add('show');
+      activeSkills.push({ id: 'airstrike', endTime: gameElapsed + sk.duration, phase: 0 });
+      planeGroup.visible = true;
+      planeGroup.position.set(60, 22, -30);
+      sfxCannon();
+    } else if (skId === 'extraCannon') {
+      SKILLBANNER.textContent = '🎯 砲兵增援！';
+      SKILLBANNER.classList.add('show');
+      activeSkills.push({ id: 'extraCannon', endTime: gameElapsed + sk.duration, nextFire: gameElapsed + 1 });
+      extraCannons.forEach(ec => { ec.cannon.visible = true; ec.soldier.visible = true; });
+      sfxCannon();
+    } else if (skId === 'tank') {
+      SKILLBANNER.textContent = '🔥 戰車進場！';
+      SKILLBANNER.classList.add('show');
+      activeSkills.push({ id: 'tank', endTime: gameElapsed + sk.duration, nextFire: gameElapsed + 1.5 });
+      tankGroup.visible = true;
+      tankGroup.position.set(40, 0, 15);
+      sfxEngine();
+    }
+    refreshSkillBar();
+  }
+
+  function refreshSkillBar() {
+    clear(SKILLBAR);
+    let hasAny = false;
+    playerSkills.forEach(ps => {
+      if (ps.count <= 0) return;
+      hasAny = true;
+      const sk = SKILL_TYPES.find(s => s.id === ps.id);
+      const btn = el('button', 'skill-btn', sk.icon + ' ' + sk.name + ' ×' + ps.count);
+      btn.addEventListener('click', () => activateSkill(ps.id));
+      SKILLBAR.appendChild(btn);
+    });
+    if (hasAny) SKILLBAR.classList.add('show');
+    else SKILLBAR.classList.remove('show');
+  }
+
+  function skillAutoHit() {
+    // auto-score from active bombardment skills
+    if (!st.alive) return;
+    st.score++;
+    playerCoins += 8;
+    COINDISP.textContent = playerCoins;
+    showHud(st.score + ' / ' + TARGET_GOAL, 'MISSION 01 · 計算手', hudText());
+    sfxExplosion();
+    // spawn explosion at random target area
+    const rx = (Math.random() - 0.5) * 30, rz = -20 - Math.random() * 15;
+    const pos = new THREE.Vector3(rx, 0, rz);
+    // crater
+    if (craterIdx < craters.length) {
+      craters[craterIdx].position.set(rx, 0.02, rz);
+      craters[craterIdx].visible = true;
+      craterIdx++;
+    }
+    // explosion effect
+    for (let i = 0; i < 8; i++) {
+      const pi = particles[Math.floor(Math.random() * particles.length)];
+      pi.mesh.visible = true;
+      pi.mesh.position.copy(pos);
+      pi.vel.set((Math.random() - 0.5) * 10, 4 + Math.random() * 6, (Math.random() - 0.5) * 10);
+      pi.life = 0.6 + Math.random() * 0.4;
+      pi.mesh.scale.setScalar(1.5);
+    }
+    // ground fire
+    const gf = groundFires.find(f => f.life <= 0);
+    if (gf) { gf.mesh.position.set(rx, 0.6, rz); gf.mesh.visible = true; gf.life = 3; }
+
+    if (st.score >= TARGET_GOAL) {
+      st.alive = false;
+      COINDISP.classList.remove('show');
+      SKILLBAR.classList.remove('show');
+      SKILLBANNER.classList.remove('show');
+      const meadow = buildMeadowBg();
+      setTimeout(() => finishLevel({
+        code: 'MISSION 01 · 達成', title: '全連第一名',
+        sub: [['','射擊諸元全數命中，滿分通過。'],['em','結果任務 —— 顧一頭牛。'],['','你對著牛，數她的睫毛。']],
+        stats: [['命中',TARGET_GOAL + ' / ' + TARGET_GOAL],['剩餘','●'.repeat(st.life)],['軍餉',playerCoins+'']]
+      }, meadow), 1500);
+    }
+  }
+
   function updateTimingZone() {
-    // zone gets narrower as score increases (harder each hit)
-    const baseWidth = 0.30 + (selectedShell.zoneBonus * 0.15);
-    const width = Math.max(0.10, baseWidth - st.score * 0.012);
+    const baseWidth = 0.30 + (selectedShell.zoneBonus * 0.15) + precisionBonus;
+    const width = Math.max(0.10, baseWidth - st.score * 0.008);
     st.zoneStart = 0.5 - width / 2;
     st.zoneEnd = 0.5 + width / 2;
-    st.needleSpeed = NEEDLE_SPEED_BASE + st.score * 0.18;
+    st.needleSpeed = NEEDLE_SPEED_BASE + st.score * 0.15;
     TZONE.style.left = (st.zoneStart * 100) + '%';
     TZONE.style.width = (width * 100) + '%';
   }
@@ -1309,7 +1585,7 @@ function buildArtillery() {
     updateTimingZone();
     TBAR.classList.add('show');
     TLABEL.classList.add('show');
-    TLABEL.textContent = '計算完成 — 按下發射！';
+    TLABEL.textContent = '按下發射！';
   }
 
   function newTarget() {
@@ -1376,6 +1652,17 @@ function buildArtillery() {
       p.mesh.scale.setScalar(blastScale);
     });
 
+    // crater at impact
+    if (craterIdx < craters.length) {
+      craters[craterIdx].position.set(pos.x, 0.02, pos.z);
+      craters[craterIdx].visible = true;
+      craters[craterIdx].scale.setScalar(blastScale * 0.8);
+      craterIdx++;
+    }
+    // ground fire at hit
+    const gf = groundFires.find(f => f.life <= 0);
+    if (gf) { gf.mesh.position.set(pos.x, 0.6, pos.z); gf.mesh.visible = true; gf.life = 4; }
+
     if (hit) {
       const reward = perfect ? 20 : 10;
       playerCoins += reward;
@@ -1388,6 +1675,8 @@ function buildArtillery() {
       if (st.score >= TARGET_GOAL) {
         st.alive = false;
         COINDISP.classList.remove('show');
+        SKILLBAR.classList.remove('show');
+        SKILLBANNER.classList.remove('show');
         const meadow = buildMeadowBg();
         setTimeout(() => finishLevel({
           code: 'MISSION 01 · 達成', title: '全連第一名',
@@ -1399,17 +1688,23 @@ function buildArtillery() {
       setTimeout(() => { newTarget(); }, 1200);
     } else {
       sfxMiss();
-      st.life--;
+      if (hasShield) {
+        hasShield = false;
+        showFB('🛡️ 防護罩擋住了！', 'ok');
+        refreshSkillBar();
+      } else {
+        st.life--;
+      }
       showHud(st.score + ' / ' + TARGET_GOAL, 'MISSION 01 · 計算手', hudText());
       if (st.life <= 0) {
-        // 失敗 — 重來但軍餉保留
         showFB('任務失敗…重新部署', 'ng');
         st.alive = false;
         FIRE.classList.remove('show');
         TBAR.classList.remove('show');
         TLABEL.classList.remove('show');
+        SKILLBAR.classList.remove('show');
+        SKILLBANNER.classList.remove('show');
         setTimeout(() => {
-          // show retry screen
           clear(OV);
           const box = el('div', 'r-box');
           box.appendChild(el('div', 'r-code', 'MISSION 01 · 未達成'));
@@ -1424,7 +1719,11 @@ function buildArtillery() {
           retryBtn.addEventListener('click', () => {
             clear(OV); OV.classList.remove('active');
             st.score = 0; st.life = MAX_LIVES; st.alive = true; st.locked = false; st.shell = null;
-            // show shop if has coins
+            hasShield = false; precisionBonus = 0; activeSkills.length = 0;
+            craterIdx = 0; craters.forEach(c => c.visible = false);
+            groundFires.forEach(f => { f.mesh.visible = false; f.life = 0; });
+            planeGroup.visible = false; tankGroup.visible = false;
+            extraCannons.forEach(ec => { ec.cannon.visible = false; ec.soldier.visible = false; });
             if (playerCoins > 0) {
               showShop(() => { clear(OV); OV.classList.remove('active'); beginArtillery(); });
             } else {
@@ -1445,20 +1744,24 @@ function buildArtillery() {
   }
 
   function beginArtillery() {
+    gameElapsed = 0;
     showHud('0 / ' + TARGET_GOAL, 'MISSION 01 · 計算手', hudText());
-    FIRE.textContent = '發射諸元';
+    FIRE.textContent = '發 射';
     FIRE.style.left = '50%';
     FIRE.classList.add('show');
     COINDISP.classList.add('show');
     COINDISP.textContent = playerCoins;
     FIRE.onclick = fireShell;
     document.onkeydown = e => { if (e.code === 'Space') { e.preventDefault(); fireShell(); } };
+    refreshSkillBar();
     newTarget();
     levelInputs.push(() => {
       FIRE.onclick = null;
       TBAR.classList.remove('show');
       TLABEL.classList.remove('show');
       COINDISP.classList.remove('show');
+      SKILLBAR.classList.remove('show');
+      SKILLBANNER.classList.remove('show');
     });
   }
 
@@ -1476,7 +1779,7 @@ function buildArtillery() {
       }
     },
     update(dt) {
-      if (!st.alive && !st.shell) return;
+      gameElapsed += dt;
 
       // animate timing bar needle
       if (st.aiming) {
@@ -1536,13 +1839,100 @@ function buildArtillery() {
         if (s.material.opacity <= 0) s.visible = false;
       });
 
+      // ground fires flicker & decay
+      groundFires.forEach(gf => {
+        if (gf.life <= 0) return;
+        gf.life -= dt;
+        gf.mesh.scale.y = 0.6 + Math.sin(gameElapsed * 12 + gf.mesh.position.x) * 0.4;
+        gf.mesh.scale.x = 0.8 + Math.sin(gameElapsed * 8) * 0.2;
+        gf.mesh.material.opacity = Math.min(0.7, gf.life * 0.3);
+        if (gf.life <= 0) gf.mesh.visible = false;
+      });
+
+      // dust float
+      dustParticles.forEach(dp => {
+        dp.mesh.position.y = dp.baseY + Math.sin(gameElapsed * dp.speed) * 0.5;
+        dp.mesh.position.x += Math.sin(gameElapsed * 0.2 + dp.baseY) * dt * 0.3;
+      });
+
+      // === SKILL ANIMATIONS ===
+      for (let si = activeSkills.length - 1; si >= 0; si--) {
+        const ask = activeSkills[si];
+        if (gameElapsed >= ask.endTime) {
+          // skill expired
+          if (ask.id === 'airstrike') { planeGroup.visible = false; }
+          if (ask.id === 'tank') { tankGroup.visible = false; }
+          if (ask.id === 'extraCannon') { extraCannons.forEach(ec => { ec.cannon.visible = false; ec.soldier.visible = false; }); }
+          SKILLBANNER.classList.remove('show');
+          activeSkills.splice(si, 1);
+          continue;
+        }
+
+        if (ask.id === 'airstrike') {
+          // plane flies across, dropping bombs
+          const progress = (gameElapsed - (ask.endTime - 10)) / 10;
+          planeGroup.position.x = 60 - progress * 120;
+          planeGroup.position.z = -25 + Math.sin(progress * 4) * 8;
+          planeGroup.rotation.y = Math.PI + Math.sin(progress * 3) * 0.1;
+          // drop bombs periodically
+          if (gameElapsed >= (ask.nextFire || 0)) {
+            ask.nextFire = gameElapsed + 1.2;
+            if (st.alive && st.score < TARGET_GOAL) skillAutoHit();
+          }
+        }
+
+        if (ask.id === 'tank') {
+          // tank rolls toward target zone
+          const progress = (gameElapsed - (ask.endTime - 15)) / 15;
+          tankGroup.position.x = 40 - progress * 45;
+          tankGroup.position.z = 15 - progress * 30;
+          tankGroup.rotation.y = Math.atan2(-(15 - progress * 30), -(40 - progress * 45));
+          // fire periodically
+          if (gameElapsed >= (ask.nextFire || 0)) {
+            ask.nextFire = gameElapsed + 1.8;
+            sfxCannon();
+            if (st.alive && st.score < TARGET_GOAL) skillAutoHit();
+          }
+        }
+
+        if (ask.id === 'extraCannon') {
+          // extra cannons fire periodically
+          if (gameElapsed >= (ask.nextFire || 0)) {
+            ask.nextFire = gameElapsed + 1.0;
+            sfxCannon();
+            // muzzle flash on random extra cannon
+            const ec = extraCannons[Math.floor(Math.random() * extraCannons.length)];
+            const ms = smokes.find(s => !s.visible);
+            if (ms) {
+              ms.visible = true;
+              ms.position.copy(ec.cannon.position).add(new THREE.Vector3(0, 1, -1));
+              ms.scale.setScalar(0.6);
+              ms.material.opacity = 0.5;
+              setTimeout(() => { ms.visible = false; }, 300);
+            }
+            if (st.alive && st.score < TARGET_GOAL) skillAutoHit();
+          }
+        }
+      }
+
       // flag flutter
       flag.rotation.y = Math.sin(Date.now() * 0.003) * 0.2;
 
-      // camera slight sway
-      camera.position.x = 8 + Math.sin(Date.now() * 0.0004) * 0.3;
+      // camera slight sway + shake on explosion
+      const shakeDecay = Math.max(0, 1 - (Date.now() - st.explosionTime) / 500);
+      const shake = shakeDecay * 0.3;
+      camera.position.x = 8 + Math.sin(Date.now() * 0.0004) * 0.3 + (Math.random() - 0.5) * shake;
+      camera.position.y = 5 + (Math.random() - 0.5) * shake * 0.5;
     },
-    stop() { st.alive = false; st.shell = null; TBAR.classList.remove('show'); TLABEL.classList.remove('show'); COINDISP.classList.remove('show'); FIRE.classList.remove('show'); }
+    stop() {
+      st.alive = false; st.shell = null;
+      TBAR.classList.remove('show'); TLABEL.classList.remove('show');
+      COINDISP.classList.remove('show'); FIRE.classList.remove('show');
+      SKILLBAR.classList.remove('show'); SKILLBANNER.classList.remove('show');
+      activeSkills.length = 0;
+      planeGroup.visible = false; tankGroup.visible = false;
+      extraCannons.forEach(ec => { ec.cannon.visible = false; ec.soldier.visible = false; });
+    }
   };
 }
 
