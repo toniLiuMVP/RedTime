@@ -1400,20 +1400,39 @@ function buildArtillery() {
 
   // === SKILL ANIMATION OBJECTS ===
 
-  // airstrike plane
+  // airstrike plane (larger, more detailed)
   const planeGroup = new THREE.Group();
-  const fuselage = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.2, 4, 6), new THREE.MeshStandardMaterial({ color: 0x556655, metalness: 0.4 }));
+  const planeMat = new THREE.MeshStandardMaterial({ color: 0x556655, metalness: 0.4, roughness: 0.6 });
+  const fuselage = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.25, 5, 8), planeMat);
   fuselage.rotation.z = Math.PI / 2;
   planeGroup.add(fuselage);
-  const wingL = new THREE.Mesh(new THREE.BoxGeometry(3, 0.06, 0.8), new THREE.MeshStandardMaterial({ color: 0x667766 }));
-  wingL.position.set(0, 0, 0);
+  // wings
+  const wingL = new THREE.Mesh(new THREE.BoxGeometry(5, 0.08, 1.2), new THREE.MeshStandardMaterial({ color: 0x667766 }));
   planeGroup.add(wingL);
-  const tailV = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.8, 0.5), new THREE.MeshStandardMaterial({ color: 0x556655 }));
-  tailV.position.set(-1.8, 0.3, 0);
-  planeGroup.add(tailV);
+  // tail wings
+  const tailH = new THREE.Mesh(new THREE.BoxGeometry(2, 0.06, 0.5), new THREE.MeshStandardMaterial({ color: 0x667766 }));
+  tailH.position.set(-2.2, 0, 0); planeGroup.add(tailH);
+  const tailV = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.0, 0.6), planeMat);
+  tailV.position.set(-2.2, 0.4, 0); planeGroup.add(tailV);
+  // engine glow
+  const engineGlow = new THREE.Mesh(new THREE.SphereGeometry(0.15, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.7 }));
+  engineGlow.position.set(-2.6, 0, 0); planeGroup.add(engineGlow);
+  // nose
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.8, 6), planeMat);
+  nose.rotation.z = -Math.PI / 2; nose.position.set(2.8, 0, 0); planeGroup.add(nose);
   planeGroup.visible = false;
-  planeGroup.position.set(60, 25, -30);
+  planeGroup.position.set(40, 12, -20);
   scene.add(planeGroup);
+
+  // bomb objects for airstrike
+  const bombs = [];
+  const bombMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.5 });
+  for (let i = 0; i < 5; i++) {
+    const b = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.04, 0.5, 6), bombMat);
+    b.visible = false;
+    scene.add(b);
+    bombs.push({ mesh: b, vel: new THREE.Vector3(), active: false });
+  }
 
   // tank
   const tankGroup = new THREE.Group();
@@ -1611,14 +1630,23 @@ function buildArtillery() {
     const inZone = st.needlePos >= st.zoneStart && st.needlePos <= st.zoneEnd;
     const perfectCenter = Math.abs(st.needlePos - 0.5) < 0.04;
 
-    // muzzle flash
+    // muzzle position (cannon at 3,0.3,4 rotation.y=PI → muzzle local (-1.5,1.0,-0.6) → world (4.5,1.3,4.6))
+    // but barrel points toward -z in world, so muzzle tip is at front of barrel
+    const muzzleWorld = new THREE.Vector3();
+    cannon.localToWorld(muzzleWorld.copy(cannon.userData.muzzlePos));
+
+    // muzzle flash — at cannon mouth
     smokes.forEach((s, i) => {
       s.visible = true;
-      s.position.set(3 - 1.5 + (Math.random() - 0.5) * 0.5, 1.0 + Math.random() * 0.3, 4 - 0.6 + (Math.random() - 0.5) * 0.3);
+      s.position.set(muzzleWorld.x + (Math.random() - 0.5) * 0.4, muzzleWorld.y + Math.random() * 0.3, muzzleWorld.z - 0.5 - Math.random() * 0.3);
       s.scale.setScalar(0.5 + Math.random() * 0.5);
       s.material.opacity = 0.5;
       setTimeout(() => { s.visible = false; }, 400 + i * 50);
     });
+
+    // barrel recoil animation
+    cannon.position.z += 0.3;
+    setTimeout(() => { cannon.position.z = 4; }, 200);
 
     // calculate hit position — if in zone, much closer to target
     const aimError = inZone ? (Math.random() - 0.5) * 1.0 : (Math.random() * 8 - 4) * 1.5;
@@ -1626,7 +1654,7 @@ function buildArtillery() {
     const hitZ = st.targetPos.z + (inZone ? (Math.random() - 0.5) * 0.5 : (Math.random() - 0.5) * 6);
     const hit = inZone;
 
-    const start = new THREE.Vector3(3 - 1.5, 1.0, 4 - 0.6);
+    const start = muzzleWorld.clone();
     const end = new THREE.Vector3(hitX, 0, hitZ);
 
     st.shell = { start, end, progress: 0, hit, perfect: perfectCenter, trailIdx: 0 };
@@ -1722,6 +1750,7 @@ function buildArtillery() {
             hasShield = false; precisionBonus = 0; activeSkills.length = 0;
             craterIdx = 0; craters.forEach(c => c.visible = false);
             groundFires.forEach(f => { f.mesh.visible = false; f.life = 0; });
+            bombs.forEach(b => { b.active = false; b.mesh.visible = false; });
             planeGroup.visible = false; tankGroup.visible = false;
             extraCannons.forEach(ec => { ec.cannon.visible = false; ec.soldier.visible = false; });
             if (playerCoins > 0) {
@@ -1869,46 +1898,117 @@ function buildArtillery() {
         }
 
         if (ask.id === 'airstrike') {
-          // plane flies across, dropping bombs
+          // plane flies across visible area — camera sees (8,5,?) looking at (0,0,-10)
           const progress = (gameElapsed - (ask.endTime - 10)) / 10;
-          planeGroup.position.x = 60 - progress * 120;
-          planeGroup.position.z = -25 + Math.sin(progress * 4) * 8;
-          planeGroup.rotation.y = Math.PI + Math.sin(progress * 3) * 0.1;
+          // fly from right to left, at altitude 10-14, through target zone
+          planeGroup.position.x = 30 - progress * 60;
+          planeGroup.position.y = 12 + Math.sin(progress * 3) * 2;
+          planeGroup.position.z = -15 + Math.sin(progress * 5) * 10;
+          planeGroup.rotation.y = Math.PI + 0.15;
+          // engine glow flicker
+          engineGlow.material.opacity = 0.5 + Math.sin(gameElapsed * 20) * 0.3;
+          // bank on turns
+          planeGroup.rotation.z = Math.cos(progress * 5) * 0.15;
           // drop bombs periodically
           if (gameElapsed >= (ask.nextFire || 0)) {
             ask.nextFire = gameElapsed + 1.2;
+            // spawn visible bomb falling from plane
+            const bomb = bombs.find(b => !b.active);
+            if (bomb) {
+              bomb.active = true;
+              bomb.mesh.visible = true;
+              bomb.mesh.position.copy(planeGroup.position);
+              bomb.vel.set((Math.random() - 0.5) * 2, -1, (Math.random() - 0.5) * 2);
+            }
+            sfxCannon();
             if (st.alive && st.score < TARGET_GOAL) skillAutoHit();
           }
         }
 
+        // animate falling bombs
+        bombs.forEach(b => {
+          if (!b.active) return;
+          b.vel.y -= 15 * dt;
+          b.mesh.position.addScaledVector(b.vel, dt);
+          b.mesh.rotation.x += dt * 5;
+          if (b.mesh.position.y <= 0) {
+            b.active = false;
+            b.mesh.visible = false;
+            // explosion at bomb landing
+            sfxExplosion();
+            const pos = b.mesh.position.clone();
+            for (let i = 0; i < 6; i++) {
+              const pi = particles[Math.floor(Math.random() * particles.length)];
+              pi.mesh.visible = true;
+              pi.mesh.position.copy(pos);
+              pi.vel.set((Math.random() - 0.5) * 12, 5 + Math.random() * 8, (Math.random() - 0.5) * 12);
+              pi.life = 0.8;
+              pi.mesh.scale.setScalar(1.5);
+            }
+          }
+        });
+
         if (ask.id === 'tank') {
-          // tank rolls toward target zone
+          // tank rolls from right side into visible area, toward target zone
           const progress = (gameElapsed - (ask.endTime - 15)) / 15;
-          tankGroup.position.x = 40 - progress * 45;
-          tankGroup.position.z = 15 - progress * 30;
-          tankGroup.rotation.y = Math.atan2(-(15 - progress * 30), -(40 - progress * 45));
-          // fire periodically
+          tankGroup.position.x = 25 - progress * 30;
+          tankGroup.position.z = 10 - progress * 25;
+          tankGroup.rotation.y = Math.atan2(-(-25), -(10 - 25)) + Math.sin(progress * 2) * 0.05;
+          // tank turret oscillates toward target
+          turret.rotation.y = Math.sin(gameElapsed * 0.5) * 0.3;
+          // track dust
+          if (Math.random() < 0.3) {
+            const ds = smokes.find(s => !s.visible);
+            if (ds) {
+              ds.visible = true;
+              ds.position.set(tankGroup.position.x + (Math.random() - 0.5) * 2, 0.2, tankGroup.position.z + 2);
+              ds.scale.setScalar(0.3);
+              ds.material.opacity = 0.25;
+              setTimeout(() => { ds.visible = false; }, 600);
+            }
+          }
+          // fire periodically — with muzzle flash
           if (gameElapsed >= (ask.nextFire || 0)) {
             ask.nextFire = gameElapsed + 1.8;
             sfxCannon();
+            // tank muzzle flash
+            const tankFlash = smokes.find(s => !s.visible);
+            if (tankFlash) {
+              tankFlash.visible = true;
+              const barrelTip = new THREE.Vector3(0, 1.2, -3.0);
+              tankGroup.localToWorld(barrelTip);
+              tankFlash.position.copy(barrelTip);
+              tankFlash.scale.setScalar(0.8);
+              tankFlash.material.opacity = 0.6;
+              setTimeout(() => { tankFlash.visible = false; }, 250);
+            }
             if (st.alive && st.score < TARGET_GOAL) skillAutoHit();
           }
         }
 
         if (ask.id === 'extraCannon') {
-          // extra cannons fire periodically
+          // extra cannons fire periodically — all 3 fire in sequence
           if (gameElapsed >= (ask.nextFire || 0)) {
-            ask.nextFire = gameElapsed + 1.0;
+            ask.nextFire = gameElapsed + 0.8;
+            // fire from a specific cannon in rotation
+            ask.fireIdx = ((ask.fireIdx || 0) + 1) % 3;
+            const ec = extraCannons[ask.fireIdx];
             sfxCannon();
-            // muzzle flash on random extra cannon
-            const ec = extraCannons[Math.floor(Math.random() * extraCannons.length)];
-            const ms = smokes.find(s => !s.visible);
-            if (ms) {
-              ms.visible = true;
-              ms.position.copy(ec.cannon.position).add(new THREE.Vector3(0, 1, -1));
-              ms.scale.setScalar(0.6);
-              ms.material.opacity = 0.5;
-              setTimeout(() => { ms.visible = false; }, 300);
+            // recoil
+            ec.cannon.position.z += 0.2;
+            setTimeout(() => { ec.cannon.position.z -= 0.2; }, 150);
+            // muzzle flash at cannon mouth
+            const muzzleW = new THREE.Vector3();
+            ec.cannon.localToWorld(muzzleW.copy(ec.cannon.userData ? ec.cannon.userData.muzzlePos || new THREE.Vector3(0, 1, -1) : new THREE.Vector3(0, 1, -1)));
+            for (let si = 0; si < 3; si++) {
+              const ms = smokes.find(s => !s.visible);
+              if (ms) {
+                ms.visible = true;
+                ms.position.set(muzzleW.x + (Math.random() - 0.5) * 0.3, muzzleW.y + Math.random() * 0.2, muzzleW.z - 0.3 - Math.random() * 0.3);
+                ms.scale.setScalar(0.4 + Math.random() * 0.3);
+                ms.material.opacity = 0.5;
+                setTimeout(() => { ms.visible = false; }, 300 + si * 80);
+              }
             }
             if (st.alive && st.score < TARGET_GOAL) skillAutoHit();
           }
@@ -1932,6 +2032,7 @@ function buildArtillery() {
       activeSkills.length = 0;
       planeGroup.visible = false; tankGroup.visible = false;
       extraCannons.forEach(ec => { ec.cannon.visible = false; ec.soldier.visible = false; });
+      bombs.forEach(b => { b.active = false; b.mesh.visible = false; });
     }
   };
 }
