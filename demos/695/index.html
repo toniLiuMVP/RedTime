@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; font-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none';">
 <meta name="theme-color" content="#0b0d08">
 <title>695T · 時間裡的兩個妳 番外</title>
 <meta name="description" content="海軍陸戰隊 695T 的六個片段，六個小遊戲，一本寫不完的日記。">
@@ -1143,11 +1143,11 @@ let selectedShell = SHELL_TYPES[0];
 
 // skill types — stackable, activated during gameplay
 const SKILL_TYPES = [
-  { id:'extraCannon', name:'砲兵增援',   desc:'增援一隊砲兵齊射 8 秒',   price: 50,  icon:'🎯', duration: 8  },
-  { id:'airstrike',   name:'空軍轟炸',   desc:'呼叫空軍對目標區轟炸 10 秒', price: 80,  icon:'✈️', duration: 10 },
-  { id:'tank',         name:'戰車支援',   desc:'戰車進場連續砲擊 15 秒',  price: 120, icon:'🔥', duration: 15 },
-  { id:'shield',       name:'防護罩',     desc:'下次失誤不扣命',          price: 35,  icon:'🛡️', duration: 0  },
-  { id:'precision',    name:'精準校正',   desc:'瞄準區永久 +20%（本局）', price: 70,  icon:'📐', duration: 0  }
+  { id:'extraCannon', name:'砲兵增援',   desc:'增援一隊砲兵齊射 8 秒',   price: 50,  icon:'[增]', duration: 8  },
+  { id:'airstrike',   name:'空中火力',   desc:'呼叫空中火力支援 10 秒',   price: 80,  icon:'[空]', duration: 10 },
+  { id:'tank',         name:'戰車支援',   desc:'戰車進場連續砲擊 15 秒',  price: 120, icon:'[戰]', duration: 15 },
+  { id:'shield',       name:'防護罩',     desc:'下次失誤不扣命',          price: 35,  icon:'[護]', duration: 0  },
+  { id:'precision',    name:'精準校正',   desc:'瞄準區永久 +20%（本局）', price: 70,  icon:'[準]', duration: 0  }
 ];
 const playerSkills = []; // { id, count } — accumulated inventory
 
@@ -1506,29 +1506,29 @@ function buildArtillery() {
 
     if (skId === 'shield') {
       hasShield = true;
-      showFB('🛡️ 防護罩啟動', 'ok');
-      SKILLBANNER.textContent = '🛡️ 防護罩';
+      showFB('防護罩啟動', 'ok');
+      SKILLBANNER.textContent = '— 防護罩 —';
       SKILLBANNER.classList.add('show');
       setTimeout(() => SKILLBANNER.classList.remove('show'), 2000);
     } else if (skId === 'precision') {
       precisionBonus += 0.20;
-      showFB('📐 精準校正 +20%', 'ok');
+      showFB('精準校正 +20%', 'ok');
       updateTimingZone();
     } else if (skId === 'airstrike') {
-      SKILLBANNER.textContent = '✈️ 空軍轟炸中…';
+      SKILLBANNER.textContent = '— 空中火力支援 —';
       SKILLBANNER.classList.add('show');
       activeSkills.push({ id: 'airstrike', endTime: gameElapsed + sk.duration, phase: 0 });
       planeGroup.visible = true;
       planeGroup.position.set(60, 22, -30);
       sfxCannon();
     } else if (skId === 'extraCannon') {
-      SKILLBANNER.textContent = '🎯 砲兵增援！';
+      SKILLBANNER.textContent = '— 砲兵增援 —';
       SKILLBANNER.classList.add('show');
       activeSkills.push({ id: 'extraCannon', endTime: gameElapsed + sk.duration, nextFire: gameElapsed + 1 });
       extraCannons.forEach(ec => { ec.cannon.visible = true; ec.soldier.visible = true; });
       sfxCannon();
     } else if (skId === 'tank') {
-      SKILLBANNER.textContent = '🔥 戰車進場！';
+      SKILLBANNER.textContent = '— 戰車進場 —';
       SKILLBANNER.classList.add('show');
       activeSkills.push({ id: 'tank', endTime: gameElapsed + sk.duration, nextFire: gameElapsed + 1.5 });
       tankGroup.visible = true;
@@ -1613,7 +1613,7 @@ function buildArtillery() {
     updateTimingZone();
     TBAR.classList.add('show');
     TLABEL.classList.add('show');
-    TLABEL.textContent = '按下發射！';
+    TLABEL.textContent = '— 就位 —';
   }
 
   function newTarget() {
@@ -1679,7 +1679,7 @@ function buildArtillery() {
   }
 
   function hudText() {
-    return '●'.repeat(Math.max(0, st.life)) + '○'.repeat(Math.max(0, MAX_LIVES - st.life)) + '  💰' + playerCoins;
+    return '●'.repeat(Math.max(0, st.life)) + '○'.repeat(Math.max(0, MAX_LIVES - st.life)) + '  軍餉 ' + playerCoins;
   }
 
   function explode(pos, hit, perfect) {
@@ -2503,7 +2503,7 @@ function buildRun() {
         n.element.style.top = topPx + 'px';
 
         // auto-miss: note passed judge line
-        if (!n.judged && pct > 1.25) {
+        if (!n.judged && pct > 1.05) {
           n.judged = true;
           n.element.classList.add('miss');
           showRhythmFB('MISS', 'miss');
@@ -2682,7 +2682,7 @@ function buildTrain() {
     cameraSetup(cam) { cam.position.set(-2, 3, 14); cam.lookAt(-2, 1, -10); },
     start() {
       showHud('30', 'MISSION 03', '60 km/h');
-      TAP.textContent = '按住加速';
+      TAP.textContent = '踩 油 門';
       TAP.classList.add('show');
       TAP.onmousedown = press; TAP.onmouseup = release; TAP.onmouseleave = release;
       TAP.ontouchstart = e => { e.preventDefault(); press(); };
@@ -2834,7 +2834,13 @@ function buildArm() {
   let drain;
 
   function push(side) {
-    if (!st.alive || st.last === side) return;
+    if (!st.alive) return;
+    if (st.last === side) {
+      const btn = side === 'L' ? FIRE : TAP;
+      btn.style.opacity = '0.4';
+      setTimeout(() => { btn.style.opacity = '1'; }, 120);
+      return;
+    }
     st.last = side;
     st.value += 4;
     sfxSlam();
@@ -2851,10 +2857,10 @@ function buildArm() {
     cameraSetup(cam) { cam.position.set(0, 2.8, 2.8); cam.lookAt(0, 1.2, 0); },
     start() {
       nextRound();
-      FIRE.textContent = '← A';
+      FIRE.textContent = '← 推';
       FIRE.classList.add('show');
       FIRE.style.left = '25%';
-      TAP.textContent = 'D →';
+      TAP.textContent = '壓 →';
       TAP.classList.add('show');
       TAP.style.left = '75%';
       TAP.style.transform = 'translateX(-50%)';
@@ -3200,6 +3206,7 @@ function buildOnion() {
     const startY = g.position.y;
     const popStart = performance.now();
     function popFrame(now) {
+      if (!st.alive) return;
       const t = (now - popStart) / 500;
       if (t >= 1) { scene.remove(g); return; }
       g.position.y = startY + 4 * Math.sin(Math.PI * t);
@@ -3263,14 +3270,15 @@ function buildOnion() {
       });
     },
     update(dt) {
-      for (const o of onions) {
-        if (o.userData.picked) continue;
+      for (let i = onions.length - 1; i >= 0; i--) {
+        const o = onions[i];
+        if (o.userData.picked) { onions.splice(i, 1); continue; }
         o.userData.age += dt;
-        // gentle sway
         o.rotation.z = Math.sin(Date.now() * 0.002 + o.position.x) * 0.05;
         if (o.userData.age > 8) {
           o.userData.picked = true;
           scene.remove(o);
+          onions.splice(i, 1);
         }
       }
     },

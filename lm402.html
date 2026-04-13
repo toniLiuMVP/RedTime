@@ -770,6 +770,7 @@
               src.connect(ctx.destination);
               src.start(0);
               window.__lm402PrimedAudioCtx = ctx;
+              setTimeout(() => { window.__lm402PrimedAudioCtx = null; }, 3000);
             }
           } catch (e) { /* noop */ }
           //    (b) HTMLAudioElement media engagement 預熱
