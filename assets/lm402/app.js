@@ -888,7 +888,8 @@ function createAudioSystem() {
 }
 
 const audioSystem = createAudioSystem();
-const debugEnabled = new URLSearchParams(window.location.search).get("debug") === "1";
+const debugEnabled = new URLSearchParams(window.location.search).get("debug") === "1"
+  && localStorage.getItem("lm402_dev") === "toni";
 let objectiveCompactTimer = 0;
 
 /* ── Timer Registry：追蹤所有 setTimeout，resetScene 時統一清除 ── */
