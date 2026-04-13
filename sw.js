@@ -55,6 +55,7 @@ async function trimCache(cacheName, maxItems) {
 }
 
 self.addEventListener('fetch', event => {
+  if (!event.request.url.startsWith('http')) return;
   const url = new URL(event.request.url);
 
   // 全部 network-first：有網路拿最新，離線回退快取
