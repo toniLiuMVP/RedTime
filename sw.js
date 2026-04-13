@@ -44,6 +44,16 @@ self.addEventListener('activate', event => {
   );
 });
 
+const MAX_CACHE_ITEMS = 120;
+
+async function trimCache(cacheName, maxItems) {
+  const cache = await caches.open(cacheName);
+  const keys = await cache.keys();
+  if (keys.length > maxItems) {
+    await Promise.all(keys.slice(0, keys.length - maxItems).map(k => cache.delete(k)));
+  }
+}
+
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
@@ -53,7 +63,10 @@ self.addEventListener('fetch', event => {
       .then(response => {
         if (response.ok && url.origin === location.origin) {
           const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, clone);
+            trimCache(CACHE_NAME, MAX_CACHE_ITEMS);
+          });
         }
         return response;
       })

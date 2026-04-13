@@ -1,7 +1,7 @@
 {
   "name": "時間裡的兩個妳",
   "short_name": "時間裡的兩個妳",
-  "description": "一眼只有一秒，卻用了二十年才讀懂。",
+  "description": "一眼只有一秒，卻用了二十年才讀懂。《時間裡的兩個妳》 連載中。",
   "start_url": "/RedTime/",
   "scope": "/RedTime/",
   "display": "standalone",
@@ -20,6 +20,18 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "assets/pwa-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "assets/pwa-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

@@ -1622,6 +1622,9 @@ function buildArtillery() {
     st.targetPos.set(x, 0, z);
     targetGroup.position.set(x, 0, z);
     targetRing.position.set(x, 0.15, z);
+    // 砲車自動轉向目標
+    cannon.lookAt(x, cannon.position.y, z);
+    extraCannons.forEach(ec => ec.cannon.lookAt(x, ec.cannon.position.y, z));
     st.locked = false;
     flag.material.color.setHex(0xff2200);
     startAiming();
@@ -1653,9 +1656,11 @@ function buildArtillery() {
       setTimeout(() => { s.visible = false; }, 400 + i * 50);
     });
 
-    // barrel recoil animation
-    cannon.position.z += 0.3;
-    setTimeout(() => { cannon.position.z = 4; }, 200);
+    // barrel recoil animation（沿砲管反方向後退）
+    const recoilDir = new THREE.Vector3(0, 0, 1).applyQuaternion(cannon.quaternion).multiplyScalar(0.3);
+    cannon.position.add(recoilDir);
+    const savedPos = cannon.position.clone().sub(recoilDir);
+    setTimeout(() => { cannon.position.copy(savedPos); }, 200);
 
     // calculate hit position — if in zone, much closer to target
     const aimError = inZone ? (Math.random() - 0.5) * 1.0 : (Math.random() * 8 - 4) * 1.5;
@@ -2003,9 +2008,11 @@ function buildArtillery() {
             ask.fireIdx = ((ask.fireIdx || 0) + 1) % 3;
             const ec = extraCannons[ask.fireIdx];
             sfxCannon();
-            // recoil
-            ec.cannon.position.z += 0.2;
-            setTimeout(() => { ec.cannon.position.z -= 0.2; }, 150);
+            // recoil（沿砲管反方向）
+            const ecRecoil = new THREE.Vector3(0, 0, 1).applyQuaternion(ec.cannon.quaternion).multiplyScalar(0.2);
+            ec.cannon.position.add(ecRecoil);
+            const ecSaved = ec.cannon.position.clone().sub(ecRecoil);
+            setTimeout(() => { ec.cannon.position.copy(ecSaved); }, 150);
             // muzzle flash at cannon mouth
             const muzzleW = new THREE.Vector3();
             ec.cannon.localToWorld(muzzleW.copy(ec.cannon.userData ? ec.cannon.userData.muzzlePos || new THREE.Vector3(0, 1, -1) : new THREE.Vector3(0, 1, -1)));

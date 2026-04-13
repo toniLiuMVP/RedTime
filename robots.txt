@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Disallow tooling / internal work
+Disallow: /tools/
+Disallow: /Backup/
+Disallow: /.claude/
+
+Sitemap: https://toniliumvp.github.io/RedTime/sitemap.xml
