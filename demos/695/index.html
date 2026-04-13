@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
@@ -153,7 +153,7 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 .skill-active-banner.show{opacity:1}
 
 /* rhythm game (running) */
-.rhythm-lane{position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:15;width:min(280px,72vw);height:70vh;pointer-events:none;display:none;overflow:hidden}
+.rhythm-lane{position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:15;width:min(360px,92vw);height:70vh;pointer-events:none;display:none;overflow:hidden}
 .rhythm-lane.show{display:block;pointer-events:auto}
 .rhythm-judge{position:absolute;bottom:60px;left:0;right:0;height:3px;background:#c8a063;opacity:.6}
 .rhythm-cols{position:absolute;inset:0;display:flex}
@@ -190,6 +190,7 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 </style>
 </head>
 <body>
+<noscript><p style="color:#f0e6d2;text-align:center;padding:2em;font-size:1.2em">本遊戲需要 JavaScript 才能運行，請啟用後重新載入。</p></noscript>
 
 <div id="fade"></div>
 <div id="music-toggle" title="音樂開關"></div>
@@ -245,6 +246,15 @@ function el(tag, cls, txt) {
   return e;
 }
 function clear(n) { while (n && n.firstChild) n.removeChild(n.firstChild); }
+
+// ── 集中式鍵盤處理器（避免 onkeydown 覆寫衝突）──
+let activeKeydown = null, activeKeyup = null;
+function setKeyHandler(downFn, upFn) {
+  activeKeydown = downFn || null;
+  activeKeyup = upFn || null;
+}
+document.addEventListener('keydown', e => { if (activeKeydown) activeKeydown(e); });
+document.addEventListener('keyup', e => { if (activeKeyup) activeKeyup(e); });
 
 function showFB(text, type) {
   FB.textContent = text;
@@ -606,8 +616,7 @@ function stopLevel() {
   levelInputs = [];
   if (currentLevel && currentLevel.stop) currentLevel.stop();
   currentLevel = null;
-  document.onkeydown = null;
-  document.onkeyup = null;
+  setKeyHandler(null, null);
 }
 
 /* ══════════════════════════════════════════
@@ -735,9 +744,9 @@ function showBriefOverlay(brief, onDone) {
 
   // skip interactions
   skipBtn.addEventListener('click', finish);
-  document.onkeydown = e => {
+  setKeyHandler(e => {
     if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); finish(); }
-  };
+  });
 
   levelInputs.push(() => {
     clearTimeout(autoTimer);
@@ -1190,12 +1199,13 @@ function showShop(onDone) {
       item.appendChild(badge);
     }
     item.addEventListener('click', () => {
-      if (sk.price > playerCoins) return;
+      if (sk.price > playerCoins || item.classList.contains('buying')) return;
+      item.classList.add('buying');
+      item.style.pointerEvents = 'none';
       playerCoins -= sk.price;
       coinsEl.textContent = '軍餉：' + playerCoins;
       COINDISP.textContent = playerCoins;
       if (owned) { owned.count++; } else { playerSkills.push({ id: sk.id, count: 1 }); }
-      // refresh shop to update badges & disable states
       showShop(onDone);
     });
     skillGrid.appendChild(item);
@@ -1544,12 +1554,11 @@ function buildArtillery() {
   }
 
   function skillAutoHit() {
-    // auto-score from active bombardment skills
+    // 支援砲火：暫時增大判定區 + 減慢針速，玩家仍需手動射擊
     if (!st.alive) return;
-    st.score++;
-    playerCoins += 8;
-    COINDISP.textContent = playerCoins;
-    showHud(st.score + ' / ' + TARGET_GOAL, 'MISSION 01 · 計算手', hudText());
+    precisionBonus += 0.08;
+    st.needleSpeed = Math.max(0.4, st.needleSpeed * 0.75);
+    updateTimingZone();
     sfxExplosion();
     // spawn explosion at random target area
     const rx = (Math.random() - 0.5) * 30, rz = -20 - Math.random() * 15;
@@ -1781,7 +1790,7 @@ function buildArtillery() {
     COINDISP.classList.add('show');
     COINDISP.textContent = playerCoins;
     FIRE.onclick = fireShell;
-    document.onkeydown = e => { if (e.code === 'Space') { e.preventDefault(); fireShell(); } };
+    setKeyHandler(e => { if (e.code === 'Space') { e.preventDefault(); fireShell(); } });
     refreshSkillBar();
     newTarget();
     levelInputs.push(() => {
@@ -2162,13 +2171,13 @@ function buildCowScene() {
       document.body.appendChild(skip);
 
       autoTimer = setTimeout(goNext, 8000);
-      document.onkeydown = e => { if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); goNext(); } };
+      setKeyHandler(e => { if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); goNext(); } });
 
       function goNext() {
         clearTimeout(autoTimer);
         if (text.parentNode) text.remove();
         if (skip.parentNode) skip.remove();
-        document.onkeydown = null;
+        setKeyHandler(null);
         advance();
       }
       levelInputs.push(() => {
@@ -2392,7 +2401,7 @@ function buildRun() {
     }
   }
 
-  const st = { dist: 0, time: 720, hr: 72, alive: true, gameTime: 0, combo: 0, maxCombo: 0, runPhase: 0, angle: 0 };
+  const st = { dist: 0, time: 420, hr: 72, alive: true, gameTime: 0, combo: 0, maxCombo: 0, runPhase: 0, angle: 0 };
   let timer;
 
   function tick() {
@@ -2404,7 +2413,7 @@ function buildRun() {
     showHud(Math.floor(st.dist) + 'm / 3000m', 'MISSION 02', mm + ':' + (ss < 10 ? '0' : '') + ss + comboStr);
     if (st.dist >= 3000) {
       st.alive = false; clearInterval(timer);
-      const elapsed = 720 - st.time;
+      const elapsed = 420 - st.time;
       const em = Math.floor(elapsed / 60), es = elapsed % 60;
       RLANE.classList.remove('show');
       RFLASH.className = 'rhythm-flash';
@@ -2422,7 +2431,7 @@ function buildRun() {
       finishLevel({
         code: 'MISSION 02 · 未達成', title: '時間到',
         sub: [['','距離不足。'],['em','但班長沒有處罰你。'],['','他只說：「明天再跑一次。」']],
-        stats: [['距離',Math.floor(st.dist)+'m'],['時間','12:00'],['最高連擊',st.maxCombo+'']]
+        stats: [['距離',Math.floor(st.dist)+'m'],['時間','7:00'],['最高連擊',st.maxCombo+'']]
       });
     }
   }
@@ -2431,7 +2440,7 @@ function buildRun() {
     scene,
     cameraSetup(cam) { cam.position.set(0, 25, 35); cam.lookAt(0, 0, 0); },
     start() {
-      showHud('0m / 3000m', 'MISSION 02', '12:00');
+      showHud('0m / 3000m', 'MISSION 02', '7:00');
       RLANE.classList.add('show');
       // remove any leftover note elements
       RLANE.querySelectorAll('.rhythm-note').forEach(n => n.remove());
@@ -2439,9 +2448,9 @@ function buildRun() {
       nextNoteTime = BEAT_INTERVAL;
       st.gameTime = 0;
 
-      document.onkeydown = e => {
+      setKeyHandler(e => {
         if (DIRS.includes(e.code)) { e.preventDefault(); judgeNote(e.code); }
-      };
+      });
       // mobile: tap columns
       RLANE.onpointerdown = e => {
         const rect = RLANE.getBoundingClientRect();
@@ -2671,8 +2680,10 @@ function buildTrain() {
       TAP.onmousedown = press; TAP.onmouseup = release; TAP.onmouseleave = release;
       TAP.ontouchstart = e => { e.preventDefault(); press(); };
       TAP.ontouchend = e => { e.preventDefault(); release(); };
-      document.onkeydown = e => { if (e.code === 'Space') { e.preventDefault(); press(); } };
-      document.onkeyup = e => { if (e.code === 'Space') { e.preventDefault(); release(); } };
+      setKeyHandler(
+        e => { if (e.code === 'Space') { e.preventDefault(); press(); } },
+        e => { if (e.code === 'Space') { e.preventDefault(); release(); } }
+      );
       timer = setInterval(() => {
         if (!st.alive) return;
         st.time--;
@@ -2694,10 +2705,11 @@ function buildTrain() {
     },
     update(dt) {
       if (!st.alive) return;
-      if (st.hold) { st.speed = Math.min(180, st.speed + 80 * dt); sfxEngine(); }
-      else st.speed = Math.max(50, st.speed - 30 * dt);
+      if (st.hold) { st.speed = Math.min(140, st.speed + 80 * dt); sfxEngine(); }
+      else st.speed = Math.max(50, st.speed - 40 * dt);
       const carMove = st.speed * dt * 0.5;
-      const trainMove = 100 * dt * 0.5;
+      const trainSpeed = 100 + Math.sin(st.time * 0.3) * 15;
+      const trainMove = trainSpeed * dt * 0.5;
       st.carZ -= carMove;
       st.trainZ -= trainMove;
       car.position.z = st.carZ;
@@ -2808,8 +2820,8 @@ function buildArm() {
     { name:'阿忠 · 一兵', power: 0.8 },
     { name:'大胖 · 下士', power: 1.0 },
     { name:'阿榮 · 上兵', power: 1.3 },
-    { name:'瘦皮 · 班長', power: 1.6 },
-    { name:'老虎 · 副排', power: 1.9 }
+    { name:'瘦皮 · 班長', power: 1.4 },
+    { name:'老虎 · 副排', power: 1.6 }
   ];
   const st = { round: 0, value: 0, last: '', alive: true };
   let drain;
@@ -2841,10 +2853,10 @@ function buildArm() {
       TAP.style.transform = 'translateX(-50%)';
       FIRE.onclick = () => push('L');
       TAP.onclick = () => push('R');
-      document.onkeydown = e => {
+      setKeyHandler(e => {
         if (e.code === 'KeyA' || e.code === 'ArrowLeft') { e.preventDefault(); push('L'); }
         if (e.code === 'KeyD' || e.code === 'ArrowRight') { e.preventDefault(); push('R'); }
-      };
+      });
       drain = setInterval(() => {
         if (!st.alive) return;
         const opp = OPPS[st.round];
@@ -2989,6 +3001,11 @@ function buildGuard() {
     { txt:'貓從彈藥庫旁跑過。', real: false },
     { txt:'兩百公尺外，有一道手電筒光。', real: true }
   ];
+  // Fisher-Yates shuffle
+  for (let i = EVENTS.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [EVENTS[i], EVENTS[j]] = [EVENTS[j], EVENTS[i]];
+  }
 
   // threat silhouette
   const threat = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 1.2, 4, 8), new THREE.MeshBasicMaterial({ color: 0x0a0a0a }));
@@ -3063,10 +3080,10 @@ function buildGuard() {
       TAP.style.transform = 'translateX(-50%)';
       FIRE.onclick = () => guardAns(true);
       TAP.onclick = () => guardAns(false);
-      document.onkeydown = e => {
+      setKeyHandler(e => {
         if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); guardAns(true); }
         if (e.code === 'KeyX' || e.code === 'ArrowDown') { e.preventDefault(); guardAns(false); }
-      };
+      });
       setTimeout(nextEvent, 1000);
       levelInputs.push(() => { FIRE.onclick = null; TAP.onclick = null; });
     },
@@ -3172,18 +3189,20 @@ function buildOnion() {
     st.picked++;
     sfxOnionPop();
     showHud(st.picked + ' / 30', 'MISSION 06', st.time + 's');
-    // pop-out animation
+    // pop-out animation (rAF)
     const startY = g.position.y;
-    const popStart = Date.now();
-    const popAnim = setInterval(() => {
-      const t = (Date.now() - popStart) / 500;
-      if (t >= 1) { clearInterval(popAnim); scene.remove(g); return; }
+    const popStart = performance.now();
+    function popFrame(now) {
+      const t = (now - popStart) / 500;
+      if (t >= 1) { scene.remove(g); return; }
       g.position.y = startY + 4 * Math.sin(Math.PI * t);
       g.rotation.z = t * 3;
       g.scale.setScalar(1 + t * 0.3);
       g.children[0].material.opacity = 1 - t;
       g.children[0].material.transparent = true;
-    }, 16);
+      requestAnimationFrame(popFrame);
+    }
+    requestAnimationFrame(popFrame);
     if (st.picked >= 30) {
       st.alive = false; clearInterval(timer); clearInterval(spawnTimer);
       setTimeout(() => finishLevel({
@@ -3242,7 +3261,7 @@ function buildOnion() {
         o.userData.age += dt;
         // gentle sway
         o.rotation.z = Math.sin(Date.now() * 0.002 + o.position.x) * 0.05;
-        if (o.userData.age > 5) {
+        if (o.userData.age > 8) {
           o.userData.picked = true;
           scene.remove(o);
         }

@@ -315,34 +315,12 @@ function checkStairWarp() {
 /* ── Subtitle Background Adaptation ── */
 let subtitleAdaptFrame = 0;
 function adaptSubtitleBackground() {
-  subtitleAdaptFrame++;
-  if (subtitleAdaptFrame % 15 !== 0) return; // check every ~15 frames
-  if (!canvas || !dom.subtitleBox || !dom.ambienceBox) return;
-  try {
-    const ctx = canvas.getContext("webgl2") || canvas.getContext("webgl");
-    if (!ctx) return;
-    // Sample a small area near bottom-center of canvas
-    const w = canvas.width, h = canvas.height;
-    const sampleX = Math.floor(w * 0.4), sampleY = Math.floor(h * 0.15);
-    const sampleW = Math.floor(w * 0.2), sampleH = Math.floor(h * 0.1);
-    const pixels = new Uint8Array(sampleW * sampleH * 4);
-    ctx.readPixels(sampleX, sampleY, sampleW, sampleH, ctx.RGBA, ctx.UNSIGNED_BYTE, pixels);
-    // Calculate average brightness
-    let totalBrightness = 0;
-    const pixelCount = sampleW * sampleH;
-    for (let i = 0; i < pixels.length; i += 4) {
-      totalBrightness += (pixels[i] * 0.299 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.114);
-    }
-    const avgBrightness = totalBrightness / pixelCount / 255;
-    // Apply adaptive backdrop: darker backdrop when scene is bright
-    const backdropAlpha = avgBrightness > 0.55 ? Math.min(0.85, 0.4 + avgBrightness * 0.6) : 0.25;
-    const backdropColor = `rgba(8, 10, 14, ${backdropAlpha.toFixed(2)})`;
-    dom.subtitleBox.style.setProperty("--subtitle-adaptive-bg", backdropColor);
-    dom.ambienceBox.style.setProperty("--subtitle-adaptive-bg", backdropColor);
-    // Also apply to cinematic subtitle if visible
-    const cinematicSub = document.querySelector(".cinematic-subtitle-card");
-    if (cinematicSub) cinematicSub.style.setProperty("--subtitle-adaptive-bg", backdropColor);
-  } catch {}
+  if (!dom.subtitleBox || !dom.ambienceBox) return;
+  const backdropColor = "rgba(8, 10, 14, 0.45)";
+  dom.subtitleBox.style.setProperty("--subtitle-adaptive-bg", backdropColor);
+  dom.ambienceBox.style.setProperty("--subtitle-adaptive-bg", backdropColor);
+  const cinematicSub = document.querySelector(".cinematic-subtitle-card");
+  if (cinematicSub) cinematicSub.style.setProperty("--subtitle-adaptive-bg", backdropColor);
 }
 
 function clampLookScalar(value) {
@@ -2849,8 +2827,6 @@ if (debugEnabled) {
     setLookSensitivity: (scalar, preset = null) => setLookSensitivity({ scalar, preset }),
     toggleObjective: toggleObjectivePrompt,
   };
-} else {
-  window.__LM402_DEBUG__ = { snapshot: snapshotDebug };
 }
 
 function renderFrame() {
@@ -3408,7 +3384,6 @@ function handleResize() {
   syncTranscriptUI();
   scene.resize();
   window.requestAnimationFrame(() => {
-    scene.resize();
     renderDebugPanel();
   });
   renderDebugPanel();
