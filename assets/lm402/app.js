@@ -315,34 +315,12 @@ function checkStairWarp() {
 /* ── Subtitle Background Adaptation ── */
 let subtitleAdaptFrame = 0;
 function adaptSubtitleBackground() {
-  subtitleAdaptFrame++;
-  if (subtitleAdaptFrame % 15 !== 0) return; // check every ~15 frames
-  if (!canvas || !dom.subtitleBox || !dom.ambienceBox) return;
-  try {
-    const ctx = canvas.getContext("webgl2") || canvas.getContext("webgl");
-    if (!ctx) return;
-    // Sample a small area near bottom-center of canvas
-    const w = canvas.width, h = canvas.height;
-    const sampleX = Math.floor(w * 0.4), sampleY = Math.floor(h * 0.15);
-    const sampleW = Math.floor(w * 0.2), sampleH = Math.floor(h * 0.1);
-    const pixels = new Uint8Array(sampleW * sampleH * 4);
-    ctx.readPixels(sampleX, sampleY, sampleW, sampleH, ctx.RGBA, ctx.UNSIGNED_BYTE, pixels);
-    // Calculate average brightness
-    let totalBrightness = 0;
-    const pixelCount = sampleW * sampleH;
-    for (let i = 0; i < pixels.length; i += 4) {
-      totalBrightness += (pixels[i] * 0.299 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.114);
-    }
-    const avgBrightness = totalBrightness / pixelCount / 255;
-    // Apply adaptive backdrop: darker backdrop when scene is bright
-    const backdropAlpha = avgBrightness > 0.55 ? Math.min(0.85, 0.4 + avgBrightness * 0.6) : 0.25;
-    const backdropColor = `rgba(8, 10, 14, ${backdropAlpha.toFixed(2)})`;
-    dom.subtitleBox.style.setProperty("--subtitle-adaptive-bg", backdropColor);
-    dom.ambienceBox.style.setProperty("--subtitle-adaptive-bg", backdropColor);
-    // Also apply to cinematic subtitle if visible
-    const cinematicSub = document.querySelector(".cinematic-subtitle-card");
-    if (cinematicSub) cinematicSub.style.setProperty("--subtitle-adaptive-bg", backdropColor);
-  } catch {}
+  if (!dom.subtitleBox || !dom.ambienceBox) return;
+  const backdropColor = "rgba(8, 10, 14, 0.45)";
+  dom.subtitleBox.style.setProperty("--subtitle-adaptive-bg", backdropColor);
+  dom.ambienceBox.style.setProperty("--subtitle-adaptive-bg", backdropColor);
+  const cinematicSub = document.querySelector(".cinematic-subtitle-card");
+  if (cinematicSub) cinematicSub.style.setProperty("--subtitle-adaptive-bg", backdropColor);
 }
 
 function clampLookScalar(value) {
@@ -368,7 +346,10 @@ function loadLookSetting() {
 }
 
 const initialLookSetting = loadLookSetting();
-const initialAudioEnabled = localStorage.getItem(STORAGE_KEYS.audioEnabled) === "1";
+// C9: 若使用者透過玄關按鈕進入，視為已授權播放音樂（gesture primed）
+const initialAudioEnabled =
+  localStorage.getItem(STORAGE_KEYS.audioEnabled) === "1" ||
+  (typeof window !== "undefined" && window.__lm402AutoplayPrimed === true);
 
 function isMobileLayout() {
   return window.matchMedia("(max-width: 1080px)").matches || window.matchMedia("(pointer: coarse)").matches;
@@ -885,7 +866,8 @@ function createAudioSystem() {
 }
 
 const audioSystem = createAudioSystem();
-const debugEnabled = new URLSearchParams(window.location.search).get("debug") === "1";
+const debugEnabled = new URLSearchParams(window.location.search).get("debug") === "1"
+  && localStorage.getItem("lm402_dev") === "toni";
 let objectiveCompactTimer = 0;
 
 /* ── Timer Registry：追蹤所有 setTimeout，resetScene 時統一清除 ── */
@@ -2845,8 +2827,6 @@ if (debugEnabled) {
     setLookSensitivity: (scalar, preset = null) => setLookSensitivity({ scalar, preset }),
     toggleObjective: toggleObjectivePrompt,
   };
-} else {
-  window.__LM402_DEBUG__ = { snapshot: snapshotDebug };
 }
 
 function renderFrame() {
@@ -3311,10 +3291,11 @@ function bindUI() {
     if (!panel) return;
     // 只在桌機上啟用浮動拖移
     if (window.innerWidth < 800) return;
-    panel.classList.add("ui-float");
-    // 加入拖把手提示
+    // HTML 已預先寫入 ui-float，避免 CLS；此處僅做守門
+    if (!panel.classList.contains("ui-float")) panel.classList.add("ui-float");
+    // 加入拖把手提示（HTML 已預埋，僅在舊結構下補上）
     const firstCard = panel.querySelector(".panel-card");
-    if (firstCard) {
+    if (firstCard && !firstCard.querySelector(".ui-drag-handle-hint")) {
       const hint = document.createElement("div");
       hint.className = "ui-drag-handle-hint";
       firstCard.insertBefore(hint, firstCard.firstChild);
@@ -3403,7 +3384,6 @@ function handleResize() {
   syncTranscriptUI();
   scene.resize();
   window.requestAnimationFrame(() => {
-    scene.resize();
     renderDebugPanel();
   });
   renderDebugPanel();
@@ -3436,7 +3416,12 @@ syncTranscriptUI();
 syncObjectiveChip();
 updatePointerHint();
 updateActionButtons();
-void audioSystem.tryPlay("startup");
+// C9: gate 進入者直接 unlock（resume AC + tryPlay），其他人照舊 tryPlay
+if (typeof window !== "undefined" && window.__lm402AutoplayPrimed) {
+  audioSystem.unlock();
+} else {
+  void audioSystem.tryPlay("startup");
+}
 
 /* ── WebGL Context Loss Detection ── */
 canvas.addEventListener("webglcontextlost", (e) => {
@@ -3456,6 +3441,11 @@ window.__lm402Ready = true;
   if (!loaderEl) return;
   const fillEl = document.getElementById("loader-fill");
   if (fillEl) fillEl.style.width = "100%";
+  // 清掉 lm402.html inline script 的 loading tip rotation（避免 setInterval 一直跑 + DOM ref 洩漏）
+  if (window.__lm402LoaderTipTimer) {
+    clearInterval(window.__lm402LoaderTipTimer);
+    window.__lm402LoaderTipTimer = null;
+  }
   setTimeout(() => {
     loaderEl.style.opacity = "0";
     loaderEl.style.pointerEvents = "none";

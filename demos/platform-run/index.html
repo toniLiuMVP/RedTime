@@ -3,18 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="color-scheme" content="dark" />
+<!-- Defense-in-depth CSP（最佳做法仍是 HTTP header，但 GitHub Pages 無法設 header，故以 meta 作為最低防線） -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'self' https:; connect-src 'self' https:; frame-ancestors 'self';" />
 <meta name="google-site-verification" content="X-GIGIVwll5mriPBn8nqDETFsmZnqIWp2WSbUGzot8w" />
-<meta name="description" content="月台上的狂奔：三十秒偶像劇。用你的反應，替那一秒追回來。" />
+<meta name="description" content="一眼只有一秒，卻用了二十年才讀懂。《時間裡的兩個妳》 連載中。" />
 <meta property="og:type" content="website" />
 <meta property="og:title" content="月台上的狂奔 — 三十秒偶像劇" />
-<meta property="og:description" content="三十秒，追回那一秒。來自「時間裡的兩個妳」的互動小遊戲。" />
+<meta property="og:description" content="一眼只有一秒，卻用了二十年才讀懂。《時間裡的兩個妳》 連載中。" />
 <meta property="og:url" content="https://toniliumvp.github.io/RedTime/demos/platform-run/index.html" />
 <meta property="og:image" content="https://toniliumvp.github.io/RedTime/assets/og-image.jpg" />
 <meta name="theme-color" content="#050508" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:image" content="https://toniliumvp.github.io/RedTime/assets/og-image.jpg" />
 <meta name="twitter:title" content="月台上的狂奔 — 三十秒偶像劇" />
-<meta name="twitter:description" content="三十秒，追回那一秒。來自「時間裡的兩個妳」的互動小遊戲。" />
+<meta name="twitter:description" content="一眼只有一秒，卻用了二十年才讀懂。《時間裡的兩個妳》 連載中。" />
 <link rel="canonical" href="https://toniliumvp.github.io/RedTime/demos/platform-run/index.html" />
 <link rel="manifest" href="../../manifest.json" />
 <title>月台上的狂奔 — 三十秒偶像劇</title>
@@ -45,11 +48,25 @@ canvas{display:block;width:100%;height:100%}
 #distance-text{color:#5a4a3a}
 #level-text{color:#1a6a3a;font-weight:700;font-size:clamp(14px,2vw,20px);text-shadow:0 0 8px rgba(26,106,58,0.3)}
 
-/* ── 關卡過渡 ── */
-#level-transition{position:fixed;inset:0;z-index:85;background:rgba(10,10,10,0.95);display:none;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.8s}
+/* ── 關卡過渡（韓劇導演級美術升級）── */
+#level-transition{position:fixed;inset:0;z-index:85;display:none;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;padding:clamp(36px,6vh,68px) clamp(32px,5vw,72px);background:radial-gradient(ellipse at center,rgba(26,18,10,0.9) 0%,rgba(8,5,3,0.96) 55%,rgba(0,0,0,0.98) 100%);transition:opacity 0.6s ease-out}
 #level-transition.show{display:flex}
-.level-clear-text{color:#ffd700;font-size:clamp(28px,5vw,48px);font-weight:700;opacity:0;animation:fadeUp 1s 0.3s forwards}
-.level-next-text{color:#b8956a;font-size:clamp(14px,2.5vw,22px);margin-top:20px;opacity:0;animation:fadeUp 1s 1s forwards}
+#level-transition::before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,0.035) 1px,transparent 1px);background-size:3px 3px;mix-blend-mode:overlay;pointer-events:none}
+#level-transition::after{content:"";position:absolute;inset:clamp(22px,4vh,48px) clamp(26px,4vw,60px);border:1px solid rgba(232,201,136,0.1);pointer-events:none}
+#level-transition .lt-frame,#level-transition .lt-frame2{position:absolute;inset:clamp(22px,4vh,48px) clamp(26px,4vw,60px);pointer-events:none}
+#level-transition .lt-frame::before,#level-transition .lt-frame::after,#level-transition .lt-frame2::before,#level-transition .lt-frame2::after{content:"";position:absolute;width:clamp(28px,4vw,52px);height:clamp(28px,4vw,52px);border:1.5px solid #d9b36a;box-shadow:0 0 14px rgba(217,179,106,0.18);opacity:0;animation:fadeUp 0.9s 0.2s forwards}
+#level-transition .lt-frame::before{top:-1px;left:-1px;border-right:none;border-bottom:none}
+#level-transition .lt-frame::after{bottom:-1px;right:-1px;border-left:none;border-top:none}
+#level-transition .lt-frame2::before{top:-1px;right:-1px;border-left:none;border-bottom:none}
+#level-transition .lt-frame2::after{bottom:-1px;left:-1px;border-right:none;border-top:none}
+#level-transition .lt-eyebrow{position:relative;z-index:3;color:#8a7560;font-size:clamp(10px,1.4vw,13px);letter-spacing:0.7em;text-indent:0.7em;font-weight:400;text-transform:uppercase;margin-bottom:clamp(16px,2.2vh,26px);opacity:0;animation:fadeUp 0.9s 0.45s forwards;font-family:"Cormorant Garamond",Georgia,serif}
+#level-transition .lt-eyebrow::before{content:"STAGE CLEARED"}
+.level-clear-text{position:relative;z-index:3;font-family:"Cormorant Garamond","Noto Serif TC","Noto Serif CJK TC",Georgia,serif;font-size:clamp(36px,6.2vw,64px);font-weight:300;letter-spacing:0.16em;text-indent:0.16em;line-height:1.15;background:linear-gradient(180deg,#f6e4b5 0%,#d9b36a 50%,#b97d3a 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;filter:drop-shadow(0 0 20px rgba(217,179,106,0.32));opacity:0;transform:translateY(24px) scale(0.95);animation:ltTitle 1.2s 0.75s cubic-bezier(0.2,0.7,0.2,1) forwards}
+#level-transition .lt-divider{position:relative;z-index:3;width:0;height:1px;margin:clamp(20px,2.6vh,32px) 0;background:linear-gradient(90deg,transparent,rgba(217,179,106,0.55),transparent);animation:ltDraw 0.9s 1.5s cubic-bezier(0.4,0,0.2,1) forwards}
+#level-transition .lt-divider::before{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;background:#d9b36a;transform:translate(-50%,-50%) rotate(45deg);box-shadow:0 0 10px rgba(217,179,106,0.6);opacity:0;animation:fadeUp 0.5s 2.1s forwards}
+.level-next-text{position:relative;z-index:3;color:#8a7560;font-size:clamp(11px,1.6vw,15px);margin-top:0;font-weight:400;letter-spacing:0.32em;text-indent:0.32em;text-transform:uppercase;font-family:"Cormorant Garamond",Georgia,serif;opacity:0;animation:fadeUp 1s 2s forwards}
+@keyframes ltTitle{from{opacity:0;transform:translateY(24px) scale(0.95);filter:drop-shadow(0 0 42px rgba(217,179,106,0.55)) blur(5px)}to{opacity:1;transform:translateY(0) scale(1);filter:drop-shadow(0 0 20px rgba(217,179,106,0.32)) blur(0)}}
+@keyframes ltDraw{to{width:clamp(240px,40vw,420px)}}
 
 /* ── 隱藏結局 ── */
 #hidden-ending{position:fixed;inset:0;z-index:88;background:#000;display:none;flex-direction:column;align-items:center;justify-content:center}
@@ -69,17 +86,27 @@ canvas{display:block;width:100%;height:100%}
 #narrative p{color:#2c3e50;font-size:clamp(14px,2.2vw,20px);line-height:1.8;opacity:0;transition:opacity 0.8s;text-shadow:0 1px 8px rgba(255,255,255,0.7),0 0px 3px rgba(255,255,255,0.5)}
 #narrative p.show{opacity:1}
 
-/* ── 結果畫面 ── */
-#result-screen{position:fixed;inset:0;z-index:90;background:rgba(10,10,10,0.92);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+/* ── 結果畫面（韓劇導演級美術升級）── */
+#result-screen{position:fixed;inset:0;z-index:90;display:none;flex-direction:column;align-items:center;justify-content:center;padding:clamp(40px,6vh,72px) clamp(32px,5vw,72px);overflow:hidden;background:radial-gradient(ellipse at center,rgba(26,18,10,0.9) 0%,rgba(8,5,3,0.96) 55%,rgba(0,0,0,0.98) 100%)}
 #result-screen.show{display:flex}
-.result-text{color:#e8d5b8;font-size:clamp(20px,4vw,40px);font-weight:700;opacity:0;animation:fadeUp 1s 0.5s forwards}
-.result-sub{color:#8a7560;font-size:clamp(13px,2vw,18px);margin-top:20px;line-height:2;text-align:center;max-width:500px;opacity:0;animation:fadeUp 1s 1.2s forwards}
-.result-retry{color:#b8956a;font-size:clamp(12px,1.6vw,15px);margin-top:40px;cursor:pointer;pointer-events:auto;opacity:0;animation:fadeUp 1s 2s forwards}
-.result-retry:hover{color:#e8d5b8}
+#result-screen::before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,0.035) 1px,transparent 1px);background-size:3px 3px;mix-blend-mode:overlay;pointer-events:none}
+#result-screen::after{content:"";position:absolute;inset:clamp(22px,4vh,48px) clamp(26px,4vw,60px);border:1px solid rgba(232,201,136,0.1);pointer-events:none}
+#result-screen .rs-frame,#result-screen .rs-frame2{position:absolute;inset:clamp(22px,4vh,48px) clamp(26px,4vw,60px);pointer-events:none}
+#result-screen .rs-frame::before,#result-screen .rs-frame::after,#result-screen .rs-frame2::before,#result-screen .rs-frame2::after{content:"";position:absolute;width:clamp(28px,4vw,52px);height:clamp(28px,4vw,52px);border:1.5px solid #d9b36a;box-shadow:0 0 14px rgba(217,179,106,0.18);opacity:0;animation:fadeUp 0.9s 0.3s forwards}
+#result-screen .rs-frame::before{top:-1px;left:-1px;border-right:none;border-bottom:none}
+#result-screen .rs-frame::after{bottom:-1px;right:-1px;border-left:none;border-top:none}
+#result-screen .rs-frame2::before{top:-1px;right:-1px;border-left:none;border-bottom:none}
+#result-screen .rs-frame2::after{bottom:-1px;left:-1px;border-right:none;border-top:none}
+.result-text{position:relative;z-index:3;font-family:"Cormorant Garamond","Noto Serif TC","Noto Serif CJK TC",Georgia,serif;font-size:clamp(28px,4.8vw,52px);font-weight:300;letter-spacing:0.18em;text-indent:0.18em;line-height:1.15;text-align:center;background:linear-gradient(180deg,#f6e4b5 0%,#d9b36a 50%,#b97d3a 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;filter:drop-shadow(0 0 22px rgba(217,179,106,0.32));opacity:0;animation:fadeUp 1.2s 0.5s cubic-bezier(0.2,0.7,0.2,1) forwards}
+.result-text::after{content:"";display:block;width:clamp(200px,32vw,360px);height:1px;margin:clamp(18px,2.4vh,30px) auto clamp(6px,1vh,12px);background:linear-gradient(90deg,transparent,rgba(217,179,106,0.6),transparent)}
+.result-sub{position:relative;z-index:3;color:#c8b89a;font-size:clamp(14px,2.1vw,19px);margin-top:clamp(14px,2vh,22px);line-height:2.1;font-weight:300;letter-spacing:0.12em;text-align:center;max-width:560px;opacity:0;animation:fadeUp 1s 1.2s forwards;text-shadow:0 1px 8px rgba(0,0,0,0.7)}
+.result-sub > div:empty::before{content:"\00a0"}
+.result-retry{position:relative;z-index:3;color:#e8c988;font-size:clamp(13px,1.7vw,16px);letter-spacing:0.32em;text-indent:0.32em;padding:12px 32px;margin-top:clamp(28px,4vh,46px);border:1px solid rgba(217,179,106,0.45);background:rgba(217,179,106,0.05);border-radius:2px;cursor:pointer;pointer-events:auto;text-transform:uppercase;font-family:"Cormorant Garamond",Georgia,serif;opacity:0;animation:fadeUp 1s 2s forwards;transition:color 0.35s ease,background 0.35s ease,border-color 0.35s ease,box-shadow 0.35s ease,letter-spacing 0.35s ease}
+.result-retry:hover{color:#f6e4b5;background:rgba(217,179,106,0.16);border-color:#d9b36a;box-shadow:0 0 24px rgba(217,179,106,0.28);letter-spacing:0.36em}
 
 /* ── 排行榜 ── */
-#leaderboard-btn{color:#b8956a;font-size:clamp(12px,1.6vw,15px);margin-top:16px;cursor:pointer;pointer-events:auto;opacity:0;animation:fadeUp 1s 2.5s forwards}
-#leaderboard-btn:hover{color:#e8d5b8}
+#leaderboard-btn{position:relative;z-index:3;color:#b8956a;font-size:clamp(12px,1.6vw,15px);letter-spacing:0.28em;text-indent:0.28em;margin-top:18px;padding:9px 24px;border:1px solid rgba(184,149,106,0.28);background:transparent;border-radius:2px;cursor:pointer;pointer-events:auto;opacity:0;animation:fadeUp 1s 2.5s forwards;font-family:"Cormorant Garamond",Georgia,serif;text-transform:uppercase;transition:color 0.35s ease,background 0.35s ease,border-color 0.35s ease,box-shadow 0.35s ease}
+#leaderboard-btn:hover{color:#e8c988;border-color:rgba(217,179,106,0.55);background:rgba(217,179,106,0.08);box-shadow:0 0 18px rgba(217,179,106,0.18)}
 #leaderboard-panel{position:fixed;inset:0;z-index:95;background:rgba(10,10,10,0.95);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px}
 #leaderboard-panel.show{display:flex}
 .lb-title{color:#e8d5b8;font-size:clamp(18px,3vw,28px);font-weight:700;margin-bottom:16px}
@@ -91,17 +118,19 @@ canvas{display:block;width:100%;height:100%}
 .lb-close{color:#b8956a;font-size:clamp(12px,1.6vw,15px);margin-top:24px;cursor:pointer;pointer-events:auto}
 .lb-close:hover{color:#e8d5b8}
 /* ── 結果畫面連結 ── */
-.result-links{margin-top:16px;display:flex;gap:20px;opacity:0;animation:fadeUp 1s 3s forwards}
-.result-link{color:#8a7560;font-size:clamp(11px,1.4vw,14px);text-decoration:none;pointer-events:auto;transition:color 0.2s}
-.result-link:hover{color:#e8d5b8}
+.result-links{position:relative;z-index:3;margin-top:clamp(22px,3vh,34px);display:flex;gap:clamp(22px,3.2vw,42px);opacity:0;animation:fadeUp 1s 3s forwards}
+.result-link{position:relative;color:#7a6247;font-size:clamp(11px,1.4vw,14px);letter-spacing:0.18em;text-decoration:none;pointer-events:auto;padding-bottom:4px;transition:color 0.35s ease;font-family:"Cormorant Garamond",Georgia,serif}
+.result-link::after{content:"";position:absolute;left:0;bottom:0;width:0;height:1px;background:#d9b36a;transition:width 0.4s ease}
+.result-link:hover{color:#e8c988}
+.result-link:hover::after{width:100%}
 /* ── 名字輸入（勝利後）── */
-#name-input-wrap{margin-top:20px;opacity:0;text-align:center;display:none}
+#name-input-wrap{position:relative;z-index:3;margin-top:clamp(22px,3vh,32px);opacity:0;text-align:center;display:none}
 #name-input-wrap.show{display:block;animation:fadeUp 1s 0.3s forwards}
-#name-input{background:rgba(255,255,255,0.08);border:1px solid rgba(184,149,106,0.4);border-radius:6px;color:#e8d5b8;font-size:15px;padding:8px 14px;width:160px;text-align:center;font-family:monospace;letter-spacing:2px;outline:none}
-#name-input:focus{border-color:#b8956a}
-#name-input::placeholder{color:rgba(184,149,106,0.4)}
-#save-score-btn{background:rgba(184,149,106,0.2);border:1px solid rgba(184,149,106,0.5);border-radius:6px;color:#b8956a;font-size:13px;padding:6px 18px;margin-left:8px;cursor:pointer;font-family:inherit}
-#save-score-btn:hover{background:rgba(184,149,106,0.35);color:#e8d5b8}
+#name-input{background:rgba(217,179,106,0.06);border:1px solid rgba(217,179,106,0.35);border-radius:2px;color:#e8c988;font-size:15px;padding:10px 16px;width:180px;text-align:center;font-family:monospace;letter-spacing:3px;outline:none;transition:border-color 0.35s ease,background 0.35s ease,box-shadow 0.35s ease}
+#name-input:focus{border-color:#d9b36a;background:rgba(217,179,106,0.1);box-shadow:0 0 16px rgba(217,179,106,0.22)}
+#name-input::placeholder{color:rgba(184,149,106,0.38);letter-spacing:2px}
+#save-score-btn{background:rgba(217,179,106,0.08);border:1px solid rgba(217,179,106,0.45);border-radius:2px;color:#d9b36a;font-size:13px;padding:10px 22px;margin-left:10px;cursor:pointer;font-family:"Cormorant Garamond",Georgia,serif;letter-spacing:0.22em;text-indent:0.22em;text-transform:uppercase;transition:background 0.35s ease,color 0.35s ease,border-color 0.35s ease,box-shadow 0.35s ease}
+#save-score-btn:hover{background:rgba(217,179,106,0.2);color:#f6e4b5;border-color:#d9b36a;box-shadow:0 0 16px rgba(217,179,106,0.28)}
 
 /* ── 電影黑邊 ── */
 .letterbox-top,.letterbox-bot{position:fixed;left:0;right:0;height:0;background:#0a0a0a;z-index:5;transition:height 0.8s}
@@ -149,6 +178,34 @@ canvas{display:block;width:100%;height:100%}
 .quality-opt{display:block;width:100%;padding:6px 16px;margin:2px 0;border:none;border-radius:4px;background:rgba(255,255,255,0.06);color:#c8c0b0;font-size:13px;cursor:pointer;text-align:left;font-family:inherit}
 .quality-opt:hover{background:rgba(255,255,255,0.15)}
 .quality-opt.active{background:rgba(184,149,106,0.3);color:#e8d5b8;font-weight:700}
+/* ── 最終關卡警告（第 9→10 關電影化過場）── */
+#final-level-warning{position:fixed;inset:0;z-index:86;display:none;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#0a0603 0%,#000 75%);opacity:0;transition:opacity 0.8s ease-out;overflow:hidden;pointer-events:none}
+#final-level-warning.show{display:flex;opacity:1}
+#final-level-warning .flw-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 30%,rgba(120,20,20,0.32) 82%,rgba(50,0,0,0.6) 100%);pointer-events:none;opacity:0;animation:flwVignette 6s ease-out forwards}
+#final-level-warning .flw-grain{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,0.04) 1px,transparent 1px);background-size:3px 3px;mix-blend-mode:overlay;opacity:0;animation:flwFade 1s 0.2s forwards;pointer-events:none}
+#final-level-warning .flw-letterbox-top,#final-level-warning .flw-letterbox-bot{position:absolute;left:0;right:0;height:0;background:#000;z-index:2;animation:flwLetterbox 0.6s 0.1s cubic-bezier(0.4,0,0.2,1) forwards}
+#final-level-warning .flw-letterbox-top{top:0}
+#final-level-warning .flw-letterbox-bot{bottom:0}
+@keyframes flwLetterbox{from{height:0}to{height:clamp(40px,8vh,80px)}}
+@keyframes flwVignette{0%{opacity:0}20%{opacity:0.35}55%{opacity:0.25}75%{opacity:1}100%{opacity:0.7}}
+
+#final-level-warning .flw-content{position:relative;z-index:3;text-align:center;font-family:"Cormorant Garamond","Noto Serif TC","Noto Serif CJK TC",Georgia,serif;padding:20px;max-width:720px}
+#final-level-warning .flw-sub{font-size:clamp(10px,1.5vw,14px);color:#7a6247;letter-spacing:0.7em;text-indent:0.7em;text-transform:uppercase;font-weight:400;opacity:0;animation:flwFade 0.8s 0.4s forwards}
+#final-level-warning .flw-number{font-size:clamp(88px,14vw,180px);color:#e8c988;font-weight:300;letter-spacing:0.15em;text-indent:0.15em;line-height:1;margin:clamp(6px,1.4vh,18px) 0 clamp(2px,0.4vh,6px);text-shadow:0 0 40px rgba(232,201,136,0.3),0 0 90px rgba(185,71,71,0.15);opacity:0;animation:flwScaleIn 1.2s 1s cubic-bezier(0.2,0.7,0.2,1) forwards}
+#final-level-warning .flw-eyebrow{font-size:clamp(11px,1.8vw,17px);color:#b8956a;letter-spacing:0.55em;text-indent:0.55em;font-variant:small-caps;opacity:0;animation:flwFade 0.9s 1.8s forwards}
+#final-level-warning .flw-divider{width:0;height:1px;margin:clamp(12px,1.8vh,24px) auto;background:linear-gradient(90deg,transparent,rgba(232,201,136,0.75),transparent);animation:flwDraw 0.9s 2.2s cubic-bezier(0.4,0,0.2,1) forwards}
+@keyframes flwDraw{to{width:clamp(180px,30vw,340px)}}
+#final-level-warning .flw-line1,#final-level-warning .flw-line2{font-size:clamp(17px,2.8vw,27px);color:#ede1cf;font-weight:400;letter-spacing:0.25em;text-indent:0.25em;line-height:1.9;opacity:0;text-shadow:0 0 14px rgba(0,0,0,0.85),0 1px 2px rgba(0,0,0,0.9)}
+#final-level-warning .flw-line1{animation:flwRise 1s 2.6s forwards}
+#final-level-warning .flw-line2{animation:flwRise 1s 3.3s forwards}
+#final-level-warning .flw-cta{font-size:clamp(34px,6.2vw,66px);font-weight:700;letter-spacing:0.3em;text-indent:0.3em;margin-top:clamp(16px,2.6vh,32px);background:linear-gradient(180deg,#f6e4b5 0%,#d9b36a 45%,#b97d3a 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;text-shadow:none;filter:drop-shadow(0 0 24px rgba(185,71,71,0.45)) drop-shadow(0 0 8px rgba(232,201,136,0.35));opacity:0;transform:scale(0.7);animation:flwBlast 1.1s 4s cubic-bezier(0.2,0.8,0.2,1) forwards}
+#final-level-warning .flw-cta-line{width:0;height:2px;margin:18px auto 0;background:linear-gradient(90deg,transparent,#b94747,transparent);animation:flwDraw 0.8s 4.7s forwards}
+
+@keyframes flwFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes flwRise{from{opacity:0;transform:translateY(18px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes flwScaleIn{0%{opacity:0;transform:scale(1.55);letter-spacing:1.1em;text-indent:1.1em;filter:blur(6px)}55%{opacity:0.9;filter:blur(0.5px)}100%{opacity:1;transform:scale(1);letter-spacing:0.15em;text-indent:0.15em;filter:blur(0)}}
+@keyframes flwBlast{0%{opacity:0;transform:scale(0.7);filter:brightness(2.2) drop-shadow(0 0 24px rgba(185,71,71,0.45)) drop-shadow(0 0 8px rgba(232,201,136,0.35))}35%{opacity:1;transform:scale(1.14);filter:brightness(1.55) drop-shadow(0 0 32px rgba(185,71,71,0.6)) drop-shadow(0 0 12px rgba(232,201,136,0.5))}70%{transform:scale(0.98);filter:brightness(1.15) drop-shadow(0 0 24px rgba(185,71,71,0.45)) drop-shadow(0 0 8px rgba(232,201,136,0.35))}100%{opacity:1;transform:scale(1);filter:brightness(1) drop-shadow(0 0 24px rgba(185,71,71,0.45)) drop-shadow(0 0 8px rgba(232,201,136,0.35))}}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -199,12 +256,14 @@ canvas{display:block;width:100%;height:100%}
 <!-- 紅暈 -->
 <div id="vignette"></div>
 
-<!-- 結果畫面 -->
+<!-- 結果畫面（韓劇導演級美術升級） -->
 <div id="result-screen">
+  <div class="rs-frame" aria-hidden="true"></div>
+  <div class="rs-frame2" aria-hidden="true"></div>
   <div class="result-text" id="result-title"></div>
   <div class="result-sub" id="result-body"></div>
   <div id="name-input-wrap">
-    <input type="text" id="name-input" maxlength="10" placeholder="YOUR NAME" autocomplete="off">
+    <input type="text" id="name-input" maxlength="10" placeholder="你的名字" autocomplete="off">
     <button id="save-score-btn">記錄成績</button>
   </div>
   <div class="result-retry" id="result-retry">再來一次</div>
@@ -222,10 +281,32 @@ canvas{display:block;width:100%;height:100%}
   <div class="lb-close" id="lb-close">關閉</div>
 </div>
 
-<!-- 關卡過渡畫面 -->
+<!-- 關卡過渡畫面（韓劇導演級美術升級） -->
 <div id="level-transition">
+  <div class="lt-frame" aria-hidden="true"></div>
+  <div class="lt-frame2" aria-hidden="true"></div>
+  <div class="lt-eyebrow" aria-hidden="true"></div>
   <div class="level-clear-text" id="level-clear-text"></div>
+  <div class="lt-divider" aria-hidden="true"></div>
   <div class="level-next-text" id="level-next-text"></div>
+</div>
+
+<!-- 最終關卡警告（第 9→10 關電影化過場） -->
+<div id="final-level-warning" role="alert" aria-live="assertive" aria-atomic="true">
+  <div class="flw-vignette" aria-hidden="true"></div>
+  <div class="flw-grain" aria-hidden="true"></div>
+  <div class="flw-letterbox-top" aria-hidden="true"></div>
+  <div class="flw-letterbox-bot" aria-hidden="true"></div>
+  <div class="flw-content">
+    <div class="flw-sub">STAGE 9 · CLEARED</div>
+    <div class="flw-number">10</div>
+    <div class="flw-eyebrow">FINAL RUN · 最終關卡</div>
+    <div class="flw-divider" aria-hidden="true"></div>
+    <div class="flw-line1">為了抱起女兒</div>
+    <div class="flw-line2">請用盡所有的力氣</div>
+    <div class="flw-cta">狂　奔　吧！</div>
+    <div class="flw-cta-line" aria-hidden="true"></div>
+  </div>
 </div>
 
 <!-- 隱藏結局 -->
@@ -343,6 +424,7 @@ const dom = {
   levelTransition: document.getElementById("level-transition"),
   levelClearText: document.getElementById("level-clear-text"),
   levelNextText:  document.getElementById("level-next-text"),
+  finalLevelWarning: document.getElementById("final-level-warning"),
   hiddenEnding:   document.getElementById("hidden-ending"),
   hiddenEndingText: document.getElementById("hidden-ending-text"),
   ultimateCount:  document.getElementById("ultimate-count"),
@@ -4143,6 +4225,11 @@ function updateVictoryAnimation(dt) {
    關卡過渡：顯示過關畫面，自動進入下一關
    ════════════════════════════════════════════════ */
 function showLevelTransition() {
+  /* 第 9→10 關專屬電影化最終警告（韓劇導演級過場） */
+  if (state.currentLevel === 9) {
+    showFinalLevelWarning();
+    return;
+  }
   dom.levelClearText.textContent = "\u7B2C " + state.currentLevel + " \u95DC \u904E\u95DC\uFF01";
   dom.levelNextText.textContent = "\u5373\u5C07\u9032\u5165\u7B2C " + (state.currentLevel + 1) + " \u95DC...";
   /* Re-trigger animation by cloning */
@@ -4160,6 +4247,78 @@ function showLevelTransition() {
     dom.levelTransition.classList.remove("show");
     advanceToNextLevel();
   }, 3000);
+}
+
+/* ════════════════════════════════════════════════
+   最終關卡警告：第 9→10 關電影化過場（韓劇導演級）
+   時間線：
+     0.0s  overlay 淡入、黑邊滑入
+     0.4s  STAGE 9 · CLEARED
+     1.0s  「10」從模糊放大聚焦
+     1.8s  FINAL RUN · 最終關卡
+     2.2s  金色分隔線左右拉開
+     2.6s  為了抱起女兒
+     3.3s  請用盡所有的力氣
+     4.0s  狂 奔 吧！（爆發 + 紅暈震動）
+     4.7s  紅色底線延展
+     6.4s  advanceToNextLevel()
+   ════════════════════════════════════════════════ */
+function showFinalLevelWarning() {
+  /* Clone overlay to restart CSS animations (defensive, same pattern as showLevelTransition) */
+  var overlay = dom.finalLevelWarning;
+  var clone = overlay.cloneNode(true);
+  overlay.parentNode.replaceChild(clone, overlay);
+  dom.finalLevelWarning = clone;
+
+  clone.classList.add("show");
+  document.body.classList.remove("letterbox-on");
+
+  /* Duck BGM for dramatic breath */
+  var prevVolume = bgm.volume;
+  try { bgm.volume = 0.12; } catch (e) {}
+
+  /* Cinematic heartbeats — slow opener, then accelerating toward climax */
+  var beatTimings = [2400, 3150, 3850, 4150, 4450];
+  var beatTimers = [];
+  for (var bi = 0; bi < beatTimings.length; bi++) {
+    (function(ms, idx) {
+      beatTimers.push(setTimeout(function() {
+        if (!audioCtx) return;
+        var now = audioCtx.currentTime;
+        var osc = audioCtx.createOscillator();
+        var gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(62, now);
+        osc.frequency.exponentialRampToValueAtTime(30, now + 0.22);
+        /* Later beats grow louder */
+        var amp = 0.35 + idx * 0.04;
+        gain.gain.setValueAtTime(amp, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.32);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.35);
+      }, ms));
+    })(beatTimings[bi], bi);
+  }
+
+  /* Vignette red flash on climax */
+  var vignetteTimer = setTimeout(function() {
+    if (dom.vignette) {
+      dom.vignette.style.transition = "opacity 0.15s";
+      dom.vignette.style.opacity = "0.9";
+      setTimeout(function() {
+        if (dom.vignette) dom.vignette.style.opacity = "0";
+      }, 600);
+    }
+  }, 4000);
+
+  /* Auto-advance after full sequence */
+  setTimeout(function() {
+    clone.classList.remove("show");
+    try { bgm.volume = prevVolume; } catch (e) {}
+    advanceToNextLevel();
+  }, 6400);
 }
 
 function advanceToNextLevel() {
@@ -5004,7 +5163,8 @@ init();
 </script>
 <script>
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/RedTime/sw.js').catch(() => {});
+  // 相對路徑同時支援 GitHub Pages (/RedTime/) 與本機伺服器 (/)
+  navigator.serviceWorker.register('../../sw.js').catch(() => {});
 }
 </script>
 </body>

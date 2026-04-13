@@ -672,7 +672,10 @@ export function initPanelSystem() {
     reset: resetPanelLayout,
     toggleTranscriptMaximize,
   };
-  window.__LM402_PANEL_SYSTEM__ = api;
+  if (new URLSearchParams(window.location.search).get("debug") === "1"
+    && localStorage.getItem("lm402_dev") === "toni") {
+    window.__LM402_PANEL_SYSTEM__ = api;
+  }
 
   window.addEventListener("resize", queueSync, { passive: true });
   window.visualViewport?.addEventListener("resize", queueSync, { passive: true });

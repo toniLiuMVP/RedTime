@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
@@ -139,24 +139,45 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 .shop-item-name{color:#f0e6d2;font-size:14px;margin-bottom:4px}
 .shop-item-desc{color:#cdbf99;font-size:11px;margin-bottom:6px}
 .shop-item-price{color:#ffd700;font-family:"Courier New",monospace;font-size:12px}
+.shop-item-badge{margin-top:4px;color:#7fb069;font-size:11px;font-family:"Courier New",monospace}
+.shop-section{color:#c8a063;font-family:"Courier New",monospace;font-size:11px;letter-spacing:.4em;margin:16px 0 8px;text-align:center}
+.skill-item{cursor:pointer;transition:all .15s}
+.skill-item:active{transform:scale(.95)}
+.skill-bar{position:fixed;bottom:170px;left:50%;transform:translateX(-50%);z-index:15;display:none;gap:8px;flex-wrap:wrap;justify-content:center}
+.skill-bar.show{display:flex}
+.skill-btn{padding:6px 14px;border:1px solid #c8a063;color:#c8a063;font-size:13px;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);border-radius:4px;cursor:pointer;transition:all .2s;font-family:inherit}
+.skill-btn:hover{background:rgba(200,160,99,.15)}
+.skill-btn:active{transform:scale(.93)}
+.skill-btn.used{opacity:.3;pointer-events:none}
+.skill-active-banner{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:25;font-family:"Courier New",monospace;font-size:14px;color:#ffd700;letter-spacing:.2em;text-shadow:0 0 16px rgba(255,215,0,.6);pointer-events:none;opacity:0;transition:opacity .3s}
+.skill-active-banner.show{opacity:1}
 
 /* rhythm game (running) */
-.rhythm-lane{position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:15;width:min(280px,72vw);height:70vh;pointer-events:none;display:none;overflow:hidden}
+.rhythm-lane{position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:15;width:min(360px,92vw);height:70vh;pointer-events:none;display:none;overflow:hidden}
 .rhythm-lane.show{display:block;pointer-events:auto}
 .rhythm-judge{position:absolute;bottom:60px;left:0;right:0;height:3px;background:#c8a063;opacity:.6}
 .rhythm-cols{position:absolute;inset:0;display:flex}
 .rhythm-col{flex:1;border-right:1px solid rgba(200,160,99,.08)}
 .rhythm-col:last-child{border-right:none}
 .rhythm-hint{position:absolute;bottom:40px;left:0;right:0;display:flex;justify-content:center;gap:0}
-.rhythm-hint span{flex:1;text-align:center;font-family:"Courier New",monospace;font-size:16px;color:rgba(200,160,99,.4);line-height:1}
-.rhythm-note{position:absolute;width:25%;text-align:center;font-size:22px;color:#f0e6d2;text-shadow:0 0 8px rgba(200,160,99,.5);pointer-events:none;transition:none}
-.rhythm-note.hit{color:#7fb069;text-shadow:0 0 12px rgba(127,176,105,.8)}
-.rhythm-note.miss{color:#d94832;opacity:.4}
-.rhythm-fb{position:fixed;bottom:calc(60px + 30px);left:50%;transform:translateX(-50%);z-index:16;font-size:14px;font-family:"Courier New",monospace;letter-spacing:.15em;opacity:0;transition:opacity .2s;pointer-events:none}
-.rhythm-fb.show{opacity:1}
-.rhythm-fb.perfect{color:#ffd700}
-.rhythm-fb.good{color:#7fb069}
-.rhythm-fb.miss{color:#d94832}
+.rhythm-hint span{flex:1;text-align:center;font-family:"Courier New",monospace;font-size:32px;font-weight:bold;color:rgba(200,160,99,.5);line-height:1;text-shadow:0 0 10px rgba(200,160,99,.2)}
+.rhythm-note{position:absolute;width:25%;text-align:center;font-size:38px;color:#f0e6d2;text-shadow:0 0 14px rgba(200,160,99,.7),0 0 28px rgba(200,160,99,.3);pointer-events:none;transition:none;font-weight:bold;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5))}
+.rhythm-note::after{content:'';position:absolute;left:25%;right:25%;top:100%;height:24px;background:linear-gradient(180deg,rgba(200,160,99,.25),transparent);border-radius:0 0 50% 50%;pointer-events:none}
+.rhythm-note.hit{color:#7fb069;text-shadow:0 0 18px rgba(127,176,105,1),0 0 36px rgba(127,176,105,.5);transform:scale(1.3);transition:transform .12s,color .12s}
+.rhythm-note.miss{color:#d94832;opacity:.4;transform:scale(0.7);transition:transform .15s,opacity .15s}
+.rhythm-fb{position:fixed;bottom:calc(60px + 40px);left:50%;transform:translateX(-50%);z-index:16;font-size:20px;font-weight:bold;font-family:"Courier New",monospace;letter-spacing:.2em;opacity:0;transition:opacity .15s;pointer-events:none}
+.rhythm-fb.show{opacity:1;animation:rhythmPop .25s ease-out}
+.rhythm-fb.perfect{color:#ffd700;text-shadow:0 0 16px rgba(255,215,0,.8),0 0 32px rgba(255,215,0,.4)}
+.rhythm-fb.good{color:#7fb069;text-shadow:0 0 12px rgba(127,176,105,.6)}
+.rhythm-fb.miss{color:#d94832;text-shadow:0 0 8px rgba(217,72,50,.4)}
+@keyframes rhythmPop{0%{transform:translateX(-50%) scale(1.6);opacity:0}50%{opacity:1}100%{transform:translateX(-50%) scale(1)}}
+.rhythm-flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0}
+.rhythm-flash.fire{background:radial-gradient(ellipse at center bottom,rgba(255,215,0,.25),transparent 70%);animation:rFlash .3s ease-out forwards}
+.rhythm-flash.combo{background:radial-gradient(ellipse at center bottom,rgba(255,100,0,.2),transparent 60%);animation:rFlash .4s ease-out forwards}
+@keyframes rFlash{0%{opacity:1}100%{opacity:0}}
+.rhythm-combo{position:fixed;bottom:calc(60px + 70px);left:50%;transform:translateX(-50%);z-index:16;font-size:28px;font-weight:bold;font-family:"Courier New",monospace;color:#ff8c00;text-shadow:0 0 20px rgba(255,140,0,.6);pointer-events:none;opacity:0;transition:opacity .2s}
+.rhythm-combo.show{opacity:1;animation:comboPulse .4s ease-in-out}
+@keyframes comboPulse{0%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.3)}100%{transform:translateX(-50%) scale(1)}}
 
 /* end */
 .end-roll{max-width:560px;text-align:center;line-height:2.6;font-size:clamp(15px,4vw,19px);letter-spacing:.08em;animation:endIn 2s ease .3s both}
@@ -169,6 +190,7 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 </style>
 </head>
 <body>
+<noscript><p style="color:#f0e6d2;text-align:center;padding:2em;font-size:1.2em">本遊戲需要 JavaScript 才能運行，請啟用後重新載入。</p></noscript>
 
 <div id="fade"></div>
 <div id="music-toggle" title="音樂開關"></div>
@@ -183,8 +205,12 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 <div class="timing-label" id="timing-label">瞄準中…</div>
 <div class="timing-bar" id="timing-bar"><div class="timing-zone" id="timing-zone"></div><div class="timing-needle" id="timing-needle"></div></div>
 <div class="coin-display" id="coin-display">0</div>
+<div class="skill-bar" id="skill-bar"></div>
+<div class="skill-active-banner" id="skill-banner"></div>
 <div class="rhythm-lane" id="rhythm-lane"><div class="rhythm-cols"><div class="rhythm-col"></div><div class="rhythm-col"></div><div class="rhythm-col"></div><div class="rhythm-col"></div></div><div class="rhythm-judge"></div><div class="rhythm-hint"><span>←</span><span>↓</span><span>↑</span><span>→</span></div></div>
 <div class="rhythm-fb" id="rhythm-fb"></div>
+<div class="rhythm-flash" id="rhythm-flash"></div>
+<div class="rhythm-combo" id="rhythm-combo"></div>
 
 <script type="importmap">{"imports":{"three":"../platform-run/three.module.js"}}</script>
 <script type="module">
@@ -206,6 +232,10 @@ const TLABEL = $('timing-label');
 const COINDISP = $('coin-display');
 const RLANE = $('rhythm-lane');
 const RFB = $('rhythm-fb');
+const RFLASH = $('rhythm-flash');
+const RCOMBO = $('rhythm-combo');
+const SKILLBAR = $('skill-bar');
+const SKILLBANNER = $('skill-banner');
 const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 let playerCoins = 0;
 
@@ -216,6 +246,15 @@ function el(tag, cls, txt) {
   return e;
 }
 function clear(n) { while (n && n.firstChild) n.removeChild(n.firstChild); }
+
+// ── 集中式鍵盤處理器（避免 onkeydown 覆寫衝突）──
+let activeKeydown = null, activeKeyup = null;
+function setKeyHandler(downFn, upFn) {
+  activeKeydown = downFn || null;
+  activeKeyup = upFn || null;
+}
+document.addEventListener('keydown', e => { if (activeKeydown) activeKeydown(e); });
+document.addEventListener('keyup', e => { if (activeKeyup) activeKeyup(e); });
 
 function showFB(text, type) {
   FB.textContent = text;
@@ -494,8 +533,8 @@ const DIARY = [
    ══════════════════════════════════════════ */
 const BRIEFS = {
   artillery: {
-    lines: ['明天考砲兵射擊。','','數字，','是我現在唯一聽得清楚的聲音。'],
-    mission: 'MISSION 01', name: '砲 兵 射 擊',
+    lines: ['明天考砲兵射擊。','','計算手，負責算出每一發砲彈的落點。','數字，是我現在唯一聽得清楚的聲音。'],
+    mission: 'MISSION 01', name: '計 算 手',
     camStart: [20, 4, 18], camLook: [0, 0, -15]
   },
   run: {
@@ -577,8 +616,7 @@ function stopLevel() {
   levelInputs = [];
   if (currentLevel && currentLevel.stop) currentLevel.stop();
   currentLevel = null;
-  document.onkeydown = null;
-  document.onkeyup = null;
+  setKeyHandler(null, null);
 }
 
 /* ══════════════════════════════════════════
@@ -706,9 +744,9 @@ function showBriefOverlay(brief, onDone) {
 
   // skip interactions
   skipBtn.addEventListener('click', finish);
-  document.onkeydown = e => {
+  setKeyHandler(e => {
     if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); finish(); }
-  };
+  });
 
   levelInputs.push(() => {
     clearTimeout(autoTimer);
@@ -1095,40 +1133,86 @@ function addFog(scene, color, density) {
    ══════════════════════════════════════════ */
 // shell types for shop system
 const SHELL_TYPES = [
-  { id:'standard', name:'標準榴彈', desc:'基本砲彈', price: 0, blastR: 2.5, color: 0x1a1a0a },
-  { id:'heavy',    name:'重型穿甲彈', desc:'爆炸範圍 +40%', price: 30, blastR: 3.5, color: 0x4a1a0a },
-  { id:'cluster',  name:'子母彈',   desc:'爆炸範圍 +80%', price: 60, blastR: 4.5, color: 0x6a2a0a }
+  { id:'standard', name:'標準榴彈',   desc:'基本砲彈',             price: 0,  blastR: 2.5, speed: 0.7, zoneBonus: 0, color: 0x1a1a0a },
+  { id:'fast',     name:'高速彈',     desc:'飛行速度 ×2',          price: 15, blastR: 2.5, speed: 1.4, zoneBonus: 0, color: 0x2a2a3a },
+  { id:'heavy',    name:'重型穿甲彈', desc:'爆炸範圍 +60%',        price: 30, blastR: 4.0, speed: 0.5, zoneBonus: 0, color: 0x4a1a0a },
+  { id:'guided',   name:'導引彈',     desc:'瞄準區寬 +50%',        price: 40, blastR: 2.5, speed: 0.7, zoneBonus: 0.5, color: 0x1a3a4a },
+  { id:'cluster',  name:'子母彈',     desc:'爆炸範圍 +120%',       price: 60, blastR: 5.5, speed: 0.6, zoneBonus: 0, color: 0x6a2a0a }
 ];
 let selectedShell = SHELL_TYPES[0];
+
+// skill types — stackable, activated during gameplay
+const SKILL_TYPES = [
+  { id:'extraCannon', name:'砲兵增援',   desc:'增援一隊砲兵齊射 8 秒',   price: 50,  icon:'🎯', duration: 8  },
+  { id:'airstrike',   name:'空軍轟炸',   desc:'呼叫空軍對目標區轟炸 10 秒', price: 80,  icon:'✈️', duration: 10 },
+  { id:'tank',         name:'戰車支援',   desc:'戰車進場連續砲擊 15 秒',  price: 120, icon:'🔥', duration: 15 },
+  { id:'shield',       name:'防護罩',     desc:'下次失誤不扣命',          price: 35,  icon:'🛡️', duration: 0  },
+  { id:'precision',    name:'精準校正',   desc:'瞄準區永久 +20%（本局）', price: 70,  icon:'📐', duration: 0  }
+];
+const playerSkills = []; // { id, count } — accumulated inventory
 
 function showShop(onDone) {
   clear(OV);
   const wrap = el('div', 'shop-wrap');
-  wrap.appendChild(el('div', 'shop-title', '砲 彈 補 給 站'));
-  const coins = el('div', 'shop-coins');
-  coins.textContent = '軍餉：' + playerCoins;
-  wrap.appendChild(coins);
-  const grid = el('div', 'shop-grid');
+  wrap.appendChild(el('div', 'shop-title', '配 備 站'));
+  const coinsEl = el('div', 'shop-coins');
+  coinsEl.textContent = '軍餉：' + playerCoins;
+  wrap.appendChild(coinsEl);
+
+  // section: shell selection
+  wrap.appendChild(el('div', 'shop-section', '── 砲 彈 ──'));
+  const shellGrid = el('div', 'shop-grid');
   let chosen = selectedShell;
-  const items = [];
+  const shellItems = [];
   SHELL_TYPES.forEach(sh => {
     const item = el('div', 'shop-item');
-    if (sh.price > playerCoins) item.classList.add('disabled');
+    if (sh.price > playerCoins && sh.price > 0) item.classList.add('disabled');
     if (sh.id === chosen.id) item.classList.add('selected');
     item.appendChild(el('div', 'shop-item-name', sh.name));
     item.appendChild(el('div', 'shop-item-desc', sh.desc));
     item.appendChild(el('div', 'shop-item-price', sh.price === 0 ? '免費' : sh.price + ' 軍餉'));
     item.addEventListener('click', () => {
-      if (sh.price > playerCoins) return;
+      if (sh.price > playerCoins && sh.price > 0) return;
       chosen = sh;
-      items.forEach(it => it.classList.remove('selected'));
+      shellItems.forEach(it => it.classList.remove('selected'));
       item.classList.add('selected');
     });
-    grid.appendChild(item);
-    items.push(item);
+    shellGrid.appendChild(item);
+    shellItems.push(item);
   });
-  wrap.appendChild(grid);
-  const btn = el('button', 'btn primary', '出擊');
+  wrap.appendChild(shellGrid);
+
+  // section: skills (stackable)
+  wrap.appendChild(el('div', 'shop-section', '── 技 能（可累計） ──'));
+  const skillGrid = el('div', 'shop-grid');
+  SKILL_TYPES.forEach(sk => {
+    const owned = playerSkills.find(p => p.id === sk.id);
+    const count = owned ? owned.count : 0;
+    const item = el('div', 'shop-item skill-item');
+    if (sk.price > playerCoins) item.classList.add('disabled');
+    item.appendChild(el('div', 'shop-item-name', sk.icon + ' ' + sk.name));
+    item.appendChild(el('div', 'shop-item-desc', sk.desc));
+    const priceRow = el('div', 'shop-item-price', sk.price + ' 軍餉');
+    item.appendChild(priceRow);
+    if (count > 0) {
+      const badge = el('div', 'shop-item-badge', '已持有 ×' + count);
+      item.appendChild(badge);
+    }
+    item.addEventListener('click', () => {
+      if (sk.price > playerCoins || item.classList.contains('buying')) return;
+      item.classList.add('buying');
+      item.style.pointerEvents = 'none';
+      playerCoins -= sk.price;
+      coinsEl.textContent = '軍餉：' + playerCoins;
+      COINDISP.textContent = playerCoins;
+      if (owned) { owned.count++; } else { playerSkills.push({ id: sk.id, count: 1 }); }
+      showShop(onDone);
+    });
+    skillGrid.appendChild(item);
+  });
+  wrap.appendChild(skillGrid);
+
+  const btn = el('button', 'btn primary', '出 擊');
   btn.addEventListener('click', () => {
     if (chosen.price > 0) playerCoins -= chosen.price;
     selectedShell = chosen;
@@ -1142,31 +1226,55 @@ function showShop(onDone) {
 
 function buildArtillery() {
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x5a6a48);
-  addFog(scene, 0x5a6a48, 0.008);
+  scene.background = new THREE.Color(0x4a5838);
+  addFog(scene, 0x4a5838, 0.006);
 
-  // lighting
-  scene.add(new THREE.HemisphereLight(0x8899aa, 0x443322, 0.4));
-  const sun = new THREE.DirectionalLight(0xffe8c0, 2.0);
+  // lighting — dramatic military
+  scene.add(new THREE.HemisphereLight(0x8899aa, 0x443322, 0.5));
+  const sun = new THREE.DirectionalLight(0xffe8c0, 2.2);
   sun.position.set(-15, 25, 10);
   sun.castShadow = !isMobile;
-  if (!isMobile) { sun.shadow.mapSize.set(1024, 1024); sun.shadow.camera.far = 80; }
+  if (!isMobile) { sun.shadow.mapSize.set(1024, 1024); sun.shadow.camera.far = 80; const sc = sun.shadow.camera; sc.left = -40; sc.right = 40; sc.top = 40; sc.bottom = -40; }
   scene.add(sun);
+  // rim light
+  const rim = new THREE.DirectionalLight(0xffaa44, 0.6);
+  rim.position.set(20, 10, -15); scene.add(rim);
 
-  // terrain — rolling hills, flat near cannon/soldier area
-  const terrainGeo = new THREE.PlaneGeometry(120, 120, 48, 48);
+  // terrain — more detailed rolling hills
+  const terrainGeo = new THREE.PlaneGeometry(160, 160, 64, 64);
   const posArr = terrainGeo.attributes.position.array;
   for (let i = 0; i < posArr.length; i += 3) {
     const x = posArr[i], y = posArr[i + 1];
     const distFromCannon = Math.sqrt((x - 3) * (x - 3) + (y - 4) * (y - 4));
     const dampen = Math.min(1, distFromCannon / 15);
-    posArr[i + 2] = (Math.sin(x * 0.08) * 1.2 + Math.cos(y * 0.06) * 0.8 + Math.random() * 0.2) * dampen;
+    posArr[i + 2] = (Math.sin(x * 0.08) * 1.5 + Math.cos(y * 0.06) * 1.0 + Math.sin(x * 0.03 + y * 0.04) * 2.0 + Math.random() * 0.15) * dampen;
   }
   terrainGeo.computeVertexNormals();
-  const terrain = new THREE.Mesh(terrainGeo, new THREE.MeshStandardMaterial({ color: 0x5a7a3a, roughness: 1 }));
+  const terrain = new THREE.Mesh(terrainGeo, new THREE.MeshStandardMaterial({ color: 0x4a6a2a, roughness: 1 }));
   terrain.rotation.x = -Math.PI / 2;
   terrain.receiveShadow = true;
   scene.add(terrain);
+
+  // sandbag fortification around cannon
+  const sandbagMat = new THREE.MeshStandardMaterial({ color: 0x8a7a5a, roughness: 0.95 });
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 1.3 - Math.PI * 0.15;
+    const r = 3.5;
+    const bag = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 0.4), sandbagMat);
+    bag.position.set(3 + Math.cos(angle) * r, 0.15 + (i % 2) * 0.3, 4 + Math.sin(angle) * r);
+    bag.rotation.y = angle + Math.PI / 2;
+    bag.castShadow = true;
+    scene.add(bag);
+  }
+
+  // trenches (dark grooves in terrain)
+  const trenchMat = new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 1 });
+  for (let i = 0; i < 3; i++) {
+    const trench = new THREE.Mesh(new THREE.BoxGeometry(8, 0.4, 1.2), trenchMat);
+    trench.position.set(-15 + i * 12, -0.1, -8 - i * 5);
+    trench.rotation.y = 0.2 * (i - 1);
+    scene.add(trench);
+  }
 
   // cannon
   const cannon = makeCannon();
@@ -1174,23 +1282,27 @@ function buildArtillery() {
   cannon.rotation.y = Math.PI;
   scene.add(cannon);
 
-  // soldier (you) standing beside cannon
+  // soldier (you — 計算手) standing beside cannon with clipboard
   const soldier = makeSoldier();
   soldier.position.set(5, 0.3, 4.5);
   soldier.rotation.y = -0.3;
   scene.add(soldier);
 
-  // another soldier (loader)
-  const loader = makeSoldier();
-  loader.position.set(4.5, 0.3, 3);
-  loader.rotation.y = -0.5;
-  scene.add(loader);
+  // loader soldiers (2)
+  const loader1 = makeSoldier();
+  loader1.position.set(4.5, 0.3, 3);
+  loader1.rotation.y = -0.5;
+  scene.add(loader1);
+  const loader2 = makeSoldier();
+  loader2.position.set(2, 0.3, 5.5);
+  loader2.rotation.y = 0.3;
+  scene.add(loader2);
 
-  // ammo crates
+  // ammo crates (more)
   const crateMat = new THREE.MeshStandardMaterial({ color: 0x4a3a1a, roughness: 0.9 });
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 5; i++) {
     const crate = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.35, 0.35), crateMat);
-    crate.position.set(6 + i * 0.6, 0.48, 3.8);
+    crate.position.set(6 + (i % 3) * 0.6, 0.48 + Math.floor(i / 3) * 0.36, 3.8 + Math.floor(i / 3) * 0.4);
     crate.castShadow = true;
     scene.add(crate);
   }
@@ -1215,72 +1327,281 @@ function buildArtillery() {
   targetRing.position.set(0, 0.15, -25);
   scene.add(targetRing);
 
-  // trees in background
-  for (let i = 0; i < 25; i++) {
-    const t = makeTree(2 + Math.random() * 2, 0x2a5a18);
-    t.position.set(-30 + Math.random() * 60, 0, -40 - Math.random() * 15);
+  // trees in background (more varied)
+  for (let i = 0; i < 40; i++) {
+    const t = makeTree(1.5 + Math.random() * 3, i % 3 === 0 ? 0x1a4a10 : 0x2a5a18);
+    t.position.set(-40 + Math.random() * 80, 0, -35 - Math.random() * 25);
     scene.add(t);
+  }
+
+  // dust particles floating in air
+  const dustParticles = [];
+  const dustMat = new THREE.MeshBasicMaterial({ color: 0xccbb88, transparent: true, opacity: 0.3 });
+  for (let i = 0; i < 20; i++) {
+    const d = new THREE.Mesh(new THREE.SphereGeometry(0.03, 4, 4), dustMat.clone());
+    d.position.set((Math.random() - 0.5) * 30, 1 + Math.random() * 4, (Math.random() - 0.5) * 30);
+    scene.add(d);
+    dustParticles.push({ mesh: d, baseY: d.position.y, speed: 0.3 + Math.random() * 0.5 });
   }
 
   // shell projectile
   const shellMesh = new THREE.Mesh(
-    new THREE.SphereGeometry(0.1, 8, 8),
+    new THREE.SphereGeometry(0.12, 8, 8),
     new THREE.MeshBasicMaterial({ color: selectedShell.color })
   );
   shellMesh.visible = false;
   scene.add(shellMesh);
 
-  // shell trail
+  // shell trail (thicker)
   const trailPts = [];
   for (let i = 0; i < 40; i++) trailPts.push(new THREE.Vector3());
   const trailGeo = new THREE.BufferGeometry().setFromPoints(trailPts);
-  const trail = new THREE.Line(trailGeo, new THREE.LineBasicMaterial({ color: 0x888866, transparent: true, opacity: 0.5 }));
+  const trail = new THREE.Line(trailGeo, new THREE.LineBasicMaterial({ color: 0xaa9955, transparent: true, opacity: 0.6 }));
   trail.visible = false;
   scene.add(trail);
 
-  // explosion particles
+  // explosion particles (more!)
   const particles = [];
   const particleMat = new THREE.MeshBasicMaterial({ color: 0xff6600 });
   const debrisMat = new THREE.MeshBasicMaterial({ color: 0x5a4a2a });
-  for (let i = 0; i < 30; i++) {
+  const fireMat = new THREE.MeshBasicMaterial({ color: 0xff2200 });
+  for (let i = 0; i < 50; i++) {
+    const mat = i < 20 ? particleMat.clone() : i < 35 ? debrisMat.clone() : fireMat.clone();
     const p = new THREE.Mesh(
-      new THREE.SphereGeometry(0.05 + Math.random() * 0.08, 4, 4),
-      i < 15 ? particleMat.clone() : debrisMat.clone()
+      new THREE.SphereGeometry(0.04 + Math.random() * 0.1, 4, 4), mat
     );
     p.visible = false;
     scene.add(p);
     particles.push({ mesh: p, vel: new THREE.Vector3(), life: 0 });
   }
 
-  // smoke puff
+  // smoke puffs (more)
   const smokeMat = new THREE.MeshBasicMaterial({ color: 0xccccaa, transparent: true, opacity: 0.4 });
   const smokes = [];
-  for (let i = 0; i < 8; i++) {
-    const s = new THREE.Mesh(new THREE.SphereGeometry(0.3, 6, 6), smokeMat.clone());
+  for (let i = 0; i < 12; i++) {
+    const s = new THREE.Mesh(new THREE.SphereGeometry(0.35, 6, 6), smokeMat.clone());
     s.visible = false;
     scene.add(s);
     smokes.push(s);
   }
 
+  // crater marks (reusable)
+  const craterMat = new THREE.MeshStandardMaterial({ color: 0x2a1a0a, roughness: 1, transparent: true, opacity: 0.7 });
+  const craters = [];
+  for (let i = 0; i < 8; i++) {
+    const c = new THREE.Mesh(new THREE.CircleGeometry(1.5, 12), craterMat.clone());
+    c.rotation.x = -Math.PI / 2;
+    c.position.y = 0.02;
+    c.visible = false;
+    scene.add(c);
+    craters.push(c);
+  }
+  let craterIdx = 0;
+
+  // ground fire (persistent flames at crater)
+  const groundFires = [];
+  const gFireMat = new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.6 });
+  for (let i = 0; i < 6; i++) {
+    const f = new THREE.Mesh(new THREE.ConeGeometry(0.3, 1.2, 5), gFireMat.clone());
+    f.visible = false;
+    scene.add(f);
+    groundFires.push({ mesh: f, life: 0 });
+  }
+
+  // === SKILL ANIMATION OBJECTS ===
+
+  // airstrike plane (larger, more detailed)
+  const planeGroup = new THREE.Group();
+  const planeMat = new THREE.MeshStandardMaterial({ color: 0x556655, metalness: 0.4, roughness: 0.6 });
+  const fuselage = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.25, 5, 8), planeMat);
+  fuselage.rotation.z = Math.PI / 2;
+  planeGroup.add(fuselage);
+  // wings
+  const wingL = new THREE.Mesh(new THREE.BoxGeometry(5, 0.08, 1.2), new THREE.MeshStandardMaterial({ color: 0x667766 }));
+  planeGroup.add(wingL);
+  // tail wings
+  const tailH = new THREE.Mesh(new THREE.BoxGeometry(2, 0.06, 0.5), new THREE.MeshStandardMaterial({ color: 0x667766 }));
+  tailH.position.set(-2.2, 0, 0); planeGroup.add(tailH);
+  const tailV = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.0, 0.6), planeMat);
+  tailV.position.set(-2.2, 0.4, 0); planeGroup.add(tailV);
+  // engine glow
+  const engineGlow = new THREE.Mesh(new THREE.SphereGeometry(0.15, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.7 }));
+  engineGlow.position.set(-2.6, 0, 0); planeGroup.add(engineGlow);
+  // nose
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.8, 6), planeMat);
+  nose.rotation.z = -Math.PI / 2; nose.position.set(2.8, 0, 0); planeGroup.add(nose);
+  planeGroup.visible = false;
+  planeGroup.position.set(40, 12, -20);
+  scene.add(planeGroup);
+
+  // bomb objects for airstrike
+  const bombs = [];
+  const bombMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.5 });
+  for (let i = 0; i < 5; i++) {
+    const b = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.04, 0.5, 6), bombMat);
+    b.visible = false;
+    scene.add(b);
+    bombs.push({ mesh: b, vel: new THREE.Vector3(), active: false });
+  }
+
+  // tank
+  const tankGroup = new THREE.Group();
+  const hull = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.8, 4), new THREE.MeshStandardMaterial({ color: 0x4a5a3a, roughness: 0.8 }));
+  hull.position.y = 0.6; tankGroup.add(hull);
+  const turret = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.7, 0.5, 8), new THREE.MeshStandardMaterial({ color: 0x3a4a2a }));
+  turret.position.set(0, 1.2, -0.3); tankGroup.add(turret);
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 2.5, 6), new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.6 }));
+  barrel.rotation.x = Math.PI / 2; barrel.position.set(0, 1.2, -1.8); tankGroup.add(barrel);
+  // tracks
+  for (const s of [-1, 1]) {
+    const track = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.5, 4.2), new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9 }));
+    track.position.set(s * 1.3, 0.3, 0); tankGroup.add(track);
+  }
+  tankGroup.visible = false;
+  tankGroup.position.set(40, 0, 15);
+  scene.add(tankGroup);
+
+  // extra cannon group (for 砲兵增援)
+  const extraCannons = [];
+  for (let i = 0; i < 3; i++) {
+    const ec = makeCannon();
+    ec.position.set(-5 - i * 4, 0.3, 6 + i * 2);
+    ec.rotation.y = Math.PI + 0.1 * (i - 1);
+    ec.visible = false;
+    scene.add(ec);
+    const es = makeSoldier();
+    es.position.set(-4 - i * 4, 0.3, 7 + i * 2);
+    es.rotation.y = Math.PI;
+    es.visible = false;
+    scene.add(es);
+    extraCannons.push({ cannon: ec, soldier: es });
+  }
+
+  // active skill state
+  const activeSkills = []; // { id, endTime, ... }
+
   // timing bar state
-  const NEEDLE_SPEED_BASE = 2.0; // oscillations per second
+  const NEEDLE_SPEED_BASE = 2.0;
+  const TARGET_GOAL = 20;
+  const MAX_LIVES = 5;
+  let hasShield = false;
+  let precisionBonus = 0;
+  let gameElapsed = 0;
   const st = {
-    score: 0, life: 3, alive: true, locked: false,
+    score: 0, life: MAX_LIVES, alive: true, locked: false,
     shell: null,
     targetPos: new THREE.Vector3(0, 0, -25),
     explosionTime: 0,
     needlePos: 0, needleDir: 1, needleSpeed: NEEDLE_SPEED_BASE,
-    // hit zone: center 35-65% of bar width, shrinks each round
     zoneStart: 0.35, zoneEnd: 0.65,
     aiming: false
   };
 
+  // skill activation
+  function activateSkill(skId) {
+    const owned = playerSkills.find(p => p.id === skId);
+    if (!owned || owned.count <= 0) return;
+    owned.count--;
+    const sk = SKILL_TYPES.find(s => s.id === skId);
+
+    if (skId === 'shield') {
+      hasShield = true;
+      showFB('🛡️ 防護罩啟動', 'ok');
+      SKILLBANNER.textContent = '🛡️ 防護罩';
+      SKILLBANNER.classList.add('show');
+      setTimeout(() => SKILLBANNER.classList.remove('show'), 2000);
+    } else if (skId === 'precision') {
+      precisionBonus += 0.20;
+      showFB('📐 精準校正 +20%', 'ok');
+      updateTimingZone();
+    } else if (skId === 'airstrike') {
+      SKILLBANNER.textContent = '✈️ 空軍轟炸中…';
+      SKILLBANNER.classList.add('show');
+      activeSkills.push({ id: 'airstrike', endTime: gameElapsed + sk.duration, phase: 0 });
+      planeGroup.visible = true;
+      planeGroup.position.set(60, 22, -30);
+      sfxCannon();
+    } else if (skId === 'extraCannon') {
+      SKILLBANNER.textContent = '🎯 砲兵增援！';
+      SKILLBANNER.classList.add('show');
+      activeSkills.push({ id: 'extraCannon', endTime: gameElapsed + sk.duration, nextFire: gameElapsed + 1 });
+      extraCannons.forEach(ec => { ec.cannon.visible = true; ec.soldier.visible = true; });
+      sfxCannon();
+    } else if (skId === 'tank') {
+      SKILLBANNER.textContent = '🔥 戰車進場！';
+      SKILLBANNER.classList.add('show');
+      activeSkills.push({ id: 'tank', endTime: gameElapsed + sk.duration, nextFire: gameElapsed + 1.5 });
+      tankGroup.visible = true;
+      tankGroup.position.set(40, 0, 15);
+      sfxEngine();
+    }
+    refreshSkillBar();
+  }
+
+  function refreshSkillBar() {
+    clear(SKILLBAR);
+    let hasAny = false;
+    playerSkills.forEach(ps => {
+      if (ps.count <= 0) return;
+      hasAny = true;
+      const sk = SKILL_TYPES.find(s => s.id === ps.id);
+      const btn = el('button', 'skill-btn', sk.icon + ' ' + sk.name + ' ×' + ps.count);
+      btn.addEventListener('click', () => activateSkill(ps.id));
+      SKILLBAR.appendChild(btn);
+    });
+    if (hasAny) SKILLBAR.classList.add('show');
+    else SKILLBAR.classList.remove('show');
+  }
+
+  function skillAutoHit() {
+    // 支援砲火：暫時增大判定區 + 減慢針速，玩家仍需手動射擊
+    if (!st.alive) return;
+    precisionBonus += 0.08;
+    st.needleSpeed = Math.max(0.4, st.needleSpeed * 0.75);
+    updateTimingZone();
+    sfxExplosion();
+    // spawn explosion at random target area
+    const rx = (Math.random() - 0.5) * 30, rz = -20 - Math.random() * 15;
+    const pos = new THREE.Vector3(rx, 0, rz);
+    // crater
+    if (craterIdx < craters.length) {
+      craters[craterIdx].position.set(rx, 0.02, rz);
+      craters[craterIdx].visible = true;
+      craterIdx++;
+    }
+    // explosion effect
+    for (let i = 0; i < 8; i++) {
+      const pi = particles[Math.floor(Math.random() * particles.length)];
+      pi.mesh.visible = true;
+      pi.mesh.position.copy(pos);
+      pi.vel.set((Math.random() - 0.5) * 10, 4 + Math.random() * 6, (Math.random() - 0.5) * 10);
+      pi.life = 0.6 + Math.random() * 0.4;
+      pi.mesh.scale.setScalar(1.5);
+    }
+    // ground fire
+    const gf = groundFires.find(f => f.life <= 0);
+    if (gf) { gf.mesh.position.set(rx, 0.6, rz); gf.mesh.visible = true; gf.life = 3; }
+
+    if (st.score >= TARGET_GOAL) {
+      st.alive = false;
+      COINDISP.classList.remove('show');
+      SKILLBAR.classList.remove('show');
+      SKILLBANNER.classList.remove('show');
+      const meadow = buildMeadowBg();
+      setTimeout(() => finishLevel({
+        code: 'MISSION 01 · 達成', title: '全連第一名',
+        sub: [['','射擊諸元全數命中，滿分通過。'],['em','結果任務 —— 顧一頭牛。'],['','你對著牛，數她的睫毛。']],
+        stats: [['命中',TARGET_GOAL + ' / ' + TARGET_GOAL],['剩餘','●'.repeat(st.life)],['軍餉',playerCoins+'']]
+      }, meadow), 1500);
+    }
+  }
+
   function updateTimingZone() {
-    // zone gets narrower as score increases (harder each hit)
-    const width = Math.max(0.12, 0.30 - st.score * 0.03);
+    const baseWidth = 0.30 + (selectedShell.zoneBonus * 0.15) + precisionBonus;
+    const width = Math.max(0.10, baseWidth - st.score * 0.008);
     st.zoneStart = 0.5 - width / 2;
     st.zoneEnd = 0.5 + width / 2;
-    st.needleSpeed = NEEDLE_SPEED_BASE + st.score * 0.35;
+    st.needleSpeed = NEEDLE_SPEED_BASE + st.score * 0.15;
     TZONE.style.left = (st.zoneStart * 100) + '%';
     TZONE.style.width = (width * 100) + '%';
   }
@@ -1292,7 +1613,7 @@ function buildArtillery() {
     updateTimingZone();
     TBAR.classList.add('show');
     TLABEL.classList.add('show');
-    TLABEL.textContent = '按 FIRE 開砲！';
+    TLABEL.textContent = '按下發射！';
   }
 
   function newTarget() {
@@ -1318,14 +1639,23 @@ function buildArtillery() {
     const inZone = st.needlePos >= st.zoneStart && st.needlePos <= st.zoneEnd;
     const perfectCenter = Math.abs(st.needlePos - 0.5) < 0.04;
 
-    // muzzle flash
+    // muzzle position (cannon at 3,0.3,4 rotation.y=PI → muzzle local (-1.5,1.0,-0.6) → world (4.5,1.3,4.6))
+    // but barrel points toward -z in world, so muzzle tip is at front of barrel
+    const muzzleWorld = new THREE.Vector3();
+    cannon.localToWorld(muzzleWorld.copy(cannon.userData.muzzlePos));
+
+    // muzzle flash — at cannon mouth
     smokes.forEach((s, i) => {
       s.visible = true;
-      s.position.set(3 - 1.5 + (Math.random() - 0.5) * 0.5, 1.0 + Math.random() * 0.3, 4 - 0.6 + (Math.random() - 0.5) * 0.3);
+      s.position.set(muzzleWorld.x + (Math.random() - 0.5) * 0.4, muzzleWorld.y + Math.random() * 0.3, muzzleWorld.z - 0.5 - Math.random() * 0.3);
       s.scale.setScalar(0.5 + Math.random() * 0.5);
       s.material.opacity = 0.5;
       setTimeout(() => { s.visible = false; }, 400 + i * 50);
     });
+
+    // barrel recoil animation
+    cannon.position.z += 0.3;
+    setTimeout(() => { cannon.position.z = 4; }, 200);
 
     // calculate hit position — if in zone, much closer to target
     const aimError = inZone ? (Math.random() - 0.5) * 1.0 : (Math.random() * 8 - 4) * 1.5;
@@ -1333,7 +1663,7 @@ function buildArtillery() {
     const hitZ = st.targetPos.z + (inZone ? (Math.random() - 0.5) * 0.5 : (Math.random() - 0.5) * 6);
     const hit = inZone;
 
-    const start = new THREE.Vector3(3 - 1.5, 1.0, 4 - 0.6);
+    const start = muzzleWorld.clone();
     const end = new THREE.Vector3(hitX, 0, hitZ);
 
     st.shell = { start, end, progress: 0, hit, perfect: perfectCenter, trailIdx: 0 };
@@ -1341,6 +1671,10 @@ function buildArtillery() {
     trail.visible = true;
     const tp = trail.geometry.attributes.position.array;
     for (let i = 0; i < tp.length; i++) tp[i] = 0;
+  }
+
+  function hudText() {
+    return '●'.repeat(Math.max(0, st.life)) + '○'.repeat(Math.max(0, MAX_LIVES - st.life)) + '  💰' + playerCoins;
   }
 
   function explode(pos, hit, perfect) {
@@ -1355,38 +1689,118 @@ function buildArtillery() {
       p.mesh.scale.setScalar(blastScale);
     });
 
+    // crater at impact
+    if (craterIdx < craters.length) {
+      craters[craterIdx].position.set(pos.x, 0.02, pos.z);
+      craters[craterIdx].visible = true;
+      craters[craterIdx].scale.setScalar(blastScale * 0.8);
+      craterIdx++;
+    }
+    // ground fire at hit
+    const gf = groundFires.find(f => f.life <= 0);
+    if (gf) { gf.mesh.position.set(pos.x, 0.6, pos.z); gf.mesh.visible = true; gf.life = 4; }
+
     if (hit) {
       const reward = perfect ? 20 : 10;
       playerCoins += reward;
       COINDISP.textContent = playerCoins;
       sfxHit();
-      showFB(perfect ? '完美命中！+20' : '命中！+10', 'ok');
+      showFB(perfect ? '完美命中！+' + reward : '命中！+' + reward, 'ok');
       st.score++;
       flag.material.color.setHex(0x44ff44);
-      showHud(st.score + ' / 5', 'MISSION 01', '●'.repeat(st.life) + '  💰' + playerCoins);
-      if (st.score >= 5) {
+      showHud(st.score + ' / ' + TARGET_GOAL, 'MISSION 01 · 計算手', hudText());
+      if (st.score >= TARGET_GOAL) {
         st.alive = false;
         COINDISP.classList.remove('show');
+        SKILLBAR.classList.remove('show');
+        SKILLBANNER.classList.remove('show');
         const meadow = buildMeadowBg();
         setTimeout(() => finishLevel({
           code: 'MISSION 01 · 達成', title: '全連第一名',
-          sub: [['','滿分通過砲兵射擊。'],['em','結果任務 —— 顧一頭牛。'],['','你對著牛，數她的睫毛。']],
-          stats: [['命中','5 / 5'],['剩餘','●'.repeat(st.life)],['軍餉',playerCoins+'']]
+          sub: [['','射擊諸元全數命中，滿分通過。'],['em','結果任務 —— 顧一頭牛。'],['','你對著牛，數她的睫毛。']],
+          stats: [['命中',TARGET_GOAL + ' / ' + TARGET_GOAL],['剩餘','●'.repeat(st.life)],['軍餉',playerCoins+'']]
         }, meadow), 1500);
         return;
       }
-      setTimeout(() => { newTarget(); }, 1500);
+      setTimeout(() => { newTarget(); }, 1200);
     } else {
       sfxMiss();
-      showFB('偏離目標。', 'ng');
-      st.life--;
-      showHud(st.score + ' / 5', 'MISSION 01', '●'.repeat(Math.max(0, st.life)) + '  💰' + playerCoins);
-      if (st.life <= 0) {
-        st.life = 3; st.score = 0;
-        showHud('0 / 5', '', '● ● ●');
+      if (hasShield) {
+        hasShield = false;
+        showFB('🛡️ 防護罩擋住了！', 'ok');
+        refreshSkillBar();
+      } else {
+        st.life--;
       }
-      setTimeout(() => { newTarget(); }, 1500);
+      showHud(st.score + ' / ' + TARGET_GOAL, 'MISSION 01 · 計算手', hudText());
+      if (st.life <= 0) {
+        showFB('任務失敗…重新部署', 'ng');
+        st.alive = false;
+        FIRE.classList.remove('show');
+        TBAR.classList.remove('show');
+        TLABEL.classList.remove('show');
+        SKILLBAR.classList.remove('show');
+        SKILLBANNER.classList.remove('show');
+        setTimeout(() => {
+          clear(OV);
+          const box = el('div', 'r-box');
+          box.appendChild(el('div', 'r-code', 'MISSION 01 · 未達成'));
+          box.appendChild(el('div', 'r-title', '射擊中止'));
+          const sub = el('div', 'r-sub');
+          sub.appendChild(document.createTextNode('命中 ' + st.score + ' / ' + TARGET_GOAL + '。'));
+          sub.appendChild(el('br'));
+          const em1 = el('em', null, '軍餉已保留，重新部署。');
+          sub.appendChild(em1);
+          box.appendChild(sub);
+          const retryBtn = el('button', 'btn primary', '重新部署');
+          retryBtn.addEventListener('click', () => {
+            clear(OV); OV.classList.remove('active');
+            st.score = 0; st.life = MAX_LIVES; st.alive = true; st.locked = false; st.shell = null;
+            hasShield = false; precisionBonus = 0; activeSkills.length = 0;
+            craterIdx = 0; craters.forEach(c => c.visible = false);
+            groundFires.forEach(f => { f.mesh.visible = false; f.life = 0; });
+            bombs.forEach(b => { b.active = false; b.mesh.visible = false; });
+            planeGroup.visible = false; tankGroup.visible = false;
+            extraCannons.forEach(ec => { ec.cannon.visible = false; ec.soldier.visible = false; });
+            if (playerCoins > 0) {
+              showShop(() => { clear(OV); OV.classList.remove('active'); beginArtillery(); });
+            } else {
+              beginArtillery();
+            }
+          });
+          const actionDiv = el('div', 'r-action');
+          actionDiv.appendChild(retryBtn);
+          box.appendChild(actionDiv);
+          OV.appendChild(box);
+          OV.classList.add('active');
+        }, 1200);
+        return;
+      }
+      showFB('偏離目標。', 'ng');
+      setTimeout(() => { newTarget(); }, 1200);
     }
+  }
+
+  function beginArtillery() {
+    gameElapsed = 0;
+    showHud('0 / ' + TARGET_GOAL, 'MISSION 01 · 計算手', hudText());
+    FIRE.textContent = '發 射';
+    FIRE.style.left = '50%';
+    FIRE.classList.add('show');
+    COINDISP.classList.add('show');
+    COINDISP.textContent = playerCoins;
+    FIRE.onclick = fireShell;
+    setKeyHandler(e => { if (e.code === 'Space') { e.preventDefault(); fireShell(); } });
+    refreshSkillBar();
+    newTarget();
+    levelInputs.push(() => {
+      FIRE.onclick = null;
+      TBAR.classList.remove('show');
+      TLABEL.classList.remove('show');
+      COINDISP.classList.remove('show');
+      SKILLBAR.classList.remove('show');
+      SKILLBANNER.classList.remove('show');
+    });
   }
 
   return {
@@ -1396,32 +1810,14 @@ function buildArtillery() {
       cam.lookAt(0, 0, -10);
     },
     start() {
-      // show shop if second round, else go straight
-      const begin = () => {
-        showHud('0 / 5', 'MISSION 01', '● ● ●  💰' + playerCoins);
-        FIRE.textContent = 'F I R E';
-        FIRE.style.left = '50%';
-        FIRE.classList.add('show');
-        COINDISP.classList.add('show');
-        COINDISP.textContent = playerCoins;
-        FIRE.onclick = fireShell;
-        document.onkeydown = e => { if (e.code === 'Space') { e.preventDefault(); fireShell(); } };
-        newTarget();
-        levelInputs.push(() => {
-          FIRE.onclick = null;
-          TBAR.classList.remove('show');
-          TLABEL.classList.remove('show');
-          COINDISP.classList.remove('show');
-        });
-      };
       if (playerCoins > 0) {
-        showShop(() => { clear(OV); OV.classList.remove('active'); begin(); });
+        showShop(() => { clear(OV); OV.classList.remove('active'); beginArtillery(); });
       } else {
-        begin();
+        beginArtillery();
       }
     },
     update(dt) {
-      if (!st.alive && !st.shell) return;
+      gameElapsed += dt;
 
       // animate timing bar needle
       if (st.aiming) {
@@ -1433,7 +1829,7 @@ function buildArtillery() {
 
       // animate shell
       if (st.shell) {
-        st.shell.progress += dt * 0.7;
+        st.shell.progress += dt * selectedShell.speed;
         const t = Math.min(1, st.shell.progress);
         const s = st.shell.start, e = st.shell.end;
         const x = s.x + (e.x - s.x) * t;
@@ -1481,13 +1877,172 @@ function buildArtillery() {
         if (s.material.opacity <= 0) s.visible = false;
       });
 
+      // ground fires flicker & decay
+      groundFires.forEach(gf => {
+        if (gf.life <= 0) return;
+        gf.life -= dt;
+        gf.mesh.scale.y = 0.6 + Math.sin(gameElapsed * 12 + gf.mesh.position.x) * 0.4;
+        gf.mesh.scale.x = 0.8 + Math.sin(gameElapsed * 8) * 0.2;
+        gf.mesh.material.opacity = Math.min(0.7, gf.life * 0.3);
+        if (gf.life <= 0) gf.mesh.visible = false;
+      });
+
+      // dust float
+      dustParticles.forEach(dp => {
+        dp.mesh.position.y = dp.baseY + Math.sin(gameElapsed * dp.speed) * 0.5;
+        dp.mesh.position.x += Math.sin(gameElapsed * 0.2 + dp.baseY) * dt * 0.3;
+      });
+
+      // === SKILL ANIMATIONS ===
+      for (let si = activeSkills.length - 1; si >= 0; si--) {
+        const ask = activeSkills[si];
+        if (gameElapsed >= ask.endTime) {
+          // skill expired
+          if (ask.id === 'airstrike') { planeGroup.visible = false; }
+          if (ask.id === 'tank') { tankGroup.visible = false; }
+          if (ask.id === 'extraCannon') { extraCannons.forEach(ec => { ec.cannon.visible = false; ec.soldier.visible = false; }); }
+          SKILLBANNER.classList.remove('show');
+          activeSkills.splice(si, 1);
+          continue;
+        }
+
+        if (ask.id === 'airstrike') {
+          // plane flies across visible area — camera sees (8,5,?) looking at (0,0,-10)
+          const progress = (gameElapsed - (ask.endTime - 10)) / 10;
+          // fly from right to left, at altitude 10-14, through target zone
+          planeGroup.position.x = 30 - progress * 60;
+          planeGroup.position.y = 12 + Math.sin(progress * 3) * 2;
+          planeGroup.position.z = -15 + Math.sin(progress * 5) * 10;
+          planeGroup.rotation.y = Math.PI + 0.15;
+          // engine glow flicker
+          engineGlow.material.opacity = 0.5 + Math.sin(gameElapsed * 20) * 0.3;
+          // bank on turns
+          planeGroup.rotation.z = Math.cos(progress * 5) * 0.15;
+          // drop bombs periodically
+          if (gameElapsed >= (ask.nextFire || 0)) {
+            ask.nextFire = gameElapsed + 1.2;
+            // spawn visible bomb falling from plane
+            const bomb = bombs.find(b => !b.active);
+            if (bomb) {
+              bomb.active = true;
+              bomb.mesh.visible = true;
+              bomb.mesh.position.copy(planeGroup.position);
+              bomb.vel.set((Math.random() - 0.5) * 2, -1, (Math.random() - 0.5) * 2);
+            }
+            sfxCannon();
+            if (st.alive && st.score < TARGET_GOAL) skillAutoHit();
+          }
+        }
+
+        // animate falling bombs
+        bombs.forEach(b => {
+          if (!b.active) return;
+          b.vel.y -= 15 * dt;
+          b.mesh.position.addScaledVector(b.vel, dt);
+          b.mesh.rotation.x += dt * 5;
+          if (b.mesh.position.y <= 0) {
+            b.active = false;
+            b.mesh.visible = false;
+            // explosion at bomb landing
+            sfxExplosion();
+            const pos = b.mesh.position.clone();
+            for (let i = 0; i < 6; i++) {
+              const pi = particles[Math.floor(Math.random() * particles.length)];
+              pi.mesh.visible = true;
+              pi.mesh.position.copy(pos);
+              pi.vel.set((Math.random() - 0.5) * 12, 5 + Math.random() * 8, (Math.random() - 0.5) * 12);
+              pi.life = 0.8;
+              pi.mesh.scale.setScalar(1.5);
+            }
+          }
+        });
+
+        if (ask.id === 'tank') {
+          // tank rolls from right side into visible area, toward target zone
+          const progress = (gameElapsed - (ask.endTime - 15)) / 15;
+          tankGroup.position.x = 25 - progress * 30;
+          tankGroup.position.z = 10 - progress * 25;
+          tankGroup.rotation.y = Math.atan2(-(-25), -(10 - 25)) + Math.sin(progress * 2) * 0.05;
+          // tank turret oscillates toward target
+          turret.rotation.y = Math.sin(gameElapsed * 0.5) * 0.3;
+          // track dust
+          if (Math.random() < 0.3) {
+            const ds = smokes.find(s => !s.visible);
+            if (ds) {
+              ds.visible = true;
+              ds.position.set(tankGroup.position.x + (Math.random() - 0.5) * 2, 0.2, tankGroup.position.z + 2);
+              ds.scale.setScalar(0.3);
+              ds.material.opacity = 0.25;
+              setTimeout(() => { ds.visible = false; }, 600);
+            }
+          }
+          // fire periodically — with muzzle flash
+          if (gameElapsed >= (ask.nextFire || 0)) {
+            ask.nextFire = gameElapsed + 1.8;
+            sfxCannon();
+            // tank muzzle flash
+            const tankFlash = smokes.find(s => !s.visible);
+            if (tankFlash) {
+              tankFlash.visible = true;
+              const barrelTip = new THREE.Vector3(0, 1.2, -3.0);
+              tankGroup.localToWorld(barrelTip);
+              tankFlash.position.copy(barrelTip);
+              tankFlash.scale.setScalar(0.8);
+              tankFlash.material.opacity = 0.6;
+              setTimeout(() => { tankFlash.visible = false; }, 250);
+            }
+            if (st.alive && st.score < TARGET_GOAL) skillAutoHit();
+          }
+        }
+
+        if (ask.id === 'extraCannon') {
+          // extra cannons fire periodically — all 3 fire in sequence
+          if (gameElapsed >= (ask.nextFire || 0)) {
+            ask.nextFire = gameElapsed + 0.8;
+            // fire from a specific cannon in rotation
+            ask.fireIdx = ((ask.fireIdx || 0) + 1) % 3;
+            const ec = extraCannons[ask.fireIdx];
+            sfxCannon();
+            // recoil
+            ec.cannon.position.z += 0.2;
+            setTimeout(() => { ec.cannon.position.z -= 0.2; }, 150);
+            // muzzle flash at cannon mouth
+            const muzzleW = new THREE.Vector3();
+            ec.cannon.localToWorld(muzzleW.copy(ec.cannon.userData ? ec.cannon.userData.muzzlePos || new THREE.Vector3(0, 1, -1) : new THREE.Vector3(0, 1, -1)));
+            for (let si = 0; si < 3; si++) {
+              const ms = smokes.find(s => !s.visible);
+              if (ms) {
+                ms.visible = true;
+                ms.position.set(muzzleW.x + (Math.random() - 0.5) * 0.3, muzzleW.y + Math.random() * 0.2, muzzleW.z - 0.3 - Math.random() * 0.3);
+                ms.scale.setScalar(0.4 + Math.random() * 0.3);
+                ms.material.opacity = 0.5;
+                setTimeout(() => { ms.visible = false; }, 300 + si * 80);
+              }
+            }
+            if (st.alive && st.score < TARGET_GOAL) skillAutoHit();
+          }
+        }
+      }
+
       // flag flutter
       flag.rotation.y = Math.sin(Date.now() * 0.003) * 0.2;
 
-      // camera slight sway
-      camera.position.x = 8 + Math.sin(Date.now() * 0.0004) * 0.3;
+      // camera slight sway + shake on explosion
+      const shakeDecay = Math.max(0, 1 - (Date.now() - st.explosionTime) / 500);
+      const shake = shakeDecay * 0.3;
+      camera.position.x = 8 + Math.sin(Date.now() * 0.0004) * 0.3 + (Math.random() - 0.5) * shake;
+      camera.position.y = 5 + (Math.random() - 0.5) * shake * 0.5;
     },
-    stop() { st.alive = false; TBAR.classList.remove('show'); TLABEL.classList.remove('show'); COINDISP.classList.remove('show'); }
+    stop() {
+      st.alive = false; st.shell = null;
+      TBAR.classList.remove('show'); TLABEL.classList.remove('show');
+      COINDISP.classList.remove('show'); FIRE.classList.remove('show');
+      SKILLBAR.classList.remove('show'); SKILLBANNER.classList.remove('show');
+      activeSkills.length = 0;
+      planeGroup.visible = false; tankGroup.visible = false;
+      extraCannons.forEach(ec => { ec.cannon.visible = false; ec.soldier.visible = false; });
+      bombs.forEach(b => { b.active = false; b.mesh.visible = false; });
+    }
   };
 }
 
@@ -1616,13 +2171,13 @@ function buildCowScene() {
       document.body.appendChild(skip);
 
       autoTimer = setTimeout(goNext, 8000);
-      document.onkeydown = e => { if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); goNext(); } };
+      setKeyHandler(e => { if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); goNext(); } });
 
       function goNext() {
         clearTimeout(autoTimer);
         if (text.parentNode) text.remove();
         if (skip.parentNode) skip.remove();
-        document.onkeydown = null;
+        setKeyHandler(null);
         advance();
       }
       levelInputs.push(() => {
@@ -1790,9 +2345,24 @@ function buildRun() {
     rhythmFbTimer = setTimeout(() => { RFB.className = 'rhythm-fb'; }, 400);
   }
 
+  function rhythmFlash(type) {
+    RFLASH.className = 'rhythm-flash ' + type;
+    setTimeout(() => { RFLASH.className = 'rhythm-flash'; }, 400);
+  }
+
+  function updateComboDisplay() {
+    if (st.combo >= 5) {
+      RCOMBO.textContent = st.combo + ' COMBO';
+      RCOMBO.className = 'rhythm-combo show';
+      rhythmFlash('combo');
+    } else {
+      RCOMBO.className = 'rhythm-combo';
+    }
+  }
+
   function judgeNote(dir) {
     const now = st.gameTime;
-    const judgeTime = FALL_TIME; // note should be at judge line at spawnTime + FALL_TIME
+    const judgeTime = FALL_TIME;
     let best = null, bestDiff = Infinity;
     for (const n of notes) {
       if (n.judged || n.dir !== dir) continue;
@@ -1805,10 +2375,12 @@ function buildRun() {
       best.judged = true;
       best.element.classList.add('hit');
       showRhythmFB('PERFECT', 'perfect');
+      rhythmFlash('fire');
       st.dist += 18;
       st.combo++;
       st.runPhase += 0.5;
       sfxFootstep();
+      updateComboDisplay();
     } else if (bestDiff < 0.18) {
       // GOOD
       best.judged = true;
@@ -1818,16 +2390,18 @@ function buildRun() {
       st.combo++;
       st.runPhase += 0.5;
       sfxFootstep();
+      updateComboDisplay();
     } else if (bestDiff < 0.35) {
       // MISS (early press)
       best.judged = true;
       best.element.classList.add('miss');
       showRhythmFB('MISS', 'miss');
       st.combo = 0;
+      RCOMBO.className = 'rhythm-combo';
     }
   }
 
-  const st = { dist: 0, time: 720, hr: 72, alive: true, gameTime: 0, combo: 0, maxCombo: 0, runPhase: 0, angle: 0 };
+  const st = { dist: 0, time: 420, hr: 72, alive: true, gameTime: 0, combo: 0, maxCombo: 0, runPhase: 0, angle: 0 };
   let timer;
 
   function tick() {
@@ -1839,9 +2413,11 @@ function buildRun() {
     showHud(Math.floor(st.dist) + 'm / 3000m', 'MISSION 02', mm + ':' + (ss < 10 ? '0' : '') + ss + comboStr);
     if (st.dist >= 3000) {
       st.alive = false; clearInterval(timer);
-      const elapsed = 720 - st.time;
+      const elapsed = 420 - st.time;
       const em = Math.floor(elapsed / 60), es = elapsed % 60;
       RLANE.classList.remove('show');
+      RFLASH.className = 'rhythm-flash';
+      RCOMBO.className = 'rhythm-combo';
       finishLevel({
         code: 'MISSION 02 · 達成', title: '3000m · ' + em + '分' + (es < 10 ? '0' : '') + es + '秒',
         sub: [['','12 分鐘內完成。'],['em','榮譽假提早到今晚 21:00。'],['','你賺了 11 個小時。']],
@@ -1850,10 +2426,12 @@ function buildRun() {
     } else if (st.time <= 0) {
       st.alive = false; clearInterval(timer);
       RLANE.classList.remove('show');
+      RFLASH.className = 'rhythm-flash';
+      RCOMBO.className = 'rhythm-combo';
       finishLevel({
         code: 'MISSION 02 · 未達成', title: '時間到',
         sub: [['','距離不足。'],['em','但班長沒有處罰你。'],['','他只說：「明天再跑一次。」']],
-        stats: [['距離',Math.floor(st.dist)+'m'],['時間','12:00'],['最高連擊',st.maxCombo+'']]
+        stats: [['距離',Math.floor(st.dist)+'m'],['時間','7:00'],['最高連擊',st.maxCombo+'']]
       });
     }
   }
@@ -1862,7 +2440,7 @@ function buildRun() {
     scene,
     cameraSetup(cam) { cam.position.set(0, 25, 35); cam.lookAt(0, 0, 0); },
     start() {
-      showHud('0m / 3000m', 'MISSION 02', '12:00');
+      showHud('0m / 3000m', 'MISSION 02', '7:00');
       RLANE.classList.add('show');
       // remove any leftover note elements
       RLANE.querySelectorAll('.rhythm-note').forEach(n => n.remove());
@@ -1870,9 +2448,9 @@ function buildRun() {
       nextNoteTime = BEAT_INTERVAL;
       st.gameTime = 0;
 
-      document.onkeydown = e => {
+      setKeyHandler(e => {
         if (DIRS.includes(e.code)) { e.preventDefault(); judgeNote(e.code); }
-      };
+      });
       // mobile: tap columns
       RLANE.onpointerdown = e => {
         const rect = RLANE.getBoundingClientRect();
@@ -1886,6 +2464,8 @@ function buildRun() {
         clearInterval(timer);
         RLANE.classList.remove('show');
         RLANE.onpointerdown = null;
+        RFLASH.className = 'rhythm-flash';
+        RCOMBO.className = 'rhythm-combo';
         notes.forEach(n => { if (n.element.parentNode) n.element.remove(); });
         notes.length = 0;
       });
@@ -1921,6 +2501,7 @@ function buildRun() {
           n.element.classList.add('miss');
           showRhythmFB('MISS', 'miss');
           st.combo = 0;
+          RCOMBO.className = 'rhythm-combo';
         }
         // cleanup old notes
         if (pct > 1.8) {
@@ -2099,8 +2680,10 @@ function buildTrain() {
       TAP.onmousedown = press; TAP.onmouseup = release; TAP.onmouseleave = release;
       TAP.ontouchstart = e => { e.preventDefault(); press(); };
       TAP.ontouchend = e => { e.preventDefault(); release(); };
-      document.onkeydown = e => { if (e.code === 'Space') { e.preventDefault(); press(); } };
-      document.onkeyup = e => { if (e.code === 'Space') { e.preventDefault(); release(); } };
+      setKeyHandler(
+        e => { if (e.code === 'Space') { e.preventDefault(); press(); } },
+        e => { if (e.code === 'Space') { e.preventDefault(); release(); } }
+      );
       timer = setInterval(() => {
         if (!st.alive) return;
         st.time--;
@@ -2122,10 +2705,11 @@ function buildTrain() {
     },
     update(dt) {
       if (!st.alive) return;
-      if (st.hold) { st.speed = Math.min(180, st.speed + 80 * dt); sfxEngine(); }
-      else st.speed = Math.max(50, st.speed - 30 * dt);
+      if (st.hold) { st.speed = Math.min(140, st.speed + 80 * dt); sfxEngine(); }
+      else st.speed = Math.max(50, st.speed - 40 * dt);
       const carMove = st.speed * dt * 0.5;
-      const trainMove = 100 * dt * 0.5;
+      const trainSpeed = 100 + Math.sin(st.time * 0.3) * 15;
+      const trainMove = trainSpeed * dt * 0.5;
       st.carZ -= carMove;
       st.trainZ -= trainMove;
       car.position.z = st.carZ;
@@ -2236,8 +2820,8 @@ function buildArm() {
     { name:'阿忠 · 一兵', power: 0.8 },
     { name:'大胖 · 下士', power: 1.0 },
     { name:'阿榮 · 上兵', power: 1.3 },
-    { name:'瘦皮 · 班長', power: 1.6 },
-    { name:'老虎 · 副排', power: 1.9 }
+    { name:'瘦皮 · 班長', power: 1.4 },
+    { name:'老虎 · 副排', power: 1.6 }
   ];
   const st = { round: 0, value: 0, last: '', alive: true };
   let drain;
@@ -2269,10 +2853,10 @@ function buildArm() {
       TAP.style.transform = 'translateX(-50%)';
       FIRE.onclick = () => push('L');
       TAP.onclick = () => push('R');
-      document.onkeydown = e => {
+      setKeyHandler(e => {
         if (e.code === 'KeyA' || e.code === 'ArrowLeft') { e.preventDefault(); push('L'); }
         if (e.code === 'KeyD' || e.code === 'ArrowRight') { e.preventDefault(); push('R'); }
-      };
+      });
       drain = setInterval(() => {
         if (!st.alive) return;
         const opp = OPPS[st.round];
@@ -2417,6 +3001,11 @@ function buildGuard() {
     { txt:'貓從彈藥庫旁跑過。', real: false },
     { txt:'兩百公尺外，有一道手電筒光。', real: true }
   ];
+  // Fisher-Yates shuffle
+  for (let i = EVENTS.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [EVENTS[i], EVENTS[j]] = [EVENTS[j], EVENTS[i]];
+  }
 
   // threat silhouette
   const threat = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 1.2, 4, 8), new THREE.MeshBasicMaterial({ color: 0x0a0a0a }));
@@ -2491,10 +3080,10 @@ function buildGuard() {
       TAP.style.transform = 'translateX(-50%)';
       FIRE.onclick = () => guardAns(true);
       TAP.onclick = () => guardAns(false);
-      document.onkeydown = e => {
+      setKeyHandler(e => {
         if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); guardAns(true); }
         if (e.code === 'KeyX' || e.code === 'ArrowDown') { e.preventDefault(); guardAns(false); }
-      };
+      });
       setTimeout(nextEvent, 1000);
       levelInputs.push(() => { FIRE.onclick = null; TAP.onclick = null; });
     },
@@ -2600,18 +3189,20 @@ function buildOnion() {
     st.picked++;
     sfxOnionPop();
     showHud(st.picked + ' / 30', 'MISSION 06', st.time + 's');
-    // pop-out animation
+    // pop-out animation (rAF)
     const startY = g.position.y;
-    const popStart = Date.now();
-    const popAnim = setInterval(() => {
-      const t = (Date.now() - popStart) / 500;
-      if (t >= 1) { clearInterval(popAnim); scene.remove(g); return; }
+    const popStart = performance.now();
+    function popFrame(now) {
+      const t = (now - popStart) / 500;
+      if (t >= 1) { scene.remove(g); return; }
       g.position.y = startY + 4 * Math.sin(Math.PI * t);
       g.rotation.z = t * 3;
       g.scale.setScalar(1 + t * 0.3);
       g.children[0].material.opacity = 1 - t;
       g.children[0].material.transparent = true;
-    }, 16);
+      requestAnimationFrame(popFrame);
+    }
+    requestAnimationFrame(popFrame);
     if (st.picked >= 30) {
       st.alive = false; clearInterval(timer); clearInterval(spawnTimer);
       setTimeout(() => finishLevel({
@@ -2670,7 +3261,7 @@ function buildOnion() {
         o.userData.age += dt;
         // gentle sway
         o.rotation.z = Math.sin(Date.now() * 0.002 + o.position.x) * 0.05;
-        if (o.userData.age > 5) {
+        if (o.userData.age > 8) {
           o.userData.picked = true;
           scene.remove(o);
         }

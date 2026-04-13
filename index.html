@@ -7,21 +7,23 @@
       content="width=device-width,initial-scale=1,viewport-fit=cover"
     />
     <meta name="theme-color" content="#050508" />
+    <meta name="color-scheme" content="dark" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="google-site-verification" content="X-GIGIVwll5mriPBn8nqDETFsmZnqIWp2WSbUGzot8w" />
     <link rel="canonical" href="https://toniliumvp.github.io/RedTime/" />
     <link rel="manifest" href="manifest.json" />
-    <!-- Security headers such as CSP / X-Frame-Options should be sent by the host, not meta tags. -->
+    <!-- Defense-in-depth CSP（最佳做法仍是 HTTP header，但 GitHub Pages 無法設 header，故以 meta 作為最低防線） -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://www.youtube.com https://youtube.com; frame-src https://www.youtube.com https://youtube.com; img-src 'self' data: https:; media-src 'self' https:; connect-src 'self' https:; frame-ancestors 'self';" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <meta
       name="description"
-      content="一眼只有一秒，卻用了二十年才讀懂——女兒穿越時空，見證父母相遇的那道光。五種視角、三條時間線，toni 連載故事 EP0–EP40 全集免費閱讀。"
+      content="一眼只有一秒，卻用了二十年才讀懂。《時間裡的兩個妳》 連載中。"
     />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="時間裡的兩個妳 · toni" />
     <meta
       property="og:description"
-      content="一眼只有一秒，卻用了二十年才讀懂——女兒穿越時空，見證父母相遇的那道光。EP0–EP40 全集免費閱讀。"
+      content="一眼只有一秒，卻用了二十年才讀懂。《時間裡的兩個妳》 連載中。"
     />
     <!-- og-image: 自託管版本；備用來源：https://img.youtube.com/vi/eACPFC4K89o/maxresdefault.jpg -->
     <meta
@@ -32,7 +34,7 @@
     <meta name="twitter:title" content="時間裡的兩個妳 · toni" />
     <meta
       name="twitter:description"
-      content="一眼只有一秒，卻用了二十年才讀懂——女兒穿越時空，見證父母相遇的那道光。EP0–EP40 全集免費閱讀。"
+      content="一眼只有一秒，卻用了二十年才讀懂。《時間裡的兩個妳》 連載中。"
     />
     <meta
       name="twitter:image"
@@ -46,7 +48,7 @@
       "name": "時間裡的兩個妳",
       "alternateName": "The Two Yous in Time",
       "url": "https://toniliumvp.github.io/RedTime/",
-      "description": "一眼只有一秒，卻用了二十年才讀懂——女兒穿越時空，見證父母相遇的那道光。五種視角、三條時間線，toni 連載故事 EP0–EP40 全集免費閱讀。",
+      "description": "一眼只有一秒，卻用了二十年才讀懂。《時間裡的兩個妳》 連載中。",
       "inLanguage": "zh-TW",
       "author": {
         "@type": "Person",
@@ -55,6 +57,8 @@
     }
     </script>
     <link rel="preload" href="fonts/fonts.css" as="style" />
+    <!-- LCP 優化：preload 首屏 hero-title 使用的 Cormorant Garamond 300 latin -->
+    <link rel="preload" href="fonts/co3bmX5slCNuHLi8bLeY9MK7whWMhyjYqXtKky2F7g.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="fonts/fonts.css" />
     <style>
       /* ─── Reset & Root ─── */
@@ -2362,7 +2366,8 @@
                 src="https://www.youtube.com/embed/eACPFC4K89o"
                 title="時間裡的兩個妳：一眼瞬間 微電影"
                 frameborder="0"
-                sandbox="allow-scripts allow-same-origin allow-popups"
+                sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-presentation"
+                referrerpolicy="strict-origin-when-cross-origin"
                 allow="
                   accelerometer;
                   autoplay;
@@ -2415,7 +2420,8 @@
                 src="https://www.youtube.com/embed/Ne3mv-6Ufl8"
                 title="時間裡的兩個妳：一眼瞬間 原聲帶"
                 frameborder="0"
-                sandbox="allow-scripts allow-same-origin allow-popups"
+                sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-presentation"
+                referrerpolicy="strict-origin-when-cross-origin"
                 allow="
                   accelerometer;
                   autoplay;
@@ -3036,7 +3042,8 @@
     </script>
     <script>
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/RedTime/sw.js').catch(() => {});
+        // 相對路徑同時支援 GitHub Pages (/RedTime/) 與本機伺服器 (/)
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
       }
     </script>
   </body>
