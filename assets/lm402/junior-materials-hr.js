@@ -226,6 +226,9 @@ export function createSkinMaterialHR(color = "#f9e7da") {
     attenuationColor: new THREE.Color("#ff7060"),
     attenuationDistance: 1.2,
     envMapIntensity: 0.85,
+    // Tier 6 emissive — 模擬皮膚被晚霞反射的微弱自身光（不依賴外光也有暖意）
+    emissive: new THREE.Color("#3a1a14"),
+    emissiveIntensity: 0.05,
   });
 }
 
@@ -250,6 +253,9 @@ export function createSkinSubMaterialHR(baseColor = "#f9e7da") {
     attenuationColor: new THREE.Color("#ff5040"),
     attenuationDistance: 1.0,
     envMapIntensity: 0.85,
+    // Tier 6 emissive（鼻翼/嘴唇周圍紅潤更明顯）
+    emissive: new THREE.Color("#5a1812"),
+    emissiveIntensity: 0.06,
   });
 }
 
@@ -281,6 +287,9 @@ export function createIrisMaterialHR(color = "#5d4334") {
     clearcoat: 0.22,
     clearcoatRoughness: 0.16,
     envMapIntensity: 1.3,
+    // Tier 6 iridescence — 虹膜邊緣彩虹閃光（角度敏感，黃昏光下會閃藍紫）
+    iridescence: 0.45,
+    iridescenceIOR: 1.45,
   });
 }
 
@@ -316,6 +325,9 @@ export function createHairMaterialHR(color = "#3c2a22") {
     sheenColor: new THREE.Color("#9c7b5e"),
     sheenRoughness: 0.32,
     envMapIntensity: 1.0,
+    // Tier 6 iridescence — 髮絲微彩虹閃（陽光下的迷幻金光）
+    iridescence: 0.18,
+    iridescenceIOR: 1.42,
   });
 }
 

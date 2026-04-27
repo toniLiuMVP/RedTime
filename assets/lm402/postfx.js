@@ -192,6 +192,9 @@ const FS_FINAL = /* glsl */ `
   uniform vec3  uShadowTint;
   uniform vec3  uHighlightTint;
   uniform float uTime;
+  // Tier 6
+  uniform sampler2D uLensDirt;
+  uniform float uDirtAmount;
 
   // ACES tone map（與 renderer 一致）
   vec3 acesToneMap(vec3 x) {
@@ -260,6 +263,10 @@ const FS_FINAL = /* glsl */ `
     float v = smoothstep(uVignetteOffset, 1.0, r);
     c = mix(c, uVignetteColor, v * uVignetteDarkness);
 
+    // === Tier 6: Lens Dirt（鏡頭髒污 luma multiplied，黃昏光打到髒污會被點亮）===
+    vec3 dirt = texture2D(uLensDirt, vUv).rgb;
+    c += dirt * luma(c) * uDirtAmount;
+
     // === Tier 5: Film Grain（隨 uTime 變化，動態顆粒不靜態化） ===
     float gn = (rand(vUv * 1024.0 + vec2(uTime * 0.4, uTime * 0.27)) - 0.5) * uGrainAmount;
     c += vec3(gn);
@@ -269,6 +276,55 @@ const FS_FINAL = /* glsl */ `
     gl_FragColor = vec4(c, 1.0);
   }
 `;
+
+// ─────────────────────────────────────────────────────────────
+//  Tier 6: Lens Dirt — 程式生成鏡頭髒污紋理
+//  做法：黑底 + 200 個小亮點（隨機灰塵）+ 8 個大光斑（油污 / 指紋）
+//  在 final pass 用 luma multiply 疊加：高光通過髒污會被點亮，暗處幾乎看不見
+//  這是電影鏡頭真實感的 last 5%（業界叫「lens veiling」）
+// ─────────────────────────────────────────────────────────────
+let _lensDirtTexture = null;
+function buildLensDirtCanvas() {
+  const size = 512;
+  const c = document.createElement("canvas");
+  c.width = c.height = size;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, size, size);
+
+  // 200 顆細塵點
+  for (let i = 0; i < 200; i++) {
+    const x = Math.random() * size;
+    const y = Math.random() * size;
+    const r = 1 + Math.random() * 3;
+    const intensity = 0.4 + Math.random() * 0.6;
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, r * 4);
+    grad.addColorStop(0, `rgba(255,255,255,${intensity})`);
+    grad.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(x - r * 4, y - r * 4, r * 8, r * 8);
+  }
+  // 8 個大光斑（指紋油污感）
+  for (let i = 0; i < 8; i++) {
+    const x = Math.random() * size;
+    const y = Math.random() * size;
+    const r = 30 + Math.random() * 60;
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+    grad.addColorStop(0, `rgba(255,240,210,${0.08 + Math.random() * 0.06})`);
+    grad.addColorStop(1, "rgba(255,240,210,0)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+  return c;
+}
+function getLensDirtTexture() {
+  if (_lensDirtTexture) return _lensDirtTexture;
+  _lensDirtTexture = new THREE.CanvasTexture(buildLensDirtCanvas());
+  _lensDirtTexture.colorSpace = THREE.LinearSRGBColorSpace;
+  _lensDirtTexture.wrapS = THREE.ClampToEdgeWrapping;
+  _lensDirtTexture.wrapT = THREE.ClampToEdgeWrapping;
+  return _lensDirtTexture;
+}
 
 // ═════════════════════════════════════════════════════════════
 //  工廠：建立後製管線實例
@@ -290,6 +346,7 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
       highlightTint: [1.08, 1.04, 0.94],                      // 亮部偏暖橙
     },
     msaa: 4,                                                    // MSAA samples（取代 FXAA）
+    lensDirt:  { amount: 0.45 },                               // Tier 6 鏡頭髒污疊加（0=關，1=明顯）
   };
 
   // ─── DPR-aware 解析度（手機降畫質） ───
@@ -379,6 +436,9 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
       uShadowTint:        { value: new THREE.Color().fromArray(tuning.colorGrade.shadowTint) },
       uHighlightTint:     { value: new THREE.Color().fromArray(tuning.colorGrade.highlightTint) },
       uTime:              { value: 0.0 },
+      // Tier 6
+      uLensDirt:          { value: getLensDirtTexture() },
+      uDirtAmount:        { value: tuning.lensDirt.amount },
     },
   });
 
@@ -502,6 +562,7 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     matFinal.uniforms.uShadowTint.value.fromArray(tuning.colorGrade.shadowTint);
     matFinal.uniforms.uHighlightTint.value.fromArray(tuning.colorGrade.highlightTint);
     matFinal.uniforms.uTime.value = time || 0;
+    matFinal.uniforms.uDirtAmount.value = tuning.lensDirt.amount;
     fsq.render(renderer, matFinal, null);   // null = 直接 render 到螢幕
   }
 

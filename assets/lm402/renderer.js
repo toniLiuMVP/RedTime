@@ -280,9 +280,12 @@ function buildReferenceJuniorHeroHead(t = {}) {
           thickness: 0.3,
           clearcoat: 1.0,
           clearcoatRoughness: 0.05,
-          envMapIntensity: 1.8,
+          envMapIntensity: 2.5,
           side: e.FrontSide,
           depthWrite: !1,
+          // Tier 6 iridescence — 角膜濕潤的彩虹閃（黃昏光最戲劇性）
+          iridescence: 0.7,
+          iridescenceIOR: 1.5,
         }),
       );
       (cornea.position.set(0, 0, 0.012),
