@@ -383,7 +383,7 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
       highlightTint: [1.08, 1.04, 0.94],                      // 亮部偏暖橙
     },
     msaa: 4,                                                    // MSAA samples（取代 FXAA）
-    lensDirt:  { amount: 0.45 },                               // Tier 6 鏡頭髒污疊加（0=關，1=明顯）
+    lensDirt:  { amount: 0 },                                  // Tier 6 鏡頭髒污（toni 不要白點，預設關 — 可從 console 開）
     // Tier 7：太陽光體積特效（screen-space）
     godRays:   { strength: 0.35 },                             // 從太陽方向放射的光柱（0=關，0.6=戲劇）
     lensFlare: { strength: 0.4 },                              // 鏡頭眩光 ghost
