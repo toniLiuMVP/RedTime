@@ -6016,7 +6016,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         updateWormhole(0.016),
         __juniorRig?.update?.(performance.now() / 1000),
         __clothRig?.update?.(performance.now() / 1000),
-        (__postfx ? __postfx.render() : U.render(W, q)));
+        (__postfx ? __postfx.render(performance.now() / 1000) : U.render(W, q)));
     },
     resize: qo,
     resolveMotion: function (t, o, a = 0.28) {

@@ -150,18 +150,21 @@ const FS_DOF = /* glsl */ `
 
     vec3 sum = vec3(0.0);
     float total = 0.0;
-    // 13-tap poisson 圓盤（電影派偏 hexagonal aperture，這裡用 disc 簡化）
-    const vec2 poisson[13] = vec2[](
-      vec2( 0.0,  0.0),
-      vec2( 0.85, 0.0), vec2(-0.85, 0.0),
-      vec2( 0.0,  0.85), vec2( 0.0, -0.85),
-      vec2( 0.6,  0.6), vec2(-0.6,  0.6),
-      vec2( 0.6, -0.6), vec2(-0.6, -0.6),
-      vec2( 0.4,  0.0), vec2(-0.4,  0.0),
-      vec2( 0.0,  0.4), vec2( 0.0, -0.4)
+    // Tier 5: 19-tap hexagonal aperture（電影鏡頭真實 6 角形 bokeh）
+    const vec2 hex[19] = vec2[](
+      vec2(0.0, 0.0),
+      // 內六角（radius 0.5）
+      vec2(0.5, 0.0),    vec2(0.25, 0.433),  vec2(-0.25, 0.433),
+      vec2(-0.5, 0.0),   vec2(-0.25, -0.433), vec2(0.25, -0.433),
+      // 外六角（radius 1.0）
+      vec2(1.0, 0.0),    vec2(0.5, 0.866),   vec2(-0.5, 0.866),
+      vec2(-1.0, 0.0),   vec2(-0.5, -0.866), vec2(0.5, -0.866),
+      // 邊中（六角邊上中點，radius ~0.866）
+      vec2(0.75, 0.433),  vec2(0.0, 0.866),   vec2(-0.75, 0.433),
+      vec2(-0.75, -0.433), vec2(0.0, -0.866),  vec2(0.75, -0.433)
     );
-    for (int i = 0; i < 13; i++) {
-      vec2 off = poisson[i] * radius * uTexel;
+    for (int i = 0; i < 19; i++) {
+      vec2 off = hex[i] * radius * uTexel;
       sum += texture2D(tDiffuse, vUv + off).rgb;
       total += 1.0;
     }
@@ -178,11 +181,17 @@ const FS_FINAL = /* glsl */ `
   varying vec2 vUv;
   uniform sampler2D tDiffuse;
   uniform vec2 uTexel;
-  uniform vec3 uVignetteColor;     // 暗角顏色（暖棕配黃昏）
-  uniform float uVignetteOffset;   // 開始衰減的位置（0=中心、1=邊角）
-  uniform float uVignetteDarkness; // 邊角壓暗強度
-  uniform float uExposure;         // tone map exposure（同 renderer）
+  uniform vec3 uVignetteColor;
+  uniform float uVignetteOffset;
+  uniform float uVignetteDarkness;
+  uniform float uExposure;
   uniform bool  uFxaa;
+  // Tier 5 新加 uniforms
+  uniform float uChromaStrength;
+  uniform float uGrainAmount;
+  uniform vec3  uShadowTint;
+  uniform vec3  uHighlightTint;
+  uniform float uTime;
 
   // ACES tone map（與 renderer 一致）
   vec3 acesToneMap(vec3 x) {
@@ -222,22 +231,41 @@ const FS_FINAL = /* glsl */ `
     return (lumaB < lumaMin || lumaB > lumaMax) ? rgbA : rgbB;
   }
 
-  void main() {
-    vec3 c = uFxaa ? fxaa(tDiffuse, vUv, uTexel) : texture2D(tDiffuse, vUv).rgb;
+  // Tier 5 偽隨機（grain 用，per-frame 變化靠 uTime）
+  float rand(vec2 st) {
+    return fract(sin(dot(st, vec2(12.9898, 78.233))) * 43758.5453123);
+  }
 
-    // tone map（HDR → LDR）
+  void main() {
+    // === Tier 5: Chromatic Aberration（鏡頭色散，3 channel 各取不同位置）===
+    vec2 caOff = (vUv - 0.5) * uChromaStrength;
+    vec3 c;
+    c.r = texture2D(tDiffuse, vUv + caOff).r;
+    c.g = texture2D(tDiffuse, vUv).g;
+    c.b = texture2D(tDiffuse, vUv - caOff).b;
+
+    // === Tone map（HDR → LDR） ===
     c *= uExposure;
     c = acesToneMap(c);
 
-    // Vignette：以畫面中心為原點的徑向衰減
+    // === Tier 5: Color Grading（暗部冷綠、亮部暖橙，黃昏電影調） ===
+    float lu = luma(c);
+    vec3 shadowed   = c * uShadowTint;
+    vec3 highlighted = c * uHighlightTint;
+    c = mix(shadowed, highlighted, smoothstep(0.0, 1.0, lu));
+
+    // === Vignette（暖棕暗角） ===
     vec2 d = vUv - 0.5;
-    float r = length(d) * 1.4142;       // 0~1 (角落=1)
+    float r = length(d) * 1.4142;
     float v = smoothstep(uVignetteOffset, 1.0, r);
     c = mix(c, uVignetteColor, v * uVignetteDarkness);
 
-    // sRGB 編碼（renderer 直 render 時會自動，這裡手動）
-    c = pow(c, vec3(1.0 / 2.2));
+    // === Tier 5: Film Grain（隨 uTime 變化，動態顆粒不靜態化） ===
+    float gn = (rand(vUv * 1024.0 + vec2(uTime * 0.4, uTime * 0.27)) - 0.5) * uGrainAmount;
+    c += vec3(gn);
 
+    // === sRGB encode ===
+    c = pow(max(c, vec3(0.0)), vec3(1.0 / 2.2));
     gl_FragColor = vec4(c, 1.0);
   }
 `;
@@ -252,8 +280,16 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     bloom:    { threshold: 0.86, softKnee: 0.5, strength: 0.32, mips: 4 },
     dof:      { focalRange: 0.6, maxBlur: 6.0, enabled: true },
     vignette: { color: [0.18, 0.10, 0.05], offset: 0.55, darkness: 0.42 },
-    fxaa:     true,
-    exposure: 1.0,  // 在 final pass 內套用（renderer 自己的 toneMappingExposure 仍生效）
+    fxaa:     false,  // Tier 5 改用 MSAA RT，FXAA 不需要
+    exposure: 1.0,
+    // Tier 5 電影級後製
+    chroma:    { strength: 0.0028 },                          // 鏡頭色散（0~0.006）
+    grain:     { amount: 0.018 },                              // 顆粒感（0~0.04）
+    colorGrade: {
+      shadowTint:    [0.92, 1.04, 0.98],                      // 暗部偏冷綠
+      highlightTint: [1.08, 1.04, 0.94],                      // 亮部偏暖橙
+    },
+    msaa: 4,                                                    // MSAA samples（取代 FXAA）
   };
 
   // ─── DPR-aware 解析度（手機降畫質） ───
@@ -269,6 +305,7 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     magFilter: THREE.LinearFilter,
     depthBuffer: true,
     stencilBuffer: false,
+    samples: tuning.msaa,                    // Tier 5 MSAA（GPU-resolved AA，比 FXAA 銳利）
   });
   sceneRT.depthTexture = new THREE.DepthTexture();
   sceneRT.depthTexture.format = THREE.DepthFormat;
@@ -336,6 +373,12 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
       uVignetteDarkness:  { value: tuning.vignette.darkness },
       uExposure:          { value: tuning.exposure },
       uFxaa:              { value: tuning.fxaa },
+      // Tier 5
+      uChromaStrength:    { value: tuning.chroma.strength },
+      uGrainAmount:       { value: tuning.grain.amount },
+      uShadowTint:        { value: new THREE.Color().fromArray(tuning.colorGrade.shadowTint) },
+      uHighlightTint:     { value: new THREE.Color().fromArray(tuning.colorGrade.highlightTint) },
+      uTime:              { value: 0.0 },
     },
   });
 
@@ -453,6 +496,12 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     matFinal.uniforms.uVignetteDarkness.value = tuning.vignette.darkness;
     matFinal.uniforms.uExposure.value = tuning.exposure;
     matFinal.uniforms.uFxaa.value = tuning.fxaa;
+    // Tier 5 uniforms
+    matFinal.uniforms.uChromaStrength.value = tuning.chroma.strength;
+    matFinal.uniforms.uGrainAmount.value = tuning.grain.amount;
+    matFinal.uniforms.uShadowTint.value.fromArray(tuning.colorGrade.shadowTint);
+    matFinal.uniforms.uHighlightTint.value.fromArray(tuning.colorGrade.highlightTint);
+    matFinal.uniforms.uTime.value = time || 0;
     fsq.render(renderer, matFinal, null);   // null = 直接 render 到螢幕
   }
 
