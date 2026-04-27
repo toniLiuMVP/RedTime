@@ -1496,7 +1496,10 @@ function S(t) {
     });
     o.add(heroCloseupHead.root);
     // Tier 3 表情系統：建立 rig + 暴露 console API
-    __juniorRig = createJuniorExpressionRig(heroCloseupHead.refs);
+    // Tier 8 加 getCamera options，給 eye tracking 用
+    __juniorRig = createJuniorExpressionRig(heroCloseupHead.refs, {
+      getCamera: () => q,
+    });
     // Tier 4 布料動態：traverse head 找 userData.cloth = true 的 mesh
     __clothRig = createClothRig(heroCloseupHead.root);
     if (typeof window !== "undefined") {
@@ -3309,7 +3312,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     (U.toneMapping = e.ACESFilmicToneMapping),
     (U.toneMappingExposure = 1.14),
     (U.shadowMap.enabled = !0),
-    (U.shadowMap.type = e.PCFSoftShadowMap));
+    // Tier 9.1 VSMShadowMap — variance shadow maps，距離自適應軟陰影（取代 PCFSoftShadowMap）
+    (U.shadowMap.type = e.VSMShadowMap));
   const W = new e.Scene();
   ((W.background = new e.Color("#ccd8e4")),
     (W.fog = new e.Fog("#d0dce6", 12, 65)));
@@ -3440,7 +3444,9 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     (Te.shadow.camera.bottom = -14),
     (Te.shadow.bias = -3e-4),
     (Te.shadow.normalBias = 0.026),
-    (Te.shadow.radius = 4),
+    // Tier 9.1 VSM 軟陰影：radius 4 → 8 + blurSamples 25
+    (Te.shadow.radius = 8),
+    (Te.shadow.blurSamples = 25),
     W.add(Te));
   const Ie = new e.PointLight(14215156, 1.28, 58, 2);
   (Ie.position.set(Q + 2.42, 3.64, g(t.frontDoor.center.z - 122)), W.add(Ie));

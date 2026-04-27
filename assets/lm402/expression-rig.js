@@ -26,9 +26,14 @@
  *   - 微呼吸：頭部 y 微小浮動（sine wave）
  */
 
+import * as THREE from "./vendor-three.module.js";
+
 // ─── helpers ──────────────────────────────────────────
 function clamp01(v) { return Math.max(0, Math.min(1, v)); }
 function clampRange(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+// reusable Vector3（避免 update() 內每幀 new 物件）
+const _v3a = new THREE.Vector3();
 
 /**
  * 紀錄每個 mesh 的初始 transform（深拷貝）
@@ -63,12 +68,15 @@ function resetToRest(refs, rest) {
 }
 
 // ─── factory ──────────────────────────────────────────
-export function createJuniorExpressionRig(refs) {
+export function createJuniorExpressionRig(refs, options = {}) {
   if (!refs) {
     console.warn("[expression-rig] No refs provided, rig disabled.");
     return makeNoOpRig();
   }
   const rest = captureRest(refs);
+
+  // Tier 8 options：getCamera() 提供 camera ref（給 eye tracking 算注視方向）
+  const getCamera = options.getCamera ?? null;
 
   // 公開狀態（toni 可從 console 直接修改）
   const state = {
@@ -78,8 +86,14 @@ export function createJuniorExpressionRig(refs) {
     browRaise: 0,    // 0=neutral, 1=raised (驚訝)
     lookX: 0,        // -1=左 ~ +1=右
     lookY: 0,        // -1=下 ~ +1=上
-    autoBlink: true, // 自動眨眼開關
+    autoBlink: true,
     autoBreath: true,
+    // Tier 8 新行為開關
+    autoEyeTrack: true,   // 眼睛跟隨相機
+    autoSaccade: true,    // 隨機眼跳（saccade）
+    autoMicro: true,      // 隨機微表情
+    autoHeadWobble: true, // 頭部點頭傾頭微動
+    eyeTrackStrength: 0.5, // 眼睛追蹤強度（0=不動，1=全跟）
   };
 
   // idle 狀態機
@@ -89,6 +103,21 @@ export function createJuniorExpressionRig(refs) {
   let blinkPhaseTime = 0;
   let breathPhase = 0;
   let manualBlinkOverride = false;
+
+  // Tier 8.1 Eye tracking：學妹頭部世界座標暫存
+  const _headWorld = { x: 0, y: 0, z: 0 };
+  // Tier 8.2 Saccade（眼跳）狀態
+  let saccadeTimer = 1.5 + Math.random() * 2;
+  let saccadeTargetX = 0;
+  let saccadeTargetY = 0;
+  let saccadeCurX = 0;
+  let saccadeCurY = 0;
+  // Tier 8.3 Micro-expression 狀態
+  let microTimer = 5 + Math.random() * 8;
+  let currentMicro = null; // { kind, start, duration }
+  // Tier 8.4 頭部 wobble 相位
+  let headWobbleX = 0;
+  let headWobbleZ = 0;
 
   // ─── 套用 state 到 mesh transform ───
   function apply() {
@@ -194,6 +223,89 @@ export function createJuniorExpressionRig(refs) {
       if (refs.headShell && rest.headShell?.pos) {
         refs.headShell.position.y = rest.headShell.pos.y + b * 0.0008;
       }
+    }
+
+    // === Tier 8.1 Eye tracking — 學妹眼睛跟隨相機 ===
+    if (state.autoEyeTrack && getCamera) {
+      const cam = getCamera();
+      if (cam && refs.headShell) {
+        // 學妹頭部世界座標
+        refs.headShell.getWorldPosition(_v3a);
+        _headWorld.x = _v3a.x; _headWorld.y = _v3a.y; _headWorld.z = _v3a.z;
+        // 從學妹眼睛指向相機的單位向量
+        const dx = cam.position.x - _headWorld.x;
+        const dy = cam.position.y - _headWorld.y;
+        const dz = cam.position.z - _headWorld.z;
+        const len = Math.sqrt(dx*dx + dy*dy + dz*dz) || 1;
+        const nx = dx / len, ny = dy / len;
+        // 轉成 lookX/Y（學妹本身朝 +Z，所以左右 = world x，上下 = world y）
+        const targetX = clampRange(nx * 0.85, -1, 1) * state.eyeTrackStrength;
+        const targetY = clampRange(ny * 0.85, -1, 1) * state.eyeTrackStrength;
+        // 平滑追隨（每幀補 8% 差距，自然不突兀）
+        state.lookX += (targetX - state.lookX) * 0.08;
+        state.lookY += (targetY - state.lookY) * 0.08;
+      }
+    }
+
+    // === Tier 8.2 Saccade — 隨機眼跳（人眼自然抖動，每秒 3-4 次微跳） ===
+    if (state.autoSaccade) {
+      saccadeTimer -= dt;
+      if (saccadeTimer <= 0) {
+        saccadeTargetX = (Math.random() - 0.5) * 0.35;
+        saccadeTargetY = (Math.random() - 0.5) * 0.22;
+        saccadeTimer = 1.2 + Math.random() * 2.5; // 每 1.2~3.7 秒一次
+      }
+      // 平滑收斂到 saccade target（快速到達後保持，等下次切換）
+      saccadeCurX += (saccadeTargetX - saccadeCurX) * 0.18;
+      saccadeCurY += (saccadeTargetY - saccadeCurY) * 0.18;
+      state.lookX += saccadeCurX * 0.06;
+      state.lookY += saccadeCurY * 0.06;
+    }
+
+    // === Tier 8.3 Micro-expression — 隨機觸發小表情（每 8-20 秒一次） ===
+    if (state.autoMicro) {
+      microTimer -= dt;
+      if (microTimer <= 0 && !currentMicro) {
+        const choices = ["briefSmile", "lipPress", "browTwitch", "tinyHmm"];
+        currentMicro = {
+          kind: choices[Math.floor(Math.random() * choices.length)],
+          start: time,
+          duration: 0.6 + Math.random() * 0.6, // 0.6~1.2 秒
+        };
+        microTimer = 8 + Math.random() * 12;
+      }
+      if (currentMicro) {
+        const elapsed = time - currentMicro.start;
+        const t = elapsed / currentMicro.duration;
+        if (t >= 1) {
+          currentMicro = null;
+        } else {
+          // sin(t*PI) 升降曲線（中段最強，兩端 0）
+          const wave = Math.sin(t * Math.PI);
+          switch (currentMicro.kind) {
+            case "briefSmile":
+              state.smile = Math.max(state.smile, wave * 0.32);
+              break;
+            case "lipPress":
+              state.mouthOpen = Math.min(state.mouthOpen, -wave * 0.12);
+              break;
+            case "browTwitch":
+              state.browRaise = Math.max(state.browRaise, wave * 0.45);
+              break;
+            case "tinyHmm":
+              state.lookY = clampRange(state.lookY - wave * 0.08, -1, 1);
+              break;
+          }
+        }
+      }
+    }
+
+    // === Tier 8.4 頭部 idle wobble — 微微點頭 + 偶爾傾頭 ===
+    if (state.autoHeadWobble && refs.headShell && rest.headShell) {
+      headWobbleX = Math.sin(breathPhase * 0.4 + 0.3) * 0.014;   // 點頭（rot.x）
+      headWobbleZ = Math.sin(breathPhase * 0.27 + 1.1) * 0.008;  // 傾頭（rot.z）
+      refs.headShell.rotation.x = rest.headShell.rotX + headWobbleX;
+      refs.headShell.rotation.z = rest.headShell.rotZ + headWobbleZ;
     }
 
     apply();
