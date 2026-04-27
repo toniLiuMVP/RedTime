@@ -5,7 +5,9 @@ import { buildSunsetEnvMap } from "./envmap-sunset.js";
 import { createPostFX } from "./postfx.js";
 import * as JM from "./junior-materials-hr.js";
 import { createJuniorExpressionRig } from "./expression-rig.js";
+import { createClothRig } from "./cloth-rig.js";
 let __juniorRig = null;
+let __clothRig = null;
 export const WORLD_SCALE = 1 / 80;
 const a = new e.Vector3(),
   n = new e.Vector3(),
@@ -122,6 +124,8 @@ function buildJuniorHairRibbon(t, o, a, n = {}) {
       envMapIntensity: 1.0,
     }),
   );
+  // Tier 4 標記為可動（cloth-rig 會 traverse 找這個 flag）
+  i.userData.cloth = true;
   return ((i.renderOrder = n.renderOrder ?? 18), i);
 }
 function buildReferenceJuniorHeroHead(t = {}) {
@@ -400,11 +404,14 @@ function buildReferenceJuniorHeroHead(t = {}) {
     { y: -0.018, z: -0.008, r: 0.02, len: 0.074, rotX: -0.16, rotZ: -0.06 },
     { y: -0.082, z: 0, r: 0.018, len: 0.088, rotX: -0.1, rotZ: -0.08 },
     { y: -0.152, z: 0.01, r: 0.015, len: 0.072, rotX: -0.06, rotZ: -0.08 },
-  ].forEach((t) => {
+  ].forEach((t, idx) => {
     const o = new e.Mesh(new e.CapsuleGeometry(t.r, t.len, 6, 10), l);
     (o.position.set(0.01, t.y, t.z),
       o.rotation.set(t.rotX, 0.08, t.rotZ),
       o.scale.set(0.84, 0.9, 0.64),
+      // Tier 4 馬尾段可動，越下面 mass 越輕（擺動越明顯）
+      (o.userData.cloth = true),
+      (o.userData.clothMass = 1.5 - idx * 0.4),
       W.add(o));
   });
   // Tier 2.2 牙齒 plane — 嘴唇後方淡白 plane（避免微張嘴時內部全黑）
@@ -1485,7 +1492,12 @@ function S(t) {
     o.add(heroCloseupHead.root);
     // Tier 3 表情系統：建立 rig + 暴露 console API
     __juniorRig = createJuniorExpressionRig(heroCloseupHead.refs);
-    if (typeof window !== "undefined") window.__JUNIOR_RIG__ = __juniorRig;
+    // Tier 4 布料動態：traverse head 找 userData.cloth = true 的 mesh
+    __clothRig = createClothRig(heroCloseupHead.root);
+    if (typeof window !== "undefined") {
+      window.__JUNIOR_RIG__ = __juniorRig;
+      window.__CLOTH_RIG__ = __clothRig;
+    }
   }
   const Se = (function (t, o = 1) {
     const a = new e.MeshBasicMaterial({
@@ -6003,6 +6015,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       }),
         updateWormhole(0.016),
         __juniorRig?.update?.(performance.now() / 1000),
+        __clothRig?.update?.(performance.now() / 1000),
         (__postfx ? __postfx.render() : U.render(W, q)));
     },
     resize: qo,
