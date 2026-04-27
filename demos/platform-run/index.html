@@ -215,6 +215,31 @@ canvas{display:block;width:100%;height:100%}
   }
 }
 </style>
+<!-- Audio auto-stop hook：頁面隱藏 / 關閉時自動停所有音樂（對所有玩家生效） -->
+<script>
+(function () {
+  const _OriginalAudio = window.Audio;
+  const _trackedAudios = new Set();
+  window.Audio = function (...args) {
+    const a = new _OriginalAudio(...args);
+    _trackedAudios.add(a);
+    return a;
+  };
+  window.Audio.prototype = _OriginalAudio.prototype;
+  function stopAllAudio() {
+    _trackedAudios.forEach((a) => { try { a.pause(); } catch (e) {} });
+    document.querySelectorAll("audio, video").forEach((el) => { try { el.pause(); } catch (e) {} });
+    if (window.__AUDIO_CONTEXT__ && typeof window.__AUDIO_CONTEXT__.suspend === "function") {
+      try { window.__AUDIO_CONTEXT__.suspend(); } catch (e) {}
+    }
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) stopAllAudio();
+  });
+  window.addEventListener("pagehide", stopAllAudio);
+  window.addEventListener("beforeunload", stopAllAudio);
+})();
+</script>
 </head>
 <body role="application" aria-label="月台上的狂奔 互動遊戲">
 

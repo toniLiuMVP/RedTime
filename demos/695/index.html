@@ -188,6 +188,31 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.diary-line,.diary-next button{opacity:1}}
 @media(max-width:520px){.diary-paper{padding:32px 22px}}
 </style>
+<!-- Audio auto-stop hook：頁面隱藏 / 關閉時自動停所有音樂（對所有玩家生效） -->
+<script>
+(function () {
+  const _OriginalAudio = window.Audio;
+  const _trackedAudios = new Set();
+  window.Audio = function (...args) {
+    const a = new _OriginalAudio(...args);
+    _trackedAudios.add(a);
+    return a;
+  };
+  window.Audio.prototype = _OriginalAudio.prototype;
+  function stopAllAudio() {
+    _trackedAudios.forEach((a) => { try { a.pause(); } catch (e) {} });
+    document.querySelectorAll("audio, video").forEach((el) => { try { el.pause(); } catch (e) {} });
+    if (window.__AUDIO_CONTEXT__ && typeof window.__AUDIO_CONTEXT__.suspend === "function") {
+      try { window.__AUDIO_CONTEXT__.suspend(); } catch (e) {}
+    }
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) stopAllAudio();
+  });
+  window.addEventListener("pagehide", stopAllAudio);
+  window.addEventListener("beforeunload", stopAllAudio);
+})();
+</script>
 </head>
 <body>
 <noscript><p style="color:#f0e6d2;text-align:center;padding:2em;font-size:1.2em">本遊戲需要 JavaScript 才能運行，請啟用後重新載入。</p></noscript>
