@@ -1,6 +1,11 @@
 import * as e from "./vendor-three.module.js";
 import { GLTFLoader } from "./GLTFLoader.js";
 import { WORLD as t, CINEMATIC_TIMELINE as o } from "./data.js";
+import { buildSunsetEnvMap } from "./envmap-sunset.js";
+import { createPostFX } from "./postfx.js";
+import * as JM from "./junior-materials-hr.js";
+import { createJuniorExpressionRig } from "./expression-rig.js";
+let __juniorRig = null;
 export const WORLD_SCALE = 1 / 80;
 const a = new e.Vector3(),
   n = new e.Vector3(),
@@ -111,6 +116,10 @@ function buildJuniorHairRibbon(t, o, a, n = {}) {
       sheen: 0.3,
       sheenRoughness: 0.34,
       sheenColor: new e.Color("#a77f5d"),
+      // Tier 2.2 hair anisotropy — 每束頭髮自身水平方向有條狀高光
+      anisotropy: 0.75,
+      anisotropyRotation: n.anisotropyRotation ?? 0,
+      envMapIntensity: 1.0,
     }),
   );
   return ((i.renderOrder = n.renderOrder ?? 18), i);
@@ -131,86 +140,59 @@ function buildReferenceJuniorHeroHead(t = {}) {
   const a = new e.Color(t.skinColor ?? "#f9e7da"),
     n = new e.Color(t.hairColor ?? "#3c2a22"),
     s = new e.Color(t.irisColor ?? "#5d4334"),
-    r = new e.MeshPhysicalMaterial({
-      color: a.clone(),
-      roughness: 0.56,
-      metalness: 0,
-      clearcoat: 0.06,
-      clearcoatRoughness: 0.7,
-      sheen: 0.12,
-      sheenRoughness: 0.5,
-      sheenColor: new e.Color("#ffd5bf"),
-    }),
-    i = new e.MeshPhysicalMaterial({
-      color: a.clone().lerp(new e.Color("#f4cdbd"), 0.18),
-      roughness: 0.62,
-      metalness: 0,
-      clearcoat: 0.04,
-      clearcoatRoughness: 0.74,
-      sheen: 0.08,
-    }),
-    l = new e.MeshPhysicalMaterial({
-      color: n.clone(),
-      roughness: 0.38,
-      metalness: 0.03,
-      clearcoat: 0.08,
-      clearcoatRoughness: 0.46,
-      sheen: 0.26,
-      sheenRoughness: 0.34,
-      sheenColor: new e.Color("#9c7b5e"),
-    }),
-    c = new e.MeshPhysicalMaterial({
-      color: "#fffdfa",
-      roughness: 0.22,
-      metalness: 0,
-      clearcoat: 0.06,
-      clearcoatRoughness: 0.28,
-    }),
-    h = new e.MeshPhysicalMaterial({
-      color: s.clone(),
-      roughness: 0.36,
-      metalness: 0.03,
-      clearcoat: 0.06,
-      clearcoatRoughness: 0.2,
-    }),
-    d = new e.MeshStandardMaterial({
-      color: n.clone().lerp(new e.Color("#120d0d"), 0.35),
-      roughness: 0.74,
-      metalness: 0.02,
-    }),
-    p = new e.MeshPhysicalMaterial({
-      color: "#bf8f8f",
-      roughness: 0.54,
-      metalness: 0,
-      clearcoat: 0.04,
-      clearcoatRoughness: 0.48,
-      transparent: !0,
-      opacity: 0.96,
-    }),
-    m = new e.MeshStandardMaterial({
-      color: "#c79395",
-      roughness: 0.58,
-      metalness: 0,
-      transparent: !0,
-      opacity: 0.72,
-    });
+    // === Tier 2 半寫實材質（HR = Half Realistic）===
+    r = JM.createSkinMaterialHR(t.skinColor ?? "#f9e7da"),
+    i = JM.createSkinSubMaterialHR(t.skinColor ?? "#f9e7da"),
+    l = JM.createHairMaterialHR(t.hairColor ?? "#3c2a22"),
+    c = JM.createEyeWhiteMaterialHR(),
+    h = JM.createIrisMaterialHR(t.irisColor ?? "#5d4334"),
+    d = JM.createLashBrowMaterialHR(),
+    p = JM.createLipMaterialHR("#bf8f8f"),
+    m = JM.createLipLineMaterialHR();
+    // === /Tier 2 ===
   const w = new e.Mesh(new e.SphereGeometry(0.114, 48, 48), r);
   (w.position.set(0, -0.004, -0.01), w.scale.set(0.72, 0.92, 0.68), o.add(w));
   const M = new e.Mesh(new e.SphereGeometry(0.086, 44, 44), i);
   (M.position.set(0, -0.076, 0.012), M.scale.set(0.52, 0.46, 0.5), o.add(M));
+  // (c3) 下巴尖 — 圓潤但有定義（符合 reference 圖學妹臉型，不是尖下巴）
+  const chinTip = new e.Mesh(new e.SphereGeometry(0.018, 24, 24), i);
+  (chinTip.position.set(0, -0.108, 0.046),
+    chinTip.scale.set(0.62, 0.52, 0.58),
+    o.add(chinTip));
   const f = new e.Mesh(new e.SphereGeometry(0.018, 20, 20), i);
   (f.position.set(0, -0.132, 0.044), f.scale.set(0.8, 0.42, 0.82), o.add(f));
   const u = new e.Mesh(new e.SphereGeometry(0.026, 20, 20), i);
   (u.position.set(-0.046, -0.02, 0.04), u.scale.set(0.82, 0.58, 0.54), o.add(u));
   const y = u.clone();
   ((y.position.x = 0.052), o.add(y));
+  // (c2) 顴骨 — 雙頰上方微突 sphere（黃昏側光打在顴骨上很有立體感）
+  const cheekBoneL = new e.Mesh(new e.SphereGeometry(0.014, 16, 16), i);
+  (cheekBoneL.position.set(-0.054, -0.005, 0.054),
+    cheekBoneL.scale.set(0.72, 0.38, 0.48),
+    o.add(cheekBoneL));
+  const cheekBoneR = cheekBoneL.clone();
+  ((cheekBoneR.position.x = 0.060), o.add(cheekBoneR));
+  // (c1) 鼻樑 — 加長、加挺、變窄（更接近真實亞洲鼻型）
   const g = new e.Mesh(
-    new e.CapsuleGeometry(0.0038, 0.032, 4, 10),
+    new e.CapsuleGeometry(0.0042, 0.042, 4, 10),
     i,
   );
-  (g.position.set(0, -0.018, 0.078),
-    g.scale.set(0.46, 0.68, 0.56),
+  (g.position.set(0, -0.020, 0.080),
+    g.scale.set(0.40, 0.78, 0.58),
     o.add(g));
+  // (c1) 鼻根 — 在鼻樑頂端、眉間下方做微凸（接續眉骨）
+  const noseRoot = new e.Mesh(new e.SphereGeometry(0.006, 16, 16), i);
+  (noseRoot.position.set(0, 0.000, 0.078),
+    noseRoot.scale.set(0.55, 0.35, 0.4),
+    o.add(noseRoot));
+  // (c1) 鼻樑高光 — 模擬黃昏側光打在鼻骨上（細長白點）
+  const noseHi = new e.Mesh(
+    new e.SphereGeometry(0.0024, 12, 12),
+    new e.MeshBasicMaterial({ color: "#ffffff", transparent: !0, opacity: 0.34 }),
+  );
+  (noseHi.position.set(0, -0.012, 0.086),
+    noseHi.scale.set(0.4, 1.6, 0.3),
+    o.add(noseHi));
   const x = new e.Mesh(new e.SphereGeometry(0.013, 24, 24), i);
   (x.position.set(0, -0.048, 0.088), x.scale.set(0.72, 0.52, 0.84), o.add(x));
   const b = new e.Mesh(new e.SphereGeometry(0.0048, 18, 18), i);
@@ -232,8 +214,9 @@ function buildReferenceJuniorHeroHead(t = {}) {
   (v.position.set(0, -0.094, 0.096), (v.renderOrder = 17), o.add(v));
   const G = new e.Mesh(new e.CapsuleGeometry(0.0026, 0.026, 4, 10), p);
   (G.position.set(0, -0.09, 0.098), (G.rotation.z = Math.PI / 2), o.add(G));
-  const z = new e.Mesh(new e.CapsuleGeometry(0.0032, 0.03, 4, 10), p.clone());
-  ((z.material.opacity = 0.88),
+  // (b3) 下唇 — 比上唇亮 + 更高 clearcoat（飽滿、唇蜜感）
+  const z = new e.Mesh(new e.CapsuleGeometry(0.0032, 0.03, 4, 10), JM.createLipMaterialHR("#d29694"));
+  ((z.material.clearcoat = 0.58),
     z.position.set(0, -0.1, 0.096),
     (z.rotation.z = Math.PI / 2),
     o.add(z));
@@ -242,9 +225,10 @@ function buildReferenceJuniorHeroHead(t = {}) {
       o.position.set(0.041 * t, -0.002, 0.082);
       const a = new e.Mesh(new e.SphereGeometry(0.017, 24, 24), c);
       (a.scale.set(1.14, 0.6, 0.34), o.add(a));
-      const n = new e.Mesh(new e.SphereGeometry(0.0086, 20, 20), h);
-      (n.position.set(0, 0, 0.016),
-        n.scale.set(0.76, 0.84, 0.42),
+      // (a1) iris 改用 CircleGeometry plane，讓 procedural iris texture 1:1 顯示
+      const n = new e.Mesh(new e.CircleGeometry(0.011, 28), h);
+      (n.position.set(0, 0, 0.018),
+        n.scale.set(1, 1.05, 1),
         o.add(n));
       const s = new e.Mesh(
         new e.SphereGeometry(0.0036, 16, 16),
@@ -253,6 +237,21 @@ function buildReferenceJuniorHeroHead(t = {}) {
       (s.position.set(0, 0, 0.022), s.scale.set(0.76, 0.82, 0.32), o.add(s));
       const r = new e.Mesh(new e.CapsuleGeometry(0.0026, 0.028, 4, 10), i);
       (r.position.set(0, 0.008, 0.008), (r.rotation.z = Math.PI / 2), o.add(r));
+      // (b1) 雙眼皮 — 上眼瞼上方薄條，半透明深棕（亞洲女性辨識特徵）
+      const doubleLid = new e.Mesh(
+        new e.CapsuleGeometry(0.0008, 0.024, 3, 8),
+        new e.MeshStandardMaterial({
+          color: "#5a4338",
+          transparent: !0,
+          opacity: 0.42,
+          roughness: 0.72,
+          metalness: 0,
+        }),
+      );
+      (doubleLid.position.set(0, 0.013, 0.012),
+        (doubleLid.rotation.z = Math.PI / 2),
+        doubleLid.scale.set(0.95, 1, 0.6),
+        o.add(doubleLid));
       const l = new e.Mesh(new e.CapsuleGeometry(0.0016, 0.026, 4, 10), i);
       (l.position.set(0, -0.011, 0.006),
         (l.rotation.z = Math.PI / 2),
@@ -263,6 +262,38 @@ function buildReferenceJuniorHeroHead(t = {}) {
         (p.rotation.z = Math.PI / 2),
         p.scale.set(0.84, 0.82, 0.68),
         o.add(p));
+      // Tier 2.2 cornea — 透明角膜層（黃昏光反射 = 水汪汪眼神）
+      const cornea = new e.Mesh(
+        new e.SphereGeometry(0.014, 20, 20),
+        new e.MeshPhysicalMaterial({
+          color: new e.Color("#ffffff"),
+          transparent: !0,
+          opacity: 0.18,
+          roughness: 0.03,
+          metalness: 0,
+          transmission: 0.7,
+          ior: 1.376,
+          thickness: 0.3,
+          clearcoat: 1.0,
+          clearcoatRoughness: 0.05,
+          envMapIntensity: 1.8,
+          side: e.FrontSide,
+          depthWrite: !1,
+        }),
+      );
+      (cornea.position.set(0, 0, 0.012),
+        cornea.scale.set(1, 1, 0.5),
+        (cornea.renderOrder = 18),
+        o.add(cornea));
+      // Tier 2.2 睫毛 plane — 梳狀 alpha map（取代 capsule p 的細條）
+      const lashPlane = new e.Mesh(
+        new e.PlaneGeometry(0.03, 0.0085),
+        JM.createLashFanMaterialHR(),
+      );
+      (lashPlane.position.set(0, 0.013, 0.022),
+        (lashPlane.rotation.x = -0.22),
+        (lashPlane.renderOrder = 19),
+        o.add(lashPlane));
       const m = new e.Mesh(
         new e.SphereGeometry(0.0028, 12, 12),
         new e.MeshBasicMaterial({
@@ -277,7 +308,19 @@ function buildReferenceJuniorHeroHead(t = {}) {
           o.add(m),
           (a.userData.baseScale = a.scale.clone()),
           (n.userData.baseScale = n.scale.clone()),
-          { root: o, eyeWhite: a, iris: n, lash: p })
+          {
+            root: o,
+            eyeWhite: a,
+            iris: n,
+            pupil: s,
+            upperLid: r,
+            lowerLid: l,
+            lash: p,
+            highlight: m,
+            doubleLid: doubleLid,
+            cornea: cornea,
+            lashPlane: lashPlane,
+          })
       );
     },
     eyeL = eyeGroup(-1),
@@ -290,6 +333,13 @@ function buildReferenceJuniorHeroHead(t = {}) {
     o.add(T));
   const R = T.clone();
   ((R.position.x = 0.048), (R.rotation.z = -0.12), (R.rotation.y = -0.05), o.add(R));
+  // (b2) 眉頭加深 — 眉峰位置加深色小球（亞洲眉型常見「眉頭深、眉尾淺」）
+  const browInL = new e.Mesh(new e.SphereGeometry(0.003, 12, 12), d);
+  (browInL.position.set(-0.052, 0.028, 0.083),
+    browInL.scale.set(0.7, 1.3, 0.55),
+    o.add(browInL));
+  const browInR = browInL.clone();
+  ((browInR.position.x = 0.054), o.add(browInR));
   const I = new e.Mesh(
     new e.SphereGeometry(0.118, 48, 48, 0, 2 * Math.PI, 0, 0.76 * Math.PI),
     l,
@@ -357,6 +407,62 @@ function buildReferenceJuniorHeroHead(t = {}) {
       o.scale.set(0.84, 0.9, 0.64),
       W.add(o));
   });
+  // Tier 2.2 牙齒 plane — 嘴唇後方淡白 plane（避免微張嘴時內部全黑）
+  const teethPlane = new e.Mesh(
+    new e.PlaneGeometry(0.024, 0.005),
+    new e.MeshStandardMaterial({
+      color: "#f5f0e0",
+      roughness: 0.32,
+      metalness: 0.04,
+      transparent: !0,
+      opacity: 0.72,
+    }),
+  );
+  (teethPlane.position.set(0, -0.094, 0.094),
+    (teethPlane.renderOrder = 16),
+    o.add(teethPlane));
+  // Tier 2.2 耳朵 — 左右兩側 sphere（用副皮膚 i 含 SSS，耳殼薄處透光）
+  const earL = new e.Mesh(new e.SphereGeometry(0.022, 16, 16), i);
+  (earL.position.set(-0.082, -0.025, 0.005),
+    earL.scale.set(0.38, 1.0, 0.55),
+    (earL.rotation.z = 0.18),
+    o.add(earL));
+  const earR = earL.clone();
+  ((earR.position.x = 0.090),
+    (earR.rotation.z = -0.18),
+    o.add(earR));
+  // Tier 2.3 鎖骨 — 脖子下方斜向外的細 capsule（黃昏側光打鎖骨陰影超有戲）
+  const collarBoneL = new e.Mesh(new e.CapsuleGeometry(0.0034, 0.058, 4, 8), r);
+  (collarBoneL.position.set(-0.034, -0.182, 0.054),
+    (collarBoneL.rotation.z = -1.18),
+    (collarBoneL.rotation.y = 0.20),
+    collarBoneL.scale.set(0.55, 1, 0.5),
+    o.add(collarBoneL));
+  const collarBoneR = collarBoneL.clone();
+  ((collarBoneR.position.x = 0.054),
+    (collarBoneR.rotation.z = 1.18),
+    (collarBoneR.rotation.y = -0.20),
+    o.add(collarBoneR));
+  // Tier 2.3 髮絲飛揚 — 馬尾後方延伸的飄逸細條（沿用 hair material l 自帶 anisotropy）
+  const flyHairData = [
+    { px: 0.04, py: 0.04, pz: -0.18, rx: -0.4, rz: -0.1 },
+    { px: 0.05, py: -0.02, pz: -0.20, rx: -0.5, rz: 0.05 },
+    { px: 0.04, py: -0.08, pz: -0.22, rx: -0.6, rz: -0.08 },
+  ];
+  for (const cfg of flyHairData) {
+    const flyRibbon = new e.Mesh(new e.PlaneGeometry(0.006, 0.07, 1, 6), l);
+    const flyR = flyRibbon.geometry.attributes.position;
+    for (let fi = 0; fi < flyR.count; fi++) {
+      const fy = flyR.getY(fi);
+      const ft = (fy + 0.035) / 0.07;
+      flyR.setZ(fi, Math.sin(ft * Math.PI) * 0.005);
+    }
+    flyR.needsUpdate = true;
+    flyRibbon.geometry.computeVertexNormals();
+    flyRibbon.position.set(cfg.px, cfg.py, cfg.pz);
+    flyRibbon.rotation.set(cfg.rx, 0, cfg.rz);
+    o.add(flyRibbon);
+  }
   const D = new e.Mesh(
     new e.PlaneGeometry(0.16, 0.11),
     new e.MeshBasicMaterial({
@@ -376,12 +482,20 @@ function buildReferenceJuniorHeroHead(t = {}) {
       refs: {
         headShell: w,
         jawShell: M,
-        heroEyeWhiteL: eyeL.eyeWhite,
-        heroEyeWhiteR: eyeR.eyeWhite,
-        heroIrisL: eyeL.iris,
-        heroIrisR: eyeR.iris,
-        heroBrowL: T,
-        heroBrowR: R,
+        // 眼睛（每隻：白/虹膜/瞳孔/眼瞼/睫毛/雙眼皮/角膜，給 expression-rig 全套用）
+        heroEyeWhiteL: eyeL.eyeWhite, heroEyeWhiteR: eyeR.eyeWhite,
+        heroIrisL: eyeL.iris,         heroIrisR: eyeR.iris,
+        heroPupilL: eyeL.pupil,       heroPupilR: eyeR.pupil,
+        heroUpperLidL: eyeL.upperLid, heroUpperLidR: eyeR.upperLid,
+        heroLowerLidL: eyeL.lowerLid, heroLowerLidR: eyeR.lowerLid,
+        heroLashL: eyeL.lashPlane,    heroLashR: eyeR.lashPlane,
+        heroDoubleLidL: eyeL.doubleLid, heroDoubleLidR: eyeR.doubleLid,
+        heroCorneaL: eyeL.cornea,     heroCorneaR: eyeR.cornea,
+        // 眉毛
+        heroBrowL: T, heroBrowR: R,
+        // 嘴部
+        heroUpperLip: G, heroLowerLip: z, heroLipLine: v,
+        // 頭髮
         heroHairCap: I,
         heroPonytail: W,
       },
@@ -1369,6 +1483,9 @@ function S(t) {
       irisColor: t.iris ?? "#5b4030",
     });
     o.add(heroCloseupHead.root);
+    // Tier 3 表情系統：建立 rig + 暴露 console API
+    __juniorRig = createJuniorExpressionRig(heroCloseupHead.refs);
+    if (typeof window !== "undefined") window.__JUNIOR_RIG__ = __juniorRig;
   }
   const Se = (function (t, o = 1) {
     const a = new e.MeshBasicMaterial({
@@ -3181,6 +3298,12 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     (W.fog = new e.Fog("#d0dce6", 12, 65)));
   const q = new e.PerspectiveCamera(74, 1, 0.03, 180);
   q.rotation.order = "YXZ";
+  // === Tier 1 後製管線：黃昏 HDR IBL + 電影派 Bloom/DOF/Vignette ===
+  const __sunsetEnvMap = buildSunsetEnvMap(U);
+  W.environment = __sunsetEnvMap;
+  const __postfx = createPostFX({ renderer: U, scene: W, camera: q });
+  if (typeof window !== "undefined") window.__POSTFX__ = __postfx;
+  // === /Tier 1 ===
   const _ = new e.Raycaster(),
     A = [],
     Z = [],
@@ -4985,6 +5108,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       (U.domElement.style.height = `${o}px`),
       (q.aspect = t / o),
       q.updateProjectionMatrix());
+    __postfx?.setSize?.(t, o);
   }
   const _isMobile = () => window.innerWidth <= 1080;
   function _o(e, t = 0, o = !0) {
@@ -5878,7 +6002,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         assetState: { ...assetState },
       }),
         updateWormhole(0.016),
-        U.render(W, q));
+        __juniorRig?.update?.(performance.now() / 1000),
+        (__postfx ? __postfx.render() : U.render(W, q)));
     },
     resize: qo,
     resolveMotion: function (t, o, a = 0.28) {
