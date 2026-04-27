@@ -20,6 +20,9 @@
 
 import * as THREE from "./vendor-three.module.js";
 
+// Tier 7：預設黃昏太陽方向（世界空間，朝場景）— god rays / lens flare 用這個方向
+export const SUNSET_SUN_DIR = new THREE.Vector3(0.4, 0.18, -0.85).normalize();
+
 // ─── Shader：把球面方向 → 黃昏 gradient + 太陽光暈 ───
 const SKY_VERT = /* glsl */ `
   varying vec3 vDir;

@@ -1,13 +1,15 @@
 import * as e from "./vendor-three.module.js";
 import { GLTFLoader } from "./GLTFLoader.js";
 import { WORLD as t, CINEMATIC_TIMELINE as o } from "./data.js";
-import { buildSunsetEnvMap } from "./envmap-sunset.js";
+import { buildSunsetEnvMap, SUNSET_SUN_DIR } from "./envmap-sunset.js";
 import { createPostFX } from "./postfx.js";
 import * as JM from "./junior-materials-hr.js";
 import { createJuniorExpressionRig } from "./expression-rig.js";
 import { createClothRig } from "./cloth-rig.js";
 let __juniorRig = null;
 let __clothRig = null;
+const __sunFar = new e.Vector3();   // Tier 7：太陽世界座標暫存（每幀 reuse）
+const __sunUv = new e.Vector2();    // Tier 7：太陽螢幕座標（NDC → UV）
 export const WORLD_SCALE = 1 / 80;
 const a = new e.Vector3(),
   n = new e.Vector3(),
@@ -6019,7 +6021,10 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         updateWormhole(0.016),
         __juniorRig?.update?.(performance.now() / 1000),
         __clothRig?.update?.(performance.now() / 1000),
-        (__postfx ? __postfx.render(performance.now() / 1000) : U.render(W, q)));
+        // Tier 7：每幀計算太陽 NDC 位置（god rays + lens flare 用）
+        __sunFar.copy(SUNSET_SUN_DIR).multiplyScalar(1000).add(q.position).project(q),
+        __sunUv.set(__sunFar.x * 0.5 + 0.5, __sunFar.y * 0.5 + 0.5),
+        (__postfx ? __postfx.render(performance.now() / 1000, __sunUv) : U.render(W, q)));
     },
     resize: qo,
     resolveMotion: function (t, o, a = 0.28) {

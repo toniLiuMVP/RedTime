@@ -195,6 +195,10 @@ const FS_FINAL = /* glsl */ `
   // Tier 6
   uniform sampler2D uLensDirt;
   uniform float uDirtAmount;
+  // Tier 7
+  uniform vec2  uSunUv;
+  uniform float uGodRaysStrength;
+  uniform float uLensFlareStrength;
 
   // ACES tone map（與 renderer 一致）
   vec3 acesToneMap(vec3 x) {
@@ -266,6 +270,39 @@ const FS_FINAL = /* glsl */ `
     // === Tier 6: Lens Dirt（鏡頭髒污 luma multiplied，黃昏光打到髒污會被點亮）===
     vec3 dirt = texture2D(uLensDirt, vUv).rgb;
     c += dirt * luma(c) * uDirtAmount;
+
+    // === Tier 7: God Rays（從太陽方向 march sample 累積亮度）===
+    if (uGodRaysStrength > 0.0 && uSunUv.x >= -0.2 && uSunUv.x <= 1.2 && uSunUv.y >= -0.2 && uSunUv.y <= 1.2) {
+      vec2 godDelta = (uSunUv - vUv) / 32.0;
+      vec3 godRays = vec3(0.0);
+      vec2 godUv = vUv;
+      for (int i = 0; i < 32; i++) {
+        godUv += godDelta;
+        if (godUv.x < 0.0 || godUv.x > 1.0 || godUv.y < 0.0 || godUv.y > 1.0) break;
+        vec3 ss = texture2D(tDiffuse, godUv).rgb;
+        // 取超過閾值的 HDR 部分（光源實際比場景更亮）
+        godRays += max(ss - vec3(0.8), vec3(0.0)) * (1.0 - float(i) / 32.0);
+      }
+      godRays /= 32.0;
+      // 暖橙染色（黃昏感）
+      c += godRays * uGodRaysStrength * vec3(1.2, 1.0, 0.7);
+    }
+
+    // === Tier 7: Lens Flare（4 個 ghost 從相反位置採樣強光）===
+    if (uLensFlareStrength > 0.0) {
+      vec3 flares = vec3(0.0);
+      for (int g = 0; g < 4; g++) {
+        float scale = 0.4 + float(g) * 0.4;
+        vec2 ghostUv = mix(uSunUv, vec2(1.0) - uSunUv, scale);
+        float dist = length(vUv - ghostUv);
+        if (dist < 0.05) {
+          vec3 sFl = texture2D(tDiffuse, ghostUv).rgb;
+          flares += max(sFl - vec3(0.8), vec3(0.0)) * (1.0 - dist / 0.05);
+        }
+      }
+      // 微藍冷色 ghost（電影鏡頭典型 lens coating tint）
+      c += flares * uLensFlareStrength * vec3(0.95, 1.05, 1.15);
+    }
 
     // === Tier 5: Film Grain（隨 uTime 變化，動態顆粒不靜態化） ===
     float gn = (rand(vUv * 1024.0 + vec2(uTime * 0.4, uTime * 0.27)) - 0.5) * uGrainAmount;
@@ -347,6 +384,9 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     },
     msaa: 4,                                                    // MSAA samples（取代 FXAA）
     lensDirt:  { amount: 0.45 },                               // Tier 6 鏡頭髒污疊加（0=關，1=明顯）
+    // Tier 7：太陽光體積特效（screen-space）
+    godRays:   { strength: 0.35 },                             // 從太陽方向放射的光柱（0=關，0.6=戲劇）
+    lensFlare: { strength: 0.4 },                              // 鏡頭眩光 ghost
   };
 
   // ─── DPR-aware 解析度（手機降畫質） ───
@@ -439,6 +479,10 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
       // Tier 6
       uLensDirt:          { value: getLensDirtTexture() },
       uDirtAmount:        { value: tuning.lensDirt.amount },
+      // Tier 7
+      uSunUv:             { value: new THREE.Vector2(0.5, 0.7) },
+      uGodRaysStrength:   { value: tuning.godRays.strength },
+      uLensFlareStrength: { value: tuning.lensFlare.strength },
     },
   });
 
@@ -472,7 +516,7 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
   }
 
   // ─── 主 render ───
-  function render(time = 0) {
+  function render(time = 0, sunUv = null) {
     if (!tuning.enabled) {
       // 緊急停用：直接 render 到螢幕（fallback）
       renderer.setRenderTarget(null);
@@ -563,6 +607,9 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     matFinal.uniforms.uHighlightTint.value.fromArray(tuning.colorGrade.highlightTint);
     matFinal.uniforms.uTime.value = time || 0;
     matFinal.uniforms.uDirtAmount.value = tuning.lensDirt.amount;
+    matFinal.uniforms.uGodRaysStrength.value = tuning.godRays.strength;
+    matFinal.uniforms.uLensFlareStrength.value = tuning.lensFlare.strength;
+    if (sunUv) matFinal.uniforms.uSunUv.value.copy(sunUv);
     fsq.render(renderer, matFinal, null);   // null = 直接 render 到螢幕
   }
 
