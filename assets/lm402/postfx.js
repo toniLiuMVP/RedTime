@@ -199,6 +199,9 @@ const FS_FINAL = /* glsl */ `
   uniform vec2  uSunUv;
   uniform float uGodRaysStrength;
   uniform float uLensFlareStrength;
+  // F7 Rain on lens
+  uniform sampler2D uRain;
+  uniform float uRainAmount;
 
   // ACES tone map（與 renderer 一致）
   vec3 acesToneMap(vec3 x) {
@@ -270,6 +273,13 @@ const FS_FINAL = /* glsl */ `
     // === Tier 6: Lens Dirt（鏡頭髒污 luma multiplied，黃昏光打到髒污會被點亮）===
     vec3 dirt = texture2D(uLensDirt, vUv).rgb;
     c += dirt * luma(c) * uDirtAmount;
+
+    // === F7 Rain on lens（鏡頭上的雨滴 + 流痕，水會反光所以亮一點）===
+    if (uRainAmount > 0.0) {
+      vec3 rain = texture2D(uRain, vUv).rgb;
+      // 水滴像「微透鏡」— 會放大背景亮度，所以用 luma 加成更明顯
+      c += rain * uRainAmount * (0.45 + luma(c) * 1.1);
+    }
 
     // === Tier 7: God Rays（從太陽方向 march sample 累積亮度）===
     if (uGodRaysStrength > 0.0 && uSunUv.x >= -0.2 && uSunUv.x <= 1.2 && uSunUv.y >= -0.2 && uSunUv.y <= 1.2) {
@@ -363,6 +373,62 @@ function getLensDirtTexture() {
   return _lensDirtTexture;
 }
 
+// ─────────────────────────────────────────────────────────────
+//  F7 Rain on lens — 鏡頭上的雨滴 + 雨水流痕
+//  做法：60 個橢圓水滴（亮度漸層）+ 5 條垂直流痕，luma multiplied 疊加
+//  比 lens dirt 亮一點（水會反光），且偏冷色（晚雨感）
+// ─────────────────────────────────────────────────────────────
+let _rainTexture = null;
+function buildRainCanvas() {
+  const size = 512;
+  const c = document.createElement("canvas");
+  c.width = c.height = size;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, size, size);
+
+  // 60 個橢圓水滴
+  for (let i = 0; i < 60; i++) {
+    const x = Math.random() * size;
+    const y = Math.random() * size;
+    const r = 3 + Math.random() * 12;
+    const intensity = 0.4 + Math.random() * 0.5;
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+    grad.addColorStop(0, `rgba(255,255,255,${intensity})`);
+    grad.addColorStop(0.5, `rgba(220,235,255,${intensity * 0.55})`);
+    grad.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.ellipse(x, y, r * 0.85, r, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // 5 條垂直雨水流痕（水滴沿玻璃滑下的軌跡）
+  for (let i = 0; i < 5; i++) {
+    const x = Math.random() * size;
+    const yStart = Math.random() * size * 0.5;
+    const yEnd = yStart + 80 + Math.random() * 120;
+    const grad = ctx.createLinearGradient(x, yStart, x, yEnd);
+    grad.addColorStop(0, "rgba(220,235,255,0)");
+    grad.addColorStop(0.5, "rgba(220,235,255,0.45)");
+    grad.addColorStop(1, "rgba(220,235,255,0)");
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x, yStart);
+    ctx.lineTo(x, yEnd);
+    ctx.stroke();
+  }
+  return c;
+}
+function getRainTexture() {
+  if (_rainTexture) return _rainTexture;
+  _rainTexture = new THREE.CanvasTexture(buildRainCanvas());
+  _rainTexture.colorSpace = THREE.LinearSRGBColorSpace;
+  _rainTexture.wrapS = THREE.ClampToEdgeWrapping;
+  _rainTexture.wrapT = THREE.ClampToEdgeWrapping;
+  return _rainTexture;
+}
+
 // ═════════════════════════════════════════════════════════════
 //  工廠：建立後製管線實例
 // ═════════════════════════════════════════════════════════════
@@ -387,6 +453,8 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     // Tier 7：太陽光體積特效（screen-space）
     godRays:   { strength: 0.35 },                             // 從太陽方向放射的光柱（0=關，0.6=戲劇）
     lensFlare: { strength: 0.4 },                              // 鏡頭眩光 ghost
+    // F7 Rain on lens — 鏡頭上的雨滴（劇情可動態切「下雨場景」）
+    rain:      { amount: 0 },                                  // 預設關，console 開：0.4~0.8
   };
 
   // ─── DPR-aware 解析度（手機降畫質） ───
@@ -483,6 +551,9 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
       uSunUv:             { value: new THREE.Vector2(0.5, 0.7) },
       uGodRaysStrength:   { value: tuning.godRays.strength },
       uLensFlareStrength: { value: tuning.lensFlare.strength },
+      // F7 Rain on lens
+      uRain:              { value: getRainTexture() },
+      uRainAmount:        { value: tuning.rain.amount },
     },
   });
 
@@ -609,6 +680,7 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     matFinal.uniforms.uDirtAmount.value = tuning.lensDirt.amount;
     matFinal.uniforms.uGodRaysStrength.value = tuning.godRays.strength;
     matFinal.uniforms.uLensFlareStrength.value = tuning.lensFlare.strength;
+    matFinal.uniforms.uRainAmount.value = tuning.rain.amount;
     if (sunUv) matFinal.uniforms.uSunUv.value.copy(sunUv);
     fsq.render(renderer, matFinal, null);   // null = 直接 render 到螢幕
   }
