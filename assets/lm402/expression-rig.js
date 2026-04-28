@@ -97,6 +97,9 @@ export function createJuniorExpressionRig(refs, options = {}) {
     autoMicro: true,      // 隨機微表情
     autoHeadWobble: true, // 頭部點頭傾頭微動
     eyeTrackStrength: 0.5, // 眼睛追蹤強度（0=不動，1=全跟）
+    // C5 Gaze focus AI：複雜注視邏輯（看玩家 / 看世界 / 發呆三模式）
+    autoGazeAI: true,
+    gazeMode: "player",   // 'player' / 'world' / 'daydream'（自動切換）
   };
 
   // idle 狀態機
@@ -127,6 +130,22 @@ export function createJuniorExpressionRig(refs, options = {}) {
   const _raycaster = new THREE.Raycaster();
   const _ndc = new THREE.Vector2();
 
+  // C5 Gaze focus AI 狀態
+  let gazeTimer = 5 + Math.random() * 8;       // 第一次切換倒數
+  let gazeWorldX = 0, gazeWorldY = 0;          // 當前 world target
+  // 場景注視點預設（lookX/lookY 偏移值）
+  const WORLD_FOCUSES = [
+    { name: "left",     x: -0.65, y: 0.0 },
+    { name: "right",    x:  0.65, y: 0.0 },
+    { name: "up",       x:  0.0,  y: 0.55 },
+    { name: "down",     x:  0.0,  y: -0.4 },
+    { name: "topLeft",  x: -0.55, y: 0.45 },
+    { name: "thinking", x:  0.4,  y: 0.5 },   // 思考態（往右上看）
+  ];
+  function pickWorldFocus() {
+    return WORLD_FOCUSES[Math.floor(Math.random() * WORLD_FOCUSES.length)];
+  }
+
   // C6 raycaster + click reaction 註冊
   if (canvasEl && getCamera && getJuniorHead) {
     canvasEl.addEventListener("pointermove", (event) => {
@@ -151,6 +170,9 @@ export function createJuniorExpressionRig(refs, options = {}) {
         duration: 1.0 + Math.random() * 0.5,
       };
       microTimer = 12 + Math.random() * 8; // 重置計時，避免馬上又被 auto micro 蓋掉
+      // C5 Gaze AI：點擊 → 注意力被吸引，強制看玩家 5-8 秒
+      state.gazeMode = "player";
+      gazeTimer = 5 + Math.random() * 3;
     });
   }
 
@@ -267,25 +289,63 @@ export function createJuniorExpressionRig(refs, options = {}) {
       state.eyeTrackStrength = hoverStrengthCur;
     }
 
-    // === Tier 8.1 Eye tracking — 學妹眼睛跟隨相機 ===
+    // === C5 Gaze focus AI — 注視 state machine（player / world / daydream）===
+    if (state.autoGazeAI && !isHovered) {  // hover 時強制看玩家，不切 mode
+      gazeTimer -= dt;
+      if (gazeTimer <= 0) {
+        if (state.gazeMode === "player") {
+          // 從看玩家切走 — 30% 機率 daydream，70% world focus
+          if (Math.random() < 0.3) {
+            state.gazeMode = "daydream";
+            const tgt = pickWorldFocus();
+            gazeWorldX = tgt.x; gazeWorldY = tgt.y;
+            gazeTimer = 4 + Math.random() * 4; // 發呆 4-8 秒
+          } else {
+            state.gazeMode = "world";
+            const tgt = pickWorldFocus();
+            gazeWorldX = tgt.x; gazeWorldY = tgt.y;
+            gazeTimer = 1.2 + Math.random() * 1.8; // 看世界 1.2-3 秒
+          }
+        } else {
+          // world 或 daydream 結束 → 回看玩家
+          state.gazeMode = "player";
+          gazeTimer = 4 + Math.random() * 7; // 看玩家 4-11 秒
+        }
+      }
+      // daydream 模式下，target 持續慢慢漂移（眼神放空）
+      if (state.gazeMode === "daydream") {
+        gazeWorldX = clampRange(gazeWorldX + (Math.random() - 0.5) * 0.04, -0.7, 0.7);
+        gazeWorldY = clampRange(gazeWorldY + (Math.random() - 0.5) * 0.04, -0.5, 0.6);
+      }
+    } else if (isHovered) {
+      // hover 強制 player mode（注意力被玩家吸引）
+      state.gazeMode = "player";
+      gazeTimer = 3 + Math.random() * 4;
+    }
+
+    // === Tier 8.1 Eye tracking — 依 gazeMode 不同邏輯 ===
     if (state.autoEyeTrack && getCamera) {
-      const cam = getCamera();
-      if (cam && refs.headShell) {
-        // 學妹頭部世界座標
-        refs.headShell.getWorldPosition(_v3a);
-        _headWorld.x = _v3a.x; _headWorld.y = _v3a.y; _headWorld.z = _v3a.z;
-        // 從學妹眼睛指向相機的單位向量
-        const dx = cam.position.x - _headWorld.x;
-        const dy = cam.position.y - _headWorld.y;
-        const dz = cam.position.z - _headWorld.z;
-        const len = Math.sqrt(dx*dx + dy*dy + dz*dz) || 1;
-        const nx = dx / len, ny = dy / len;
-        // 轉成 lookX/Y（學妹本身朝 +Z，所以左右 = world x，上下 = world y）
-        const targetX = clampRange(nx * 0.85, -1, 1) * state.eyeTrackStrength;
-        const targetY = clampRange(ny * 0.85, -1, 1) * state.eyeTrackStrength;
-        // 平滑追隨（每幀補 8% 差距，自然不突兀）
-        state.lookX += (targetX - state.lookX) * 0.08;
-        state.lookY += (targetY - state.lookY) * 0.08;
+      if (state.gazeMode === "player") {
+        // 看玩家：算相機方向 → lookX/Y target
+        const cam = getCamera();
+        if (cam && refs.headShell) {
+          refs.headShell.getWorldPosition(_v3a);
+          _headWorld.x = _v3a.x; _headWorld.y = _v3a.y; _headWorld.z = _v3a.z;
+          const dx = cam.position.x - _headWorld.x;
+          const dy = cam.position.y - _headWorld.y;
+          const dz = cam.position.z - _headWorld.z;
+          const len = Math.sqrt(dx*dx + dy*dy + dz*dz) || 1;
+          const nx = dx / len, ny = dy / len;
+          const targetX = clampRange(nx * 0.85, -1, 1) * state.eyeTrackStrength;
+          const targetY = clampRange(ny * 0.85, -1, 1) * state.eyeTrackStrength;
+          state.lookX += (targetX - state.lookX) * 0.08;
+          state.lookY += (targetY - state.lookY) * 0.08;
+        }
+      } else {
+        // world / daydream：lerp 到 gazeWorldX/Y（比 player 慢一點，更自然）
+        const lerpRate = state.gazeMode === "daydream" ? 0.04 : 0.06;
+        state.lookX += (gazeWorldX - state.lookX) * lerpRate;
+        state.lookY += (gazeWorldY - state.lookY) * lerpRate;
       }
     }
 
