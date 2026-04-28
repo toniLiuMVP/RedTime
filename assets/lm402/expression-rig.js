@@ -77,6 +77,9 @@ export function createJuniorExpressionRig(refs, options = {}) {
 
   // Tier 8 options：getCamera() 提供 camera ref（給 eye tracking 算注視方向）
   const getCamera = options.getCamera ?? null;
+  // C6 Hover/click options：canvas + getJuniorHead 給 raycaster 用
+  const canvasEl = options.canvas ?? null;
+  const getJuniorHead = options.getJuniorHead ?? null;
 
   // 公開狀態（toni 可從 console 直接修改）
   const state = {
@@ -118,6 +121,38 @@ export function createJuniorExpressionRig(refs, options = {}) {
   // Tier 8.4 頭部 wobble 相位
   let headWobbleX = 0;
   let headWobbleZ = 0;
+  // C6 Hover/click 狀態
+  let isHovered = false;            // 玩家滑鼠在學妹頭部上
+  let hoverStrengthCur = 0.5;       // 當前 eyeTrackStrength（會 lerp 到 hover 目標）
+  const _raycaster = new THREE.Raycaster();
+  const _ndc = new THREE.Vector2();
+
+  // C6 raycaster + click reaction 註冊
+  if (canvasEl && getCamera && getJuniorHead) {
+    canvasEl.addEventListener("pointermove", (event) => {
+      const rect = canvasEl.getBoundingClientRect();
+      _ndc.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      _ndc.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      const cam = getCamera();
+      const head = getJuniorHead();
+      if (!cam || !head) return;
+      _raycaster.setFromCamera(_ndc, cam);
+      const hits = _raycaster.intersectObject(head, true);
+      isHovered = hits.length > 0;
+    }, { passive: true });
+
+    canvasEl.addEventListener("click", () => {
+      if (!isHovered) return;
+      // 觸發 click reaction（surprise / shy / happy 隨機，比一般 micro 強）
+      const big = ["surprise", "shy", "happy"];
+      currentMicro = {
+        kind: big[Math.floor(Math.random() * big.length)],
+        start: lastTime,
+        duration: 1.0 + Math.random() * 0.5,
+      };
+      microTimer = 12 + Math.random() * 8; // 重置計時，避免馬上又被 auto micro 蓋掉
+    });
+  }
 
   // ─── 套用 state 到 mesh transform ───
   function apply() {
@@ -225,6 +260,13 @@ export function createJuniorExpressionRig(refs, options = {}) {
       }
     }
 
+    // === C6 Hover lerp：滑鼠 hover 學妹時 eyeTrackStrength 提升 0.5 → 1.0 ===
+    {
+      const target = isHovered ? 1.0 : 0.5;
+      hoverStrengthCur += (target - hoverStrengthCur) * Math.min(1, dt * 4);
+      state.eyeTrackStrength = hoverStrengthCur;
+    }
+
     // === Tier 8.1 Eye tracking — 學妹眼睛跟隨相機 ===
     if (state.autoEyeTrack && getCamera) {
       const cam = getCamera();
@@ -294,6 +336,21 @@ export function createJuniorExpressionRig(refs, options = {}) {
               break;
             case "tinyHmm":
               state.lookY = clampRange(state.lookY - wave * 0.08, -1, 1);
+              break;
+            // C6 click reactions（玩家點學妹觸發，比 auto micro 更明顯）
+            case "surprise":
+              state.browRaise = Math.max(state.browRaise, wave * 0.75);
+              state.mouthOpen = Math.max(state.mouthOpen, wave * 0.30);
+              state.smile = 0;
+              break;
+            case "shy":
+              state.smile = Math.max(state.smile, wave * 0.42);
+              state.lookY = clampRange(state.lookY - wave * 0.18, -1, 1);
+              state.lookX = clampRange(state.lookX + wave * 0.12, -1, 1);
+              break;
+            case "happy":
+              state.smile = Math.max(state.smile, wave * 0.65);
+              state.browRaise = Math.max(state.browRaise, wave * 0.22);
               break;
           }
         }

@@ -1497,8 +1497,11 @@ function S(t) {
     o.add(heroCloseupHead.root);
     // Tier 3 表情系統：建立 rig + 暴露 console API
     // Tier 8 加 getCamera options，給 eye tracking 用
+    // C6 加 canvas + getJuniorHead，給 hover/click raycaster 用
     __juniorRig = createJuniorExpressionRig(heroCloseupHead.refs, {
       getCamera: () => q,
+      canvas: U.domElement,
+      getJuniorHead: () => heroCloseupHead.root,
     });
     // Tier 4 布料動態：traverse head 找 userData.cloth = true 的 mesh
     __clothRig = createClothRig(heroCloseupHead.root);
