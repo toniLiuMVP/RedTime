@@ -3332,6 +3332,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
               antialias: o.antialias,
               alpha: !1,
               powerPreference: o.powerPreference,
+              preserveDrawingBuffer: !0, // E10 Polaroid 拍照需要：toDataURL 才能拿到 pixels
             });
             return ((a.__lm402RendererProfile = o.label), a);
           } catch (e) {
@@ -3348,6 +3349,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
           antialias: !1,
           alpha: !1,
           powerPreference: "default",
+          preserveDrawingBuffer: !0, // E10 Polaroid 拍照
         });
         return ((o.__lm402RendererProfile = "three-fallback"), o);
       } catch (e) {

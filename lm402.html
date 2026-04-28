@@ -970,5 +970,77 @@
         navigator.serviceWorker.register('./sw.js').catch(() => {});
       }
     </script>
+    <!-- E10 Polaroid 拍照按鈕（固定右下角） -->
+    <button id="lm402-polaroid-btn" type="button" aria-label="拍立得留念" title="拍立得留念">📷</button>
+    <style>
+      #lm402-polaroid-btn {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: rgba(20, 16, 12, 0.72);
+        color: #f4eee0;
+        border: 1px solid rgba(255, 230, 200, 0.32);
+        font-size: 24px;
+        cursor: pointer;
+        z-index: 9990;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        transition: transform 0.18s ease, background 0.18s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+      }
+      #lm402-polaroid-btn:hover {
+        transform: scale(1.08);
+        background: rgba(40, 30, 20, 0.85);
+      }
+      #lm402-polaroid-btn:active {
+        transform: scale(0.94);
+      }
+      #lm402-polaroid-flash {
+        position: fixed;
+        inset: 0;
+        background: white;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 9991;
+        transition: opacity 0.06s ease-out;
+      }
+      #lm402-polaroid-flash.flash {
+        opacity: 0.85;
+      }
+    </style>
+    <div id="lm402-polaroid-flash" aria-hidden="true"></div>
+    <script>
+      (function () {
+        const btn = document.getElementById("lm402-polaroid-btn");
+        const flash = document.getElementById("lm402-polaroid-flash");
+        let busy = false;
+        btn.addEventListener("click", async () => {
+          if (busy) return;
+          busy = true;
+          // 拍照閃光特效（白屏 100ms）
+          flash.classList.add("flash");
+          setTimeout(() => flash.classList.remove("flash"), 120);
+          try {
+            const mod = await import("./assets/lm402/polaroid.js");
+            const cam = mod.createPolaroidCapture({
+              getCanvas: () => document.querySelector("canvas"),
+              getYear: () => (window.__LM402_YEAR__ ?? "2005"),
+              subtitle: "LM402 · 一眼瞬間",
+            });
+            const ok = cam.snapAndDownload();
+            if (!ok) console.warn("[polaroid] 拍照失敗，請進入場景後再試");
+          } catch (e) {
+            console.error("[polaroid] error:", e);
+          }
+          setTimeout(() => { busy = false; }, 600);
+        });
+      })();
+    </script>
   </body>
 </html>
