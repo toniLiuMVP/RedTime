@@ -1,0 +1,33 @@
+{
+  "characterId": "junior2005",
+  "source": "tools/generate_junior_glb.mjs",
+  "sourceBlend": "assets/lm402/characters/junior/work/junior_hero_master.blend",
+  "generatedVariantPolicy": {
+    "runtime": "full-body runtime bundle",
+    "hero_closeup": "full-body runtime bundle mirrored for close-up framing",
+    "mobile": "decimated runtime bundle"
+  },
+  "exports": [
+    {
+      "name": "runtime",
+      "file": "junior_2005_runtime.glb"
+    },
+    {
+      "name": "hero_closeup",
+      "file": "junior_2005_hero_closeup.glb"
+    },
+    {
+      "name": "mobile",
+      "file": "junior_2005_runtime_mobile.glb"
+    }
+  ],
+  "fallbackPolicy": {
+    "missingRuntime": "procedural_shell",
+    "missingHeroCloseup": "runtime_glb_camera_crop",
+    "preserveGameplay": true
+  },
+  "notes": [
+    "The hero closeup now mirrors the runtime full-body bundle so gameplay and endings stay on the same character model.",
+    "All three exports are generated from the same procedural source script for now."
+  ]
+}
