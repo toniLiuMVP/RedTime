@@ -178,6 +178,46 @@ function buildReferenceJuniorHeroHead(t = {}) {
     o.add(cheekBoneL));
   const cheekBoneR = cheekBoneL.clone();
   ((cheekBoneR.position.x = 0.060), o.add(cheekBoneR));
+  // B8 Blush overlay — 雙頰紅潤（害羞/微笑時 expression-rig 提升 opacity）
+  const blushMatBase = new e.MeshBasicMaterial({
+    color: "#ff8a78",
+    transparent: !0,
+    opacity: 0,
+    depthWrite: !1,
+  });
+  const blushL = new e.Mesh(new e.SphereGeometry(0.013, 14, 14), blushMatBase.clone());
+  (blushL.position.set(-0.052, -0.012, 0.062),
+    blushL.scale.set(0.7, 0.4, 0.35),
+    (blushL.renderOrder = 17),
+    (blushL.visible = !1),
+    o.add(blushL));
+  const blushR = blushL.clone();
+  ((blushR.material = blushL.material.clone()),
+    (blushR.position.x = 0.058),
+    o.add(blushR));
+  // B8 Forehead sweat — 額頭汗珠（緊張/驚訝時提升 opacity + clearcoat）
+  const sweatDrop = new e.Mesh(
+    new e.SphereGeometry(0.0035, 12, 12),
+    new e.MeshPhysicalMaterial({
+      color: "#e8f0ff",
+      transparent: !0,
+      opacity: 0,
+      roughness: 0.04,
+      metalness: 0,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.05,
+      transmission: 0.55,
+      ior: 1.33,
+      thickness: 0.2,
+      envMapIntensity: 1.6,
+      depthWrite: !1,
+    }),
+  );
+  (sweatDrop.position.set(0.022, 0.058, 0.078),
+    sweatDrop.scale.set(0.85, 1.4, 0.7),
+    (sweatDrop.renderOrder = 18),
+    (sweatDrop.visible = !1),
+    o.add(sweatDrop));
   // (c1) 鼻樑 — 加長、加挺、變窄（更接近真實亞洲鼻型）
   const g = new e.Mesh(
     new e.CapsuleGeometry(0.0042, 0.042, 4, 10),
@@ -510,6 +550,10 @@ function buildReferenceJuniorHeroHead(t = {}) {
         // 頭髮
         heroHairCap: I,
         heroPonytail: W,
+        // B8 情緒驅動皮膚（blush + sweat overlay）
+        heroBlushL: blushL,
+        heroBlushR: blushR,
+        heroSweat: sweatDrop,
       },
     }
   );

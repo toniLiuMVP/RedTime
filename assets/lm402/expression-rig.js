@@ -100,6 +100,10 @@ export function createJuniorExpressionRig(refs, options = {}) {
     // C5 Gaze focus AI：複雜注視邏輯（看玩家 / 看世界 / 發呆三模式）
     autoGazeAI: true,
     gazeMode: "player",   // 'player' / 'world' / 'daydream'（自動切換）
+    // B8 情緒驅動皮膚動態（自動由 smile/browRaise/micro 計算）
+    blush: 0,             // 0=無, 1=滿臉紅
+    sweat: 0,             // 0=乾, 1=明顯汗珠
+    autoSkinDynamic: true,
   };
 
   // idle 狀態機
@@ -414,6 +418,34 @@ export function createJuniorExpressionRig(refs, options = {}) {
               break;
           }
         }
+      }
+    }
+
+    // === B8 情緒驅動皮膚動態（blush + sweat） ===
+    if (state.autoSkinDynamic) {
+      // Blush target — 害羞 / 微笑時臉紅
+      let blushTarget = clamp01(Math.max(0, state.smile) * 0.55);
+      if (currentMicro?.kind === "shy")        blushTarget = Math.max(blushTarget, 0.7);
+      if (currentMicro?.kind === "happy")      blushTarget = Math.max(blushTarget, 0.5);
+      if (currentMicro?.kind === "briefSmile") blushTarget = Math.max(blushTarget, 0.25);
+      // Sweat target — 緊張 / 驚訝時冒汗
+      let sweatTarget = clamp01(state.browRaise * 0.5 + Math.max(0, state.mouthOpen) * 0.3);
+      if (currentMicro?.kind === "surprise") sweatTarget = Math.max(sweatTarget, 0.75);
+      // 平滑 lerp（blush 慢一點，更自然；sweat 快一點，緊張感）
+      state.blush += (blushTarget - state.blush) * 0.05;
+      state.sweat += (sweatTarget - state.sweat) * 0.07;
+      // Apply 到 mesh
+      if (refs.heroBlushL?.material) {
+        refs.heroBlushL.material.opacity = state.blush * 0.7;
+        refs.heroBlushL.visible = state.blush > 0.04;
+      }
+      if (refs.heroBlushR?.material) {
+        refs.heroBlushR.material.opacity = state.blush * 0.7;
+        refs.heroBlushR.visible = state.blush > 0.04;
+      }
+      if (refs.heroSweat?.material) {
+        refs.heroSweat.material.opacity = state.sweat * 0.85;
+        refs.heroSweat.visible = state.sweat > 0.08;
       }
     }
 
