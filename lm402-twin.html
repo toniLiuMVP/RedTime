@@ -1048,9 +1048,17 @@
         .then((mod) => {
           const n = mod.createNarrativeOverlay();
           window.__NARRATIVE__ = n;
-          // 不主動 show，等劇情代碼或 console 觸發
         })
         .catch((e) => console.warn("[narrative] init failed:", e));
+    </script>
+    <!-- H2+H4 章節 fade + 記憶閃回 — 啟動後暴露 window.__TRANSITIONS__ -->
+    <script type="module">
+      import("./assets/lm402-twin/narrative-transitions.js")
+        .then((mod) => {
+          const t = mod.createTransitions();
+          window.__TRANSITIONS__ = t;
+        })
+        .catch((e) => console.warn("[transitions] init failed:", e));
     </script>
   </body>
 </html>
