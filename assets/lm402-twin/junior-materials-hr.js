@@ -183,6 +183,49 @@ export function getSkinNormalTexture() {
 }
 
 /**
+ * A3 Iris parallax — 圓形凸面 normal map
+ * 每像素 normal = (uvFromCenter, sqrt(1-uvLen²)) 規範化
+ * → iris plane 視角轉動時有「球面凸出」深度感（不再看起來扁平）
+ */
+function buildIrisNormalCanvas() {
+  const size = 128;
+  const c = document.createElement("canvas");
+  c.width = c.height = size;
+  const ctx = c.getContext("2d");
+  const img = ctx.createImageData(size, size);
+  const cx = size / 2, cy = size / 2, radius = size / 2;
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const dx = (x - cx) / radius;
+      const dy = (y - cy) / radius;
+      const len2 = dx * dx + dy * dy;
+      let nx = 0, ny = 0, nz = 1;
+      if (len2 < 1) {
+        // 球面 normal：中心朝外，邊緣斜向外
+        nx = dx;
+        ny = -dy; // canvas Y 反向（上小下大）
+        nz = Math.sqrt(1 - len2);
+      }
+      // 規範化到 0~1（normal map 編碼）
+      const i = (y * size + x) * 4;
+      img.data[i]     = Math.round((nx * 0.5 + 0.5) * 255);
+      img.data[i + 1] = Math.round((ny * 0.5 + 0.5) * 255);
+      img.data[i + 2] = Math.round((nz * 0.5 + 0.5) * 255);
+      img.data[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  return c;
+}
+export function getIrisNormalTexture() {
+  if (_textureCache.has("iris_normal")) return _textureCache.get("iris_normal");
+  const tex = new THREE.CanvasTexture(buildIrisNormalCanvas());
+  tex.colorSpace = THREE.LinearSRGBColorSpace;
+  _textureCache.set("iris_normal", tex);
+  return tex;
+}
+
+/**
  * 睫毛/眉毛 alpha 漸進邊緣
  * 上下漸進透明，中間實心 — 讓細長 mesh 的邊緣自然消融
  */
@@ -294,6 +337,9 @@ export function createEyeWhiteMaterialHR() {
 export function createIrisMaterialHR(color = "#5d4334") {
   return new THREE.MeshPhysicalMaterial({
     map: getIrisTexture(color),
+    // A3 Iris parallax — 圓形凸面 normal map，視角轉動有球面深度感
+    normalMap: getIrisNormalTexture(),
+    normalScale: new THREE.Vector2(0.7, 0.7),
     color: new THREE.Color("#ffffff"), // 白色不染色 map（map 主導）
     roughness: 0.32,
     metalness: 0.06,
