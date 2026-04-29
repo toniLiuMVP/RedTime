@@ -202,6 +202,12 @@ const FS_FINAL = /* glsl */ `
   // F7 Rain on lens
   uniform sampler2D uRain;
   uniform float uRainAmount;
+  // A5 Volumetric Fog（distance-based postfx fog）
+  uniform sampler2D uDepthForFog;
+  uniform float uVolFogDensity;
+  uniform vec3 uVolFogColor;
+  uniform float uCameraNearForFog;
+  uniform float uCameraFarForFog;
 
   // ACES tone map（與 renderer 一致）
   vec3 acesToneMap(vec3 x) {
@@ -253,6 +259,15 @@ const FS_FINAL = /* glsl */ `
     c.r = texture2D(tDiffuse, vUv + caOff).r;
     c.g = texture2D(tDiffuse, vUv).g;
     c.b = texture2D(tDiffuse, vUv - caOff).b;
+
+    // === A5 Volumetric Fog（在 tone map 之前混入，fog 也經過 ACES）===
+    if (uVolFogDensity > 0.0) {
+      float depth01 = texture2D(uDepthForFog, vUv).r;
+      // 二次曲線：近處幾乎無霧，遠處快速增加
+      float fogFactor = depth01 * depth01 * uVolFogDensity * 8.0;
+      fogFactor = clamp(fogFactor, 0.0, 0.65);
+      c = mix(c, uVolFogColor * uExposure, fogFactor);
+    }
 
     // === Tone map（HDR → LDR） ===
     c *= uExposure;
@@ -455,6 +470,8 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     lensFlare: { strength: 0.4 },                              // 鏡頭眩光 ghost
     // F7 Rain on lens — 鏡頭上的雨滴（劇情可動態切「下雨場景」）
     rain:      { amount: 0 },                                  // 預設關，console 開：0.4~0.8
+    // A5 Volumetric Fog — 大氣體積感（distance-based depth fog）
+    volFog:    { density: 0.08, color: [1.0, 0.78, 0.55] },   // 暖橙黃昏霧
   };
 
   // ─── DPR-aware 解析度（手機降畫質） ───
@@ -554,6 +571,12 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
       // F7 Rain on lens
       uRain:              { value: getRainTexture() },
       uRainAmount:        { value: tuning.rain.amount },
+      // A5 Volumetric Fog
+      uVolFogDensity:     { value: tuning.volFog.density },
+      uVolFogColor:       { value: new THREE.Color().fromArray(tuning.volFog.color) },
+      uDepthForFog:       { value: null },  // sceneRT.depthTexture
+      uCameraNearForFog:  { value: 0.03 },
+      uCameraFarForFog:   { value: 180 },
     },
   });
 
@@ -681,6 +704,12 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     matFinal.uniforms.uGodRaysStrength.value = tuning.godRays.strength;
     matFinal.uniforms.uLensFlareStrength.value = tuning.lensFlare.strength;
     matFinal.uniforms.uRainAmount.value = tuning.rain.amount;
+    // A5 Volumetric Fog
+    matFinal.uniforms.uVolFogDensity.value = tuning.volFog.density;
+    matFinal.uniforms.uVolFogColor.value.fromArray(tuning.volFog.color);
+    matFinal.uniforms.uDepthForFog.value = sceneRT.depthTexture;
+    matFinal.uniforms.uCameraNearForFog.value = camera.near;
+    matFinal.uniforms.uCameraFarForFog.value = camera.far;
     if (sunUv) matFinal.uniforms.uSunUv.value.copy(sunUv);
     fsq.render(renderer, matFinal, null);   // null = 直接 render 到螢幕
   }
