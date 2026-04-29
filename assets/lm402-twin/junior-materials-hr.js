@@ -130,28 +130,41 @@ export function getIrisTexture(color = "#5d4334") {
  * 純紋理，全身皮膚共用一張即可（在 mesh 上會 wrap）
  */
 function buildSkinNormalCanvas() {
-  const size = 256;
+  // A4 升級：512 高解析度 + 多層 noise + 280 個毛孔窩
+  const size = 512;
   const c = document.createElement("canvas");
   c.width = c.height = size;
   const ctx = c.getContext("2d");
 
-  // normal map 預設「直」方向 = RGB(128,128,255)
+  // base：normal map 預設「直」方向 = RGB(128,128,255)
   ctx.fillStyle = "rgb(128,128,255)";
   ctx.fillRect(0, 0, size, size);
 
-  // 加微妙噪聲模擬毛孔
+  // Layer 1：高頻單像素 noise（皮膚表面微紋路）
   const img = ctx.getImageData(0, 0, size, size);
   for (let i = 0; i < img.data.length; i += 4) {
-    // 同時擾動 R(X) 和 G(Y)，B 保持 ~255 維持「向外」
-    const nx = (Math.random() - 0.5) * 24;
-    const ny = (Math.random() - 0.5) * 24;
-    img.data[i] = Math.max(0, Math.min(255, img.data[i] + nx));
+    const nx = (Math.random() - 0.5) * 18;
+    const ny = (Math.random() - 0.5) * 18;
+    img.data[i]     = Math.max(0, Math.min(255, img.data[i]     + nx));
     img.data[i + 1] = Math.max(0, Math.min(255, img.data[i + 1] + ny));
   }
   ctx.putImageData(img, 0, 0);
 
-  // 套一個輕微 blur（讓 noise 不要太銳利）
-  ctx.filter = "blur(0.6px)";
+  // Layer 2：280 個程式生成毛孔窩（圓形 darker spot 像微小凹陷）
+  for (let i = 0; i < 280; i++) {
+    const x = Math.random() * size;
+    const y = Math.random() * size;
+    const r = 1.2 + Math.random() * 1.5;
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, r * 2.2);
+    // 中心 B 較低（向內凹）+ 微 R/G 偏移（normal 邊緣方向感）
+    grad.addColorStop(0, "rgba(96,108,210,0.55)");
+    grad.addColorStop(1, "rgba(128,128,255,0)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(x - r * 2.2, y - r * 2.2, r * 4.4, r * 4.4);
+  }
+
+  // Layer 3：輕微 blur 軟化（皮膚不是完全銳利）
+  ctx.filter = "blur(0.8px)";
   ctx.drawImage(c, 0, 0);
   ctx.filter = "none";
 
@@ -211,7 +224,7 @@ export function createSkinMaterialHR(color = "#f9e7da") {
   return new THREE.MeshPhysicalMaterial({
     color: new THREE.Color(color),
     normalMap: getSkinNormalTexture(),
-    normalScale: new THREE.Vector2(0.35, 0.35),
+    normalScale: new THREE.Vector2(0.42, 0.42),
     roughness: 0.62,
     metalness: 0,
     clearcoat: 0.12,
@@ -240,7 +253,7 @@ export function createSkinSubMaterialHR(baseColor = "#f9e7da") {
   return new THREE.MeshPhysicalMaterial({
     color: c,
     normalMap: getSkinNormalTexture(),
-    normalScale: new THREE.Vector2(0.3, 0.3),
+    normalScale: new THREE.Vector2(0.36, 0.36),
     roughness: 0.66,
     metalness: 0,
     clearcoat: 0.08,
