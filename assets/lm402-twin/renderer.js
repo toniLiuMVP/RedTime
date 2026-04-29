@@ -3499,9 +3499,10 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     (Te.shadow.camera.bottom = -14),
     (Te.shadow.bias = -3e-4),
     (Te.shadow.normalBias = 0.026),
-    // Tier 9.1 VSM 軟陰影：radius 4 → 8 + blurSamples 25
-    (Te.shadow.radius = 8),
-    (Te.shadow.blurSamples = 25),
+    // Tier 9.1 VSM 軟陰影 + A7 推極限（雙時空）
+    (Te.shadow.radius = 14),               // 8 → 14（更軟）
+    (Te.shadow.blurSamples = 40),          // 25 → 40（更高品質）
+    (Te.shadow.mapSize.set(4096, 4096)),   // 提升解析度避免 blur 出鋸齒
     W.add(Te));
   const Ie = new e.PointLight(14215156, 1.28, 58, 2);
   (Ie.position.set(Q + 2.42, 3.64, g(t.frontDoor.center.z - 122)), W.add(Ie));
