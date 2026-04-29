@@ -8,10 +8,12 @@ import { createJuniorExpressionRig } from "./expression-rig.js";
 import { createClothRig } from "./cloth-rig.js";
 import { createConsciousnessLights } from "./consciousness-lights.js";
 import { createConsciousnessParticles } from "./consciousness-particles.js";
+import { createConsciousnessText } from "./consciousness-text.js";
 let __juniorRig = null;
 let __clothRig = null;
 let __conscLights = null;
 let __conscParticles = null;
+let __conscText = null;
 const __sunFar = new e.Vector3();   // Tier 7：太陽世界座標暫存（每幀 reuse）
 const __sunUv = new e.Vector2();    // Tier 7：太陽螢幕座標（NDC → UV）
 export const WORLD_SCALE = 1 / 80;
@@ -4943,9 +4945,17 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     radius: 0.55,
     heightRange: 1.4,
   });
+  // 雙時空 B4 意識菜市場 · 文字派 — 12 個 sprite 漂浮詩意短句（5 個年紀內心話）
+  __conscText = createConsciousnessText({
+    parent: Co,
+    anchor: { x: 0, y: 1.5, z: 0 },
+    radius: 0.7,
+    heightRange: 1.0,
+  });
   if (typeof window !== "undefined") {
     window.__CONSC_LIGHTS__ = __conscLights;
     window.__CONSC_PARTICLES__ = __conscParticles;
+    window.__CONSC_TEXT__ = __conscText;
   }
   const juniorRuntimeModelRoot = new e.Group(),
     juniorHeroCloseupModelRoot = new e.Group();
@@ -6101,6 +6111,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         __clothRig?.update?.(performance.now() / 1000),
         __conscLights?.update?.(performance.now() / 1000),
         __conscParticles?.update?.(performance.now() / 1000),
+        __conscText?.update?.(performance.now() / 1000),
         // Tier 7：每幀計算太陽 NDC 位置（god rays + lens flare 用）
         __sunFar.copy(SUNSET_SUN_DIR).multiplyScalar(1000).add(q.position).project(q),
         __sunUv.set(__sunFar.x * 0.5 + 0.5, __sunFar.y * 0.5 + 0.5),
