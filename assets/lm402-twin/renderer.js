@@ -7,9 +7,11 @@ import * as JM from "./junior-materials-hr.js";
 import { createJuniorExpressionRig } from "./expression-rig.js";
 import { createClothRig } from "./cloth-rig.js";
 import { createConsciousnessLights } from "./consciousness-lights.js";
+import { createConsciousnessParticles } from "./consciousness-particles.js";
 let __juniorRig = null;
 let __clothRig = null;
 let __conscLights = null;
+let __conscParticles = null;
 const __sunFar = new e.Vector3();   // Tier 7：太陽世界座標暫存（每幀 reuse）
 const __sunUv = new e.Vector2();    // Tier 7：太陽螢幕座標（NDC → UV）
 export const WORLD_SCALE = 1 / 80;
@@ -4934,7 +4936,17 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     orbitRadius: 0.55,
     heightAbove: 1.7,
   });
-  if (typeof window !== "undefined") window.__CONSC_LIGHTS__ = __conscLights;
+  // 雙時空 B2 意識菜市場 · 粒子派 — 150 個記憶碎片飄動（5 種年紀色彩）
+  __conscParticles = createConsciousnessParticles({
+    parent: Co,
+    anchor: { x: 0, y: 1.45, z: 0 },  // 學妹頭部位置
+    radius: 0.55,
+    heightRange: 1.4,
+  });
+  if (typeof window !== "undefined") {
+    window.__CONSC_LIGHTS__ = __conscLights;
+    window.__CONSC_PARTICLES__ = __conscParticles;
+  }
   const juniorRuntimeModelRoot = new e.Group(),
     juniorHeroCloseupModelRoot = new e.Group();
   (juniorRuntimeModelRoot.name = "junior-runtime-model-root",
@@ -6088,6 +6100,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         __juniorRig?.update?.(performance.now() / 1000),
         __clothRig?.update?.(performance.now() / 1000),
         __conscLights?.update?.(performance.now() / 1000),
+        __conscParticles?.update?.(performance.now() / 1000),
         // Tier 7：每幀計算太陽 NDC 位置（god rays + lens flare 用）
         __sunFar.copy(SUNSET_SUN_DIR).multiplyScalar(1000).add(q.position).project(q),
         __sunUv.set(__sunFar.x * 0.5 + 0.5, __sunFar.y * 0.5 + 0.5),
