@@ -275,16 +275,16 @@ export function createSkinMaterialHR(color = "#f9e7da") {
     sheen: 0.28,
     sheenColor: new THREE.Color("#ffd5bf"),
     sheenRoughness: 0.5,
-    // SSS 近似（耳朵鼻翼透光感）
-    transmission: 0.05,
-    thickness: 0.6,
+    // A1 SSS 強化（雙時空走極限：transmission/thickness/atten 全推）
+    transmission: 0.085,           // 0.05 → 0.085
+    thickness: 0.95,               // 0.6 → 0.95
     ior: 1.4,
-    attenuationColor: new THREE.Color("#ff7060"),
-    attenuationDistance: 1.2,
+    attenuationColor: new THREE.Color("#ff5848"), // 更紅（#ff7060 → #ff5848）
+    attenuationDistance: 1.55,     // 1.2 → 1.55（紅光透更深）
     envMapIntensity: 0.85,
-    // Tier 6 emissive — 模擬皮膚被晚霞反射的微弱自身光（不依賴外光也有暖意）
+    // A1 emissive 強化 — 0.05 → 0.08（血肉感）
     emissive: new THREE.Color("#3a1a14"),
-    emissiveIntensity: 0.05,
+    emissiveIntensity: 0.08,
   });
 }
 
@@ -303,15 +303,16 @@ export function createSkinSubMaterialHR(baseColor = "#f9e7da") {
     clearcoatRoughness: 0.6,
     sheen: 0.18,
     sheenColor: new THREE.Color("#ffc9b0"),
-    transmission: 0.04,
-    thickness: 0.5,
+    // A1 SSS 強化（副皮膚是鼻翼/嘴唇周邊薄處，透光更強）
+    transmission: 0.075,           // 0.04 → 0.075
+    thickness: 0.78,               // 0.5 → 0.78
     ior: 1.4,
-    attenuationColor: new THREE.Color("#ff5040"),
-    attenuationDistance: 1.0,
+    attenuationColor: new THREE.Color("#ff3a30"), // 更深紅（#ff5040 → #ff3a30）
+    attenuationDistance: 1.3,      // 1.0 → 1.3
     envMapIntensity: 0.85,
-    // Tier 6 emissive（鼻翼/嘴唇周圍紅潤更明顯）
+    // A1 emissive 強化 — 0.06 → 0.10（鼻翼嘴唇紅潤明顯）
     emissive: new THREE.Color("#5a1812"),
-    emissiveIntensity: 0.06,
+    emissiveIntensity: 0.10,
   });
 }
 
