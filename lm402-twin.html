@@ -1042,5 +1042,15 @@
         });
       })();
     </script>
+    <!-- H1+H3 文學旁白系統（雙時空專屬）— 啟動後暴露 window.__NARRATIVE__ -->
+    <script type="module">
+      import("./assets/lm402-twin/narrative-overlay.js")
+        .then((mod) => {
+          const n = mod.createNarrativeOverlay();
+          window.__NARRATIVE__ = n;
+          // 不主動 show，等劇情代碼或 console 觸發
+        })
+        .catch((e) => console.warn("[narrative] init failed:", e));
+    </script>
   </body>
 </html>
