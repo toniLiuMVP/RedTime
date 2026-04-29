@@ -126,10 +126,10 @@ function buildJuniorHairRibbon(t, o, a, n = {}) {
       sheen: 0.3,
       sheenRoughness: 0.34,
       sheenColor: new e.Color("#a77f5d"),
-      // Tier 2.2 hair anisotropy — 每束頭髮自身水平方向有條狀高光
-      anisotropy: 0.75,
+      // A2 Marschner approximation — anisotropy 推極限 + 加 clearcoat secondary
+      anisotropy: 0.92,                  // 0.75 → 0.92
       anisotropyRotation: n.anisotropyRotation ?? 0,
-      envMapIntensity: 1.0,
+      envMapIntensity: 1.15,             // 1.0 → 1.15
     }),
   );
   // Tier 4 標記為可動（cloth-rig 會 traverse 找這個 flag）

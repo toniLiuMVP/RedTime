@@ -375,18 +375,20 @@ export function createPupilMaterialHR() {
 export function createHairMaterialHR(color = "#3c2a22") {
   return new THREE.MeshPhysicalMaterial({
     color: new THREE.Color(color),
-    roughness: 0.42,
-    metalness: 0.06,
-    anisotropy: 0.85,
-    anisotropyRotation: Math.PI / 2, // 沿垂直方向（頭髮一般是直下）
-    clearcoat: 0.16,
-    clearcoatRoughness: 0.36,
-    sheen: 0.42,
-    sheenColor: new THREE.Color("#9c7b5e"),
-    sheenRoughness: 0.32,
-    envMapIntensity: 1.0,
-    // Tier 6 iridescence — 髮絲微彩虹閃（陽光下的迷幻金光）
-    iridescence: 0.18,
+    roughness: 0.38,                // 0.42 → 0.38（A2 更光滑讓 specular 更銳）
+    metalness: 0.08,                // 0.06 → 0.08
+    // A2 Marschner approximation：anisotropy 推到極限（primary R-component）
+    anisotropy: 0.95,               // 0.85 → 0.95
+    anisotropyRotation: Math.PI / 2,
+    // A2 secondary specular 模擬：clearcoat 加重 + 更銳（Marschner TT/TRT-component）
+    clearcoat: 0.32,                // 0.16 → 0.32
+    clearcoatRoughness: 0.22,       // 0.36 → 0.22（更銳）
+    // sheen 加重 + 紅棕色（亞洲頭髮 secondary highlight 帶溫紅）
+    sheen: 0.55,                    // 0.42 → 0.55
+    sheenColor: new THREE.Color("#b88a5c"), // #9c7b5e → #b88a5c（更紅）
+    sheenRoughness: 0.28,           // 0.32 → 0.28
+    envMapIntensity: 1.15,          // 1.0 → 1.15
+    iridescence: 0.22,              // 0.18 → 0.22
     iridescenceIOR: 1.42,
   });
 }
