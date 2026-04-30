@@ -147,7 +147,7 @@ export function createConsciousnessParticles(options = {}) {
     fragmentShader: PARTICLE_FS,
     uniforms: {
       uMap: { value: getParticleTexture() },
-      uIntensity: { value: 1.0 },
+      uIntensity: { value: 0.5 },           // 1.0 → 0.5（fix「粒子蓋過學妹」）
       uPixelRatio: { value: window.devicePixelRatio || 1 },
     },
     transparent: true,

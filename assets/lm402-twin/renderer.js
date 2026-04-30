@@ -4943,10 +4943,11 @@ export function createLm402Scene(D, runtimeOptions = {}) {
   $.add(Go, Co, Bo, ko);
   Co.userData.legacyChildren = [...Co.children];
   // 雙時空 B3 意識菜市場 · 光柱派 — 5 盞不同年紀色彩的 SpotLight 跟著學妹
+  // fix toni 反映「光蓋過學妹」：baseIntensity 1.4 → 0.45
   __conscLights = createConsciousnessLights({
     parent: Co,
     anchor: { x: 0, y: 1.4, z: 0 },   // Co local 座標（學妹頭頂上方）
-    baseIntensity: 1.4,
+    baseIntensity: 0.45,
     orbitRadius: 0.55,
     heightAbove: 1.7,
   });

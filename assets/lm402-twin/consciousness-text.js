@@ -134,8 +134,8 @@ export function createConsciousnessText(options = {}) {
         respawnSprite(sprite, anchor, radius, heightRange, phraseData);
         continue;
       }
-      // lifecycle alpha：sin(life * PI) 平滑 0→1→0
-      sprite.material.opacity = Math.sin(ud.life * Math.PI) * masterIntensity * 0.9;
+      // lifecycle alpha：sin(life * PI) 平滑 0→1→0（0.9 → 0.55，fix「文字蓋過學妹」）
+      sprite.material.opacity = Math.sin(ud.life * Math.PI) * masterIntensity * 0.55;
       // drift
       sprite.position.x += ud.vx * dt;
       sprite.position.y += ud.vy * dt;

@@ -38,7 +38,7 @@ export function createConsciousnessLights(options = {}) {
   }
 
   const lights = [];
-  const baseIntensity = options.baseIntensity ?? 1.6;
+  const baseIntensity = options.baseIntensity ?? 0.55; // 1.6 → 0.55（fix toni 反映「光蓋過學妹」）
   const orbitRadius = options.orbitRadius ?? 0.6;
   const heightAbove = options.heightAbove ?? 1.6;
 
