@@ -1042,5 +1042,20 @@
         });
       })();
     </script>
+    <!-- F1 平行世界 WebGPU 啟動器（detection + fallback / placeholder） -->
+    <script type="module">
+      import("./assets/lm402-parallel/webgpu-bootstrap.js")
+        .then(async (mod) => {
+          const result = await mod.detectWebGPU();
+          if (!result.supported) {
+            mod.showWebGPUFallback(result.reason);
+            console.warn("[WebGPU] not supported:", result.reason);
+          } else {
+            mod.showWebGPUPlaceholder(result.adapter);
+            console.log("[WebGPU] adapter ready:", result.adapter);
+          }
+        })
+        .catch((e) => console.error("[WebGPU bootstrap] failed:", e));
+    </script>
   </body>
 </html>
