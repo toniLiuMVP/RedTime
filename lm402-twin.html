@@ -1060,5 +1060,23 @@
         })
         .catch((e) => console.warn("[transitions] init failed:", e));
     </script>
+    <!-- H6 書信日記模式 — 啟動後暴露 window.__LETTER__ -->
+    <script type="module">
+      import("./assets/lm402-twin/narrative-letter.js")
+        .then((mod) => {
+          const l = mod.createNarrativeLetter();
+          window.__LETTER__ = l;
+        })
+        .catch((e) => console.warn("[letter] init failed:", e));
+    </script>
+    <!-- H7+H8 環境音層次 + 動態 BGM — 啟動後暴露 window.__AUDIO_LAYER__ -->
+    <script type="module">
+      import("./assets/lm402-twin/narrative-audio.js")
+        .then((mod) => {
+          const a = mod.createNarrativeAudio();
+          window.__AUDIO_LAYER__ = a;
+        })
+        .catch((e) => console.warn("[audio-layer] init failed:", e));
+    </script>
   </body>
 </html>
