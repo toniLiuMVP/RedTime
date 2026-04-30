@@ -9,11 +9,13 @@ import { createClothRig } from "./cloth-rig.js";
 import { createConsciousnessLights } from "./consciousness-lights.js";
 import { createConsciousnessParticles } from "./consciousness-particles.js";
 import { createConsciousnessText } from "./consciousness-text.js";
+import { createEnvironmentPresets } from "./environment-presets.js";
 let __juniorRig = null;
 let __clothRig = null;
 let __conscLights = null;
 let __conscParticles = null;
 let __conscText = null;
+let __envPresets = null;
 const __sunFar = new e.Vector3();   // Tier 7：太陽世界座標暫存（每幀 reuse）
 const __sunUv = new e.Vector2();    // Tier 7：太陽螢幕座標（NDC → UV）
 export const WORLD_SCALE = 1 / 80;
@@ -3504,6 +3506,15 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     (Te.shadow.blurSamples = 40),          // 25 → 40（更高品質）
     (Te.shadow.mapSize.set(4096, 4096)),   // 提升解析度避免 blur 出鋸齒
     W.add(Te));
+  // E3 季節時間環境 — 5 preset 切換（dusk/night/rainy/snowy/day）
+  __envPresets = createEnvironmentPresets({
+    scene: W,
+    light: Te,
+    ambientLight: ke,
+    renderer: U,
+    transitionMs: 2000,
+  });
+  if (typeof window !== "undefined") window.__ENV__ = __envPresets;
   const Ie = new e.PointLight(14215156, 1.28, 58, 2);
   (Ie.position.set(Q + 2.42, 3.64, g(t.frontDoor.center.z - 122)), W.add(Ie));
   const Re = new e.PointLight(16771512, 1.72, 68, 2);

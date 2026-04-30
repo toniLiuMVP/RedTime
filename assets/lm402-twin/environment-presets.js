@@ -1,0 +1,209 @@
+/**
+ * environment-presets.js — 季節時間環境（E3）
+ *
+ * 5 個預設氛圍：
+ *   dusk  黃昏（預設，原本 Tier 1 的氣質）
+ *   night 夜晚（深藍 + 月光）
+ *   rainy 雨天（灰藍冷色 + 低彩度）
+ *   snowy 雪天（白藍 + 高霧）
+ *   day   白天（暖白 + 低霧）
+ *
+ * Simplified 設計：
+ *   - 只切 fog color / light color & intensity / scene background
+ *   - envMap 不動（避免 PMREM 重建成本）
+ *   - 仍能營造強烈氣質差異
+ *
+ * 公開 API：
+ *   const e = createEnvironmentPresets({ scene, light, transitionMs: 2000 });
+ *   e.setPreset('night', 1500);  // 1.5s 內 lerp 到夜晚
+ *   e.getCurrentPreset();
+ *   e.dispose();
+ */
+
+import * as THREE from "./vendor-three.module.js";
+
+const PRESETS = {
+  dusk: {
+    fogColor: "#d0dce6",
+    fogNear: 12,
+    fogFar: 65,
+    bgColor: "#ccd8e4",
+    lightColor: "#fff8e1",  // 16772034
+    lightIntensity: 2.8,
+    ambientLightColor: "#fff8d0", // 16775408
+    ambientLightIntensity: 0.22,
+    exposure: 1.14,
+  },
+  night: {
+    fogColor: "#0a0e1a",
+    fogNear: 6,
+    fogFar: 38,
+    bgColor: "#070a14",
+    lightColor: "#9cb8e0",  // 月光藍
+    lightIntensity: 1.0,
+    ambientLightColor: "#5878a0",
+    ambientLightIntensity: 0.18,
+    exposure: 0.85,
+  },
+  rainy: {
+    fogColor: "#7c8694",
+    fogNear: 8,
+    fogFar: 45,
+    bgColor: "#5e6878",
+    lightColor: "#c0c8d0",  // 灰白
+    lightIntensity: 1.6,
+    ambientLightColor: "#a8b0bc",
+    ambientLightIntensity: 0.32,
+    exposure: 0.95,
+  },
+  snowy: {
+    fogColor: "#dde6f0",
+    fogNear: 10,
+    fogFar: 55,
+    bgColor: "#e8eef6",
+    lightColor: "#fafcff",  // 純白偏冷
+    lightIntensity: 2.4,
+    ambientLightColor: "#d8e2ee",
+    ambientLightIntensity: 0.4,
+    exposure: 1.05,
+  },
+  day: {
+    fogColor: "#e8d8c0",
+    fogNear: 18,
+    fogFar: 78,
+    bgColor: "#dcc8a8",
+    lightColor: "#ffffe0",  // 白天暖白
+    lightIntensity: 3.4,
+    ambientLightColor: "#fff5d8",
+    ambientLightIntensity: 0.32,
+    exposure: 1.22,
+  },
+};
+
+export function createEnvironmentPresets(options = {}) {
+  const scene = options.scene;
+  const light = options.light;                  // directional light Te
+  const ambientLight = options.ambientLight;    // ambient light ke
+  const renderer = options.renderer;
+  const defaultTransitionMs = options.transitionMs ?? 2000;
+
+  if (!scene) {
+    console.warn("[environment-presets] scene required");
+    return makeNoOp();
+  }
+
+  let currentPresetName = "dusk";
+  let currentValues = null;
+  let transitionRaf = null;
+
+  // 初始化 currentValues 從場景當前狀態（也可從 dusk preset 取）
+  function snapshotCurrent() {
+    return {
+      fogColor: scene.fog ? new THREE.Color().copy(scene.fog.color) : new THREE.Color("#d0dce6"),
+      fogNear: scene.fog?.near ?? 12,
+      fogFar: scene.fog?.far ?? 65,
+      bgColor: scene.background instanceof THREE.Color
+        ? new THREE.Color().copy(scene.background)
+        : new THREE.Color("#ccd8e4"),
+      lightColor: light ? new THREE.Color().copy(light.color) : new THREE.Color("#fff8e1"),
+      lightIntensity: light?.intensity ?? 2.8,
+      ambientLightColor: ambientLight
+        ? new THREE.Color().copy(ambientLight.color)
+        : new THREE.Color("#fff8d0"),
+      ambientLightIntensity: ambientLight?.intensity ?? 0.22,
+      exposure: renderer?.toneMappingExposure ?? 1.14,
+    };
+  }
+  currentValues = snapshotCurrent();
+
+  function setPreset(name, transitionMs) {
+    const target = PRESETS[name];
+    if (!target) {
+      console.warn("[environment-presets] unknown preset:", name, "available:", Object.keys(PRESETS));
+      return;
+    }
+    if (transitionRaf) cancelAnimationFrame(transitionRaf);
+
+    const duration = transitionMs ?? defaultTransitionMs;
+    const startTime = performance.now();
+    const startValues = snapshotCurrent();
+    const targetValues = {
+      fogColor: new THREE.Color(target.fogColor),
+      fogNear: target.fogNear,
+      fogFar: target.fogFar,
+      bgColor: new THREE.Color(target.bgColor),
+      lightColor: new THREE.Color(target.lightColor),
+      lightIntensity: target.lightIntensity,
+      ambientLightColor: new THREE.Color(target.ambientLightColor),
+      ambientLightIntensity: target.ambientLightIntensity,
+      exposure: target.exposure,
+    };
+
+    function step() {
+      const t = Math.min(1, (performance.now() - startTime) / duration);
+      // ease-in-out
+      const e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+      // fog color & range
+      if (scene.fog) {
+        scene.fog.color.copy(startValues.fogColor).lerp(targetValues.fogColor, e);
+        scene.fog.near = startValues.fogNear + (targetValues.fogNear - startValues.fogNear) * e;
+        scene.fog.far = startValues.fogFar + (targetValues.fogFar - startValues.fogFar) * e;
+      }
+      // background
+      if (scene.background instanceof THREE.Color) {
+        scene.background.copy(startValues.bgColor).lerp(targetValues.bgColor, e);
+      }
+      // directional light
+      if (light) {
+        light.color.copy(startValues.lightColor).lerp(targetValues.lightColor, e);
+        light.intensity = startValues.lightIntensity + (targetValues.lightIntensity - startValues.lightIntensity) * e;
+      }
+      // ambient light
+      if (ambientLight) {
+        ambientLight.color.copy(startValues.ambientLightColor).lerp(targetValues.ambientLightColor, e);
+        ambientLight.intensity = startValues.ambientLightIntensity + (targetValues.ambientLightIntensity - startValues.ambientLightIntensity) * e;
+      }
+      // tone mapping exposure
+      if (renderer) {
+        renderer.toneMappingExposure = startValues.exposure + (targetValues.exposure - startValues.exposure) * e;
+      }
+
+      if (t < 1) {
+        transitionRaf = requestAnimationFrame(step);
+      } else {
+        transitionRaf = null;
+        currentPresetName = name;
+        currentValues = snapshotCurrent();
+      }
+    }
+    transitionRaf = requestAnimationFrame(step);
+  }
+
+  function getCurrentPreset() {
+    return currentPresetName;
+  }
+
+  function inspect() {
+    return {
+      current: currentPresetName,
+      available: Object.keys(PRESETS),
+    };
+  }
+
+  function dispose() {
+    if (transitionRaf) cancelAnimationFrame(transitionRaf);
+  }
+
+  return { setPreset, getCurrentPreset, inspect, dispose, PRESETS };
+}
+
+function makeNoOp() {
+  return {
+    setPreset: () => {},
+    getCurrentPreset: () => "dusk",
+    inspect: () => ({ current: "dusk", available: [] }),
+    dispose: () => {},
+    PRESETS: {},
+  };
+}
