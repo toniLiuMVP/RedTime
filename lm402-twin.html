@@ -1078,5 +1078,14 @@
         })
         .catch((e) => console.warn("[audio-layer] init failed:", e));
     </script>
+    <!-- C8 學妹發起互動 — 暴露 window.__INITIATED__（手動 start 才開始） -->
+    <script type="module">
+      import("./assets/lm402-twin/initiated-interactions.js")
+        .then((mod) => {
+          const c = mod.createInitiatedInteractions();
+          window.__INITIATED__ = c;
+        })
+        .catch((e) => console.warn("[initiated] init failed:", e));
+    </script>
   </body>
 </html>
