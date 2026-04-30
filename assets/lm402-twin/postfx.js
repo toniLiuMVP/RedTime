@@ -260,12 +260,17 @@ const FS_FINAL = /* glsl */ `
     c.g = texture2D(tDiffuse, vUv).g;
     c.b = texture2D(tDiffuse, vUv - caOff).b;
 
-    // === A5 Volumetric Fog（在 tone map 之前混入，fog 也經過 ACES）===
+    // === A5 Volumetric Fog（linearize depth + exp fog，避免近處也濛）===
     if (uVolFogDensity > 0.0) {
-      float depth01 = texture2D(uDepthForFog, vUv).r;
-      // 二次曲線：近處幾乎無霧，遠處快速增加
-      float fogFactor = depth01 * depth01 * uVolFogDensity * 8.0;
-      fogFactor = clamp(fogFactor, 0.0, 0.65);
+      float rawDepth = texture2D(uDepthForFog, vUv).r;
+      // raw depth 0~1 (perspective 非線性) → linear distance（公尺）
+      float z_ndc = rawDepth * 2.0 - 1.0;
+      float linearZ = (2.0 * uCameraNearForFog * uCameraFarForFog) /
+        (uCameraFarForFog + uCameraNearForFog - z_ndc * (uCameraFarForFog - uCameraNearForFog));
+      // exp fog 公式：fog = 1 - e^(-distance * density)
+      // 近處（學妹臉 1m）幾乎透明、遠處（窗外 30m+）才明顯霧化
+      float fogFactor = 1.0 - exp(-linearZ * uVolFogDensity);
+      fogFactor = clamp(fogFactor, 0.0, 0.5);
       c = mix(c, uVolFogColor * uExposure, fogFactor);
     }
 
@@ -470,8 +475,9 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     lensFlare: { strength: 0.4 },                              // 鏡頭眩光 ghost
     // F7 Rain on lens — 鏡頭上的雨滴（劇情可動態切「下雨場景」）
     rain:      { amount: 0 },                                  // 預設關，console 開：0.4~0.8
-    // A5 Volumetric Fog — 大氣體積感（distance-based depth fog）
-    volFog:    { density: 0.08, color: [1.0, 0.78, 0.55] },   // 暖橙黃昏霧
+    // A5 Volumetric Fog — linearize depth + exp fog（fix toni 反映「濛濛一片」）
+    // density 0.04：1m=4% / 5m=18% / 10m=33% / clamp upper 50%
+    volFog:    { density: 0.04, color: [1.0, 0.78, 0.55] },
   };
 
   // ─── DPR-aware 解析度（手機降畫質） ───
