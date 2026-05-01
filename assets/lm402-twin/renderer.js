@@ -4965,10 +4965,26 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     radius: 0.7,
     heightRange: 1.0,
   });
+  // 第 3 輪 nuclear default — toni 反映「學妹完全被覆蓋」（B2/B3/B4 三派疊加成白塊）
+  // 預設關閉，console 想開個別 effect 自己開：
+  //   __CONSC_LIGHTS__.setIntensity(0.5)     // 5 盞光柱（不同年紀色彩）
+  //   __CONSC_PARTICLES__.setIntensity(0.4)  // 150 個記憶粒子
+  //   __CONSC_TEXT__.setIntensity(0.6)       // 12 個 toni 原文短句飄浮
+  __conscLights.setIntensity(0);
+  __conscParticles.setIntensity(0);
+  __conscText.setIntensity(0);
   if (typeof window !== "undefined") {
     window.__CONSC_LIGHTS__ = __conscLights;
     window.__CONSC_PARTICLES__ = __conscParticles;
     window.__CONSC_TEXT__ = __conscText;
+    console.info(
+      "%c[雙時空] 意識菜市場 B2/B3/B4 預設關閉",
+      "color:#ffd49c;font-weight:bold;",
+      "\n想看「七嘴八舌」效果，console 輸入：" +
+      "\n  __CONSC_LIGHTS__.setIntensity(0.5)" +
+      "\n  __CONSC_PARTICLES__.setIntensity(0.4)" +
+      "\n  __CONSC_TEXT__.setIntensity(0.6)"
+    );
   }
   const juniorRuntimeModelRoot = new e.Group(),
     juniorHeroCloseupModelRoot = new e.Group();

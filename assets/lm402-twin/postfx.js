@@ -456,30 +456,29 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
   // ─── 預設參數（電影派微 Bloom + 暖棕暗角 + DOF） ───
   const tuning = {
     enabled: true,
-    // fix toni 反映「畫面濛泛白」：bloom 0.32→0.18, DOF 6→2.5
-    bloom:    { threshold: 0.86, softKnee: 0.5, strength: 0.18, mips: 4 },
-    dof:      { focalRange: 0.6, maxBlur: 2.5, enabled: true },
-    vignette: { color: [0.18, 0.10, 0.05], offset: 0.55, darkness: 0.42 },
-    fxaa:     false,  // Tier 5 改用 MSAA RT，FXAA 不需要
-    exposure: 0.92,  // 1.0 → 0.92（降整體亮度）
-    // Tier 5 電影級後製
-    chroma:    { strength: 0.0028 },                          // 鏡頭色散（0~0.006）
-    grain:     { amount: 0.018 },                              // 顆粒感（0~0.04）
+    // 第 3 輪 nuclear default — toni 反映「學妹完全被覆蓋」（白塊過曝）
+    // 全部「可能造成過曝」的 effect default = 0，console 想開個別 effect 自己開
+    bloom:    { threshold: 0.86, softKnee: 0.5, strength: 0, mips: 4 },     // 完全關
+    dof:      { focalRange: 0.6, maxBlur: 2.5, enabled: false },            // 完全關
+    vignette: { color: [0.18, 0.10, 0.05], offset: 0.55, darkness: 0.32 },  // 0.42→0.32
+    fxaa:     false,
+    exposure: 0.95,  // 0.92→0.95 微調
+    // Tier 5 電影級後製（第 3 輪 nuclear default — 全部高量過曝 effect 預設關）
+    chroma:    { strength: 0 },                                // 0.0028 → 0（鏡頭色散，console 開：0.002~0.006）
+    grain:     { amount: 0.012 },                              // 0.018 → 0.012（保留輕微膠卷感）
     colorGrade: {
-      shadowTint:    [0.92, 1.04, 0.98],                      // 暗部偏冷綠
-      highlightTint: [1.08, 1.04, 0.94],                      // 亮部偏暖橙
+      shadowTint:    [0.94, 1.02, 0.99],                      // 0.92,1.04,0.98 → 弱化（避免色偏太重）
+      highlightTint: [1.04, 1.02, 0.97],                      // 1.08,1.04,0.94 → 弱化
     },
     msaa: 4,                                                    // MSAA samples（取代 FXAA）
-    lensDirt:  { amount: 0 },                                  // Tier 6 鏡頭髒污（toni 不要白點，預設關 — 可從 console 開）
-    // Tier 7：太陽光體積特效（screen-space）
-    // fix toni 反映「god rays 蓋過學妹」：0.35 → 0.10、0.4 → 0.12
-    godRays:   { strength: 0.10 },                             // 0.35 → 0.10
-    lensFlare: { strength: 0.12 },                             // 0.4 → 0.12
+    lensDirt:  { amount: 0 },                                  // Tier 6 鏡頭髒污（預設關，console 開：0.3~0.7）
+    // Tier 7：太陽光體積特效（screen-space）— 完全關，toni 反映「白塊蓋學妹」
+    godRays:   { strength: 0 },                                // 0.10 → 0（console 開：0.1~0.4）
+    lensFlare: { strength: 0 },                                // 0.12 → 0（console 開：0.1~0.4）
     // F7 Rain on lens — 鏡頭上的雨滴（劇情可動態切「下雨場景」）
     rain:      { amount: 0 },                                  // 預設關，console 開：0.4~0.8
-    // A5 Volumetric Fog — linearize depth + exp fog（再次降低，fix toni 反映畫面仍濛）
-    // density 0.015：1m=1.5% / 5m=7% / 10m=14% / 30m=36% / clamp upper 0.4
-    volFog:    { density: 0.015, color: [0.92, 0.85, 0.72] },  // 顏色降暖度避免泛黃
+    // A5 Volumetric Fog — 完全關（toni 反映畫面濛濛的）
+    volFog:    { density: 0, color: [0.92, 0.85, 0.72] },     // 0.015 → 0（console 開：0.02~0.06）
   };
 
   // ─── DPR-aware 解析度（手機降畫質） ───
