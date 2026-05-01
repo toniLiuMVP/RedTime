@@ -270,7 +270,7 @@ const FS_FINAL = /* glsl */ `
       // exp fog 公式：fog = 1 - e^(-distance * density)
       // 近處（學妹臉 1m）幾乎透明、遠處（窗外 30m+）才明顯霧化
       float fogFactor = 1.0 - exp(-linearZ * uVolFogDensity);
-      fogFactor = clamp(fogFactor, 0.0, 0.5);
+      fogFactor = clamp(fogFactor, 0.0, 0.40);  // 0.5 → 0.40 進一步限制
       c = mix(c, uVolFogColor * uExposure, fogFactor);
     }
 
@@ -456,11 +456,12 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
   // ─── 預設參數（電影派微 Bloom + 暖棕暗角 + DOF） ───
   const tuning = {
     enabled: true,
-    bloom:    { threshold: 0.86, softKnee: 0.5, strength: 0.32, mips: 4 },
-    dof:      { focalRange: 0.6, maxBlur: 6.0, enabled: true },
+    // fix toni 反映「畫面濛泛白」：bloom 0.32→0.18, DOF 6→2.5
+    bloom:    { threshold: 0.86, softKnee: 0.5, strength: 0.18, mips: 4 },
+    dof:      { focalRange: 0.6, maxBlur: 2.5, enabled: true },
     vignette: { color: [0.18, 0.10, 0.05], offset: 0.55, darkness: 0.42 },
     fxaa:     false,  // Tier 5 改用 MSAA RT，FXAA 不需要
-    exposure: 1.0,
+    exposure: 0.92,  // 1.0 → 0.92（降整體亮度）
     // Tier 5 電影級後製
     chroma:    { strength: 0.0028 },                          // 鏡頭色散（0~0.006）
     grain:     { amount: 0.018 },                              // 顆粒感（0~0.04）
@@ -476,9 +477,9 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     lensFlare: { strength: 0.12 },                             // 0.4 → 0.12
     // F7 Rain on lens — 鏡頭上的雨滴（劇情可動態切「下雨場景」）
     rain:      { amount: 0 },                                  // 預設關，console 開：0.4~0.8
-    // A5 Volumetric Fog — linearize depth + exp fog（fix toni 反映「濛濛一片」）
-    // density 0.04：1m=4% / 5m=18% / 10m=33% / clamp upper 50%
-    volFog:    { density: 0.04, color: [1.0, 0.78, 0.55] },
+    // A5 Volumetric Fog — linearize depth + exp fog（再次降低，fix toni 反映畫面仍濛）
+    // density 0.015：1m=1.5% / 5m=7% / 10m=14% / 30m=36% / clamp upper 0.4
+    volFog:    { density: 0.015, color: [0.92, 0.85, 0.72] },  // 顏色降暖度避免泛黃
   };
 
   // ─── DPR-aware 解析度（手機降畫質） ───
