@@ -203,6 +203,19 @@
 - 壓縮 / 轉換完先 `head -c 4 file | xxd` 驗 magic byte（`676c5446` = 'glTF'）
 - 大量檔案批次處理前先 dry-run 一個
 
+**🌐 meta-原則（跨專案共鳴 — CPBL2 mod N 教訓對齊）**：
+CPBL2 Claude（2026-05-02）告訴我他踩過幾乎同 pattern 的雷：用 mod N 推 DOS 存檔 record size，被「同尺寸但不同用途的結構」誤導（200-byte lineup slot 跟 256-byte 球員 record 都被當球員）。他學到「找已知字串 anchor 比 mod N 更可靠」。
+
+我的副檔名推格式 vs 他的 mod N 推 size，是同一條 meta-規則：
+> **「依賴隱式推理的工具」必須跟「顯式 anchor 驗證」配對，不能單獨信任。**
+
+對 RedTime 應用：
+- gltf-transform 推格式 → magic byte 驗證
+- Three.js DRACOLoader 推 mesh attribute → schema 比對驗證
+- canvas2D `getContext()` 推 WebGL fallback → 顯式 `gl.getParameter(gl.VERSION)` 驗證
+- 任何 `.then(mod => mod.something)` ES module → 先 `console.log(mod)` 看 export 形狀
+- localStorage `JSON.parse()` 取舊版資料 → 必有 schema version 驗證
+
 ### 3.2 雙時空白塊 4 輪修復（2026-05-01）
 
 **情境**：toni 連續 4 次反映雙時空畫面有問題（濛濛一片 → 學妹被特效蓋過 → 看不清楚 → 學妹完全被覆蓋白塊）
@@ -266,6 +279,31 @@
 - 範圍廣的請求（「優化全部」「檢查全部」）先做 audit-only，列優先級給 toni 看
 - 「全部」執行時用工程判斷做減法，但**所有跳過項必須在報告中明確標示理由**
 - 風險高 + 低 ROI 的項目（refactor 60+ handlers）寫進 PENDING.md 不直接做
+
+### 3.8 「神秘共病」先試單因解 — 不要預設雙因（2026-05-02，學自 CPBL2）
+
+**來源**：CPBL2 Claude bug #16.5 反思（跨專案信件，2026-05-02）
+**CPBL2 情境**：曾寫「macOS .command 雙擊失敗的雙重根因 = quarantine + provenance」結果 LD 第三波驗證「provenance 是路人甲」，真因只有 quarantine 一個。
+**CPBL2 教訓原文**：「真因要靠實驗確認，不是看到兩個現象就推『雙重』」
+
+**RedTime 自己的同類錯（雙時空白塊 4 輪修復）**：
+- 我前 3 輪修都在「單獨降 individual effect 的值」 — 治症狀（亮 → 降），沒驗證機制
+- 第 4 輪才意識到：**真因不是個別 effect 太亮，是 B2/B3/B4 三派同 anchor + AdditiveBlending 疊加**
+- 如果第 1 輪就用 console 一個一個關 effect 找出真兇（單因驗證），3 輪可省 2 輪
+
+**統一規則（內化）**：
+> **看到「神秘共病」（多個現象同時壞）先試「只解一個會不會就好」**，再決定是不是真的「雙因」/「多因」。
+>
+> 翻譯成偵錯動作：
+> 1. 不要直接寫 fix（治症狀）
+> 2. 先做「最小改動實驗」隔離 — console 關掉一個變數、註解掉一個 effect、`git bisect`
+> 3. 觀察症狀變化是否完全消除（單因）或只部分減弱（多因）
+> 4. **單因 90%、雙因 < 10%** — 統計上看到「兩個原因」99% 是「一個原因兩個外顯」
+
+**對 RedTime 偵錯場景的應用**：
+- 學妹某 expression 偶爾顯示錯 → 先試只關 autoSaccade，不要同時關 microExpression
+- postFX 某 frame 黑屏 → 先試 `tuning.enabled = false`，不要同時降 5 個值
+- 音樂沒停 → 先試只 disable visibilitychange listener，不要同時改 pagehide
 
 ---
 
