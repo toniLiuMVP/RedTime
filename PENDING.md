@@ -3,7 +3,7 @@
 > 給未來 Claude Code session 一眼看清「還剩什麼沒做」。
 > 學自 JYQXZ / PTT 等其他專案的 PENDING.md 慣例。
 
-最後更新：2026-05-02
+最後更新：2026-05-02（晚間：跨專案 lessons 整理 + LESSONS.md 建立）
 
 ---
 
@@ -124,30 +124,45 @@
 
 ## 🛠 工程改進建議（從跨專案吸取）
 
-### 從 PAL_2026（仙劍）學到
+> 完整跨專案 patterns + mistakes 詳見 [LESSONS.md](LESSONS.md)。本段只列「對 RedTime 有具體可執行價值的新項目」。
 
-- ⏳ **加 4 層安全檢查到本機 server**（如果未來做 .command 啟動）
-- ⏳ **加跨平台啟動腳本**（`啟動.command` / `啟動.bat`）— 玩家雙擊就跑 server + 開 lm402
-- ⏳ **預設埠分配**：8200-8210 給 LM402 三線（避免跟仙劍 8180-8183 / 金庸 8186-8189 / 軒轅劍 8192-8193 衝突）
+### 從 PAL_2026（仙劍）學到 — 新增（2026-05-02）
 
-### 從 JYQXZ（金庸）學到
+- 🆕 **`health_check.sh` 8 類 62 項 pre-pack 自檢** — 檢查 GLB 存在、postFX uniform 沒漏、console API 接好（高 ROI，1 天可建初版）
+- 🆕 **`啟動.command --diagnose` 環境探測** — probe Three.js 版本、GPU tier、GLB 檔案 — 玩家自己看跑得動跑不動（半天）
+- ✅ ~~跨平台啟動腳本~~（已建 `啟動.command` / `啟動.bat`）
+- ✅ ~~預設埠分配~~（已用 8200-8210）
 
-- ⏳ **加 sync.sh 雙向同步**（如果 toni 在 Windows 也開發）
-- ⏳ **加 USAGE.md / FAQ.md**（給玩家看）
-- ⏳ **明確版本標記**（v0.1, v1.0...）
-- ⏳ **PENDING.md**（這個檔！從 JYQXZ 學的）
+### 從 JYQXZ（金庸）學到 — 新增（2026-05-02）
 
-### 從 LD（俠客遊 II）學到
+- 🆕 **`.sync.conf` 驅動的通用 sync.sh** — 把 dev-tools/ 各 ad-hoc 收斂到 conf-driven runner（半天）
+- 🆕 **mtime ±2s tolerance** — 未來 Mac Mini M4（SMB）→ NAS（SMB）sync 時用上
+- ✅ ~~PENDING.md~~（已有）
 
-- ⏳ **加 PUBLISHING.md**（公開發布規則 — 哪些可放線上、哪些不能）
-- ⏳ **資料夾標記**：明確標記哪些不備份、不上傳（隱私資料）
-- ⏳ **「絕對規則」段在 CLAUDE.md 最前面**（已加 ✅）
-- ⏳ **自動產生文件**（_build_readme.py 等）
+### 從 LD（俠客遊 II）學到 — 新增（2026-05-02）
 
-### 從 PTT（旗艦專案）學到
+- 🆕 **`pre_commit_check.sh` 把規則 codify** — 「永遠不可改故事文本」做成 pre-commit grep 擋 commit（高 ROI，0.5 天）
+- 🆕 **`_build_*.py` 文件自動生成** — `_build_pending.py` 掃 data.js 場景數注入 PENDING.md / ROADMAP.md（1 天）
+- 🆕 **「三層備份」auto-tm enforcement** — 動任何檔案前自動 tm（已有 backup.sh，加自動觸發 hook 1 天）
+- 🆕 **`PUBLISHING.md` 內容分級 A/B/C** — 「正本不動 / 副本實驗」+「故事文本不能改」軸 codify（半天）
+- 🆕 **特殊資料夾名 = 規則本身** — `Backup/` 改 `Backup_僅供資料參考_勿改/`（10 分鐘）
+- ✅ ~~「絕對規則」CLAUDE.md~~（已加）
 
-- ⏳ **拆分 ARCHITECTURE.md / SECURITY.md / QUALITY_BAR.md / THREAT_MODEL.md**（單一 CLAUDE.md 不夠）
-- ⏳ **加 ROADMAP.md 明確 milestone**（這個檔！）
+### 從 PTT（旗艦）學到 — 新增（2026-05-02）
+
+- 🆕 **`QUALITY_BAR.md` 量化紅線** — fps、首次進畫面、CSP、a11y 標準（1 天）
+- 🆕 **ARCHITECTURE.md「70/30 法則」+ 依賴方向 ASCII 圖** — `data.js → renderer.js / app.js → ui-panels.js` 寫死方向（半天）
+- 🆕 **ROADMAP phases Exit conditions** — 每個 milestone 加可量測 Exit 條件（M1-M18 改寫，1 天）
+- ✅ ~~ROADMAP.md~~（已有）
+
+### 從 MVP_Baseball 學到 — 新增（2026-05-02）
+
+- 🆕 **`README_讀者看這裡.md`** — 對外發布時面向「不懂技術的故事讀者」（半天）
+
+### 從 SWDA_2026（軒轅劍）學到 — 新增（2026-05-02）
+
+- 🆕 **idempotent injector + marker tag** — 對已生成 HTML 加 enhancement 用 `createElement` + `ADDED MANUALLY` marker（半天，未來需要時）
+- 🆕 **`_Mac首次執行_先點我.command` ice-breaker** — zip 分發給玩家試玩時必備（10 分鐘）
 
 ---
 
