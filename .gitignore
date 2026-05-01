@@ -36,3 +36,6 @@ rembg_script.py
 *.key
 *.p12
 credentials.json
+
+# Master + Work daemon 寫的 status JSON（每次 daemon 跑都會變動）
+.tools/
