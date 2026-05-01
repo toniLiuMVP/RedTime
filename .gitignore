@@ -1,4 +1,5 @@
 .DS_Store
+Thumbs.db
 .claude/
 .shots/
 .pycache/
@@ -6,14 +7,27 @@ node_modules/
 Backup/
 *.docx
 *.doc
-tools/lighthouse-baseline/**/*.report.html
-tools/lighthouse-baseline/**/*.report.json
+# Lighthouse baseline 與 smoke tests 整資料夾排除（不只 report 檔）
+tools/lighthouse-baseline/
+tools/smoke-tests/
 output/
 test-results/
 .playwright-cli/
-# 本地 .original.* 備份檔案（只保留在檔案系統，不追蹤）
+# 本地 .original.* 備份檔案（三線都不追蹤）
 assets/lm402/*.original.js
 assets/lm402/*.original.css
+assets/lm402-twin/*.original.js
+assets/lm402-twin/*.original.css
+assets/lm402-parallel/*.original.js
+assets/lm402-parallel/*.original.css
+# 開發測試 fixture 與 Python 腳本（不需公開到 GitHub Pages）
+tools/test-escape.html
+tools/*.spec.js
+tools/verify-audit.mjs
+tools/blender_export_junior.py
+tools/export_junior_glb_placeholder.py
+scripts/verify_lm402_pointer_lock.py
+rembg_script.py
 
 # 安全：排除敏感檔案
 .env

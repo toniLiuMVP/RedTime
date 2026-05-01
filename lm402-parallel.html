@@ -12,7 +12,7 @@
     <link rel="canonical" href="https://toniliumvp.github.io/RedTime/lm402-parallel.html" />
     <link rel="manifest" href="manifest.json" />
     <!-- Defense-in-depth CSP（最佳做法仍是 HTTP header，但 GitHub Pages 無法設 header，故以 meta 作為最低防線） -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://www.youtube.com https://youtube.com; worker-src 'self' blob:; img-src 'self' data: blob: https:; media-src 'self' https:; connect-src 'self'; frame-ancestors 'self';" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.youtube.com https://youtube.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' https:; worker-src 'self' blob:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none';" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <meta
       name="description"
@@ -63,6 +63,11 @@
     <!-- preload 兩個首屏 loader 字體：標題用 Cormorant Garamond 300 latin，提示文字用 Noto Sans TC 300 common-CJK -->
     <link rel="preload" href="fonts/co3bmX5slCNuHLi8bLeY9MK7whWMhyjYqXtKky2F7g.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="fonts/-nF7OG829Oofr2wohFbTp9iFOisNA_cTyNromxqQuEMQ2wHYwbnmy1R1jDujLebozBXCo2qYhRo.119.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- modulepreload：渲染核心預先 fetch+parse，省一個 RTT 進入畫面 -->
+    <link rel="modulepreload" href="assets/lm402-parallel/vendor-three.module.js" />
+    <link rel="modulepreload" href="assets/lm402-parallel/renderer.js" />
+    <!-- prefetch GLB：等 renderer.js 解析完才會發 fetch；先 prefetch 讓瀏覽器並行下載 -->
+    <link rel="prefetch" href="assets/lm402-parallel/characters/junior/exports/junior_2005_runtime.glb" as="fetch" crossorigin />
     <link rel="stylesheet" href="fonts/fonts.css" />
     <link rel="stylesheet" href="assets/lm402-parallel/lm402.css" />
     <!-- Audio auto-stop hook：頁面隱藏 / 關閉時自動停所有音樂（toni 要求；對所有玩家生效） -->

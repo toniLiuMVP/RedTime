@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<title>RedTime DevTool — 清除 Service Worker</title>
+<style>
+  body { font-family: -apple-system, sans-serif; max-width: 640px; margin: 40px auto; padding: 20px; color: #222; line-height: 1.6; }
+  h1 { font-size: 22px; }
+  .ok { color: #2a7; font-weight: 600; }
+  .err { color: #c33; font-weight: 600; }
+  .log { background: #f0f0f0; padding: 12px; border-radius: 6px; font-family: ui-monospace, Menlo, monospace; font-size: 13px; white-space: pre-wrap; }
+  button { padding: 10px 18px; font-size: 16px; border: none; border-radius: 6px; background: #2a7; color: white; cursor: pointer; margin: 8px 0; }
+  button:hover { background: #1a5; }
+</style>
+</head>
+<body>
+<h1>🧹 RedTime DevTool — 清除 Service Worker / Cache</h1>
+<p>Safari / Chrome 都可用。打開這個頁面就會自動：</p>
+<ol>
+  <li>取消所有 Service Worker 註冊</li>
+  <li>清除所有 Cache Storage（PWA cache）</li>
+  <li>列出結果</li>
+</ol>
+
+<button onclick="run()">🔁 再執行一次</button>
+
+<h2>結果：</h2>
+<div class="log" id="log">啟動中…</div>
+
+<script>
+const log = document.getElementById('log');
+function append(msg, cls = '') {
+  const span = document.createElement('span');
+  if (cls) span.className = cls;
+  span.textContent = msg + '\n';
+  log.appendChild(span);
+}
+
+async function run() {
+  log.textContent = '';
+
+  // 1. Unregister Service Workers
+  if ('serviceWorker' in navigator) {
+    try {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      append(`找到 ${regs.length} 個 Service Worker 註冊`);
+      for (const r of regs) {
+        const ok = await r.unregister();
+        append(`  - ${r.scope} → ${ok ? '✅ 已取消' : '❌ 失敗'}`, ok ? 'ok' : 'err');
+      }
+    } catch (e) {
+      append('❌ Service Worker 操作錯誤: ' + e.message, 'err');
+    }
+  } else {
+    append('⚠️  此瀏覽器不支援 Service Worker（不需處理）');
+  }
+
+  // 2. Clear all Cache Storage
+  if ('caches' in window) {
+    try {
+      const keys = await caches.keys();
+      append(`找到 ${keys.length} 個 Cache Storage`);
+      for (const k of keys) {
+        const ok = await caches.delete(k);
+        append(`  - ${k} → ${ok ? '✅ 已清除' : '❌ 失敗'}`, ok ? 'ok' : 'err');
+      }
+    } catch (e) {
+      append('❌ Cache 清除錯誤: ' + e.message, 'err');
+    }
+  }
+
+  // 3. Optional: clear localStorage / sessionStorage
+  try {
+    const lsCount = localStorage.length;
+    const ssCount = sessionStorage.length;
+    localStorage.clear();
+    sessionStorage.clear();
+    append(`已清 localStorage (${lsCount} 項) + sessionStorage (${ssCount} 項)`);
+  } catch (e) {
+    append('⚠️  storage 清除失敗（可能是隱私模式）');
+  }
+
+  append('');
+  append('✨ 完成！現在可以關掉這個分頁，重新開 lm402.html', 'ok');
+  append('⚠️  如果音樂還在播 → 完全退出 Safari (Cmd+Q) 再重開');
+}
+
+run();
+</script>
+</body>
+</html>

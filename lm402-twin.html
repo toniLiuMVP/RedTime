@@ -12,7 +12,7 @@
     <link rel="canonical" href="https://toniliumvp.github.io/RedTime/lm402-twin.html" />
     <link rel="manifest" href="manifest.json" />
     <!-- Defense-in-depth CSP（最佳做法仍是 HTTP header，但 GitHub Pages 無法設 header，故以 meta 作為最低防線） -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://www.youtube.com https://youtube.com; worker-src 'self' blob:; img-src 'self' data: blob: https:; media-src 'self' https:; connect-src 'self'; frame-ancestors 'self';" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.youtube.com https://youtube.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' https:; worker-src 'self' blob:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none';" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <meta
       name="description"
@@ -63,6 +63,11 @@
     <!-- preload 兩個首屏 loader 字體：標題用 Cormorant Garamond 300 latin，提示文字用 Noto Sans TC 300 common-CJK -->
     <link rel="preload" href="fonts/co3bmX5slCNuHLi8bLeY9MK7whWMhyjYqXtKky2F7g.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="fonts/-nF7OG829Oofr2wohFbTp9iFOisNA_cTyNromxqQuEMQ2wHYwbnmy1R1jDujLebozBXCo2qYhRo.119.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- modulepreload：渲染核心預先 fetch+parse，省一個 RTT 進入畫面 -->
+    <link rel="modulepreload" href="assets/lm402-twin/vendor-three.module.js" />
+    <link rel="modulepreload" href="assets/lm402-twin/renderer.js" />
+    <!-- prefetch GLB：等 renderer.js 解析完才會發 fetch；先 prefetch 讓瀏覽器並行下載 -->
+    <link rel="prefetch" href="assets/lm402-twin/characters/junior/exports/junior_2005_runtime.glb" as="fetch" crossorigin />
     <link rel="stylesheet" href="fonts/fonts.css" />
     <link rel="stylesheet" href="assets/lm402-twin/lm402.css" />
     <!-- Audio auto-stop hook：頁面隱藏 / 關閉時自動停所有音樂（toni 要求；對所有玩家生效） -->
@@ -1042,50 +1047,43 @@
         });
       })();
     </script>
-    <!-- H1+H3 文學旁白系統（雙時空專屬）— 啟動後暴露 window.__NARRATIVE__ -->
+    <!-- 五個 narrative module 改成 idle 載入：學妹靜止場景渲染先穩，main thread 閒下來才載
+         requestIdleCallback fallback 用 setTimeout(2000) 兜底（Safari < 17 沒這 API） -->
     <script type="module">
-      import("./assets/lm402-twin/narrative-overlay.js")
-        .then((mod) => {
-          const n = mod.createNarrativeOverlay();
-          window.__NARRATIVE__ = n;
-        })
-        .catch((e) => console.warn("[narrative] init failed:", e));
-    </script>
-    <!-- H2+H4 章節 fade + 記憶閃回 — 啟動後暴露 window.__TRANSITIONS__ -->
-    <script type="module">
-      import("./assets/lm402-twin/narrative-transitions.js")
-        .then((mod) => {
-          const t = mod.createTransitions();
-          window.__TRANSITIONS__ = t;
-        })
-        .catch((e) => console.warn("[transitions] init failed:", e));
-    </script>
-    <!-- H6 書信日記模式 — 啟動後暴露 window.__LETTER__ -->
-    <script type="module">
-      import("./assets/lm402-twin/narrative-letter.js")
-        .then((mod) => {
-          const l = mod.createNarrativeLetter();
-          window.__LETTER__ = l;
-        })
-        .catch((e) => console.warn("[letter] init failed:", e));
-    </script>
-    <!-- H7+H8 環境音層次 + 動態 BGM — 啟動後暴露 window.__AUDIO_LAYER__ -->
-    <script type="module">
-      import("./assets/lm402-twin/narrative-audio.js")
-        .then((mod) => {
-          const a = mod.createNarrativeAudio();
-          window.__AUDIO_LAYER__ = a;
-        })
-        .catch((e) => console.warn("[audio-layer] init failed:", e));
-    </script>
-    <!-- C8 學妹發起互動 — 暴露 window.__INITIATED__（手動 start 才開始） -->
-    <script type="module">
-      import("./assets/lm402-twin/initiated-interactions.js")
-        .then((mod) => {
-          const c = mod.createInitiatedInteractions();
-          window.__INITIATED__ = c;
-        })
-        .catch((e) => console.warn("[initiated] init failed:", e));
+      const idle = (cb) =>
+        ("requestIdleCallback" in window)
+          ? requestIdleCallback(cb, { timeout: 3000 })
+          : setTimeout(cb, 2000);
+      // H1+H3 文學旁白系統 — 啟動後暴露 window.__NARRATIVE__
+      idle(() => {
+        import("./assets/lm402-twin/narrative-overlay.js")
+          .then((mod) => { window.__NARRATIVE__ = mod.createNarrativeOverlay(); })
+          .catch((e) => console.warn("[narrative] init failed:", e));
+      });
+      // H2+H4 章節 fade + 記憶閃回 — 啟動後暴露 window.__TRANSITIONS__
+      idle(() => {
+        import("./assets/lm402-twin/narrative-transitions.js")
+          .then((mod) => { window.__TRANSITIONS__ = mod.createTransitions(); })
+          .catch((e) => console.warn("[transitions] init failed:", e));
+      });
+      // H6 書信日記模式 — 啟動後暴露 window.__LETTER__
+      idle(() => {
+        import("./assets/lm402-twin/narrative-letter.js")
+          .then((mod) => { window.__LETTER__ = mod.createNarrativeLetter(); })
+          .catch((e) => console.warn("[letter] init failed:", e));
+      });
+      // H7+H8 環境音層次 + 動態 BGM — 啟動後暴露 window.__AUDIO_LAYER__
+      idle(() => {
+        import("./assets/lm402-twin/narrative-audio.js")
+          .then((mod) => { window.__AUDIO_LAYER__ = mod.createNarrativeAudio(); })
+          .catch((e) => console.warn("[audio-layer] init failed:", e));
+      });
+      // C8 學妹發起互動 — 暴露 window.__INITIATED__（手動 start 才開始）
+      idle(() => {
+        import("./assets/lm402-twin/initiated-interactions.js")
+          .then((mod) => { window.__INITIATED__ = mod.createInitiatedInteractions(); })
+          .catch((e) => console.warn("[initiated] init failed:", e));
+      });
     </script>
   </body>
 </html>

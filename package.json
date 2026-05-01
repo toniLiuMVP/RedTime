@@ -1,0 +1,37 @@
+{
+  "name": "redtime",
+  "version": "1.1.0",
+  "private": true,
+  "description": "時間裡的兩個妳 · RedTime — 互動式小說 / Three.js 遊戲（GitHub Pages 純靜態）",
+  "homepage": "https://toniliumvp.github.io/RedTime/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/toniLiuMVP/RedTime.git"
+  },
+  "author": "toni",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "audit": "echo \"All deps are vendored — no dynamic install. Three.js r179 in assets/lm402*/three.core.js\"",
+    "backup": "bash backup.sh both",
+    "go": "bash backup.sh go",
+    "all": "bash backup.sh all"
+  },
+  "dependenciesNote": "All runtime deps are vendored (Three.js r179, GLTFLoader r179) under assets/lm402*/ — no npm install needed for serving. This file exists so npm audit / Dependabot / security scanners have a manifest to read.",
+  "vendoredLibraries": [
+    {
+      "name": "three",
+      "version": "r179",
+      "path": "assets/lm402/three.core.js, assets/lm402/vendor-three.module.js (+ twin/parallel copies)",
+      "license": "MIT"
+    },
+    {
+      "name": "GLTFLoader",
+      "version": "r179",
+      "path": "assets/lm402/GLTFLoader.js (+ twin/parallel copies)",
+      "license": "MIT"
+    }
+  ]
+}

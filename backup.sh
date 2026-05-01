@@ -24,6 +24,13 @@ EXCLUDES=(
   --exclude=output
   --exclude=.playwright-cli
   --exclude=.DS_Store
+  --exclude=Thumbs.db
+  # Lighthouse / smoke 大量臨時檔（非開發必需，不上 NAS）
+  --exclude=tools/lighthouse-baseline
+  --exclude=tools/smoke-tests
+  # 本地 .original.* 備份（已存在工作機，不需重複 NAS）
+  --exclude=*.original.js
+  --exclude=*.original.css
 )
 
 # ─── helpers ───────────────────────────────────────────
