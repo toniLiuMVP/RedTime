@@ -135,6 +135,12 @@
 
 ### 從 JYQXZ（金庸）學到 — 新增（2026-05-02）
 
+- 🆕 **🔥 Master + Work 雙位置 + sync.sh 雙向同步**（高 ROI，**Claude 跑 RedTime 速度 5-50x**）
+  - 現況：RedTime 純 SMB（`/Volumes/Mac Mini M4/Red Time/`），所有檔案 I/O 都過網路 → SMB
+  - 目標：建 `/Volumes/Work/RedTime/` APFS 副本 + `sync.sh` 雙向同步
+  - 工程量：半天（cp -r 複製 + 寫 .sync.conf + 寫 sync.sh + 測試 + 啟動腳本 hook）
+  - 效益：`git status` 從 5s → 0.2s（25x）、Glob 30s → 0.5s（60x）、ALLRM 整流程 5-10 分鐘 → 1-2 分鐘
+  - 範本：直接抄 JYQXZ `/Volumes/Work/JYQXZ/sync.sh` + `.sync.conf`
 - 🆕 **`.sync.conf` 驅動的通用 sync.sh** — 把 dev-tools/ 各 ad-hoc 收斂到 conf-driven runner（半天）
 - 🆕 **mtime ±2s tolerance** — 未來 Mac Mini M4（SMB）→ NAS（SMB）sync 時用上
 - ✅ ~~PENDING.md~~（已有）
