@@ -280,6 +280,43 @@ CPBL2 Claude（2026-05-02）告訴我他踩過幾乎同 pattern 的雷：用 mod
 - 「全部」執行時用工程判斷做減法，但**所有跳過項必須在報告中明確標示理由**
 - 風險高 + 低 ROI 的項目（refactor 60+ handlers）寫進 PENDING.md 不直接做
 
+### 3.9 daemon 寫 SMB：rsync 不擋但 echo/mkdir/touch 會擋（2026-05-02）
+
+**情境**：8 個 daemon（含 RedTime）跑 launchctl 寫 SMB 時 stderr 噴 "Operation not permitted"，但 sync 主功能似乎能跑。
+
+**測試結果**：
+| 操作 | TCC 擋 |
+|---|---|
+| `echo > "$SMB/.tools/file"` 直接 redirection | ❌ 擋 |
+| `mkdir -p "$SMB/.tools"` 直接 mkdir | ❌ 擋 |
+| `touch "$SMB/.tools/.lock"` 直接 touch | ❌ 擋 |
+| `rsync -a "$WORK/" "$SMB/"` 跨 SMB rsync | ✅ **不擋** |
+
+**根因**：TCC sandbox 對 rsync 的低階 syscall 比 bash 高階 redirection 寬鬆。
+
+**設計原則（升級規則）**：
+- daemon **只管 rsync**（核心功能）
+- 所有 maintenance 檔案（lock / status JSON / pid）**一律放 Work 端 APFS**，**永遠不寫 SMB**
+- 這條規則一勞永逸繞開 TCC，不需要 toni 在 System Settings 加 bash 到任何 category
+
+**修法（已套用 8 個 daemon）**：
+```bash
+# Before（會被 TCC 擋）
+mkdir -p "$WORK_DIR/.tools" "$SMB_DIR/.tools"
+echo "$JSON" > "$SMB_DIR/.tools/last_sync.json"
+
+# After（永遠 work）
+mkdir -p "$WORK_DIR/.tools"
+echo "$JSON" > "$WORK_DIR/.tools/last_sync.json"
+# SMB 端不寫，靠 rsync 自己同步維護
+```
+
+**也修了 SWDA 的 LOCK 路徑**（之前是 `$SMB_DIR/.tools/.sync_lock` → 改 `$WORK_DIR/.tools/.sync_lock`）。
+
+**對全域 LESSONS.md §11 的擴充**：原 §11 說「lock 放 Work」，但實際範圍應該是「**所有 daemon 寫入操作放 Work**」— rsync 例外（系統 syscall 不被 TCC 擋）。
+
+---
+
 ### 3.8 「神秘共病」先試單因解 — 不要預設雙因（2026-05-02，學自 CPBL2）
 
 **來源**：CPBL2 Claude bug #16.5 反思（跨專案信件，2026-05-02）
