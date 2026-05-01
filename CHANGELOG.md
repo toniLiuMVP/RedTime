@@ -5,6 +5,27 @@
 
 ---
 
+## v1.1 雙時空白塊修復（nuclear default）— 2026-05-01
+
+### 修復
+
+- **學妹完全被覆蓋（白塊）** — toni 連續 3 輪反映雙時空畫面有問題：
+  - 第 1 輪 (`bf0e0c4`)：A5 Volumetric Fog 修「濛濛一片」（raw depth → linearize + exp fog）
+  - 第 2 輪 (`f284d3d`)：5 個 effect（B3/B2/B4/god rays/lens flare）大幅降低
+  - 第 3 輪 (`da94815`)：bloom/DOF/exposure/fog 再降
+  - 第 4 輪 (`41ab5ed`)：**nuclear default** — 全部「可能造成過曝」effect 預設 = 0
+- 診斷：B2 + B3 + B4 三派同 anchor（學妹頭部 y=1.4~1.5）+ AdditiveBlending → 疊成白塊
+
+### 變更
+
+- **B2/B3/B4 預設關閉** — `__CONSC_LIGHTS__/__CONSC_PARTICLES__/__CONSC_TEXT__` 全部 setIntensity(0)
+- **postfx default**：godRays / lensFlare / chroma / volFog density 全部 = 0
+- **postfx 弱化**：grain 0.018→0.012、colorGrade 偏移弱化、vignette darkness 0.42→0.32
+- **console.info 提示** — 雙時空啟動時 console 印出如何 opt-in 三派
+- **CLAUDE.md 動工紀律加第 6 條**：「設新 effect 預設值前要算最壞情況疊加效果」
+
+---
+
 ## [Unreleased] — 2026-04-30
 
 ### 加入
@@ -102,6 +123,7 @@
 
 | 版本 | git commit |
 |---|---|
+| v1.1 雙時空白塊修復 | `bf0e0c4` 第 1 輪 → `41ab5ed` 第 4 輪 nuclear default |
 | v1.0 雙時空全套 | `64decb6` 三線分工 → `b90b3fa` F1.1 |
 | v0.9 短期擴充 | `c85c861` C6 → `e73e3b4` E10 |
 | v0.8 行為活感 | `9299606` Tier 8 + 9.1 |
