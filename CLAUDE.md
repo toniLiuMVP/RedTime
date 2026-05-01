@@ -3,22 +3,58 @@
 ## 基本資訊
 
 - **專案名稱**：時間裡的兩個妳（RedTime）
-- **主目錄**：`/Volumes/Mac Mini M4/Red Time`（2026-04-15 搬遷，SMB：`smb://toni/Mac Mini M4/Red Time`）
-- **舊主目錄**（已淘汰）：`/Users/toni/Downloads/時間裡的兩個妳`
+- **主開發位置**（2026-05-02 起）：`/Volumes/Work/RedTime/`（APFS，速度快 5-50x）
+- **副本同步位置**：`/Volumes/Mac Mini M4/Red Time/`（SMB Master，每 60s 自動 sync from Work）
 - **GitHub Repo**：`toniLiuMVP/RedTime`（GitHub Pages 部署）
 - **網站類型**：互動式小說 / 遊戲網站
+- **架構**：Master + Work 雙位置 + sync.sh 雙向同步 + launchd daemon 60s 自動 sync
+  → 完整設計詳見 [docs/MASTER_WORK_MIGRATION.md](docs/MASTER_WORK_MIGRATION.md)
 
-### 自動掛載 Mac Mini M4（本機專案 SMB）
+### ⚠️ 給未來 Claude session 的核心紀律
+
+| 動作 | 在哪做 |
+|---|---|
+| **git commit / push** | **永遠在 Work 端**（`/Volumes/Work/RedTime/`） |
+| **編輯檔案** | **永遠在 Work 端** |
+| **Claude session cwd** | **永遠指 Work 端** |
+| 跑 backup.sh | Work 端（速度快） |
+| Master 端 (`/Volumes/Mac Mini M4/Red Time/`) | **唯讀副本** — daemon 自動同步 |
+
+如果你不確定當前 cwd 是哪邊：`pwd`。如果是 Master 端立刻 `cd /Volumes/Work/RedTime/`。
+
+### 同步機制速查
+
 ```bash
+cd /Volumes/Work/RedTime
+bash sync.sh status     # 看 Master ↔ Work 差異 + 衝突偵測
+bash sync.sh both       # 手動雙向同步
+bash sync.sh --daemon-status   # 看 daemon 狀態 + 最後 sync 時間
+```
+
+daemon plist：`~/Library/LaunchAgents/com.toni.redtime_autosync.plist`
+daemon log：`~/Library/Logs/redtime_sync.log`
+
+### 自動掛載 Work（本機 APFS SSD）+ Mac Mini M4（SMB 副本）
+```bash
+# Work（主開發位置 — 應該永遠掛載）
+if [ ! -d "/Volumes/Work" ]; then
+  echo "❌ Work SSD 沒掛載！請接上 SSD 再開 Claude session"
+  exit 1
+fi
+
+# Mac Mini M4（副本端，sync 用）
 if [ ! -d "/Volumes/Mac Mini M4" ]; then
   osascript -e 'tell application "Finder" to open location "smb://toni/Mac%20Mini%20M4"'
   sleep 8
 fi
 ```
 
-### 搬遷後注意事項
-- SMB 檔案權限預設 `700`，git 需設定 `core.fileMode false` 避免誤判 modified
-- 新位置已執行 `git config core.fileMode false`
+### git 設定（已套用）
+- `git config core.fileMode false`（避免 SMB 700 vs APFS 755 誤判）
+
+### 歷史路徑（已淘汰）
+- 2026-04-15 → 2026-05-02：純 SMB `/Volumes/Mac Mini M4/Red Time/`
+- 2026-04-15 之前：`/Users/toni/Downloads/時間裡的兩個妳`
 
 ## ⛔ NAS 備份（重要！不要用 Toni-NAS！）
 
