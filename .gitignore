@@ -1,0 +1,55 @@
+# Hidden / OS
+.DS_Store
+Thumbs.db
+.Spotlight-V100
+.Trashes
+.fseventsd
+.shots/
+.pycache/
+.claude/
+
+# Build / dependencies
+node_modules/
+__pycache__/
+*.pyc
+
+# Local dev tools (not for GitHub Pages)
+.githooks/
+tools/
+dev-tools/
+scripts/
+backup.sh
+sync.sh
+.sync.conf
+
+# Project docs (kept local)
+*.md
+
+# Local launcher scripts
+啟動.bat
+啟動.command
+
+# Backup / archive
+Backup/
+*.original.js
+*.original.css
+*.docx
+*.doc
+
+# Test outputs
+output/
+test-results/
+.playwright-cli/
+tools/lighthouse-baseline/
+tools/smoke-tests/
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+*.p12
+credentials.json
+
+# Daemon status (local cache)
+.tools/
