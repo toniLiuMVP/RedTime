@@ -3,6 +3,10 @@
 > **狀態**:Sprint plan(2026-05-02 17:50 round-3+1 啟動)
 > **總工程量**:**4-6 週 dedicated sprint**
 > **本 session 動作**:寫 sprint plan,不真做 vendor copy(F1.2)— 避免半成品 break runtime
+>
+> ✅ **toni 確認:F 全做(2026-05-02 18:00)** — 原話「F 全做,因為是平行世界」
+> ⚠️ **加學妹 GLB 化前置 → 完整 sprint 8-12 週**(原 4-6 週估計只算 F1-F4+E,沒含學妹 mesh 重做)
+> 學妹重設計詳見 [JUNIOR_REDESIGN.md](JUNIOR_REDESIGN.md)
 > **F1.1 已完成**:`commit b90b3fa` WebGPU detection + fallback overlay
 
 ---

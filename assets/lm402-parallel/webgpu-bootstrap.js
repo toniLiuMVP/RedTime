@@ -31,7 +31,7 @@ export async function detectWebGPU() {
 }
 
 /**
- * 顯示 fallback overlay：列出支援需求 + 引導切換到正本/雙時空
+ * 顯示 fallback overlay：列出支援需求 + 引導切換到原始時間線/雙時空
  */
 export function showWebGPUFallback(reason) {
   const overlay = document.createElement("div");
@@ -125,7 +125,7 @@ export function showWebGPUFallback(reason) {
 
   const mainBtn = document.createElement("a");
   mainBtn.href = "lm402.html";
-  mainBtn.textContent = "→ 前往 LM402 正本";
+  mainBtn.textContent = "→ 前往 LM402 原始時間線";
   Object.assign(mainBtn.style, {
     padding: "14px 36px",
     background: "#ffd49c",
@@ -211,7 +211,7 @@ export function showWebGPUPlaceholder(adapter) {
     "F1 WebGPU 偵測完成，您的瀏覽器支援下世代 GPU API。" +
     "\n真正的 WebGPU renderer 改造（F2 切 renderer / F3 重寫 shader / E 一眼瞬間極致精雕）" +
     "需要 4-6 週的 dedicated sprint，目前進行中。" +
-    "\n\n暫時請前往 LM402 正本或雙時空體驗。";
+    "\n\n暫時請前往 LM402 原始時間線或雙時空體驗。";
   info.style.whiteSpace = "pre-line";
   overlay.appendChild(info);
 
@@ -238,7 +238,7 @@ export function showWebGPUPlaceholder(adapter) {
   ["lm402.html", "lm402-twin.html"].forEach((href, i) => {
     const a = document.createElement("a");
     a.href = href;
-    a.textContent = i === 0 ? "→ LM402 正本" : "⏳ LM402 雙時空";
+    a.textContent = i === 0 ? "→ LM402 原始時間線" : "⏳ LM402 雙時空";
     Object.assign(a.style, {
       padding: "12px 28px",
       background: i === 0 ? "#ffd49c" : "rgba(168,197,255,0.16)",

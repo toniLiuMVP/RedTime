@@ -31,16 +31,19 @@
 | **下一步** | toni 開 lm402-twin.html → console 跑 `__TWIN_BALANCE__('low')` 看效果 → 反饋具體值 |
 | **剩餘工程量** | 0.3 天(toni 反饋後改 source 預設值) |
 
-### A6 真實 Motion Blur(2026-05-02 17:50 toni 質疑「為什麼跳過」)
+### A6 真實 Motion Blur ✅ **toni confirm 真做(2026-05-02 18:00)**
 
 | 項目 | 詳情 |
 |---|---|
-| **狀態** | 未做(simplified 也沒做)|
-| **真做需要** | prev viewProj matrix uniform + motion vector G-buffer + sample-along-vector blur |
-| **工程量** | 5-7 天 |
-| **simplified 替代** | accumulation blend(每幀混 30% 前一幀,有「拖影」感)— 1-2 天 |
-| ⚠️ **「跳過」是我的判斷不是事實** | 我寫「對學妹靜止場景效果不顯著,可以不做」是基於「LM402 場景學妹 70% 站著,motion blur 主要靠頭髮搖晃 / 衣襬 / 學長走進場景觸發」的觀察 — 但這是**我的視覺判斷,不該替 toni 決定**。toni 質疑後改回「待 toni 決定」 |
-| **toni 決定樹** | A) 不做 — 維持判斷;B) simplified 做 1-2 天 — accumulation blend;C) 真做 5-7 天 — motion vector G-buffer |
+| **狀態** | ✅ toni 確認:**選 C 真做** — 原話「A6 我們真做,因為是雙時空」 |
+| **設計骨架** | [docs/A6_MOTION_BLUR_DESIGN.md](docs/A6_MOTION_BLUR_DESIGN.md)(2026-05-02 18:00 完成) |
+| **核心** | Motion Vector G-buffer(prev/current ViewProjMatrix → velocity RT → sample-along-vector blur) |
+| **工程量** | 5-7 天 dedicated session |
+| **適用線** | lm402-twin 雙時空(non-blocking lm402 原始時間線) |
+| **預設** | M18 nuclear default — 預設關,console `__MOTION_BLUR__.enable()` opt-in |
+| **跟 F sprint 關係** | A6 先在 WebGL2 跑 1-2 月,F sprint phase 3 一起 WGSL 化 |
+| **跟學妹 GLB 化關係** | A6 phase 1 static mesh + camera motion;phase 2(GLB 化後)加 SkinnedMesh velocity |
+| **下一步** | toni 確認設計骨架後 dedicated session 跑 5-7 天 |
 
 ### E4 場景變換(教室外 / 月台 / 咖啡廳)2026-05-02 17:50 啟動 simplified
 
@@ -54,12 +57,29 @@
 
 ---
 
-## 🔴 平行世界 LM402-parallel · 真 WebGPU 改造
+## 🔴 平行世界 LM402-parallel · 真 WebGPU 改造 ✅ **toni confirm 全做(2026-05-02 18:00)**
 
-> ⚠️ **最大工程 4-6 週 dedicated sprint**。F1.1 偵測 + fallback 完成(commit `b90b3fa`)。
-> **2026-05-02 17:50 完整 sprint plan**:[docs/F_SPRINT_PLAN.md](docs/F_SPRINT_PLAN.md)
-> 內含 phase 0-5 工程分解 / 風險評估 / ROI / 中間方案 A/B/C(toni 決定)
-> 本 session 不真做 — 不在日常 session 夾 sprint 級工程,避免半成品 break runtime
+> ✅ **toni 確認:F 全做** — 原話「F 全做,因為是平行世界」
+> ⚠️ **完整 sprint 8-12 週**(F1.2-F4 + E + 學妹 GLB 化前置,見下)
+> 完整 sprint plan:[docs/F_SPRINT_PLAN.md](docs/F_SPRINT_PLAN.md)
+> 學妹重設計強耦合:[docs/JUNIOR_REDESIGN.md](docs/JUNIOR_REDESIGN.md)
+> Phase 0 F1.1 ✅(`b90b3fa`)
+> 本 session 不真做 — 8-12 週工程不能在日常 session 啟動半成品
+
+### 推薦執行順序(toni 確認後 dedicated sprint)
+
+| Phase | 內容 | 工程量 | 累計 |
+|---|---|---|---|
+| **學妹重設計 Phase 0** | AI 生成 GLB 嘗試(Tripo / RODIN / Meshy) | 1 天 | 1 天 |
+| **學妹重設計 Phase 1** | GLB 整合到 lm402-twin(取代 primitive) | 2-3 週 | 約 3 週 |
+| **F1.2** | Vendor Three.js WebGPURenderer | 3 天 | 3.5 週 |
+| **F2** | 切換 WebGLRenderer → WebGPURenderer | 5 天 | 4 週 |
+| **F3** | GLSL → WGSL 重寫(5+ ShaderMaterial) | 7-10 天 | 5.5 週 |
+| **F4** | compute shader(SSGI / GPU cloth / particle physics) | 14-21 天 | 8.5-9 週 |
+| **E 一眼瞬間精雕** | 4K texture + dedicated camera + 微表情 amplification | 7 天 | 9.5-10 週 |
+| **共** | | | **8-12 週 dedicated sprint** |
+
+⚠️ **學妹 GLB 化是 F sprint 的隱含前置** — 在 primitive 上套 4K 沒意義(F4/E 投入回報降低 50%)
 
 ### F1.2 Vendor Three.js WebGPURenderer
 
@@ -108,7 +128,26 @@
 
 ---
 
-## ⚪ 正本 LM402 · 待做
+## 🌟 學妹外觀重新設計 ⭐ **toni 訴求(2026-05-02 18:00)— 一眼瞬間核心**
+
+> toni 原話:「LM402 的學妹 3D 呈現才是最重要的,才會一眼瞬間」
+> 完整設計探討:[docs/JUNIOR_REDESIGN.md](docs/JUNIOR_REDESIGN.md)
+
+| 項目 | 詳情 |
+|---|---|
+| **問題** | toni 反映「學妹現在的設計不像『人』」 |
+| **根因** | 程式積木的 polygon flow 限制(sphere segments 邊界、缺軟組織暗示)|
+| **4 路選擇** | A) 強化 primitive 1-2 週 / B) GLB 模型整合 2-3 週(取決於 GLB 來源)/ C) 混合 4-6 週 / **D) AI 生成 GLB 1 天嘗試 + 整合 1-2 週** |
+| **建議** | **D + B**(AI 生成驗證可行性後走 GLB 整合)— ROI 最高 |
+| **適用線** | lm402-twin 雙時空(lm402 原始時間線維持 primitive 作對照組) |
+| **架構極限** | L1-L6 階段(現狀 L1 程式生成卡通 → 目標 L4-L5 GLB 寫實 / MetaHuman) |
+| **跟 F sprint 強耦合** | F4/E 必須在 GLB mesh 上才有意義(primitive 套 4K 無感) |
+| **toni 提供需要的素材** | 1994/2005/2025 學妹定稿 4 張高解析度 PNG(M4 端已有) |
+| **下一步** | toni 確認方向 → dedicated session 跑 Phase 0(AI 嘗試 1 天) |
+
+---
+
+## ⚪ LM402 原始時間線 · 待做
 
 ### C7 Idle pose 變化
 
