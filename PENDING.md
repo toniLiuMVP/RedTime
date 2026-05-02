@@ -3,7 +3,7 @@
 > 給未來 Claude Code session 一眼看清「還剩什麼沒做」。
 > 學自 JYQXZ / PTT 等其他專案的 PENDING.md 慣例。
 
-最後更新：2026-05-02（晚間：跨專案 lessons 整理 + LESSONS.md 建立）
+最後更新：2026-05-02（17:30 晚間：round-3 ALLRM 後加 daemon / sync follow-up）
 
 ---
 
@@ -170,6 +170,47 @@
 
 - 🆕 **idempotent injector + marker tag** — 對已生成 HTML 加 enhancement 用 `createElement` + `ADDED MANUALLY` marker（半天，未來需要時）
 - 🆕 **`_Mac首次執行_先點我.command` ice-breaker** — zip 分發給玩家試玩時必備（10 分鐘）
+
+---
+
+## 🆕 Round-3 ALLRM 後 follow-up（2026-05-02 17:30 新增）
+
+> 本 session round-2 + round-3 揭露 daemon/sync infrastructure 待改項目。詳見 [LESSONS.md](LESSONS.md) §3.10/§3.11/§3.11.1/§3.12。
+
+### 🔴 修 sync_daemon.sh PROBE 設計盲點（高優先）
+
+| 項目 | 詳情 |
+|---|---|
+| **狀態** | round-3 抓到（commit `8927b40` LESSONS §3.12）|
+| **問題** | 單一 anchor PROBE = `lm402.html`，本 session 改 LESSONS / sync.sh / .sync.conf 沒碰 lm402.html → daemon 11 小時 silent skip 沒同步任何 commit 到 SMB |
+| **修法 3 選 1** | (a) PROBE 多檔取 max mtime（30 分鐘，最快）/ (b) 每 N 分鐘無條件 force sync 一次（1 小時，雙保險）/ (c) `find $WORK -newer $LAST_SYNC_MARKER` 全目錄 walk（半天，最準但成本高） |
+| **建議** | 先做 (a) 短期 work-around（lm402.html + LESSONS.md + sync.sh 取 max），再評估 (b) 雙保險 |
+| **工程量** | 30 分鐘（a） + 1 小時（b） |
+
+### 🟡 sync.sh `--audit` 子命令（中優先）
+
+| 項目 | 詳情 |
+|---|---|
+| **狀態** | 多專案有同 pattern（CPBL2 16:05 / RedCandle 14:35 / PAL 17:00 / MVP 17:10 都跑過 4 重驗證）|
+| **內容** | 一條命令跑完 §SOP 4 重驗證:`stderr.log` 空 + `main log` 無近期 ENOPERM + `anchor mtime` 雙端收斂 + `du -sh` 雙端 < 5% 差 + `last_sync.json` timestamp 接近 now |
+| **觸發** | `bash sync.sh --audit` |
+| **可選擴充** | 跑 audit 失敗時自動跑 touch trigger 重試 |
+| **工程量** | 半天 |
+
+### 🟡 廣播 v2.2 連鎖 over-claim 校正（已在 LESSONS 但 PENDING 該記）
+
+| 項目 | 詳情 |
+|---|---|
+| **狀態** | LESSONS §3.11 + §3.11.1 + §3.12 已記，但本 session 仍有「8 個 daemon stderr 100% 空」這個錯誤訊息散在 v2.2 廣播被各專案 cite |
+| **建議** | **不主動修廣播 v2.2**（保留 audit trail），但 round-N 留言中持續提醒「v2.2 over-claim 已校正,實際是 RedTime/PAL = 對照組,LD/RedCandle/JYQXZ/MVP = 早期 ENOPERM 後自癒,CPBL2 = PROBE bug」|
+
+### ⚪ 「3 種 silent skip pattern」full taxonomy 升級全域（toni 決定）
+
+| 項目 | 詳情 |
+|---|---|
+| **狀態** | 廣場 `lessons/macos_tcc_daemon_subtleties.md` 已記 3 種 pattern + 對照表 |
+| **建議升級** | 多 case study 累積後（≥3 daemon 跨各 pattern 驗證）升級到 `~/.claude/CROSS_PROJECT_LESSONS.md` § macOS daemon 真修法 stable 章節 |
+| **工程量** | 0.5 天（純文件搬移 + 整理）|
 
 ---
 
