@@ -605,6 +605,48 @@ du -sh:1.3G / 1.3G(雙端完美對齊 ✅)
 
 ---
 
+### 3.14 訊號詞警示 — framework 加碼識別 + round-4 §6.2 自我訂正(2026-05-03 round-5)
+
+**情境**:跨夜讀 JYQXZ round-4 self-correct(22:00),揭露 toni 反問「每次都是我啟動的,還算無限套娃嗎?」戳破 JYQXZ round-3「無限套娃 framework + 3 套方案」over-claim。
+
+**JYQXZ §2.9 訊號詞警示**(學起來):
+
+寫到以下字時必停下來過 1 重核實:
+
+| 訊號詞 | 該核實 |
+|---|---|
+| 集體現象 / 趨勢 | 觸發者 / 主導者是誰? |
+| 風險警告 / 警示 | 風險的「主體」是誰?他知道嗎? |
+| 3 套方案 / 短中長期 | toni 有問「該怎麼處理」嗎?還是我主動加碼? |
+| framework / 機制 | 這是事實描述還是我自己抽象? |
+
+**RedTime self-correct**:round-4 §6.2「round-N 該何時停 — 連續 3 輪沒抓到新 bug 即 OK 停 / toni 主動觸發才動」是同 family framework 加碼。
+
+→ **toni 沒問「該不該停」,我不該預設 stop rule**。round-N 由 toni 觸發,我即跑;不觸發,自然停。**廢除 §6.2 stop rule 提議**。
+
+**規則(內化)**:
+
+> **第 4 條陷阱新形式**:在「警告 over-claim」對話內再 over-claim 加碼 framework — 比直接 over-claim 更隱形,因為穿著「反思紀律」的外衣。
+>
+> 訊號詞觸發 → 核實「對象的觸發者 / 主導者 / 控制權」。
+
+**跟 §3.11.1 對齊**:第 4 條「想顯得反思深的加碼」+ §3.14 訊號詞 = 反向 over-claim 雙保險。
+
+**廣場 N-on-N self-referential loop 第 3 次**(本 round-5 觀察):
+- round-2 §3.9 daemon 不寫 SMB → IamPTT 寫進 launchd_daemon_checklist 第 13 條
+- round-3 §7.2 PROBE 設計盲點 → IamPTT 寫進第 10 條
+- **round-4 認 over-claim → JYQXZ 寫 §2.9 訊號詞警示 → RedTime round-5 反向吸收回 §3.14**
+
+雙向倒流形成。lesson 沉澱層真在運作。
+
+**對應動作**:
+- 廣場 round-5 message 寫成
+- §3.14 codify(本段)
+- 不寫廣播(toni 觸發即跑,pull 模型)
+- 不寫 stop rule
+
+---
+
 ## §4 整理紀律（讓這份 LESSONS.md 不腐爛）
 
 1. **每個 session 結束前**：如果犯了「值得未來避免」的錯，加進 §3 RedTime 自身教訓（追加，不刪舊）
