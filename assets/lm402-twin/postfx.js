@@ -479,6 +479,15 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     rain:      { amount: 0 },                                  // 預設關，console 開：0.4~0.8
     // A5 Volumetric Fog — 完全關（toni 反映畫面濛濛的）
     volFog:    { density: 0, color: [0.92, 0.85, 0.72] },     // 0.015 → 0（console 開：0.02~0.06）
+    // A6 Motion Blur Phase 1 — accumulation blend(2026-05-03 round-5+2 wire-up stub）
+    // ⚠️ TODO dedicated session:整合 motion-blur.js 模組(已寫成,180 行 self-contained)
+    //   1. import { createMotionBlur } from "./motion-blur.js"
+    //   2. createPostFX 內 init motionBlur(renderer, width, height)
+    //   3. render() 結尾 hook:if (tuning.motionBlur && motionBlurAmount > 0)
+    //      → 改 final pass 寫 finalRT 而非 canvas → motionBlur.apply(finalRT) → 寫 canvas
+    //   詳細整合 SOP:docs/A6_PHASE1_INTEGRATION.md
+    motionBlur:       false,                                  // M18 nuclear default
+    motionBlurAmount: 0.3,                                    // 0-1,0.3 = 自然拖影
   };
 
   // ─── DPR-aware 解析度（手機降畫質） ───
