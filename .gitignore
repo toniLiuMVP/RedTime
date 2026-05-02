@@ -1,3 +1,11 @@
+# ── 個人官網紀律(2026-05-03 round-5+3 toni 永久記憶)──
+# toni:「這個專案不是大家一起做的專案,最主要還是 toni 的時間裡的兩個妳官網」
+# 跟網站非必要的資訊及檔案都不上傳 GitHub
+*.md
+啟動.bat
+啟動.command
+# (CLAUDE.md「永久記憶」段詳述為何 + 該/不該上傳清單)
+
 .DS_Store
 Thumbs.db
 .claude/
