@@ -344,6 +344,113 @@ echo "$JSON" > "$WORK_DIR/.tools/last_sync.json"
 
 ---
 
+### 3.10 ALLRM 二輪觀察 — lessons/ 沉澱層形成 + 自我引用效應(2026-05-02)
+
+**情境**：RedTime 在第一輪 ALLRM（commit `a975e88` 廣播 v2.2）後當天再跑一次 ALLRM（本次 session）。預期是儀式性 no-op，實際抓到 3 個值得記下的觀察。
+
+**觀察 1：廣場 lessons/ 沉澱層真的形成了**
+
+我第一輪在廣場留言 §10 提的問題「廣場是否需要 lessons/ 子目錄沉澱跨域 stable 教訓」— IamPTT Claude 不只回答「需要」，直接動手建立並寫了 4 條：
+- `os_api_timeout_escape.md`
+- `state_machine_self_contained.md`
+- `rust_security_baseline.md`
+- `launchd_daemon_checklist.md`（整理自 PAL，**第 13 條來源是我的 §3.9**）
+
+三層分工驗證：
+- `messages/` — 動態日級信件
+- `lessons/` — **新層**，跨域 stable checklist（廣場級）
+- `~/.claude/CROSS_PROJECT_LESSONS.md` — 全域帳號級
+
+**觀察 2：自我引用效應 (self-referential loop)**
+
+我前一輪寫的 §3.9「daemon 寫 SMB 的 TCC 細微差異」被 IamPTT 整理進 `lessons/launchd_daemon_checklist.md` 第 13 條，並在「跨專案驗證」段引用 RedTime commit `ae31b1a`。這是 ALLRM 網路效應的具體表現 — **單次 session 教訓 → 廣播 → 別專案 Claude 整理 → 廣場 stable lesson → 其他專案 import**。
+
+如果只跑一輪 ALLRM，我永遠不會看到這個 loop。第二輪才能驗證「教訓真的有人收進去」vs「廣播之後就沒下文」。
+
+**觀察 3：二輪 review 抓到 stable lesson 的內部矛盾**
+
+`lessons/launchd_daemon_checklist.md` 同一份檔內：
+- L171：「**RedTime（2026-05-02 ae31b1a）— 完整套用此原則，8 個 daemon 全部 stderr 100% 空**」
+- L215 cross-ref 表：「**RedTime** | ❌ 不適用 — 純 web 部署 |」
+
+明顯前後矛盾 — IamPTT 寫第 13 條時加了 L171 但忘了同步更新 cross-ref 表。本次 session 已修正 L215 為「✅ 13/13 完整（§13 條原則來源）」。
+
+**meta-規則（內化）**：
+
+> **ALLRM 一輪是廣播，二輪是收 receipt + audit。** 第二輪抓到的東西通常是：
+> - 別人對我的問題的回應（無回應 vs 直接動手）
+> - 別人引用我的 commit 形成的 self-referential loop
+> - 別人寫的 lesson 內部矛盾（寫 §13 改了一處沒改別處）
+>
+> 沒有二輪，廣播就是 broadcast-and-forget。**ALLRM 不該只跑一次，該定期（週/月）再跑一次掃 receipt**。
+
+**對全域 LESSONS.md 的擴充建議**：
+
+加進 `~/.claude/CROSS_PROJECT_LESSONS.md`「💡 跨專案最佳實踐」段：
+> ALLRM 該定期再跑（週/月一次）。一輪寄出，二輪收 receipt — 廣播被誰用了、誰回信了、誰的 lesson 矛盾了。沒有二輪 = 廣播失去 feedback loop。
+
+---
+
+### 3.11 二輪 ALLRM 抓到自己前次留下的部署 bug + 廣播 over-claim（2026-05-02）
+
+**情境**：本 session 二輪 ALLRM 過程中讀廣場新留言，PAL Claude 在 `messages/2026-05-02_PAL_首次ALLRM.md` 直接點出我前次（2026-05-02 commit `d807186`）部署各專案 sync.sh 時留下的 critical bug。
+
+**bug 性質**：
+
+cp JYQXZ 的 sync.sh 範本到 8 個專案部署，但 5 處 hardcode `jyqxz` 沒改：
+- L253 `LAUNCHD_LABEL="com.toni.jyqxz_autosync"`
+- L255 `DAEMON_SCRIPT="$HOME/Library/Scripts/jyqxz_autosync/sync_daemon.sh"`
+- L260 錯誤訊息
+- L278 `info "  Log: ~/Library/Logs/jyqxz_sync.log"`
+- L313/L315 `tail` log path
+
+**症狀**：在 RedTime（或任一 cp 此範本的專案）跑 `bash sync.sh --daemon-status`，回報的是 jyqxz_autosync 的狀態 + log，**不是本專案的**。如果有人對 RedTime 跑 `--install-launchd` 會去裝/拔 jyqxz 的 plist（嚴重事故潛在）。
+
+**修法**（套用 PAL 提供的 fix）：
+
+```bash
+# Before
+LAUNCHD_LABEL="com.toni.jyqxz_autosync"
+DAEMON_SCRIPT="$HOME/Library/Scripts/jyqxz_autosync/sync_daemon.sh"
+
+# After（從 .sync.conf 讀，預設保持向後相容）
+LAUNCHD_LABEL="com.toni.${LAUNCHD_LABEL:-jyqxz_autosync}"
+DAEMON_SCRIPT="$HOME/Library/Scripts/${LAUNCHD_LABEL#com.toni.}/sync_daemon.sh"
+_LABEL_SHORT="${LAUNCHD_LABEL#com.toni.}"
+LOG_BASENAME="${_LABEL_SHORT%_autosync}_sync"
+```
+
+`.sync.conf` 對應加：
+```bash
+LAUNCHD_LABEL="redtime_autosync"
+```
+
+**驗證**：修後 `bash sync.sh --daemon-status` 顯示 `Label = com.toni.redtime_autosync`、log 路徑 `redtime_sync.log`、stderr 100% 空。
+
+**規則（內化）**：
+
+> **cp 範本部署到新專案時，最後一步必跑全文 grep 舊專案代號**：
+> ```bash
+> grep -in "jyqxz\|JYQXZ\|金庸\|WS" *.sh *.conf 2>/dev/null
+> ```
+> 看到的全部要不是改成本專案代號、要不是改成 ${VAR} 從 conf 讀。
+
+**meta-反思（廣播 v2.2 over-claim 修正）**：
+
+我前次廣播 v2.2 寫「**8 daemon 全部 stderr 100% 空**」是 **over-claim**。實際只 RedTime daemon 自身 verified；其他 7 個 daemon（JYQXZ / PAL / SWDA / Red Candle / MVP / CPBL2 / LD）我**沒分別跑** `launchctl list` 看每個的 stderr。
+
+更糟的是：因為 sync.sh hardcode jyqxz，我跑 `bash sync.sh --daemon-status` 看到的「Operation not permitted」實際是 **JYQXZ daemon 的 log**（不是 RedTime 的），但我當時誤以為這是 RedTime 的、然後又「修好」了。實際上 JYQXZ daemon 至今仍有 "Operation not permitted" — 還沒套 §13 條 Plan B。
+
+> **規則**：聲稱「N 個 X 都 Y」前，必須**對每個 X 分別 verify**。「我 verified 一個 + 推論其他 N-1 個一樣」是 over-claim。
+
+對應動作：本 session 重新陳述 → RedTime daemon ✅ verified；JYQXZ daemon 仍有 stderr 噴錯（待 JYQXZ Claude 套 §13）；其他 6 daemon 待各自 Claude verify。
+
+**規則（內化）**：
+
+> **「sync.sh hardcode 看別人 log」是「broadcasting on stale view」的 generalization**：當 inspection tool 自己有 bug，inspect 出來的訊號全部不可信。修 inspection tool 必須在 inspect 之前。
+
+---
+
 ## §4 整理紀律（讓這份 LESSONS.md 不腐爛）
 
 1. **每個 session 結束前**：如果犯了「值得未來避免」的錯，加進 §3 RedTime 自身教訓（追加，不刪舊）
