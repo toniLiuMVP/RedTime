@@ -177,25 +177,23 @@
 
 > 本 session round-2 + round-3 揭露 daemon/sync infrastructure 待改項目。詳見 [LESSONS.md](LESSONS.md) §3.10/§3.11/§3.11.1/§3.12。
 
-### 🔴 修 sync_daemon.sh PROBE 設計盲點（高優先）
+### ✅ ~~修 sync_daemon.sh PROBE 設計盲點~~（高優先）— **2026-05-02 17:30 完成**
 
 | 項目 | 詳情 |
 |---|---|
-| **狀態** | round-3 抓到（commit `8927b40` LESSONS §3.12）|
-| **問題** | 單一 anchor PROBE = `lm402.html`，本 session 改 LESSONS / sync.sh / .sync.conf 沒碰 lm402.html → daemon 11 小時 silent skip 沒同步任何 commit 到 SMB |
-| **修法 3 選 1** | (a) PROBE 多檔取 max mtime（30 分鐘，最快）/ (b) 每 N 分鐘無條件 force sync 一次（1 小時，雙保險）/ (c) `find $WORK -newer $LAST_SYNC_MARKER` 全目錄 walk（半天，最準但成本高） |
-| **建議** | 先做 (a) 短期 work-around（lm402.html + LESSONS.md + sync.sh 取 max），再評估 (b) 雙保險 |
-| **工程量** | 30 分鐘（a） + 1 小時（b） |
+| **完成狀態** | ✅ 採用 (a) 多檔 PROBE 取 max mtime — commit `fd7347f` document 在 message |
+| **修法** | `PROBES=("lm402.html" "LESSONS.md" "PENDING.md" "CLAUDE.md" "sync.sh" ".sync.conf")` for 迴圈取雙端 max |
+| **驗證** | reload daemon 後立刻 sync(17:26:06→17:26:15, 9 秒);SMB LESSONS.md mtime `1777712412` 對齊 Work;du -sh 1.3G/1.3G |
+| **後續(可選)** | (b) 每 N 分鐘無條件 force sync 一次 — 雙保險,等 multi-PROBE 跑 1-2 週看是否還有 silent skip 才決定要不要做 |
 
-### 🟡 sync.sh `--audit` 子命令（中優先）
+### ✅ ~~sync.sh `--audit` 子命令~~（中優先）— **2026-05-02 17:30 完成**
 
 | 項目 | 詳情 |
 |---|---|
-| **狀態** | 多專案有同 pattern（CPBL2 16:05 / RedCandle 14:35 / PAL 17:00 / MVP 17:10 都跑過 4 重驗證）|
-| **內容** | 一條命令跑完 §SOP 4 重驗證:`stderr.log` 空 + `main log` 無近期 ENOPERM + `anchor mtime` 雙端收斂 + `du -sh` 雙端 < 5% 差 + `last_sync.json` timestamp 接近 now |
-| **觸發** | `bash sync.sh --audit` |
-| **可選擴充** | 跑 audit 失敗時自動跑 touch trigger 重試 |
-| **工程量** | 半天 |
+| **完成狀態** | ✅ commit `fd7347f` |
+| **內容** | `bash sync.sh --audit` 跑 §SOP 4 重驗證 + emoji 標示 ✅/⚠️/❌ + FAIL 時 return 1 |
+| **驗證** | 4/4 通過 + bash sync.sh help 列出新子命令 |
+| **後續(可選)** | 跑 audit 失敗時自動 touch trigger 重試(若以後常踩需要) |
 
 ### 🟡 廣播 v2.2 連鎖 over-claim 校正（已在 LESSONS 但 PENDING 該記）
 
