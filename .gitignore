@@ -30,6 +30,15 @@ sync.sh
 啟動.bat
 啟動.command
 
+# Reference images (kept on local backup, not for site)
+1994年學妹定稿/
+2005年學妹定稿/
+2025年學妹定稿/
+
+# Placeholder / test fixtures
+.gitkeep
+assets/lm402-parallel/webgpu-test.html
+
 # Backup / archive
 Backup/
 *.original.js
