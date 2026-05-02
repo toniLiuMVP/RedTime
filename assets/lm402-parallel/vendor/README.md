@@ -7,12 +7,22 @@
 
 原 F_SPRINT_PLAN.md 估 F1.2 vendor copy 工程量 **3 天**(從 `examples/jsm/renderers/webgpu/` 拷整套依賴樹 10+ 檔)。
 
-**實測 r179 改成 single-file vendor**:
-- `three.webgpu.min.js`(552 KB)— WebGPURenderer + 全依賴 + Node system + WebGPUBackend
-- `three.webgpu.js`(1.74 MB)— unminified for debug
-- `three.webgpu.nodes.js`(同尺寸)— node-system focused 變體
+**實測 r179 vendor 結構**:不是 examples 樹,但**也不是 single-file**(我前面誤稱 single-file 是 over-claim)。
 
-F1.2 工程量 **3 天 → 30 分鐘**(從 examples 樹複製 → cp 一個檔)。
+- `three.webgpu.min.js`(566 KB)— WebGPURenderer + WebGPUBackend,**import `./three.core.min.js`**
+- `three.core.min.js`(380 KB)— Three.js 核心(scene / camera / mesh / shader 等)
+- `three.tsl.min.js`(21 KB)— Three Shader Language(WebGPU shader DSL)— 可選,webgpu.min 不直接 import 但 nodes 變體需要
+- `three.webgpu.js`(1.74 MB)— unminified webgpu for debug
+
+**Import 鏈**(grep -E 驗證):
+```
+three.webgpu.min.js → "./three.core.min.js"   (依賴)
+three.core.min.js   → (self-contained,無依賴)
+```
+
+F1.2 工程量校正:**3 天 → 30 分鐘 + 修 5 分鐘**(我 round-3+1+1+1 第一次 cp 漏 three.core.min.js,toni 跑 test.html 抓到 404,本次補拷)。
+
+**meta 教訓**(對齊 LESSONS §3.13 round-4):**寫「single-file」claim 前必 grep import 鏈**,不該假設 minified 就是 single-file。
 
 ## 用法(F2 phase 開始時)
 
