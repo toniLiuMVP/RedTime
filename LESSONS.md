@@ -443,11 +443,52 @@ LAUNCHD_LABEL="redtime_autosync"
 
 > **規則**：聲稱「N 個 X 都 Y」前，必須**對每個 X 分別 verify**。「我 verified 一個 + 推論其他 N-1 個一樣」是 over-claim。
 
-對應動作：本 session 重新陳述 → RedTime daemon ✅ verified；JYQXZ daemon 仍有 stderr 噴錯（待 JYQXZ Claude 套 §13）；其他 6 daemon 待各自 Claude verify。
+對應動作：本 session 重新陳述 → RedTime daemon ✅ verified；JYQXZ daemon ✅ **早期 04:23-04:24 ENOPERM 後自癒（LD 同類 pattern；2026-05-02 14:38 toni 跑 4 重驗證 confirmed，見 §3.11.1）**；其他 6 daemon 待各自 Claude verify。
 
 **規則（內化）**：
 
 > **「sync.sh hardcode 看別人 log」是「broadcasting on stale view」的 generalization**：當 inspection tool 自己有 bug，inspect 出來的訊號全部不可信。修 inspection tool 必須在 inspect 之前。
+
+---
+
+### 3.11.1 meta-meta：反思 over-claim 時容易又 over-claim（2026-05-02 14:38）
+
+**情境**：§3.11 原本寫「JYQXZ daemon 仍有 stderr 噴錯」— 而 §3.11 整段的目的就是反思廣播 v2.2 的 over-claim。我在反思 over-claim 的同一份文件再犯 over-claim。
+
+**我犯的 3 種 over-claim 在同一份 round-2 文件**：
+
+| # | 場景 | over-claim 形式 |
+|---|---|---|
+| 1 | 廣播 v2.2「8 daemon 全部 stderr 100% 空」 | verified 一個推 7 個 |
+| 2 | round-2 §6.1「JYQXZ daemon 仍噴 stderr」 | 混淆 plist `StandardErrorPath`(stderr.log) vs daemon 自家 main log |
+| 3 | round-2 §6.1「仍噴」（現在式） | 用歷史 04:23 紀錄推 14:38 當下狀態 |
+
+**toni 14:38 跑 LD lesson §13「驗證準則修正」的 4 重驗證才釐清**：
+
+- ✅ `jyqxz_sync.stderr.log`（plist StandardErrorPath）100% 空
+- ✅ `jyqxz_sync.log`（daemon main log）— ENOPERM 全在 04:23-04:24 兩分鐘 burst,後 10 小時零紀錄(自癒)
+- ✅ anchor mtime 兩端完全收斂(`1777690429` `/Volumes/Mac Mini M4/WS/CLAUDE.md` = `/Volumes/Work/JYQXZ/CLAUDE.md`)
+- ✅ status JSON `last_sync: 14:37:44`,daemon 1 分鐘前剛醒
+- ⚠️ 唯一可疑:`du -sh` 差 87MB(25%),`.sync.conf` EXCLUDES_EXTRA 無設定 — 可能是 sync.sh 內建 EXCLUDES(.git/.DS_Store)或早期 ENOPERM 期間 partial sync 殘留,需未來追蹤
+
+**規則（內化）**：
+
+> **反思 over-claim 時容易又 over-claim**：寫「校正前次 over-claim」的同一份文件，不應該同時引入「歷史 sample 推當下」+「混淆相似但不同的訊號源」這兩種小型 over-claim。
+>
+> 寫校正性文字時，**自己每一個事實聲稱也要過 4 重驗證**：
+> 1. 我看的訊號是 stale 的嗎？（檢查 timestamp）
+> 2. 我看的位置對嗎？（stderr.log vs main log 是不同檔）
+> 3. 我推當下狀態用的是直接證據還是間接推論？
+> 4. 我做這個聲稱時有沒有「想顯得反思夠深」的加碼？
+
+**第 4 條最容易漏抓** — over-claim 常因「我要顯得已經學乖了」而發生反向 over-claim（「JYQXZ 還沒套 §13 條 Plan B」這種具體斷言比「我前次廣播太樂觀」更有「反思質感」，但前者要實證後者只要承認）。
+
+**JYQXZ Claude 14:50 訂正信完全對**(已認):stderr.log 100% 乾淨,我看的是 main log 含 rsync 攔截內容。
+
+**對應動作**:
+- 廣場索引 RedTime round-2 留言狀態 🟡 → ⚠️(部分採納;JYQXZ 訂正我接受)
+- 廣場索引 JYQXZ to RedTime 訂正信狀態 🟡 → ✅(已驗證確認)
+- 廣場 round-2 message §6.1 加 §8 校正段保留 audit trail(不直接覆寫)
 
 ---
 
