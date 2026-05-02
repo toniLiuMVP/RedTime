@@ -368,12 +368,16 @@ cmd_audit() {
         local NOW
         NOW=$(date +%s)
         local AGE=$((NOW - LAST_UNIX))
+        # threshold 對齊 daemon FORCE_SYNC_INTERVAL=1800(30 分鐘 force sync 雙保險)
+        # round-4 修法:audit 自家跟自家 daemon 不同步是 sibling bug to round-3 PROBE 設計盲點
         if [ "$AGE" -lt 120 ]; then
             ok "[3/4] last_sync ${AGE}s 前 (< 2 分鐘,daemon 活躍)"
-        elif [ "$AGE" -lt 300 ]; then
-            warn "[3/4] last_sync ${AGE}s 前 (2-5 分鐘,可能正常但 PROBE mtime 沒變)"
+        elif [ "$AGE" -lt 1800 ]; then
+            ok "[3/4] last_sync ${AGE}s 前 (< 30 分鐘,daemon 處於 mtime probe silent skip 期 — 正常,等 force sync)"
+        elif [ "$AGE" -lt 2100 ]; then
+            warn "[3/4] last_sync ${AGE}s 前 (30-35 分鐘,force sync 該到了 — 等 daemon 下一個 tick)"
         else
-            err "[3/4] last_sync ${AGE}s 前 (> 5 分鐘,可能 silent skip)"
+            err "[3/4] last_sync ${AGE}s 前 (> 35 分鐘,force sync 該到沒到 — daemon 可能真卡)"
             warn "    建議:cd $WORK && touch lm402.html && sleep 70 && bash sync.sh --audit"
             FAIL=$((FAIL+1))
         fi
