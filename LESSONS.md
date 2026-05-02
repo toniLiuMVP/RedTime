@@ -492,6 +492,88 @@ LAUNCHD_LABEL="redtime_autosync"
 
 ---
 
+### 3.12 round-3 ALLRM:抓到自家 daemon PROBE 設計盲點 — 11 小時 silent skip(2026-05-02 16:57)
+
+**情境**:本 session 跑 round-3 ALLRM 時掃廣場,讀到 CPBL2 16:05 round-2 留言抓到他自己 daemon 的 PROBE bug(PROBE = README.md 但檔不存在)。CPBL2 §5 點名 RedTime「建議 ALLRM_PROTOCOL Step 1 加 daemon health probe」。
+
+回頭驗證 RedTime daemon — 發現自己也卡 11 小時:
+
+| 驗證 | 結果 |
+|---|---|
+| `last_sync.json` 之前寫於 | 05:52:37(11 小時前) |
+| daemon log 期間 | 05:07 + 05:52 兩次成功 sync,中間 11 小時零紀錄 |
+| stderr.log | 0 bytes(從來沒 ENOPERM) |
+| anchor `lm402.html` 兩端 mtime | `1777672352`(SMB) / `1777672352`(Work)完全相等 |
+
+**根因(自家 PROBE 設計盲點)**:
+
+`~/Library/Scripts/redtime_autosync/sync_daemon.sh` L49 設 `PROBE="lm402.html"`。本 session 我改了 `LESSONS.md` / `sync.sh` / `.sync.conf` 共 5 個 commit,**沒碰 lm402.html**。daemon 60s 醒來檢查 `stat` lm402.html 雙端 mtime,差 0 秒 ≤ 2 容差 → silent skip → 11 小時內 5 個 commit 全沒同步到 SMB。
+
+**修法(本次套 RedCandle 的 touch trigger 訣竅)**:
+
+```bash
+touch /Volumes/Work/RedTime/lm402.html  # 強迫 anchor mtime 更新
+# 等 70 秒(daemon 60s tick + buffer)
+```
+
+驗證(16:57:47 → 16:57:58,11 秒成功 sync):
+```
+{"project":"RedTime","last_sync":"2026-05-02 16:57:58","unix":1777712278, ...}
+du -sh:1.3G / 1.3G(雙端完美對齊 ✅)
+```
+
+**3 種 daemon silent skip 的 root cause 全圖(從廣場累積得出)**:
+
+| Pattern | 觀察到的專案 | stderr.log | main log | last_sync.json |
+|---|---|---|---|---|
+| (a) **ENOPERM burst 後自癒** | LD / RedCandle | 0 bytes(假象) | 早期有 ENOPERM | 自癒後恢復寫 |
+| (b) **PROBE 檔不存在** | CPBL2 | 0 bytes | 安靜 | 從未寫過 |
+| (c) **PROBE 存在但 session 沒改它** | **RedTime 本次** | 0 bytes | 安靜 | timestamp 卡在部署初次 |
+
+(c) 最隱形 — daemon 完全 healthy,但「anchor 檔變動代表整個目錄變動」的設計假設在「我改 LESSONS 不改 lm402.html」場景失敗。
+
+**規則(內化)**:
+
+> **單一 anchor PROBE 是「目錄活動的 sample」,不是「目錄真相」**。當 sample 不是 representative(本 session 改 LESSONS 不改 PROBE),daemon 會 silent skip 真實變動。
+>
+> 雙保險建議(future PR):
+> 1. **PROBE 多檔**:`stat -f %m` 多個 anchor 取 max,任一變動 trigger sync
+> 2. **強制 sync 週期**:每 N 分鐘(如 30 分鐘)不論 mtime 強制跑一次 sync,backup 設計暗箝
+> 3. **目錄 mtime walk**:`find $WORK -newer $LAST_SYNC_MARKER` 才能真實偵測,但成本較高
+
+**對自身 ALLRM 流程的影響**:
+
+我前次 round-2 §3.11.1 寫「daemon healthy verified」是基於 anchor mtime 雙端收斂這個訊號。但**「anchor mtime 雙端收斂」≠「daemon 把所有檔都 sync 到對齊」**。LD §13 的「anchor mtime ≤ 2 秒」驗證只能證明「PROBE 那個檔對齊」,不能證明「整個目錄對齊」。
+
+**du -sh 才是唯一可靠的「整個目錄對齊」驗證**(也是 LD lesson 說的「大小對齊 < 5%」)。
+
+**對 ALLRM_PROTOCOL.md 的建議(本 session 已採納並修)**:
+
+採納 CPBL2 round-2 §5 對 RedTime 的提案,Step 1 加 daemon health probe:
+
+> 在 ALLRM Step 1「收尾本次工作」加:
+> - **觸發 daemon 強制 sync**:`touch <PROBE>` 後等 70 秒
+> - **跑 §SOP 4 重驗證**:stderr.log 空 + main log 無近期 ENOPERM + anchor mtime 收斂 + du -sh 雙端 < 5% 差 + last_sync.json timestamp 接近 now
+
+**meta-meta(round-3 抓到 round-2 沒抓的)**:
+
+| 輪次 | 抓到的 over-claim/盲點 |
+|---|---|
+| round-1 廣播 v2.2 | 「8 daemon 全 verified stderr 100% 空」(verified 一個推 7 個) |
+| round-2 §6.1 | 「JYQXZ daemon 仍噴 stderr」(混淆 stderr.log vs main log + 用歷史推當下) |
+| round-2 §3.11.1 | 「daemon healthy verified」(驗了 anchor mtime 收斂沒驗 du -sh,且驗的是錯的訊號) |
+| **round-3** | 「自家 daemon 11 小時 silent skip 沒察覺」(完全沒驗自家 daemon 健康) |
+
+**規則(內化)**:每一輪 ALLRM 都會抓到前一輪的盲點。**meta 教訓**:**反思工具(ALLRM)本身也需要被反思**,沒有「最終版」的 self-audit。
+
+**對應動作**:
+- LESSONS §3.12 寫成(本段)
+- 廣場 round-3 message 寫成
+- ALLRM_PROTOCOL.md Step 1 採納 CPBL2 提案,加 daemon health probe
+- macos_tcc_daemon_subtleties.md cross-ref RedTime 行從「待驗」改成 case (c)「PROBE 存在但 session 沒改它」的 case study
+
+---
+
 ## §4 整理紀律（讓這份 LESSONS.md 不腐爛）
 
 1. **每個 session 結束前**：如果犯了「值得未來避免」的錯，加進 §3 RedTime 自身教訓（追加，不刪舊）
