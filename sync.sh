@@ -321,6 +321,102 @@ cmd_daemon_status() {
     fi
 }
 
+# ── --audit: §SOP 4 重驗證(學自跨專案 daemon 健康自查 pattern) ──
+# 來源:CPBL2 round-2 / RedCandle 14:35 / PAL 17:00 / MVP 17:10 / RedTime round-3
+# 詳見:廣場 lessons/macos_tcc_daemon_subtleties.md §SOP
+cmd_audit() {
+    info "═══ daemon health audit (§SOP 4 重驗證) ═══"
+    local FAIL=0
+    local STDERR_LOG="$HOME/Library/Logs/${LOG_BASENAME}.stderr.log"
+    local MAIN_LOG="$HOME/Library/Logs/${LOG_BASENAME}.log"
+    local STATUS_JSON="$WORK/.tools/last_sync.json"
+
+    # [1/4] stderr.log size = 0 (daemon process 沒崩潰)
+    if [ -f "$STDERR_LOG" ]; then
+        local STDERR_SIZE
+        STDERR_SIZE=$(stat -f %z "$STDERR_LOG" 2>/dev/null || echo 0)
+        if [ "$STDERR_SIZE" -eq 0 ]; then
+            ok "[1/4] stderr.log 0 bytes (daemon process 沒崩潰)"
+        else
+            err "[1/4] stderr.log $STDERR_SIZE bytes — daemon process 可能崩潰"
+            FAIL=$((FAIL+1))
+        fi
+    else
+        warn "[1/4] stderr.log 不存在 — daemon 從未跑過?"
+        FAIL=$((FAIL+1))
+    fi
+
+    # [2/4] main log 近 30 行無 ENOPERM/error/denied
+    if [ -f "$MAIN_LOG" ]; then
+        local ENOPERM_COUNT
+        ENOPERM_COUNT=$(tail -30 "$MAIN_LOG" | grep -ciE "permitted|denied|error" 2>/dev/null || true)
+        ENOPERM_COUNT=${ENOPERM_COUNT:-0}
+        if [ "$ENOPERM_COUNT" -eq 0 ]; then
+            ok "[2/4] main log 近 30 行無 ENOPERM/error/denied"
+        else
+            warn "[2/4] main log 近 30 行有 $ENOPERM_COUNT 個 ENOPERM/error 訊息(可能 daemon 過渡期或仍卡)"
+        fi
+    else
+        warn "[2/4] main log 不存在"
+        FAIL=$((FAIL+1))
+    fi
+
+    # [3/4] last_sync.json timestamp 接近 now
+    if [ -f "$STATUS_JSON" ]; then
+        local LAST_UNIX
+        LAST_UNIX=$(grep -o '"unix":[0-9]*' "$STATUS_JSON" | cut -d: -f2)
+        local NOW
+        NOW=$(date +%s)
+        local AGE=$((NOW - LAST_UNIX))
+        if [ "$AGE" -lt 120 ]; then
+            ok "[3/4] last_sync ${AGE}s 前 (< 2 分鐘,daemon 活躍)"
+        elif [ "$AGE" -lt 300 ]; then
+            warn "[3/4] last_sync ${AGE}s 前 (2-5 分鐘,可能正常但 PROBE mtime 沒變)"
+        else
+            err "[3/4] last_sync ${AGE}s 前 (> 5 分鐘,可能 silent skip)"
+            warn "    建議:cd $WORK && touch lm402.html && sleep 70 && bash sync.sh --audit"
+            FAIL=$((FAIL+1))
+        fi
+    else
+        err "[3/4] last_sync.json 不存在 — daemon 從未真 sync 過 (case b PROBE 不存在?)"
+        FAIL=$((FAIL+1))
+    fi
+
+    # [4/4] du -sh 雙端差距 < 5%
+    if [ -d "$MASTER" ] && [ -d "$WORK" ]; then
+        local MASTER_KB
+        local WORK_KB
+        MASTER_KB=$(du -sk "$MASTER" 2>/dev/null | cut -f1)
+        WORK_KB=$(du -sk "$WORK" 2>/dev/null | cut -f1)
+        local DIFF_KB=$((MASTER_KB - WORK_KB))
+        local ABS=${DIFF_KB#-}
+        local LARGER=$((MASTER_KB > WORK_KB ? MASTER_KB : WORK_KB))
+        local PCT=0
+        [ "$LARGER" -gt 0 ] && PCT=$((ABS * 100 / LARGER))
+        local MASTER_H
+        local WORK_H
+        MASTER_H=$(du -sh "$MASTER" 2>/dev/null | cut -f1)
+        WORK_H=$(du -sh "$WORK" 2>/dev/null | cut -f1)
+        if [ "$PCT" -lt 5 ]; then
+            ok "[4/4] du -sh:Master=$MASTER_H / Work=$WORK_H (差 ${PCT}%,< 5% ✅)"
+        else
+            warn "[4/4] du -sh:Master=$MASTER_H / Work=$WORK_H (差 ${PCT}%,> 5%)"
+            warn "    可能是 EXCLUDES_EXTRA / EXCLUDES 排除 by design (參考 SWDA *.7z / PAL _dist 案例)"
+            warn "    或 sync 不完整,跑 'bash sync.sh status' 看具體差異"
+        fi
+    else
+        warn "[4/4] Master 或 Work 路徑不存在 — 跳過 du 比較"
+    fi
+
+    echo ""
+    if [ "$FAIL" -eq 0 ]; then
+        ok "═══ audit 通過 (daemon 健康) ═══"
+    else
+        err "═══ audit 發現 $FAIL 項硬性問題 ═══"
+        return 1
+    fi
+}
+
 # ── 使用說明 ──
 cmd_help() {
     local DAEMON_RUNNING="否"
@@ -341,6 +437,7 @@ cmd_help() {
   --install-launchd     啟用 launchd daemon
   --uninstall-launchd   停止 launchd daemon
   --daemon-status       看 daemon 狀態 + log
+  --audit               跑 §SOP 4 重驗證 daemon 健康（stderr/main log/last_sync/du -sh）
 
   help     顯示此說明
 
@@ -364,6 +461,7 @@ case "${1:-help}" in
     --install-launchd)  cmd_install_launchd ;;
     --uninstall-launchd) cmd_uninstall_launchd ;;
     --daemon-status)    cmd_daemon_status ;;
+    --audit)            cmd_audit ;;
     help|-h|--help)     cmd_help ;;
     *)                  err "未知指令：$1"; cmd_help; exit 1 ;;
 esac
