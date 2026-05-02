@@ -1,0 +1,55 @@
+#!/bin/bash
+# RedTime pre-commit hook — 擋故事文本意外變動
+# 安裝方式:bash tools/setup_hooks.sh(一次性)
+# 設計:CLAUDE.md 動工紀律「永遠不可自行修改故事文本」codify
+# 來源:學自 LD pre_commit_check.sh(2026-05-02 RedTime LESSONS PENDING follow-up)
+
+set -e
+
+# ── 故事文本檔(任何改動都要 toni 本人確認)──
+# data.js / reader.html / assets/lm402*/data.js
+STORY_PATTERNS=(
+    "^data\.js$"
+    "^reader\.html$"
+    "^assets/lm402/data\.js$"
+    "^assets/lm402-twin/data\.js$"
+    "^assets/lm402-parallel/data\.js$"
+    "^index\.html$"
+)
+
+CHANGED=$(git diff --cached --name-only)
+VIOLATED=()
+
+for p in "${STORY_PATTERNS[@]}"; do
+    while IFS= read -r f; do
+        [ -n "$f" ] && VIOLATED+=("$f")
+    done < <(echo "$CHANGED" | grep -E "$p" || true)
+done
+
+if [ ${#VIOLATED[@]} -gt 0 ]; then
+    {
+        echo ""
+        echo "🚫 ═══════════════════════════════════════════════════════"
+        echo "   pre-commit hook:偵測到動到故事文本檔"
+        echo "═══════════════════════════════════════════════════════════"
+        for f in "${VIOLATED[@]}"; do
+            echo "   ⚠️  $f"
+        done
+        echo ""
+        echo "RedTime CLAUDE.md 動工紀律 #2:"
+        echo "   永遠不可自行修改故事文本(data.js 對話 / reader.html 段落 / index.html)"
+        echo ""
+        echo "──────────────────────────────────────────────────────────"
+        echo "如果你是 toni 本人:"
+        echo "   git commit --no-verify  # 跳過此檢查"
+        echo ""
+        echo "如果你是 Claude(動工紀律違反):"
+        echo "   git restore --staged <file>  # 取消 staging"
+        echo "   git restore <file>           # 復原檔案"
+        echo "──────────────────────────────────────────────────────────"
+        echo ""
+    } >&2
+    exit 1
+fi
+
+exit 0

@@ -4977,10 +4977,41 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     window.__CONSC_LIGHTS__ = __conscLights;
     window.__CONSC_PARTICLES__ = __conscParticles;
     window.__CONSC_TEXT__ = __conscText;
+    // __TWIN_BALANCE__:一鍵切換 B2/B3/B4 平衡 preset(round-3 follow-up #3,2026-05-02)
+    // PENDING 提:「找『能感受到意識菜市場但不過曝』的甜蜜點 — 三派 0.2/0.3/0.4 漸進測試」
+    // 設計:預設仍 0(M18 nuclear default 紀律),preset 工具給 toni 一鍵試
+    window.__TWIN_BALANCE__ = function(preset) {
+      const presets = {
+        off:  { lights: 0,    particles: 0,    text: 0    },  // M18 nuclear default
+        low:  { lights: 0.15, particles: 0.10, text: 0.20 },  // 弱可見 — 試起點
+        mid:  { lights: 0.30, particles: 0.20, text: 0.40 },  // 中等 — 主推測試
+        high: { lights: 0.50, particles: 0.40, text: 0.60 },  // 原 console 註解建議值
+      };
+      const p = presets[preset];
+      if (!p) {
+        console.warn("[__TWIN_BALANCE__] 未知 preset:", preset, "— 可選: off / low / mid / high");
+        return;
+      }
+      __conscLights.setIntensity(p.lights);
+      __conscParticles.setIntensity(p.particles);
+      __conscText.setIntensity(p.text);
+      console.info(
+        "%c[雙時空] 平衡 preset 切換:" + preset,
+        "color:#ffd49c;font-weight:bold;",
+        "\n  __CONSC_LIGHTS__:    " + p.lights +
+        "\n  __CONSC_PARTICLES__: " + p.particles +
+        "\n  __CONSC_TEXT__:      " + p.text
+      );
+    };
     console.info(
       "%c[雙時空] 意識菜市場 B2/B3/B4 預設關閉",
       "color:#ffd49c;font-weight:bold;",
-      "\n想看「七嘴八舌」效果，console 輸入：" +
+      "\n一鍵試 preset(推薦 toni 從 low 試起):" +
+      "\n  __TWIN_BALANCE__('low')   // 弱可見起點" +
+      "\n  __TWIN_BALANCE__('mid')   // 中等" +
+      "\n  __TWIN_BALANCE__('high')  // 原建議值" +
+      "\n  __TWIN_BALANCE__('off')   // 復原 nuclear default" +
+      "\n\n或單獨微調:" +
       "\n  __CONSC_LIGHTS__.setIntensity(0.5)" +
       "\n  __CONSC_PARTICLES__.setIntensity(0.4)" +
       "\n  __CONSC_TEXT__.setIntensity(0.6)"
