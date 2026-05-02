@@ -12,6 +12,7 @@ Thumbs.db
 node_modules/
 __pycache__/
 *.pyc
+*.py
 
 # Local dev tools (not for GitHub Pages)
 .githooks/
