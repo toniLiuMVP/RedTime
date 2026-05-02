@@ -3,7 +3,13 @@
 > 給未來 Claude Code session 一眼看清「還剩什麼沒做」。
 > 學自 JYQXZ / PTT 等其他專案的 PENDING.md 慣例。
 
-最後更新：2026-05-02（17:30 晚間：round-3 ALLRM 後加 daemon / sync follow-up）
+最後更新：2026-05-03（round-5 後 — 三線分類訂正 + F1.2 ✅ stale 修）
+
+> **三線分類紀律**(toni round-5+1 ask 2026-05-03)：
+> 任何 LM402 相關項目必標明三線之一:
+> - 🟦 **LM402 原始時間線**(`lm402.html`)— 穩定保守升級,半寫實
+> - 🟪 **LM402 雙時空**(`lm402-twin.html`)— WebGL2 走極限 + 意識菜市場 + 主推路線
+> - 🟧 **LM402 平行世界**(`lm402-parallel.html`)— WebGPU 改造 + 一眼瞬間精雕
 
 ---
 
@@ -19,9 +25,9 @@
 
 ---
 
-## 🟡 雙時空 LM402-twin · 待做
+## 🟪 LM402 雙時空 · 待做(`lm402-twin.html`)
 
-### B2/B3/B4 平衡點調校（**新增 2026-05-02**,17:50 部分完成）
+### B2/B3/B4 平衡點調校 🟪 雙時空 only(**新增 2026-05-02**,17:50 部分完成)
 
 | 項目 | 詳情 |
 |---|---|
@@ -31,7 +37,7 @@
 | **下一步** | toni 開 lm402-twin.html → console 跑 `__TWIN_BALANCE__('low')` 看效果 → 反饋具體值 |
 | **剩餘工程量** | 0.3 天(toni 反饋後改 source 預設值) |
 
-### A6 Motion Blur — Phase 1 模組完成 ✅(2026-05-02 22:00)
+### A6 Motion Blur 🟪 雙時空 only — Phase 1 模組完成 ✅(2026-05-02 22:00)
 
 | 項目 | 詳情 |
 |---|---|
@@ -43,19 +49,20 @@
 | **跟 F sprint 關係** | F3 phase 一起 GLSL→WGSL 化(motion-blur.js shader 同步重寫) |
 | **下一步** | dedicated session 跟 A6_PHASE1_INTEGRATION.md 跑整合,toni 視覺驗證 |
 
-### E4 場景變換(教室外 / 月台 / 咖啡廳)2026-05-02 17:50 啟動 simplified
+### E4 場景變換 🟪 雙時空主導(原始時間線可後續適用)— 2026-05-02 17:50 啟動 simplified
 
 | 項目 | 詳情 |
 |---|---|
+| **適用線** | 🟪 雙時空(主)— prop mesh 跟 E3 environment-presets 鉤,E3 已是雙時空獨有 |
+| **🟦 原始時間線** | 不適用(原始保持單純教室,無 E3 preset 系統)|
 | **狀態** | simplified 設計骨架完成 — [docs/E4_DESIGN.md](docs/E4_DESIGN.md)(round-3+1 啟動)|
 | **真做需要** | 建新場景 mesh + 切換邏輯,每場景 5-10 天 — **跳過真做**(narrative 都在教室發生)|
 | **simplified 替代** | 5 個 prop mesh(月亮 / 雲 暖+灰 / 雨粒子 / 雪粒子)+ E3 preset 鉤(2-3 天)|
 | **下一步** | toni 確認 docs/E4_DESIGN.md 設計後 → dedicated session 寫 e4-props.js + renderer.js 整合 |
-| **本 session 為何不真做** | 半小時內寫 e4-props.js stub 但不接 renderer.js = 死代碼。給設計骨架更安全 |
 
 ---
 
-## 🔴 平行世界 LM402-parallel · 真 WebGPU 改造 ✅ **toni confirm 全做(2026-05-02 18:00)**
+## 🟧 LM402 平行世界 · 真 WebGPU 改造 ✅ **toni confirm 全做(2026-05-02 18:00)**(`lm402-parallel.html`)
 
 > ✅ **toni 確認:F 全做** — 原話「F 全做,因為是平行世界」
 > ⚠️ **完整 sprint 8-12 週**(F1.2-F4 + E + 學妹 GLB 化前置,見下)
@@ -79,14 +86,15 @@
 
 ⚠️ **學妹 GLB 化是 F sprint 的隱含前置** — 在 primitive 上套 4K 沒意義(F4/E 投入回報降低 50%)
 
-### F1.2 Vendor Three.js WebGPURenderer
+### F1.2 Vendor Three.js WebGPURenderer ✅ **完成(2026-05-02,30 分鐘實測)**
 
 | 項目 | 詳情 |
 |---|---|
-| **狀態** | 未做 |
-| **需要** | 從 Three.js examples/jsm/renderers/webgpu/ 複製 WebGPURenderer.js + 全部依賴到 `assets/lm402-parallel/webgpu/` |
-| **工程量** | 3 天 |
-| **風險** | r179 WebGPURenderer 仍 alpha，依賴複雜（10+ 檔） |
+| **狀態** | ✅ commit `013c5f6` + `50dcf72` |
+| **修法** | r179 改 single-file vendor(`build/three.webgpu.min.js` 552 KB + `three.core.min.js` 380 KB)→ 拷 2 檔到 `assets/lm402-parallel/vendor/` |
+| **驗證** | `assets/lm402-parallel/webgpu-test.html` 5 ✅ Safari + Chrome 雙瀏覽器 verified(REVISION=179,WebGPURenderer init OK,連續 60 frames render OK) |
+| **工程量訂正** | 原估 3 天(基於 r150 examples 樹結構)→ 實測 30 分鐘(r179 single-file)|
+| **meta 教訓** | LESSONS §3.13 sibling — 寫工程量估計前必看 vendor source 真實結構 |
 
 ### F2 切換 WebGLRenderer → WebGPURenderer
 
@@ -126,9 +134,11 @@
 
 ---
 
-## 🌟 學妹外觀重新設計 ⭐ **toni 訴求(2026-05-02 18:00)— 一眼瞬間核心**
+## 🌟 學妹外觀重新設計 🟪 雙時空 only ⭐ **toni 訴求(2026-05-02 18:00)— 一眼瞬間核心**
 
-> toni 原話:「LM402 的學妹 3D 呈現才是最重要的,才會一眼瞬間」
+> toni 原話:「**在 LM402 雙時空重新設計學妹外表**」+「LM402 的學妹 3D 呈現才是最重要的,才會一眼瞬間」
+> **🟦 原始時間線維持 primitive 學妹**(對照組,toni 明確指示)
+> **🟧 平行世界**:F4/E phase 5 一眼瞬間精雕在 GLB 學妹之上(強耦合)
 > 完整設計探討:[docs/JUNIOR_REDESIGN.md](docs/JUNIOR_REDESIGN.md)
 
 | 項目 | 詳情 |
@@ -145,21 +155,24 @@
 
 ---
 
-## ⚪ LM402 原始時間線 · 待做
+## 🟦 LM402 原始時間線 · 待做(`lm402.html`)
 
-### C7 Idle pose 變化
+> 三線中最穩定,toni 紀律「正本不動,新功能先副本實驗」。原始時間線**維持 primitive 學妹**(GLB 不化)當對照組。
+
+### C7 Idle pose 變化 🟦 原始時間線 + 🟪 雙時空(架構限制 — 跨線同問題)
 
 | 項目 | 詳情 |
 |---|---|
 | **狀態** | 跳過真做 |
 | **架構限制** | 學妹是「程式積木 N 個 primitives」，不是 SkinnedMesh，無法切換姿勢 |
-| **真做需要** | 重做學妹成統一 mesh + skeleton + skin weights（Blender 工程） |
-| **工程量** | 1-2 週 |
-| **建議** | 留待「美術流程切換」討論（會破壞「程式生成」優勢） |
+| **真做需要** | 重做學妹成統一 mesh + skeleton + skin weights(Blender 工程)|
+| **工程量** | 1-2 週(若搭配 🟪 雙時空學妹 GLB 化,可一起做)|
+| **🟪 雙時空** | 學妹 GLB 化後 SkinnedMesh 自然支援,C7 在雙時空變可行 |
+| **🟦 原始時間線** | 永遠跳過真做(維持 primitive 對照組)|
 
 ### E4 場景變換
 
-同雙時空 E4。
+同 🟪 雙時空 E4 段(simplified prop mesh 主要在雙時空,原始時間線不適用)。
 
 ---
 
