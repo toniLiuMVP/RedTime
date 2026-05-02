@@ -4965,16 +4965,16 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     radius: 0.7,
     heightRange: 1.0,
   });
-  // 第 3 輪 nuclear default — toni 反映「學妹完全被覆蓋」（B2/B3/B4 三派疊加成白塊）
+  // 過曝白塊修正後預設關鎖 — B2/B3/B4 三派疊加成白塊問題
   // 預設關閉，console 想開個別 effect 自己開：
   //   __CONSC_LIGHTS__.setIntensity(0.5)     // 5 盞光柱（不同年紀色彩）
   //   __CONSC_PARTICLES__.setIntensity(0.4)  // 150 個記憶粒子
   //   __CONSC_TEXT__.setIntensity(0.6)       // 12 個 toni 原文短句飄浮
-  // B3 預設 0.30（toni round-3+1 ask「完成 B3」,2026-05-02 17:45）
-  // 安全分析:M18 nuclear default 紀律是「B2+B3+B4 同 anchor+AdditiveBlending 疊加會白塊」
+  // B3 預設 0.30 啟用意識光柱
+  // 安全分析:疊加效果預設關鎖紀律是「B2+B3+B4 同 anchor+AdditiveBlending 疊加會白塊」
   // → 單獨 B3=0.30 不會疊加(B2/B4 仍 0),不違反紀律
   // → 5 盞 SpotLight 不同年紀色彩(暖橙/暖白/淡綠/淡紫/月光藍)有最弱「七嘴八舌」暗示
-  // toni 嫌弱 → __TWIN_BALANCE__('mid') 一鍵升級;嫌過 → __TWIN_BALANCE__('off') 復原 nuclear default
+  // 嫌弱 → __TWIN_BALANCE__('mid') 一鍵升級;嫌過 → __TWIN_BALANCE__('off') 復原預設關鎖
   __conscLights.setIntensity(0.30);
   __conscParticles.setIntensity(0);
   __conscText.setIntensity(0);
@@ -4982,12 +4982,12 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     window.__CONSC_LIGHTS__ = __conscLights;
     window.__CONSC_PARTICLES__ = __conscParticles;
     window.__CONSC_TEXT__ = __conscText;
-    // __TWIN_BALANCE__:一鍵切換 B2/B3/B4 平衡 preset(round-3 follow-up #3,2026-05-02)
-    // PENDING 提:「找『能感受到意識菜市場但不過曝』的甜蜜點 — 三派 0.2/0.3/0.4 漸進測試」
-    // 設計:預設仍 0(M18 nuclear default 紀律),preset 工具給 toni 一鍵試
+    // __TWIN_BALANCE__:一鍵切換 B2/B3/B4 平衡 preset
+    // 找「能感受到意識菜市場但不過曝」的甜蜜點 — 三派 0.2/0.3/0.4 漸進測試
+    // 設計:預設仍 0(疊加效果預設關鎖紀律),preset 工具一鍵試
     window.__TWIN_BALANCE__ = function(preset) {
       const presets = {
-        off:  { lights: 0,    particles: 0,    text: 0    },  // M18 nuclear default
+        off:  { lights: 0,    particles: 0,    text: 0    },  // 預設關鎖
         low:  { lights: 0.15, particles: 0.10, text: 0.20 },  // 弱可見 — 試起點
         mid:  { lights: 0.30, particles: 0.20, text: 0.40 },  // 中等 — 主推測試
         high: { lights: 0.50, particles: 0.40, text: 0.60 },  // 原 console 註解建議值
@@ -5015,7 +5015,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       "\n  __TWIN_BALANCE__('low')   // 弱可見起點" +
       "\n  __TWIN_BALANCE__('mid')   // 中等" +
       "\n  __TWIN_BALANCE__('high')  // 原建議值" +
-      "\n  __TWIN_BALANCE__('off')   // 復原 nuclear default" +
+      "\n  __TWIN_BALANCE__('off')   // 復原預設關鎖" +
       "\n\n或單獨微調:" +
       "\n  __CONSC_LIGHTS__.setIntensity(0.5)" +
       "\n  __CONSC_PARTICLES__.setIntensity(0.4)" +

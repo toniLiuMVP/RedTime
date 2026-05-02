@@ -456,14 +456,14 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
   // ─── 預設參數（電影派微 Bloom + 暖棕暗角 + DOF） ───
   const tuning = {
     enabled: true,
-    // 第 3 輪 nuclear default — toni 反映「學妹完全被覆蓋」（白塊過曝）
-    // 全部「可能造成過曝」的 effect default = 0，console 想開個別 effect 自己開
+    // 過曝白塊修正後預設關鎖 — 全部「可能造成過曝」的 effect default = 0
+    // console 想開個別 effect 自己開
     bloom:    { threshold: 0.86, softKnee: 0.5, strength: 0, mips: 4 },     // 完全關
     dof:      { focalRange: 0.6, maxBlur: 2.5, enabled: false },            // 完全關
     vignette: { color: [0.18, 0.10, 0.05], offset: 0.55, darkness: 0.32 },  // 0.42→0.32
     fxaa:     false,
     exposure: 0.95,  // 0.92→0.95 微調
-    // Tier 5 電影級後製（第 3 輪 nuclear default — 全部高量過曝 effect 預設關）
+    // Tier 5 電影級後製（過曝高量 effect 預設關）
     chroma:    { strength: 0 },                                // 0.0028 → 0（鏡頭色散，console 開：0.002~0.006）
     grain:     { amount: 0.012 },                              // 0.018 → 0.012（保留輕微膠卷感）
     colorGrade: {
@@ -479,14 +479,8 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     rain:      { amount: 0 },                                  // 預設關，console 開：0.4~0.8
     // A5 Volumetric Fog — 完全關（toni 反映畫面濛濛的）
     volFog:    { density: 0, color: [0.92, 0.85, 0.72] },     // 0.015 → 0（console 開：0.02~0.06）
-    // A6 Motion Blur Phase 1 — accumulation blend(2026-05-03 round-5+2 wire-up stub）
-    // ⚠️ TODO dedicated session:整合 motion-blur.js 模組(已寫成,180 行 self-contained)
-    //   1. import { createMotionBlur } from "./motion-blur.js"
-    //   2. createPostFX 內 init motionBlur(renderer, width, height)
-    //   3. render() 結尾 hook:if (tuning.motionBlur && motionBlurAmount > 0)
-    //      → 改 final pass 寫 finalRT 而非 canvas → motionBlur.apply(finalRT) → 寫 canvas
-    //   詳細整合 SOP:docs/A6_PHASE1_INTEGRATION.md
-    motionBlur:       false,                                  // M18 nuclear default
+    // Motion blur — wire-up stub(motion-blur.js 模組已寫成,待整合)
+    motionBlur:       false,                                  // 預設關鎖
     motionBlurAmount: 0.3,                                    // 0-1,0.3 = 自然拖影
   };
 

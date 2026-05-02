@@ -1,25 +1,22 @@
 /**
- * motion-blur.js — A6 phase 1 simplified accumulation blend(2026-05-02 22:00)
+ * motion-blur.js — Motion blur(simplified accumulation blend)
  *
- * Phase 1(本檔)— accumulation blend:
+ * Accumulation blend 版:
  *   - prev frame 跟 current frame 線性混合(intensity 控制比例)
  *   - 視覺上有「拖影」感(persistence-of-vision style motion blur)
  *   - 不需 motion vector G-buffer,實作簡單(~150 行)
  *   - 缺點:相機快速移動時整個畫面糊,不只移動物件糊
  *
- * Phase 2(留之後 dedicated session,~5-7 天)— motion vector G-buffer:
+ * 進階版(motion vector G-buffer):
  *   - prev/current ViewProjMatrix → velocity per pixel → blur 沿 velocity
- *   - 只移動物件糊(學妹頭髮搖晃 / 學長走進場景),靜止背景清楚
- *   - 詳見 docs/A6_MOTION_BLUR_DESIGN.md
+ *   - 只移動物件糊(角色頭髮搖晃 / 走進場景),靜止背景清楚
  *
  * 整合方式(2 種):
  *   A) 在 postfx.js 最終 pass 之前插入 — 改 postfx.js 加 motion blur uniforms + RT
  *   B) 在 renderer.js 主迴圈 render 完 postfx 後再跑 — 獨立 hook,風險低但需多一次 RT swap
  *
- * 預設 disabled(M18 nuclear default 紀律)。
+ * 預設 disabled(疊加效果預設關鎖紀律)。
  * console API:__MOTION_BLUR__.enable() / disable() / setIntensity(0.3)
- *
- * 來源:RedTime LESSONS round-3+1 toni confirm「A6 我們真做,因為是雙時空」
  */
 
 import * as THREE from "./vendor-three.module.js";
@@ -55,7 +52,7 @@ const FS_MOTION_BLUR_BLEND = /* glsl */ `
  * @param {THREE.WebGLRenderer} opts.renderer
  * @param {number} opts.width  - canvas 寬(可呼叫 setSize 更新)
  * @param {number} opts.height
- * @param {number} [opts.defaultIntensity=0.0] - 預設 0(disabled,M18 nuclear default)
+ * @param {number} [opts.defaultIntensity=0.0] - 預設 0(disabled,符合疊加效果預設關鎖)
  *
  * @returns {Object} motion blur instance
  *   - apply(inputTex, outputTarget):render motion blur 一 pass。回傳 mixed texture。

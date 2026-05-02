@@ -1,30 +1,22 @@
 /**
- * e4-props.js — E4 場景變換 prop mesh(simplified 版,2026-05-03 round-5+2)
+ * e4-props.js — 場景變換 prop mesh(simplified 版)
  *
- * 🟪 LM402 雙時空 only(原始時間線無 E3 preset 系統,不適用)
+ * LM402 雙時空專用 — 教室場景固定,「窗外」prop 配合 environment-presets 切換。
+ *   night → 月亮顯示
+ *   rainy → 雨粒子 + 灰雲
+ *   dusk/day → 暖雲
+ *   snowy → 雪粒子 + 灰雲
  *
- * 設計理念(simplified 替代真做新場景 5-10 天/場景):
- *   - 教室場景固定,「窗外」prop 配合 E3 environment-presets 切換
- *   - night → 月亮顯示;rainy → 雨粒子 + 灰雲;dusk/day → 暖雲;snowy → 雪粒子 + 灰雲
- *   - 達 90% 場景氛圍變化需求,工程 simplified 1/10
- *
- * 完整設計:docs/E4_DESIGN.md
- *
- * 整合方式(下次 dedicated session 跟 environment-presets 鉤):
+ * 整合方式(跟 environment-presets 鉤):
  *   1. import { createE4Props } from "./e4-props.js";
  *   2. const e4 = createE4Props({ scene, currentPreset: env.getCurrentPreset() });
  *   3. environment-presets.js setPreset() 結尾呼叫 e4.syncToPreset(name)
  *   4. window.__E4_PROPS__ = e4;  (console API)
  *
- * 預設行為:
- *   - 所有 prop 預設 visible=false(M18 nuclear default 紀律)
- *   - syncToPreset(name) 才 enable 對應 prop
+ * 預設行為:所有 prop 預設 visible=false(避免疊加過曝)。
+ * 動畫:每 frame 呼叫 e4.update(delta) 讓雨/雪粒子持續落下。
  *
- * 動畫:
- *   - 每 frame 呼叫 e4.update(delta) 讓雨/雪粒子持續落下
- *   - 月亮/雲是靜態 mesh,不需 update
- *
- * NOT YET WIRED to lm402-twin/renderer.js — 等 dedicated session 整合
+ * NOT YET WIRED to lm402-twin/renderer.js — 獨立檔避免 break runtime。
  */
 
 import * as THREE from "./vendor-three.module.js";
@@ -140,6 +132,7 @@ export function createE4Props({ scene, currentPreset = "dusk" }) {
 }
 
 // — Moon:emissive sphere 月光藍 —
+// 對齊 environment-presets night.lightColor —
 function createMoon() {
   const geo = new THREE.SphereGeometry(1.5, 32, 32);
   const mat = new THREE.MeshStandardMaterial({
