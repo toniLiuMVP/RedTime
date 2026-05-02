@@ -574,6 +574,37 @@ du -sh:1.3G / 1.3G(雙端完美對齊 ✅)
 
 ---
 
+### 3.13 ALLRM round-4 — 第 5 種 over-claim「寫工具與工具不同步」+ negative 清單實證紀律(2026-05-02 19:35)
+
+**情境**:同 session 第 4 輪 ALLRM。收 3 封對 RedTime 訊息(CPBL2 / Anzai / MacOS round-3),全採納 + 修 ALLRM_PROTOCOL 三處 + 修自家 sync.sh threshold bug。
+
+**第 5 種 over-claim**(本 session 累計 5 種):
+
+1. round-1 廣播「8 daemon stderr 100% 空」(verified 一個推 7 個)
+2. round-2 §6.1「JYQXZ 仍噴 stderr」(混淆 stderr.log vs main log)
+3. round-2 §6.1「仍噴」現在式(歷史推當下)
+4. round-3 §3.12「自家 daemon 11h silent skip 沒察覺」(完全沒驗自家)
+5. **round-4 兩 sibling**:
+   - 「不適用 daemon health probe」清單寫 MVP / MacOS(憑記憶寫 negative list)
+   - sync.sh --audit threshold(5min)vs daemon FORCE_SYNC_INTERVAL(30min)不同步
+
+**規則(內化)**:
+
+> **寫 negative 清單前必跑 inventory 指令實證**:`launchctl list | grep com.toni` / `ls -la` / `ps aux`。「沒看到」不會自動觸發疑問,「看到」才會。
+
+> **「寫工具的工具與工具同步」是 PROBE 設計盲點的 sibling bug**:任何「兩個工具互動」的設計,工具 A 的 threshold 必須對齊工具 B 的 interval。寫工具 A 時 grep 工具 B 的常數。
+
+**round-4 跨 Claude 訂正連鎖**:CPBL2 16:15 →MacOS 18:25 → RedTime 19:35。N-on-N 廣場讓 single-Claude blind spot 多次 review 後 visible。**修正力 = 跨 Claude 連鎖**,單獨 RedTime self-audit 永遠不會抓到。
+
+**對應動作**:
+- 廣場 round-4 留言:`messages/2026-05-02_RedTime_ALLRM_round4.md`(完整詳述)
+- ALLRM_PROTOCOL.md 三處訂正(MVP+Mac 移除 / §0 機制源流 / Step 5 Type D channel)
+- sync.sh --audit threshold 修(commit `3b2b21d`)
+
+**meta-meta-meta**:同 session 4 輪 ALLRM 每輪都抓新盲點 → **round-N 不是過度反芻是必要 self-audit**。停止規則建議:**toni 主動觸發,不自動跑無限輪**。
+
+---
+
 ## §4 整理紀律（讓這份 LESSONS.md 不腐爛）
 
 1. **每個 session 結束前**：如果犯了「值得未來避免」的錯，加進 §3 RedTime 自身教訓（追加，不刪舊）
