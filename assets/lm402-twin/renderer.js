@@ -4970,7 +4970,12 @@ export function createLm402Scene(D, runtimeOptions = {}) {
   //   __CONSC_LIGHTS__.setIntensity(0.5)     // 5 盞光柱（不同年紀色彩）
   //   __CONSC_PARTICLES__.setIntensity(0.4)  // 150 個記憶粒子
   //   __CONSC_TEXT__.setIntensity(0.6)       // 12 個 toni 原文短句飄浮
-  __conscLights.setIntensity(0);
+  // B3 預設 0.30（toni round-3+1 ask「完成 B3」,2026-05-02 17:45）
+  // 安全分析:M18 nuclear default 紀律是「B2+B3+B4 同 anchor+AdditiveBlending 疊加會白塊」
+  // → 單獨 B3=0.30 不會疊加(B2/B4 仍 0),不違反紀律
+  // → 5 盞 SpotLight 不同年紀色彩(暖橙/暖白/淡綠/淡紫/月光藍)有最弱「七嘴八舌」暗示
+  // toni 嫌弱 → __TWIN_BALANCE__('mid') 一鍵升級;嫌過 → __TWIN_BALANCE__('off') 復原 nuclear default
+  __conscLights.setIntensity(0.30);
   __conscParticles.setIntensity(0);
   __conscText.setIntensity(0);
   if (typeof window !== "undefined") {

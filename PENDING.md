@@ -21,41 +21,45 @@
 
 ## 🟡 雙時空 LM402-twin · 待做
 
-### B2/B3/B4 平衡點調校（**新增 2026-05-02**）
+### B2/B3/B4 平衡點調校（**新增 2026-05-02**,17:50 部分完成）
 
 | 項目 | 詳情 |
 |---|---|
-| **狀態** | 預設 0（不會蓋學妹），但「七嘴八舌」效果完全感受不到 |
+| **B3 狀態** | ✅ **完成 — 預設 0.30**(commit fd7347f 後 round-3+1,renderer.js L4980)。M18 nuclear default 紀律不違反(B2/B4 仍 0,單 B3 不疊加) |
+| **B2/B4 狀態** | 仍預設 0,等 toni 用 `__TWIN_BALANCE__('low'/'mid'/'high')` 一鍵測試後決定 |
 | **目標** | 找「能感受到意識菜市場但不過曝」的甜蜜點 |
-| **建議測試方法** | 三派分別 0.2/0.3/0.4 漸進測試，找學妹仍清晰可見的最高值 |
-| **工程量** | 0.5 天（純調參數 + toni 實機反饋） |
-| **優先級** | 高（影響雙時空核心體驗） |
+| **下一步** | toni 開 lm402-twin.html → console 跑 `__TWIN_BALANCE__('low')` 看效果 → 反饋具體值 |
+| **剩餘工程量** | 0.3 天(toni 反饋後改 source 預設值) |
 
-### A6 真實 Motion Blur
+### A6 真實 Motion Blur(2026-05-02 17:50 toni 質疑「為什麼跳過」)
 
 | 項目 | 詳情 |
 |---|---|
-| **狀態** | 未做（simplified 也沒做） |
+| **狀態** | 未做(simplified 也沒做)|
 | **真做需要** | prev viewProj matrix uniform + motion vector G-buffer + sample-along-vector blur |
 | **工程量** | 5-7 天 |
-| **simplified 替代** | accumulation blend（每幀混 30% 前一幀，有「拖影」感）— 1-2 天 |
-| **建議** | 對學妹靜止場景效果不顯著，**可以不做** |
+| **simplified 替代** | accumulation blend(每幀混 30% 前一幀,有「拖影」感)— 1-2 天 |
+| ⚠️ **「跳過」是我的判斷不是事實** | 我寫「對學妹靜止場景效果不顯著,可以不做」是基於「LM402 場景學妹 70% 站著,motion blur 主要靠頭髮搖晃 / 衣襬 / 學長走進場景觸發」的觀察 — 但這是**我的視覺判斷,不該替 toni 決定**。toni 質疑後改回「待 toni 決定」 |
+| **toni 決定樹** | A) 不做 — 維持判斷;B) simplified 做 1-2 天 — accumulation blend;C) 真做 5-7 天 — motion vector G-buffer |
 
-### E4 場景變換（教室外 / 月台 / 咖啡廳）
+### E4 場景變換(教室外 / 月台 / 咖啡廳)2026-05-02 17:50 啟動 simplified
 
 | 項目 | 詳情 |
 |---|---|
-| **狀態** | 未做 |
-| **真做需要** | 建新場景 mesh（教室外走廊、月台、咖啡廳）+ 切換邏輯 |
-| **工程量** | 每場景 5-10 天 |
-| **simplified 替代** | 加幾個 prop mesh（雲、月亮、雨）配合 E3 環境 preset 切換 — 2-3 天 |
-| **建議** | 配合劇情需要時再做（目前 LM402 場景固定教室） |
+| **狀態** | simplified 設計骨架完成 — [docs/E4_DESIGN.md](docs/E4_DESIGN.md)(round-3+1 啟動)|
+| **真做需要** | 建新場景 mesh + 切換邏輯,每場景 5-10 天 — **跳過真做**(narrative 都在教室發生)|
+| **simplified 替代** | 5 個 prop mesh(月亮 / 雲 暖+灰 / 雨粒子 / 雪粒子)+ E3 preset 鉤(2-3 天)|
+| **下一步** | toni 確認 docs/E4_DESIGN.md 設計後 → dedicated session 寫 e4-props.js + renderer.js 整合 |
+| **本 session 為何不真做** | 半小時內寫 e4-props.js stub 但不接 renderer.js = 死代碼。給設計骨架更安全 |
 
 ---
 
 ## 🔴 平行世界 LM402-parallel · 真 WebGPU 改造
 
-> ⚠️ **最大工程**。F1.1 偵測 + fallback 完成（commit `b90b3fa`），剩下需要 dedicated sprint。
+> ⚠️ **最大工程 4-6 週 dedicated sprint**。F1.1 偵測 + fallback 完成(commit `b90b3fa`)。
+> **2026-05-02 17:50 完整 sprint plan**:[docs/F_SPRINT_PLAN.md](docs/F_SPRINT_PLAN.md)
+> 內含 phase 0-5 工程分解 / 風險評估 / ROI / 中間方案 A/B/C(toni 決定)
+> 本 session 不真做 — 不在日常 session 夾 sprint 級工程,避免半成品 break runtime
 
 ### F1.2 Vendor Three.js WebGPURenderer
 
