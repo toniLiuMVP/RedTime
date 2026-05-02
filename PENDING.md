@@ -31,19 +31,17 @@
 | **下一步** | toni 開 lm402-twin.html → console 跑 `__TWIN_BALANCE__('low')` 看效果 → 反饋具體值 |
 | **剩餘工程量** | 0.3 天(toni 反饋後改 source 預設值) |
 
-### A6 真實 Motion Blur ✅ **toni confirm 真做(2026-05-02 18:00)**
+### A6 Motion Blur — Phase 1 模組完成 ✅(2026-05-02 22:00)
 
 | 項目 | 詳情 |
 |---|---|
-| **狀態** | ✅ toni 確認:**選 C 真做** — 原話「A6 我們真做,因為是雙時空」 |
-| **設計骨架** | [docs/A6_MOTION_BLUR_DESIGN.md](docs/A6_MOTION_BLUR_DESIGN.md)(2026-05-02 18:00 完成) |
-| **核心** | Motion Vector G-buffer(prev/current ViewProjMatrix → velocity RT → sample-along-vector blur) |
-| **工程量** | 5-7 天 dedicated session |
-| **適用線** | lm402-twin 雙時空(non-blocking lm402 原始時間線) |
-| **預設** | M18 nuclear default — 預設關,console `__MOTION_BLUR__.enable()` opt-in |
-| **跟 F sprint 關係** | A6 先在 WebGL2 跑 1-2 月,F sprint phase 3 一起 WGSL 化 |
-| **跟學妹 GLB 化關係** | A6 phase 1 static mesh + camera motion;phase 2(GLB 化後)加 SkinnedMesh velocity |
-| **下一步** | toni 確認設計骨架後 dedicated session 跑 5-7 天 |
+| **Phase 1 狀態** | ✅ **`assets/lm402-twin/motion-blur.js` 寫成** — accumulation blend simplified 版,180 行 self-contained 模組 |
+| **整合 SOP** | [docs/A6_PHASE1_INTEGRATION.md](docs/A6_PHASE1_INTEGRATION.md)(留 dedicated session 跑 30-60 分鐘整合 postfx) |
+| **預設** | disabled(M18 nuclear default),console `__MOTION_BLUR__.enable()` opt-in |
+| **Phase 2 狀態** | ⏳ Motion Vector G-buffer 真做 5-7 天 — 等 phase 1 視覺反饋後決定升級 |
+| **Phase 2 設計** | [docs/A6_MOTION_BLUR_DESIGN.md](docs/A6_MOTION_BLUR_DESIGN.md) |
+| **跟 F sprint 關係** | F3 phase 一起 GLSL→WGSL 化(motion-blur.js shader 同步重寫) |
+| **下一步** | dedicated session 跟 A6_PHASE1_INTEGRATION.md 跑整合,toni 視覺驗證 |
 
 ### E4 場景變換(教室外 / 月台 / 咖啡廳)2026-05-02 17:50 啟動 simplified
 
