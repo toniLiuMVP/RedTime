@@ -250,14 +250,19 @@ EOF
 }
 
 # ── launchd daemon 控制 ──
-LAUNCHD_LABEL="com.toni.jyqxz_autosync"
+# 從 .sync.conf 讀 LAUNCHD_LABEL（如「redtime_autosync」），預設 jyqxz_autosync 保持向後相容
+# 修法源自 PAL Claude 廣場留言（2026-05-02 二輪 ALLRM）— 解決「cp 範本後沒 grep 全文」反覆踩雷
+LAUNCHD_LABEL="com.toni.${LAUNCHD_LABEL:-jyqxz_autosync}"
 LAUNCHD_PLIST="$HOME/Library/LaunchAgents/$LAUNCHD_LABEL.plist"
-DAEMON_SCRIPT="$HOME/Library/Scripts/jyqxz_autosync/sync_daemon.sh"
+DAEMON_SCRIPT="$HOME/Library/Scripts/${LAUNCHD_LABEL#com.toni.}/sync_daemon.sh"
+# log 命名慣例 <project>_sync.log（去 _autosync 後綴）
+_LABEL_SHORT="${LAUNCHD_LABEL#com.toni.}"
+LOG_BASENAME="${_LABEL_SHORT%_autosync}_sync"
 
 cmd_install_launchd() {
     if [ ! -f "$LAUNCHD_PLIST" ]; then
         err "找不到 plist：$LAUNCHD_PLIST"
-        err "請確認 com.toni.jyqxz_autosync.plist 已建立於 ~/Library/LaunchAgents/"
+        err "請確認 $LAUNCHD_LABEL.plist 已建立於 ~/Library/LaunchAgents/"
         exit 1
     fi
     if [ ! -x "$DAEMON_SCRIPT" ]; then
@@ -275,7 +280,7 @@ cmd_install_launchd() {
     if launchctl list | grep -q "$LAUNCHD_LABEL"; then
         ok "Daemon 已載入並運行中"
         info "  每 60 秒自動檢查並同步 Master ↔ Work"
-        info "  Log: ~/Library/Logs/jyqxz_sync.log"
+        info "  Log: ~/Library/Logs/${LOG_BASENAME}.log"
         info "  Status JSON: $WORK/.tools/last_sync.json"
         info ""
         info "  停止：bash sync.sh --uninstall-launchd"
@@ -310,9 +315,9 @@ cmd_daemon_status() {
         warn "尚無 last_sync.json（daemon 還沒實際同步過 — mtime 容差內可能還沒觸發）"
     fi
     echo ""
-    if [ -f "$HOME/Library/Logs/jyqxz_sync.log" ]; then
+    if [ -f "$HOME/Library/Logs/${LOG_BASENAME}.log" ]; then
         info "── 最近 10 行 log ──"
-        tail -10 "$HOME/Library/Logs/jyqxz_sync.log"
+        tail -10 "$HOME/Library/Logs/${LOG_BASENAME}.log"
     fi
 }
 
