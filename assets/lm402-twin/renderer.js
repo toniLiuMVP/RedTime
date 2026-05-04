@@ -3518,9 +3518,12 @@ export function createLm402Scene(D, runtimeOptions = {}) {
   });
   if (typeof window !== "undefined") window.__ENV__ = __envPresets;
   // E4 場景 prop(月亮 / 雲 / 雨雪)— 鉤在 environment-presets setPreset 後
+  // worldAnchor 對齊雙時空教室右牆外、中段窗戶位置
+  // (data.js: rightWallWindows z=1640 / classroom right wall x≈2400 / g(e)=0.0125*e)
   __e4Props = createE4Props({
     scene: W,
     currentPreset: __envPresets.getCurrentPreset?.() || "dusk",
+    worldAnchor: { x: g(2400), y: 0, z: g(1640) },   // ≈ (30, 0, 20.5)
   });
   const __envOriginalSetPreset = __envPresets.setPreset.bind(__envPresets);
   __envPresets.setPreset = function (name, transitionMs) {
