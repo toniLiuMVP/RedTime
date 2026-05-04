@@ -10,12 +10,14 @@ import { createConsciousnessLights } from "./consciousness-lights.js";
 import { createConsciousnessParticles } from "./consciousness-particles.js";
 import { createConsciousnessText } from "./consciousness-text.js";
 import { createEnvironmentPresets } from "./environment-presets.js";
+import { createE4Props } from "./e4-props.js";
 let __juniorRig = null;
 let __clothRig = null;
 let __conscLights = null;
 let __conscParticles = null;
 let __conscText = null;
 let __envPresets = null;
+let __e4Props = null;
 const __sunFar = new e.Vector3();   // Tier 7：太陽世界座標暫存（每幀 reuse）
 const __sunUv = new e.Vector2();    // Tier 7：太陽螢幕座標（NDC → UV）
 export const WORLD_SCALE = 1 / 80;
@@ -3515,6 +3517,17 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     transitionMs: 2000,
   });
   if (typeof window !== "undefined") window.__ENV__ = __envPresets;
+  // E4 場景 prop(月亮 / 雲 / 雨雪)— 鉤在 environment-presets setPreset 後
+  __e4Props = createE4Props({
+    scene: W,
+    currentPreset: __envPresets.getCurrentPreset?.() || "dusk",
+  });
+  const __envOriginalSetPreset = __envPresets.setPreset.bind(__envPresets);
+  __envPresets.setPreset = function (name, transitionMs) {
+    __envOriginalSetPreset(name, transitionMs);
+    __e4Props.syncToPreset(name);
+  };
+  if (typeof window !== "undefined") window.__E4_PROPS__ = __e4Props;
   const Ie = new e.PointLight(14215156, 1.28, 58, 2);
   (Ie.position.set(Q + 2.42, 3.64, g(t.frontDoor.center.z - 122)), W.add(Ie));
   const Re = new e.PointLight(16771512, 1.72, 68, 2);

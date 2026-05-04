@@ -2882,6 +2882,9 @@ function tick(now) {
     adaptSubtitleBackground();
     audioSystem.update(dt);
     updateCharacterAudio(dt);
+    if (typeof window !== "undefined" && window.__E4_PROPS__) {
+      window.__E4_PROPS__.update(dt);   // E4 雨/雪粒子 + 雲微飄
+    }
     renderFrame();
   } catch (err) {
     console.error("[tick] error:", err);
