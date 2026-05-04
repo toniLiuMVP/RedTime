@@ -116,46 +116,29 @@ export function createMotionBlur({ renderer, width, height, defaultIntensity = 0
    * @returns {THREE.Texture} 混合後的 texture(若 disabled 則回傳 inputTex)
    */
   function apply(inputTex, outputTarget) {
-    if (!enabled || intensity <= 0.001) {
-      return inputTex;  // bypass,不做任何 mix
-    }
+    // caller 已 check enabled + intensity > 0,本函數保證寫 outputTarget
+    // first frame:prev = inputTex(uIntensity=0,純 current,等同 copy)
+    // 後續 frame:mix(current, prev, intensity)
 
-    if (firstFrame) {
-      // 第一 frame:把 inputTex 複製到 prevRT 作初始狀態,不 mix
-      mat.uniforms.tCurrent.value = inputTex;
-      mat.uniforms.tPrev.value = inputTex;
-      mat.uniforms.uIntensity.value = 0.0;  // 強制 0,純 current
-      renderer.setRenderTarget(prevRT);
-      renderer.render(quadScene, quadCamera);
-      firstFrame = false;
-      // 第一 frame 不寫 outputTarget(讓 postfx 接著跑)
-      return inputTex;
-    }
-
-    // 第二 frame 起:mix(current, prev, intensity) → curRT
+    // Pass 1:mix → curRT
     mat.uniforms.tCurrent.value = inputTex;
-    mat.uniforms.tPrev.value = prevRT.texture;
-    mat.uniforms.uIntensity.value = intensity;
-
+    mat.uniforms.tPrev.value = firstFrame ? inputTex : prevRT.texture;
+    mat.uniforms.uIntensity.value = firstFrame ? 0.0 : intensity;
     renderer.setRenderTarget(curRT);
     renderer.render(quadScene, quadCamera);
 
-    // 把 mix 結果寫到 outputTarget(若指定)
-    if (outputTarget !== undefined) {
-      // 用 simple copy(若 outputTarget 是 canvas null,renderer 會直接畫到 canvas)
-      mat.uniforms.tCurrent.value = curRT.texture;
-      mat.uniforms.tPrev.value = curRT.texture;
-      mat.uniforms.uIntensity.value = 0.0;  // 純 current copy
-      renderer.setRenderTarget(outputTarget);
-      renderer.render(quadScene, quadCamera);
-    }
+    // Pass 2:copy curRT → outputTarget(canvas 若 null)
+    mat.uniforms.tCurrent.value = curRT.texture;
+    mat.uniforms.tPrev.value = curRT.texture;
+    mat.uniforms.uIntensity.value = 0.0;
+    renderer.setRenderTarget(outputTarget);
+    renderer.render(quadScene, quadCamera);
 
-    // swap RT(下 frame curRT 變 prevRT)
+    // swap RT(curRT 成為下 frame 的 prevRT)
     const tmp = prevRT;
     prevRT = curRT;
     curRT = tmp;
-
-    return prevRT.texture;
+    firstFrame = false;
   }
 
   function setIntensity(v) {

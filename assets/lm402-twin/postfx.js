@@ -27,6 +27,7 @@
 
 import * as THREE from "./vendor-three.module.js";
 import { focalProvider } from "./postfx-focus.js";
+import { createMotionBlur } from "./motion-blur.js";
 
 // ─────────────────────────────────────────────────────────────
 //  全螢幕 quad helper（render fullscreen pass 用）
@@ -517,6 +518,10 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
   // ─── DOF / Final 中間 RT ───
   const dofRT = makeRT();
 
+  // ─── Motion Blur 中間 RT(final pass 結果寫這,motion-blur composite 寫 canvas)──
+  const finalRT = makeRT();
+  const motionBlur = createMotionBlur({ renderer, width: 1, height: 1 });
+
   // ─── Materials ───
   const matBright = new THREE.ShaderMaterial({
     vertexShader: VS_FULLSCREEN, fragmentShader: FS_BRIGHT,
@@ -609,6 +614,8 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     sceneRT.setSize(W, H);
     bloomCompositeRT.setSize(W, H);
     dofRT.setSize(W, H);
+    finalRT.setSize(W, H);
+    motionBlur.setSize(W, H);
 
     bloomMipRTs.forEach((mip, i) => {
       const div = Math.pow(2, i + 1);   // 1/2, 1/4, 1/8, 1/16
@@ -721,7 +728,18 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     matFinal.uniforms.uCameraNearForFog.value = camera.near;
     matFinal.uniforms.uCameraFarForFog.value = camera.far;
     if (sunUv) matFinal.uniforms.uSunUv.value.copy(sunUv);
-    fsq.render(renderer, matFinal, null);   // null = 直接 render 到螢幕
+
+    // 5. Motion Blur composite(可選 — 預設關鎖)
+    //    enabled 時:final → finalRT,motionBlur 讀 finalRT mix prev → canvas
+    //    disabled 時:final 直接寫 canvas(原行為,零開銷)
+    const useMB = tuning.motionBlur && tuning.motionBlurAmount > 0.001;
+    if (useMB) {
+      motionBlur.setIntensity(tuning.motionBlurAmount);
+      fsq.render(renderer, matFinal, finalRT);
+      motionBlur.apply(finalRT.texture, null);
+    } else {
+      fsq.render(renderer, matFinal, null);   // null = 直接 render 到螢幕
+    }
   }
 
   // ─── 釋放 ───
@@ -729,6 +747,8 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     sceneRT.dispose();
     bloomCompositeRT.dispose();
     dofRT.dispose();
+    finalRT.dispose();
+    motionBlur.dispose();
     bloomMipRTs.forEach((m) => { m.a.dispose(); m.b.dispose(); });
     [matBright, matBlur, matBloomAdd, matDOF, matFinal].forEach((m) => m.dispose());
     fsq.dispose();
