@@ -11,6 +11,7 @@ import { createConsciousnessParticles } from "./consciousness-particles.js";
 import { createConsciousnessText } from "./consciousness-text.js";
 import { createEnvironmentPresets } from "./environment-presets.js";
 import { createE4Props } from "./e4-props.js";
+import "./debug-character-inspect.js";   // B-VIS-001 debug:console __INSPECT_CHARS__() / __INSPECT_LEGS__('Go')
 let __juniorRig = null;
 let __clothRig = null;
 let __conscLights = null;
@@ -3514,6 +3515,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     light: Te,
     ambientLight: ke,
     renderer: U,
+    glassMaterial: Vt,                     // 窗戶玻璃 PBR — B-VIS-002 night envmap 透出修正
+    sceneEnvSource: __sunsetEnvMap,        // 用於 sceneEnvIntensity lerp reference
     transitionMs: 2000,
   });
   if (typeof window !== "undefined") window.__ENV__ = __envPresets;
@@ -3531,6 +3534,13 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     __e4Props.syncToPreset(name);
   };
   if (typeof window !== "undefined") window.__E4_PROPS__ = __e4Props;
+  // B-VIS-001 debug expose:console __INSPECT_CHARS__() 列實際 mesh material color
+  if (typeof window !== "undefined") {
+    window.__GO__ = Go;
+    window.__CO__ = Co;
+    window.__BO__ = Bo;
+    window.__KO__ = ko;
+  }
   const Ie = new e.PointLight(14215156, 1.28, 58, 2);
   (Ie.position.set(Q + 2.42, 3.64, g(t.frontDoor.center.z - 122)), W.add(Ie));
   const Re = new e.PointLight(16771512, 1.72, 68, 2);
