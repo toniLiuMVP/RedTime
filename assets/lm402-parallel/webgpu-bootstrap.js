@@ -254,3 +254,76 @@ export function showWebGPUPlaceholder(adapter) {
 
   document.body.appendChild(overlay);
 }
+
+/**
+ * F2 起步:WebGPURenderer standalone smoke test
+ * 不影響主 runtime — 在 hidden offscreen canvas 跑一個 cube,證明 WebGPU stack 完整 work
+ *
+ * Console call:`__WEBGPU_DEMO__()` 啟動 smoke test
+ *
+ * @returns {Promise<{success: boolean, frames: number, ms: number, fps?: number, error?: string}>}
+ */
+export async function runWebGPUSmokeTest() {
+  const detection = await detectWebGPU();
+  if (!detection.supported) {
+    return { success: false, frames: 0, ms: 0, error: detection.reason };
+  }
+
+  // 動態 import vendor(避免主 runtime 載入 webgpu vendor)
+  const THREE = await import("./vendor/three.webgpu.min.js");
+
+  const canvas = document.createElement("canvas");
+  canvas.width = 64;
+  canvas.height = 64;
+
+  let renderer = null;
+  let frames = 0;
+  const t0 = performance.now();
+
+  try {
+    renderer = new THREE.WebGPURenderer({ canvas, antialias: false });
+    await renderer.init();
+    renderer.setSize(64, 64, false);
+    renderer.setClearColor(0x1a1820, 1);
+
+    const scene = new THREE.Scene();
+    const cube = new THREE.Mesh(
+      new THREE.BoxGeometry(1, 1, 1),
+      new THREE.MeshBasicMaterial({ color: 0xffd49c })
+    );
+    scene.add(cube);
+    const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 100);
+    camera.position.set(2, 2, 2);
+    camera.lookAt(0, 0, 0);
+
+    for (let i = 0; i < 60; i++) {
+      cube.rotation.y = i * 0.05;
+      await renderer.renderAsync(scene, camera);
+      frames++;
+    }
+
+    const ms = performance.now() - t0;
+    const fps = frames / (ms / 1000);
+    console.info(
+      "%c[WebGPU smoke test] success",
+      "color:#a8c5ff;font-weight:bold;",
+      `\n  REVISION=${THREE.REVISION}` +
+      `\n  frames=${frames}` +
+      `\n  ms=${ms.toFixed(1)}` +
+      `\n  fps=${fps.toFixed(1)}`
+    );
+
+    cube.geometry.dispose();
+    cube.material.dispose();
+    renderer.dispose();
+
+    return { success: true, frames, ms, fps };
+  } catch (err) {
+    console.error("[WebGPU smoke test] failed:", err);
+    return { success: false, frames, ms: performance.now() - t0, error: err.message };
+  }
+}
+
+if (typeof window !== "undefined") {
+  window.__WEBGPU_DEMO__ = runWebGPUSmokeTest;
+}
