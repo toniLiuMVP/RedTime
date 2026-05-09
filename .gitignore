@@ -63,3 +63,4 @@ credentials.json
 
 # Daemon status (local cache)
 .tools/
+*.uncompressed.glb

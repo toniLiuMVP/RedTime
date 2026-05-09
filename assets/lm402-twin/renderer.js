@@ -1,5 +1,6 @@
 import * as e from "./vendor-three.module.js";
 import { GLTFLoader } from "./GLTFLoader.js";
+import { DRACOLoader } from "./DRACOLoader.js";
 import { WORLD as t, CINEMATIC_TIMELINE as o } from "./data.js";
 import { buildSunsetEnvMap, SUNSET_SUN_DIR } from "./envmap-sunset.js";
 import { createPostFX } from "./postfx.js";
@@ -2936,6 +2937,17 @@ function loadJuniorGltfModel(t, o = {}) {
   return new Promise((n, s) => {
     try {
       const r = new a(o.manager ?? new e.LoadingManager());
+      // 設 DRACOLoader 解碼 Draco-compressed GLB(2026-05-09 round-15+ 加)
+      // GLB 透過 Draco 從 ~5 MB 壓到 ~400 KB(91% 縮減)
+      if (typeof DRACOLoader !== "undefined") {
+        try {
+          const d = new DRACOLoader();
+          d.setDecoderPath("./draco/");
+          r.setDRACOLoader(d);
+        } catch (e) {
+          // 沒設成功仍可 load 非 Draco GLB
+        }
+      }
       o.crossOrigin && (r.crossOrigin = o.crossOrigin);
       r.load(t, n, void 0, s);
     } catch (t) {
