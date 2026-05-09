@@ -2915,10 +2915,11 @@ function loadJuniorGltfModel(t, o = {}) {
     try {
       const r = new a(o.manager ?? new e.LoadingManager());
       // 設 DRACOLoader 解碼 Draco-compressed GLB(2026-05-09 round-15+ 加)
+      // 用 import.meta.url 計算相對 renderer.js 的 draco/ 路徑
       if (typeof DRACOLoader !== "undefined") {
         try {
           const d = new DRACOLoader();
-          d.setDecoderPath("./draco/");
+          d.setDecoderPath(new URL("./draco/", import.meta.url).href);
           r.setDRACOLoader(d);
         } catch (e) {}
       }

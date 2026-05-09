@@ -2938,11 +2938,11 @@ function loadJuniorGltfModel(t, o = {}) {
     try {
       const r = new a(o.manager ?? new e.LoadingManager());
       // 設 DRACOLoader 解碼 Draco-compressed GLB(2026-05-09 round-15+ 加)
-      // GLB 透過 Draco 從 ~5 MB 壓到 ~400 KB(91% 縮減)
+      // 用 import.meta.url 計算相對 renderer.js 的 draco/ 路徑(避免 page URL 跟 module URL 不同 base 問題)
       if (typeof DRACOLoader !== "undefined") {
         try {
           const d = new DRACOLoader();
-          d.setDecoderPath("./draco/");
+          d.setDecoderPath(new URL("./draco/", import.meta.url).href);
           r.setDRACOLoader(d);
         } catch (e) {
           // 沒設成功仍可 load 非 Draco GLB
