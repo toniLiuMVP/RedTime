@@ -12,6 +12,12 @@ import { createConsciousnessText } from "./consciousness-text.js";
 import { createEnvironmentPresets } from "./environment-presets.js";
 import { createE4Props } from "./e4-props.js";
 import "./debug-character-inspect.js";   // B-VIS-001 debug:console __INSPECT_CHARS__() / __INSPECT_LEGS__('Go')
+import { createNarrativeOverlay } from "./narrative-overlay.js";
+import { createTransitions } from "./narrative-transitions.js";
+import { createNarrativeLetter } from "./narrative-letter.js";
+import { createNarrativeAudio } from "./narrative-audio.js";
+import { createInitiatedInteractions } from "./initiated-interactions.js";
+import { createPolaroidCapture } from "./polaroid.js";
 let __juniorRig = null;
 let __clothRig = null;
 let __conscLights = null;
@@ -19,6 +25,12 @@ let __conscParticles = null;
 let __conscText = null;
 let __envPresets = null;
 let __e4Props = null;
+let __narrativeOverlay = null;
+let __transitions = null;
+let __letter = null;
+let __audioLayer = null;
+let __initiated = null;
+let __polaroid = null;
 const __sunFar = new e.Vector3();   // Tier 7：太陽世界座標暫存（每幀 reuse）
 const __sunUv = new e.Vector2();    // Tier 7：太陽螢幕座標（NDC → UV）
 export const WORLD_SCALE = 1 / 80;
@@ -3540,6 +3552,29 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     window.__CO__ = Co;
     window.__BO__ = Bo;
     window.__KO__ = ko;
+  }
+  // 6 個 narrative module wire-up(round-15+ — 認 round-12 over-claim 修)
+  // CLAUDE.md console API 表 line 514-519 宣稱有但實際沒接 — 1182 行 source 寫了沒 wire-up
+  // ─ DOM-only / no deps(可獨立 init)─
+  __narrativeOverlay = createNarrativeOverlay();           // __NARRATIVE__ H1+H3 文學旁白系統
+  __transitions = createTransitions();                      // __TRANSITIONS__ H2+H4 章節 fade + 記憶閃回
+  __letter = createNarrativeLetter();                       // __LETTER__ H6 書信日記
+  __audioLayer = createNarrativeAudio();                    // __AUDIO_LAYER__ H7+H8 環境音 + 動態 BGM
+  // ─ 依賴 __JUNIOR_RIG__ + __NARRATIVE__(必須在它們之後)─
+  __initiated = createInitiatedInteractions();              // __INITIATED__ C8 學妹發起互動 6 種情緒
+  // ─ 依賴 canvas(從 renderer.domElement 取)─
+  __polaroid = createPolaroidCapture({
+    getCanvas: () => U.domElement,
+    getYear: () => "2005",
+    subtitle: "LM402 · 一眼瞬間",
+  });
+  if (typeof window !== "undefined") {
+    window.__NARRATIVE__ = __narrativeOverlay;
+    window.__TRANSITIONS__ = __transitions;
+    window.__LETTER__ = __letter;
+    window.__AUDIO_LAYER__ = __audioLayer;
+    window.__INITIATED__ = __initiated;
+    window.__POLAROID__ = __polaroid;
   }
   const Ie = new e.PointLight(14215156, 1.28, 58, 2);
   (Ie.position.set(Q + 2.42, 3.64, g(t.frontDoor.center.z - 122)), W.add(Ie));
