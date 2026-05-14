@@ -3535,6 +3535,29 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     (Te.shadow.mapSize.set(4096, 4096)),   // 提升解析度避免 blur 出鋸齒
     W.add(Te));
   // E3 季節時間環境 — 5 preset 切換（dusk/night/rainy/snowy/day）
+  // 窗戶玻璃 + 窗框材質 — 提前宣告(下方 createEnvironmentPresets 需要 glassMaterial,
+  // 不可在宣告前引用 → 否則 const TDZ ReferenceError)
+  const Vt = new e.MeshPhysicalMaterial({
+      color: "#dce8f2",
+      roughness: 0.03,
+      metalness: 0.01,
+      transmission: 0.95,
+      thickness: 0.05,
+      transparent: !0,
+      opacity: 0.14,
+      ior: 1.52,
+      clearcoat: 1,
+      clearcoatRoughness: 0.01,
+      envMapIntensity: 0.5,
+      reflectivity: 0.6,
+      side: e.DoubleSide,
+      depthWrite: !1,
+    }),
+    Et = new e.MeshStandardMaterial({
+      color: "#beb5a5",
+      roughness: 0.62,
+      metalness: 0.14,
+    });
   __envPresets = createEnvironmentPresets({
     scene: W,
     light: Te,
@@ -3559,13 +3582,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     __e4Props.syncToPreset(name);
   };
   if (typeof window !== "undefined") window.__E4_PROPS__ = __e4Props;
-  // B-VIS-001 debug expose:console __INSPECT_CHARS__() 列實際 mesh material color
-  if (typeof window !== "undefined") {
-    window.__GO__ = Go;
-    window.__CO__ = Co;
-    window.__BO__ = Bo;
-    window.__KO__ = ko;
-  }
+  // (角色 Go/Co/Bo/ko 的 window expose 已移到下方角色宣告之後 — const 不可在宣告前引用)
   // 6 個 narrative module wire-up(round-15+ — 認 round-12 over-claim 修)
   // CLAUDE.md console API 表 line 514-519 宣稱有但實際沒接 — 1182 行 source 寫了沒 wire-up
   // ─ DOM-only / no deps(可獨立 init)─
@@ -4149,27 +4166,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
   var It2L = new e.PointLight(16773583, 0.5, 6, 2);
   It2L.position.set(ee + 0.5, g(t.plaque.y) + 0.08, g(t.plaque.z));
   j.add(It2L);
-  const Vt = new e.MeshPhysicalMaterial({
-      color: "#dce8f2",
-      roughness: 0.03,
-      metalness: 0.01,
-      transmission: 0.95,
-      thickness: 0.05,
-      transparent: !0,
-      opacity: 0.14,
-      ior: 1.52,
-      clearcoat: 1,
-      clearcoatRoughness: 0.01,
-      envMapIntensity: 0.5,
-      reflectivity: 0.6,
-      side: e.DoubleSide,
-      depthWrite: !1,
-    }),
-    Et = new e.MeshStandardMaterial({
-      color: "#beb5a5",
-      roughness: 0.62,
-      metalness: 0.14,
-    });
+  // (Vt 窗戶玻璃 / Et 窗框材質已提前宣告於 createEnvironmentPresets 呼叫之前)
   (t.leftWallWindows.forEach((t) => {
     const o = Ge(t, "left"),
       a = o.z2 - o.z1,
@@ -5053,6 +5050,12 @@ export function createLm402Scene(D, runtimeOptions = {}) {
   __conscParticles.setIntensity(0);
   __conscText.setIntensity(0);
   if (typeof window !== "undefined") {
+    // B-VIS-001 debug expose:console __INSPECT_CHARS__() / __INSPECT_LEGS__('Go')
+    // (從函式前段移到此處 — Go/Co/Bo/ko 是 const,須在宣告後才能引用,否則 TDZ ReferenceError)
+    window.__GO__ = Go;
+    window.__CO__ = Co;
+    window.__BO__ = Bo;
+    window.__KO__ = ko;
     window.__CONSC_LIGHTS__ = __conscLights;
     window.__CONSC_PARTICLES__ = __conscParticles;
     window.__CONSC_TEXT__ = __conscText;

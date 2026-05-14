@@ -51,6 +51,7 @@ Backup/
 output/
 test-results/
 .playwright-cli/
+.playwright-mcp/
 tools/lighthouse-baseline/
 tools/smoke-tests/
 
