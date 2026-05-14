@@ -35,6 +35,8 @@ const PRESETS = {
     exposure: 1.14,
     glassEnvIntensity: 0.5,    // 窗戶玻璃 envMap reflection 強度(0-1)
     sceneEnvIntensity: 1.0,    // 整體 PBR IBL 強度(透過 scene.environment 投在所有 mesh)
+    glassColor: "#dce8f2",     // 窗戶玻璃本色
+    glassTransmission: 0.95,   // 窗戶透光度(night 降低 → 少透出室外暖光)
   },
   night: {
     fogColor: "#0a0e1a",
@@ -48,6 +50,8 @@ const PRESETS = {
     exposure: 0.85,
     glassEnvIntensity: 0.02,   // 夜晚玻璃幾乎不反射(避免透出 sunset envmap)
     sceneEnvIntensity: 0.15,   // 夜晚 IBL 大幅壓低(避免 PBR 物件透出 sunset 暖光)
+    glassColor: "#0a0e1a",     // 夜晚玻璃本色轉深(窗戶看起來像夜玻璃,非亮天空)
+    glassTransmission: 0.45,   // 夜晚透光度降低(少透出室外環境光)
   },
   rainy: {
     fogColor: "#7c8694",
@@ -61,6 +65,8 @@ const PRESETS = {
     exposure: 0.95,
     glassEnvIntensity: 0.3,
     sceneEnvIntensity: 0.6,
+    glassColor: "#aab4c0",
+    glassTransmission: 0.78,
   },
   snowy: {
     fogColor: "#dde6f0",
@@ -74,6 +80,8 @@ const PRESETS = {
     exposure: 1.05,
     glassEnvIntensity: 0.4,
     sceneEnvIntensity: 0.7,
+    glassColor: "#eef4fa",
+    glassTransmission: 0.86,
   },
   day: {
     fogColor: "#e8d8c0",
@@ -87,6 +95,8 @@ const PRESETS = {
     exposure: 1.22,
     glassEnvIntensity: 0.6,
     sceneEnvIntensity: 1.1,
+    glassColor: "#eaf2f8",
+    glassTransmission: 0.95,
   },
 };
 
@@ -126,6 +136,10 @@ export function createEnvironmentPresets(options = {}) {
       exposure: renderer?.toneMappingExposure ?? 1.14,
       glassEnvIntensity: glassMaterial?.envMapIntensity ?? 0.5,
       sceneEnvIntensity: scene?.environmentIntensity ?? 1.0,
+      glassColor: glassMaterial
+        ? new THREE.Color().copy(glassMaterial.color)
+        : new THREE.Color("#dce8f2"),
+      glassTransmission: glassMaterial?.transmission ?? 0.95,
     };
   }
   currentValues = snapshotCurrent();
@@ -153,6 +167,8 @@ export function createEnvironmentPresets(options = {}) {
       exposure: target.exposure,
       glassEnvIntensity: target.glassEnvIntensity ?? 0.5,
       sceneEnvIntensity: target.sceneEnvIntensity ?? 1.0,
+      glassColor: new THREE.Color(target.glassColor ?? "#dce8f2"),
+      glassTransmission: target.glassTransmission ?? 0.95,
     };
 
     function step() {
@@ -184,10 +200,14 @@ export function createEnvironmentPresets(options = {}) {
       if (renderer) {
         renderer.toneMappingExposure = startValues.exposure + (targetValues.exposure - startValues.exposure) * e;
       }
-      // 窗戶玻璃 envMap reflection 強度(B-VIS-002 night 透出 sunset envmap 修正)
+      // 窗戶玻璃 envMap reflection 強度 + 本色 + 透光度
+      // night 玻璃轉深、透光度降低 → 窗戶不再透出 sunset 暖橘天空
       if (glassMaterial) {
         glassMaterial.envMapIntensity =
           startValues.glassEnvIntensity + (targetValues.glassEnvIntensity - startValues.glassEnvIntensity) * e;
+        glassMaterial.color.copy(startValues.glassColor).lerp(targetValues.glassColor, e);
+        glassMaterial.transmission =
+          startValues.glassTransmission + (targetValues.glassTransmission - startValues.glassTransmission) * e;
       }
       // 整體 PBR IBL 強度 — 控制 scene.environment 投在所有 PBR mesh 的反射量
       // night 時降到 0.15 → PBR 物件失去 sunset 暖色反射,看起來更夜晚

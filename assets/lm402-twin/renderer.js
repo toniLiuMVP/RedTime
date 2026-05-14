@@ -801,8 +801,9 @@ function S(t) {
       var cuffR = cuff.clone(); cuffR.position.x = 0.085; o.add(cuffR);
     })(),
     !t.female)) {
-    const t = new e.Mesh(new e.BoxGeometry(0.13, 0.66, 0.18), i);
-    t.position.set(-0.095, 0.36, 0.008);
+    // 牛仔褲 box 尺寸必須完整包覆膚色 capsule 腿(S/z, 直徑 0.144 / Y span -0.072~0.752)
+    const t = new e.Mesh(new e.BoxGeometry(0.165, 0.72, 0.19), i);
+    t.position.set(-0.095, 0.37, 0.008);
     const a = t.clone();
     a.position.x = 0.095;
     const n = new e.Mesh(
