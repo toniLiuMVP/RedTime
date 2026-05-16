@@ -66,3 +66,7 @@ credentials.json
 # Daemon status (local cache)
 .tools/
 *.uncompressed.glb
+
+# AI-Control workflow v3.0 (2026-05-17)
+docs/reviews/
+docs/session-logs/
