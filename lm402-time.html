@@ -1,180 +1,328 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
+<!doctype html>
+<html lang="zh-TW">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'self'; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none';" />
-    <title>LM402 ｜ 走進那一秒</title>
-    <meta name="description" content="LM402 — 時間裡的兩個妳。三條時間線:原始 / 雙時空 / 平行世界。" />
-    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#050508" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <link rel="canonical" href="https://toniliumvp.github.io/RedTime/lm402-time.html" />
     <link rel="manifest" href="manifest.json" />
-    <meta name="theme-color" content="#0a0a0a" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'self'; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none';" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <meta name="description" content="LM402 — 同一秒鐘，三條時間線。原始 / 雙時空 / 平行世界。" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="LM402 · 走進那一秒" />
+    <meta property="og:description" content="同一秒鐘，三條時間線。" />
+    <meta property="og:image" content="https://toniliumvp.github.io/RedTime/assets/og-image.jpg" />
+    <title>LM402 · 走進那一秒 · 時間裡的兩個妳</title>
+    <link rel="stylesheet" href="fonts/fonts.css" />
     <style>
-      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      /* ─── Reset & Root ─── 對齊 index.html 設計系統 */
       :root {
-        --bg: #0a0a0a;
-        --ink-1: #f4ede4;
-        --ink-2: rgba(244, 237, 228, 0.72);
-        --ink-3: #6b5a3f;
-        --gold: #8a6620;
-        --wine: #6f2832;
-        --line: rgba(244, 237, 228, 0.12);
-        --card-bg: rgba(244, 237, 228, 0.04);
-        --card-bg-hover: rgba(244, 237, 228, 0.07);
+        --ink: #050508;
+        --ink2: #0a0a10;
+        --seam: #1a1a24;
+        --parchment: #eae6de;
+        --warm: #b4b0a8;
+        --mist: #8c8a88;
+        --jade: #16a864;
+        --amber: #c89010;
+        --rose: #e04860;
+        --f1: #ff4858;
+        --gutter: clamp(22px, 6vw, 80px);
       }
-      html, body { background: var(--bg); color: var(--ink-1); min-height: 100vh; }
+      *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        scroll-behavior: smooth;
+        -webkit-text-size-adjust: 100%;
+      }
       body {
-        font-family: "Noto Serif TC", "PingFang TC", "Songti TC", "Source Han Serif TC", serif;
-        line-height: 1.7;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+        background: var(--ink);
+        color: var(--parchment);
+        font-family: "Noto Serif TC", serif;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+      a { color: inherit; text-decoration: none; }
+      a, [role="button"] { touch-action: manipulation; }
+      :focus-visible {
+        outline: 2px solid rgba(22, 168, 100, 0.78);
+        outline-offset: 3px;
+      }
+
+      /* ─── Grain overlay ─── 對齊 index */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+        background-size: 200px 200px;
+        opacity: 0.55;
+        mix-blend-mode: overlay;
+      }
+
+      /* ─── NAV ─── 對齊 index 簡化版 */
+      #nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 500;
+        height: 60px;
         display: flex;
-        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 var(--gutter);
+        background: rgba(5, 5, 8, 0.88);
+        backdrop-filter: blur(16px);
+      }
+      .nav-logo {
+        font-family: "Cormorant Garamond", serif;
+        font-style: italic;
+        font-size: 17px;
+        font-weight: 300;
+        color: rgba(234, 230, 222, 0.65);
+        letter-spacing: 0.1em;
+        transition: color 0.2s;
+      }
+      .nav-logo:hover { color: var(--parchment); }
+      .nav-back {
+        font-family: "DM Mono", monospace;
+        font-size: 9.5px;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: var(--mist);
+        transition: color 0.18s;
+      }
+      .nav-back:hover { color: var(--parchment); }
+
+      /* ─── HERO-STYLE STAGE ─── 對齊 index hero */
+      main {
+        min-height: 100svh;
+        display: flex;
         align-items: center;
         justify-content: center;
-        padding: 6vh 5vw;
+        padding: 100px var(--gutter) 80px;
+        position: relative;
+        z-index: 2;
       }
-      .wrap { max-width: 980px; width: 100%; }
-      header { text-align: center; margin-bottom: 6vh; }
-      h1 {
-        font-size: clamp(2rem, 5vw, 3.4rem);
+      /* Radial background 對齊 index hero-radial */
+      main::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background:
+          radial-gradient(ellipse 90% 70% at 50% 30%, rgba(8, 28, 14, 0.95) 0%, transparent 65%),
+          radial-gradient(ellipse 60% 60% at 20% 80%, rgba(8, 6, 18, 0.8) 0%, transparent 50%),
+          radial-gradient(ellipse 70% 50% at 80% 90%, rgba(16, 8, 4, 0.7) 0%, transparent 50%),
+          var(--ink);
+      }
+      /* Cinematic vignette 對齊 index #hero::after */
+      main::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background:
+          radial-gradient(ellipse 80% 80% at 50% 50%, transparent 40%, rgba(5,5,8,0.6) 100%),
+          linear-gradient(180deg, rgba(5,5,8,0.3) 0%, transparent 12%, transparent 88%, rgba(5,5,8,0.5) 100%);
+      }
+
+      .wrap {
+        max-width: 980px;
+        width: 100%;
+        text-align: center;
+        position: relative;
+      }
+
+      .eyebrow {
+        font-family: "DM Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.5em;
+        text-transform: uppercase;
+        color: var(--mist);
+        margin-bottom: 28px;
+        opacity: 0;
+        animation: fadeUp 0.9s 0.2s forwards;
+      }
+
+      h1.title {
+        font-family: "Noto Serif TC", serif;
+        font-size: clamp(2.2rem, 5.5vw, 3.6rem);
         font-weight: 400;
-        letter-spacing: 0.06em;
-        color: var(--ink-1);
-        margin-bottom: 1.2rem;
+        letter-spacing: 0.08em;
+        color: var(--parchment);
+        margin-bottom: 22px;
+        opacity: 0;
+        animation: fadeUp 0.9s 0.4s forwards;
       }
+
       .sub {
-        color: var(--ink-2);
-        font-size: clamp(0.95rem, 1.8vw, 1.05rem);
+        font-family: "Cormorant Garamond", serif;
+        font-style: italic;
+        font-size: clamp(1.05rem, 2vw, 1.3rem);
+        color: var(--warm);
         letter-spacing: 0.04em;
-        max-width: 32em;
-        margin: 0 auto;
+        max-width: 36em;
+        margin: 0 auto 64px;
+        opacity: 0;
+        animation: fadeUp 0.9s 0.6s forwards;
       }
-      .grid {
+
+      /* ─── Timeline cards ─── 對齊 index 雕琢過的卡片風 */
+      .timeline-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 1.5rem;
-        margin-top: 2vh;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.2rem;
+        margin-top: 12px;
+        opacity: 0;
+        animation: fadeUp 0.9s 0.8s forwards;
       }
-      a.card {
-        display: flex;
-        flex-direction: column;
-        gap: 0.9rem;
-        padding: 2rem 1.8rem;
-        background: var(--card-bg);
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        color: var(--ink-1);
-        text-decoration: none;
-        transition: background 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
+
+      a.line-card {
+        display: block;
+        padding: 2.2rem 1.6rem 1.8rem;
+        background: rgba(234, 230, 222, 0.025);
+        border: 1px solid rgba(234, 230, 222, 0.1);
+        border-radius: 4px;
+        transition: background 0.3s ease, border-color 0.3s ease, transform 0.25s ease;
+        text-align: left;
+        position: relative;
       }
-      a.card:hover, a.card:focus-visible {
-        background: var(--card-bg-hover);
-        border-color: var(--gold);
+      a.line-card:hover,
+      a.line-card:focus-visible {
+        background: rgba(22, 168, 100, 0.05);
+        border-color: rgba(22, 168, 100, 0.45);
         transform: translateY(-2px);
         outline: none;
       }
-      a.card:focus-visible {
-        box-shadow: 0 0 0 2px var(--gold);
+
+      .line-num {
+        font-family: "Cormorant Garamond", serif;
+        font-style: italic;
+        font-size: 22px;
+        font-weight: 300;
+        color: var(--jade);
+        letter-spacing: 0.12em;
+        display: block;
+        margin-bottom: 14px;
+        opacity: 0.9;
       }
-      .card .icon {
-        font-size: 1.8rem;
-        line-height: 1;
+
+      .line-tag {
+        font-family: "DM Mono", monospace;
+        font-size: 9px;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--mist);
+        display: block;
+        margin-bottom: 12px;
       }
-      .card h2 {
+
+      .line-name {
+        font-family: "Noto Serif TC", serif;
         font-size: 1.35rem;
         font-weight: 500;
-        letter-spacing: 0.04em;
+        color: var(--parchment);
+        letter-spacing: 0.05em;
+        margin-bottom: 18px;
       }
-      .card .tag {
-        font-size: 0.8rem;
-        color: var(--gold);
-        letter-spacing: 0.1em;
+
+      .line-desc {
+        font-family: "Noto Serif TC", serif;
+        font-size: 1rem;
+        line-height: 1.7;
+        color: var(--warm);
+      }
+
+      footer.under {
+        margin-top: 72px;
+        font-family: "DM Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.3em;
         text-transform: uppercase;
+        color: var(--mist);
+        opacity: 0;
+        animation: fadeUp 0.9s 1s forwards;
       }
-      .card .desc {
-        color: var(--ink-2);
-        font-size: 0.95rem;
-        line-height: 1.6;
+      footer.under a {
+        color: var(--mist);
+        border-bottom: 1px dotted rgba(140, 138, 136, 0.4);
+        padding-bottom: 1px;
+        transition: color 0.18s, border-color 0.18s;
       }
-      .card .note {
-        margin-top: auto;
-        padding-top: 0.8rem;
-        border-top: 1px solid var(--line);
-        font-size: 0.82rem;
-        color: var(--ink-3);
+      footer.under a:hover {
+        color: var(--parchment);
+        border-bottom-color: var(--jade);
       }
-      footer {
-        margin-top: 8vh;
-        text-align: center;
-        color: var(--ink-3);
-        font-size: 0.85rem;
+
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
       }
-      footer a {
-        color: var(--ink-2);
-        text-decoration: none;
-        border-bottom: 1px dotted var(--ink-3);
-      }
-      footer a:hover, footer a:focus-visible {
-        color: var(--ink-1);
-        border-bottom-color: var(--gold);
-        outline: none;
-      }
+
       @media (prefers-reduced-motion: reduce) {
-        a.card { transition: none; }
-        a.card:hover, a.card:focus-visible { transform: none; }
+        .eyebrow, h1.title, .sub, .timeline-grid, footer.under {
+          animation: none;
+          opacity: 1;
+        }
+        a.line-card { transition: none; }
+        a.line-card:hover,
+        a.line-card:focus-visible { transform: none; }
       }
     </style>
   </head>
   <body>
-    <main class="wrap">
-      <header>
-        <h1>走進 LM402 那一秒</h1>
-        <p class="sub">
-          2005 年 11:00,LM402 教室前後門。<br />
-          同一秒鐘,三條時間線。選一條走進去。
-        </p>
-      </header>
+    <nav id="nav">
+      <a class="nav-logo" href="index.html">時間裡的兩個妳</a>
+      <a class="nav-back" href="index.html">← 回首頁</a>
+    </nav>
 
-      <nav class="grid" aria-label="LM402 時間線選擇">
-        <a class="card" href="lm402.html">
-          <span class="icon" aria-hidden="true">⏱</span>
-          <span class="tag">穩定 · 正本</span>
-          <h2>原始時間線</h2>
-          <p class="desc">
-            最初的 LM402。學妹 29 歲、學長 21 歲、一眼瞬間。
-            穩定發行版,保守升級,不會壞掉。
-          </p>
-          <p class="note">推薦第一次來的讀者。</p>
-        </a>
+    <main>
+      <div class="wrap">
+        <div class="eyebrow">2005 · 11:00 · LM402</div>
+        <h1 class="title">走進那一秒</h1>
+        <p class="sub">同一秒鐘，三條時間線。選一條走進去。</p>
 
-        <a class="card" href="lm402-twin.html">
-          <span class="icon" aria-hidden="true">⏳</span>
-          <span class="tag">進化中 · 主推</span>
-          <h2>雙時空</h2>
-          <p class="desc">
-            原始線的進化版。意識菜市場 + 環境 preset + 角色 rig + 文學旁白。
-            持續加入新模組,實驗 WebGL2 極限。
-          </p>
-          <p class="note">主推路線,接近完整體驗。</p>
-        </a>
+        <nav class="timeline-grid" aria-label="LM402 時間線選擇">
+          <a class="line-card" href="lm402.html">
+            <span class="line-num">i</span>
+            <span class="line-tag">穩定 · 正本</span>
+            <div class="line-name">原始時間線</div>
+            <p class="line-desc">最初的 LM402。</p>
+          </a>
 
-        <a class="card" href="lm402-parallel.html">
-          <span class="icon" aria-hidden="true">🌌</span>
-          <span class="tag">探索 · 80/20</span>
-          <h2>平行世界</h2>
-          <p class="desc">
-            WebGPU 重新繪製的另一個 LM402。
-            學妹學長精緻 3D,目標是 next-gen 視覺。
-          </p>
-          <p class="note">建構中,需 WebGPU 支援的瀏覽器。</p>
-        </a>
-      </nav>
+          <a class="line-card" href="lm402-twin.html">
+            <span class="line-num">ii</span>
+            <span class="line-tag">進化中 · 主推</span>
+            <div class="line-name">雙時空</div>
+            <p class="line-desc">實驗 WebGL2 極限。</p>
+          </a>
 
-      <footer>
-        <p>
-          ← <a href="index.html">回到《時間裡的兩個妳》</a> &nbsp;·&nbsp;
-          <a href="reader.html">閱讀小說</a>
-        </p>
-      </footer>
+          <a class="line-card" href="lm402-parallel.html">
+            <span class="line-num">iii</span>
+            <span class="line-tag">探索 · 80/20</span>
+            <div class="line-name">平行世界</div>
+            <p class="line-desc">WebGPU 版本的 LM402。</p>
+          </a>
+        </nav>
+
+        <footer class="under">
+          <a href="reader.html">翻開故事</a>
+        </footer>
+      </div>
     </main>
   </body>
 </html>
