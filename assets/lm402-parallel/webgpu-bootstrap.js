@@ -189,7 +189,7 @@ export function showWebGPUPlaceholder(adapter) {
   overlay.appendChild(title);
 
   const subtitle = document.createElement("p");
-  subtitle.textContent = "WebGPU 已就緒 · 學妹學長精緻版本建置中";
+  subtitle.textContent = "建置中";
   Object.assign(subtitle.style, {
     fontSize: "16px",
     marginBottom: "32px",
@@ -197,23 +197,6 @@ export function showWebGPUPlaceholder(adapter) {
     letterSpacing: "0.04em",
   });
   overlay.appendChild(subtitle);
-
-  const info = document.createElement("div");
-  Object.assign(info.style, {
-    fontSize: "14px",
-    lineHeight: "1.85",
-    maxWidth: "560px",
-    opacity: "0.75",
-    marginBottom: "32px",
-    fontStyle: "italic",
-  });
-  info.textContent =
-    "F1 WebGPU 偵測完成，您的瀏覽器支援下世代 GPU API。" +
-    "\n真正的 WebGPU renderer 改造（F2 切 renderer / F3 重寫 shader / E 一眼瞬間極致精雕）" +
-    "需要 4-6 週的 dedicated sprint，目前進行中。" +
-    "\n\n暫時請前往 LM402 原始時間線或雙時空體驗。";
-  info.style.whiteSpace = "pre-line";
-  overlay.appendChild(info);
 
   if (adapter) {
     const adapterInfo = document.createElement("div");
