@@ -160,79 +160,188 @@ export function showWebGPUFallback(reason) {
  * 顯示「WebGPU ready」提示（給 dev 看）— 真 WebGPU renderer 還沒做
  */
 export function showWebGPUPlaceholder(adapter) {
+  // 注入一次性 style sheet — 對齊 index.html 設計系統(grain / radial / fadeUp / palette)
+  if (!document.getElementById("lm402-webgpu-placeholder-style")) {
+    const style = document.createElement("style");
+    style.id = "lm402-webgpu-placeholder-style";
+    style.textContent = `
+      #lm402-webgpu-placeholder {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: clamp(40px, 8vw, 80px);
+        text-align: center;
+        color: #eae6de;
+        font-family: "Noto Serif TC", "PingFang TC", serif;
+        background:
+          radial-gradient(ellipse 90% 70% at 50% 30%, rgba(8, 28, 14, 0.95) 0%, transparent 65%),
+          radial-gradient(ellipse 60% 60% at 20% 80%, rgba(8, 6, 18, 0.8) 0%, transparent 50%),
+          radial-gradient(ellipse 70% 50% at 80% 90%, rgba(16, 8, 4, 0.7) 0%, transparent 50%),
+          #050508;
+      }
+      #lm402-webgpu-placeholder::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+        background-size: 200px 200px;
+        opacity: 0.55;
+        mix-blend-mode: overlay;
+      }
+      #lm402-webgpu-placeholder::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background:
+          radial-gradient(ellipse 80% 80% at 50% 50%, transparent 40%, rgba(5,5,8,0.6) 100%),
+          linear-gradient(180deg, rgba(5,5,8,0.3) 0%, transparent 12%, transparent 88%, rgba(5,5,8,0.5) 100%);
+      }
+      #lm402-webgpu-placeholder > * { position: relative; z-index: 2; }
+
+      #lm402-webgpu-placeholder .pl-eyebrow {
+        font-family: "DM Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.5em;
+        text-transform: uppercase;
+        color: #8c8a88;
+        margin-bottom: 28px;
+        opacity: 0;
+        animation: plFadeUp 0.9s 0.2s forwards;
+      }
+      #lm402-webgpu-placeholder .pl-title {
+        font-family: "Noto Serif TC", serif;
+        font-weight: 400;
+        font-size: clamp(2rem, 5vw, 3rem);
+        letter-spacing: 0.08em;
+        color: #eae6de;
+        margin: 0 0 22px;
+        opacity: 0;
+        animation: plFadeUp 0.9s 0.4s forwards;
+      }
+      #lm402-webgpu-placeholder .pl-sub {
+        font-family: "Cormorant Garamond", serif;
+        font-style: italic;
+        font-size: clamp(1.05rem, 2vw, 1.3rem);
+        letter-spacing: 0.04em;
+        color: #b4b0a8;
+        margin: 0 0 36px;
+        opacity: 0;
+        animation: plFadeUp 0.9s 0.6s forwards;
+      }
+      #lm402-webgpu-placeholder .pl-adapter {
+        font-family: "DM Mono", monospace;
+        font-size: 9.5px;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: rgba(140, 138, 136, 0.55);
+        margin-bottom: 32px;
+        opacity: 0;
+        animation: plFadeUp 0.9s 0.7s forwards;
+      }
+      #lm402-webgpu-placeholder .pl-btn-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: center;
+        opacity: 0;
+        animation: plFadeUp 0.9s 0.8s forwards;
+      }
+      #lm402-webgpu-placeholder .pl-btn {
+        font-family: "DM Mono", monospace;
+        font-size: 9.5px;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        padding: 11px 22px;
+        border-radius: 3px;
+        background: rgba(22, 168, 100, 0.06);
+        color: #16a864;
+        border: 1px solid rgba(22, 168, 100, 0.4);
+        text-decoration: none;
+        transition: background 0.18s, border-color 0.18s, color 0.18s;
+      }
+      #lm402-webgpu-placeholder .pl-btn:hover,
+      #lm402-webgpu-placeholder .pl-btn:focus-visible {
+        background: rgba(22, 168, 100, 0.14);
+        border-color: rgba(22, 168, 100, 0.65);
+        outline: none;
+      }
+      #lm402-webgpu-placeholder .pl-btn-ghost {
+        background: transparent;
+        color: #8c8a88;
+        border-color: rgba(234, 230, 222, 0.14);
+      }
+      #lm402-webgpu-placeholder .pl-btn-ghost:hover,
+      #lm402-webgpu-placeholder .pl-btn-ghost:focus-visible {
+        color: #eae6de;
+        background: rgba(234, 230, 222, 0.04);
+        border-color: rgba(234, 230, 222, 0.32);
+      }
+      @keyframes plFadeUp {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #lm402-webgpu-placeholder .pl-eyebrow,
+        #lm402-webgpu-placeholder .pl-title,
+        #lm402-webgpu-placeholder .pl-sub,
+        #lm402-webgpu-placeholder .pl-adapter,
+        #lm402-webgpu-placeholder .pl-btn-row {
+          animation: none;
+          opacity: 1;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   const overlay = document.createElement("div");
   overlay.id = "lm402-webgpu-placeholder";
-  Object.assign(overlay.style, {
-    position: "fixed",
-    inset: "0",
-    background: "linear-gradient(180deg, #0a1018 0%, #1a2030 100%)",
-    color: "#f4eee0",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: "'Noto Serif TC', 'PingFang TC', serif",
-    padding: "40px",
-    textAlign: "center",
-    zIndex: "99999",
-  });
+
+  const eyebrow = document.createElement("div");
+  eyebrow.className = "pl-eyebrow";
+  eyebrow.textContent = "LM402 · PARALLEL · WebGPU";
+  overlay.appendChild(eyebrow);
 
   const title = document.createElement("h1");
+  title.className = "pl-title";
   title.textContent = "🌌 LM402 平行世界";
-  Object.assign(title.style, {
-    fontSize: "32px",
-    marginBottom: "12px",
-    color: "#a8c5ff",
-    letterSpacing: "0.06em",
-    fontWeight: "500",
-  });
   overlay.appendChild(title);
 
   const subtitle = document.createElement("p");
+  subtitle.className = "pl-sub";
   subtitle.textContent = "建置中";
-  Object.assign(subtitle.style, {
-    fontSize: "16px",
-    marginBottom: "32px",
-    opacity: "0.7",
-    letterSpacing: "0.04em",
-  });
   overlay.appendChild(subtitle);
 
   if (adapter) {
     const adapterInfo = document.createElement("div");
-    Object.assign(adapterInfo.style, {
-      fontSize: "12px",
-      opacity: "0.4",
-      marginBottom: "24px",
-      fontFamily: "ui-monospace, Menlo, monospace",
-    });
-    adapterInfo.textContent = `GPU adapter: ${adapter.name || "(unnamed)"}`;
+    adapterInfo.className = "pl-adapter";
+    adapterInfo.textContent = `GPU · ${adapter.name || "ready"}`;
     overlay.appendChild(adapterInfo);
   }
 
   const btnRow = document.createElement("div");
-  Object.assign(btnRow.style, {
-    display: "flex",
-    gap: "12px",
-    flexWrap: "wrap",
-    justifyContent: "center",
-  });
+  btnRow.className = "pl-btn-row";
 
-  ["lm402.html", "lm402-twin.html"].forEach((href, i) => {
+  const links = [
+    { href: "lm402.html", text: "→ LM402 原始時間線", primary: true },
+    { href: "lm402-twin.html", text: "⏳ LM402 雙時空", primary: false },
+    { href: "lm402-time.html", text: "← 回三線選擇", primary: false },
+  ];
+  for (const { href, text, primary } of links) {
     const a = document.createElement("a");
     a.href = href;
-    a.textContent = i === 0 ? "→ LM402 原始時間線" : "⏳ LM402 雙時空";
-    Object.assign(a.style, {
-      padding: "12px 28px",
-      background: i === 0 ? "#ffd49c" : "rgba(168,197,255,0.16)",
-      color: i === 0 ? "#1a1820" : "#a8c5ff",
-      textDecoration: "none",
-      borderRadius: "4px",
-      fontSize: "15px",
-      border: i === 0 ? "none" : "1px solid rgba(168,197,255,0.3)",
-    });
+    a.textContent = text;
+    a.className = primary ? "pl-btn" : "pl-btn pl-btn-ghost";
     btnRow.appendChild(a);
-  });
+  }
   overlay.appendChild(btnRow);
 
   document.body.appendChild(overlay);
