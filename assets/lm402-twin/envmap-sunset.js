@@ -115,5 +115,13 @@ export function buildSunsetEnvMap(renderer, opts = {}) {
   skyGeo.dispose();
   skyMat.dispose();
 
+  // 2026-05-18 r28 Codex finding：envRT (WebGLRenderTarget) 持有 envMap 生命週期，
+  // 之前只回傳 envMap，envRT 沒 dispose path → 重新生成（日夜變換 / 場景切換）會 memory leak。
+  // backward-compat 修法：envMap 不變（caller 直接用），加 userData.dispose 給 future caller 控制。
+  envMap.userData.envRT = envRT;
+  envMap.userData.dispose = () => {
+    envRT.dispose(); // dispose render target 會連帶 dispose texture + framebuffer
+  };
+
   return envMap;
 }
