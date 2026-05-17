@@ -86,48 +86,26 @@ async function trimCache(cacheName, maxItems) {
   }
 }
 
-// 安全紀律:cache allowlist — 只 cache 已知 file type 或 html(避免 cache 異常 path)
-function isCacheable(pathname) {
-  if (pathname === '/' || pathname.endsWith('/') || pathname.endsWith('.html')) return true;
-  return /\.(js|mjs|css|glb|woff2?|ttf|otf|png|jpg|jpeg|svg|ico|wasm|json)$/i.test(pathname);
-}
-
 self.addEventListener('fetch', event => {
-  const { request } = event;
-
-  // 安全紀律 1:只 cache GET(POST/PUT/DELETE 等不 cache,直接 passthrough)
-  if (request.method !== 'GET') return;
-
-  // 安全紀律 2:只處理 http(s)(skip chrome-extension:// / data: / blob:)
-  if (!request.url.startsWith('http')) return;
-
-  const url = new URL(request.url);
-
-  // 安全紀律 3:只 cache 同 origin(跨 origin response 不入 cache,避免 cache poisoning)
-  if (url.origin !== location.origin) return;
-
-  // 安全紀律 4:path allowlist(只 cache 已知 file type / html,避免異常 path 入 cache)
-  if (!isCacheable(url.pathname)) return;
+  if (!event.request.url.startsWith('http')) return;
+  const url = new URL(event.request.url);
 
   // 全部 network-first(有網路拿最新,離線回退快取)
   event.respondWith(
-    fetch(request)
+    fetch(event.request)
       .then(response => {
-        if (response.ok) {
+        if (response.ok && url.origin === location.origin) {
           const clone = response.clone();
           // 分流寫進對應 cache
           const targetCache = isStaticAsset(url.pathname) ? STATIC_CACHE : RUNTIME_CACHE;
           const targetMax = isStaticAsset(url.pathname) ? MAX_STATIC_ITEMS : MAX_RUNTIME_ITEMS;
-          caches.open(targetCache)
-            .then(cache => cache.put(request, clone))
-            .then(() => trimCache(targetCache, targetMax))
-            .catch(err => {
-              // cache.put 失敗(quota exceeded / Range response 等)— 不影響 main response delivery
-              console.warn('[sw] cache.put failed:', url.pathname, err && err.message);
-            });
+          caches.open(targetCache).then(cache => {
+            cache.put(event.request, clone);
+            trimCache(targetCache, targetMax);
+          });
         }
         return response;
       })
-      .catch(() => caches.match(request))    // match() 自動跨所有 cache 找
+      .catch(() => caches.match(event.request))    // match() 自動跨所有 cache 找
   );
 });

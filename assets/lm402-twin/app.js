@@ -1327,10 +1327,6 @@ function closeDialogue() {
 }
 
 function collectMemory(id) {
-  if (!MEMORY_FRAGMENTS[id]) {
-    console.warn(`[lm402-twin] collectMemory: unknown fragment id "${id}"`);
-    return;
-  }
   if (!state.memories.has(id)) {
     state.memories.add(id);
     updateMemoryList();
