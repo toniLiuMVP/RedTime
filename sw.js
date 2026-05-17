@@ -7,9 +7,9 @@
 
 // — Cache version 分離 —
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
-const STATIC_VERSION = 'static-v1-20260509';
+const STATIC_VERSION = 'static-v2-20260518';  // bumped:加 twin/parallel GLB 進 precache
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v1-20260509';
+const RUNTIME_VERSION = 'runtime-v2-20260518';  // bumped:加 twin/parallel/time html + module
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
@@ -17,6 +17,7 @@ const ALL_CURRENT_CACHES = new Set([STATIC_CACHE, RUNTIME_CACHE]);
 
 // — 大型不變 asset:STATIC_CACHE —
 const STATIC_PRECACHE_URLS = [
+  // 正本 lm402(穩定)
   '/RedTime/assets/lm402/vendor-three.module.js',
   '/RedTime/assets/lm402/GLTFLoader.js',
   '/RedTime/assets/lm402/DRACOLoader.js',
@@ -25,6 +26,19 @@ const STATIC_PRECACHE_URLS = [
   '/RedTime/assets/lm402/characters/junior/exports/junior_2005_hero_closeup.glb',
   '/RedTime/assets/lm402/characters/junior/exports/junior_2005_runtime.glb',
   '/RedTime/assets/lm402/characters/junior/exports/junior_2005_runtime_mobile.glb',
+  // 雙時空 lm402-twin(進化版,獨立 GLB 副本)
+  '/RedTime/assets/lm402-twin/GLTFLoader.js',
+  '/RedTime/assets/lm402-twin/DRACOLoader.js',
+  '/RedTime/assets/lm402-twin/characters/junior/exports/junior_2005_hero_closeup.glb',
+  '/RedTime/assets/lm402-twin/characters/junior/exports/junior_2005_runtime.glb',
+  '/RedTime/assets/lm402-twin/characters/junior/exports/junior_2005_runtime_mobile.glb',
+  // 平行世界 lm402-parallel(WebGPU 探索,獨立 GLB + WebGPU vendor)
+  '/RedTime/assets/lm402-parallel/GLTFLoader.js',
+  '/RedTime/assets/lm402-parallel/DRACOLoader.js',
+  '/RedTime/assets/lm402-parallel/characters/junior/exports/junior_2005_hero_closeup.glb',
+  '/RedTime/assets/lm402-parallel/characters/junior/exports/junior_2005_runtime.glb',
+  '/RedTime/assets/lm402-parallel/characters/junior/exports/junior_2005_runtime_mobile.glb',
+  // 共用 assets
   '/RedTime/fonts/fonts.css',
   '/RedTime/assets/og-image.jpg',
   '/RedTime/assets/pwa-icon-192.png',
@@ -37,12 +51,31 @@ const RUNTIME_PRECACHE_URLS = [
   '/RedTime/',
   '/RedTime/index.html',
   '/RedTime/reader.html',
+  // 三線 LM402 入口 + 共用 landing
   '/RedTime/lm402.html',
+  '/RedTime/lm402-time.html',
+  '/RedTime/lm402-twin.html',
+  '/RedTime/lm402-parallel.html',
+  // 正本 lm402 主 module
   '/RedTime/assets/lm402/lm402.css',
   '/RedTime/assets/lm402/app.js',
   '/RedTime/assets/lm402/renderer.js',
   '/RedTime/assets/lm402/data.js',
   '/RedTime/assets/lm402/ui-panels.js',
+  // 雙時空主 module
+  '/RedTime/assets/lm402-twin/lm402.css',
+  '/RedTime/assets/lm402-twin/app.js',
+  '/RedTime/assets/lm402-twin/renderer.js',
+  '/RedTime/assets/lm402-twin/data.js',
+  '/RedTime/assets/lm402-twin/junior-materials-hr.js',
+  '/RedTime/assets/lm402-twin/envmap-sunset.js',
+  // 平行世界主 module
+  '/RedTime/assets/lm402-parallel/lm402.css',
+  '/RedTime/assets/lm402-parallel/app.js',
+  '/RedTime/assets/lm402-parallel/renderer.js',
+  '/RedTime/assets/lm402-parallel/data.js',
+  '/RedTime/assets/lm402-parallel/webgpu-bootstrap.js',
+  '/RedTime/assets/lm402-parallel/parallel-init.js',
 ];
 
 // — 路徑分流規則 —
