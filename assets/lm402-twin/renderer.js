@@ -3705,6 +3705,320 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       try { window.__LETTERBOX_OFF__(); } catch(e) {}
       console.info('[__ART_RESET_ALL__] r36 美術 batch 1 全套重置');
     };
+    // ════════════════════════════════════════════════════════════════
+    // r37 push5 美術 batch 2(toni 抓「停下來 = 完美?」)
+    // 自我 audit:over-standoff 的 hr-scale items 拉回 ship
+    // ════════════════════════════════════════════════════════════════
+    // M5 (r37) Cloth-specific sheen tuning(silk / cotton / denim 分 preset)
+    window.__CLOTH_SHEEN__ = (preset = 'default') => {
+      const presets = {
+        default: { silk: 0.3, cotton: 0.3, denim: 0.3 },
+        silk:    { silk: 0.85, cotton: 0.3, denim: 0.15 },
+        rustic:  { silk: 0.4, cotton: 0.6, denim: 0.25 },
+        flat:    { silk: 0.1, cotton: 0.1, denim: 0.1 },
+      };
+      const p = presets[preset] || presets.default;
+      let count = 0;
+      W.traverse((obj) => {
+        if (obj.material && typeof obj.material.sheen === 'number') {
+          if (obj.material.userData._origSheen === undefined) {
+            obj.material.userData._origSheen = obj.material.sheen;
+          }
+          const name = (obj.name || '').toLowerCase();
+          let mult = p.cotton;
+          if (name.includes('silk') || name.includes('blouse') || name.includes('shirt_f')) mult = p.silk;
+          else if (name.includes('denim') || name.includes('jean') || name.includes('pant')) mult = p.denim;
+          obj.material.sheen = mult;
+          obj.material.needsUpdate = true;
+          count++;
+        }
+      });
+      console.info(`[__CLOTH_SHEEN__] preset="${preset}" applied to ${count} sheen materials`);
+    };
+    // F5 (r37) Lens Flare 增強(extra ghost sprite chain DOM overlay)
+    let _flareEl = null;
+    window.__LENS_FLARE__ = (count = 6, intensity = 0.6) => {
+      if (typeof document === 'undefined') return;
+      if (_flareEl) _flareEl.remove();
+      _flareEl = document.createElement('div');
+      _flareEl.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:8998;mix-blend-mode:screen;';
+      for (let i = 0; i < count; i++) {
+        const ghost = document.createElement('div');
+        const size = 20 + i * 18;
+        const offset = 10 + i * 12;
+        const hue = (i * 50) % 360;
+        ghost.style.cssText = `position:absolute;top:${30 + offset}%;left:${70 - offset}%;width:${size}px;height:${size}px;border-radius:50%;background:radial-gradient(circle, hsla(${hue}, 70%, 60%, ${intensity * 0.35}) 0%, transparent 70%);filter:blur(${i + 1}px);`;
+        _flareEl.appendChild(ghost);
+      }
+      document.body.appendChild(_flareEl);
+      console.info(`[__LENS_FLARE__] ${count} ghosts intensity=${intensity}`);
+    };
+    window.__LENS_FLARE_OFF__ = () => {
+      if (_flareEl) { _flareEl.remove(); _flareEl = null; }
+      console.info('[__LENS_FLARE__] off');
+    };
+    // F6 (r37) Spatiotemporal Film Grain(DOM SVG noise,類底片感)
+    let _grainEl = null, _grainRAF = null;
+    window.__GRAIN__ = (strength = 0.12, fps = 24) => {
+      if (typeof document === 'undefined') return;
+      if (_grainEl) _grainEl.remove();
+      _grainEl = document.createElement('div');
+      const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='SEED'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 STR 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>`;
+      _grainEl.style.cssText = `position:fixed;inset:0;pointer-events:none;z-index:8997;opacity:${strength};mix-blend-mode:overlay;`;
+      document.body.appendChild(_grainEl);
+      let last = 0, seed = 0;
+      const interval = 1000 / fps;
+      const tick = (now) => {
+        if (!_grainEl) return;
+        if (now - last > interval) {
+          seed = (seed + 1) % 100;
+          const url = `data:image/svg+xml;utf8,${svg.replace('SEED', seed).replace('STR', strength * 2)}`;
+          _grainEl.style.backgroundImage = `url("${url}")`;
+          last = now;
+        }
+        _grainRAF = requestAnimationFrame(tick);
+      };
+      tick(0);
+      console.info(`[__GRAIN__] strength=${strength} fps=${fps}`);
+    };
+    window.__GRAIN_OFF__ = () => {
+      if (_grainRAF) { cancelAnimationFrame(_grainRAF); _grainRAF = null; }
+      if (_grainEl) { _grainEl.remove(); _grainEl = null; }
+      console.info('[__GRAIN__] off');
+    };
+    // F7 (r37) Vignette DOM overlay(LM402 端缺 → 補)
+    let _vignEl = null;
+    window.__VIGNETTE__ = (strength = 0.4) => {
+      if (typeof document === 'undefined') return;
+      if (!_vignEl) {
+        _vignEl = document.createElement('div');
+        _vignEl.style.cssText = `position:fixed;inset:0;pointer-events:none;z-index:8996;`;
+        document.body.appendChild(_vignEl);
+      }
+      _vignEl.style.background = `radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,${strength}) 100%)`;
+      console.info(`[__VIGNETTE__] strength=${strength}`);
+    };
+    window.__VIGNETTE_OFF__ = () => {
+      if (_vignEl) { _vignEl.remove(); _vignEl = null; }
+      console.info('[__VIGNETTE__] off');
+    };
+    // F8 (r37) DOF Rack Focus animate(focal distance 漸變到目標)
+    window.__RACK_FOCUS__ = (targetDist = 3.0, durationMs = 1200) => {
+      if (!window.__POSTFX__ || !window.__POSTFX__.tuning || !window.__POSTFX__.tuning.dof) {
+        console.warn('[__RACK_FOCUS__] __POSTFX__.tuning.dof not ready'); return;
+      }
+      const dof = window.__POSTFX__.tuning.dof;
+      const startDist = dof.focusDistance ?? 5.0;
+      const startTime = performance.now();
+      const loop = () => {
+        const t = Math.min((performance.now() - startTime) / durationMs, 1);
+        const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        dof.focusDistance = startDist + (targetDist - startDist) * ease;
+        if (t < 1) requestAnimationFrame(loop);
+        else console.info(`[__RACK_FOCUS__] complete @ focusDistance=${dof.focusDistance.toFixed(2)}`);
+      };
+      loop();
+      console.info(`[__RACK_FOCUS__] ${startDist} → ${targetDist} duration=${durationMs}ms`);
+    };
+    // A4 (r37) Atmospheric Perspective(scene.fog 密度 mode)
+    window.__AT_PERSPECTIVE__ = (mode = 'subtle') => {
+      const presets = {
+        none:    { color: '#d0dce6', near: 50,  far: 500 },
+        subtle:  { color: '#d0dce6', near: 25,  far: 80  },
+        moderate:{ color: '#c8d4e0', near: 12,  far: 60  },
+        heavy:   { color: '#b8c4d0', near: 6,   far: 40  },
+        dramatic:{ color: '#a8b4c0', near: 4,   far: 28  },
+      };
+      const p = presets[mode] || presets.subtle;
+      W.fog = new e.Fog(new e.Color(p.color), p.near, p.far);
+      console.info(`[__AT_PERSPECTIVE__] mode="${mode}" near=${p.near} far=${p.far}`);
+    };
+    // A8 (r37) Snow particle physics(風場 + 重力 + 翻轉)
+    let _snow = null;
+    window.__SNOW__ = (count = 300, intensity = 0.7) => {
+      if (_snow) W.remove(_snow);
+      const geo = new e.BufferGeometry();
+      const positions = new Float32Array(count * 3), velocities = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        positions[i*3] = (Math.random() - 0.5) * 30;
+        positions[i*3+1] = Math.random() * 8 + 2;
+        positions[i*3+2] = (Math.random() - 0.5) * 30;
+        velocities[i*3] = (Math.random() - 0.5) * 0.012;
+        velocities[i*3+1] = -0.018 - Math.random() * 0.012;
+        velocities[i*3+2] = (Math.random() - 0.5) * 0.012;
+      }
+      geo.setAttribute('position', new e.BufferAttribute(positions, 3));
+      geo.userData.velocities = velocities;
+      const mat = new e.PointsMaterial({ size: 0.04, color: 0xffffff, transparent: true, opacity: intensity * 0.8, sizeAttenuation: true, depthWrite: false, blending: e.AdditiveBlending });
+      _snow = new e.Points(geo, mat);
+      W.add(_snow);
+      const tick = () => {
+        if (!_snow) return;
+        const p = _snow.geometry.attributes.position.array, v = _snow.geometry.userData.velocities;
+        const t = performance.now() / 1000;
+        for (let i = 0; i < count; i++) {
+          p[i*3] += v[i*3] + Math.sin(t * 0.3 + i) * 0.002;  // 風場
+          p[i*3+1] += v[i*3+1];
+          p[i*3+2] += v[i*3+2];
+          if (p[i*3+1] < 0) { p[i*3+1] = 8; p[i*3] = (Math.random() - 0.5) * 30; }
+        }
+        _snow.geometry.attributes.position.needsUpdate = true;
+        requestAnimationFrame(tick);
+      };
+      tick();
+      console.info(`[__SNOW__] ${count} flakes intensity=${intensity}`);
+    };
+    window.__SNOW_OFF__ = () => {
+      if (_snow) { W.remove(_snow); _snow = null; }
+      console.info('[__SNOW__] off');
+    };
+    // C3 (r37) Asymmetric smile / micro-twitch(嘴角不對稱)
+    let _asymRAF = null;
+    window.__ASYM_SMILE__ = (bias = 0.15, twitchFreq = 0.3) => {
+      if (!window.__JUNIOR_RIG__ || !window.__JUNIOR_RIG__.state) {
+        console.warn('[__ASYM_SMILE__] __JUNIOR_RIG__ not ready'); return;
+      }
+      if (_asymRAF) cancelAnimationFrame(_asymRAF);
+      const s = window.__JUNIOR_RIG__.state;
+      const loop = () => {
+        const t = performance.now() / 1000;
+        const twitch = Math.sin(t * twitchFreq * 2 * Math.PI) * 0.04;
+        s.smileBias = bias + twitch;  // 左/右嘴角差異
+        s.smile = (s.smile || 0.1) + Math.sin(t * twitchFreq * 1.3) * 0.02;
+        _asymRAF = requestAnimationFrame(loop);
+      };
+      loop();
+      console.info(`[__ASYM_SMILE__] bias=${bias} twitchFreq=${twitchFreq}Hz`);
+    };
+    window.__ASYM_SMILE_OFF__ = () => {
+      if (_asymRAF) { cancelAnimationFrame(_asymRAF); _asymRAF = null; }
+      console.info('[__ASYM_SMILE__] off');
+    };
+    // C4 (r37) Idle weight shift(站姿重心程序切換)
+    let _weightRAF = null;
+    window.__WEIGHT_SHIFT__ = (amp = 0.015, freq = 0.15) => {
+      if (_weightRAF) cancelAnimationFrame(_weightRAF);
+      const targets = ['__GO__', '__CO__', '__BO__', '__KO__']
+        .map(k => window[k]).filter(x => x && x.position);
+      if (targets.length === 0) { console.warn('[__WEIGHT_SHIFT__] no characters'); return; }
+      const bases = targets.map(t => ({ x: t.position.x, z: t.position.z, ry: t.rotation.y }));
+      const loop = () => {
+        const t = performance.now() / 1000;
+        targets.forEach((char, i) => {
+          char.position.x = bases[i].x + Math.sin(t * freq * 2 * Math.PI + i) * amp;
+          char.position.z = bases[i].z + Math.cos(t * freq * 1.7 * Math.PI + i * 0.5) * amp * 0.6;
+          char.rotation.y = bases[i].ry + Math.sin(t * freq * 1.3 * Math.PI + i) * 0.02;
+        });
+        _weightRAF = requestAnimationFrame(loop);
+      };
+      loop();
+      console.info(`[__WEIGHT_SHIFT__] amp=${amp} freq=${freq}Hz on ${targets.length} chars`);
+    };
+    window.__WEIGHT_SHIFT_OFF__ = () => {
+      if (_weightRAF) { cancelAnimationFrame(_weightRAF); _weightRAF = null; }
+      console.info('[__WEIGHT_SHIFT__] off');
+    };
+    // E4 (r37) Light flicker(走廊燈管閃爍,程序故障率)
+    let _flickerRAF = null;
+    window.__LIGHT_FLICKER__ = (failRate = 0.003, lightNames = ['corridor', 'fluorescent']) => {
+      if (_flickerRAF) cancelAnimationFrame(_flickerRAF);
+      const lights = [];
+      W.traverse((obj) => {
+        if (obj.isLight && lightNames.some(n => (obj.name || '').toLowerCase().includes(n))) {
+          lights.push({ light: obj, baseIntensity: obj.intensity });
+        }
+      });
+      const loop = () => {
+        lights.forEach(({ light, baseIntensity }) => {
+          if (Math.random() < failRate) {
+            light.intensity = baseIntensity * (0.2 + Math.random() * 0.4);
+          } else {
+            light.intensity = baseIntensity;
+          }
+        });
+        _flickerRAF = requestAnimationFrame(loop);
+      };
+      loop();
+      console.info(`[__LIGHT_FLICKER__] failRate=${failRate} on ${lights.length} lights`);
+    };
+    window.__LIGHT_FLICKER_OFF__ = () => {
+      if (_flickerRAF) { cancelAnimationFrame(_flickerRAF); _flickerRAF = null; }
+      console.info('[__LIGHT_FLICKER__] off');
+    };
+    // P1 (r37) Breathing depth per emotion(呼吸節律切 mode)
+    window.__BREATH_EMOTION__ = (mode = 'calm') => {
+      if (!window.__JUNIOR_RIG__ || !window.__JUNIOR_RIG__.state) {
+        console.warn('[__BREATH_EMOTION__] __JUNIOR_RIG__ not ready'); return;
+      }
+      const presets = {
+        calm:     { freq: 0.25, depth: 1.0 },  // 平靜深長 15 bpm
+        anxious:  { freq: 0.5,  depth: 0.6 },  // 焦慮短促 30 bpm
+        excited:  { freq: 0.4,  depth: 1.2 },  // 興奮 24 bpm
+        sleeping: { freq: 0.18, depth: 1.4 },  // 沉睡 11 bpm
+        held:     { freq: 0,    depth: 0   },  // 屏息
+      };
+      const p = presets[mode] || presets.calm;
+      const s = window.__JUNIOR_RIG__.state;
+      s.breathFreq = p.freq;
+      s.breathDepth = p.depth;
+      s.autoBreath = p.freq > 0;
+      console.info(`[__BREATH_EMOTION__] mode="${mode}" freq=${p.freq}Hz depth=${p.depth}`);
+    };
+    // L1 (r37) 三點光 rig 重配比(key + fill + rim balance)
+    window.__LIGHT_RIG__ = (mode = 'natural') => {
+      const presets = {
+        natural:    { key: 1.0, fill: 0.4, rim: 0.6 },  // 自然光
+        dramatic:   { key: 1.4, fill: 0.15, rim: 1.2 }, // 戲劇高對比
+        soft:       { key: 0.8, fill: 0.7, rim: 0.3 },  // 柔光人像
+        noir:       { key: 1.5, fill: 0.05, rim: 0.9 }, // 黑色電影
+        beauty:     { key: 1.1, fill: 0.6, rim: 0.5 },  // 美妝廣告
+      };
+      const p = presets[mode] || presets.natural;
+      let count = 0;
+      W.traverse((obj) => {
+        if (!obj.isLight) return;
+        const n = (obj.name || '').toLowerCase();
+        if (obj.userData._origIntensity === undefined) obj.userData._origIntensity = obj.intensity;
+        const orig = obj.userData._origIntensity;
+        if (n.includes('key') || n.includes('main') || n.includes('sun')) { obj.intensity = orig * p.key; count++; }
+        else if (n.includes('fill') || n.includes('ambient')) { obj.intensity = orig * p.fill; count++; }
+        else if (n.includes('rim') || n.includes('back')) { obj.intensity = orig * p.rim; count++; }
+      });
+      console.info(`[__LIGHT_RIG__] mode="${mode}" adjusted ${count} lights`);
+    };
+    // K5 (r37) Rule of thirds auto-frame(camera offset)
+    let _rot3Base = null;
+    window.__RULE_OF_THIRDS__ = (mode = 'left') => {
+      if (_rot3Base === null) _rot3Base = { x: q.position.x };
+      const offsets = { center: 0, left: -0.6, right: 0.6, off: 0 };
+      const dx = offsets[mode] ?? 0;
+      q.position.x = _rot3Base.x + dx;
+      console.info(`[__RULE_OF_THIRDS__] mode="${mode}" offset=${dx}`);
+    };
+    // r37 batch 2 — apply all
+    window.__ART_APPLY_BATCH2__ = () => {
+      try { window.__CLOTH_SHEEN__('silk'); } catch(e) {}
+      try { window.__LENS_FLARE__(6, 0.6); } catch(e) {}
+      try { window.__GRAIN__(0.12, 24); } catch(e) {}
+      try { window.__VIGNETTE__(0.4); } catch(e) {}
+      try { window.__AT_PERSPECTIVE__('subtle'); } catch(e) {}
+      try { window.__ASYM_SMILE__(0.15, 0.3); } catch(e) {}
+      try { window.__WEIGHT_SHIFT__(0.015, 0.15); } catch(e) {}
+      try { window.__LIGHT_FLICKER__(0.003, ['corridor', 'fluorescent']); } catch(e) {}
+      try { window.__BREATH_EMOTION__('calm'); } catch(e) {}
+      try { window.__LIGHT_RIG__('natural'); } catch(e) {}
+      console.info('[__ART_APPLY_BATCH2__] r37 美術 batch 2 全套啟用');
+    };
+    window.__ART_RESET_BATCH2__ = () => {
+      try { window.__LENS_FLARE_OFF__(); } catch(e) {}
+      try { window.__GRAIN_OFF__(); } catch(e) {}
+      try { window.__VIGNETTE_OFF__(); } catch(e) {}
+      try { window.__SNOW_OFF__(); } catch(e) {}
+      try { window.__ASYM_SMILE_OFF__(); } catch(e) {}
+      try { window.__WEIGHT_SHIFT_OFF__(); } catch(e) {}
+      try { window.__LIGHT_FLICKER_OFF__(); } catch(e) {}
+      console.info('[__ART_RESET_BATCH2__] r37 美術 batch 2 全套重置');
+    };
   }
   // === /Tier 1 ===
   const _ = new e.Raycaster(),
