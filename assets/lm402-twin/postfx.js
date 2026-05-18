@@ -150,26 +150,33 @@ const FS_DOF = /* glsl */ `
     float radius = coc * uMaxBlur;
 
     vec3 sum = vec3(0.0);
-    float total = 0.0;
     // Tier 5: 19-tap hexagonal aperture（電影鏡頭真實 6 角形 bokeh）
-    const vec2 hex[19] = vec2[](
-      vec2(0.0, 0.0),
-      // 內六角（radius 0.5）
-      vec2(0.5, 0.0),    vec2(0.25, 0.433),  vec2(-0.25, 0.433),
-      vec2(-0.5, 0.0),   vec2(-0.25, -0.433), vec2(0.25, -0.433),
-      // 外六角（radius 1.0）
-      vec2(1.0, 0.0),    vec2(0.5, 0.866),   vec2(-0.5, 0.866),
-      vec2(-1.0, 0.0),   vec2(-0.5, -0.866), vec2(0.5, -0.866),
-      // 邊中（六角邊上中點，radius ~0.866）
-      vec2(0.75, 0.433),  vec2(0.0, 0.866),   vec2(-0.75, 0.433),
-      vec2(-0.75, -0.433), vec2(0.0, -0.866),  vec2(0.75, -0.433)
-    );
-    for (int i = 0; i < 19; i++) {
-      vec2 off = hex[i] * radius * uTexel;
-      sum += texture2D(tDiffuse, vUv + off).rgb;
-      total += 1.0;
-    }
-    gl_FragColor = vec4(sum / total, 1.0);
+    // fix-5 (r32):unroll 19 taps,移除 GLSL3 array literal `vec2[](...)` —
+    //   原寫法在 WebGL1 / 部分 mobile 編譯失敗(vec2 array literal 是 GLSL3 syntax)
+    vec2 base = radius * uTexel;
+    sum += texture2D(tDiffuse, vUv).rgb;
+    // 內六角（radius 0.5）
+    sum += texture2D(tDiffuse, vUv + vec2( 0.5,   0.0  ) * base).rgb;
+    sum += texture2D(tDiffuse, vUv + vec2( 0.25,  0.433) * base).rgb;
+    sum += texture2D(tDiffuse, vUv + vec2(-0.25,  0.433) * base).rgb;
+    sum += texture2D(tDiffuse, vUv + vec2(-0.5,   0.0  ) * base).rgb;
+    sum += texture2D(tDiffuse, vUv + vec2(-0.25, -0.433) * base).rgb;
+    sum += texture2D(tDiffuse, vUv + vec2( 0.25, -0.433) * base).rgb;
+    // 外六角（radius 1.0）
+    sum += texture2D(tDiffuse, vUv + vec2( 1.0,   0.0  ) * base).rgb;
+    sum += texture2D(tDiffuse, vUv + vec2( 0.5,   0.866) * base).rgb;
+    sum += texture2D(tDiffuse, vUv + vec2(-0.5,   0.866) * base).rgb;
+    sum += texture2D(tDiffuse, vUv + vec2(-1.0,   0.0  ) * base).rgb;
+    sum += texture2D(tDiffuse, vUv + vec2(-0.5,  -0.866) * base).rgb;
+    sum += texture2D(tDiffuse, vUv + vec2( 0.5,  -0.866) * base).rgb;
+    // 邊中（六角邊上中點，radius ~0.866）
+    sum += texture2D(tDiffuse, vUv + vec2( 0.75,  0.433) * base).rgb;
+    sum += texture2D(tDiffuse, vUv + vec2( 0.0,   0.866) * base).rgb;
+    sum += texture2D(tDiffuse, vUv + vec2(-0.75,  0.433) * base).rgb;
+    sum += texture2D(tDiffuse, vUv + vec2(-0.75, -0.433) * base).rgb;
+    sum += texture2D(tDiffuse, vUv + vec2( 0.0,  -0.866) * base).rgb;
+    sum += texture2D(tDiffuse, vUv + vec2( 0.75, -0.433) * base).rgb;
+    gl_FragColor = vec4(sum / 19.0, 1.0);
   }
 `;
 

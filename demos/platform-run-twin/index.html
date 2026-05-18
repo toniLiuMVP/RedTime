@@ -1435,8 +1435,15 @@ const MAT_whistle = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness:
 
 function createGuards() {
   /* Remove old guards */
+  /* fix-7 (r32 Codex finding):加 dispose geometry + material,避免換關 WebGL memory leak
+     (對齊 npc / lg / m 既有 dispose pattern,line 2347-2517) */
   for (var gi = 0; gi < guards.length; gi++) {
-    if (guards[gi].parent) scene.remove(guards[gi]);
+    var g = guards[gi];
+    if (g.parent) scene.remove(g);
+    g.traverse(function(child){
+      if (child.geometry) child.geometry.dispose();
+      if (child.material && child.material.dispose) child.material.dispose();
+    });
   }
   guards.length = 0;
 
