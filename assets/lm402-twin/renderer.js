@@ -4463,6 +4463,140 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       try { window.__ART_RESET_BATCH3__(); } catch(e) {}
       console.info('[__ART_RESET_EVERYTHING__] 全 3 batch 重置');
     };
+    // ════════════════════════════════════════════════════════════════
+    // r39 push7 美術 batch 4(toni 第 7 次「若遇到困難就排除」)
+    // 兌現 r38 結尾「若 push7 來 batch 4 可 ship」承諾
+    // ════════════════════════════════════════════════════════════════
+    // E2 (r39) Chalkboard 程序粉筆痕 overlay(教室靈魂物件)
+    let _chalkTex = null;
+    window.__CHALKBOARD__ = (text = 'F = ma\n2π·r\nE = mc²', opacity = 0.7) => {
+      if (typeof document === 'undefined') return;
+      const c = document.createElement('canvas');
+      c.width = 1024; c.height = 512;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#1a3a2e'; ctx.fillRect(0, 0, 1024, 512);  // 墨綠黑板
+      // 粉筆灰塵底層
+      for (let i = 0; i < 200; i++) {
+        ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.05})`;
+        ctx.beginPath();
+        ctx.arc(Math.random() * 1024, Math.random() * 512, 1 + Math.random() * 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // 文字
+      ctx.fillStyle = `rgba(255,255,255,${opacity})`;
+      ctx.font = 'bold 56px Caveat, cursive';
+      const lines = text.split('\n');
+      lines.forEach((line, i) => ctx.fillText(line, 60, 80 + i * 80));
+      // 擦痕
+      for (let i = 0; i < 8; i++) {
+        ctx.strokeStyle = `rgba(255,255,255,${0.05 + Math.random() * 0.1})`;
+        ctx.lineWidth = 20 + Math.random() * 30;
+        ctx.beginPath();
+        const y = Math.random() * 512;
+        ctx.moveTo(0, y); ctx.lineTo(1024, y + (Math.random() - 0.5) * 50);
+        ctx.stroke();
+      }
+      _chalkTex = new e.CanvasTexture(c);
+      let count = 0;
+      W.traverse((obj) => {
+        if (!obj.material) return;
+        const n = (obj.name || '').toLowerCase();
+        if (!/(blackboard|chalkboard|board)/.test(n)) return;
+        obj.material.map = _chalkTex;
+        obj.material.needsUpdate = true;
+        count++;
+      });
+      console.info(`[__CHALKBOARD__] text="${text.replace(/\n/g, '|')}" applied to ${count} board(s)`);
+    };
+    // A1 (r39) Volumetric fog fake(BillboardSprite layered fog 替代 raymarch)
+    let _volSprites = [];
+    window.__VOLUMETRIC__ = (count = 30, intensity = 0.4) => {
+      _volSprites.forEach(s => W.remove(s)); _volSprites = [];
+      if (typeof document === 'undefined') return;
+      // 程序生成霧氣 sprite texture
+      const c = document.createElement('canvas');
+      c.width = c.height = 256;
+      const ctx = c.getContext('2d');
+      const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+      gradient.addColorStop(0, 'rgba(255,255,255,0.8)');
+      gradient.addColorStop(0.5, 'rgba(255,255,255,0.3)');
+      gradient.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 256, 256);
+      const tex = new e.CanvasTexture(c);
+      const mat = new e.SpriteMaterial({ map: tex, color: 0xeeeeff, transparent: true, opacity: intensity * 0.15, depthWrite: false, blending: e.AdditiveBlending });
+      for (let i = 0; i < count; i++) {
+        const sprite = new e.Sprite(mat.clone());
+        sprite.position.set((Math.random() - 0.5) * 20, 0.5 + Math.random() * 3, (Math.random() - 0.5) * 20);
+        const scale = 2 + Math.random() * 4;
+        sprite.scale.set(scale, scale, 1);
+        W.add(sprite);
+        _volSprites.push(sprite);
+      }
+      console.info(`[__VOLUMETRIC__] ${count} fog sprites intensity=${intensity}`);
+    };
+    window.__VOLUMETRIC_OFF__ = () => {
+      _volSprites.forEach(s => W.remove(s)); _volSprites = [];
+      console.info('[__VOLUMETRIC__] off');
+    };
+    // A2 (r39) God Rays fake(cone mesh + transparent gradient 替代 shader)
+    let _godRayMeshes = [];
+    window.__GOD_RAYS__ = (sourcePositions = null, intensity = 0.5) => {
+      _godRayMeshes.forEach(m => W.remove(m)); _godRayMeshes = [];
+      // 預設位置:從窗戶 / 天花板 / 後門入射
+      const sources = sourcePositions || [
+        { pos: [3, 5, 2], dir: [-0.5, -1, -0.3], color: '#fff5d6' },
+        { pos: [-3, 5, 2], dir: [0.5, -1, -0.3], color: '#fff5d6' },
+        { pos: [0, 6, -3], dir: [0, -1, 0.5], color: '#ffd9a8' },
+      ];
+      sources.forEach(s => {
+        const len = 8;
+        const geo = new e.ConeGeometry(2.5, len, 16, 1, true);
+        const mat = new e.MeshBasicMaterial({
+          color: new e.Color(s.color), transparent: true, opacity: intensity * 0.25,
+          side: e.DoubleSide, depthWrite: false, blending: e.AdditiveBlending,
+        });
+        const cone = new e.Mesh(geo, mat);
+        cone.position.set(s.pos[0], s.pos[1] - len / 2, s.pos[2]);
+        // align cone to direction
+        const dir = new e.Vector3(s.dir[0], s.dir[1], s.dir[2]).normalize();
+        const up = new e.Vector3(0, -1, 0);
+        const quat = new e.Quaternion().setFromUnitVectors(up, dir);
+        cone.quaternion.copy(quat);
+        W.add(cone);
+        _godRayMeshes.push(cone);
+      });
+      console.info(`[__GOD_RAYS__] ${_godRayMeshes.length} ray cones intensity=${intensity}`);
+    };
+    window.__GOD_RAYS_OFF__ = () => {
+      _godRayMeshes.forEach(m => W.remove(m)); _godRayMeshes = [];
+      console.info('[__GOD_RAYS__] off');
+    };
+    // r39 batch 4 apply / reset
+    window.__ART_APPLY_BATCH4__ = () => {
+      try { window.__CHALKBOARD__('F = ma\\n2π·r\\nE = mc²', 0.7); } catch(e) {}
+      try { window.__VOLUMETRIC__(30, 0.4); } catch(e) {}
+      try { window.__GOD_RAYS__(null, 0.5); } catch(e) {}
+      console.info('[__ART_APPLY_BATCH4__] r39 美術 batch 4 全套啟用');
+    };
+    window.__ART_RESET_BATCH4__ = () => {
+      try { window.__VOLUMETRIC_OFF__(); } catch(e) {}
+      try { window.__GOD_RAYS_OFF__(); } catch(e) {}
+      console.info('[__ART_RESET_BATCH4__] r39 美術 batch 4 全套重置');
+    };
+    // 更新 EVERYTHING 含 batch 4
+    const _origApplyEverything = window.__ART_APPLY_EVERYTHING__;
+    window.__ART_APPLY_EVERYTHING__ = () => {
+      try { _origApplyEverything(); } catch(e) {}
+      try { window.__ART_APPLY_BATCH4__(); } catch(e) {}
+      console.info('[__ART_APPLY_EVERYTHING__] r36+r37+r38+r39 全 4 batch 美術全套啟用');
+    };
+    const _origResetEverything = window.__ART_RESET_EVERYTHING__;
+    window.__ART_RESET_EVERYTHING__ = () => {
+      try { _origResetEverything(); } catch(e) {}
+      try { window.__ART_RESET_BATCH4__(); } catch(e) {}
+      console.info('[__ART_RESET_EVERYTHING__] 全 4 batch 重置');
+    };
   }
   // === /Tier 1 ===
   const _ = new e.Raycaster(),
