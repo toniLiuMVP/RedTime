@@ -615,6 +615,177 @@ camera.position.set(0, 12, PLATFORM_LEN / 2 + 20);
 camera.lookAt(0, 0, 0);
 
 /* ════════════════════════════════════════════════
+   r36 push4 美術強化 batch 1(platform-run-twin)
+   所有 API 預設 OFF,console call 才啟用 — 避免壞掉
+   ════════════════════════════════════════════════ */
+let _trainHeadlight = null;
+window.__TRAIN_HEADLIGHT__ = function(intensity, color) {
+  if (intensity === undefined) intensity = 2.5;
+  if (color === undefined) color = '#fff5d6';
+  if (_trainHeadlight) scene.remove(_trainHeadlight);
+  _trainHeadlight = new THREE.SpotLight(new THREE.Color(color), intensity, 60, Math.PI / 5, 0.4, 1.5);
+  _trainHeadlight.position.set(0, 4, -PLATFORM_LEN / 2);
+  _trainHeadlight.target.position.set(0, 0, 0);
+  scene.add(_trainHeadlight); scene.add(_trainHeadlight.target);
+  console.info('[__TRAIN_HEADLIGHT__] intensity=' + intensity + ' color=' + color);
+  return _trainHeadlight;
+};
+window.__TRAIN_HEADLIGHT_OFF__ = function() {
+  if (_trainHeadlight) { scene.remove(_trainHeadlight); _trainHeadlight = null; }
+  console.info('[__TRAIN_HEADLIGHT__] off');
+};
+
+/* L7 月台天花板 RectAreaLight 螢光燈群(替代單一 DirectionalLight) */
+let _ceilingLights = [];
+window.__CEILING_LIGHTS__ = function(count, intensity) {
+  if (count === undefined) count = 6;
+  if (intensity === undefined) intensity = 3;
+  _ceilingLights.forEach(function(l) { scene.remove(l); });
+  _ceilingLights = [];
+  var spacing = PLATFORM_LEN / count;
+  for (var i = 0; i < count; i++) {
+    var light = new THREE.RectAreaLight(0xffffe0, intensity, 4, 0.4);
+    light.position.set(0, 5.5, -PLATFORM_LEN / 2 + spacing / 2 + i * spacing);
+    light.lookAt(0, 0, light.position.z);
+    scene.add(light);
+    _ceilingLights.push(light);
+  }
+  console.info('[__CEILING_LIGHTS__] ' + count + ' lights intensity=' + intensity);
+};
+window.__CEILING_LIGHTS_OFF__ = function() {
+  _ceilingLights.forEach(function(l) { scene.remove(l); });
+  _ceilingLights = [];
+  console.info('[__CEILING_LIGHTS__] off');
+};
+
+/* K7 火車經過鏡頭震動(camera shake transfer) */
+let _shakeRAF = null, _shakeT0 = 0;
+window.__TRAIN_SHAKE__ = function(amplitude, durationMs) {
+  if (amplitude === undefined) amplitude = 0.08;
+  if (durationMs === undefined) durationMs = 1200;
+  if (_shakeRAF) cancelAnimationFrame(_shakeRAF);
+  _shakeT0 = performance.now();
+  var baseY = camera.position.y, baseX = camera.position.x, baseZ = camera.position.z;
+  var loop = function() {
+    var t = (performance.now() - _shakeT0) / durationMs;
+    if (t >= 1) {
+      camera.position.set(baseX, baseY, baseZ);
+      _shakeRAF = null;
+      console.info('[__TRAIN_SHAKE__] complete');
+      return;
+    }
+    var falloff = 1 - t;
+    camera.position.y = baseY + (Math.random() - 0.5) * amplitude * falloff;
+    camera.position.x = baseX + (Math.random() - 0.5) * amplitude * falloff;
+    camera.position.z = baseZ + (Math.random() - 0.5) * amplitude * falloff;
+    _shakeRAF = requestAnimationFrame(loop);
+  };
+  loop();
+  console.info('[__TRAIN_SHAKE__] amplitude=' + amplitude + ' duration=' + durationMs + 'ms');
+};
+
+/* A5 月台蒸汽 / 火車到站 steam particle */
+let _steam = null;
+window.__STEAM__ = function(count, intensity) {
+  if (count === undefined) count = 150;
+  if (intensity === undefined) intensity = 0.7;
+  if (_steam) scene.remove(_steam);
+  var geo = new THREE.BufferGeometry();
+  var positions = new Float32Array(count * 3), velocities = new Float32Array(count * 3);
+  for (var i = 0; i < count; i++) {
+    positions[i*3] = (Math.random() - 0.5) * 8;
+    positions[i*3+1] = Math.random() * 2 + 0.2;
+    positions[i*3+2] = -PLATFORM_LEN / 2 + Math.random() * 10;
+    velocities[i*3] = (Math.random() - 0.5) * 0.003;
+    velocities[i*3+1] = 0.005 + Math.random() * 0.008;
+    velocities[i*3+2] = (Math.random() - 0.5) * 0.003;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.userData.velocities = velocities;
+  var mat = new THREE.PointsMaterial({
+    size: 0.35, color: 0xeeeeee, transparent: true, opacity: intensity * 0.5,
+    sizeAttenuation: true, depthWrite: false, blending: THREE.AdditiveBlending
+  });
+  _steam = new THREE.Points(geo, mat);
+  scene.add(_steam);
+  var tick = function() {
+    if (!_steam) return;
+    var p = _steam.geometry.attributes.position.array, v = _steam.geometry.userData.velocities;
+    for (var i = 0; i < count; i++) {
+      p[i*3] += v[i*3]; p[i*3+1] += v[i*3+1]; p[i*3+2] += v[i*3+2];
+      if (p[i*3+1] > 6) { p[i*3+1] = 0.2; }
+    }
+    _steam.geometry.attributes.position.needsUpdate = true;
+    requestAnimationFrame(tick);
+  };
+  tick();
+  console.info('[__STEAM__] ' + count + ' particles intensity=' + intensity);
+};
+window.__STEAM_OFF__ = function() {
+  if (_steam) { scene.remove(_steam); _steam = null; }
+  console.info('[__STEAM__] off');
+};
+
+/* F7 + F6 Vignette + Grain DOM overlay(便宜 postfx,不需 EffectComposer)*/
+let _vignetteEl = null;
+window.__VIGNETTE__ = function(strength) {
+  if (strength === undefined) strength = 0.5;
+  if (typeof document === 'undefined') return;
+  if (!_vignetteEl) {
+    _vignetteEl = document.createElement('div');
+    _vignetteEl.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9000;background:radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,' + strength + ') 100%);';
+    document.body.appendChild(_vignetteEl);
+  } else {
+    _vignetteEl.style.background = 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,' + strength + ') 100%)';
+  }
+  console.info('[__VIGNETTE__] strength=' + strength);
+};
+window.__VIGNETTE_OFF__ = function() {
+  if (_vignetteEl) { _vignetteEl.remove(); _vignetteEl = null; }
+  console.info('[__VIGNETTE__] off');
+};
+
+/* K1 Camera Breath(月台雙時空也有用,FPS 漫步感)*/
+let _pBreathRAF = null, _pBreathBaseY = null;
+window.__CAMERA_BREATH__ = function(amp, freq) {
+  if (amp === undefined) amp = 0.012;
+  if (freq === undefined) freq = 0.5;
+  if (_pBreathRAF) cancelAnimationFrame(_pBreathRAF);
+  var t0 = performance.now();
+  if (_pBreathBaseY === null) _pBreathBaseY = camera.position.y;
+  var loop = function() {
+    var t = (performance.now() - t0) / 1000;
+    camera.position.y = _pBreathBaseY + Math.sin(t * freq * 2 * Math.PI) * amp;
+    _pBreathRAF = requestAnimationFrame(loop);
+  };
+  loop();
+  console.info('[__CAMERA_BREATH__] amp=' + amp + ' freq=' + freq + 'Hz');
+};
+window.__CAMERA_BREATH_OFF__ = function() {
+  if (_pBreathRAF) { cancelAnimationFrame(_pBreathRAF); _pBreathRAF = null; }
+  if (_pBreathBaseY !== null) camera.position.y = _pBreathBaseY;
+  console.info('[__CAMERA_BREATH__] off');
+};
+
+/* r36 一鍵 apply all art enhancements */
+window.__ART_APPLY_ALL__ = function() {
+  try { window.__TRAIN_HEADLIGHT__(2.5, '#fff5d6'); } catch(e) {}
+  try { window.__CEILING_LIGHTS__(6, 3); } catch(e) {}
+  try { window.__STEAM__(150, 0.7); } catch(e) {}
+  try { window.__VIGNETTE__(0.4); } catch(e) {}
+  try { window.__CAMERA_BREATH__(0.012, 0.5); } catch(e) {}
+  console.info('[__ART_APPLY_ALL__] r36 platform-run-twin 美術 batch 1 全套啟用');
+};
+window.__ART_RESET_ALL__ = function() {
+  try { window.__TRAIN_HEADLIGHT_OFF__(); } catch(e) {}
+  try { window.__CEILING_LIGHTS_OFF__(); } catch(e) {}
+  try { window.__STEAM_OFF__(); } catch(e) {}
+  try { window.__VIGNETTE_OFF__(); } catch(e) {}
+  try { window.__CAMERA_BREATH_OFF__(); } catch(e) {}
+  console.info('[__ART_RESET_ALL__] r36 platform-run-twin 美術 batch 1 全套重置');
+};
+
+/* ════════════════════════════════════════════════
    光源 — DAYTIME
    ════════════════════════════════════════════════ */
 /* 半球光 — 天空/地面漸層環境光 */

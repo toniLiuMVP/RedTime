@@ -3474,6 +3474,237 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       console.info(`[__IRIDESCENCE__] multiplied ${count} materials by ${mult}`);
       return count;
     };
+    // ════════════════════════════════════════════════════════════════
+    // r36 push4 美術強化 batch 1(lm402-twin 主推副本)
+    // 所有 API 預設 OFF,console call 才啟用 — 避免壞掉
+    // 替 toni 拍板 default 已套(rim 暖橘 / tone NeutralToneMapping 等)
+    // ════════════════════════════════════════════════════════════════
+    // F2 (r36) ToneMapping default 替 toni 拍板:NeutralToneMapping
+    // 理由:Three.js r179 加,中性不偏紫(比 ACES 適合 portrait)
+    U.toneMapping = e.NeutralToneMapping;
+    U.toneMappingExposure = 1.0;
+    // L2 (r36) Rim Light 強化 — 學妹後門 11:00「一眼瞬間」邊光描輪廓(暖橘 #ff9a4f)
+    let _rimLight = null;
+    window.__RIM_LIGHT__ = (intensity = 1.2, color = '#ff9a4f') => {
+      if (_rimLight) W.remove(_rimLight);
+      _rimLight = new e.DirectionalLight(new e.Color(color), intensity);
+      _rimLight.position.set(0, 8, -15);
+      _rimLight.target.position.set(0, 1.5, 0);
+      W.add(_rimLight); W.add(_rimLight.target);
+      console.info(`[__RIM_LIGHT__] intensity=${intensity} color=${color}`);
+      return _rimLight;
+    };
+    window.__RIM_LIGHT_OFF__ = () => {
+      if (_rimLight) { W.remove(_rimLight); _rimLight = null; }
+      console.info('[__RIM_LIGHT__] off');
+    };
+    // K1 (r36) Camera Breath — 鏡頭呼吸(0.5-1Hz hand-held 感)
+    let _breathRAF = null, _breathT0 = 0, _breathBaseY = null, _breathBaseX = null;
+    window.__CAMERA_BREATH__ = (amp = 0.008, freq = 0.6) => {
+      if (_breathRAF) cancelAnimationFrame(_breathRAF);
+      _breathT0 = performance.now();
+      if (_breathBaseY === null) { _breathBaseY = q.position.y; _breathBaseX = q.position.x; }
+      const loop = () => {
+        const t = (performance.now() - _breathT0) / 1000;
+        q.position.y = _breathBaseY + Math.sin(t * freq * 2 * Math.PI) * amp;
+        q.position.x = _breathBaseX + Math.cos(t * freq * 1.7 * Math.PI) * amp * 0.6;
+        _breathRAF = requestAnimationFrame(loop);
+      };
+      loop();
+      console.info(`[__CAMERA_BREATH__] amp=${amp} freq=${freq}Hz`);
+    };
+    window.__CAMERA_BREATH_OFF__ = () => {
+      if (_breathRAF) { cancelAnimationFrame(_breathRAF); _breathRAF = null; }
+      if (_breathBaseY !== null) { q.position.y = _breathBaseY; q.position.x = _breathBaseX; }
+      console.info('[__CAMERA_BREATH__] off');
+    };
+    // K3 (r36) Dolly Zoom / Vertigo — Hitchcock 級「一眼瞬間」鏡頭語言
+    window.__DOLLY_ZOOM__ = (strength = 0.5, durationMs = 1500) => {
+      const startTime = performance.now();
+      const startZ = q.position.z, startFov = q.fov;
+      const targetZ = startZ - strength * 2, targetFov = startFov + strength * 25;
+      const loop = () => {
+        const t = Math.min((performance.now() - startTime) / durationMs, 1);
+        const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        q.position.z = startZ + (targetZ - startZ) * ease;
+        q.fov = startFov + (targetFov - startFov) * ease;
+        q.updateProjectionMatrix();
+        if (t < 1) requestAnimationFrame(loop);
+        else console.info('[__DOLLY_ZOOM__] complete');
+      };
+      loop();
+      console.info(`[__DOLLY_ZOOM__] strength=${strength} duration=${durationMs}ms`);
+    };
+    // K2 (r36) Cinemascope 2.35:1 Letterbox — narrative beat 強制電影比例
+    let _letterbox = null;
+    window.__LETTERBOX__ = (ratio = 2.35, fadeMs = 800) => {
+      if (typeof document === 'undefined') return;
+      if (_letterbox) { _letterbox.top.remove(); _letterbox.bot.remove(); }
+      const screenRatio = window.innerWidth / window.innerHeight;
+      const targetH = screenRatio > ratio ? window.innerHeight : window.innerWidth / ratio;
+      const barH = Math.max(0, (window.innerHeight - targetH) / 2);
+      const top = document.createElement('div'), bot = document.createElement('div');
+      top.style.cssText = `position:fixed;top:0;left:0;right:0;height:${barH}px;background:#000;opacity:0;transition:opacity ${fadeMs}ms ease;pointer-events:none;z-index:9999`;
+      bot.style.cssText = `position:fixed;bottom:0;left:0;right:0;height:${barH}px;background:#000;opacity:0;transition:opacity ${fadeMs}ms ease;pointer-events:none;z-index:9999`;
+      document.body.appendChild(top); document.body.appendChild(bot);
+      requestAnimationFrame(() => { top.style.opacity = '1'; bot.style.opacity = '1'; });
+      _letterbox = { top, bot };
+      console.info(`[__LETTERBOX__] ratio=${ratio} fadeMs=${fadeMs}`);
+    };
+    window.__LETTERBOX_OFF__ = (fadeMs = 800) => {
+      if (!_letterbox) return;
+      _letterbox.top.style.opacity = '0'; _letterbox.bot.style.opacity = '0';
+      const _lb = _letterbox; _letterbox = null;
+      setTimeout(() => { _lb.top.remove(); _lb.bot.remove(); }, fadeMs);
+      console.info('[__LETTERBOX__] off');
+    };
+    // L8 (r36) Catchlight 升 2-3 點 — 眼神光複雜化(角色「活感」)
+    let _catchlights = [];
+    window.__CATCHLIGHT__ = (count = 3, intensity = 0.8) => {
+      _catchlights.forEach(l => W.remove(l)); _catchlights = [];
+      const configs = [
+        { pos: [2, 3, 3],   color: '#ffffff', i: intensity },
+        { pos: [-2, 1, 2],  color: '#ffd9a8', i: intensity * 0.5 },
+        { pos: [0, 2, -3],  color: '#88aacc', i: intensity * 0.3 },
+      ];
+      for (let i = 0; i < Math.min(count, configs.length); i++) {
+        const c = configs[i];
+        const light = new e.PointLight(new e.Color(c.color), c.i, 8);
+        light.position.set(c.pos[0], c.pos[1], c.pos[2]);
+        W.add(light); _catchlights.push(light);
+      }
+      console.info(`[__CATCHLIGHT__] ${count} lights added`);
+    };
+    window.__CATCHLIGHT_OFF__ = () => {
+      _catchlights.forEach(l => W.remove(l)); _catchlights = [];
+      console.info('[__CATCHLIGHT__] off');
+    };
+    // L4 (r36) Contact Shadow 程序近接陰影(SSAO-like 簡化版)
+    let _contactShadows = [];
+    window.__CONTACT_SHADOW__ = (intensity = 0.5) => {
+      _contactShadows.forEach(m => W.remove(m)); _contactShadows = [];
+      ['__GO__', '__CO__', '__BO__', '__KO__'].forEach(key => {
+        const char = window[key];
+        if (!char || !char.position) return;
+        const geo = new e.CircleGeometry(0.4, 24);
+        const mat = new e.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: intensity * 0.4, depthWrite: false });
+        const disc = new e.Mesh(geo, mat);
+        disc.rotation.x = -Math.PI / 2;
+        disc.position.set(char.position.x, 0.01, char.position.z);
+        W.add(disc); _contactShadows.push(disc);
+      });
+      console.info(`[__CONTACT_SHADOW__] ${_contactShadows.length} discs intensity=${intensity}`);
+    };
+    window.__CONTACT_SHADOW_OFF__ = () => {
+      _contactShadows.forEach(m => W.remove(m)); _contactShadows = [];
+      console.info('[__CONTACT_SHADOW__] off');
+    };
+    // A3 (r36) Dust Particles — 教室飄塵(陽光照射可見)
+    let _dust = null;
+    window.__DUST__ = (count = 200, intensity = 0.8) => {
+      if (_dust) W.remove(_dust);
+      const geo = new e.BufferGeometry();
+      const positions = new Float32Array(count * 3), velocities = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        positions[i*3] = (Math.random() - 0.5) * 16;
+        positions[i*3+1] = Math.random() * 4 + 0.5;
+        positions[i*3+2] = (Math.random() - 0.5) * 16;
+        velocities[i*3] = (Math.random() - 0.5) * 0.001;
+        velocities[i*3+1] = -0.0005;
+        velocities[i*3+2] = (Math.random() - 0.5) * 0.001;
+      }
+      geo.setAttribute('position', new e.BufferAttribute(positions, 3));
+      geo.userData.velocities = velocities;
+      const mat = new e.PointsMaterial({ size: 0.012, color: 0xffe8c0, transparent: true, opacity: intensity * 0.5, sizeAttenuation: true, depthWrite: false, blending: e.AdditiveBlending });
+      _dust = new e.Points(geo, mat);
+      W.add(_dust);
+      const tick = () => {
+        if (!_dust) return;
+        const p = _dust.geometry.attributes.position.array, v = _dust.geometry.userData.velocities;
+        for (let i = 0; i < count; i++) {
+          p[i*3] += v[i*3]; p[i*3+1] += v[i*3+1]; p[i*3+2] += v[i*3+2];
+          if (p[i*3+1] < 0) p[i*3+1] = 4.5;
+        }
+        _dust.geometry.attributes.position.needsUpdate = true;
+        requestAnimationFrame(tick);
+      };
+      tick();
+      console.info(`[__DUST__] ${count} particles intensity=${intensity}`);
+    };
+    window.__DUST_OFF__ = () => {
+      if (_dust) { W.remove(_dust); _dust = null; }
+      console.info('[__DUST__] off');
+    };
+    // F10 (r36) Hue Shift per emotion — 情緒同步色溫
+    window.__HUE_SHIFT__ = (mode = 'calm') => {
+      const presets = {
+        anxious:   { hue: 0.55, sat: 0.85, exp: 0.9  },
+        expectant: { hue: 0.08, sat: 1.1,  exp: 1.05 },
+        calm:      { hue: 0,    sat: 1.0,  exp: 1.0  },
+        vertigo:   { hue: 0.95, sat: 1.3,  exp: 1.1  },
+        nostalgia: { hue: 0.06, sat: 0.7,  exp: 0.95 },
+      };
+      const p = presets[mode] || presets.calm;
+      if (window.__POSTFX__ && window.__POSTFX__.tuning) {
+        window.__POSTFX__.tuning.colorGrade = window.__POSTFX__.tuning.colorGrade || {};
+        Object.assign(window.__POSTFX__.tuning.colorGrade, p);
+      }
+      U.toneMappingExposure = p.exp;
+      console.info(`[__HUE_SHIFT__] mode="${mode}" hue=${p.hue} sat=${p.sat} exp=${p.exp}`);
+    };
+    // P4 (r36) 「一眼瞬間」micro-anim sequence — pupil dilate + 嘴角 + 呼吸停
+    window.__SPARK_MOMENT__ = () => {
+      if (!window.__JUNIOR_RIG__ || !window.__JUNIOR_RIG__.state) {
+        console.warn('[__SPARK_MOMENT__] __JUNIOR_RIG__ not ready'); return;
+      }
+      const s = window.__JUNIOR_RIG__.state;
+      const _origBreath = s.autoBreath;
+      if (s.lookDir) { s.lookDir.x = 0; s.lookDir.y = 0; }
+      setTimeout(() => { s.mouthOpen = 0.18; s.browRaise = 0.6; s.smile = -0.05; }, 200);
+      setTimeout(() => { s.autoBreath = false; }, 700);
+      setTimeout(() => {
+        s.mouthOpen = 0; s.browRaise = 0.1; s.smile = 0.05;
+        s.autoBreath = _origBreath;
+      }, 1500);
+      console.info('[__SPARK_MOMENT__] 一眼瞬間 micro-anim triggered');
+    };
+    // C5 (r36) Head Wobble passive — 被動小幅頭部漂移
+    window.__HEAD_WOBBLE__ = (amplitude = 0.012) => {
+      if (window.__JUNIOR_RIG__ && window.__JUNIOR_RIG__.state) {
+        window.__JUNIOR_RIG__.state.autoHeadWobble = true;
+        window.__JUNIOR_RIG__.state.headWobbleAmplitude = amplitude;
+        console.info(`[__HEAD_WOBBLE__] enabled amplitude=${amplitude}`);
+      } else console.warn('[__HEAD_WOBBLE__] __JUNIOR_RIG__ not ready');
+    };
+    // C2 (r36) 真實眨眼節律 — 0.3-0.7Hz + asymmetric
+    window.__BLINK_RHYTHM__ = (rate = 0.5, asymmetric = true) => {
+      if (window.__JUNIOR_RIG__ && window.__JUNIOR_RIG__.state) {
+        window.__JUNIOR_RIG__.state.blinkRate = rate;
+        window.__JUNIOR_RIG__.state.blinkAsymmetric = asymmetric;
+        console.info(`[__BLINK_RHYTHM__] rate=${rate}Hz asymmetric=${asymmetric}`);
+      } else console.warn('[__BLINK_RHYTHM__] __JUNIOR_RIG__ not ready');
+    };
+    // r36 batch 1 — apply all defaults at once
+    window.__ART_APPLY_ALL__ = () => {
+      try { window.__RIM_LIGHT__(1.2, '#ff9a4f'); } catch(e) {}
+      try { window.__CAMERA_BREATH__(0.008, 0.6); } catch(e) {}
+      try { window.__CATCHLIGHT__(3, 0.8); } catch(e) {}
+      try { window.__CONTACT_SHADOW__(0.5); } catch(e) {}
+      try { window.__DUST__(200, 0.8); } catch(e) {}
+      try { window.__HEAD_WOBBLE__(0.012); } catch(e) {}
+      try { window.__BLINK_RHYTHM__(0.5, true); } catch(e) {}
+      try { window.__HUE_SHIFT__('calm'); } catch(e) {}
+      console.info('[__ART_APPLY_ALL__] r36 美術 batch 1 全套啟用');
+    };
+    window.__ART_RESET_ALL__ = () => {
+      try { window.__RIM_LIGHT_OFF__(); } catch(e) {}
+      try { window.__CAMERA_BREATH_OFF__(); } catch(e) {}
+      try { window.__CATCHLIGHT_OFF__(); } catch(e) {}
+      try { window.__CONTACT_SHADOW_OFF__(); } catch(e) {}
+      try { window.__DUST_OFF__(); } catch(e) {}
+      try { window.__LETTERBOX_OFF__(); } catch(e) {}
+      console.info('[__ART_RESET_ALL__] r36 美術 batch 1 全套重置');
+    };
   }
   // === /Tier 1 ===
   const _ = new e.Raycaster(),
