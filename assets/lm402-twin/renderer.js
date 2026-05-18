@@ -4019,6 +4019,450 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       try { window.__LIGHT_FLICKER_OFF__(); } catch(e) {}
       console.info('[__ART_RESET_BATCH2__] r37 美術 batch 2 全套重置');
     };
+    // ════════════════════════════════════════════════════════════════
+    // r38 push6 美術 batch 3(toni:「若遇到困難就排除」突破 toggle-only)
+    // 拉回 r37 剩 28 的 over-standoff:procedural shader hooks + 程序 mesh
+    // ════════════════════════════════════════════════════════════════
+    // M1 (r38) SSS approximation — skin transmission + thickness cheap fake
+    window.__SSS__ = (strength = 0.5, thickness = 0.3) => {
+      let count = 0;
+      W.traverse((obj) => {
+        if (!obj.material || typeof obj.material.transmission !== 'number') return;
+        const n = (obj.name || '').toLowerCase();
+        // 命中 skin / face / ear / nose / lip / hand — 套 SSS approximation
+        if (!/(skin|face|ear|nose|lip|hand|cheek|forehead)/.test(n)) return;
+        if (obj.material.userData._origTransmission === undefined) {
+          obj.material.userData._origTransmission = obj.material.transmission;
+          obj.material.userData._origThickness = obj.material.thickness ?? 0;
+        }
+        obj.material.transmission = strength * 0.3;  // skin SSS cheap
+        obj.material.thickness = thickness;
+        obj.material.attenuationDistance = 1.5;
+        obj.material.attenuationColor = new e.Color('#ff8866');  // 皮膚下偏紅
+        obj.material.ior = 1.4;
+        obj.material.needsUpdate = true;
+        count++;
+      });
+      console.info(`[__SSS__] ${count} skin materials,strength=${strength} thickness=${thickness}`);
+    };
+    // M2 (r38) Procedural skin detail normal map
+    let _skinNormalTex = null;
+    window.__SKIN_NORMAL__ = (scale = 0.5, density = 256) => {
+      if (typeof document === 'undefined') return;
+      if (!_skinNormalTex) {
+        const c = document.createElement('canvas');
+        c.width = density; c.height = density;
+        const ctx = c.getContext('2d');
+        const img = ctx.createImageData(density, density);
+        for (let i = 0; i < density * density; i++) {
+          const n1 = (Math.random() - 0.5) * 50;
+          const n2 = (Math.random() - 0.5) * 50;
+          img.data[i*4]   = 128 + n1;
+          img.data[i*4+1] = 128 + n2;
+          img.data[i*4+2] = 255;
+          img.data[i*4+3] = 255;
+        }
+        ctx.putImageData(img, 0, 0);
+        _skinNormalTex = new e.CanvasTexture(c);
+        _skinNormalTex.wrapS = _skinNormalTex.wrapT = e.RepeatWrapping;
+      }
+      let count = 0;
+      W.traverse((obj) => {
+        if (!obj.material || obj.material.normalMap !== undefined) {
+          const n = (obj.name || '').toLowerCase();
+          if (!/(skin|face|cheek|forehead)/.test(n)) return;
+          obj.material.normalMap = _skinNormalTex;
+          obj.material.normalScale = new e.Vector2(scale, scale);
+          obj.material.needsUpdate = true;
+          count++;
+        }
+      });
+      console.info(`[__SKIN_NORMAL__] ${count} materials scale=${scale} density=${density}`);
+    };
+    // M3 (r38) Hair anisotropyMap procedural streak(canvas-based)
+    let _hairAnisoTex = null;
+    window.__HAIR_STREAK__ = (strength = 0.7, streakDensity = 64) => {
+      if (typeof document === 'undefined') return;
+      if (!_hairAnisoTex) {
+        const c = document.createElement('canvas');
+        c.width = 256; c.height = 256;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#7f7fff'; ctx.fillRect(0, 0, 256, 256);
+        // 垂直 streak lines(模擬髮絲方向)
+        for (let i = 0; i < streakDensity; i++) {
+          const x = Math.random() * 256;
+          const r = 127 + (Math.random() - 0.5) * 30;
+          ctx.strokeStyle = `rgb(${r}, ${r}, 255)`;
+          ctx.lineWidth = 1 + Math.random();
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + (Math.random() - 0.5) * 8, 256); ctx.stroke();
+        }
+        _hairAnisoTex = new e.CanvasTexture(c);
+        _hairAnisoTex.wrapS = _hairAnisoTex.wrapT = e.RepeatWrapping;
+      }
+      let count = 0;
+      W.traverse((obj) => {
+        if (!obj.material || typeof obj.material.anisotropy !== 'number') return;
+        const n = (obj.name || '').toLowerCase();
+        if (!/(hair|wig|fringe|bang|ponytail)/.test(n)) return;
+        obj.material.anisotropyMap = _hairAnisoTex;
+        obj.material.anisotropy = strength;
+        obj.material.needsUpdate = true;
+        count++;
+      });
+      console.info(`[__HAIR_STREAK__] ${count} hair materials strength=${strength}`);
+    };
+    // M4 (r38) Eye cornea reflection layer(每角色程序加 mesh)
+    let _corneaMeshes = [];
+    window.__EYE_CORNEA__ = (radius = 0.011, intensity = 0.6) => {
+      _corneaMeshes.forEach(m => m.parent && m.parent.remove(m));
+      _corneaMeshes = [];
+      ['__GO__', '__CO__', '__BO__', '__KO__'].forEach(key => {
+        const char = window[key];
+        if (!char) return;
+        char.traverse(obj => {
+          const n = (obj.name || '').toLowerCase();
+          if (!/(eye|iris|pupil)/.test(n)) return;
+          const cornea = new e.Mesh(
+            new e.SphereGeometry(radius * 1.05, 16, 16),
+            new e.MeshPhysicalMaterial({
+              color: 0xffffff, transparent: true, opacity: 0.15,
+              transmission: 0.95, roughness: 0.05, clearcoat: 1.0,
+              clearcoatRoughness: 0.02, envMapIntensity: intensity * 2,
+              depthWrite: false,
+            })
+          );
+          obj.add(cornea);
+          _corneaMeshes.push(cornea);
+        });
+      });
+      console.info(`[__EYE_CORNEA__] added ${_corneaMeshes.length} cornea meshes`);
+    };
+    window.__EYE_CORNEA_OFF__ = () => {
+      _corneaMeshes.forEach(m => m.parent && m.parent.remove(m));
+      _corneaMeshes = [];
+      console.info('[__EYE_CORNEA__] off');
+    };
+    // C7 (r38) Eyelash procedural mesh strip
+    let _eyelashMeshes = [];
+    window.__EYELASH__ = (density = 12, length = 0.018) => {
+      _eyelashMeshes.forEach(m => m.parent && m.parent.remove(m));
+      _eyelashMeshes = [];
+      ['__GO__', '__CO__', '__BO__', '__KO__'].forEach(key => {
+        const char = window[key];
+        if (!char) return;
+        char.traverse(obj => {
+          const n = (obj.name || '').toLowerCase();
+          if (!/(eye)/.test(n)) return;
+          for (let i = 0; i < density; i++) {
+            const angle = (i / density) * Math.PI;
+            const lash = new e.Mesh(
+              new e.ConeGeometry(0.0008, length, 4),
+              new e.MeshStandardMaterial({ color: 0x1a0f08, roughness: 0.7 })
+            );
+            lash.position.set(Math.cos(angle) * 0.012, 0.012, Math.sin(angle) * 0.012);
+            lash.rotation.z = angle - Math.PI / 2;
+            lash.rotation.x = -Math.PI / 8;
+            obj.add(lash);
+            _eyelashMeshes.push(lash);
+          }
+        });
+      });
+      console.info(`[__EYELASH__] ${_eyelashMeshes.length} lashes added`);
+    };
+    window.__EYELASH_OFF__ = () => {
+      _eyelashMeshes.forEach(m => m.parent && m.parent.remove(m));
+      _eyelashMeshes = [];
+      console.info('[__EYELASH__] off');
+    };
+    // F3 (r38) Procedural LUT color grading(取代 .cube file)
+    window.__LUT_PROC__ = (preset = 'warm') => {
+      const presets = {
+        warm:     { hueShift: 0.05, satBoost: 1.15, contrastLift: 1.1, shadowTint: '#3a1f15' },
+        cool:     { hueShift: -0.05, satBoost: 0.95, contrastLift: 1.05, shadowTint: '#0f1f3a' },
+        teal_orange: { hueShift: 0.08, satBoost: 1.25, contrastLift: 1.2, shadowTint: '#0a3a3a' },
+        bleach:   { hueShift: 0, satBoost: 0.6, contrastLift: 1.4, shadowTint: '#666' },
+        sepia:    { hueShift: 0.05, satBoost: 0.5, contrastLift: 1.1, shadowTint: '#3a2818' },
+        neon:     { hueShift: 0.95, satBoost: 1.6, contrastLift: 1.3, shadowTint: '#1a0a2a' },
+      };
+      const p = presets[preset] || presets.warm;
+      if (window.__POSTFX__ && window.__POSTFX__.tuning) {
+        window.__POSTFX__.tuning.colorGrade = window.__POSTFX__.tuning.colorGrade || {};
+        Object.assign(window.__POSTFX__.tuning.colorGrade, p);
+      }
+      console.info(`[__LUT_PROC__] preset="${preset}"`);
+    };
+    // A7 (r38) Rain splash + ripple extension
+    let _splashes = [];
+    window.__RAIN_SPLASH__ = (count = 30, density = 'medium') => {
+      _splashes.forEach(s => W.remove(s)); _splashes = [];
+      const densityMap = { light: 0.5, medium: 1.0, heavy: 2.0 };
+      const mult = densityMap[density] || 1.0;
+      for (let i = 0; i < count * mult; i++) {
+        const ring = new e.Mesh(
+          new e.RingGeometry(0.05, 0.08, 16),
+          new e.MeshBasicMaterial({ color: 0xaaccff, transparent: true, opacity: 0.7, side: e.DoubleSide })
+        );
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.set((Math.random() - 0.5) * 12, 0.005, (Math.random() - 0.5) * 12);
+        ring.userData.life = Math.random();
+        W.add(ring);
+        _splashes.push(ring);
+      }
+      const tick = () => {
+        if (_splashes.length === 0) return;
+        _splashes.forEach(s => {
+          s.userData.life += 0.02;
+          if (s.userData.life > 1) {
+            s.userData.life = 0;
+            s.position.set((Math.random() - 0.5) * 12, 0.005, (Math.random() - 0.5) * 12);
+          }
+          s.scale.set(s.userData.life * 3, s.userData.life * 3, 1);
+          s.material.opacity = 0.7 * (1 - s.userData.life);
+        });
+        requestAnimationFrame(tick);
+      };
+      tick();
+      console.info(`[__RAIN_SPLASH__] ${_splashes.length} splashes density=${density}`);
+    };
+    window.__RAIN_SPLASH_OFF__ = () => {
+      _splashes.forEach(s => W.remove(s)); _splashes = [];
+      console.info('[__RAIN_SPLASH__] off');
+    };
+    // E1 (r38) Wear & tear procedural decals(桌椅刮痕)
+    let _wearTex = null;
+    window.__WEAR_TEAR__ = (intensity = 0.3) => {
+      if (typeof document === 'undefined') return;
+      if (!_wearTex) {
+        const c = document.createElement('canvas');
+        c.width = c.height = 512;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#888'; ctx.fillRect(0, 0, 512, 512);
+        // 刮痕
+        for (let i = 0; i < 80; i++) {
+          ctx.strokeStyle = `rgba(40,30,20,${Math.random() * 0.4})`;
+          ctx.lineWidth = 0.5 + Math.random() * 1.5;
+          const x = Math.random() * 512, y = Math.random() * 512;
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x + (Math.random() - 0.5) * 60, y + (Math.random() - 0.5) * 60);
+          ctx.stroke();
+        }
+        // 髒污點
+        for (let i = 0; i < 50; i++) {
+          ctx.fillStyle = `rgba(30,25,15,${Math.random() * 0.3})`;
+          ctx.beginPath();
+          ctx.arc(Math.random() * 512, Math.random() * 512, 2 + Math.random() * 5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        _wearTex = new e.CanvasTexture(c);
+        _wearTex.wrapS = _wearTex.wrapT = e.RepeatWrapping;
+      }
+      let count = 0;
+      W.traverse((obj) => {
+        if (!obj.material || !obj.material.roughnessMap !== undefined) return;
+        const n = (obj.name || '').toLowerCase();
+        if (!/(desk|chair|table|bench|wood)/.test(n)) return;
+        obj.material.roughnessMap = _wearTex;
+        obj.material.roughness = Math.min(1, (obj.material.roughness || 0.5) + intensity * 0.3);
+        obj.material.needsUpdate = true;
+        count++;
+      });
+      console.info(`[__WEAR_TEAR__] ${count} surfaces intensity=${intensity}`);
+    };
+    // E3 (r38) Window fog / mist(視窗起霧)
+    window.__WINDOW_FOG__ = (opacity = 0.3) => {
+      let count = 0;
+      W.traverse((obj) => {
+        if (!obj.material) return;
+        const n = (obj.name || '').toLowerCase();
+        if (!/(window|glass|pane)/.test(n)) return;
+        if (obj.material.userData._origOpacity === undefined) {
+          obj.material.userData._origOpacity = obj.material.opacity ?? 1.0;
+          obj.material.userData._origTransparent = obj.material.transparent;
+        }
+        obj.material.transparent = true;
+        obj.material.opacity = Math.min(0.95, obj.material.userData._origOpacity + opacity);
+        obj.material.roughness = 0.8;
+        obj.material.needsUpdate = true;
+        count++;
+      });
+      console.info(`[__WINDOW_FOG__] ${count} windows opacity+=${opacity}`);
+    };
+    // E9 (r38) Seasonal vegetation color shift
+    window.__VEGETATION__ = (season = 'summer') => {
+      const presets = {
+        spring: '#9bcc7a', summer: '#4a7c2a', autumn: '#c87f3c', winter: '#7a8a7a',
+      };
+      const targetColor = new e.Color(presets[season] || presets.summer);
+      let count = 0;
+      W.traverse((obj) => {
+        if (!obj.material || !obj.material.color) return;
+        const n = (obj.name || '').toLowerCase();
+        if (!/(tree|leaf|grass|plant|vegetation)/.test(n)) return;
+        obj.material.color.copy(targetColor);
+        obj.material.needsUpdate = true;
+        count++;
+      });
+      console.info(`[__VEGETATION__] season="${season}" ${count} vegetation meshes`);
+    };
+    // K6 (r38) Letterbox UI fade(對話氣泡漸出 + 黑邊滑入)
+    window.__UI_FADE__ = (mode = 'in', durationMs = 600) => {
+      if (typeof document === 'undefined') return;
+      const uiElements = document.querySelectorAll('[class*="dialog"], [class*="bubble"], [class*="hud"], .ui-panel');
+      uiElements.forEach(el => {
+        el.style.transition = `opacity ${durationMs}ms ease, transform ${durationMs}ms ease`;
+        if (mode === 'in') {
+          el.style.opacity = '1';
+          el.style.transform = 'translateY(0)';
+        } else {
+          el.style.opacity = '0';
+          el.style.transform = 'translateY(20px)';
+        }
+      });
+      console.info(`[__UI_FADE__] mode="${mode}" affected ${uiElements.length} UI elements`);
+    };
+    // P2 (r38) Saccade predictive(眼動預判 + micro-saccade)
+    let _saccadeRAF = null;
+    window.__SACCADE__ = (predictMs = 200, microFreq = 0.8) => {
+      if (!window.__JUNIOR_RIG__ || !window.__JUNIOR_RIG__.state) {
+        console.warn('[__SACCADE__] __JUNIOR_RIG__ not ready'); return;
+      }
+      if (_saccadeRAF) cancelAnimationFrame(_saccadeRAF);
+      const s = window.__JUNIOR_RIG__.state;
+      let nextMicro = performance.now();
+      const loop = () => {
+        const now = performance.now();
+        if (now > nextMicro && s.lookDir) {
+          // micro-saccade(隨機跳視)
+          s.lookDir.x += (Math.random() - 0.5) * 0.08;
+          s.lookDir.y += (Math.random() - 0.5) * 0.06;
+          nextMicro = now + 1000 / microFreq + Math.random() * 500;
+        }
+        _saccadeRAF = requestAnimationFrame(loop);
+      };
+      loop();
+      s.saccadePredictMs = predictMs;
+      console.info(`[__SACCADE__] predictMs=${predictMs} microFreq=${microFreq}Hz`);
+    };
+    window.__SACCADE_OFF__ = () => {
+      if (_saccadeRAF) { cancelAnimationFrame(_saccadeRAF); _saccadeRAF = null; }
+      console.info('[__SACCADE__] off');
+    };
+    // P3 (r38) Gesture library(手部 idle:撥頭髮/摸臉/看錶/整理衣領/看窗外)
+    let _gestureRAF = null;
+    window.__GESTURE__ = (gesture = 'auto', intervalMs = 4000) => {
+      if (!window.__JUNIOR_RIG__ || !window.__JUNIOR_RIG__.state) {
+        console.warn('[__GESTURE__] __JUNIOR_RIG__ not ready'); return;
+      }
+      const gestures = ['hairTouch', 'cheekTouch', 'checkWatch', 'collarAdjust', 'lookOut'];
+      if (_gestureRAF) cancelAnimationFrame(_gestureRAF);
+      const s = window.__JUNIOR_RIG__.state;
+      let nextGesture = performance.now() + 1500;
+      const loop = () => {
+        const now = performance.now();
+        if (now > nextGesture) {
+          const pick = gesture === 'auto' ? gestures[Math.floor(Math.random() * gestures.length)] : gesture;
+          s.currentGesture = pick;
+          s.gestureStartTime = now;
+          // 動畫:hairTouch lift右手 / cheekTouch lift左手 / 等
+          if (pick === 'hairTouch' && s.armR) s.armR = 0.8;
+          else if (pick === 'cheekTouch' && s.armL) s.armL = 0.6;
+          else if (pick === 'checkWatch' && s.armL) s.armL = 0.4;
+          else if (pick === 'collarAdjust' && s.armR) s.armR = 0.5;
+          else if (pick === 'lookOut' && s.lookDir) { s.lookDir.x = 0.7; s.lookDir.y = 0.1; }
+          setTimeout(() => { if (s.armR) s.armR = 0; if (s.armL) s.armL = 0; }, 1500);
+          nextGesture = now + intervalMs + Math.random() * 2000;
+        }
+        _gestureRAF = requestAnimationFrame(loop);
+      };
+      loop();
+      console.info(`[__GESTURE__] gesture="${gesture}" intervalMs=${intervalMs}`);
+    };
+    window.__GESTURE_OFF__ = () => {
+      if (_gestureRAF) { cancelAnimationFrame(_gestureRAF); _gestureRAF = null; }
+      console.info('[__GESTURE__] off');
+    };
+    // P7 (r38) 學妹後門 idle sequence(重心 / 整理頭髮 / 看錶 cycle)
+    window.__JUNIOR_IDLE__ = (mode = 'waiting') => {
+      if (!window.__JUNIOR_RIG__) {
+        console.warn('[__JUNIOR_IDLE__] __JUNIOR_RIG__ not ready'); return;
+      }
+      // 啟動組合:weight shift + gesture loop + breath calm
+      try {
+        if (mode === 'waiting') {
+          window.__WEIGHT_SHIFT__(0.02, 0.15);
+          window.__GESTURE__('auto', 5000);
+          window.__BREATH_EMOTION__('expectant' in {expectant:1} ? 'expectant' : 'calm');
+        } else if (mode === 'nervous') {
+          window.__WEIGHT_SHIFT__(0.035, 0.4);
+          window.__GESTURE__('hairTouch', 2500);
+          window.__BREATH_EMOTION__('anxious');
+        } else if (mode === 'still') {
+          window.__WEIGHT_SHIFT_OFF__();
+          window.__GESTURE_OFF__();
+          window.__BREATH_EMOTION__('calm');
+        }
+        console.info(`[__JUNIOR_IDLE__] mode="${mode}" composite idle started`);
+      } catch (err) {
+        console.warn('[__JUNIOR_IDLE__] composite error:', err.message);
+      }
+    };
+    // L5 (r38) GI fake bounce(hemisphere/ambient color tint,牆色染人臉)
+    window.__GI_BOUNCE__ = (wallColor = '#ffd9a8', intensity = 0.25) => {
+      const tint = new e.Color(wallColor);
+      let count = 0;
+      W.traverse((obj) => {
+        if (obj.isHemisphereLight) {
+          if (obj.userData._origGroundColor === undefined) {
+            obj.userData._origGroundColor = obj.groundColor.clone();
+          }
+          obj.groundColor.copy(obj.userData._origGroundColor).lerp(tint, intensity);
+          count++;
+        } else if (obj.isAmbientLight) {
+          if (obj.userData._origColor === undefined) obj.userData._origColor = obj.color.clone();
+          obj.color.copy(obj.userData._origColor).lerp(tint, intensity * 0.5);
+          count++;
+        }
+      });
+      console.info(`[__GI_BOUNCE__] wallColor=${wallColor} intensity=${intensity} affected ${count} lights`);
+    };
+    // r38 batch 3 — apply / reset
+    window.__ART_APPLY_BATCH3__ = () => {
+      try { window.__SSS__(0.5, 0.3); } catch(e) {}
+      try { window.__SKIN_NORMAL__(0.5, 256); } catch(e) {}
+      try { window.__HAIR_STREAK__(0.7, 64); } catch(e) {}
+      try { window.__EYE_CORNEA__(0.011, 0.6); } catch(e) {}
+      try { window.__EYELASH__(12, 0.018); } catch(e) {}
+      try { window.__LUT_PROC__('warm'); } catch(e) {}
+      try { window.__WEAR_TEAR__(0.3); } catch(e) {}
+      try { window.__WINDOW_FOG__(0.2); } catch(e) {}
+      try { window.__VEGETATION__('summer'); } catch(e) {}
+      try { window.__SACCADE__(200, 0.8); } catch(e) {}
+      try { window.__GESTURE__('auto', 4000); } catch(e) {}
+      try { window.__GI_BOUNCE__('#ffd9a8', 0.25); } catch(e) {}
+      console.info('[__ART_APPLY_BATCH3__] r38 美術 batch 3 全套啟用');
+    };
+    window.__ART_RESET_BATCH3__ = () => {
+      try { window.__EYE_CORNEA_OFF__(); } catch(e) {}
+      try { window.__EYELASH_OFF__(); } catch(e) {}
+      try { window.__RAIN_SPLASH_OFF__(); } catch(e) {}
+      try { window.__SACCADE_OFF__(); } catch(e) {}
+      try { window.__GESTURE_OFF__(); } catch(e) {}
+      console.info('[__ART_RESET_BATCH3__] r38 美術 batch 3 全套重置');
+    };
+    // r38 終極 — 全 3 batch 一鍵啟用
+    window.__ART_APPLY_EVERYTHING__ = () => {
+      try { window.__ART_APPLY_ALL__(); } catch(e) {}
+      try { window.__ART_APPLY_BATCH2__(); } catch(e) {}
+      try { window.__ART_APPLY_BATCH3__(); } catch(e) {}
+      console.info('[__ART_APPLY_EVERYTHING__] r36+r37+r38 全 3 batch 美術全套啟用');
+    };
+    window.__ART_RESET_EVERYTHING__ = () => {
+      try { window.__ART_RESET_ALL__(); } catch(e) {}
+      try { window.__ART_RESET_BATCH2__(); } catch(e) {}
+      try { window.__ART_RESET_BATCH3__(); } catch(e) {}
+      console.info('[__ART_RESET_EVERYTHING__] 全 3 batch 重置');
+    };
   }
   // === /Tier 1 ===
   const _ = new e.Raycaster(),

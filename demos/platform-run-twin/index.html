@@ -786,6 +786,182 @@ window.__ART_RESET_ALL__ = function() {
 };
 
 /* ════════════════════════════════════════════════
+   r38 push6 美術 batch 2(platform-run-twin)
+   ════════════════════════════════════════════════ */
+/* M6 火車金屬 MeshPhysical 升等(traverse 火車相關 mesh)*/
+window.__TRAIN_PHYSICAL__ = function(metalness, roughness, clearcoat) {
+  if (metalness === undefined) metalness = 0.85;
+  if (roughness === undefined) roughness = 0.35;
+  if (clearcoat === undefined) clearcoat = 0.4;
+  var count = 0;
+  scene.traverse(function(obj) {
+    if (!obj.material) return;
+    var n = (obj.name || '').toLowerCase();
+    if (!/train|car|metal|body|engine/.test(n)) return;
+    // 取代為 MeshPhysicalMaterial(若還是 MeshStandard)
+    if (obj.material.type === 'MeshStandardMaterial' && !obj.userData._physicalSwapped) {
+      var c = obj.material.color ? obj.material.color.clone() : new THREE.Color(0x888888);
+      var newMat = new THREE.MeshPhysicalMaterial({
+        color: c, metalness: metalness, roughness: roughness,
+        clearcoat: clearcoat, clearcoatRoughness: 0.1
+      });
+      obj.material = newMat;
+      obj.userData._physicalSwapped = true;
+      obj.material.needsUpdate = true;
+      count++;
+    } else if (obj.material.metalness !== undefined) {
+      obj.material.metalness = metalness;
+      obj.material.roughness = roughness;
+      if (typeof obj.material.clearcoat === 'number') obj.material.clearcoat = clearcoat;
+      obj.material.needsUpdate = true;
+      count++;
+    }
+  });
+  console.info('[__TRAIN_PHYSICAL__] ' + count + ' train materials upgraded');
+};
+
+/* M7 月台地磚 detail material(tile pattern + dirt overlay)*/
+let _platformTileTex = null;
+window.__PLATFORM_TILE__ = function(intensity) {
+  if (intensity === undefined) intensity = 0.7;
+  if (typeof document === 'undefined') return;
+  if (!_platformTileTex) {
+    var c = document.createElement('canvas');
+    c.width = c.height = 256;
+    var ctx = c.getContext('2d');
+    /* tile pattern */
+    ctx.fillStyle = '#7a7568';
+    ctx.fillRect(0, 0, 256, 256);
+    for (var x = 0; x < 256; x += 64) {
+      for (var y = 0; y < 256; y += 64) {
+        ctx.fillStyle = '#86806f';
+        ctx.fillRect(x + 1, y + 1, 62, 62);
+        /* dirt 隨機 */
+        ctx.fillStyle = 'rgba(40,35,25,' + (Math.random() * 0.2) + ')';
+        ctx.fillRect(x + 1 + Math.random() * 50, y + 1 + Math.random() * 50, 8, 8);
+      }
+    }
+    _platformTileTex = new THREE.CanvasTexture(c);
+    _platformTileTex.wrapS = _platformTileTex.wrapT = THREE.RepeatWrapping;
+    _platformTileTex.repeat.set(8, 8);
+  }
+  var count = 0;
+  scene.traverse(function(obj) {
+    if (!obj.material) return;
+    var n = (obj.name || '').toLowerCase();
+    if (!/platform|floor|ground|tile/.test(n)) return;
+    obj.material.map = _platformTileTex;
+    obj.material.needsUpdate = true;
+    count++;
+  });
+  console.info('[__PLATFORM_TILE__] ' + count + ' floor surfaces tiled intensity=' + intensity);
+};
+
+/* M9 火車車身 decals(車牌 + logo SDF-style)*/
+let _decals = [];
+window.__TRAIN_DECALS__ = function(text) {
+  if (text === undefined) text = 'LM-402';
+  _decals.forEach(function(d) { if (d.parent) d.parent.remove(d); });
+  _decals = [];
+  if (typeof document === 'undefined') return;
+  var c = document.createElement('canvas');
+  c.width = 256; c.height = 64;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 256, 64);
+  ctx.fillStyle = '#000';
+  ctx.font = 'bold 32px sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, 128, 32);
+  var tex = new THREE.CanvasTexture(c);
+  var matDecal = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false });
+  scene.traverse(function(obj) {
+    if (!obj.material) return;
+    var n = (obj.name || '').toLowerCase();
+    if (!/car|train|body/.test(n)) return;
+    var geo = new THREE.PlaneGeometry(2, 0.5);
+    var decal = new THREE.Mesh(geo, matDecal);
+    decal.position.set(0, 1, 1.01);
+    if (obj.position) obj.add(decal);
+    _decals.push(decal);
+  });
+  console.info('[__TRAIN_DECALS__] text="' + text + '" ' + _decals.length + ' decals added');
+};
+window.__TRAIN_DECALS_OFF__ = function() {
+  _decals.forEach(function(d) { if (d.parent) d.parent.remove(d); });
+  _decals = [];
+  console.info('[__TRAIN_DECALS__] off');
+};
+
+/* A6 月台地面濕反射(平面假反射 — 不用 true SSR)*/
+let _wetFloorMesh = null;
+window.__WET_FLOOR__ = function(reflectivity) {
+  if (reflectivity === undefined) reflectivity = 0.3;
+  if (_wetFloorMesh) scene.remove(_wetFloorMesh);
+  /* 加一層半透 PlaneGeometry 模擬反射光 */
+  var geo = new THREE.PlaneGeometry(PLATFORM_LEN, PLATFORM_W * 2);
+  var mat = new THREE.MeshPhysicalMaterial({
+    color: 0x223344, metalness: 0.8, roughness: 0.15,
+    transparent: true, opacity: reflectivity,
+    clearcoat: 1.0, clearcoatRoughness: 0.05
+  });
+  _wetFloorMesh = new THREE.Mesh(geo, mat);
+  _wetFloorMesh.rotation.x = -Math.PI / 2;
+  _wetFloorMesh.position.y = 0.005;
+  scene.add(_wetFloorMesh);
+  console.info('[__WET_FLOOR__] reflectivity=' + reflectivity);
+};
+window.__WET_FLOOR_OFF__ = function() {
+  if (_wetFloorMesh) { scene.remove(_wetFloorMesh); _wetFloorMesh = null; }
+  console.info('[__WET_FLOOR__] off');
+};
+
+/* K4 First-person POV camera mode toggle */
+let _fpsBase = null;
+window.__FPS_POV__ = function(mode) {
+  if (mode === undefined) mode = 'on';
+  if (_fpsBase === null) {
+    _fpsBase = {
+      pos: camera.position.clone(),
+      target: new THREE.Vector3(0, 0, 0)
+    };
+    camera.getWorldDirection(_fpsBase.target);
+  }
+  if (mode === 'on') {
+    camera.position.set(0, 1.7, 0);
+    camera.lookAt(0, 1.7, -PLATFORM_LEN / 2);
+  } else {
+    camera.position.copy(_fpsBase.pos);
+    camera.lookAt(0, 0, 0);
+  }
+  console.info('[__FPS_POV__] mode="' + mode + '"');
+};
+
+/* r38 batch 2 apply / reset for platform-run-twin */
+window.__ART_APPLY_BATCH2__ = function() {
+  try { window.__TRAIN_PHYSICAL__(0.85, 0.35, 0.4); } catch(e) {}
+  try { window.__PLATFORM_TILE__(0.7); } catch(e) {}
+  try { window.__TRAIN_DECALS__('LM-402'); } catch(e) {}
+  try { window.__WET_FLOOR__(0.3); } catch(e) {}
+  console.info('[__ART_APPLY_BATCH2__] r38 platform-run-twin 美術 batch 2 全套啟用');
+};
+window.__ART_RESET_BATCH2__ = function() {
+  try { window.__TRAIN_DECALS_OFF__(); } catch(e) {}
+  try { window.__WET_FLOOR_OFF__(); } catch(e) {}
+  try { window.__FPS_POV__('off'); } catch(e) {}
+  console.info('[__ART_RESET_BATCH2__] r38 platform-run-twin 美術 batch 2 全套重置');
+};
+window.__ART_APPLY_EVERYTHING__ = function() {
+  try { window.__ART_APPLY_ALL__(); } catch(e) {}
+  try { window.__ART_APPLY_BATCH2__(); } catch(e) {}
+  console.info('[__ART_APPLY_EVERYTHING__] platform-run-twin 全 2 batch 美術全套啟用');
+};
+window.__ART_RESET_EVERYTHING__ = function() {
+  try { window.__ART_RESET_ALL__(); } catch(e) {}
+  try { window.__ART_RESET_BATCH2__(); } catch(e) {}
+  console.info('[__ART_RESET_EVERYTHING__] platform-run-twin 全 2 batch 重置');
+};
+
+/* ════════════════════════════════════════════════
    光源 — DAYTIME
    ════════════════════════════════════════════════ */
 /* 半球光 — 天空/地面漸層環境光 */
