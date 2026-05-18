@@ -3976,6 +3976,157 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       try { window.__LIGHT_FLICKER_OFF__(); } catch(e) {}
       console.info('[__ART_RESET_BATCH2__] r37 美術 batch 2 全套重置');
     };
+    // ════════════════════════════════════════════════════════════════
+    // Sprint H Step 1(r41 push9 — 3-6 wk WebGPU+TSL 進階 sprint 啟動)
+    // 真實 WebGPURenderer + smoke test scene(不破壞主場景)
+    // 替 toni 拍板:跳 Sprint H(純技術 / 無 Blender / r33 starter 承接)
+    // ════════════════════════════════════════════════════════════════
+    let _webgpuState = { renderer: null, scene: null, camera: null, canvas: null, raf: null, fps: 0, lastT: 0, frames: 0 };
+    // H Step 1.1:動態 import WebGPU vendor + create WebGPURenderer + smoke test scene
+    window.__WEBGPU_INIT__ = async () => {
+      if (_webgpuState.renderer) {
+        console.info('[__WEBGPU_INIT__] already initialized — call __WEBGPU_DISPOSE__() first to reset');
+        return _webgpuState;
+      }
+      // detect WebGPU support
+      if (typeof navigator === 'undefined' || !navigator.gpu) {
+        console.error('[__WEBGPU_INIT__] navigator.gpu unavailable — WebGPU not supported');
+        return null;
+      }
+      try {
+        const adapter = await navigator.gpu.requestAdapter();
+        if (!adapter) {
+          console.error('[__WEBGPU_INIT__] no GPU adapter — driver/hardware block');
+          return null;
+        }
+        let info = null;
+        try { info = await adapter.requestAdapterInfo?.(); } catch(_) {}
+        console.info('[__WEBGPU_INIT__] adapter:', info?.description || info?.vendor || 'unknown');
+        // dynamic import vendor WebGPU bundle
+        const THREE_WEBGPU = await import('./vendor/three.webgpu.min.js');
+        console.info('[__WEBGPU_INIT__] vendor loaded: keys=', Object.keys(THREE_WEBGPU).filter(k => /Renderer|Scene|Camera/.test(k)).slice(0, 5));
+        // create overlay canvas(右下角 320×200 smoke test view)
+        if (typeof document === 'undefined') {
+          console.error('[__WEBGPU_INIT__] no document');
+          return null;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = 320; canvas.height = 200;
+        canvas.style.cssText = 'position:fixed;right:12px;bottom:12px;width:320px;height:200px;border:2px solid #ff9a4f;border-radius:8px;z-index:9000;background:#000;pointer-events:none;';
+        document.body.appendChild(canvas);
+        // create WebGPURenderer
+        const WebGPURenderer = THREE_WEBGPU.WebGPURenderer || THREE_WEBGPU.default?.WebGPURenderer;
+        if (!WebGPURenderer) {
+          console.error('[__WEBGPU_INIT__] WebGPURenderer not found in vendor bundle');
+          canvas.remove();
+          return null;
+        }
+        const gpuRenderer = new WebGPURenderer({ canvas, antialias: true });
+        await gpuRenderer.init();
+        gpuRenderer.setPixelRatio(window.devicePixelRatio || 1);
+        gpuRenderer.setSize(320, 200, false);
+        // build smoke test scene(box + light + camera)— TSL Node materials
+        const gpuScene = new THREE_WEBGPU.Scene();
+        gpuScene.background = new THREE_WEBGPU.Color('#1a1820');
+        const gpuCamera = new THREE_WEBGPU.PerspectiveCamera(60, 320 / 200, 0.1, 50);
+        gpuCamera.position.set(0, 1.2, 3);
+        gpuCamera.lookAt(0, 0.5, 0);
+        // 立方體 + standard material(WebGPU 兼容)
+        const cubeMat = new THREE_WEBGPU.MeshStandardMaterial({ color: '#ff9a4f', metalness: 0.3, roughness: 0.4 });
+        const cube = new THREE_WEBGPU.Mesh(new THREE_WEBGPU.BoxGeometry(1, 1, 1), cubeMat);
+        cube.position.set(0, 0.5, 0);
+        gpuScene.add(cube);
+        // 球體 + iridescence(MeshPhysical WebGPU)
+        if (THREE_WEBGPU.MeshPhysicalMaterial) {
+          const sphereMat = new THREE_WEBGPU.MeshPhysicalMaterial({ color: '#88aacc', roughness: 0.2, iridescence: 0.6, iridescenceIOR: 1.5 });
+          const sphere = new THREE_WEBGPU.Mesh(new THREE_WEBGPU.SphereGeometry(0.4, 32, 32), sphereMat);
+          sphere.position.set(1.3, 0.5, -0.5);
+          gpuScene.add(sphere);
+        }
+        // 光
+        gpuScene.add(new THREE_WEBGPU.AmbientLight('#fff', 0.4));
+        const dirLight = new THREE_WEBGPU.DirectionalLight('#fff5e6', 1.5);
+        dirLight.position.set(2, 3, 2);
+        gpuScene.add(dirLight);
+        // RAF loop + fps counter
+        _webgpuState = { renderer: gpuRenderer, scene: gpuScene, camera: gpuCamera, canvas, cube, raf: null, fps: 0, lastT: performance.now(), frames: 0 };
+        const tick = async () => {
+          if (!_webgpuState.renderer) return;
+          _webgpuState.cube.rotation.x += 0.01;
+          _webgpuState.cube.rotation.y += 0.012;
+          try {
+            await _webgpuState.renderer.renderAsync(_webgpuState.scene, _webgpuState.camera);
+          } catch (err) {
+            console.error('[__WEBGPU_INIT__] renderAsync error:', err.message);
+            return;
+          }
+          _webgpuState.frames++;
+          const now = performance.now();
+          if (now - _webgpuState.lastT > 1000) {
+            _webgpuState.fps = _webgpuState.frames * 1000 / (now - _webgpuState.lastT);
+            _webgpuState.frames = 0;
+            _webgpuState.lastT = now;
+          }
+          _webgpuState.raf = requestAnimationFrame(tick);
+        };
+        tick();
+        console.info(`[__WEBGPU_INIT__] ✅ WebGPU smoke test scene running @ 320×200 overlay (右下角)`);
+        return _webgpuState;
+      } catch (err) {
+        console.error('[__WEBGPU_INIT__] failed:', err.message, err.stack);
+        return null;
+      }
+    };
+    // H Step 1.2:取得 WebGPU smoke test fps
+    window.__WEBGPU_FPS__ = () => {
+      if (!_webgpuState.renderer) {
+        console.warn('[__WEBGPU_FPS__] WebGPU not initialized — call __WEBGPU_INIT__() first');
+        return null;
+      }
+      console.info(`[__WEBGPU_FPS__] ${_webgpuState.fps.toFixed(1)} fps (overlay smoke test)`);
+      return _webgpuState.fps;
+    };
+    // H Step 1.3:dispose WebGPU smoke test(釋放資源)
+    window.__WEBGPU_DISPOSE__ = () => {
+      if (_webgpuState.raf) cancelAnimationFrame(_webgpuState.raf);
+      if (_webgpuState.canvas) _webgpuState.canvas.remove();
+      if (_webgpuState.renderer && typeof _webgpuState.renderer.dispose === 'function') {
+        try { _webgpuState.renderer.dispose(); } catch(_) {}
+      }
+      _webgpuState = { renderer: null, scene: null, camera: null, canvas: null, raf: null, fps: 0, lastT: 0, frames: 0 };
+      console.info('[__WEBGPU_DISPOSE__] ✅ WebGPU smoke test disposed');
+    };
+    // H Step 1.4:perf comparison(WebGL 主場景 fps vs WebGPU smoke test fps)
+    window.__WEBGPU_PERF__ = () => {
+      const gpuFps = _webgpuState.fps;
+      // 估 WebGL fps:用 requestAnimationFrame 計 1 秒(粗估)
+      let gwl_count = 0;
+      const start = performance.now();
+      const sample = () => {
+        gwl_count++;
+        if (performance.now() - start < 1000) requestAnimationFrame(sample);
+        else {
+          console.info(`[__WEBGPU_PERF__] WebGL main scene: ${gwl_count} fps | WebGPU smoke test: ${gpuFps.toFixed(1)} fps`);
+        }
+      };
+      sample();
+    };
+    // H Step 1.5:status banner(整合 r33 __WEBGPU_STATUS__)
+    window.__WEBGPU_SPRINT_H__ = () => {
+      const summary = {
+        'Sprint H': '4-6 wk WebGPU+TSL dedicated sprint',
+        'Step 1 (本 round ship)': '✅ WebGPURenderer + smoke test scene overlay',
+        'Step 2 (下 round)': '⏸ 主場景 WebGLRenderer → WebGPURenderer 切換(需視覺驗收每材質)',
+        'Step 3-4 (下 2-3 round)': '⏸ scene materials + postfx WebGPU 兼容(MeshPhysical / EffectComposer Node)',
+        'Step 5-6 (下 round)': '⏸ light + GLB DRACOLoader WebGPU mode',
+        'Step 7 (下 round)': '⏸ perf comparison 真實(F2 真切 vs WebGL)',
+        'Step 8 (下 round)': '⏸ fallback handler(WebGPU detect fail 自動 WebGL)',
+        '解鎖效應': 'Step 8 完整 done 後 → Sprint J 月台借 + C8 WebGPU cloth + C9 strand hair 全 unblock',
+        'console 試': 'await __WEBGPU_INIT__() / __WEBGPU_FPS__() / __WEBGPU_DISPOSE__()',
+      };
+      console.table(summary);
+      return summary;
+    };
   }
   // === /Tier 1 ===
   const _ = new e.Raycaster(),
