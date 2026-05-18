@@ -7,9 +7,9 @@
 
 // — Cache version 分離 —
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
-const STATIC_VERSION = 'static-v3-20260519';  // bumped:r35 加 platform-run-twin offline 完整(three.module + GLB + mp3)
+const STATIC_VERSION = 'static-v4-20260519';  // bumped:r41 hotfix postfx.js GLSL comment backtick(SyntaxError 修)
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v3-20260519';  // bumped:r35 加 platform-run-twin/time html
+const RUNTIME_VERSION = 'runtime-v4-20260519';  // bumped:r41 postfx.js hotfix 強制 invalidate
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
