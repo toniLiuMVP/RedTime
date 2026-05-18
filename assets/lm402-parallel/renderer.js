@@ -3439,6 +3439,38 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       },
       list: () => Object.keys(_toneMap),
     };
+    // P1.1 (r35):envmap intensity 全 material multiplier(輕量 A/B,不 rebuild envmap)
+    window.__ENVMAP_INTENSITY__ = (mult) => {
+      let count = 0;
+      W.traverse((obj) => {
+        if (obj.material && obj.material.envMap) {
+          if (obj.material.userData._origEnvMapIntensity === undefined) {
+            obj.material.userData._origEnvMapIntensity = obj.material.envMapIntensity ?? 1.0;
+          }
+          obj.material.envMapIntensity = obj.material.userData._origEnvMapIntensity * mult;
+          obj.material.needsUpdate = true;
+          count++;
+        }
+      });
+      console.info(`[__ENVMAP_INTENSITY__] multiplied ${count} materials by ${mult}`);
+      return count;
+    };
+    // P1.5 (r35):iridescence 全 material multiplier
+    window.__IRIDESCENCE__ = (mult) => {
+      let count = 0;
+      W.traverse((obj) => {
+        if (obj.material && typeof obj.material.iridescence === 'number') {
+          if (obj.material.userData._origIridescence === undefined) {
+            obj.material.userData._origIridescence = obj.material.iridescence;
+          }
+          obj.material.iridescence = obj.material.userData._origIridescence * mult;
+          obj.material.needsUpdate = true;
+          count++;
+        }
+      });
+      console.info(`[__IRIDESCENCE__] multiplied ${count} materials by ${mult}`);
+      return count;
+    };
   }
   // === /Tier 1 ===
   const _ = new e.Raycaster(),

@@ -7,9 +7,9 @@
 
 // — Cache version 分離 —
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
-const STATIC_VERSION = 'static-v2-20260518';  // bumped:加 twin/parallel GLB 進 precache
+const STATIC_VERSION = 'static-v3-20260519';  // bumped:r35 加 platform-run-twin offline 完整(three.module + GLB + mp3)
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v2-20260518';  // bumped:加 twin/parallel/time html + module
+const RUNTIME_VERSION = 'runtime-v3-20260519';  // bumped:r35 加 platform-run-twin/time html
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
@@ -38,6 +38,9 @@ const STATIC_PRECACHE_URLS = [
   '/RedTime/assets/lm402-parallel/characters/junior/exports/junior_2005_hero_closeup.glb',
   '/RedTime/assets/lm402-parallel/characters/junior/exports/junior_2005_runtime.glb',
   '/RedTime/assets/lm402-parallel/characters/junior/exports/junior_2005_runtime_mobile.glb',
+  // 月台奔跑雙時空(完整 offline:three vendor + 主題曲 mp3 + GLB 若有)
+  '/RedTime/demos/platform-run-twin/three.module.js',
+  '/RedTime/demos/platform-run-twin/把拔我會想你的.mp3',
   // 共用 assets
   '/RedTime/fonts/fonts.css',
   '/RedTime/assets/og-image.jpg',
@@ -76,6 +79,10 @@ const RUNTIME_PRECACHE_URLS = [
   '/RedTime/assets/lm402-parallel/data.js',
   '/RedTime/assets/lm402-parallel/webgpu-bootstrap.js',
   '/RedTime/assets/lm402-parallel/parallel-init.js',
+  // 月台奔跑入口頁 + 雙時空 SPA
+  '/RedTime/demos/platform-run-time.html',
+  '/RedTime/demos/platform-run/index.html',
+  '/RedTime/demos/platform-run-twin/index.html',
 ];
 
 // — 路徑分流規則 —

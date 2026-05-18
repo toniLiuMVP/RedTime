@@ -3436,6 +3436,44 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       },
       list: () => Object.keys(_toneMap),
     };
+    // P1.1 (r35):envmap intensity 全 material multiplier(輕量 A/B,不 rebuild envmap)
+    // Usage: __ENVMAP_INTENSITY__(0.7)   // 變暗 30%
+    //        __ENVMAP_INTENSITY__(1.0)   // 還原
+    //        __ENVMAP_INTENSITY__(1.5)   // 變亮 50%
+    window.__ENVMAP_INTENSITY__ = (mult) => {
+      let count = 0;
+      W.traverse((obj) => {
+        if (obj.material && obj.material.envMap) {
+          if (obj.material.userData._origEnvMapIntensity === undefined) {
+            obj.material.userData._origEnvMapIntensity = obj.material.envMapIntensity ?? 1.0;
+          }
+          obj.material.envMapIntensity = obj.material.userData._origEnvMapIntensity * mult;
+          obj.material.needsUpdate = true;
+          count++;
+        }
+      });
+      console.info(`[__ENVMAP_INTENSITY__] multiplied ${count} materials by ${mult}`);
+      return count;
+    };
+    // P1.5 (r35):iridescence 全 material multiplier(微虹光,亞洲女性皮膚高光的玄機)
+    // Usage: __IRIDESCENCE__(0)     // 關閉
+    //        __IRIDESCENCE__(0.5)   // 加重
+    //        __IRIDESCENCE__(1.0)   // 還原(default 0.22)
+    window.__IRIDESCENCE__ = (mult) => {
+      let count = 0;
+      W.traverse((obj) => {
+        if (obj.material && typeof obj.material.iridescence === 'number') {
+          if (obj.material.userData._origIridescence === undefined) {
+            obj.material.userData._origIridescence = obj.material.iridescence;
+          }
+          obj.material.iridescence = obj.material.userData._origIridescence * mult;
+          obj.material.needsUpdate = true;
+          count++;
+        }
+      });
+      console.info(`[__IRIDESCENCE__] multiplied ${count} materials by ${mult}`);
+      return count;
+    };
   }
   // === /Tier 1 ===
   const _ = new e.Raycaster(),
