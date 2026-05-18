@@ -151,7 +151,7 @@ const FS_DOF = /* glsl */ `
 
     vec3 sum = vec3(0.0);
     // Tier 5: 19-tap hexagonal aperture（電影鏡頭真實 6 角形 bokeh）
-    // fix-5 (r32):unroll 19 taps,移除 GLSL3 array literal `vec2[](...)` —
+    // fix-5 (r32):unroll 19 taps,移除 GLSL3 array literal vec2 array literal —
     //   原寫法在 WebGL1 / 部分 mobile 編譯失敗(vec2 array literal 是 GLSL3 syntax)
     vec2 base = radius * uTexel;
     sum += texture2D(tDiffuse, vUv).rgb;
