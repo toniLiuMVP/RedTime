@@ -364,6 +364,35 @@ canvas{display:block;width:100%;height:100%}
 </script>
 <script type="module">
 import * as THREE from "three";
+/* ════════════════════════════════════════════════
+   fix-7 (r33 Codex finding):timer registry
+   ════════════════════════════════════════════════
+   現 13 處 setTimeout 未追蹤取消,phase change / restart 後舊 callback 仍會跑 → state/DOM 污染
+   解:wrap setTimeout 為 safeSetTimeout(track _allTimers),createGuards 換關時 clearAllTimers()
+   Console API:__CLEAR_TIMERS__() 緊急清所有 pending
+*/
+const _allTimers = new Set();
+function safeSetTimeout(fn, ms) {
+  let id;
+  id = setTimeout(() => {
+    _allTimers.delete(id);
+    try { fn(); } catch (e) { console.error('[safeSetTimeout] callback error:', e); }
+  }, ms);
+  _allTimers.add(id);
+  return id;
+}
+function clearAllTimers() {
+  const n = _allTimers.size;
+  _allTimers.forEach(id => clearTimeout(id));
+  _allTimers.clear();
+  if (n > 0) console.info('[clearAllTimers] cleared', n, 'pending timer(s)');
+  return n;
+}
+if (typeof window !== 'undefined') {
+  window.__CLEAR_TIMERS__ = clearAllTimers;
+  window.__PENDING_TIMERS__ = () => _allTimers.size;
+}
+
 
 /* ════════════════════════════════════════════════
    常數與設定
@@ -1434,6 +1463,8 @@ const MAT_reflective = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughne
 const MAT_whistle = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.2, metalness: 0.8 });
 
 function createGuards() {
+  /* fix-7 (r33):換關時 clear 所有 pending timers,避免舊 callback 改 state/DOM */
+  clearAllTimers();
   /* Remove old guards */
   /* fix-7 (r32 Codex finding):加 dispose geometry + material,避免換關 WebGL memory leak
      (對齊 npc / lg / m 既有 dispose pattern,line 2347-2517) */
@@ -2799,7 +2830,7 @@ function activateUltimate() {
   dom.goldFlash.style.opacity = "1";
   document.body.style.filter = "brightness(2) saturate(2)";
 
-  setTimeout(function() {
+  safeSetTimeout(function() {
     /* Phase 2: Gold ripple (0.3-0.8s) */
     dom.goldFlash.style.transition = "opacity 0.5s";
     dom.goldFlash.style.background = "radial-gradient(ellipse at center, rgba(255,215,0,0.7) 0%, rgba(255,180,0,0.3) 50%, transparent 80%)";
@@ -2807,7 +2838,7 @@ function activateUltimate() {
     document.body.style.filter = "brightness(1.3) saturate(1.5)";
   }, 300);
 
-  setTimeout(function() {
+  safeSetTimeout(function() {
     /* Phase 3: Subtle golden hue (0.8-5s) */
     dom.goldFlash.style.transition = "opacity 0.8s";
     dom.goldFlash.style.background = "radial-gradient(ellipse at center, rgba(255,215,0,0.15) 0%, transparent 70%)";
@@ -2853,7 +2884,7 @@ function activateUltimate() {
   }
 
   /* === Cleanup after 5s === */
-  setTimeout(function() {
+  safeSetTimeout(function() {
     if (fatherGlowLight && fatherGlowLight.parent) {
       father.remove(fatherGlowLight);
       fatherGlowLight = null;
@@ -3736,7 +3767,7 @@ function updateIntro(dt) {
       dom.ultimateBtn.style.display = "block";
       dom.ultimateCount.style.display = "block";
     }
-    setTimeout(function() { dom.breathHint.style.opacity = "0"; }, 4000);
+    safeSetTimeout(function() { dom.breathHint.style.opacity = "0"; }, 4000);
     document.body.classList.remove("letterbox-on");
     if (state.currentLevel === 1) {
       showNarrative("\u8DD1\uFF01", 1.5);
@@ -3901,7 +3932,7 @@ function updateGame(dt) {
   if (state.phase === "sprint2") {
     if (!sprint2HintShown) {
       sprint2HintShown = true;
-      setTimeout(function() {
+      safeSetTimeout(function() {
         if (state.phase === "sprint2") {
           showNarrative("\u5F80\u53F3\u908A\uFF01\u885D\u5411\u5317\u4E0A\u81EA\u5F37\u865F\u7684\u8ECA\u9580\uFF01", 3);
         }
@@ -4006,7 +4037,7 @@ function updateGame(dt) {
     scene.remove(daughter);
     father.add(daughter);
     daughter.position.set(0.3, 0.6, 0.2);
-    setTimeout(function() {
+    safeSetTimeout(function() {
       state.phase = "sprint2";
       showNarrative("\u5FEB\uFF01\u5317\u4E0A\u81EA\u5F37\u865F\u7684\u9580\u8981\u95DC\u4E86\uFF01", 2.5);
       if (audioCtx) playDoorChime();
@@ -4275,7 +4306,7 @@ function showLevelTransition() {
   dom.levelTransition.classList.add("show");
   document.body.classList.remove("letterbox-on");
 
-  setTimeout(function() {
+  safeSetTimeout(function() {
     dom.levelTransition.classList.remove("show");
     advanceToNextLevel();
   }, 3000);
@@ -4314,7 +4345,7 @@ function showFinalLevelWarning() {
   var beatTimers = [];
   for (var bi = 0; bi < beatTimings.length; bi++) {
     (function(ms, idx) {
-      beatTimers.push(setTimeout(function() {
+      beatTimers.push(safeSetTimeout(function() {
         if (!audioCtx) return;
         var now = audioCtx.currentTime;
         var osc = audioCtx.createOscillator();
@@ -4335,18 +4366,18 @@ function showFinalLevelWarning() {
   }
 
   /* Vignette red flash on climax */
-  var vignetteTimer = setTimeout(function() {
+  var vignetteTimer = safeSetTimeout(function() {
     if (dom.vignette) {
       dom.vignette.style.transition = "opacity 0.15s";
       dom.vignette.style.opacity = "0.9";
-      setTimeout(function() {
+      safeSetTimeout(function() {
         if (dom.vignette) dom.vignette.style.opacity = "0";
       }, 600);
     }
   }, 4000);
 
   /* Auto-advance after full sequence */
-  setTimeout(function() {
+  safeSetTimeout(function() {
     clone.classList.remove("show");
     try { bgm.volume = prevVolume; } catch (e) {}
     advanceToNextLevel();
@@ -4590,7 +4621,7 @@ function failure() {
 
   /* BGM continues — do NOT pause */
 
-  setTimeout(function() {
+  safeSetTimeout(function() {
     dom.result.classList.add("show");
     dom.resultTitle.textContent = "\u4F86\u4E0D\u53CA\u4E86";
     dom.resultBody.textContent = "";
@@ -5131,7 +5162,7 @@ dom.title.addEventListener("click", function() {
     bgm.play().catch(function() {});
   }
   dom.title.classList.add("hide");
-  setTimeout(function() {
+  safeSetTimeout(function() {
     dom.title.style.display = "none";
     startIntro();
   }, 1200);

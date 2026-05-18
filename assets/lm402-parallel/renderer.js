@@ -3373,6 +3373,35 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     (U.shadowMap.enabled = !0),
     // Tier 9.1 VSMShadowMap — variance shadow maps，距離自適應軟陰影（取代 PCFSoftShadowMap）
     (U.shadowMap.type = e.VSMShadowMap));
+  // H F2 starter (r33):WebGPU 真切換是 weeks-scope dedicated sprint(scene/camera/lights/materials/postfx 全 port)
+  // 本 round 加 console diagnostic + future switch entry point。current scene 仍跑 WebGLRenderer。
+  // Usage: __WEBGPU_STATUS__()           // detect WebGPU support + adapter info
+  //        __WEBGPU_RENDERER_PROFILE__()  // 看當前 renderer profile (web-fallback / three-fallback / 未來 webgpu)
+  if (typeof window !== "undefined") {
+    window.__WEBGPU_STATUS__ = async () => {
+      if (!navigator.gpu) {
+        console.warn("[__WEBGPU_STATUS__] navigator.gpu unavailable (WebGPU not supported in this browser)");
+        return { supported: false, reason: "no-navigator-gpu" };
+      }
+      try {
+        const adapter = await navigator.gpu.requestAdapter();
+        if (!adapter) {
+          console.warn("[__WEBGPU_STATUS__] no adapter (hardware/driver block?)");
+          return { supported: false, reason: "no-adapter" };
+        }
+        const info = await adapter.requestAdapterInfo?.() || {};
+        console.info("%c[__WEBGPU_STATUS__] supported", "color:#a8c5ff;font-weight:bold", info);
+        console.info("  current renderer profile:", U.__lm402RendererProfile || "unknown");
+        console.info("  to真切 F2 切 WebGPURenderer 是 weeks-scope sprint(scene migrate),本 round 只 detect");
+        console.info("  smoke test: __WEBGPU_DEMO__()(已在 webgpu-bootstrap.js)");
+        return { supported: true, info, profile: U.__lm402RendererProfile };
+      } catch (err) {
+        console.error("[__WEBGPU_STATUS__] detect error:", err);
+        return { supported: false, reason: "detect-error", error: err?.message || String(err) };
+      }
+    };
+    window.__WEBGPU_RENDERER_PROFILE__ = () => U.__lm402RendererProfile || "unknown";
+  }
   const W = new e.Scene();
   ((W.background = new e.Color("#ccd8e4")),
     (W.fog = new e.Fog("#d0dce6", 12, 65)));
