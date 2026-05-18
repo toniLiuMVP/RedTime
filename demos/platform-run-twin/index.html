@@ -1156,6 +1156,142 @@ window.__ART_RESET_EVERYTHING__ = function() {
 };
 
 /* ════════════════════════════════════════════════
+   r40 push8 美術 batch 4(platform-run-twin)
+   F9 grain overlay + P5 foot IK fake + A9 heat haze 月台
+   ════════════════════════════════════════════════ */
+
+/* F9 月台 postfx 補 — film grain DOM overlay(補 batch 1 vignette)*/
+let _pgrainEl = null, _pgrainRAF = null;
+window.__MONTAI_GRAIN__ = function(strength, fps) {
+  if (strength === undefined) strength = 0.10;
+  if (fps === undefined) fps = 24;
+  if (typeof document === 'undefined') return;
+  if (_pgrainEl) _pgrainEl.remove();
+  _pgrainEl = document.createElement('div');
+  var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='SEED'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 STR 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>";
+  _pgrainEl.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:8997;opacity:' + strength + ';mix-blend-mode:overlay;';
+  document.body.appendChild(_pgrainEl);
+  var last = 0, seed = 0;
+  var interval = 1000 / fps;
+  var tick = function(now) {
+    if (!_pgrainEl) return;
+    if (now - last > interval) {
+      seed = (seed + 1) % 100;
+      var url = 'data:image/svg+xml;utf8,' + svg.replace('SEED', seed).replace('STR', strength * 2);
+      _pgrainEl.style.backgroundImage = "url(\"" + url + "\")";
+      last = now;
+    }
+    _pgrainRAF = requestAnimationFrame(tick);
+  };
+  tick(0);
+  console.info('[__MONTAI_GRAIN__] strength=' + strength + ' fps=' + fps);
+};
+window.__MONTAI_GRAIN_OFF__ = function() {
+  if (_pgrainRAF) { cancelAnimationFrame(_pgrainRAF); _pgrainRAF = null; }
+  if (_pgrainEl) { _pgrainEl.remove(); _pgrainEl = null; }
+  console.info('[__MONTAI_GRAIN__] off');
+};
+
+/* A9 月台軌道遠端 heat haze fake — DOM filter blur + hue-rotate */
+let _phazeEl = null, _phazeRAF = null;
+window.__HEAT_HAZE__ = function(strength) {
+  if (strength === undefined) strength = 0.4;
+  if (typeof document === 'undefined') return;
+  if (!_phazeEl) {
+    _phazeEl = document.createElement('div');
+    _phazeEl.style.cssText = 'position:fixed;left:0;right:0;bottom:0;height:25%;pointer-events:none;z-index:8995;backdrop-filter:blur(1px);';
+    document.body.appendChild(_phazeEl);
+  }
+  var t = 0;
+  var tick = function() {
+    if (!_phazeEl) return;
+    t += 0.04;
+    var blur = 0.6 + Math.sin(t) * strength;
+    _phazeEl.style.backdropFilter = 'blur(' + blur + 'px) hue-rotate(' + (Math.sin(t * 0.7) * 4) + 'deg)';
+    _phazeRAF = requestAnimationFrame(tick);
+  };
+  tick();
+  console.info('[__HEAT_HAZE__] strength=' + strength);
+};
+window.__HEAT_HAZE_OFF__ = function() {
+  if (_phazeRAF) { cancelAnimationFrame(_phazeRAF); _phazeRAF = null; }
+  if (_phazeEl) { _phazeEl.remove(); _phazeEl = null; }
+  console.info('[__HEAT_HAZE__] off');
+};
+
+/* P5 月台步伐 foot IK fake — 根據 character.position 反向計算 knee bend */
+let _footIKRAF = null;
+window.__FOOT_IK__ = function(strength) {
+  if (strength === undefined) strength = 0.8;
+  if (_footIKRAF) cancelAnimationFrame(_footIKRAF);
+  /* 找場景上所有有 legL/legR userData 的 character */
+  var chars = [];
+  scene.traverse(function(obj) {
+    if (obj.userData && (obj.userData.legL || obj.userData.legR)) {
+      chars.push(obj);
+    }
+  });
+  if (chars.length === 0) {
+    console.warn('[__FOOT_IK__] no characters with legL/legR userData');
+    return;
+  }
+  var basePos = chars.map(function(c) { return { y: c.position.y, t: 0 }; });
+  var loop = function() {
+    var t = performance.now() / 1000;
+    chars.forEach(function(char, i) {
+      basePos[i].t += 0.05;
+      /* foot lock to ground level + knee bend cycle */
+      var legL = char.userData.legL, legR = char.userData.legR;
+      var stepPhase = Math.sin(basePos[i].t);
+      if (legL && legL.rotation) {
+        legL.rotation.x = stepPhase * 0.4 * strength;
+      }
+      if (legR && legR.rotation) {
+        legR.rotation.x = -stepPhase * 0.4 * strength;
+      }
+      /* slight body bob 模擬 walking gait */
+      char.position.y = basePos[i].y + Math.abs(stepPhase) * 0.03 * strength;
+    });
+    _footIKRAF = requestAnimationFrame(loop);
+  };
+  loop();
+  console.info('[__FOOT_IK__] ' + chars.length + ' characters strength=' + strength);
+};
+window.__FOOT_IK_OFF__ = function() {
+  if (_footIKRAF) { cancelAnimationFrame(_footIKRAF); _footIKRAF = null; }
+  console.info('[__FOOT_IK__] off');
+};
+
+/* r40 batch 4 apply / reset */
+window.__ART_APPLY_BATCH4__ = function() {
+  try { window.__MONTAI_GRAIN__(0.10, 24); } catch(e) {}
+  try { window.__HEAT_HAZE__(0.4); } catch(e) {}
+  try { window.__FOOT_IK__(0.8); } catch(e) {}
+  console.info('[__ART_APPLY_BATCH4__] r40 platform-run-twin 美術 batch 4 全套啟用');
+};
+window.__ART_RESET_BATCH4__ = function() {
+  try { window.__MONTAI_GRAIN_OFF__(); } catch(e) {}
+  try { window.__HEAT_HAZE_OFF__(); } catch(e) {}
+  try { window.__FOOT_IK_OFF__(); } catch(e) {}
+  console.info('[__ART_RESET_BATCH4__] r40 platform-run-twin 美術 batch 4 全套重置');
+};
+/* 重定義 EVERYTHING 含 batch 4 */
+window.__ART_APPLY_EVERYTHING__ = function() {
+  try { window.__ART_APPLY_ALL__(); } catch(e) {}
+  try { window.__ART_APPLY_BATCH2__(); } catch(e) {}
+  try { window.__ART_APPLY_BATCH3__(); } catch(e) {}
+  try { window.__ART_APPLY_BATCH4__(); } catch(e) {}
+  console.info('[__ART_APPLY_EVERYTHING__] platform-run-twin 全 4 batch 美術全套啟用');
+};
+window.__ART_RESET_EVERYTHING__ = function() {
+  try { window.__ART_RESET_ALL__(); } catch(e) {}
+  try { window.__ART_RESET_BATCH2__(); } catch(e) {}
+  try { window.__ART_RESET_BATCH3__(); } catch(e) {}
+  try { window.__ART_RESET_BATCH4__(); } catch(e) {}
+  console.info('[__ART_RESET_EVERYTHING__] platform-run-twin 全 4 batch 重置');
+};
+
+/* ════════════════════════════════════════════════
    光源 — DAYTIME
    ════════════════════════════════════════════════ */
 /* 半球光 — 天空/地面漸層環境光 */

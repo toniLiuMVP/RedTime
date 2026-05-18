@@ -4597,6 +4597,160 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       try { window.__ART_RESET_BATCH4__(); } catch(e) {}
       console.info('[__ART_RESET_EVERYTHING__] 全 4 batch 重置');
     };
+    // ════════════════════════════════════════════════════════════════
+    // r40 push8 美術 batch 5(toni:「你能做的就幫我執行」)
+    // 拆「真實邊界」:我能 fake/workaround 的不可再 standoff
+    // ════════════════════════════════════════════════════════════════
+    // L3 (r40) CSM fake — 3 個 DirectionalLight 不同 frustum range 模擬 cascade
+    let _csmLights = [];
+    window.__CSM_FAKE__ = (cascades = 3, mainPos = [10, 20, 10]) => {
+      _csmLights.forEach(l => W.remove(l)); _csmLights = [];
+      // 找原 main light
+      let origIntensity = 1.0;
+      W.traverse((obj) => {
+        if (obj.isDirectionalLight && /(main|sun|key)/.test((obj.name || '').toLowerCase())) {
+          origIntensity = obj.intensity;
+          obj.intensity = 0;  // suppress
+        }
+      });
+      // 加 3 個 cascade light
+      const ranges = [
+        { far: 5,   bias: -0.0001, mapSize: 2048 },  // near
+        { far: 20,  bias: -0.0003, mapSize: 1024 },  // mid
+        { far: 80,  bias: -0.0008, mapSize: 512  },  // far
+      ];
+      for (let i = 0; i < Math.min(cascades, 3); i++) {
+        const r = ranges[i];
+        const light = new e.DirectionalLight(0xfff5e6, origIntensity / cascades);
+        light.position.set(mainPos[0], mainPos[1], mainPos[2]);
+        light.castShadow = true;
+        light.shadow.mapSize.set(r.mapSize, r.mapSize);
+        light.shadow.camera.near = 0.1;
+        light.shadow.camera.far = r.far;
+        light.shadow.camera.left = -r.far/2;
+        light.shadow.camera.right = r.far/2;
+        light.shadow.camera.top = r.far/2;
+        light.shadow.camera.bottom = -r.far/2;
+        light.shadow.bias = r.bias;
+        W.add(light);
+        _csmLights.push(light);
+      }
+      console.info(`[__CSM_FAKE__] ${_csmLights.length} cascades far=${ranges.slice(0, cascades).map(r => r.far).join('/')}`);
+    };
+    window.__CSM_FAKE_OFF__ = () => {
+      _csmLights.forEach(l => W.remove(l)); _csmLights = [];
+      W.traverse((obj) => {
+        if (obj.isDirectionalLight && /(main|sun|key)/.test((obj.name || '').toLowerCase())) {
+          if (obj.userData._origIntensity !== undefined) obj.intensity = obj.userData._origIntensity;
+        }
+      });
+      console.info('[__CSM_FAKE__] off');
+    };
+    // F1 (r40) Selective Bloom fake — emissive material override + brightness boost
+    window.__SELECTIVE_BLOOM__ = (selector = ['skin', 'eye', 'lamp', 'light'], boost = 0.5) => {
+      let count = 0;
+      W.traverse((obj) => {
+        if (!obj.material) return;
+        const n = (obj.name || '').toLowerCase();
+        const matched = selector.some(sel => n.includes(sel));
+        if (!matched) return;
+        if (obj.material.userData._origEmissive === undefined && obj.material.emissive) {
+          obj.material.userData._origEmissive = obj.material.emissive.clone();
+          obj.material.userData._origEmissiveIntensity = obj.material.emissiveIntensity ?? 1.0;
+        }
+        if (obj.material.emissive) {
+          // 加亮:emissive 套色(skin = warm / eye = white / lamp = bright)
+          let tint = 0xffeedd;
+          if (n.includes('eye')) tint = 0xffffff;
+          else if (n.includes('lamp') || n.includes('light')) tint = 0xffe888;
+          obj.material.emissive.setHex(tint);
+          obj.material.emissiveIntensity = boost;
+          obj.material.needsUpdate = true;
+          count++;
+        }
+      });
+      // 同時 boost __POSTFX__ bloom 強度(若已開)
+      if (window.__POSTFX__ && window.__POSTFX__.tuning && window.__POSTFX__.tuning.bloom) {
+        window.__POSTFX__.tuning.bloom.strength = (window.__POSTFX__.tuning.bloom.strength || 0.5) + boost * 0.3;
+      }
+      console.info(`[__SELECTIVE_BLOOM__] selector=${JSON.stringify(selector)} boost=${boost} affected=${count}`);
+    };
+    window.__SELECTIVE_BLOOM_OFF__ = () => {
+      W.traverse((obj) => {
+        if (!obj.material || !obj.material.userData._origEmissive) return;
+        obj.material.emissive.copy(obj.material.userData._origEmissive);
+        obj.material.emissiveIntensity = obj.material.userData._origEmissiveIntensity;
+        obj.material.needsUpdate = true;
+      });
+      console.info('[__SELECTIVE_BLOOM__] off');
+    };
+    // F4 (r40) Motion Blur fake — DOM CSS filter blur 動作時瞬間應用
+    let _motionBlurEl = null, _motionBlurT0 = 0;
+    window.__MOTION_BLUR__ = (durationMs = 400, strength = 4) => {
+      if (typeof document === 'undefined') return;
+      if (!_motionBlurEl) {
+        _motionBlurEl = document.querySelector('canvas') || document.body;
+      }
+      _motionBlurEl.style.transition = `filter ${durationMs / 4}ms ease-out`;
+      _motionBlurEl.style.filter = `blur(${strength}px)`;
+      _motionBlurT0 = performance.now();
+      setTimeout(() => {
+        _motionBlurEl.style.filter = '';
+        setTimeout(() => { _motionBlurEl.style.transition = ''; }, durationMs / 4);
+      }, durationMs);
+      console.info(`[__MOTION_BLUR__] strength=${strength}px duration=${durationMs}ms`);
+    };
+    // A9 (r40) Heat haze fake — DOM CSS filter blur + hue-rotate 持續微擾
+    let _hazeEl = null, _hazeRAF = null;
+    window.__HEAT_HAZE__ = (strength = 0.4) => {
+      if (typeof document === 'undefined') return;
+      if (!_hazeEl) {
+        _hazeEl = document.createElement('div');
+        _hazeEl.style.cssText = 'position:fixed;left:0;right:0;bottom:0;height:30%;pointer-events:none;z-index:8995;backdrop-filter:blur(1px);';
+        document.body.appendChild(_hazeEl);
+      }
+      let t = 0;
+      const tick = () => {
+        if (!_hazeEl) return;
+        t += 0.03;
+        const blur = 0.5 + Math.sin(t) * strength;
+        _hazeEl.style.backdropFilter = `blur(${blur}px) hue-rotate(${Math.sin(t * 0.7) * 5}deg)`;
+        _hazeRAF = requestAnimationFrame(tick);
+      };
+      tick();
+      console.info(`[__HEAT_HAZE__] strength=${strength}`);
+    };
+    window.__HEAT_HAZE_OFF__ = () => {
+      if (_hazeRAF) { cancelAnimationFrame(_hazeRAF); _hazeRAF = null; }
+      if (_hazeEl) { _hazeEl.remove(); _hazeEl = null; }
+      console.info('[__HEAT_HAZE__] off');
+    };
+    // r40 batch 5 apply / reset
+    window.__ART_APPLY_BATCH5__ = () => {
+      try { window.__CSM_FAKE__(3, [10, 20, 10]); } catch(e) {}
+      try { window.__SELECTIVE_BLOOM__(['skin', 'eye', 'lamp'], 0.4); } catch(e) {}
+      try { window.__HEAT_HAZE__(0.4); } catch(e) {}
+      console.info('[__ART_APPLY_BATCH5__] r40 美術 batch 5 全套啟用(MOTION_BLUR 需 trigger 觸發)');
+    };
+    window.__ART_RESET_BATCH5__ = () => {
+      try { window.__CSM_FAKE_OFF__(); } catch(e) {}
+      try { window.__SELECTIVE_BLOOM_OFF__(); } catch(e) {}
+      try { window.__HEAT_HAZE_OFF__(); } catch(e) {}
+      console.info('[__ART_RESET_BATCH5__] r40 美術 batch 5 全套重置');
+    };
+    // 重定義 EVERYTHING 含 batch 5
+    const _origAE2 = window.__ART_APPLY_EVERYTHING__;
+    window.__ART_APPLY_EVERYTHING__ = () => {
+      try { _origAE2(); } catch(e) {}
+      try { window.__ART_APPLY_BATCH5__(); } catch(e) {}
+      console.info('[__ART_APPLY_EVERYTHING__] r36+r37+r38+r39+r40 全 5 batch 美術全套啟用');
+    };
+    const _origRE2 = window.__ART_RESET_EVERYTHING__;
+    window.__ART_RESET_EVERYTHING__ = () => {
+      try { _origRE2(); } catch(e) {}
+      try { window.__ART_RESET_BATCH5__(); } catch(e) {}
+      console.info('[__ART_RESET_EVERYTHING__] 全 5 batch 重置');
+    };
   }
   // === /Tier 1 ===
   const _ = new e.Raycaster(),
