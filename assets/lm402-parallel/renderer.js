@@ -3382,7 +3382,35 @@ export function createLm402Scene(D, runtimeOptions = {}) {
   const __sunsetEnvMap = buildSunsetEnvMap(U);
   W.environment = __sunsetEnvMap;
   const __postfx = createPostFX({ renderer: U, scene: W, camera: q });
-  if (typeof window !== "undefined") window.__POSTFX__ = __postfx;
+  if (typeof window !== "undefined") {
+    window.__POSTFX__ = __postfx;
+    // B-3D-K item 3 (r31):NeutralToneMapping toggle(r179 新加)+ A/B compare console API
+    // Usage: __TONE__.set('neutral' | 'aces' | 'reinhard' | 'cineon' | 'agx' | 'none')
+    //        __TONE__.current()
+    const _toneMap = {
+      aces:     e.ACESFilmicToneMapping,
+      neutral:  e.NeutralToneMapping,
+      reinhard: e.ReinhardToneMapping,
+      cineon:   e.CineonToneMapping,
+      agx:      e.AgXToneMapping,
+      none:     e.NoToneMapping,
+    };
+    window.__TONE__ = {
+      set: (mode) => {
+        const m = _toneMap[mode];
+        if (m === undefined) {
+          console.warn(`[__TONE__] unknown mode "${mode}"; valid: ${Object.keys(_toneMap).join(' | ')}`);
+          return;
+        }
+        U.toneMapping = m;
+        console.info(`[__TONE__] set to "${mode}"`);
+      },
+      current: () => {
+        return Object.entries(_toneMap).find(([k, v]) => v === U.toneMapping)?.[0] ?? 'unknown';
+      },
+      list: () => Object.keys(_toneMap),
+    };
+  }
   // === /Tier 1 ===
   const _ = new e.Raycaster(),
     A = [],
