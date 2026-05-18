@@ -369,8 +369,17 @@ export async function runWebGPUSmokeTest() {
   canvas.height = 64;
 
   let renderer = null;
+  let cube = null;
   let frames = 0;
   const t0 = performance.now();
+
+  // Fix 6 (r29 Codex finding):safe error serialization(非 Error throw 也能讀 message)
+  const safeErrorMessage = (e) => {
+    if (e == null) return "unknown";
+    if (e instanceof Error) return e.message || String(e);
+    if (typeof e === "string") return e;
+    try { return JSON.stringify(e); } catch { return String(e); }
+  };
 
   try {
     renderer = new THREE.WebGPURenderer({ canvas, antialias: false });
@@ -379,7 +388,7 @@ export async function runWebGPUSmokeTest() {
     renderer.setClearColor(0x1a1820, 1);
 
     const scene = new THREE.Scene();
-    const cube = new THREE.Mesh(
+    cube = new THREE.Mesh(
       new THREE.BoxGeometry(1, 1, 1),
       new THREE.MeshBasicMaterial({ color: 0xffd49c })
     );
@@ -405,14 +414,15 @@ export async function runWebGPUSmokeTest() {
       `\n  fps=${fps.toFixed(1)}`
     );
 
-    cube.geometry.dispose();
-    cube.material.dispose();
-    renderer.dispose();
-
     return { success: true, frames, ms, fps };
   } catch (err) {
     console.error("[WebGPU smoke test] failed:", err);
-    return { success: false, frames, ms: performance.now() - t0, error: err.message };
+    return { success: false, frames, ms: performance.now() - t0, error: safeErrorMessage(err) };
+  } finally {
+    // Fix 6 (r29):finally 保證 dispose,init / render 中途錯也釋放 GPU 資源
+    try { cube?.geometry?.dispose(); } catch {}
+    try { cube?.material?.dispose(); } catch {}
+    try { renderer?.dispose(); } catch {}
   }
 }
 

@@ -128,6 +128,7 @@ export function createJuniorExpressionRig(refs, options = {}) {
   // Tier 8.4 頭部 wobble 相位
   let headWobbleX = 0;
   let headWobbleZ = 0;
+  let _breathYOffset = 0; // Fix 1 (r29 Codex finding):autoBreath 計算的 y offset,apply() 內 resetToRest 後套用
   // C6 Hover/click 狀態
   let isHovered = false;            // 玩家滑鼠在學妹頭部上
   let hoverStrengthCur = 0.5;       // 當前 eyeTrackStrength（會 lerp 到 hover 目標）
@@ -183,6 +184,18 @@ export function createJuniorExpressionRig(refs, options = {}) {
   // ─── 套用 state 到 mesh transform ───
   function apply() {
     resetToRest(refs, rest);
+
+    // Fix 1 (r29 Codex finding):autoBreath + autoHeadWobble 在 resetToRest 後套用
+    // 之前 update() 內直接寫 mesh,被 apply() 第一行 resetToRest 清掉 → 視覺 bug
+    if (refs.headShell && rest.headShell) {
+      if (state.autoBreath && rest.headShell.pos) {
+        refs.headShell.position.y = rest.headShell.pos.y + _breathYOffset;
+      }
+      if (state.autoHeadWobble) {
+        refs.headShell.rotation.x = rest.headShell.rotX + headWobbleX;
+        refs.headShell.rotation.z = rest.headShell.rotZ + headWobbleZ;
+      }
+    }
 
     const blink = clamp01(state.blink);
     const mo = clamp01(state.mouthOpen);
@@ -278,12 +291,13 @@ export function createJuniorExpressionRig(refs, options = {}) {
     }
 
     // 微呼吸：頭部 y 微浮動
+    // Fix 1 (r29 Codex finding):只計算 offset，apply() resetToRest 之後才套用（避免被清掉）
     if (state.autoBreath) {
       breathPhase += dt;
       const b = Math.sin(breathPhase * 0.65) * 0.5 + 0.5;
-      if (refs.headShell && rest.headShell?.pos) {
-        refs.headShell.position.y = rest.headShell.pos.y + b * 0.0008;
-      }
+      _breathYOffset = b * 0.0008;
+    } else {
+      _breathYOffset = 0;
     }
 
     // === C6 Hover lerp：滑鼠 hover 學妹時 eyeTrackStrength 提升 0.5 → 1.0 ===
@@ -373,10 +387,18 @@ export function createJuniorExpressionRig(refs, options = {}) {
       microTimer -= dt;
       if (microTimer <= 0 && !currentMicro) {
         const choices = ["briefSmile", "lipPress", "browTwitch", "tinyHmm"];
+        // Fix 2 (r29 Codex finding):record baseline，避免 Math.max 卡 peak 後永久污染 state
         currentMicro = {
           kind: choices[Math.floor(Math.random() * choices.length)],
           start: time,
           duration: 0.6 + Math.random() * 0.6, // 0.6~1.2 秒
+          baseline: {
+            smile: state.smile,
+            mouthOpen: state.mouthOpen,
+            browRaise: state.browRaise,
+            lookX: state.lookX,
+            lookY: state.lookY,
+          },
         };
         microTimer = 8 + Math.random() * 12;
       }
@@ -384,37 +406,45 @@ export function createJuniorExpressionRig(refs, options = {}) {
         const elapsed = time - currentMicro.start;
         const t = elapsed / currentMicro.duration;
         if (t >= 1) {
+          // Fix 2 (r29):micro 結束還原 baseline,避免 peak 卡住污染
+          state.smile = currentMicro.baseline.smile;
+          state.mouthOpen = currentMicro.baseline.mouthOpen;
+          state.browRaise = currentMicro.baseline.browRaise;
+          state.lookX = currentMicro.baseline.lookX;
+          state.lookY = currentMicro.baseline.lookY;
           currentMicro = null;
         } else {
           // sin(t*PI) 升降曲線（中段最強，兩端 0）
           const wave = Math.sin(t * Math.PI);
+          // Fix 2 (r29):改 Math.max → baseline + wave，wave→0 時 state 自然回 baseline,不卡 peak
+          const b = currentMicro.baseline;
           switch (currentMicro.kind) {
             case "briefSmile":
-              state.smile = Math.max(state.smile, wave * 0.32);
+              state.smile = b.smile + wave * 0.32;
               break;
             case "lipPress":
-              state.mouthOpen = Math.min(state.mouthOpen, -wave * 0.12);
+              state.mouthOpen = b.mouthOpen - wave * 0.12;
               break;
             case "browTwitch":
-              state.browRaise = Math.max(state.browRaise, wave * 0.45);
+              state.browRaise = b.browRaise + wave * 0.45;
               break;
             case "tinyHmm":
-              state.lookY = clampRange(state.lookY - wave * 0.08, -1, 1);
+              state.lookY = clampRange(b.lookY - wave * 0.08, -1, 1);
               break;
             // C6 click reactions（玩家點學妹觸發，比 auto micro 更明顯）
             case "surprise":
-              state.browRaise = Math.max(state.browRaise, wave * 0.75);
-              state.mouthOpen = Math.max(state.mouthOpen, wave * 0.30);
-              state.smile = 0;
+              state.browRaise = b.browRaise + wave * 0.75;
+              state.mouthOpen = b.mouthOpen + wave * 0.30;
+              state.smile = b.smile * (1 - wave); // 中段壓 smile,兩端回 baseline
               break;
             case "shy":
-              state.smile = Math.max(state.smile, wave * 0.42);
-              state.lookY = clampRange(state.lookY - wave * 0.18, -1, 1);
-              state.lookX = clampRange(state.lookX + wave * 0.12, -1, 1);
+              state.smile = b.smile + wave * 0.42;
+              state.lookY = clampRange(b.lookY - wave * 0.18, -1, 1);
+              state.lookX = clampRange(b.lookX + wave * 0.12, -1, 1);
               break;
             case "happy":
-              state.smile = Math.max(state.smile, wave * 0.65);
-              state.browRaise = Math.max(state.browRaise, wave * 0.22);
+              state.smile = b.smile + wave * 0.65;
+              state.browRaise = b.browRaise + wave * 0.22;
               break;
           }
         }
@@ -450,11 +480,13 @@ export function createJuniorExpressionRig(refs, options = {}) {
     }
 
     // === Tier 8.4 頭部 idle wobble — 微微點頭 + 偶爾傾頭 ===
-    if (state.autoHeadWobble && refs.headShell && rest.headShell) {
+    // Fix 1 (r29 Codex finding):只計算 wobble，apply() resetToRest 之後才套用（避免被清掉）
+    if (state.autoHeadWobble) {
       headWobbleX = Math.sin(breathPhase * 0.4 + 0.3) * 0.014;   // 點頭（rot.x）
       headWobbleZ = Math.sin(breathPhase * 0.27 + 1.1) * 0.008;  // 傾頭（rot.z）
-      refs.headShell.rotation.x = rest.headShell.rotX + headWobbleX;
-      refs.headShell.rotation.z = rest.headShell.rotZ + headWobbleZ;
+    } else {
+      headWobbleX = 0;
+      headWobbleZ = 0;
     }
 
     apply();

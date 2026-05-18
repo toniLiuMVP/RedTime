@@ -462,7 +462,9 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     bloom:    { threshold: 0.86, softKnee: 0.5, strength: 0, mips: 4 },     // 完全關
     dof:      { focalRange: 0.6, maxBlur: 2.5, enabled: false },            // 完全關
     vignette: { color: [0.18, 0.10, 0.05], offset: 0.55, darkness: 0.32 },  // 0.42→0.32
-    fxaa:     false,
+    // Fix 4 (r29 Codex finding):⚠️ 假功能 — uFxaa uniform/fxaa() function 都 declare 但 main shader 沒呼叫 fxaa()
+    // 改 toggle 視覺不會變(dead code)。保留 console API 不破 backward-compat,未來 sprint 真 wire FXAA 或 remove
+    fxaa:     false, // dead code(see Fix 4)
     exposure: 0.95,  // 0.92→0.95 微調
     // Tier 5 電影級後製（過曝高量 effect 預設關）
     chroma:    { strength: 0 },                                // 0.0028 → 0（鏡頭色散，console 開：0.002~0.006）
@@ -642,45 +644,49 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     renderer.setRenderTarget(null);
 
     // 2. Bloom — bright pass → 多 mip down-sample blur → up-sample 疊加
-    matBright.uniforms.tDiffuse.value = sceneRT.texture;
-    matBright.uniforms.uThreshold.value = tuning.bloom.threshold;
-    matBright.uniforms.uSoftKnee.value = tuning.bloom.softKnee;
-    fsq.render(renderer, matBright, bloomMipRTs[0].a);
+    // Fix 3 (r29 Codex finding):strength <= 0 跳整 pipeline,省 GPU 成本(預設 strength=0 也跑 = 浪費)
+    let postBloomRT = sceneRT;
+    if (tuning.bloom.strength > 0) {
+      matBright.uniforms.tDiffuse.value = sceneRT.texture;
+      matBright.uniforms.uThreshold.value = tuning.bloom.threshold;
+      matBright.uniforms.uSoftKnee.value = tuning.bloom.softKnee;
+      fsq.render(renderer, matBright, bloomMipRTs[0].a);
 
-    // 各層水平+垂直 blur，並逐層降採樣
-    for (let i = 0; i < tuning.bloom.mips; i++) {
-      const cur = bloomMipRTs[i];
-      // 從上一 mip 拿 input（或 i=0 從 bright 完的 cur.a）
-      const inputTex = (i === 0) ? cur.a.texture : bloomMipRTs[i - 1].a.texture;
+      // 各層水平+垂直 blur，並逐層降採樣
+      for (let i = 0; i < tuning.bloom.mips; i++) {
+        const cur = bloomMipRTs[i];
+        // 從上一 mip 拿 input（或 i=0 從 bright 完的 cur.a）
+        const inputTex = (i === 0) ? cur.a.texture : bloomMipRTs[i - 1].a.texture;
 
-      if (i > 0) {
-        // 把上層的結果 down-sample 到當前 mip 尺寸（用 blur material 也行，這裡簡化為 copy）
-        matBlur.uniforms.tDiffuse.value = inputTex;
+        if (i > 0) {
+          // 把上層的結果 down-sample 到當前 mip 尺寸（用 blur material 也行，這裡簡化為 copy）
+          matBlur.uniforms.tDiffuse.value = inputTex;
+          matBlur.uniforms.uTexel.value.set(1 / cur.a.width, 1 / cur.a.height);
+          matBlur.uniforms.uDirection.value.set(1, 0);
+          fsq.render(renderer, matBlur, cur.a);
+        }
+
+        // 水平 blur a → b
+        matBlur.uniforms.tDiffuse.value = cur.a.texture;
         matBlur.uniforms.uTexel.value.set(1 / cur.a.width, 1 / cur.a.height);
         matBlur.uniforms.uDirection.value.set(1, 0);
+        fsq.render(renderer, matBlur, cur.b);
+
+        // 垂直 blur b → a
+        matBlur.uniforms.tDiffuse.value = cur.b.texture;
+        matBlur.uniforms.uDirection.value.set(0, 1);
         fsq.render(renderer, matBlur, cur.a);
       }
 
-      // 水平 blur a → b
-      matBlur.uniforms.tDiffuse.value = cur.a.texture;
-      matBlur.uniforms.uTexel.value.set(1 / cur.a.width, 1 / cur.a.height);
-      matBlur.uniforms.uDirection.value.set(1, 0);
-      fsq.render(renderer, matBlur, cur.b);
-
-      // 垂直 blur b → a
-      matBlur.uniforms.tDiffuse.value = cur.b.texture;
-      matBlur.uniforms.uDirection.value.set(0, 1);
-      fsq.render(renderer, matBlur, cur.a);
+      // 把最深 mip 累加回 base（簡化的 up-sample composite）
+      matBloomAdd.uniforms.tBase.value = sceneRT.texture;
+      matBloomAdd.uniforms.tBloom.value = bloomMipRTs[tuning.bloom.mips - 1].a.texture;
+      matBloomAdd.uniforms.uStrength.value = tuning.bloom.strength;
+      fsq.render(renderer, matBloomAdd, bloomCompositeRT);
+      postBloomRT = bloomCompositeRT;
     }
 
-    // 把最深 mip 累加回 base（簡化的 up-sample composite）
-    matBloomAdd.uniforms.tBase.value = sceneRT.texture;
-    matBloomAdd.uniforms.tBloom.value = bloomMipRTs[tuning.bloom.mips - 1].a.texture;
-    matBloomAdd.uniforms.uStrength.value = tuning.bloom.strength;
-    fsq.render(renderer, matBloomAdd, bloomCompositeRT);
-
     // 3. DOF — 用 focalProvider 決定焦距，結合 depth 模糊
-    let postBloomRT = bloomCompositeRT;
     if (tuning.dof.enabled) {
       const focal = focalProvider({
         camera,
