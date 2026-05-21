@@ -522,7 +522,8 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     stencilBuffer: false,
   });
   const bloomMipRTs = Array.from({ length: tuning.bloom.mips }, () => ({ a: makeRT(), b: makeRT() }));
-  const bloomCompositeRT = makeRT();
+  // Codex r44 #3 + Phase 4 #1 (🔴):Bloom composite ping-pong RT pair(避免 read+write 同 RT feedback loop)
+  const bloomCompositeRTs = { a: makeRT(), b: makeRT() };
 
   // ─── DOF / Final 中間 RT ───
   const dofRT = makeRT();
@@ -628,7 +629,8 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     const H = Math.max(1, Math.round(h * dprScale));
 
     sceneRT.setSize(W, H);
-    bloomCompositeRT.setSize(W, H);
+    bloomCompositeRTs.a.setSize(W, H);
+    bloomCompositeRTs.b.setSize(W, H);
     dofRT.setSize(W, H);
     finalRT.setSize(W, H);
     motionBlur.setSize(W, H);
@@ -692,21 +694,25 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
         fsq.render(renderer, matBlur, cur.a);
       }
 
-      // Codex r44 #3 (🟡):Bloom multi-mip 真累加 pyramid(原:只用最深 mip;新:從 deep → shallow 加權累加)
+      // Codex r44 #3 + Phase 4 修正 (🟡→🔴 ping-pong):Bloom multi-mip pyramid 累加(避免 feedback loop)
       //   累加順序:depth N-1 → N-2 → ... → 0,每層用 add blend(實質 up-sample composite)
       //   權重:每 mip 0.6/(N-i) 衰減 — 中尺度 mip 貢獻最大,符合 bloom pyramid 物理
-      matBloomAdd.uniforms.tBase.value = sceneRT.texture;
+      //   ping-pong:read RT_A → write RT_B,swap each iteration(WebGL safe,no feedback loop)
+      let readRT = sceneRT, writeRT = bloomCompositeRTs.a;
+      matBloomAdd.uniforms.tBase.value = readRT.texture;
       matBloomAdd.uniforms.tBloom.value = bloomMipRTs[tuning.bloom.mips - 1].a.texture;
       matBloomAdd.uniforms.uStrength.value = tuning.bloom.strength;
-      fsq.render(renderer, matBloomAdd, bloomCompositeRT);
-      // 依序加上 mid + shallow mips(深→淺 reverse,額外累加層)
+      fsq.render(renderer, matBloomAdd, writeRT);
+      // 依序加上 mid + shallow mips(深→淺 reverse,額外累加層)— ping-pong swap
       for (let i = tuning.bloom.mips - 2; i >= 0; i--) {
-        matBloomAdd.uniforms.tBase.value = bloomCompositeRT.texture;
+        readRT = writeRT;
+        writeRT = (writeRT === bloomCompositeRTs.a) ? bloomCompositeRTs.b : bloomCompositeRTs.a;
+        matBloomAdd.uniforms.tBase.value = readRT.texture;
         matBloomAdd.uniforms.tBloom.value = bloomMipRTs[i].a.texture;
         matBloomAdd.uniforms.uStrength.value = tuning.bloom.strength * (0.6 / (tuning.bloom.mips - i));
-        fsq.render(renderer, matBloomAdd, bloomCompositeRT);
+        fsq.render(renderer, matBloomAdd, writeRT);
       }
-      postBloomRT = bloomCompositeRT;
+      postBloomRT = writeRT;
     }
 
     // 3. DOF — 用 focalProvider 決定焦距,結合 depth 模糊
@@ -775,7 +781,8 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
   // ─── 釋放 ───
   function dispose() {
     sceneRT.dispose();
-    bloomCompositeRT.dispose();
+    bloomCompositeRTs.a.dispose();
+    bloomCompositeRTs.b.dispose();
     dofRT.dispose();
     finalRT.dispose();
     motionBlur.dispose();
