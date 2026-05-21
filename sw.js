@@ -7,9 +7,9 @@
 
 // — Cache version 分離 —
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
-const STATIC_VERSION = 'static-v6-20260522';  // bumped:r45 Phase 5 polling traverse fix(scene init deferred 後抓 materials)
+const STATIC_VERSION = 'static-v7-20260522';  // bumped:r45 Phase 5 round 2 — color-based detection + baseline IBL for ALL standard
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v6-20260522';  // bumped:r45 Phase 5 traverse polling 強制 invalidate
+const RUNTIME_VERSION = 'runtime-v7-20260522';  // bumped:r45 Phase 5 round 2 polling broaden
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
