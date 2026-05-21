@@ -322,8 +322,8 @@ const FS_FINAL = /* glsl */ `
         godRays += max(ss - vec3(0.8), vec3(0.0)) * (1.0 - float(i) / 32.0);
       }
       godRays /= 32.0;
-      // 暖橙染色（黃昏感）
-      c += godRays * uGodRaysStrength * vec3(1.2, 1.0, 0.7);
+      // 暖橙染色（黃昏感）— Codex r44 Phase 5 #2 (🔴):ACES tone map 後加 HDR 易爆白,clamp 到 LDR safe range
+      c += clamp(godRays * uGodRaysStrength, vec3(0.0), vec3(0.6)) * vec3(1.2, 1.0, 0.7);
     }
 
     // === Tier 7: Lens Flare（4 個 ghost 從相反位置採樣強光）===
@@ -338,8 +338,8 @@ const FS_FINAL = /* glsl */ `
           flares += max(sFl - vec3(0.8), vec3(0.0)) * (1.0 - dist / 0.05);
         }
       }
-      // 微藍冷色 ghost（電影鏡頭典型 lens coating tint）
-      c += flares * uLensFlareStrength * vec3(0.95, 1.05, 1.15);
+      // 微藍冷色 ghost(電影鏡頭典型 lens coating tint)— Codex r44 Phase 5 #2:同 clamp
+      c += clamp(flares * uLensFlareStrength, vec3(0.0), vec3(0.6)) * vec3(0.95, 1.05, 1.15);
     }
 
     // === Tier 5: Film Grain（隨 uTime 變化，動態顆粒不靜態化） ===
@@ -789,6 +789,9 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     bloomMipRTs.forEach((m) => { m.a.dispose(); m.b.dispose(); });
     [matBright, matBlur, matBloomAdd, matDOF, matFinal].forEach((m) => m.dispose());
     fsq.dispose();
+    // Codex r44 Phase 5 #4 (🟡):釋放全域 canvas texture cache(避免 GPU 累積)
+    if (_lensDirtTexture) { _lensDirtTexture.dispose(); _lensDirtTexture = null; }
+    if (_rainTexture) { _rainTexture.dispose(); _rainTexture = null; }
   }
 
   return { render, setSize, setJuniorAnchor, dispose, tuning };
