@@ -681,50 +681,67 @@ scene.add(platformFill);
   /* 3. fog 大氣 perspective tone 微調(對齊 sunset 色:c0a888 → b09878)*/
   if (preset.fog) scene.fog = new THREE.FogExp2(0xb09878, 0.0025);
 
-  /* 4. defer traverse 升級 materials per name pattern(等 scene init complete)*/
-  setTimeout(function() {
-    var upgraded = 0;
-    scene.traverse(function(obj) {
-      if (!obj.material) return;
-      var mats = Array.isArray(obj.material) ? obj.material : [obj.material];
-      for (var i = 0; i < mats.length; i++) {
-        var m = mats[i];
-        if (!m.color && m.envMapIntensity === undefined) continue;
-        /* 全 material 補 envmap intensity 預設 1.0(讓 IBL 生效)*/
-        if (m.envMapIntensity === undefined) m.envMapIntensity = 1.0;
-        var name = ((obj.name || '') + ' ' + (m.name || '')).toLowerCase();
-        /* 火車 / 鐵軌 / 金屬 → metalness + clearcoat boost */
-        if (/train|rail|metal|cab|engine|car/.test(name) && m.metalness !== undefined) {
-          m.metalness = Math.max(m.metalness, 0.78);
-          m.roughness = Math.min(m.roughness || 0.5, 0.32);
-          m.envMapIntensity = 1.4;
-          if (m.userData) m.userData._artUpgraded = true;
-          upgraded++;
+  /* 4. polling retry traverse 升級 materials per name pattern
+     scene init 是 deferred(等「點擊開始」後才建場景),所以 polling retry
+     每 800ms try 一次,直到抓到 > 0 materials → stop;max 60 try ≈ 48s safety */
+  (function pollTraverseUpgrade() {
+    var tries = 0, maxTries = 60, totalUpgraded = 0;
+    function tryUpgrade() {
+      var upgraded = 0;
+      scene.traverse(function(obj) {
+        if (!obj.material) return;
+        if (obj.userData && obj.userData._artUpgradedAll) return; /* skip 已 upgraded */
+        var mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+        for (var i = 0; i < mats.length; i++) {
+          var m = mats[i];
+          if (m.userData && m.userData._artUpgraded) continue; /* skip 已 upgraded material */
+          if (!m.color && m.envMapIntensity === undefined) continue;
+          if (m.envMapIntensity === undefined) m.envMapIntensity = 1.0;
+          var name = ((obj.name || '') + ' ' + (m.name || '')).toLowerCase();
+          var didUpgrade = false;
+          if (/train|rail|metal|cab|engine|car/.test(name) && m.metalness !== undefined) {
+            m.metalness = Math.max(m.metalness, 0.78);
+            m.roughness = Math.min(m.roughness || 0.5, 0.32);
+            m.envMapIntensity = 1.4;
+            didUpgrade = true;
+          } else if (/leaf|tree|foliage|green/.test(name)) {
+            m.envMapIntensity = 0.55;
+            if (m.roughness !== undefined) m.roughness = 0.85;
+            didUpgrade = true;
+          } else if (/platform|floor|pillar|column|ground|tile/.test(name)) {
+            if (m.roughness !== undefined) m.roughness = Math.min((m.roughness || 0.7) + 0.05, 0.95);
+            m.envMapIntensity = 0.8;
+            didUpgrade = true;
+          } else if (/window|glass|pane/.test(name) && m.metalness !== undefined) {
+            m.metalness = 0.85;
+            m.roughness = 0.05;
+            m.envMapIntensity = 1.6;
+            didUpgrade = true;
+          }
+          if (didUpgrade) {
+            if (!m.userData) m.userData = {};
+            m.userData._artUpgraded = true;
+            upgraded++;
+          }
+          m.needsUpdate = true;
         }
-        /* 樹葉 → 飽和度 boost + envmap 弱化(不要金屬感)*/
-        else if (/leaf|tree|foliage|green/.test(name)) {
-          m.envMapIntensity = 0.55;
-          if (m.roughness !== undefined) m.roughness = 0.85;
-          upgraded++;
+        if (obj.userData) obj.userData._artUpgradedAll = true;
+      });
+      totalUpgraded += upgraded;
+      tries++;
+      if (upgraded > 0 || tries >= maxTries) {
+        console.info('[art-upgrade r45] polling traverse:', totalUpgraded, 'materials upgraded after', tries, 'tries');
+        /* 抓到後再 monitor 兩次抓 incremental(關卡進入新場景時)*/
+        if (tries < maxTries && totalUpgraded > 0) {
+          setTimeout(tryUpgrade, 3000);
+          setTimeout(tryUpgrade, 8000);
         }
-        /* 月台 / 地面 / 柱 → roughness 提升 + envmap 微弱反射 */
-        else if (/platform|floor|pillar|column|ground|tile/.test(name)) {
-          if (m.roughness !== undefined) m.roughness = Math.min((m.roughness || 0.7) + 0.05, 0.95);
-          m.envMapIntensity = 0.8;
-          upgraded++;
-        }
-        /* 窗 / 玻璃 → 提 metalness + 低 roughness */
-        else if (/window|glass|pane/.test(name) && m.metalness !== undefined) {
-          m.metalness = 0.85;
-          m.roughness = 0.05;
-          m.envMapIntensity = 1.6;
-          upgraded++;
-        }
-        m.needsUpdate = true;
+      } else {
+        setTimeout(tryUpgrade, 800);
       }
-    });
-    console.info('[art-upgrade r45] traverse upgrade:', upgraded, 'materials');
-  }, 200);
+    }
+    setTimeout(tryUpgrade, 800);
+  })();
 
   /* 5. DOM lightweight postfx — vignette + film grain(對齊 lm402-twin batch 5 pattern)*/
   if (typeof document !== 'undefined' && !document.getElementById('art-upgrade-postfx')) {
