@@ -627,6 +627,133 @@ platformFill.position.set(0, 5.5, -50);
 scene.add(platformFill);
 
 /* ════════════════════════════════════════════════
+   r45 美術精緻化升級(toni:整體升半寫實,不改遊戲邏輯)
+   依據 Gemini r179 best practice + LM402-twin 證實 pattern:
+   - AgX ToneMapping(取代 ACES)+ exposure 微調
+   - HDR IBL envmap 程序生成(sunset/dusk)→ scene.environment 套全 PBR materials
+   - scene.fog 大氣 perspective(已有 FogExp2 day/night toggle,只升 color tone)
+   - defer traverse 升 metalness/clearcoat/sheen per material name pattern
+   - DOM lightweight postfx:vignette + grain overlay
+   ════════════════════════════════════════════════ */
+(function applyArtUpgrade() {
+  /* 1. tone mapping AgX(Gemini #1)*/
+  renderer.toneMapping = THREE.AgXToneMapping;
+  renderer.toneMappingExposure = 1.05;
+
+  /* 2. 程序 sunset/dusk envmap → 半寫實 70%(Gemini #2 IBL)*/
+  try {
+    const pmremGen = new THREE.PMREMGenerator(renderer);
+    pmremGen.compileEquirectangularShader && pmremGen.compileEquirectangularShader();
+    const envScene = new THREE.Scene();
+    const sunsetMat = new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      vertexShader: 'varying vec3 vDir; void main(){ vDir=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+      fragmentShader: 'varying vec3 vDir;\n' +
+        'void main(){\n' +
+        '  vec3 d=normalize(vDir);\n' +
+        '  float t=clamp(d.y*0.5+0.5, 0.0, 1.0);\n' +
+        '  vec3 horizon=vec3(0.92, 0.66, 0.42);\n' +
+        '  vec3 zenith=vec3(0.18, 0.32, 0.55);\n' +
+        '  vec3 sky=mix(horizon, zenith, smoothstep(0.05, 0.55, t));\n' +
+        '  vec3 ground=vec3(0.10, 0.08, 0.06);\n' +
+        '  vec3 col=mix(ground, sky, smoothstep(-0.08, 0.05, d.y));\n' +
+        '  float sun=max(0.0, dot(d, normalize(vec3(0.55, 0.32, -0.45))));\n' +
+        '  col += pow(sun, 80.0) * vec3(2.4, 1.55, 0.85);\n' +
+        '  col += pow(sun, 8.0) * vec3(0.35, 0.18, 0.06) * 0.18;\n' +
+        '  gl_FragColor=vec4(col, 1.0);\n' +
+        '}',
+    });
+    const envSphere = new THREE.Mesh(new THREE.SphereGeometry(100, 32, 32), sunsetMat);
+    envScene.add(envSphere);
+    const envRT = pmremGen.fromScene(envScene, 0.04);
+    scene.environment = envRT.texture;
+    /* 取代純 0x87CEEB 藍天 — 半寫實 sunset 背景(月台午後黃昏感) */
+    scene.background = envRT.texture;
+    envScene.remove(envSphere);
+    envSphere.geometry.dispose();
+    sunsetMat.dispose();
+    pmremGen.dispose();
+    console.info('[art-upgrade r45] envmap + AgX tone mapping ready');
+  } catch (e) {
+    console.warn('[art-upgrade r45] envmap setup failed (graceful):', e.message);
+  }
+
+  /* 3. fog 大氣 perspective tone 微調(對齊 sunset 色:c0a888 → b09878)*/
+  if (preset.fog) scene.fog = new THREE.FogExp2(0xb09878, 0.0025);
+
+  /* 4. defer traverse 升級 materials per name pattern(等 scene init complete)*/
+  setTimeout(function() {
+    var upgraded = 0;
+    scene.traverse(function(obj) {
+      if (!obj.material) return;
+      var mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+      for (var i = 0; i < mats.length; i++) {
+        var m = mats[i];
+        if (!m.color && m.envMapIntensity === undefined) continue;
+        /* 全 material 補 envmap intensity 預設 1.0(讓 IBL 生效)*/
+        if (m.envMapIntensity === undefined) m.envMapIntensity = 1.0;
+        var name = ((obj.name || '') + ' ' + (m.name || '')).toLowerCase();
+        /* 火車 / 鐵軌 / 金屬 → metalness + clearcoat boost */
+        if (/train|rail|metal|cab|engine|car/.test(name) && m.metalness !== undefined) {
+          m.metalness = Math.max(m.metalness, 0.78);
+          m.roughness = Math.min(m.roughness || 0.5, 0.32);
+          m.envMapIntensity = 1.4;
+          if (m.userData) m.userData._artUpgraded = true;
+          upgraded++;
+        }
+        /* 樹葉 → 飽和度 boost + envmap 弱化(不要金屬感)*/
+        else if (/leaf|tree|foliage|green/.test(name)) {
+          m.envMapIntensity = 0.55;
+          if (m.roughness !== undefined) m.roughness = 0.85;
+          upgraded++;
+        }
+        /* 月台 / 地面 / 柱 → roughness 提升 + envmap 微弱反射 */
+        else if (/platform|floor|pillar|column|ground|tile/.test(name)) {
+          if (m.roughness !== undefined) m.roughness = Math.min((m.roughness || 0.7) + 0.05, 0.95);
+          m.envMapIntensity = 0.8;
+          upgraded++;
+        }
+        /* 窗 / 玻璃 → 提 metalness + 低 roughness */
+        else if (/window|glass|pane/.test(name) && m.metalness !== undefined) {
+          m.metalness = 0.85;
+          m.roughness = 0.05;
+          m.envMapIntensity = 1.6;
+          upgraded++;
+        }
+        m.needsUpdate = true;
+      }
+    });
+    console.info('[art-upgrade r45] traverse upgrade:', upgraded, 'materials');
+  }, 200);
+
+  /* 5. DOM lightweight postfx — vignette + film grain(對齊 lm402-twin batch 5 pattern)*/
+  if (typeof document !== 'undefined' && !document.getElementById('art-upgrade-postfx')) {
+    var wrap = document.createElement('div');
+    wrap.id = 'art-upgrade-postfx';
+    /* Vignette — radial dark edges */
+    var vig = document.createElement('div');
+    vig.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:8996;background:radial-gradient(ellipse at center, transparent 38%, rgba(0,0,0,0.45) 100%);';
+    wrap.appendChild(vig);
+    /* Grain — SVG fractalNoise 24fps */
+    var grain = document.createElement('div');
+    grain.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:8997;opacity:0.08;mix-blend-mode:overlay;';
+    wrap.appendChild(grain);
+    document.body.appendChild(wrap);
+    var svgT = "<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='SEED'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.15 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>";
+    var seed = 0, last = 0;
+    (function grainTick(now) {
+      if (now - last > 42) {
+        seed = (seed + 1) % 100;
+        grain.style.backgroundImage = 'url("data:image/svg+xml;utf8,' + svgT.replace('SEED', seed) + '")';
+        last = now;
+      }
+      requestAnimationFrame(grainTick);
+    })(0);
+    console.info('[art-upgrade r45] DOM postfx vignette + grain ready');
+  }
+})();
+
+/* ════════════════════════════════════════════════
    材質庫
    ════════════════════════════════════════════════ */
 const MAT = {
