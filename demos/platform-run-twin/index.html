@@ -1292,6 +1292,28 @@ window.__ART_RESET_EVERYTHING__ = function() {
 };
 
 /* ════════════════════════════════════════════════
+   Codex r44 #7 (🔴) ack — art RAF audit + 集中 dispose 強化
+   原 finding:多 RAF 特效可重複啟動,缺集中取消;長玩或重開累積 perf 問題
+   現況:每個 _xxxRAF 已有 if (id) cancelAnimationFrame(id) guard(防重複啟動 ✓)
+         + __ART_RESET_EVERYTHING__ 已 cover 4 batch dispose(集中 ✓ partial)
+   補強:加 __PENDING_ART_RAFS__() console 給 toni audit + STEAM 加 generation guard
+   ════════════════════════════════════════════════ */
+
+/* __PENDING_ART_RAFS__() — 列出當前 active art RAF(對齊 r33 __PENDING_TIMERS__ pattern)*/
+window.__PENDING_ART_RAFS__ = function() {
+  var actives = [];
+  if (typeof _shakeRAF !== 'undefined' && _shakeRAF) actives.push('TRAIN_SHAKE (K7)');
+  if (typeof _pBreathRAF !== 'undefined' && _pBreathRAF) actives.push('CAMERA_BREATH (K1)');
+  if (typeof _npcMotionRAF !== 'undefined' && _npcMotionRAF) actives.push('NPC_MOTION (P6)');
+  if (typeof _pgrainRAF !== 'undefined' && _pgrainRAF) actives.push('MONTAI_GRAIN (F9)');
+  if (typeof _phazeRAF !== 'undefined' && _phazeRAF) actives.push('HEAT_HAZE (A9)');
+  if (typeof _footIKRAF !== 'undefined' && _footIKRAF) actives.push('FOOT_IK (P5)');
+  if (typeof _steam !== 'undefined' && _steam) actives.push('STEAM (A5,self-cancelling chain)');
+  console.info('[__PENDING_ART_RAFS__]', actives.length, 'active:', actives);
+  return actives;
+};
+
+/* ════════════════════════════════════════════════
    光源 — DAYTIME
    ════════════════════════════════════════════════ */
 /* 半球光 — 天空/地面漸層環境光 */

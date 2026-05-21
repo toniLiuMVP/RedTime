@@ -532,8 +532,11 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
   const motionBlur = createMotionBlur({ renderer, width: 1, height: 1 });
 
   // ─── Materials ───
+  // Codex r44 #1 (🔴):全螢幕後製 pass 加 depthTest:false / depthWrite:false
+  //   原因:full-screen quad 不該被舊 depth buffer 擋掉,也不該寫 depth(浪費 GPU)
   const matBright = new THREE.ShaderMaterial({
     vertexShader: VS_FULLSCREEN, fragmentShader: FS_BRIGHT,
+    depthTest: false, depthWrite: false,
     uniforms: {
       tDiffuse:   { value: null },
       uThreshold: { value: tuning.bloom.threshold },
@@ -542,6 +545,7 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
   });
   const matBlur = new THREE.ShaderMaterial({
     vertexShader: VS_FULLSCREEN, fragmentShader: FS_BLUR,
+    depthTest: false, depthWrite: false,
     uniforms: {
       tDiffuse:   { value: null },
       uTexel:     { value: new THREE.Vector2() },
@@ -550,6 +554,7 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
   });
   const matBloomAdd = new THREE.ShaderMaterial({
     vertexShader: VS_FULLSCREEN, fragmentShader: FS_BLOOM_ADD,
+    depthTest: false, depthWrite: false,
     uniforms: {
       tBase:     { value: null },
       tBloom:    { value: null },
@@ -558,6 +563,7 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
   });
   const matDOF = new THREE.ShaderMaterial({
     vertexShader: VS_FULLSCREEN, fragmentShader: FS_DOF,
+    depthTest: false, depthWrite: false,
     uniforms: {
       tDiffuse:    { value: null },
       tDepth:      { value: null },
@@ -571,6 +577,7 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
   });
   const matFinal = new THREE.ShaderMaterial({
     vertexShader: VS_FULLSCREEN, fragmentShader: FS_FINAL,
+    depthTest: false, depthWrite: false,  // Codex r44 #1 同 fix
     uniforms: {
       tDiffuse:           { value: null },
       uTexel:             { value: new THREE.Vector2() },
@@ -685,16 +692,26 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
         fsq.render(renderer, matBlur, cur.a);
       }
 
-      // 把最深 mip 累加回 base（簡化的 up-sample composite）
+      // Codex r44 #3 (🟡):Bloom multi-mip 真累加 pyramid(原:只用最深 mip;新:從 deep → shallow 加權累加)
+      //   累加順序:depth N-1 → N-2 → ... → 0,每層用 add blend(實質 up-sample composite)
+      //   權重:每 mip 0.6/(N-i) 衰減 — 中尺度 mip 貢獻最大,符合 bloom pyramid 物理
       matBloomAdd.uniforms.tBase.value = sceneRT.texture;
       matBloomAdd.uniforms.tBloom.value = bloomMipRTs[tuning.bloom.mips - 1].a.texture;
       matBloomAdd.uniforms.uStrength.value = tuning.bloom.strength;
       fsq.render(renderer, matBloomAdd, bloomCompositeRT);
+      // 依序加上 mid + shallow mips(深→淺 reverse,額外累加層)
+      for (let i = tuning.bloom.mips - 2; i >= 0; i--) {
+        matBloomAdd.uniforms.tBase.value = bloomCompositeRT.texture;
+        matBloomAdd.uniforms.tBloom.value = bloomMipRTs[i].a.texture;
+        matBloomAdd.uniforms.uStrength.value = tuning.bloom.strength * (0.6 / (tuning.bloom.mips - i));
+        fsq.render(renderer, matBloomAdd, bloomCompositeRT);
+      }
       postBloomRT = bloomCompositeRT;
     }
 
-    // 3. DOF — 用 focalProvider 決定焦距，結合 depth 模糊
-    if (tuning.dof.enabled) {
+    // 3. DOF — 用 focalProvider 決定焦距,結合 depth 模糊
+    //   Codex r44 #4 (🟡):radius=0(maxBlur=0)early return 省 19 taps GPU
+    if (tuning.dof.enabled && tuning.dof.maxBlur > 0.0001) {
       const focal = focalProvider({
         camera,
         juniorAnchor,
