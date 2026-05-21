@@ -160,7 +160,8 @@ export function showWebGPUFallback(reason) {
  * 顯示「WebGPU ready」提示（給 dev 看）— 真 WebGPU renderer 還沒做
  */
 export function showWebGPUPlaceholder(adapter) {
-  // 注入一次性 style sheet — 對齊 index.html 設計系統(grain / radial / fadeUp / palette)
+  // r45 (toni request):整體優化對齊 index.html 首頁視覺風格 + 移除 emoji 圖案
+  // 設計 tokens 對齊 index:--ink/--parchment/--warm/--mist/--jade/--rose + Noto Serif TC + Cormorant Garamond + DM Mono
   if (!document.getElementById("lm402-webgpu-placeholder-style")) {
     const style = document.createElement("style");
     style.id = "lm402-webgpu-placeholder-style";
@@ -178,11 +179,12 @@ export function showWebGPUPlaceholder(adapter) {
         color: #eae6de;
         font-family: "Noto Serif TC", "PingFang TC", serif;
         background:
-          radial-gradient(ellipse 90% 70% at 50% 30%, rgba(8, 28, 14, 0.95) 0%, transparent 65%),
-          radial-gradient(ellipse 60% 60% at 20% 80%, rgba(8, 6, 18, 0.8) 0%, transparent 50%),
-          radial-gradient(ellipse 70% 50% at 80% 90%, rgba(16, 8, 4, 0.7) 0%, transparent 50%),
+          radial-gradient(ellipse 80% 60% at 50% 40%, rgba(10, 32, 18, 0.92) 0%, transparent 60%),
+          radial-gradient(ellipse 50% 70% at 75% 50%, rgba(80, 18, 28, 0.18) 0%, transparent 55%),
+          radial-gradient(ellipse 60% 50% at 20% 85%, rgba(10, 8, 20, 0.7) 0%, transparent 50%),
           #050508;
       }
+      /* film grain texture (對齊 index.html) */
       #lm402-webgpu-placeholder::before {
         content: "";
         position: absolute;
@@ -191,9 +193,10 @@ export function showWebGPUPlaceholder(adapter) {
         pointer-events: none;
         background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
         background-size: 200px 200px;
-        opacity: 0.55;
+        opacity: 0.5;
         mix-blend-mode: overlay;
       }
+      /* LM402 紅光線 hint(對應紅線敘事,從右側微微滲入)*/
       #lm402-webgpu-placeholder::after {
         content: "";
         position: absolute;
@@ -201,96 +204,130 @@ export function showWebGPUPlaceholder(adapter) {
         z-index: 1;
         pointer-events: none;
         background:
-          radial-gradient(ellipse 80% 80% at 50% 50%, transparent 40%, rgba(5,5,8,0.6) 100%),
-          linear-gradient(180deg, rgba(5,5,8,0.3) 0%, transparent 12%, transparent 88%, rgba(5,5,8,0.5) 100%);
+          radial-gradient(ellipse 35% 8% at 95% 52%, rgba(224, 72, 96, 0.28) 0%, transparent 70%),
+          radial-gradient(ellipse 80% 80% at 50% 50%, transparent 45%, rgba(5,5,8,0.55) 100%),
+          linear-gradient(180deg, rgba(5,5,8,0.25) 0%, transparent 14%, transparent 86%, rgba(5,5,8,0.45) 100%);
       }
       #lm402-webgpu-placeholder > * { position: relative; z-index: 2; }
 
       #lm402-webgpu-placeholder .pl-eyebrow {
         font-family: "DM Mono", monospace;
-        font-size: 10px;
-        letter-spacing: 0.5em;
+        font-size: 11px;
+        letter-spacing: 0.55em;
         text-transform: uppercase;
         color: #8c8a88;
-        margin-bottom: 28px;
+        margin: 0 0 18px;
         opacity: 0;
-        animation: plFadeUp 0.9s 0.2s forwards;
+        animation: plFadeUp 0.9s 0.15s forwards;
       }
-      #lm402-webgpu-placeholder .pl-title {
-        font-family: "Noto Serif TC", serif;
-        font-weight: 400;
-        font-size: clamp(2rem, 5vw, 3rem);
-        letter-spacing: 0.08em;
-        color: #eae6de;
-        margin: 0 0 22px;
-        opacity: 0;
-        animation: plFadeUp 0.9s 0.4s forwards;
-      }
-      #lm402-webgpu-placeholder .pl-sub {
+      #lm402-webgpu-placeholder .pl-en {
         font-family: "Cormorant Garamond", serif;
         font-style: italic;
-        font-size: clamp(1.05rem, 2vw, 1.3rem);
-        letter-spacing: 0.04em;
-        color: #b4b0a8;
-        margin: 0 0 36px;
+        font-weight: 300;
+        font-size: clamp(0.95rem, 1.6vw, 1.15rem);
+        letter-spacing: 0.18em;
+        color: rgba(234, 230, 222, 0.62);
+        margin: 0 0 18px;
+        opacity: 0;
+        animation: plFadeUp 0.9s 0.3s forwards;
+      }
+      #lm402-webgpu-placeholder .pl-title {
+        font-family: "Noto Serif TC", "PingFang TC", serif;
+        font-weight: 300;
+        font-size: clamp(2.6rem, 7vw, 4.2rem);
+        letter-spacing: 0.22em;
+        line-height: 1.15;
+        color: #eae6de;
+        margin: 0 0 28px;
+        opacity: 0;
+        animation: plFadeUp 1.0s 0.45s forwards;
+        text-shadow: 0 0 30px rgba(22, 168, 100, 0.12);
+      }
+      #lm402-webgpu-placeholder .pl-divider {
+        width: 64px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(234, 230, 222, 0.35), transparent);
+        margin: 0 auto 26px;
         opacity: 0;
         animation: plFadeUp 0.9s 0.6s forwards;
+      }
+      #lm402-webgpu-placeholder .pl-sub {
+        font-family: "Noto Serif TC", serif;
+        font-weight: 300;
+        font-size: clamp(1rem, 1.6vw, 1.18rem);
+        letter-spacing: 0.08em;
+        line-height: 1.85;
+        color: #b4b0a8;
+        max-width: 540px;
+        margin: 0 auto 32px;
+        opacity: 0;
+        animation: plFadeUp 0.9s 0.75s forwards;
       }
       #lm402-webgpu-placeholder .pl-adapter {
         font-family: "DM Mono", monospace;
         font-size: 9.5px;
-        letter-spacing: 0.3em;
+        letter-spacing: 0.35em;
         text-transform: uppercase;
-        color: rgba(140, 138, 136, 0.55);
-        margin-bottom: 32px;
+        color: rgba(22, 168, 100, 0.55);
+        margin: 0 0 38px;
+        padding: 6px 14px;
+        border: 1px solid rgba(22, 168, 100, 0.18);
+        border-radius: 2px;
+        display: inline-block;
         opacity: 0;
-        animation: plFadeUp 0.9s 0.7s forwards;
+        animation: plFadeUp 0.9s 0.9s forwards;
       }
       #lm402-webgpu-placeholder .pl-btn-row {
         display: flex;
-        gap: 12px;
+        gap: 14px;
         flex-wrap: wrap;
         justify-content: center;
         opacity: 0;
-        animation: plFadeUp 0.9s 0.8s forwards;
+        animation: plFadeUp 0.9s 1.0s forwards;
       }
       #lm402-webgpu-placeholder .pl-btn {
         font-family: "DM Mono", monospace;
-        font-size: 9.5px;
-        letter-spacing: 0.28em;
+        font-size: 11px;
+        letter-spacing: 0.3em;
         text-transform: uppercase;
-        padding: 11px 22px;
-        border-radius: 3px;
-        background: rgba(22, 168, 100, 0.06);
+        padding: 14px 28px;
+        border-radius: 2px;
+        background: rgba(22, 168, 100, 0.08);
         color: #16a864;
-        border: 1px solid rgba(22, 168, 100, 0.4);
+        border: 1px solid rgba(22, 168, 100, 0.45);
         text-decoration: none;
-        transition: background 0.18s, border-color 0.18s, color 0.18s;
+        transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s;
+        cursor: pointer;
       }
       #lm402-webgpu-placeholder .pl-btn:hover,
       #lm402-webgpu-placeholder .pl-btn:focus-visible {
-        background: rgba(22, 168, 100, 0.14);
-        border-color: rgba(22, 168, 100, 0.65);
+        background: rgba(22, 168, 100, 0.18);
+        border-color: rgba(22, 168, 100, 0.75);
+        color: #25c878;
+        transform: translateY(-1px);
         outline: none;
       }
       #lm402-webgpu-placeholder .pl-btn-ghost {
         background: transparent;
         color: #8c8a88;
-        border-color: rgba(234, 230, 222, 0.14);
+        border-color: rgba(234, 230, 222, 0.16);
       }
       #lm402-webgpu-placeholder .pl-btn-ghost:hover,
       #lm402-webgpu-placeholder .pl-btn-ghost:focus-visible {
         color: #eae6de;
-        background: rgba(234, 230, 222, 0.04);
-        border-color: rgba(234, 230, 222, 0.32);
+        background: rgba(234, 230, 222, 0.05);
+        border-color: rgba(234, 230, 222, 0.36);
+        transform: translateY(-1px);
       }
       @keyframes plFadeUp {
-        from { opacity: 0; transform: translateY(8px); }
+        from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
       }
       @media (prefers-reduced-motion: reduce) {
         #lm402-webgpu-placeholder .pl-eyebrow,
+        #lm402-webgpu-placeholder .pl-en,
         #lm402-webgpu-placeholder .pl-title,
+        #lm402-webgpu-placeholder .pl-divider,
         #lm402-webgpu-placeholder .pl-sub,
         #lm402-webgpu-placeholder .pl-adapter,
         #lm402-webgpu-placeholder .pl-btn-row {
@@ -307,17 +344,29 @@ export function showWebGPUPlaceholder(adapter) {
 
   const eyebrow = document.createElement("div");
   eyebrow.className = "pl-eyebrow";
-  eyebrow.textContent = "LM402 · PARALLEL · WebGPU";
+  eyebrow.textContent = "LM402 · 平行時間線";
   overlay.appendChild(eyebrow);
+
+  const en = document.createElement("div");
+  en.className = "pl-en";
+  en.textContent = "The Parallel World";
+  overlay.appendChild(en);
 
   const title = document.createElement("h1");
   title.className = "pl-title";
-  title.textContent = "🌌 LM402 平行世界";
+  title.textContent = "平行世界";
   overlay.appendChild(title);
+
+  const divider = document.createElement("div");
+  divider.className = "pl-divider";
+  overlay.appendChild(divider);
 
   const subtitle = document.createElement("p");
   subtitle.className = "pl-sub";
-  subtitle.textContent = "建置中";
+  // 安全 DOM (避免 innerHTML XSS):textContent + <br> element 構造
+  subtitle.appendChild(document.createTextNode("用 WebGPU,重新繪製學妹學長的精緻版本。"));
+  subtitle.appendChild(document.createElement("br"));
+  subtitle.appendChild(document.createTextNode("渲染管線正在悄悄成形,先從另一條路看見那一秒。"));
   overlay.appendChild(subtitle);
 
   if (adapter) {
@@ -330,9 +379,10 @@ export function showWebGPUPlaceholder(adapter) {
   const btnRow = document.createElement("div");
   btnRow.className = "pl-btn-row";
 
+  // CTA:primary 雙時空(toni 主推副本)+ 原始時間線 + 回三線
   const links = [
-    { href: "lm402.html", text: "→ LM402 原始時間線", primary: true },
-    { href: "lm402-twin.html", text: "⏳ LM402 雙時空", primary: false },
+    { href: "lm402-twin.html", text: "→ 走進雙時空", primary: true },
+    { href: "lm402.html", text: "原始時間線", primary: false },
     { href: "lm402-time.html", text: "← 回三線選擇", primary: false },
   ];
   for (const { href, text, primary } of links) {
