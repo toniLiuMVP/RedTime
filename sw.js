@@ -7,9 +7,9 @@
 
 // — Cache version 分離 —
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
-const STATIC_VERSION = 'static-v7-20260522';  // bumped:r45 Phase 5 round 2 — color-based detection + baseline IBL for ALL standard
+const STATIC_VERSION = 'static-v8-20260522';  // bumped:r46 月台平行世界新建(demos/platform-run-parallel/)+ WebGPU bootstrap inline
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v7-20260522';  // bumped:r45 Phase 5 round 2 polling broaden
+const RUNTIME_VERSION = 'runtime-v8-20260522';  // bumped:r46 三線入口加平行世界卡 + parallel scene precache
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
@@ -41,6 +41,11 @@ const STATIC_PRECACHE_URLS = [
   // 月台奔跑雙時空(完整 offline:three vendor + 主題曲 mp3 + GLB 若有)
   '/RedTime/demos/platform-run-twin/three.module.js',
   '/RedTime/demos/platform-run-twin/把拔我會想你的.mp3',
+  // 月台奔跑平行世界(r46 新增,共享 lm402-parallel WebGPU vendor)
+  '/RedTime/demos/platform-run-parallel/three.module.js',
+  '/RedTime/demos/platform-run-parallel/把拔我會想你的.mp3',
+  '/RedTime/assets/lm402-parallel/vendor/three.webgpu.min.js',
+  '/RedTime/assets/lm402-parallel/vendor/three.tsl.min.js',
   // 共用 assets
   '/RedTime/fonts/fonts.css',
   '/RedTime/assets/og-image.jpg',
@@ -79,10 +84,11 @@ const RUNTIME_PRECACHE_URLS = [
   '/RedTime/assets/lm402-parallel/data.js',
   '/RedTime/assets/lm402-parallel/webgpu-bootstrap.js',
   '/RedTime/assets/lm402-parallel/parallel-init.js',
-  // 月台奔跑入口頁 + 雙時空 SPA
+  // 月台奔跑入口頁 + 三線 SPA(r46 加平行世界)
   '/RedTime/demos/platform-run-time.html',
   '/RedTime/demos/platform-run/index.html',
   '/RedTime/demos/platform-run-twin/index.html',
+  '/RedTime/demos/platform-run-parallel/index.html',
 ];
 
 // — 路徑分流規則 —
