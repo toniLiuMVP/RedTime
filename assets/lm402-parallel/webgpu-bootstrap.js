@@ -363,10 +363,11 @@ export function showWebGPUPlaceholder(adapter) {
 
   const subtitle = document.createElement("p");
   subtitle.className = "pl-sub";
-  // 安全 DOM (避免 innerHTML XSS):textContent + <br> element 構造
-  subtitle.appendChild(document.createTextNode("用 WebGPU,重新繪製學妹學長的精緻版本。"));
+  // r48 (toni 疑問 2 修):narrative 誠實化 — 撤掉「用 WebGPU 重新繪製精緻版本」oversold 文案
+  // 對齊 Codex r46 narrative misalignment finding,主場景目前仍 WebGL baseline
+  subtitle.appendChild(document.createTextNode("平行時間線探索中。"));
   subtitle.appendChild(document.createElement("br"));
-  subtitle.appendChild(document.createTextNode("渲染管線正在悄悄成形,先從另一條路看見那一秒。"));
+  subtitle.appendChild(document.createTextNode("主場景以 WebGL baseline 接住你,WebGPU 在另一條路上悄悄成形。"));
   overlay.appendChild(subtitle);
 
   if (adapter) {
@@ -376,42 +377,27 @@ export function showWebGPUPlaceholder(adapter) {
     overlay.appendChild(adapterInfo);
   }
 
-  const btnRow = document.createElement("div");
-  btnRow.className = "pl-btn-row";
+  document.body.appendChild(overlay);
 
-  // CTA:primary 雙時空(toni 主推副本)+ 原始時間線 + 回三線
-  // r47 (toni 紀律修):primary CTA「進入平行世界」dismiss placeholder 讓主場景 render
-  // 對齊 lm402.html / lm402-twin.html landing flow — 玩家點 button 後進場景
-  const enterBtn = document.createElement("button");
-  enterBtn.type = "button";
-  enterBtn.className = "pl-btn pl-btn-enter";
-  enterBtn.textContent = "→ 進入平行世界";
-  enterBtn.addEventListener("click", () => {
-    overlay.style.transition = "opacity 0.8s ease";
+  // r48 (toni 疑問 1 修):placeholder 改 auto fade-out splash(3 秒消失,玩家不需點)
+  // 對齊三線一致紀律 — 點進來 = 已表明意圖,不該再擋一次
+  // GPU chip 移右上角持續顯示 floating(對齊 narrative「WebGPU 在另一條路上」)
+  setTimeout(() => {
+    overlay.style.transition = "opacity 1.2s ease";
     overlay.style.opacity = "0";
     setTimeout(() => {
       overlay.remove();
-      console.info("[parallel-placeholder] dismissed — LM402 scene takes over (WebGL fallback + WebGPU smoke test still available via __WEBGPU_INIT__())");
-    }, 800);
-  });
-  btnRow.appendChild(enterBtn);
-
-  // 次要 CTA — 跳其他線 或 回三線選擇
-  const links = [
-    { href: "lm402-twin.html", text: "走進雙時空", primary: false },
-    { href: "lm402.html", text: "原始時間線", primary: false },
-    { href: "lm402-time.html", text: "← 回三線選擇", primary: false },
-  ];
-  for (const { href, text, primary } of links) {
-    const a = document.createElement("a");
-    a.href = href;
-    a.textContent = text;
-    a.className = primary ? "pl-btn" : "pl-btn pl-btn-ghost";
-    btnRow.appendChild(a);
-  }
-  overlay.appendChild(btnRow);
-
-  document.body.appendChild(overlay);
+      // 移除後加角落 floating GPU chip(persistent 不擋場景)
+      if (adapter && !document.getElementById("lm402-parallel-gpu-chip")) {
+        const chip = document.createElement("div");
+        chip.id = "lm402-parallel-gpu-chip";
+        chip.style.cssText = "position:fixed;top:14px;right:14px;z-index:9000;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.35em;text-transform:uppercase;color:rgba(22,168,100,.65);padding:5px 12px;border:1px solid rgba(22,168,100,.25);border-radius:2px;background:rgba(5,5,8,.5);backdrop-filter:blur(8px);pointer-events:none;";
+        chip.textContent = "GPU · " + (adapter.name || "ready") + " · WebGPU 探索";
+        document.body.appendChild(chip);
+      }
+      console.info("[parallel-placeholder] auto fade-out done — LM402 scene takes over (WebGL baseline + console __WEBGPU_INIT__() smoke test)");
+    }, 1200);
+  }, 3000);
 }
 
 /**

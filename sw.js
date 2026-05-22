@@ -7,9 +7,9 @@
 
 // — Cache version 分離 —
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
-const STATIC_VERSION = 'static-v9-20260523';  // bumped:r46 月台平行世界新建(demos/platform-run-parallel/)+ WebGPU bootstrap inline
+const STATIC_VERSION = 'static-v10-20260523';  // bumped:r46 月台平行世界新建(demos/platform-run-parallel/)+ WebGPU bootstrap inline
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v9-20260523';  // bumped:r46 三線入口加平行世界卡 + parallel scene precache
+const RUNTIME_VERSION = 'runtime-v10-20260523';  // bumped:r46 三線入口加平行世界卡 + parallel scene precache
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
