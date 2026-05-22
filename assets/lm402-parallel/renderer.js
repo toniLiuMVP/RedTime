@@ -4115,17 +4115,32 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     window.__WEBGPU_SPRINT_H__ = () => {
       const summary = {
         'Sprint H': '4-6 wk WebGPU+TSL dedicated sprint',
-        'Step 1 (本 round ship)': '✅ WebGPURenderer + smoke test scene overlay',
-        'Step 2 (下 round)': '⏸ 主場景 WebGLRenderer → WebGPURenderer 切換(需視覺驗收每材質)',
-        'Step 3-4 (下 2-3 round)': '⏸ scene materials + postfx WebGPU 兼容(MeshPhysical / EffectComposer Node)',
+        'Step 1': '✅ WebGPURenderer + smoke test scene overlay (r41)',
+        'Step 2 starter (r46)': '✅ __USE_LM402_WEBGPU_SCENE__() stub — abort to maintain WebGL baseline',
+        'Step 2 full (下 round)': '⏸ 主場景 WebGLRenderer → WebGPURenderer 真切(weeks-scope ShaderMaterial 全改 TSL)',
+        'Step 3-4 (下 2-3 round)': '⏸ scene materials + postfx WebGPU 兼容(MeshPhysical → MeshStandardNodeMaterial / PostProcessing TSL)',
         'Step 5-6 (下 round)': '⏸ light + GLB DRACOLoader WebGPU mode',
-        'Step 7 (下 round)': '⏸ perf comparison 真實(F2 真切 vs WebGL)',
+        'Step 7 (下 round)': '⏸ perf comparison 真實(WebGL vs WebGPU FPS)',
         'Step 8 (下 round)': '⏸ fallback handler(WebGPU detect fail 自動 WebGL)',
         '解鎖效應': 'Step 8 完整 done 後 → Sprint J 月台借 + C8 WebGPU cloth + C9 strand hair 全 unblock',
-        'console 試': 'await __WEBGPU_INIT__() / __WEBGPU_FPS__() / __WEBGPU_DISPOSE__()',
+        'console 試': 'await __WEBGPU_INIT__() / __WEBGPU_FPS__() / __WEBGPU_DISPOSE__() / __USE_LM402_WEBGPU_SCENE__()',
       };
       console.table(summary);
       return summary;
+    };
+    // H Step 2 starter (r46):嘗試主場景 WebGPU 切換 — Gemini insight 提醒 ShaderMaterial 全 break,
+    // weeks-scope 重寫,本 round 純 stub print roadmap + abort safety 保 WebGL baseline
+    window.__USE_LM402_WEBGPU_SCENE__ = async () => {
+      console.warn('[__USE_LM402_WEBGPU_SCENE__] Sprint H Step 2 starter — toni 點即試嘗試');
+      console.warn('[__USE_LM402_WEBGPU_SCENE__] safety:預設 abort,保 WebGL baseline 不破壞 lm402-parallel scene');
+      console.info('[__USE_LM402_WEBGPU_SCENE__] Gemini r179 best practice insight:');
+      console.info('  1. ShaderMaterial 在 WebGPU 下 break — lm402-parallel envmap-sunset shader 需 TSL 重寫(weeks-scope)');
+      console.info('  2. EffectComposer 不支援 WebGPU — postfx.js Bloom/DOF 需 three/webgpu PostProcessing TSL 重寫(weeks-scope)');
+      console.info('  3. scene.environment 自動 PMREMNode — 既有 PMREMGenerator 仍 graceful(可用)');
+      console.info('  4. MeshPhysical → MeshStandardNodeMaterial(TSL 擴展性更好,weeks-scope 替換)');
+      console.info('  5. renderAsync() r179 可用,r181 deprecate(過渡 render() + setAnimationLoop)');
+      console.info('[__USE_LM402_WEBGPU_SCENE__] aborted — 維持 WebGL baseline,試 __WEBGPU_INIT__() 看 smoke test overlay');
+      return { aborted: true, step: 'H Step 2 starter', reason: 'Gemini insight:shader stack 全改 TSL 為 weeks-scope,本 round abort 保 baseline' };
     };
   }
   // === /Tier 1 ===
