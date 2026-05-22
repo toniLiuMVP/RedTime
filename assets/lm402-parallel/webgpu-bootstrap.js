@@ -380,8 +380,25 @@ export function showWebGPUPlaceholder(adapter) {
   btnRow.className = "pl-btn-row";
 
   // CTA:primary 雙時空(toni 主推副本)+ 原始時間線 + 回三線
+  // r47 (toni 紀律修):primary CTA「進入平行世界」dismiss placeholder 讓主場景 render
+  // 對齊 lm402.html / lm402-twin.html landing flow — 玩家點 button 後進場景
+  const enterBtn = document.createElement("button");
+  enterBtn.type = "button";
+  enterBtn.className = "pl-btn pl-btn-enter";
+  enterBtn.textContent = "→ 進入平行世界";
+  enterBtn.addEventListener("click", () => {
+    overlay.style.transition = "opacity 0.8s ease";
+    overlay.style.opacity = "0";
+    setTimeout(() => {
+      overlay.remove();
+      console.info("[parallel-placeholder] dismissed — LM402 scene takes over (WebGL fallback + WebGPU smoke test still available via __WEBGPU_INIT__())");
+    }, 800);
+  });
+  btnRow.appendChild(enterBtn);
+
+  // 次要 CTA — 跳其他線 或 回三線選擇
   const links = [
-    { href: "lm402-twin.html", text: "→ 走進雙時空", primary: true },
+    { href: "lm402-twin.html", text: "走進雙時空", primary: false },
     { href: "lm402.html", text: "原始時間線", primary: false },
     { href: "lm402-time.html", text: "← 回三線選擇", primary: false },
   ];
