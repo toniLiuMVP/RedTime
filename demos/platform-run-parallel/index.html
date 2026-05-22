@@ -757,9 +757,12 @@ window.__STEAM__ = function(count, intensity) {
     sizeAttenuation: true, depthWrite: false, blending: THREE.AdditiveBlending
   });
   _steam = new THREE.Points(geo, mat);
+  _steam.userData._gen = (_steam.userData._gen || 0) + 1;  /* Codex r46 #1 fix:generation guard 防舊 tick 殘留 */
+  var _steamGen = _steam.userData._gen;
   scene.add(_steam);
   var tick = function() {
-    if (!_steam) return;
+    /* 舊 tick(不同 _gen)直接 abort,新 tick 才繼續 */
+    if (!_steam || _steam.userData._gen !== _steamGen) return;
     var p = _steam.geometry.attributes.position.array, v = _steam.geometry.userData.velocities;
     for (var i = 0; i < count; i++) {
       p[i*3] += v[i*3]; p[i*3+1] += v[i*3+1]; p[i*3+2] += v[i*3+2];
@@ -1540,14 +1543,30 @@ scene.add(platformFill);
     document.body.appendChild(wrap);
     var svgT = "<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='SEED'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.15 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>";
     var seed = 0, last = 0;
-    (function grainTick(now) {
+    /* Codex r46 #1 fix:grain RAF 加 cancelable reference + visibility pause 節能 */
+    var _grainRAF = null;
+    var _grainPaused = false;
+    function grainTick(now) {
+      if (_grainPaused) { _grainRAF = null; return; }
       if (now - last > 42) {
         seed = (seed + 1) % 100;
         grain.style.backgroundImage = 'url("data:image/svg+xml;utf8,' + svgT.replace('SEED', seed) + '")';
         last = now;
       }
-      requestAnimationFrame(grainTick);
-    })(0);
+      _grainRAF = requestAnimationFrame(grainTick);
+    }
+    _grainRAF = requestAnimationFrame(grainTick);
+    /* visibility hide → pause RAF / show → resume(節能 + 對齊 Codex finding)*/
+    document.addEventListener('visibilitychange', function() {
+      _grainPaused = document.hidden;
+      if (!_grainPaused && !_grainRAF) _grainRAF = requestAnimationFrame(grainTick);
+    });
+    /* expose cancel API */
+    window.__GRAIN_CANCEL__ = function() {
+      _grainPaused = true;
+      if (_grainRAF) { cancelAnimationFrame(_grainRAF); _grainRAF = null; }
+      console.info('[__GRAIN_CANCEL__] off');
+    };
     console.info('[art-upgrade r45] DOM postfx ready (parallel)');
   }
 })();
