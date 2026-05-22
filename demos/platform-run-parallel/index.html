@@ -261,8 +261,19 @@ canvas{display:block;width:100%;height:100%}
       try { window.__AUDIO_CONTEXT__.suspend(); } catch (e) {}
     }
   }
+  /* Codex r46 🔴 fix:回前景需 resume audio + BGM(原邏輯只 pause 不 resume → 切分頁永久停)*/
+  function resumeAudio() {
+    if (window.__AUDIO_CONTEXT__ && typeof window.__AUDIO_CONTEXT__.resume === "function") {
+      try { window.__AUDIO_CONTEXT__.resume(); } catch (e) {}
+    }
+    // BGM:若已 started 過,resume play(瀏覽器 autoplay policy:有 user gesture 後 resume OK)
+    if (window.bgmStarted && window.bgm && window.bgm.paused) {
+      try { window.bgm.play().catch(function() {}); } catch (e) {}
+    }
+  }
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) stopAllAudio();
+    else resumeAudio();
   });
   window.addEventListener("pagehide", stopAllAudio);
   window.addEventListener("beforeunload", stopAllAudio);
@@ -606,6 +617,14 @@ bgm.loop = true;
 bgm.volume = 0.3;
 let bgmMuted = false;
 let bgmStarted = false;
+/* Codex r46 \uD83D\uDD34 fix:expose to window so visibility resume handler can access(see <script> stopAllAudio/resumeAudio at line ~270)*/
+if (typeof window !== "undefined") {
+  Object.defineProperty(window, "bgm", { get: function() { return bgm; } });
+  Object.defineProperty(window, "bgmStarted", {
+    get: function() { return bgmStarted; },
+    set: function(v) { bgmStarted = v; }
+  });
+}
 
 dom.muteBtn.textContent = "\uD83D\uDD0A";
 dom.muteBtn.addEventListener("click", function() {
@@ -6133,12 +6152,16 @@ function resetGame(keepCarryState) {
   /* Rebuild guards for current level */
   createGuards();
 
-  /* Leaderboard DOM reset */
+  /* Leaderboard DOM reset (Codex r46 🔴 fix:disabled 沒還原 → 第二局無法記錄)*/
   dom.nameInputWrap.classList.remove("show");
   dom.nameInputWrap.style.opacity = "";
   dom.nameInput.value = "";
   dom.nameInput.readOnly = false;
   dom.leaderboardPanel.classList.remove("show");
+  if (dom.saveScoreBtn) {
+    dom.saveScoreBtn.disabled = false;
+    dom.saveScoreBtn.textContent = "記錄成績";
+  }
 
   /* Mobile UI fix: re-show mobile controls */
   if (isMobile) {
