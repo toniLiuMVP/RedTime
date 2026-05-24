@@ -6684,21 +6684,25 @@
         cont.appendChild(sec);
       });
 
-      // ── r50 (toni Task 2 fix): EP sections 是 JS dynamically created,browser hash scroll 在 build 前 fail。
-      //    build 完之後手動 trigger scroll for current hash (#ep-41 等)──
+      // ── r50 (toni Task 2 fix v2): EP sections 是 JS dynamically created,browser hash scroll fail。
+      //    用 goToEp(N) 而非 scrollIntoView — goToEp 會 dismiss hero + 計算 topOffset + smooth scroll
+      //    對齊「翻開第一頁」既有 reader entry flow ──
       if (typeof window !== 'undefined' && window.location.hash) {
         const hashMatch = window.location.hash.match(/^#ep-(\d+)$/);
         if (hashMatch) {
           const targetN = parseInt(hashMatch[1], 10);
+          // Defer 300ms 讓 sections fully painted + goToEp 可 find element
           setTimeout(() => {
-            const target = document.getElementById('ep-' + targetN);
-            if (target) {
-              target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              console.info('[reader hash jump] scrolled to ep-' + targetN);
+            if (typeof goToEp === 'function') {
+              goToEp(targetN);
+              console.info('[reader hash jump] goToEp(' + targetN + ') triggered for hash ' + window.location.hash);
             } else {
-              console.warn('[reader hash jump] target ep-' + targetN + ' not found in DOM');
+              // Fallback to scrollIntoView if goToEp not yet defined
+              const target = document.getElementById('ep-' + targetN);
+              if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              console.warn('[reader hash jump] goToEp not defined, fallback scrollIntoView');
             }
-          }, 250);
+          }, 300);
         }
       }
 
