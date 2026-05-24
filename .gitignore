@@ -73,3 +73,6 @@ docs/session-logs/
 
 # Local memory store (Claude session continuity)
 .remember/
+
+# Visual mockup previews (toni 決策用,不上 GitHub Pages)
+mockup/

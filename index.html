@@ -1474,6 +1474,107 @@
         max-width: 600px;
         margin: 0 auto;
       }
+      /* r54 D1:三集試讀路徑 */
+      .sample-path {
+        max-width: 920px;
+        margin: 0 auto;
+        text-align: center;
+      }
+      .sample-label {
+        font-family: "Noto Sans TC", sans-serif;
+        font-size: 12px;
+        letter-spacing: 0.32em;
+        color: var(--amber);
+        margin-bottom: 14px;
+        text-indent: 0.32em;
+      }
+      .sample-intro {
+        font-family: "Noto Sans TC", sans-serif;
+        font-size: 14px;
+        font-weight: 300;
+        line-height: 1.85;
+        color: rgba(234, 230, 222, 0.74);
+        max-width: 36em;
+        margin: 0 auto 32px;
+        text-wrap: pretty;
+      }
+      .sample-cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+        text-align: left;
+      }
+      .sample-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 22px 22px 18px;
+        background: rgba(255, 255, 255, 0.025);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 10px;
+        text-decoration: none;
+        color: var(--parchment);
+        transition: border-color 0.2s, background 0.2s;
+      }
+      .sample-card:hover {
+        border-color: rgba(255, 96, 80, 0.4);
+        background: rgba(255, 255, 255, 0.045);
+      }
+      .sample-card-num {
+        font-family: "DM Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 0.15em;
+        color: rgba(234, 230, 222, 0.5);
+        text-transform: uppercase;
+      }
+      .sample-card-ep {
+        font-family: "Cormorant Garamond", serif;
+        font-size: 22px;
+        font-weight: 400;
+        line-height: 1.25;
+        color: var(--parchment);
+      }
+      .sample-card-sub {
+        font-family: "Noto Sans TC", sans-serif;
+        font-size: 11.5px;
+        color: rgba(234, 230, 222, 0.6);
+        letter-spacing: 0.04em;
+      }
+      .sample-card-desc {
+        font-family: "Noto Sans TC", sans-serif;
+        font-size: 13.5px;
+        line-height: 1.75;
+        font-weight: 300;
+        color: rgba(234, 230, 222, 0.85);
+        margin-top: 8px;
+      }
+      .sample-card-arrow {
+        font-family: "Noto Sans TC", sans-serif;
+        font-size: 12px;
+        color: var(--amber);
+        margin-top: 12px;
+        letter-spacing: 0.06em;
+      }
+      .sample-card-keystone {
+        border-color: rgba(232, 90, 58, 0.35);
+        background: linear-gradient(180deg, rgba(232, 90, 58, 0.05), rgba(255, 255, 255, 0.025));
+      }
+      .sample-card-keystone .sample-card-num {
+        color: #e85a3a;
+      }
+      .sample-card-keystone:hover {
+        border-color: rgba(232, 90, 58, 0.6);
+      }
+      @media (max-width: 767px) {
+        .sample-cards {
+          grid-template-columns: 1fr;
+          gap: 14px;
+        }
+        .sample-card {
+          padding: 18px 18px 16px;
+        }
+      }
       .read-body {
         font-size: 15.6px;
         font-weight: 300;
@@ -2722,6 +2823,35 @@
             <a class="btn-primary" href="reader.html"
               style="font-size: 12px; padding: 18px 44px; display: inline-flex">
               ↓ &nbsp; 翻開故事的第一頁
+            </a>
+          </div>
+        </div>
+
+        <!-- r54 D1:三集試讀路徑(出版總編 + 網站專家共建)— 給 42 集太重的新讀者 -->
+        <div class="reveal sample-path" style="margin-top: 64px">
+          <div class="sample-label">第一次來?三集試讀</div>
+          <p class="sample-intro">如果 42 集太重,先讀這三集。它們是這座橋的三塊承重結構,讀完你就會知道要不要回頭從 EP0 開始。</p>
+          <div class="sample-cards">
+            <a class="sample-card" href="reader.html#ep-3">
+              <div class="sample-card-num">試讀 1</div>
+              <div class="sample-card-ep">EP3 · 一眼瞬間</div>
+              <div class="sample-card-sub">男主視角 · 2005 年</div>
+              <div class="sample-card-desc">大學走廊盡頭,一秒鐘的起點。整本書,就從這一眼開始算。</div>
+              <div class="sample-card-arrow">→ 讀這集</div>
+            </a>
+            <a class="sample-card" href="reader.html#ep-38">
+              <div class="sample-card-num">試讀 2</div>
+              <div class="sample-card-ep">EP38 · 意識菜市場</div>
+              <div class="sample-card-sub">女主視角 · 形式高點</div>
+              <div class="sample-card-desc">五個年紀的學妹在意識裡七嘴八舌。全系列最大膽的一集。</div>
+              <div class="sample-card-arrow">→ 讀這集</div>
+            </a>
+            <a class="sample-card sample-card-keystone" href="reader.html#ep-41">
+              <div class="sample-card-num">試讀 3 · 拱心石</div>
+              <div class="sample-card-ep">EP41 · 這不是童話故事</div>
+              <div class="sample-card-sub">夢境視角 · 2026 年</div>
+              <div class="sample-card-desc">三個人都在痛,而且痛的語言不通。「知道」救不了人。</div>
+              <div class="sample-card-arrow">→ 讀這集</div>
             </a>
           </div>
         </div>
