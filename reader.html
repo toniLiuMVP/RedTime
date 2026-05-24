@@ -2544,6 +2544,15 @@
         --fs: 21px;
         --lh: 2.14;
       }
+      /* r52:長輩友善 — 加超大 + 超特大兩階 */
+      body[data-fs="xxl"] {
+        --fs: 23.5px;
+        --lh: 2.18;
+      }
+      body[data-fs="xxxl"] {
+        --fs: 26.5px;
+        --lh: 2.22;
+      }
       body[data-width="narrow"] {
         --measure: 30em;
       }
@@ -4786,8 +4795,11 @@
             <span class="ui-glyph btn-icon" data-ui-icon="play"></span
             ><span>自動模式</span>
           </button>
-          <button class="dsk-btn" onclick="cycleFont()" id="btn-font">
+          <button class="dsk-btn" onclick="cycleFont()" id="btn-font" aria-label="切換字體大小">
             字 A
+          </button>
+          <button class="dsk-btn" onclick="magnifyFont()" id="btn-magnify" aria-label="放大鏡 — 一鍵切換到最大字體（長輩友善）" title="放大鏡 — 一鍵超特大">
+            🔍
           </button>
           <button class="dsk-btn" onclick="toggleDay()">
             <span class="ui-glyph btn-icon" data-ui-icon="sun"></span
@@ -5049,6 +5061,10 @@
         <div class="fab-item" onclick="cycleFont()">
           <span class="fab-icon" id="fab-font-icon">A</span
           ><span class="fab-label">字體</span>
+        </div>
+        <div class="fab-item" onclick="magnifyFont()" role="button" aria-label="放大鏡 — 一鍵切換到最大字體">
+          <span class="fab-icon">🔍</span
+          ><span class="fab-label">放大鏡</span>
         </div>
         <div class="fab-item" onclick="toggleDay()">
           <span class="fab-icon" data-ui-icon="sun"></span
@@ -6411,13 +6427,32 @@
       }
 
       // ── Font size cycle ──
-      const FS_LEVELS = ["sm", "md", "lg", "xl"];
-      const FS_LABELS = { sm: "小", md: "中", lg: "大", xl: "特大" };
+      // r52:6 階字體 — 加 xxl 超大 + xxxl 超特大(長輩友善)
+      const FS_LEVELS = ["sm", "md", "lg", "xl", "xxl", "xxxl"];
+      const FS_LABELS = { sm: "小", md: "中", lg: "大", xl: "特大", xxl: "超大", xxxl: "超特大" };
+      // r52:共用 site-wide font key,跨頁面同步(index + reader)
+      const SITE_FONT_KEY = "redtime_site_font_v2";
+      // Index 命名與 Reader 命名的橋接
+      const FS_BRIDGE_IDX_TO_RDR = { small: "sm", medium: "md", large: "lg", xlarge: "xl", xxlarge: "xxl", xxxlarge: "xxxl" };
+      const FS_BRIDGE_RDR_TO_IDX = { sm: "small", md: "medium", lg: "large", xl: "xlarge", xxl: "xxlarge", xxxl: "xxxlarge" };
       let fsIdx = 1;
+      function applyFontSize(level) {
+        if (!FS_LEVELS.includes(level)) return;
+        fsIdx = FS_LEVELS.indexOf(level);
+        document.body.setAttribute("data-fs", level);
+        savePref(PREF_KEYS.font, level);
+        try { localStorage.setItem(SITE_FONT_KEY, FS_BRIDGE_RDR_TO_IDX[level] || "medium"); } catch (_) {}
+        const lbl = "字 " + FS_LABELS[level];
+        const f1 = document.getElementById("btn-font");
+        if (f1) f1.textContent = "A" + FS_LABELS[level];
+        const f3 = document.getElementById("mob-font-btn");
+        if (f3) f3.textContent = "A" + FS_LABELS[level];
+      }
       function cycleFont() {
         fsIdx = (fsIdx + 1) % FS_LEVELS.length;
         document.body.setAttribute("data-fs", FS_LEVELS[fsIdx]);
         savePref(PREF_KEYS.font, FS_LEVELS[fsIdx]);
+        try { localStorage.setItem(SITE_FONT_KEY, FS_BRIDGE_RDR_TO_IDX[FS_LEVELS[fsIdx]] || "medium"); } catch (_) {}
         const lbl = "字 " + FS_LABELS[FS_LEVELS[fsIdx]];
         const f1 = document.getElementById("fab-font-icon");
         if (f1) f1.textContent = "A" + FS_LABELS[FS_LEVELS[fsIdx]];
@@ -6426,8 +6461,30 @@
         const f3 = document.getElementById("mob-font-btn");
         if (f3) f3.textContent = "A" + FS_LABELS[FS_LEVELS[fsIdx]];
       }
+      // r52:放大鏡 — 一鍵跳到最大字級「超特大」(長輩友善 elderly mode)
+      function magnifyFont() {
+        const targetLevel = "xxxl";
+        fsIdx = FS_LEVELS.indexOf(targetLevel);
+        document.body.setAttribute("data-fs", targetLevel);
+        savePref(PREF_KEYS.font, targetLevel);
+        try { localStorage.setItem(SITE_FONT_KEY, FS_BRIDGE_RDR_TO_IDX[targetLevel]); } catch (_) {}
+        const lbl = "字 " + FS_LABELS[targetLevel];
+        const f1 = document.getElementById("fab-font-icon");
+        if (f1) f1.textContent = "A" + FS_LABELS[targetLevel];
+        const f2 = document.getElementById("btn-font");
+        if (f2) f2.textContent = lbl;
+        const f3 = document.getElementById("mob-font-btn");
+        if (f3) f3.textContent = "A" + FS_LABELS[targetLevel];
+      }
       function applyStoredPrefs() {
-        const savedFont = loadPref(PREF_KEYS.font);
+        // r52:優先讀 site-wide font key(跨頁面同步),fallback 到 reader local key
+        let savedFont = loadPref(PREF_KEYS.font);
+        try {
+          const siteFont = localStorage.getItem(SITE_FONT_KEY);
+          if (siteFont && FS_BRIDGE_IDX_TO_RDR[siteFont]) {
+            savedFont = FS_BRIDGE_IDX_TO_RDR[siteFont];
+          }
+        } catch (_) {}
         const savedTheme = loadPref(PREF_KEYS.theme);
         const savedProgress = Number(loadPref(PREF_KEYS.progress));
         if (savedFont && FS_LEVELS.includes(savedFont)) {
@@ -7088,9 +7145,10 @@
         );
         document.getElementById("toast").classList.add("show");
         clearTimeout(toastTimer);
+        // r52: toni 要求 — 彩蛋跳窗只顯示 1 秒(原 7500ms 太久)
         toastTimer = setTimeout(
           () => document.getElementById("toast").classList.remove("show"),
-          7500,
+          1000,
         );
       }
       function openFromToast() {

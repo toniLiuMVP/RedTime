@@ -1804,6 +1804,18 @@
         background: rgba(22, 168, 100, 0.12);
         color: #9af0c5;
       }
+      /* r52:放大鏡按鈕 — 跟字體選項區別色(amber 系)讓長輩注意 */
+      .site-font-magnify {
+        margin-left: 4px;
+        font-size: 14px !important;
+        border-color: rgba(200, 144, 16, 0.42) !important;
+        background: rgba(200, 144, 16, 0.10) !important;
+        color: #f0d090 !important;
+      }
+      .site-font-magnify:hover {
+        background: rgba(200, 144, 16, 0.22) !important;
+        border-color: rgba(200, 144, 16, 0.70) !important;
+      }
       @media (max-width: 520px) {
         #hero {
           padding: 92px var(--gutter) 86px;
@@ -2270,6 +2282,12 @@
         </button>
         <button class="site-font-btn" type="button" data-font-scale="xxlarge">
           超大
+        </button>
+        <button class="site-font-btn" type="button" data-font-scale="xxxlarge">
+          超特大
+        </button>
+        <button class="site-font-btn site-font-magnify" type="button" id="site-font-magnify" aria-label="放大鏡 — 一鍵切換到最大字體（長輩友善）" title="放大鏡 — 一鍵超特大">
+          🔍
         </button>
       </div>
     </div>
@@ -2881,15 +2899,17 @@
       );
       document.querySelectorAll(".reveal").forEach((el) => ro.observe(el));
 
-      // Homepage font scale
+      // Homepage font scale — r52:6 階(加超特大)+ site-wide localStorage 同步 + 放大鏡 elderly mode
       (() => {
-        const KEY = "redtime_home_font_scale_v1";
+        const LEGACY_KEY = "redtime_home_font_scale_v1";  // 舊鍵 fallback
+        const SITE_KEY = "redtime_site_font_v2";          // 新鍵:跨頁面同步(reader 也讀此鍵)
         const LEVELS = {
           small: 0.92,
           medium: 1,
           large: 1.08,
           xlarge: 1.16,
           xxlarge: 1.24,
+          xxxlarge: 1.34,   // r52:新增超特大階(長輩友善)
         };
         const buttons = Array.from(
           document.querySelectorAll("[data-font-scale]"),
@@ -2909,20 +2929,35 @@
             );
           });
         };
+        // r52:優先讀新 site key,fallback 到舊 home key
         let saved = "medium";
         try {
-          saved = localStorage.getItem(KEY) || "medium";
+          saved = localStorage.getItem(SITE_KEY) || localStorage.getItem(LEGACY_KEY) || "medium";
+          if (!LEVELS[saved]) saved = "medium";
         } catch {}
         applyScale(saved);
         buttons.forEach((button) => {
           button.addEventListener("click", () => {
             const level = button.dataset.fontScale || "medium";
             try {
-              localStorage.setItem(KEY, level);
+              localStorage.setItem(SITE_KEY, level);    // 寫 site 共享鍵
+              localStorage.setItem(LEGACY_KEY, level);  // 寫舊鍵保 backward compat
             } catch {}
             applyScale(level);
           });
         });
+        // r52:放大鏡按鈕 — 一鍵跳到最大階「超特大」(長輩友善 elderly mode)
+        const magnifyBtn = document.getElementById("site-font-magnify");
+        if (magnifyBtn) {
+          magnifyBtn.addEventListener("click", () => {
+            const level = "xxxlarge";
+            try {
+              localStorage.setItem(SITE_KEY, level);
+              localStorage.setItem(LEGACY_KEY, level);
+            } catch {}
+            applyScale(level);
+          });
+        }
       })();
 
       // Hero particle canvas — with red thread of fate
