@@ -245,10 +245,10 @@
       }
       .hero-title {
         font-family: "Cormorant Garamond", serif;
-        font-weight: 300;
+        font-weight: 400;          /* r55:C3 中文 300→400 補回字重 */
         font-size: clamp(54px, 13vw, 88px);
         line-height: 1.04;
-        letter-spacing: 0.08em;
+        letter-spacing: -0.01em;   /* r55:C3 中文書法字緊紀律 0.08em→-0.01em */
         color: var(--t1);
         margin-bottom: 26px;
         text-shadow:
