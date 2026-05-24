@@ -17,13 +17,13 @@
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <meta
       name="description"
-      content="一眼只有一秒，卻用了二十年才讀懂。三條時間線、五種視角、EP0–EP41——從一場一眼瞬間，走到一句「我也相信」。toni 連載長篇《時間裡的兩個妳》。"
+      content="一眼只有一秒，卻用了二十年才讀懂。三條時間線、五種視角、EP0–EP41，從一場一眼瞬間，走到一句「我也相信」。toni 連載長篇《時間裡的兩個妳》。"
     />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="時間裡的兩個妳 · toni" />
     <meta
       property="og:description"
-      content="一眼只有一秒，卻用了二十年才讀懂。三條時間線、五種視角、EP0–EP41——從一場一眼瞬間，走到一句「我也相信」。toni 連載長篇《時間裡的兩個妳》。"
+      content="一眼只有一秒，卻用了二十年才讀懂。三條時間線、五種視角、EP0–EP41，從一場一眼瞬間，走到一句「我也相信」。toni 連載長篇《時間裡的兩個妳》。"
     />
     <!-- og-image: 自託管版本；備用來源：https://img.youtube.com/vi/eACPFC4K89o/maxresdefault.jpg -->
     <meta
@@ -34,7 +34,7 @@
     <meta name="twitter:title" content="時間裡的兩個妳 · toni" />
     <meta
       name="twitter:description"
-      content="一眼只有一秒，卻用了二十年才讀懂。三條時間線、五種視角、EP0–EP41——從一場一眼瞬間，走到一句「我也相信」。toni 連載長篇《時間裡的兩個妳》。"
+      content="一眼只有一秒，卻用了二十年才讀懂。三條時間線、五種視角、EP0–EP41，從一場一眼瞬間，走到一句「我也相信」。toni 連載長篇《時間裡的兩個妳》。"
     />
     <meta
       name="twitter:image"
@@ -48,7 +48,7 @@
       "name": "時間裡的兩個妳",
       "alternateName": "The Two Yous in Time",
       "url": "https://toniliumvp.github.io/RedTime/",
-      "description": "一眼只有一秒，卻用了二十年才讀懂。三條時間線、五種視角、EP0–EP41——從一場一眼瞬間，走到一句「我也相信」。toni 連載長篇《時間裡的兩個妳》。",
+      "description": "一眼只有一秒，卻用了二十年才讀懂。三條時間線、五種視角、EP0–EP41，從一場一眼瞬間，走到一句「我也相信」。toni 連載長篇《時間裡的兩個妳》。",
       "inLanguage": "zh-TW",
       "author": {
         "@type": "Person",
@@ -1337,6 +1337,28 @@
         padding-top: 14px;
         letter-spacing: 0.12em;
       }
+      /* r56 B6:女兒 arc-card 內秘密手勢文字版(EP37) */
+      .arc-card-secret {
+        margin-top: 10px;
+        padding: 10px 12px;
+        background: rgba(200, 144, 16, 0.04);
+        border-left: 2px solid rgba(200, 144, 16, 0.42);
+        border-radius: 3px;
+      }
+      .secret-label {
+        font-family: "DM Mono", monospace;
+        font-size: 9px;
+        letter-spacing: 0.18em;
+        color: var(--amber);
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+      .secret-desc {
+        font-family: "Noto Sans TC", sans-serif;
+        font-size: 11.5px;
+        line-height: 1.7;
+        color: rgba(234, 230, 222, 0.78);
+      }
 
       /* ─── TIMELINE TEASER ─── */
       #timeline-sec {
@@ -1565,6 +1587,30 @@
       }
       .sample-card-keystone:hover {
         border-color: rgba(232, 90, 58, 0.6);
+      }
+      /* r56 B9:相信 echo end card(對位 about-quote 形成 EP39/40 → EP41 母題 echo) */
+      .end-echo {
+        text-align: center;
+        max-width: 38em;
+        margin: 0 auto;
+        padding-top: 36px;
+        border-top: 1px solid rgba(232, 90, 58, 0.18);
+      }
+      .end-echo-quote {
+        font-family: "Noto Serif TC", "Cormorant Garamond", serif;
+        font-size: clamp(18px, 2.4vw, 24px);
+        font-weight: 400;
+        line-height: 1.85;
+        color: var(--parchment);
+        letter-spacing: 0.018em;
+        font-style: italic;
+      }
+      .end-echo-src {
+        margin-top: 14px;
+        font-family: "DM Mono", monospace;
+        font-size: 11.5px;
+        letter-spacing: 0.2em;
+        color: var(--amber);
       }
       @media (max-width: 767px) {
         .sample-cards {
@@ -2459,7 +2505,7 @@
               2005 年，大學走廊盡頭，一個男生看了一個女生一眼。那一眼只有一秒，卻用了二十年才讀懂它為什麼亮著。
             </p>
             <p>
-              五種視角、三條時間線，每一集只允許你站在一個人的位置。把拔藏在幽默底下的傷口、學長相信「相信的力量」、學妹用「離開」去愛、女兒飛遍所有時間線卻被禁止干預——你只管往前讀，拼圖會自己亮起來。
+              五種視角、三條時間線，每一集只允許你站在一個人的位置。把拔藏在幽默底下的傷口、學長相信「相信的力量」、學妹用「離開」去愛、女兒飛遍所有時間線卻被禁止干預。你只管往前讀，拼圖會自己亮起來。
             </p>
           </div>
           <div class="about-stats reveal">
@@ -2625,7 +2671,7 @@
           <h2 class="section-title">同一秒鐘,<br />五個位置,看見不同的光</h2>
         </div>
         <div class="arcs-intro reveal">
-          每一集只允許你站在一個人的身後。你看見的光，取決於你跟著誰走——前後讀完，所有視角會在同一秒鐘重逢。
+          每一集只允許你站在一個人的身後。你看見的光，取決於你跟著誰走；前後讀完，所有視角會在同一秒鐘重逢。
         </div>
       </div>
       <div class="arc-cards">
@@ -2640,7 +2686,7 @@
           <div class="arc-card-desc">
             他不能穿越時間。所以他用了二十年，把「相信」活成一個動詞。
           </div>
-          <div class="arc-card-quote">「謝謝妳從來都沒有放棄過我。」</div>
+          <div class="arc-card-quote">「ＸＤ」</div>
           <div class="arc-eps">EP0 · 1 · 4 · 15 · 30 · 33 · 39 · 40 · 41</div>
         </div>
         <div class="arc-card arc-male reveal">
@@ -2679,9 +2725,14 @@
           <div class="arc-card-name">女兒</div>
           <div class="arc-card-sub">夢境視角</div>
           <div class="arc-card-desc">
-            她飛遍所有時間線，卻被禁止干預。她什麼都知道——直到她發現，「知道」救不了人。
+            她飛遍所有時間線，卻被禁止干預。她什麼都知道，直到她發現，「知道」救不了現在的他。
           </div>
-          <div class="arc-card-quote">「我不是因為『我看過了』才相信。我是因為『我願意相信』，所以相信。」</div>
+          <div class="arc-card-quote">「我不是因為『我看過了』才相信。我是因為『我願意相信』，所以相信。就跟把拔一樣。」</div>
+          <!-- r56 B6:EP37 秘密手勢文字版(toni 親寫描述) -->
+          <div class="arc-card-secret">
+            <div class="secret-label">秘密手勢 · EP37</div>
+            <div class="secret-desc">先敲胸口兩下，用食指指著對方，用手比數字 7 放在下巴下面，最後跟對方比讚，代表你很棒！</div>
+          </div>
           <!-- ✅ 已校對：EP36、EP37 故事原文標記為 |女兒視角|，從複合視角移回此處；EP41 拱心石 -->
           <div class="arc-eps">EP16 · 21–23 · 26 · 30 · 32–37 · 41</div>
         </div>
@@ -2694,7 +2745,7 @@
           <div class="arc-card-name">複合視角</div>
           <div class="arc-card-sub">多線交織</div>
           <div class="arc-card-desc">
-            兩條、三條時間線在同一集裡交會——不同的人在不同的位置，看見的光卻照進同一個瞬間。
+            兩條、三條時間線在同一集裡交會，不同的人在不同的位置，看見的光卻照進同一個瞬間。
           </div>
           <div class="arc-card-quote">「同一秒鐘，每個人都在不同的位置。」</div>
           <div class="arc-eps">EP10 · 24 · 25</div>
@@ -2736,7 +2787,7 @@
             <div class="tl-event-year">1997年 · 某個夜晚</div>
             <div class="tl-event-label">把拔，十三歲</div>
             <div class="tl-event-desc">
-              他把外套反穿，把名字藏進裡面。
+              他把外套反穿，把名字翻進裡面。
             </div>
           </div>
           <div class="tl-event">
@@ -2758,8 +2809,11 @@
             </div>
             <div class="tl-event-year">2005年 · 大學校園</div>
             <div class="tl-event-label">一眼瞬間</div>
-            <!-- ✅ 已校對：EP3:279 原文一致 -->
-            <div class="tl-event-desc">這一次，依然再次遇見妳。</div>
+            <!-- ✅ 已校對：EP3:279 原文一致；EP41/EP21「打上星星」母題對位 -->
+            <div class="tl-event-desc">
+              這一次，依然再次遇見妳。
+              <span style="display:block;margin-top:6px;font-size:11.5px;color:var(--amber);letter-spacing:0.04em">✺ 那是被打上星星、亮亮的日子的開始。</span>
+            </div>
           </div>
           <div class="tl-event">
             <div
@@ -2808,6 +2862,30 @@
               她開始在夢裡飛行，看見比自己更早以前的時間。
             </div>
           </div>
+          <div class="tl-event">
+            <div
+              class="tl-dot"
+              style="
+                border-color: #e85a3a;
+                background: linear-gradient(
+                  180deg,
+                  rgba(232, 90, 58, 0.18),
+                  rgba(232, 90, 58, 0.05)
+                );
+                color: #e85a3a;
+              "
+            >
+              <svg class="icon-svg" viewBox="0 0 24 24">
+                <use href="#ic-orbit"></use>
+              </svg>
+            </div>
+            <div class="tl-event-year">2026年 · 一班南下的火車</div>
+            <div class="tl-event-label">1163</div>
+            <!-- ✅ 已校對：EP41 拱心石母題對位 — 1163 = 阿姨壓縮七天哭的車次號 -->
+            <div class="tl-event-desc">
+              四個數字裡塞著她哭掉的七個晚上。他讀到「1163」，是一個班次。
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -2850,10 +2928,16 @@
               <div class="sample-card-num">試讀 3 · 拱心石</div>
               <div class="sample-card-ep">EP41 · 這不是童話故事</div>
               <div class="sample-card-sub">夢境視角 · 2026 年</div>
-              <div class="sample-card-desc">三個人都在痛,而且痛的語言不通。「知道」救不了人。</div>
+              <div class="sample-card-desc">「款款的」三個字打進來，他用一個「ＸＤ」接住。「知道」救不了現在的他。</div>
               <div class="sample-card-arrow">→ 讀這集</div>
             </a>
           </div>
+        </div>
+
+        <!-- r56 B9:相信 echo end card(對位 about-quote「我相信『相信的力量』」EP39/40 學長/把拔) -->
+        <div class="reveal end-echo" style="margin-top: 64px">
+          <blockquote class="end-echo-quote">「我不是因為『我看過了』才相信。<br>我是因為『我願意相信』，所以相信。<br>就跟把拔一樣。」</blockquote>
+          <div class="end-echo-src">女兒 · EP41</div>
         </div>
       </div>
     </section>
@@ -2867,7 +2951,7 @@
             <h2 class="section-title">沿著紅線<br />我們不會走散</h2>
           </div>
           <div class="comm-intro reveal">
-            toni 在 YouTube、Facebook、Threads 與 LINE 社群持續更新——幕後創作、角色解析、讀者交流，故事還在繼續寫。
+            toni 在 YouTube、Facebook、Threads 與 LINE 社群持續更新：幕後創作、角色解析、讀者交流，故事還在繼續寫。
           </div>
         </div>
         <div class="platform-cards">
@@ -2975,7 +3059,12 @@
               >✉ 寫信給作者</a
             >
           </div>
-          <div class="foot-copy">© toni · 版權所有</div>
+          <div class="foot-copy">
+            <svg viewBox="0 0 24 24" width="13" height="13" style="vertical-align:middle;margin-right:6px" aria-label="五月康乃馨 · EP41 結尾意象">
+              <path d="M12 4c1.5 1 2.5 2.5 2.5 4.5 0 .8-.3 1.5-.8 2 .5.3 1 .7 1.3 1.3.3.6.3 1.3 0 2-.3.7-.8 1.2-1.4 1.4-.7.2-1.4.1-2-.3-.3.6-.7 1-1.3 1.3-.6.3-1.3.3-2 0-.7-.3-1.2-.8-1.4-1.4-.2-.6-.1-1.3.3-2-.5-.3-.9-.7-1.1-1.3-.2-.6-.1-1.3.2-1.9.4-.5.9-.9 1.5-1-.5-.5-.8-1.2-.8-2 0-2 1-3.5 2.5-4.5z" fill="#e85a3a" opacity="0.72"/>
+              <line x1="12" y1="14" x2="12" y2="22" stroke="#3d7a55" stroke-width="1" opacity="0.5"/>
+            </svg>© toni · 版權所有
+          </div>
         </div>
         <div class="foot-links">
           <a
