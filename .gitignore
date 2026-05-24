@@ -70,3 +70,6 @@ credentials.json
 # AI-Control workflow v3.0 (2026-05-17)
 docs/reviews/
 docs/session-logs/
+
+# Local memory store (Claude session continuity)
+.remember/

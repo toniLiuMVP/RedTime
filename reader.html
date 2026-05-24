@@ -1824,6 +1824,12 @@
         opacity: 1;
         transform: none;
       }
+      /* r51:hash-jump 期間限定 — 強制 episodes 提前 render 讓 offsetTop 立刻穩定。
+         body.hash-jumping flag 由 JS 在 hash jump 啟動時加、stable 後 remove,
+         避免永久 disable content-visibility lazy render 帶來的 layout/paint 成本 */
+      body.hash-jumping .episode.visible {
+        content-visibility: visible;
+      }
       .episode::before {
         content: "";
         position: absolute;
@@ -6673,43 +6679,115 @@
         cont.appendChild(sec);
       });
 
-      // ── r50 (toni Task 2 fix v4 — 玩家真實「直達」流): EP sections JS dynamically created,
-      //    reader 用 sticky main-col + IntersectionObserver lazy visible 系統。
-      //    v3 用 goToEp 時 layout 未 settle,scroll 計算偏掉到 EP14。
-      //    v4 修:Step 1 window past hero / Step 2 mark 所有 EP 為 visible / Step 3 用 ep-N.scrollIntoView 而非 goToEp
-      //    雙 timer 讓 paint 跑完 ──
+      // ── r51 (Task 1 v5 — 跨瀏覽器一致直達): v4 只在 Mac Safari 成功(Safari 對 nested overflow
+      //    的 smooth 靜默 fallback 為 auto),Chrome / iPhone Safari 用 smooth 動畫在 76000px 長 scroll
+      //    被 IntersectionObserver 回呼打斷停在 EP2x。
+      //    根因:(1) behavior: 'smooth' 在長 scroll + 巢狀 overflow 容器跨瀏覽器不可靠;
+      //         (2) mobile main-col 仍是 overflow-y: auto + 100vh,但 getDesktopScrollHost 用
+      //             matchMedia(min-width:768px) 判斷,mobile 回傳 null,scroll target 算錯。
+      //    v5 修:disable browser scrollRestoration / mark visible / window past hero / direct
+      //         mainCol.scrollTop instant 寫入 / 雙 rAF / 驗證 landed / retry 最多 5 次。 ──
       if (typeof window !== 'undefined' && window.location.hash) {
         const hashMatch = window.location.hash.match(/^#ep-(\d+)$/);
         if (hashMatch) {
           const targetN = parseInt(hashMatch[1], 10);
-          setTimeout(() => {
-            // Step 1: window past hero(讓 main-col 進 viewport)
-            const heroEl = document.getElementById('hero');
-            if (heroEl) {
-              window.scrollTo({ top: heroEl.offsetTop + heroEl.offsetHeight, behavior: 'auto' });
+          let attempts = 0;
+          const MAX_ATTEMPTS = 5;
+          // 只在 hash deep-link 時 disable browser scroll restore,正常進站不影響上下頁回來位置
+          if ('scrollRestoration' in history) {
+            try { history.scrollRestoration = 'manual'; } catch (_) { /* ignore */ }
+          }
+          // 啟動 hash-jumping 模式:CSS body.hash-jumping 會把 visible episodes 強制 content-visibility:visible
+          document.body.classList.add('hash-jumping');
+
+          function jumpToTarget() {
+            attempts++;
+            const target = document.getElementById('ep-' + targetN);
+            if (!target) {
+              if (attempts < MAX_ATTEMPTS) setTimeout(jumpToTarget, 200);
+              return;
             }
-            // Step 2: mark all EP <= N as visible(對齊 goToEp visibility guard)
+
+            // 1. Mark all EP <= N as visible(force lazy layout so offsetTop is accurate)
             EPISODES.forEach((ep) => {
               if (ep.ep <= targetN) {
                 const s = document.getElementById('ep-' + ep.ep);
                 if (s) s.classList.add('visible');
               }
             });
-            // Step 3: requestAnimationFrame 等 layout settle,再用 scrollIntoView(自動找 main-col 作 scroll container)
+
+            // 2. Dismiss hero on window scroll(讓 main-col 進 viewport)
+            const heroEl = document.getElementById('hero');
+            if (heroEl) {
+              window.scrollTo({ top: heroEl.offsetTop + heroEl.offsetHeight, behavior: 'auto' });
+            }
+
+            // 3. Double rAF for layout settle, then direct scrollTop write
+            //    CRITICAL: main-col 有 CSS `scroll-behavior: smooth`,JS 寫 scrollTop 也會被
+            //    瀏覽器強制平滑動畫;每次 retry 互相打斷導致動畫永遠到不了 target。
+            //    解法:暫時 inline 覆寫 scroll-behavior=auto,寫完 scrollTop 再還原。
             requestAnimationFrame(() => {
-              setTimeout(() => {
-                const target = document.getElementById('ep-' + targetN);
-                if (target) {
-                  target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  // Update sidebar active state(對齊 goToEp 後續邏輯,讓 UI 同步)
-                  if (typeof currentEpNum !== 'undefined') currentEpNum = targetN;
-                  console.info('[reader hash jump v4] window past hero + ep-' + targetN + '.scrollIntoView triggered');
+              requestAnimationFrame(() => {
+                const mainCol = document.getElementById('main-col');
+                const topOffset = parseInt(
+                  getComputedStyle(document.documentElement).getPropertyValue('--top-offset'),
+                  10
+                ) || 72;
+
+                // Detect whether main-col is the active scroll container (works on both desktop + mobile)
+                const isMainColScrollable = mainCol &&
+                  (mainCol.scrollHeight > mainCol.clientHeight + 4) &&
+                  getComputedStyle(mainCol).overflowY !== 'visible';
+
+                if (isMainColScrollable) {
+                  // 覆寫 CSS smooth → 直接 instant 跳;寫完還原
+                  // CRITICAL: target.offsetParent === <body>,所以 target.offsetTop 包含 hero 高度。
+                  // 不可用 `mainCol.scrollTop = target.offsetTop`(會 overshoot hero 高)。
+                  // 用 getBoundingClientRect 計算 target 相對於 mainCol 的位置(對齊 goToEp 既有邏輯)。
+                  const originalSB = mainCol.style.scrollBehavior;
+                  mainCol.style.scrollBehavior = 'auto';
+                  const hostRect = mainCol.getBoundingClientRect();
+                  const elRect = target.getBoundingClientRect();
+                  const targetTop = Math.max(0, elRect.top - hostRect.top + mainCol.scrollTop - topOffset + 8);
+                  mainCol.scrollTop = targetTop;
+                  // 強制 reflow 確保 scroll 立刻 apply
+                  void mainCol.offsetHeight;
+                  mainCol.style.scrollBehavior = originalSB;
                 } else {
-                  console.warn('[reader hash jump v4] target ep-' + targetN + ' not in DOM');
+                  // window scroll fallback(rare — only if mobile CSS overrides overflow:visible)
+                  const originalSB = document.documentElement.style.scrollBehavior;
+                  document.documentElement.style.scrollBehavior = 'auto';
+                  const rect = target.getBoundingClientRect();
+                  window.scrollTo({
+                    top: window.scrollY + rect.top - topOffset,
+                    behavior: 'auto'
+                  });
+                  document.documentElement.style.scrollBehavior = originalSB;
                 }
-              }, 100);
+
+                // 4. Verify after paint — retry if not landed
+                requestAnimationFrame(() => {
+                  const r = target.getBoundingClientRect();
+                  const inView = r.top >= -200 && r.top < window.innerHeight * 0.8;
+                  if (!inView && attempts < MAX_ATTEMPTS) {
+                    console.info('[reader hash jump v5] attempt ' + attempts + ' not landed (top=' + Math.round(r.top) + ') — retrying');
+                    setTimeout(jumpToTarget, 250);
+                  } else {
+                    if (typeof currentEpNum !== 'undefined') currentEpNum = targetN;
+                    console.info('[reader hash jump v5] landed on ep-' + targetN + ' (attempt ' + attempts + ', top=' + Math.round(r.top) + ')');
+                    // 收尾:1.5 秒讓 layout 完全 settle 後移除 hash-jumping flag,
+                    // 恢復後續閱讀的 content-visibility lazy render 優化
+                    setTimeout(() => {
+                      document.body.classList.remove('hash-jumping');
+                    }, 1500);
+                  }
+                });
+              });
             });
-          }, 500);
+          }
+
+          // Initial 200ms delay for EPISODES sections to be appended + first paint
+          setTimeout(jumpToTarget, 200);
         }
       }
 
