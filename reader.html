@@ -6684,31 +6684,43 @@
         cont.appendChild(sec);
       });
 
-      // ── r50 (toni Task 2 fix v3): EP sections JS dynamically created,且 reader 用 sticky main-col。
-      //    hash jump 必須 (1) scroll window past hero 把 main-col 帶進 viewport
-      //                  (2) goToEp(N) 在 main-col 內 scroll 到 EP-N
-      //    對齊「翻開第一頁」流但補上 toni 期待的「直達」── 玩家進 #ep-41 直接看到 EP41,不必再滾過 hero ──
+      // ── r50 (toni Task 2 fix v4 — 玩家真實「直達」流): EP sections JS dynamically created,
+      //    reader 用 sticky main-col + IntersectionObserver lazy visible 系統。
+      //    v3 用 goToEp 時 layout 未 settle,scroll 計算偏掉到 EP14。
+      //    v4 修:Step 1 window past hero / Step 2 mark 所有 EP 為 visible / Step 3 用 ep-N.scrollIntoView 而非 goToEp
+      //    雙 timer 讓 paint 跑完 ──
       if (typeof window !== 'undefined' && window.location.hash) {
         const hashMatch = window.location.hash.match(/^#ep-(\d+)$/);
         if (hashMatch) {
           const targetN = parseInt(hashMatch[1], 10);
           setTimeout(() => {
-            // Step 1: scroll window past hero(讓 main-col 進 viewport)
+            // Step 1: window past hero(讓 main-col 進 viewport)
             const heroEl = document.getElementById('hero');
             if (heroEl) {
-              const heroBottom = heroEl.offsetTop + heroEl.offsetHeight;
-              window.scrollTo({ top: heroBottom, behavior: 'auto' });
+              window.scrollTo({ top: heroEl.offsetTop + heroEl.offsetHeight, behavior: 'auto' });
             }
-            // Step 2: goToEp 內部 scroll main-col 到 EP-N
-            if (typeof goToEp === 'function') {
-              goToEp(targetN);
-              console.info('[reader hash jump v3] window past hero + goToEp(' + targetN + ') for ' + window.location.hash);
-            } else {
-              const target = document.getElementById('ep-' + targetN);
-              if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              console.warn('[reader hash jump v3] goToEp not defined, fallback scrollIntoView');
-            }
-          }, 300);
+            // Step 2: mark all EP <= N as visible(對齊 goToEp visibility guard)
+            EPISODES.forEach((ep) => {
+              if (ep.ep <= targetN) {
+                const s = document.getElementById('ep-' + ep.ep);
+                if (s) s.classList.add('visible');
+              }
+            });
+            // Step 3: requestAnimationFrame 等 layout settle,再用 scrollIntoView(自動找 main-col 作 scroll container)
+            requestAnimationFrame(() => {
+              setTimeout(() => {
+                const target = document.getElementById('ep-' + targetN);
+                if (target) {
+                  target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  // Update sidebar active state(對齊 goToEp 後續邏輯,讓 UI 同步)
+                  if (typeof currentEpNum !== 'undefined') currentEpNum = targetN;
+                  console.info('[reader hash jump v4] window past hero + ep-' + targetN + '.scrollIntoView triggered');
+                } else {
+                  console.warn('[reader hash jump v4] target ep-' + targetN + ' not in DOM');
+                }
+              }, 100);
+            });
+          }, 500);
         }
       }
 
