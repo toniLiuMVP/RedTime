@@ -6684,23 +6684,29 @@
         cont.appendChild(sec);
       });
 
-      // ── r50 (toni Task 2 fix v2): EP sections 是 JS dynamically created,browser hash scroll fail。
-      //    用 goToEp(N) 而非 scrollIntoView — goToEp 會 dismiss hero + 計算 topOffset + smooth scroll
-      //    對齊「翻開第一頁」既有 reader entry flow ──
+      // ── r50 (toni Task 2 fix v3): EP sections JS dynamically created,且 reader 用 sticky main-col。
+      //    hash jump 必須 (1) scroll window past hero 把 main-col 帶進 viewport
+      //                  (2) goToEp(N) 在 main-col 內 scroll 到 EP-N
+      //    對齊「翻開第一頁」流但補上 toni 期待的「直達」── 玩家進 #ep-41 直接看到 EP41,不必再滾過 hero ──
       if (typeof window !== 'undefined' && window.location.hash) {
         const hashMatch = window.location.hash.match(/^#ep-(\d+)$/);
         if (hashMatch) {
           const targetN = parseInt(hashMatch[1], 10);
-          // Defer 300ms 讓 sections fully painted + goToEp 可 find element
           setTimeout(() => {
+            // Step 1: scroll window past hero(讓 main-col 進 viewport)
+            const heroEl = document.getElementById('hero');
+            if (heroEl) {
+              const heroBottom = heroEl.offsetTop + heroEl.offsetHeight;
+              window.scrollTo({ top: heroBottom, behavior: 'auto' });
+            }
+            // Step 2: goToEp 內部 scroll main-col 到 EP-N
             if (typeof goToEp === 'function') {
               goToEp(targetN);
-              console.info('[reader hash jump] goToEp(' + targetN + ') triggered for hash ' + window.location.hash);
+              console.info('[reader hash jump v3] window past hero + goToEp(' + targetN + ') for ' + window.location.hash);
             } else {
-              // Fallback to scrollIntoView if goToEp not yet defined
               const target = document.getElementById('ep-' + targetN);
               if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              console.warn('[reader hash jump] goToEp not defined, fallback scrollIntoView');
+              console.warn('[reader hash jump v3] goToEp not defined, fallback scrollIntoView');
             }
           }, 300);
         }
