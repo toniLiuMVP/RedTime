@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v15-20260606';  // unchanged: GLB / vendor 無變動
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v19-20260525';  // bumped: r53 6-tier font size + magnifier elderly mode + site-wide font sync + 1s egg toast
+const RUNTIME_VERSION = 'runtime-v20-20260525';  // bumped: r54 hero red thread偏黃 + FAB a11y button semantics + touch target 44px + sidebar font 13px
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
