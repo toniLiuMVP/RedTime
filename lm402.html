@@ -134,6 +134,14 @@
         <div class="cinematic-gate-hint">
           點下去的那一刻，音樂會開始 · 2005 年的空氣會慢慢流進來
         </div>
+      <button
+          type="button"
+          class="cinematic-gate-tutorial"
+          onclick="openLM402Tutorial()"
+          aria-label="新手引路 — 5 秒看怎麼玩">
+          <span class="cinematic-gate-tutorial-icon" aria-hidden="true">☆</span>
+          <span class="cinematic-gate-tutorial-text">第一次玩?5 秒看怎麼玩</span>
+        </button>
       </div>
     </div>
 
@@ -1013,6 +1021,192 @@
       #lm402-polaroid-flash.flash {
         opacity: 0.85;
       }
+
+      /* r60a C10:LM402 新手引路 tutorial(對位 r58 modal 紀律) */
+      .cinematic-gate-tutorial {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 18px;
+        padding: 12px 26px;
+        background: linear-gradient(135deg, rgba(232, 90, 58, 0.16), rgba(217, 179, 106, 0.10));
+        border: 1px solid rgba(232, 90, 58, 0.45);
+        color: #f0b070;
+        font-family: "DM Mono", monospace;
+        font-size: 10.5px;
+        letter-spacing: 0.27em;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      .cinematic-gate-tutorial:hover {
+        background: linear-gradient(135deg, rgba(232, 90, 58, 0.28), rgba(217, 179, 106, 0.16));
+        box-shadow: 0 0 24px rgba(232, 90, 58, 0.18);
+        transform: translateY(-1px);
+      }
+      .cinematic-gate-tutorial-icon {
+        font-size: 13px;
+        color: rgba(224, 72, 96, 0.95);
+        letter-spacing: 0;
+      }
+      .lm402-tutorial-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: rgba(5, 5, 8, 0.96);
+        backdrop-filter: blur(20px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+      .lm402-tutorial-overlay:not([hidden]) {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .lm402-tutorial-card {
+        position: relative;
+        max-width: 640px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        background: linear-gradient(180deg, rgba(15, 15, 22, 0.94), rgba(8, 10, 16, 0.88));
+        border: 1px solid rgba(232, 90, 58, 0.18);
+        border-radius: 12px;
+        padding: 32px 40px;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      }
+      .lm402-tutorial-topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+      }
+      .lm402-tutorial-tag {
+        font-family: "DM Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.3em;
+        color: rgba(217, 179, 106, 0.85);
+      }
+      .lm402-tutorial-close {
+        background: transparent;
+        border: 1px solid rgba(232, 90, 58, 0.3);
+        color: rgba(224, 72, 96, 0.95);
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .lm402-tutorial-stepper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 32px;
+      }
+      .lt-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: 1px solid rgba(232, 90, 58, 0.5);
+        background: transparent;
+        transition: all 0.3s;
+      }
+      .lt-dot.active {
+        background: rgba(224, 72, 96, 0.95);
+        border-color: rgba(224, 72, 96, 0.95);
+        box-shadow: 0 0 12px rgba(232, 90, 58, 0.5);
+      }
+      .lt-dot.done {
+        background: rgba(232, 90, 58, 0.5);
+      }
+      .lt-line {
+        flex: 1;
+        height: 1px;
+        background: rgba(232, 90, 58, 0.2);
+      }
+      .lm402-tutorial-step {
+        display: none;
+      }
+      .lm402-tutorial-step.active {
+        display: block;
+        animation: ltStepFadeIn 0.4s ease;
+      }
+      @keyframes ltStepFadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .lt-step-title {
+        font-family: "Cormorant Garamond", "Noto Serif TC", serif;
+        font-weight: 400;
+        font-size: clamp(22px, 3.6vw, 28px);
+        color: rgba(234, 230, 222, 0.96);
+        margin-bottom: 20px;
+        letter-spacing: 0.02em;
+      }
+      .lt-step-body {
+        font-family: "Noto Serif TC", serif;
+        font-size: 15px;
+        line-height: 2;
+        color: rgba(180, 176, 168, 0.92);
+      }
+      .lt-step-body p {
+        margin-bottom: 16px;
+      }
+      .lt-step-body strong {
+        color: rgba(217, 179, 106, 0.95);
+        font-weight: 500;
+      }
+      .lm402-tutorial-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 32px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(37, 37, 48, 0.7);
+      }
+      .lt-btn-prev,
+      .lt-btn-next {
+        background: transparent;
+        border: 1px solid rgba(60, 60, 75, 0.7);
+        color: rgba(180, 176, 168, 0.92);
+        padding: 10px 18px;
+        font-family: "DM Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 0.15em;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.3s;
+      }
+      .lt-btn-next {
+        border-color: rgba(232, 90, 58, 0.5);
+        color: rgba(224, 72, 96, 0.95);
+      }
+      .lt-btn-prev:hover,
+      .lt-btn-next:hover {
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .lt-step-indicator {
+        font-family: "DM Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.2em;
+        color: rgba(140, 138, 136, 0.85);
+      }
+      .lt-skip {
+        display: block;
+        margin: 16px auto 0;
+        background: transparent;
+        border: none;
+        color: rgba(140, 138, 136, 0.85);
+        font-family: "DM Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.2em;
+        cursor: pointer;
+        text-decoration: underline;
+      }
     </style>
     <div id="lm402-polaroid-flash" aria-hidden="true"></div>
     <script>
@@ -1041,6 +1235,149 @@
           setTimeout(() => { busy = false; }, 600);
         });
       })();
+    </script>
+
+    <!-- r60a C10:LM402 新手引路 modal -->
+    <div id="lm402-tutorial" class="lm402-tutorial-overlay" hidden>
+      <div class="lm402-tutorial-card" role="dialog" aria-labelledby="lm402-tutorial-title" aria-modal="true">
+        <div class="lm402-tutorial-topbar">
+          <div class="lm402-tutorial-tag">☆ 新手引路 · 5 秒看怎麼玩</div>
+          <button class="lm402-tutorial-close" type="button" aria-label="關閉" onclick="closeLM402Tutorial()">✕</button>
+        </div>
+        <div class="lm402-tutorial-stepper">
+          <div class="lt-dot active" data-step="1"></div>
+          <div class="lt-line"></div>
+          <div class="lt-dot" data-step="2"></div>
+          <div class="lt-line"></div>
+          <div class="lt-dot" data-step="3"></div>
+        </div>
+
+        <div class="lm402-tutorial-step active" data-step="1">
+          <h2 id="lm402-tutorial-title" class="lt-step-title">你是女兒，你會飛</h2>
+          <div class="lt-step-body">
+            <p>你會沿著一條紅線，<br>從利瑪竇大樓的走廊飛進去。</p>
+            <p>紅線會告訴你下一步在哪裡。</p>
+          </div>
+        </div>
+
+        <div class="lm402-tutorial-step" data-step="2">
+          <h2 class="lt-step-title">你的操作</h2>
+          <div class="lt-step-body">
+            <p><strong>電腦：</strong><br>
+              滑鼠右鍵 → 鎖定視角(像玩 FPS)<br>
+              WASD → 走動<br>
+              滑鼠 → 看四周</p>
+            <p><strong>手機：</strong><br>
+              左下搖桿 → 走動<br>
+              右下搖桿 → 看四周<br>
+              螢幕按鈕 → 互動</p>
+          </div>
+        </div>
+
+        <div class="lm402-tutorial-step" data-step="3">
+          <h2 class="lt-step-title">你要做什麼</h2>
+          <div class="lt-step-body">
+            <p>11:00,鐘會響。<br>學長會打電話來。</p>
+            <p>你的任務是看見<br>「一眼瞬間」的全程。</p>
+            <p>剩下的，讓 LM402 自己亮起來。</p>
+          </div>
+        </div>
+
+        <div class="lm402-tutorial-bottom">
+          <button class="lt-btn-prev" type="button" onclick="lm402TourPrev()" hidden>← 上一步</button>
+          <div class="lt-step-indicator">1 / 3</div>
+          <button class="lt-btn-next" type="button" onclick="lm402TourNext()">下一步 →</button>
+        </div>
+        <button class="lt-skip" type="button" onclick="closeLM402Tutorial()">之後再玩</button>
+      </div>
+    </div>
+    <script>
+    /* r60a C10:LM402 新手引路 tutorial JS(對位 r58 modal 紀律) */
+    (function () {
+      const TOUR_KEY = "redtime_lm402_newcomer_done";
+      const TOUR_STEPS = 3;
+      let currentStep = 1;
+
+      window.openLM402Tutorial = function () {
+        const overlay = document.getElementById("lm402-tutorial");
+        if (!overlay) return;
+        overlay.hidden = false;
+        currentStep = 1;
+        updateLM402TourStep();
+        document.body.style.overflow = "hidden";
+        setTimeout(function () {
+          const closeBtn = overlay.querySelector(".lm402-tutorial-close");
+          if (closeBtn) closeBtn.focus();
+        }, 50);
+      };
+
+      window.closeLM402Tutorial = function () {
+        const overlay = document.getElementById("lm402-tutorial");
+        if (!overlay) return;
+        overlay.hidden = true;
+        document.body.style.overflow = "";
+        try { localStorage.setItem(TOUR_KEY, "1"); } catch (e) {}
+      };
+
+      window.lm402TourNext = function () {
+        if (currentStep < TOUR_STEPS) {
+          currentStep++;
+          updateLM402TourStep();
+        }
+      };
+
+      window.lm402TourPrev = function () {
+        if (currentStep > 1) {
+          currentStep--;
+          updateLM402TourStep();
+        }
+      };
+
+      function updateLM402TourStep() {
+        const overlay = document.getElementById("lm402-tutorial");
+        if (!overlay) return;
+        overlay.querySelectorAll(".lm402-tutorial-step").forEach(function (s) {
+          const n = parseInt(s.dataset.step, 10);
+          s.classList.toggle("active", n === currentStep);
+        });
+        overlay.querySelectorAll(".lt-dot").forEach(function (d) {
+          const n = parseInt(d.dataset.step, 10);
+          d.classList.toggle("active", n === currentStep);
+          d.classList.toggle("done", n < currentStep);
+        });
+        const prev = overlay.querySelector(".lt-btn-prev");
+        const next = overlay.querySelector(".lt-btn-next");
+        const indicator = overlay.querySelector(".lt-step-indicator");
+        if (prev) prev.hidden = currentStep === 1;
+        if (next) {
+          if (currentStep === TOUR_STEPS) {
+            next.textContent = "☆ 開始玩 →";
+            next.onclick = function () { window.closeLM402Tutorial(); };
+          } else {
+            next.textContent = "下一步 →";
+            next.onclick = function () { window.lm402TourNext(); };
+          }
+        }
+        if (indicator) {
+          indicator.textContent = currentStep + " / " + TOUR_STEPS;
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("keydown", function (e) {
+          const overlay = document.getElementById("lm402-tutorial");
+          if (e.key === "Escape" && overlay && !overlay.hidden) {
+            window.closeLM402Tutorial();
+          }
+        });
+        const overlay = document.getElementById("lm402-tutorial");
+        if (overlay) {
+          overlay.addEventListener("click", function (e) {
+            if (e.target === overlay) window.closeLM402Tutorial();
+          });
+        }
+      });
+    })();
     </script>
   </body>
 </html>

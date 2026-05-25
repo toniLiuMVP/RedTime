@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v15-20260606';  // unchanged: GLB / vendor 無變動
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v27-20260526';  // bumped: r59 TL/GRANNY/EGGS 補 EP41 拱心石 + 17 處改動
+const RUNTIME_VERSION = 'runtime-v28-20260526';  // bumped: r60a C10 LM402 三線新手引路 tutorial(toni r59c 拍板 + r60 GO)
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
