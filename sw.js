@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v15-20260606';  // unchanged: GLB / vendor 無變動
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v24-20260525';  // bumped: r56 11 項 cross-agent verdict 套用 + EP41 paratext 破折號清除紀律
+const RUNTIME_VERSION = 'runtime-v25-20260525';  // bumped: r57 故事文本對位 docx 修訂三版(98 處 em-dash + 段落結構)+ Path B paratext 套用(P0 4 項 + P1 4 項拍板)
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
