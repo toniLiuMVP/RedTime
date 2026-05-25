@@ -76,3 +76,10 @@ docs/session-logs/
 
 # Visual mockup previews (toni 決策用,不上 GitHub Pages)
 mockup/
+
+# CSP refactor work-in-progress (not yet wired)
+assets/*-boot.js
+assets/sw-register.js
+
+# Draft / reference documents
+*.pdf

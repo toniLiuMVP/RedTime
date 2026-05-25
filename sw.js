@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v15-20260606';  // unchanged: GLB / vendor 無變動
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v29-20260526';  // bumped: r60b batch-1 (platform-run tutorial / cinematic-gate visual signatures / photo-mode placeholder / half-width punct fix)
+const RUNTIME_VERSION = 'runtime-v30-20260526';  // bumped: r60c batch (one-eye-moment 6-effect / platform Q-toggle redline / N-failure unlock / 10-level mechanic overlays)
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
