@@ -214,6 +214,103 @@ canvas{display:block;width:100%;height:100%}
     scroll-behavior: auto !important;
   }
 }
+
+/* r60b C10:platform-run 新手引路 tutorial(對位 r60a LM402 pattern) */
+.pt-tutorial-trigger {
+  /* r60b ｜ Gemini caught conflict with #mute-btn (top:12px); offset to 60px */
+  /* r60b ｜ Codex caught z-index:200 floats over result/leaderboard; hide via :has() */
+  position: fixed;
+  top: 60px;
+  right: 16px;
+  z-index: 200;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, rgba(232, 90, 58, 0.18), rgba(217, 179, 106, 0.12));
+  border: 1px solid rgba(232, 90, 58, 0.5);
+  color: #f0b070;
+  font-family: "DM Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.27em;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+}
+.pt-tutorial-trigger:hover {
+  background: linear-gradient(135deg, rgba(232, 90, 58, 0.3), rgba(217, 179, 106, 0.2));
+  box-shadow: 0 0 20px rgba(232, 90, 58, 0.25);
+  transform: translateY(-1px);
+}
+.pt-trigger-icon { font-size: 12px; color: rgba(224, 72, 96, 0.95); letter-spacing: 0; }
+/* r60b ｜ Codex a11y: trigger only visible while title-screen is up (uses :has)  */
+body:has(#title-screen.hide) .pt-tutorial-trigger { display: none !important; }
+.pt-tutorial-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(5, 5, 8, 0.96); backdrop-filter: blur(20px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.pt-tutorial-overlay:not([hidden]) { opacity: 1; pointer-events: auto; }
+.pt-tutorial-card {
+  position: relative; max-width: 640px; width: 100%;
+  max-height: 90vh; overflow-y: auto;
+  background: linear-gradient(180deg, rgba(15, 15, 22, 0.94), rgba(8, 10, 16, 0.88));
+  border: 1px solid rgba(232, 90, 58, 0.18); border-radius: 12px;
+  padding: 32px 40px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.pt-tutorial-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.pt-tutorial-tag { font-family: "DM Mono", monospace; font-size: 10px; letter-spacing: 0.3em; color: rgba(217, 179, 106, 0.85); }
+.pt-tutorial-close {
+  background: transparent; border: 1px solid rgba(232, 90, 58, 0.3);
+  color: rgba(224, 72, 96, 0.95); width: 32px; height: 32px;
+  border-radius: 50%; font-size: 14px; cursor: pointer;
+}
+.pt-tutorial-stepper { display: flex; align-items: center; gap: 8px; margin-bottom: 32px; }
+.pt-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  border: 1px solid rgba(232, 90, 58, 0.5);
+  background: transparent; transition: all 0.3s;
+}
+.pt-dot.active { background: rgba(224, 72, 96, 0.95); border-color: rgba(224, 72, 96, 0.95); box-shadow: 0 0 12px rgba(232, 90, 58, 0.5); }
+.pt-dot.done { background: rgba(232, 90, 58, 0.5); }
+.pt-line { flex: 1; height: 1px; background: rgba(232, 90, 58, 0.2); }
+.pt-tutorial-step { display: none; }
+.pt-tutorial-step.active { display: block; animation: ptStepFadeIn 0.4s ease; }
+@keyframes ptStepFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.pt-step-title {
+  font-family: "Cormorant Garamond", "Noto Serif TC", serif;
+  font-weight: 400; font-size: clamp(22px, 3.6vw, 28px);
+  color: rgba(234, 230, 222, 0.96); margin-bottom: 20px; letter-spacing: 0.02em;
+}
+.pt-step-body { font-family: "Noto Serif TC", serif; font-size: 15px; line-height: 2; color: rgba(180, 176, 168, 0.92); }
+.pt-step-body p { margin-bottom: 16px; }
+.pt-step-body strong { color: rgba(217, 179, 106, 0.95); font-weight: 500; }
+.pt-tutorial-bottom {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 32px; padding-top: 20px;
+  border-top: 1px solid rgba(37, 37, 48, 0.7);
+}
+.pt-btn-prev, .pt-btn-next {
+  background: transparent; border: 1px solid rgba(60, 60, 75, 0.7);
+  color: rgba(180, 176, 168, 0.92); padding: 10px 18px;
+  font-family: "DM Mono", monospace; font-size: 11px;
+  letter-spacing: 0.15em; cursor: pointer; border-radius: 4px;
+  transition: all 0.3s;
+}
+.pt-btn-next { border-color: rgba(232, 90, 58, 0.5); color: rgba(224, 72, 96, 0.95); }
+.pt-btn-prev:hover, .pt-btn-next:hover { background: rgba(255, 255, 255, 0.04); }
+.pt-step-indicator { font-family: "DM Mono", monospace; font-size: 10px; letter-spacing: 0.2em; color: rgba(140, 138, 136, 0.85); }
+.pt-skip {
+  display: block; margin: 16px auto 0;
+  background: transparent; border: none;
+  color: rgba(140, 138, 136, 0.85);
+  font-family: "DM Mono", monospace; font-size: 10px;
+  letter-spacing: 0.2em; cursor: pointer; text-decoration: underline;
+}
 </style>
 <!-- Audio auto-stop hook：頁面隱藏 / 關閉時自動停所有音樂（對所有玩家生效） -->
 <script>
@@ -242,6 +339,16 @@ canvas{display:block;width:100%;height:100%}
 </script>
 </head>
 <body role="application" aria-label="月台上的狂奔 互動遊戲">
+<!-- r60b C10:platform-run 新手引路 tutorial trigger -->
+<button
+  type="button"
+  class="pt-tutorial-trigger"
+  id="pt-tutorial-trigger"
+  onclick="openPTTutorial(event)"
+  aria-label="新手引路 — 5 秒看怎麼玩">
+  <span class="pt-trigger-icon" aria-hidden="true">☆</span>
+  <span class="pt-trigger-text">第一次玩？</span>
+</button>
 
 <!-- 電影黑邊 -->
 <div class="letterbox-top"></div>
@@ -5369,5 +5476,158 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('../../sw.js').catch(() => {});
 }
 </script>
+
+<!-- r60b C10:platform-run 新手引路 modal -->
+<div id="pt-tutorial" class="pt-tutorial-overlay" hidden>
+  <div class="pt-tutorial-card" role="dialog" aria-label="新手引路 — 5 秒看怎麼玩" aria-modal="true">
+    <div class="pt-tutorial-topbar">
+      <div class="pt-tutorial-tag">☆ 月台奔跑 · 5 秒看怎麼玩</div>
+      <button class="pt-tutorial-close" type="button" aria-label="關閉" onclick="closePTTutorial(event)">✕</button>
+    </div>
+    <div class="pt-tutorial-stepper">
+      <div class="pt-dot active" data-step="1"></div>
+      <div class="pt-line"></div>
+      <div class="pt-dot" data-step="2"></div>
+      <div class="pt-line"></div>
+      <div class="pt-dot" data-step="3"></div>
+      <div class="pt-line"></div>
+      <div class="pt-dot" data-step="4"></div>
+    </div>
+
+    <div class="pt-tutorial-step active" data-step="1">
+      <h2 id="pt-tutorial-title" class="pt-step-title">你是把拔</h2>
+      <div class="pt-step-body">
+        <p>你的女兒上了往南的火車，<br>你 30 秒內要跑到月台盡頭，<br>在火車開走之前，抱起她：</p>
+        <p>(這一段是 toni 親身經歷的 30 秒，<br>來自 EP36：)</p>
+      </div>
+    </div>
+
+    <div class="pt-tutorial-step" data-step="2">
+      <h2 class="pt-step-title">怎麼跑</h2>
+      <div class="pt-step-body">
+        <p><strong>電腦：</strong><br>
+          WASD 走 · Shift 衝刺 · Space 跳</p>
+        <p><strong>手機：</strong><br>
+          左下搖桿走 · 右下「衝刺」「跳躍」按鈕</p>
+      </div>
+    </div>
+
+    <div class="pt-tutorial-step" data-step="3">
+      <h2 class="pt-step-title">月台上的東西</h2>
+      <div class="pt-step-body">
+        <p>· 行李箱 → 撞到會慢下來，跳過或繞開<br>
+           · 路人 → 撞到也會慢，保持 3 公尺距離<br>
+           · 道具(金光) → 撿到加 buff</p>
+      </div>
+    </div>
+
+    <div class="pt-tutorial-step" data-step="4">
+      <h2 class="pt-step-title">10 關</h2>
+      <div class="pt-step-body">
+        <p>共 10 關，難度遞增：<br>
+           第 10 關是 FINAL RUN：<br>
+           為了抱起女兒，請用盡所有的力氣：</p>
+      </div>
+    </div>
+
+    <div class="pt-tutorial-bottom">
+      <button class="pt-btn-prev" type="button" onclick="ptTourPrev(event)" hidden>← 上一步</button>
+      <div class="pt-step-indicator">1 / 4</div>
+      <button class="pt-btn-next" type="button" onclick="ptTourNext(event)">下一步 →</button>
+    </div>
+    <button class="pt-skip" type="button" onclick="closePTTutorial(event)">之後再玩</button>
+  </div>
+</div>
+<script>
+/* r60b C10:platform-run 新手引路 tutorial JS */
+(function () {
+  /* r60b ｜ TOUR_KEY removed (manual trigger, no first-time gating per Codex 🟡) */
+  const TOUR_STEPS = 4;
+  let currentStep = 1;
+
+  window.openPTTutorial = function (e) {
+    if (e) { e.stopPropagation(); e.preventDefault(); }
+    const overlay = document.getElementById("pt-tutorial");
+    if (!overlay) return;
+    overlay.hidden = false;
+    currentStep = 1;
+    updatePTTourStep();
+    document.body.style.overflow = "hidden";
+    setTimeout(function () {
+      const closeBtn = overlay.querySelector(".pt-tutorial-close");
+      if (closeBtn) closeBtn.focus();
+    }, 50);
+  };
+
+  window.closePTTutorial = function (e) {
+    if (e) { e.stopPropagation(); }
+    const overlay = document.getElementById("pt-tutorial");
+    if (!overlay) return;
+    overlay.hidden = true;
+    document.body.style.overflow = "";
+    /* r60b ｜ Codex: manual trigger, no first-time gating; localStorage 寫入移除 */
+  };
+
+  window.ptTourNext = function (e) {
+    if (e) e.stopPropagation();
+    if (currentStep < TOUR_STEPS) {
+      currentStep++;
+      updatePTTourStep();
+    }
+  };
+
+  window.ptTourPrev = function (e) {
+    if (e) e.stopPropagation();
+    if (currentStep > 1) {
+      currentStep--;
+      updatePTTourStep();
+    }
+  };
+
+  function updatePTTourStep() {
+    const overlay = document.getElementById("pt-tutorial");
+    if (!overlay) return;
+    overlay.querySelectorAll(".pt-tutorial-step").forEach(function (s) {
+      const n = parseInt(s.dataset.step, 10);
+      s.classList.toggle("active", n === currentStep);
+    });
+    overlay.querySelectorAll(".pt-dot").forEach(function (d) {
+      const n = parseInt(d.dataset.step, 10);
+      d.classList.toggle("active", n === currentStep);
+      d.classList.toggle("done", n < currentStep);
+    });
+    const prev = overlay.querySelector(".pt-btn-prev");
+    const next = overlay.querySelector(".pt-btn-next");
+    const indicator = overlay.querySelector(".pt-step-indicator");
+    if (prev) prev.hidden = currentStep === 1;
+    if (next) {
+      if (currentStep === TOUR_STEPS) {
+        next.textContent = "☆ OK 開始跑";
+        next.onclick = function (e) { window.closePTTutorial(e); };
+      } else {
+        next.textContent = "下一步 →";
+        next.onclick = function (e) { window.ptTourNext(e); };
+      }
+    }
+    if (indicator) indicator.textContent = currentStep + " / " + TOUR_STEPS;
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("keydown", function (e) {
+      const overlay = document.getElementById("pt-tutorial");
+      if (e.key === "Escape" && overlay && !overlay.hidden) {
+        window.closePTTutorial();
+      }
+    });
+    const overlay = document.getElementById("pt-tutorial");
+    if (overlay) {
+      overlay.addEventListener("click", function (e) {
+        if (e.target === overlay) window.closePTTutorial();
+      });
+    }
+  });
+})();
+</script>
+
 </body>
 </html>

@@ -145,7 +145,7 @@
           onclick="openLM402Tutorial()"
           aria-label="新手引路 — 5 秒看怎麼玩">
           <span class="cinematic-gate-tutorial-icon" aria-hidden="true">☆</span>
-          <span class="cinematic-gate-tutorial-text">第一次玩?5 秒看怎麼玩</span>
+          <span class="cinematic-gate-tutorial-text">第一次玩？5 秒看怎麼玩</span>
         </button>
       </div>
     </div>
@@ -1212,6 +1212,93 @@
         cursor: pointer;
         text-decoration: underline;
       }
+
+/* r60b C4:雙時空 cinematic-gate split-screen breathing(2005 金/2025 青/中央光縫) */
+body.lm402-page #cinematic-gate {
+  background: #000;
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  overflow: hidden;
+}
+body.lm402-page #cinematic-gate::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  left: 0;
+  right: 50%;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(217, 179, 106, 0.30) 0%,
+    rgba(184, 144, 80, 0.18) 30%,
+    rgba(40, 28, 12, 0.4) 65%,
+    rgba(0, 0, 0, 0.95) 100%
+  );
+  animation: c4LeftBreath 6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+body.lm402-page #cinematic-gate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  left: 50%;
+  right: 0;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(74, 168, 165, 0.28) 0%,
+    rgba(40, 110, 110, 0.16) 30%,
+    rgba(8, 26, 32, 0.4) 65%,
+    rgba(0, 0, 0, 0.95) 100%
+  );
+  animation: c4RightBreath 6s ease-in-out infinite;
+  animation-delay: 3s;
+  pointer-events: none;
+  z-index: 1;
+}
+body.lm402-page #cinematic-gate .cinematic-gate-inner {
+  position: relative;
+  z-index: 3;
+}
+body.lm402-page #cinematic-gate .cinematic-gate-inner::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -50vh;
+  bottom: -50vh;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(232, 90, 58, 0.5) 30%,
+    rgba(232, 90, 58, 0.8) 50%,
+    rgba(232, 90, 58, 0.5) 70%,
+    transparent 100%
+  );
+  z-index: 2;
+  pointer-events: none;
+}
+@keyframes c4LeftBreath {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+@keyframes c4RightBreath {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+/* hint 改對位雙時空 */
+body.lm402-page #cinematic-gate .cinematic-gate-kicker {
+  color: rgba(217, 179, 106, 0.85);
+}
+/* r60b ｜ Gemini a11y: respect prefers-reduced-motion (vestibular sensitivity) */
+@media (prefers-reduced-motion: reduce) {
+  body.lm402-page #cinematic-gate::before,
+  body.lm402-page #cinematic-gate::after {
+    animation: none !important;
+    opacity: 0.7 !important;
+  }
+}
+
     </style>
     <div id="lm402-polaroid-flash" aria-hidden="true"></div>
     <script>
@@ -1422,5 +1509,77 @@
       });
     })();
     </script>
+
+  <script>
+    // r60b C1 ｜ GLB scene render still placeholder
+    // 用法 (console)：__LM402_PHOTO__.capture()
+    //   options： { filename }
+    //   高倍率 supersample 留 r60d+ 真實作， 目前僅輸出 canvas.toBlob 原解析度。
+    (function () {
+      const LINE = 'twin';
+      const LABEL = 'LM402 Twin';
+      function findCanvas() {
+        // Three.js attaches a canvas. Prefer one inside #app or first canvas.
+        const inApp = document.querySelector('#app canvas, main canvas, #stage canvas');
+        if (inApp) return inApp;
+        const all = document.getElementsByTagName('canvas');
+        for (const c of all) {
+          if (c.width > 16 && c.height > 16) return c;
+        }
+        return null;
+      }
+      function timestamp() {
+        const d = new Date();
+        const p = (n, w = 2) => String(n).padStart(w, '0');
+        return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+      }
+      function capture(opts) {
+        opts = opts || {};
+        const canvas = findCanvas();
+        if (!canvas) {
+          console.warn('[__LM402_PHOTO__] canvas not found， 場景尚未載入？');
+          return Promise.reject(new Error('canvas-not-found'));
+        }
+        const year = (window.__LM402_YEAR__ || '2005');
+        const fname = opts.filename
+          || `lm402-${LINE}-${year}-${timestamp()}.png`;
+        return new Promise((resolve, reject) => {
+          try {
+            canvas.toBlob(function (blob) {
+              if (!blob) {
+                reject(new Error('toBlob-null'));
+                return;
+              }
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = fname;
+              document.body.appendChild(a);
+              a.click();
+              setTimeout(() => {
+                URL.revokeObjectURL(url);
+                a.remove();
+              }, 200);
+              console.info(`[__LM402_PHOTO__] saved ${fname} (${blob.size} bytes)`);
+              resolve({ filename: fname, size: blob.size, line: LINE });
+            }, 'image/png');
+          } catch (e) {
+            reject(e);
+          }
+        });
+      }
+      window.__LM402_PHOTO__ = {
+        line: LINE,
+        label: LABEL,
+        capture: capture,
+        version: 'r60b-placeholder'
+      };
+      // Brief boot log only when devtools likely open (no production noise).
+      if (window.__lm402DebugPhoto) {
+        console.info(`[__LM402_PHOTO__] ready (line=${LINE}, label=${LABEL})`);
+      }
+    })();
+  </script>
+
   </body>
 </html>
