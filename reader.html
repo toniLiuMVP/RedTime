@@ -265,6 +265,33 @@
         margin: 0 0 24px;
         text-wrap: pretty;
       }
+      /* r58 P0-1:新讀者引路 button (redirect to index.html?tour=1) */
+      .hero-newcomer {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin: 8px 0 18px;
+        padding: 14px 28px;
+        background: linear-gradient(135deg, rgba(232, 90, 58, 0.18), rgba(200, 144, 16, 0.10));
+        border: 1px solid rgba(232, 90, 58, 0.55);
+        color: #f0b070;
+        font-family: "DM Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 0.27em;
+        text-decoration: none;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+      }
+      .hero-newcomer:hover {
+        background: linear-gradient(135deg, rgba(232, 90, 58, 0.30), rgba(200, 144, 16, 0.18));
+        box-shadow: 0 0 28px rgba(232, 90, 58, 0.18);
+        transform: translateY(-1px);
+      }
+      .hero-newcomer-icon {
+        font-size: 13px;
+        color: var(--rose);
+        letter-spacing: 0;
+      }
       .hero-divider {
         width: 36px;
         height: 1px;
@@ -940,7 +967,7 @@
           text-overflow: ellipsis;
           flex: 1;
         }
-        /* r54:大字模式 sidebar 也跟著放大,維持比例 */
+        /* r54:大字模式 sidebar 也跟著放大，維持比例 */
         body[data-fs="xxl"] .sb-ep-name { font-size: 14px; }
         body[data-fs="xxxl"] .sb-ep-name { font-size: 15px; }
         .sb-ep-item.current .sb-ep-num,
@@ -4728,6 +4755,10 @@
             <h1 class="hero-title">時間裡的<br />兩個妳</h1>
             <p class="hero-tagline">一個把拔與女兒的故事，也是學長與學妹的故事。<br />她穿越時間，只為看清那一眼的重量。</p>
             <div class="hero-divider"></div>
+            <a class="hero-newcomer" href="index.html?tour=1" aria-label="新讀者引路 — 第一次來的指引">
+              <span class="hero-newcomer-icon" aria-hidden="true">☆</span>
+              <span>你是第一次來嗎?</span>
+            </a>
             <button class="hero-cta" onclick="goToEp(0)">
               ↓ &nbsp; 翻開第一頁
             </button>

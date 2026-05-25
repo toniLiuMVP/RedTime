@@ -1633,6 +1633,292 @@
         margin-right: auto;
         font-style: italic;
       }
+
+      /* r58 P0-1:新讀者引路按鈕 + modal tour */
+      .btn-newcomer {
+        background: linear-gradient(135deg, rgba(232, 90, 58, 0.18), rgba(200, 144, 16, 0.10));
+        border: 1px solid rgba(232, 90, 58, 0.55);
+        color: #f0b070;
+        font-family: "DM Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 0.27em;
+        padding: 16px 36px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        font-weight: 400;
+      }
+      .btn-newcomer:hover {
+        background: linear-gradient(135deg, rgba(232, 90, 58, 0.30), rgba(200, 144, 16, 0.18));
+        box-shadow: 0 0 28px rgba(232, 90, 58, 0.18);
+        transform: translateY(-1px);
+      }
+      .btn-newcomer-icon {
+        font-size: 13px;
+        color: var(--rose);
+        letter-spacing: 0;
+      }
+      .tour-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: rgba(5, 5, 8, 0.96);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+      .tour-overlay:not([hidden]) {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .tour-card {
+        position: relative;
+        max-width: 720px;
+        width: 100%;
+        max-height: 92vh;
+        overflow-y: auto;
+        background: linear-gradient(180deg, rgba(15, 15, 22, 0.94), rgba(8, 10, 16, 0.88));
+        border: 1px solid rgba(232, 90, 58, 0.18);
+        border-radius: 12px;
+        padding: 32px 40px;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      }
+      .tour-topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+      }
+      .tour-tag {
+        font-family: "DM Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.3em;
+        color: var(--amber);
+        text-transform: uppercase;
+      }
+      .tour-close {
+        background: transparent;
+        border: 1px solid rgba(232, 90, 58, 0.3);
+        color: var(--rose);
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+      .tour-close:hover {
+        background: rgba(232, 90, 58, 0.1);
+      }
+      .tour-stepper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 32px;
+      }
+      .tour-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: 1px solid rgba(232, 90, 58, 0.5);
+        background: transparent;
+        transition: all 0.3s;
+        flex-shrink: 0;
+      }
+      .tour-dot.active {
+        background: var(--rose);
+        border-color: var(--rose);
+        box-shadow: 0 0 12px rgba(232, 90, 58, 0.5);
+      }
+      .tour-dot.done {
+        background: rgba(232, 90, 58, 0.5);
+      }
+      .tour-line {
+        flex: 1;
+        height: 1px;
+        background: rgba(232, 90, 58, 0.2);
+      }
+      .tour-step {
+        display: none;
+      }
+      .tour-step.active {
+        display: block;
+        animation: tourStepFadeIn 0.4s ease;
+      }
+      @keyframes tourStepFadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .tour-step-title {
+        font-family: "Cormorant Garamond", "Noto Serif TC", serif;
+        font-weight: 400;
+        font-size: clamp(24px, 4vw, 32px);
+        color: var(--parchment);
+        margin-bottom: 20px;
+        letter-spacing: 0.02em;
+        line-height: 1.3;
+      }
+      .tour-step-body {
+        font-family: "Noto Serif TC", serif;
+        font-size: 16px;
+        line-height: 2;
+        color: var(--t2);
+      }
+      .tour-step-body p {
+        margin-bottom: 18px;
+      }
+      .tour-step-body .tour-intro {
+        color: var(--amber);
+        font-style: italic;
+        margin-bottom: 22px;
+      }
+      .tour-chars {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        margin-top: 12px;
+      }
+      @media (max-width: 540px) {
+        .tour-chars { grid-template-columns: 1fr; }
+      }
+      .tour-char {
+        padding: 14px 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--line2);
+        border-left: 3px solid;
+        border-radius: 4px;
+      }
+      .tour-char-father { border-left-color: var(--jade); }
+      .tour-char-male { border-left-color: #9aa0a8; }
+      .tour-char-female { border-left-color: var(--rose); }
+      .tour-char-daughter { border-left-color: var(--amber); }
+      .tour-char-name {
+        font-family: "Cormorant Garamond", "Noto Serif TC", serif;
+        font-size: 18px;
+        color: var(--parchment);
+        margin-bottom: 6px;
+      }
+      .tour-char-pitch {
+        font-size: 13.5px;
+        line-height: 1.75;
+        color: var(--t2);
+      }
+      .tour-samples {
+        margin-top: 12px;
+      }
+      .tour-sample {
+        margin-bottom: 16px;
+        padding: 12px 14px;
+        border-left: 2px solid rgba(200, 144, 16, 0.4);
+        background: rgba(200, 144, 16, 0.04);
+        border-radius: 0 4px 4px 0;
+      }
+      .tour-sample-tag {
+        font-family: "DM Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        color: var(--amber);
+        margin-bottom: 6px;
+      }
+      .tour-sample-desc {
+        font-size: 13.5px;
+        line-height: 1.8;
+        color: var(--t2);
+      }
+      .tour-final-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+        flex-wrap: wrap;
+      }
+      .tour-final-primary,
+      .tour-final-secondary {
+        padding: 12px 20px;
+        border-radius: 4px;
+        font-family: "DM Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 0.2em;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s;
+      }
+      .tour-final-primary {
+        background: linear-gradient(135deg, rgba(232, 90, 58, 0.3), rgba(200, 144, 16, 0.15));
+        border: 1px solid rgba(232, 90, 58, 0.55);
+        color: #f0b070;
+      }
+      .tour-final-primary:hover {
+        background: linear-gradient(135deg, rgba(232, 90, 58, 0.5), rgba(200, 144, 16, 0.25));
+        box-shadow: 0 0 20px rgba(232, 90, 58, 0.2);
+      }
+      .tour-final-secondary {
+        background: transparent;
+        border: 1px solid var(--line);
+        color: var(--t2);
+      }
+      .tour-final-secondary:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: var(--t3);
+      }
+      .tour-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 32px;
+        padding-top: 20px;
+        border-top: 1px solid var(--line2);
+      }
+      .tour-btn-prev,
+      .tour-btn-next {
+        background: transparent;
+        border: 1px solid var(--line);
+        color: var(--t2);
+        padding: 10px 18px;
+        font-family: "DM Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 0.15em;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.3s;
+      }
+      .tour-btn-next {
+        border-color: rgba(232, 90, 58, 0.5);
+        color: var(--rose);
+      }
+      .tour-btn-prev:hover,
+      .tour-btn-next:hover {
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .tour-step-indicator {
+        font-family: "DM Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.2em;
+        color: var(--t3);
+      }
+      .tour-skip {
+        display: block;
+        margin: 16px auto 0;
+        background: transparent;
+        border: none;
+        color: var(--t3);
+        font-family: "DM Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.2em;
+        cursor: pointer;
+        text-decoration: underline;
+      }
+      .tour-skip:hover { color: var(--t2); }
+
       /* r57 P1-3:EP28 紅線翻轉 mid-echo(對位 about-quote / end-echo 三幕結構) */
       .mid-echo {
         text-align: center;
@@ -2508,6 +2794,10 @@
               一個把拔與女兒的故事，<br />也是學長與學妹的故事。<br />她穿越時間，只為看清那一眼的重量。
             </p>
             <div class="hero-actions">
+              <button type="button" class="btn-newcomer" onclick="openNewcomerTour()" aria-label="新讀者引路 — 5 分鐘讓 toni 帶你進故事">
+                <span class="btn-newcomer-icon" aria-hidden="true">☆</span>
+                <span>你是第一次來嗎？</span>
+              </button>
               <a class="btn-primary" href="reader.html"
                 >↓ &nbsp; 翻開第一頁</a
               >
@@ -2530,6 +2820,114 @@
         <div class="scroll-line"></div>
       </div>
     </section>
+    <!-- r58 P0-1: 新讀者引路 modal(toni 顯式 ask)— 5-step onboarding overlay -->
+    <div id="newcomer-tour" class="tour-overlay" hidden aria-hidden="true">
+      <div class="tour-card" role="dialog" aria-labelledby="tour-title" aria-modal="true">
+        <div class="tour-topbar">
+          <div class="tour-tag">☆ 新讀者引路 · 約 5 分鐘</div>
+          <button type="button" class="tour-close" aria-label="關閉新讀者引路" onclick="closeNewcomerTour()">✕</button>
+        </div>
+        <div class="tour-stepper" aria-hidden="true">
+          <div class="tour-dot active" data-step="1"></div>
+          <div class="tour-line"></div>
+          <div class="tour-dot" data-step="2"></div>
+          <div class="tour-line"></div>
+          <div class="tour-dot" data-step="3"></div>
+          <div class="tour-line"></div>
+          <div class="tour-dot" data-step="4"></div>
+          <div class="tour-line"></div>
+          <div class="tour-dot" data-step="5"></div>
+        </div>
+
+        <div class="tour-step active" data-step="1">
+          <h2 id="tour-title" class="tour-step-title">☆ 你好。</h2>
+          <div class="tour-step-body">
+            <p>我是 toni。歡迎你來到《時間裡的兩個妳》。</p>
+            <p>這個故事的起點，<br>是 2005 年大學走廊盡頭，<br>一個男生看了一個女生一眼。</p>
+            <p>那一眼只有一秒。<br>讀完這個故事，大概要用一個禮拜。</p>
+            <p>請容我用 5 分鐘的時間，<br>把這個故事最少需要知道的事，<br>告訴你。</p>
+          </div>
+        </div>
+
+        <div class="tour-step" data-step="2">
+          <h2 class="tour-step-title">為什麼這個故事</h2>
+          <div class="tour-step-body">
+            <p>這不是童話故事。</p>
+            <p>這是三代人，<br>用三十多年的時間，<br>解開同一秒鐘的故事。</p>
+            <p>你會讀到四個視角：<br>一個爸爸、一個男主角、一個女主角、<br>還有一個飛過時間、卻什麼都不能說的女兒。</p>
+            <p>42 集。三條時間線。五種視角。<br>從 1990 年代走到 2026。</p>
+            <p>讀完它，你會明白：<br>為什麼一眼只有一秒，<br>卻需要二十年才能讀懂。</p>
+          </div>
+        </div>
+
+        <div class="tour-step" data-step="3">
+          <h2 class="tour-step-title">四個視角</h2>
+          <div class="tour-step-body">
+            <p class="tour-intro">先記住這四個人。其他的，讓故事自己告訴你。</p>
+            <div class="tour-chars">
+              <div class="tour-char tour-char-father">
+                <div class="tour-char-name">把拔</div>
+                <div class="tour-char-pitch">故事的敘事原點。住在桃園，女兒住台中，中間隔著 147 公里。他相信再走一段，就會看到他看過的超大光點。</div>
+              </div>
+              <div class="tour-char tour-char-male">
+                <div class="tour-char-name">學長</div>
+                <div class="tour-char-pitch">大三那年，他在利瑪竇大樓 LM402 教室前後門之間，看了一個女生一眼。他用了很多年才讀懂那一眼的重量。</div>
+              </div>
+              <div class="tour-char tour-char-female">
+                <div class="tour-char-name">學妹</div>
+                <div class="tour-char-pitch">學長 2005 年遇見的那個女生。她的內在，藏著好幾個年紀的自己。</div>
+              </div>
+              <div class="tour-char tour-char-daughter">
+                <div class="tour-char-name">女兒</div>
+                <div class="tour-char-pitch">把拔的女兒。她有個秘密：她可以飛。飛到 1990 年代的把拔身邊，飛到 2005 年的學妹教室。但她只能看，不能敲門。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tour-step" data-step="4">
+          <h2 class="tour-step-title">從哪一集開始</h2>
+          <div class="tour-step-body">
+            <p class="tour-intro">42 集太重，先讀這三集。<br>它們是這座橋的三塊承重結構。</p>
+            <div class="tour-samples">
+              <div class="tour-sample">
+                <div class="tour-sample-tag">⌬ EP3 · 一眼瞬間 · 學長視角</div>
+                <div class="tour-sample-desc">2005 年的大學走廊。這是整本書的起點。讀完你會知道，為什麼這一眼，需要很多年才能讀懂。</div>
+              </div>
+              <div class="tour-sample">
+                <div class="tour-sample-tag">⌬ EP38 · 意識菜市場 · 學妹視角</div>
+                <div class="tour-sample-desc">2005 年同一秒的另一面。讓你看見學妹的內在，不同年紀的她，在同一秒鐘吵架。</div>
+              </div>
+              <div class="tour-sample">
+                <div class="tour-sample-tag">⌬ EP41 · 這不是童話故事 · 女兒視角</div>
+                <div class="tour-sample-desc">2026 年。故事的拱心石。即使你只讀這一集，也會被那句「我也相信」打中。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tour-step" data-step="5">
+          <h2 class="tour-step-title">☆ 引路結束</h2>
+          <div class="tour-step-body">
+            <p>你現在知道：</p>
+            <p>· 這是一個三代人的故事<br>· 四個主要角色：把拔、學長、學妹、女兒<br>· 推薦的第一集是 EP3</p>
+            <p>剩下的，<br>請讓故事自己亮起來。</p>
+            <p>如果讀到一半迷路，<br>首頁上的「☆ 你是第一次來嗎？」<br>隨時都在。</p>
+            <div class="tour-final-actions">
+              <a class="tour-final-primary" href="reader.html#ep-3">☆ 開始讀 EP3</a>
+              <a class="tour-final-secondary" href="reader.html">從 EP0 開始</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="tour-bottom">
+          <button type="button" class="tour-btn-prev" onclick="tourPrev()" hidden>← 上一步</button>
+          <div class="tour-step-indicator">1 / 5</div>
+          <button type="button" class="tour-btn-next" onclick="tourNext()">下一步 →</button>
+        </div>
+        <button type="button" class="tour-skip" onclick="closeNewcomerTour()">之後再說</button>
+      </div>
+    </div>
 
     <!-- ABOUT -->
     <section id="about">
@@ -2958,7 +3356,7 @@
 
         <!-- r54 D1:三集試讀路徑(出版總編 + 網站專家共建)— 給 42 集太重的新讀者 -->
         <div class="reveal sample-path" style="margin-top: 64px">
-          <div class="sample-label">第一次來?三集試讀</div>
+          <div class="sample-label">第一次來？三集試讀</div>
           <p class="sample-intro">如果 42 集太重，先讀這三集。它們是這座橋的三塊承重結構，讀完你就會知道要不要回頭從 EP0 開始。</p>
           <div class="sample-cards">
             <a class="sample-card" href="reader.html#ep-3">
@@ -3403,6 +3801,104 @@
         // 相對路徑同時支援 GitHub Pages (/RedTime/) 與本機伺服器 (/)
         navigator.serviceWorker.register('./sw.js').catch(() => {});
       }
+    </script>
+
+    <script>
+      /* r58 P0-1: 新讀者引路 modal tour controller */
+      (function () {
+        const TOUR_KEY = "redtime_newcomer_done";
+        const TOUR_STEPS = 5;
+        let currentStep = 1;
+
+        window.openNewcomerTour = function () {
+          const overlay = document.getElementById("newcomer-tour");
+          if (!overlay) return;
+          overlay.hidden = false;
+          overlay.setAttribute("aria-hidden", "false");
+          currentStep = 1;
+          updateTourStep();
+          document.body.style.overflow = "hidden";
+          setTimeout(() => {
+            const closeBtn = overlay.querySelector(".tour-close");
+            if (closeBtn) closeBtn.focus();
+          }, 50);
+        };
+
+        window.closeNewcomerTour = function () {
+          const overlay = document.getElementById("newcomer-tour");
+          if (!overlay) return;
+          overlay.hidden = true;
+          overlay.setAttribute("aria-hidden", "true");
+          document.body.style.overflow = "";
+          try { localStorage.setItem(TOUR_KEY, "1"); } catch (e) {}
+        };
+
+        window.tourNext = function () {
+          if (currentStep < TOUR_STEPS) {
+            currentStep++;
+            updateTourStep();
+          }
+        };
+
+        window.tourPrev = function () {
+          if (currentStep > 1) {
+            currentStep--;
+            updateTourStep();
+          }
+        };
+
+        function updateTourStep() {
+          const overlay = document.getElementById("newcomer-tour");
+          if (!overlay) return;
+          overlay.querySelectorAll(".tour-step").forEach(s => {
+            const n = parseInt(s.dataset.step, 10);
+            s.classList.toggle("active", n === currentStep);
+          });
+          overlay.querySelectorAll(".tour-dot").forEach(d => {
+            const n = parseInt(d.dataset.step, 10);
+            d.classList.toggle("active", n === currentStep);
+            d.classList.toggle("done", n < currentStep);
+          });
+          const prev = overlay.querySelector(".tour-btn-prev");
+          const next = overlay.querySelector(".tour-btn-next");
+          const indicator = overlay.querySelector(".tour-step-indicator");
+          if (prev) prev.hidden = currentStep === 1;
+          if (next) next.hidden = currentStep === TOUR_STEPS;
+          if (indicator) indicator.textContent = currentStep + " / " + TOUR_STEPS;
+          // Scroll card to top so new step is visible
+          const card = overlay.querySelector(".tour-card");
+          if (card) card.scrollTop = 0;
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+          // Auto-open from query string (?tour=1 from reader.html)
+          const params = new URLSearchParams(window.location.search);
+          if (params.get("tour") === "1") {
+            setTimeout(() => window.openNewcomerTour(), 300);
+            // Clean URL so refresh doesn't re-open
+            if (window.history && window.history.replaceState) {
+              const cleanUrl = window.location.pathname + window.location.hash;
+              window.history.replaceState({}, "", cleanUrl);
+            }
+          }
+
+          // ESC close
+          document.addEventListener("keydown", function (e) {
+            const overlay = document.getElementById("newcomer-tour");
+            if (e.key === "Escape" && overlay && !overlay.hidden) {
+              window.closeNewcomerTour();
+            }
+          });
+
+          // Click outside card to close
+          const overlay = document.getElementById("newcomer-tour");
+          if (overlay) {
+            overlay.addEventListener("click", function (e) {
+              if (e.target === overlay) window.closeNewcomerTour();
+            });
+          }
+        });
+      })();
     </script>
   </body>
 </html>
