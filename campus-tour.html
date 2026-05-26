@@ -2,8 +2,8 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>輔仁大學校園巡禮 — 時間裡的兩個妳</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>故事場景對位 · 時間裡的兩個妳</title>
 <link rel="icon" href="data:,">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -48,7 +48,6 @@
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 3px;
     pointer-events: auto;
-    transition: all 0.15s ease;
   }
   .back-link:hover {
     color: rgba(255, 255, 255, 0.95);
@@ -85,7 +84,6 @@
     color: rgba(255, 220, 200, 0.95);
     margin-bottom: 6px;
   }
-
   .compass {
     position: absolute; right: 14px; bottom: 14px;
     background: rgba(8, 6, 10, 0.72); backdrop-filter: blur(10px);
@@ -99,39 +97,52 @@
     pointer-events: auto;
   }
 
-  .building-tip {
+  .scene-popup {
     position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(8, 6, 10, 0.92); backdrop-filter: blur(14px);
-    padding: 18px 24px;
+    background: rgba(8, 6, 10, 0.94); backdrop-filter: blur(14px);
+    padding: 20px 24px;
     border: 1px solid rgba(228, 70, 80, 0.55);
     border-radius: 4px;
-    max-width: 420px;
+    max-width: 460px;
+    min-width: 320px;
     display: none;
     pointer-events: auto;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
   }
-  .building-tip.show { display: block; }
-  .building-tip .bt-name {
-    font-family: "Cormorant Garamond", "Noto Serif TC", serif;
-    font-size: 22px; letter-spacing: 0.16em;
-    color: rgba(255, 220, 200, 0.95);
-    margin-bottom: 4px;
-  }
-  .building-tip .bt-ep {
+  .scene-popup.show { display: block; }
+  .scene-popup .sp-ep {
     font-family: "DM Mono", monospace;
     font-size: 10px; letter-spacing: 0.22em;
     color: rgba(248, 168, 152, 0.92);
     text-transform: uppercase;
-    margin-bottom: 12px;
+    margin-bottom: 4px;
   }
-  .building-tip .bt-desc {
-    font-size: 13px; line-height: 1.85;
-    color: rgba(238, 232, 220, 0.85);
+  .scene-popup .sp-name {
+    font-family: "Cormorant Garamond", "Noto Serif TC", serif;
+    font-size: 22px; letter-spacing: 0.16em;
+    color: rgba(255, 220, 200, 0.95);
     margin-bottom: 14px;
   }
-  .building-tip .bt-close {
-    padding: 6px 18px;
+  .scene-popup .sp-quote {
+    font-size: 13.5px; line-height: 1.96;
+    color: rgba(238, 232, 220, 0.92);
+    padding: 12px 16px;
+    border-left: 2px solid rgba(228, 70, 80, 0.62);
+    background: rgba(228, 70, 80, 0.06);
+    border-radius: 0 2px 2px 0;
+    margin-bottom: 14px;
+    white-space: pre-wrap;
+  }
+  .scene-popup .sp-source {
+    font-family: "DM Mono", monospace;
+    font-size: 10px; letter-spacing: 0.18em;
+    color: rgba(218, 184, 168, 0.62);
+    margin-bottom: 14px;
+  }
+  .scene-popup .sp-actions { display: flex; gap: 10px; }
+  .scene-popup .sp-btn {
+    padding: 7px 16px;
     background: rgba(228, 70, 80, 0.22);
     border: 1px solid rgba(228, 70, 80, 0.55);
     border-radius: 2px;
@@ -140,9 +151,15 @@
     font-size: 11px;
     letter-spacing: 0.18em;
     cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
   }
-  .building-tip .bt-close:hover {
-    background: rgba(228, 70, 80, 0.42);
+  .scene-popup .sp-btn:hover { background: rgba(228, 70, 80, 0.42); }
+  .scene-popup .sp-btn.ghost {
+    background: transparent;
+    color: rgba(218, 184, 168, 0.65);
+    border-color: rgba(218, 184, 168, 0.32);
   }
 
   .crosshair {
@@ -154,7 +171,6 @@
     box-shadow: 0 0 6px rgba(228, 70, 80, 0.62);
     pointer-events: none;
   }
-
   .focus-prompt {
     position: absolute; top: 60%; left: 50%;
     transform: translateX(-50%);
@@ -171,37 +187,56 @@
   }
   .focus-prompt.show { display: block; }
 
-  .pointer-lock-prompt {
+  .intro-overlay {
     position: absolute; inset: 0;
-    background: rgba(5, 6, 8, 0.78);
+    background: rgba(5, 6, 8, 0.85);
     backdrop-filter: blur(8px);
     display: flex; align-items: center; justify-content: center;
     pointer-events: auto;
     cursor: pointer;
+    padding: 20px;
   }
-  .pointer-lock-prompt.hide { display: none; }
-  .pointer-lock-prompt .plp-card {
+  .intro-overlay.hide { display: none; }
+  .intro-overlay .io-card {
+    max-width: 480px;
     text-align: center;
-    padding: 24px 32px;
+    padding: 28px 32px;
     background: rgba(8, 6, 10, 0.92);
     border: 1px solid rgba(228, 70, 80, 0.55);
     border-radius: 4px;
   }
-  .pointer-lock-prompt .plp-title {
+  .intro-overlay .io-tag {
+    font-family: "DM Mono", monospace;
+    font-size: 10px; letter-spacing: 0.32em;
+    color: rgba(248, 168, 152, 0.78);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .intro-overlay .io-title {
     font-family: "Cormorant Garamond", "Noto Serif TC", serif;
-    font-size: 26px; letter-spacing: 0.22em;
+    font-size: 28px; letter-spacing: 0.22em;
     color: rgba(255, 220, 200, 0.95);
+    margin-bottom: 16px;
   }
-  .pointer-lock-prompt .plp-sub {
-    font-size: 13px; letter-spacing: 0.12em;
-    color: rgba(218, 184, 168, 0.65);
-    margin-top: 12px;
+  .intro-overlay .io-text {
+    font-size: 13px; line-height: 1.95;
+    color: rgba(238, 232, 220, 0.82);
+    margin-bottom: 16px;
   }
-  .pointer-lock-prompt .plp-hint {
+  .intro-overlay .io-disclaimer {
+    font-size: 11px; line-height: 1.85;
+    color: rgba(218, 184, 168, 0.55);
+    padding: 10px 14px;
+    background: rgba(20, 12, 16, 0.55);
+    border: 1px solid rgba(218, 184, 168, 0.22);
+    border-radius: 2px;
+    margin-bottom: 18px;
+    text-align: left;
+  }
+  .intro-overlay .io-hint {
     font-family: "DM Mono", monospace;
     font-size: 10px; letter-spacing: 0.22em;
-    color: rgba(238, 232, 220, 0.55);
-    margin-top: 18px;
+    color: rgba(238, 232, 220, 0.62);
   }
 </style>
 </head>
@@ -210,14 +245,14 @@
 <div id="ui">
   <div class="top-bar">
     <div class="title-block">
-      <div class="t1">輔仁大學校園巡禮</div>
-      <div class="t2">FU JEN CATHOLIC UNIVERSITY · 第一人稱漫步</div>
+      <div class="t1">故事場景對位</div>
+      <div class="t2">SCENES FROM 時間裡的兩個妳 · 第一人稱漫步</div>
     </div>
     <a class="back-link" href="index.html">← 回首頁</a>
   </div>
 
   <div class="crosshair"></div>
-  <div class="focus-prompt" id="focusPrompt">點擊 / E 鍵 看故事連結</div>
+  <div class="focus-prompt" id="focusPrompt">點擊 / E 鍵 看故事原文</div>
 
   <div class="controls-card">
     <div class="ctrl-title">CONTROLS</div>
@@ -230,27 +265,40 @@
 
   <div class="compass" id="compass">N 0°</div>
 
-  <div class="building-tip" id="buildingTip">
-    <div class="bt-name" id="btName"></div>
-    <div class="bt-ep" id="btEp"></div>
-    <div class="bt-desc" id="btDesc"></div>
-    <button type="button" class="bt-close" id="btClose">關閉 · 繼續漫步</button>
+  <div class="scene-popup" id="scenePopup">
+    <div class="sp-ep" id="spEp"></div>
+    <div class="sp-name" id="spName"></div>
+    <div class="sp-quote" id="spQuote"></div>
+    <div class="sp-source" id="spSource"></div>
+    <div class="sp-actions">
+      <a class="sp-btn" id="spReadBtn" href="reader.html">讀完整 EP</a>
+      <button type="button" class="sp-btn ghost" id="spClose">關閉 · 繼續漫步</button>
+    </div>
   </div>
 </div>
 
-<div class="pointer-lock-prompt" id="lockPrompt">
-  <div class="plp-card">
-    <div class="plp-title">輔仁大學校園巡禮</div>
-    <div class="plp-sub">2005-10-17 · 一眼瞬間 前的清晨</div>
-    <div class="plp-hint">點擊任意處 開始 / 鎖定滑鼠</div>
+<div class="intro-overlay" id="introOverlay">
+  <div class="io-card">
+    <div class="io-tag">故事場景對位</div>
+    <div class="io-title">時間裡的兩個妳</div>
+    <div class="io-text">
+      把故事中提到的場景， 用第一人稱走一遍。<br>
+      每一個建築都對位 toni 的原文段落。
+    </div>
+    <div class="io-disclaimer">
+      ※ 本場景非真實輔仁大學地圖。 為了讓玩家在一個畫面裡走過故事的場景， 建築位置經過劇情敘事重排， 非依地理座標。 樓名為故事中提及的名稱（利瑪竇大樓 · 中美堂 · 伯達樓）。
+    </div>
+    <div class="io-hint">點擊任意處 開始 / 鎖定滑鼠</div>
   </div>
 </div>
 
 <script type="module">
 import * as THREE from './assets/lm402/vendor-three.module.js';
 
-/* r62 #5 ｜ 校園巡禮 PoC — toni 4 方向 3D 第一個
-   設計理念：toni 親自走過的輔大校園地標 mapping 到故事 narrative。 */
+/* r62 round-2 #3 ｜ 校園巡禮 v2 — toni 紀律訂正
+   - 依故事文本對位 (toni 原文 quote)
+   - 樓名只用故事中明確提到的 (利瑪竇 / 中美堂 / 伯達樓 / 校門 / 機車)
+   - 明確標示「非真實輔大地圖, 為敘事重排」 */
 
 const canvas = document.getElementById('scene-canvas');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -261,50 +309,41 @@ renderer.toneMappingExposure = 0.98;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xc4d4e0);  // 晨曦霧色
+scene.background = new THREE.Color(0xc4d4e0);
 scene.fog = new THREE.FogExp2(0xc4d4e0, 0.012);
 
 const cam = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.1, 600);
-cam.position.set(0, 1.7, 80);  // 從校門口進入
+cam.position.set(0, 1.7, 70);
 cam.rotation.order = 'YXZ';
-cam.rotation.y = Math.PI;       // face -z (校園方向)
+cam.rotation.y = Math.PI;
 
-/* ─── 地面 (草地 + 主幹道) ─── */
+/* 地面 + 主步道 */
 const groundMat = new THREE.MeshStandardMaterial({ color: 0x4a6850, roughness: 0.95, metalness: 0.02 });
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(280, 280, 1, 1), groundMat);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(260, 260, 1, 1), groundMat);
 ground.rotation.x = -Math.PI / 2;
-ground.position.y = 0;
 scene.add(ground);
 
-/* 主幹道 — 校門口往南北延伸 */
 const pathMat = new THREE.MeshStandardMaterial({ color: 0x8a7a6a, roughness: 0.78 });
-const mainPath = new THREE.Mesh(new THREE.PlaneGeometry(6, 180), pathMat);
+const mainPath = new THREE.Mesh(new THREE.PlaneGeometry(5, 160), pathMat);
 mainPath.rotation.x = -Math.PI / 2;
-mainPath.position.set(0, 0.01, 0);
+mainPath.position.set(0, 0.01, -10);
 scene.add(mainPath);
 
-/* 橫向路 */
-const crossPath = new THREE.Mesh(new THREE.PlaneGeometry(120, 4), pathMat);
+const crossPath = new THREE.Mesh(new THREE.PlaneGeometry(110, 4), pathMat);
 crossPath.rotation.x = -Math.PI / 2;
 crossPath.position.set(0, 0.01, -20);
 scene.add(crossPath);
 
-const crossPath2 = new THREE.Mesh(new THREE.PlaneGeometry(120, 4), pathMat);
+const crossPath2 = new THREE.Mesh(new THREE.PlaneGeometry(110, 4), pathMat);
 crossPath2.rotation.x = -Math.PI / 2;
-crossPath2.position.set(0, 0.01, -55);
+crossPath2.position.set(0, 0.01, -50);
 scene.add(crossPath2);
 
-/* ─── Sky 半圓 dome ─── */
-const skyMat = new THREE.MeshBasicMaterial({
-  color: 0xb8c4d4,
-  side: THREE.BackSide,
-  fog: false,
-});
+const skyMat = new THREE.MeshBasicMaterial({ color: 0xb8c4d4, side: THREE.BackSide, fog: false });
 const skyDome = new THREE.Mesh(new THREE.SphereGeometry(300, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), skyMat);
 skyDome.position.y = -50;
 scene.add(skyDome);
 
-/* ─── 光照 ─── */
 const sun = new THREE.DirectionalLight(0xfff4d8, 1.0);
 sun.position.set(60, 80, 40);
 scene.add(sun);
@@ -313,132 +352,149 @@ scene.add(ambient);
 const fillSky = new THREE.HemisphereLight(0xc8d4e0, 0x4a3820, 0.32);
 scene.add(fillSky);
 
-/* ─── 校園建築 (interactive) ─── */
-const BUILDINGS = [
+/* ─── 故事場景 buildings ─── */
+/* 設計理念:
+   - 只用故事中明確 quote 過的樓名 (利瑪竇大樓 / 中美堂 / 伯達樓 / 校門)
+   - 每個建築點擊後 popup 顯示 toni 原文段落
+   - 建築位置為「敘事重排」, 非真實校園地圖 */
+const SCENES = [
   {
-    name: '輔大校門',
-    ep: 'EP3 序章 · 2005-10-17 上午',
-    desc: '中山北路六段。 學長從這裡騎機車進來， 學妹的「群人」也從這走過去食堂。 1961 年復校時的羅馬式拱門， 是這個 narrative 的進站閘門。',
-    pos: { x: 0, y: 0, z: 78 },
-    size: { w: 14, h: 8, d: 2 },
+    name: '中山北路六段 · 校門',
+    ep: 'EP 8',
+    pos: { x: 0, y: 0, z: 75 },
+    size: { w: 14, h: 7, d: 2 },
     color: 0xc8b890,
-    type: 'gate'
+    type: 'gate',
+    quote: '走在校園路上， 學校很小， 樹蔭很多， 終能牽著妳， 從學校後門開始細數過往點滴到校門口。\n\n「學長你看， 校門前的捷運工程蓋完了欸。」',
+    source: '學長視角 · EP8',
+    href: 'reader.html#ep-8'
   },
   {
-    name: 'LM402 教學大樓',
-    ep: 'EP3 · 11:00 一眼瞬間',
-    desc: '文友樓 4 樓 · 402 教室。 學長 11:00 從 LM401 樓梯上來在前門外打電話， 學妹從教室裡叫他繞到後門。 整本書的鐘響時刻。',
-    pos: { x: 22, y: 0, z: -10 },
-    size: { w: 18, h: 14, d: 22 },
+    name: '利瑪竇大樓 LM402',
+    ep: 'EP 3 · 一眼瞬間',
+    pos: { x: 20, y: 0, z: -10 },
+    size: { w: 16, h: 14, d: 22 },
     color: 0xd4b888,
-    type: 'lm402'
+    type: 'lm402',
+    quote: '那天， 我們約好在利瑪竇大樓見面， 因為我是妳的學長。\n\n當我趕到教室前門， 打電話給妳， 電話那頭傳來妳的聲音。\n\n「妳在哪裡？」\n「學長， 你走到後門～」\n\n妳從座位站起來， 朝我走來， 身邊還有一群人跟著妳一起出來。\n\n我第一眼就看到妳。\n「也太像徐若瑄了吧！」',
+    source: '學長視角 · EP3',
+    href: 'reader.html#ep-3'
   },
   {
-    name: 'LM401 樓梯',
-    ep: 'EP3 · 學長走上來',
-    desc: '連通 401 教室與 402 教室的內梯。 學長要不是 11:00 鐘響時走錯這道樓梯， 就不會在 LM402 前門外停下來打電話。',
-    pos: { x: 14, y: 0, z: -10 },
-    size: { w: 4, h: 13, d: 8 },
-    color: 0xb8a878,
-    type: 'stairs'
-  },
-  {
-    name: '伯達樓',
-    ep: 'EP13 · 2005-12-22',
-    desc: '學妹打完那通分手電話之後， 學長在伯達樓轉角站了好久， 「眼睛早已泛紅」。 失戀的轉角， toni 親自走過的真實地點。',
+    name: '伯達樓 · 轉角',
+    ep: 'EP 13 · 2005-12-22',
     pos: { x: -22, y: 0, z: -25 },
     size: { w: 16, h: 12, d: 16 },
     color: 0xa89878,
-    type: 'building'
+    type: 'building',
+    quote: '2005 年 12 月 22 日。\n妳打電話給我。\n「我們分手吧！你不要再來找我了！」\n\n傍晚， 我站在伯達樓的轉角， 天色昏暗， 我的眼睛早已泛紅， 遇到同學， 他卻沒有注意到。\n\n我站著， 就站著， 站了好久。',
+    source: '學長視角 · EP13',
+    href: 'reader.html#ep-13'
   },
   {
     name: '中美堂',
-    ep: 'EP13 · 聖誕晚會',
-    desc: '本該是學長學妹一起去的聖誕晚會場地。 學妹沒有出現， 學長一個人站在斜坡上， 看煙火升起又落下。',
-    pos: { x: -32, y: 0, z: -52 },
-    size: { w: 26, h: 14, d: 20 },
+    ep: 'EP 6 · 羽球場 / EP 13 · 聖誕晚會',
+    pos: { x: -32, y: 0, z: -55 },
+    size: { w: 26, h: 14, d: 22 },
     color: 0xd8c8a0,
-    type: 'auditorium'
+    type: 'auditorium',
+    quote: 'EP 6 · 學長視角\n吃完早餐後， 在中美堂跟妳打了場羽球。\n「妳真的是練過羽球隊的喔☺️」\n\nEP 13 · 學長視角\n原本計畫在 2005 年的 12 月 24 日， 一起去學校參加中美堂的聖誕晚會， 期待著那場最終沒有發生的「事件」。',
+    source: 'EP6 + EP13 對位',
+    href: 'reader.html#ep-6'
   },
   {
-    name: '文學院圖書館',
-    ep: 'EP9 / EP31 · 大二大三',
-    desc: '學長學妹一起念書的圖書館。 從這裡出去就是華江橋方向。 阿 Q 兔子的 PTT 認養文最初是在這裡寫的。',
-    pos: { x: 0, y: 0, z: -65 },
-    size: { w: 20, h: 12, d: 18 },
-    color: 0xc8b898,
-    type: 'library'
-  },
-  {
-    name: '機車停車場',
-    ep: 'EP12 · 2005 紙條',
-    desc: '學妹來這裡把那張紙條放在學長機車儀表板。 「我走了。 你要好好照顧自己。」 兩天後學長騎車回來看到了。',
-    pos: { x: 28, y: 0, z: 25 },
-    size: { w: 16, h: 2.4, d: 12 },
+    name: '學長機車停車處',
+    ep: 'EP 12 · 紙條',
+    pos: { x: 22, y: 0, z: 24 },
+    size: { w: 12, h: 2.4, d: 10 },
     color: 0x6a5a48,
-    type: 'parking'
+    type: 'parking',
+    quote: 'EP 12 · 學妹視角\n還記得 2006 年 1 月的那張紙條嗎？\n\n我寫給你的， 那張紙條， 放在你的 125 機車上。\n「我走了！你要好好照顧自己。」\n\n事實真相是， 每次上學前， 我依然會不知不覺地騎車經過那條「民安西路」， 往後好多年我不敢再經過的「民安西路」。\n\n「我說我走了， 但我從沒離開過。」',
+    source: '學妹視角 · EP12',
+    href: 'reader.html#ep-12'
   }
 ];
 
-const buildingMeshes = [];
-function makeBuilding(b) {
+const sceneMeshes = [];
+function makeBuilding(s) {
   const group = new THREE.Group();
-  const geo = new THREE.BoxGeometry(b.size.w, b.size.h, b.size.d);
-  const mat = new THREE.MeshStandardMaterial({ color: b.color, roughness: 0.72, metalness: 0.05 });
+  const geo = new THREE.BoxGeometry(s.size.w, s.size.h, s.size.d);
+  const mat = new THREE.MeshStandardMaterial({ color: s.color, roughness: 0.72, metalness: 0.05 });
   const mesh = new THREE.Mesh(geo, mat);
-  mesh.position.set(0, b.size.h / 2, 0);
-  mesh.userData.building = b;
+  mesh.position.set(0, s.size.h / 2, 0);
+  mesh.userData.scene = s;
   group.add(mesh);
 
-  /* 屋頂 (深色片) */
-  const roofGeo = new THREE.BoxGeometry(b.size.w + 0.4, 0.4, b.size.d + 0.4);
-  const roofMat = new THREE.MeshStandardMaterial({ color: 0x3a2820, roughness: 0.6 });
-  const roof = new THREE.Mesh(roofGeo, roofMat);
-  roof.position.set(0, b.size.h + 0.2, 0);
-  group.add(roof);
+  /* 屋頂 */
+  if (s.type !== 'parking') {
+    const roof = new THREE.Mesh(
+      new THREE.BoxGeometry(s.size.w + 0.4, 0.4, s.size.d + 0.4),
+      new THREE.MeshStandardMaterial({ color: 0x3a2820, roughness: 0.6 })
+    );
+    roof.position.set(0, s.size.h + 0.2, 0);
+    group.add(roof);
+  }
 
-  /* 窗戶 (4-8 排 emissive 暖光) */
-  const winCols = Math.max(2, Math.floor(b.size.w / 3));
-  const winRows = Math.max(1, Math.floor(b.size.h / 3.6));
-  const winMat = new THREE.MeshBasicMaterial({ color: 0xffe0a0, fog: true });
-  for (let r = 0; r < winRows; r++) {
-    for (let c = 0; c < winCols; c++) {
-      if (Math.random() > 0.62) continue;  // 隨機些窗戶亮
-      const w = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.9), winMat);
-      w.position.set(
-        -b.size.w / 2 + 1.5 + c * ((b.size.w - 3) / Math.max(1, winCols - 1)),
-        1.8 + r * 3.6,
-        b.size.d / 2 + 0.01
-      );
-      group.add(w);
+  /* 窗戶 — 隨機亮 */
+  if (s.type === 'lm402' || s.type === 'auditorium' || s.type === 'building') {
+    const winCols = Math.max(2, Math.floor(s.size.w / 3));
+    const winRows = Math.max(1, Math.floor(s.size.h / 3.6));
+    const winMat = new THREE.MeshBasicMaterial({ color: 0xffe0a0, fog: true });
+    for (let r = 0; r < winRows; r++) {
+      for (let c = 0; c < winCols; c++) {
+        if (Math.random() > 0.62) continue;
+        const w = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.9), winMat);
+        w.position.set(
+          -s.size.w / 2 + 1.5 + c * ((s.size.w - 3) / Math.max(1, winCols - 1)),
+          1.8 + r * 3.6,
+          s.size.d / 2 + 0.01
+        );
+        group.add(w);
+      }
     }
   }
 
-  group.position.set(b.pos.x, 0, b.pos.z);
+  /* LM402 標牌 — 標示「402」教室 */
+  if (s.type === 'lm402') {
+    const c = document.createElement('canvas');
+    c.width = 256; c.height = 96;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#1a1a18';
+    ctx.fillRect(0, 0, 256, 96);
+    ctx.fillStyle = '#ffd388';
+    ctx.font = 'bold 56px "DM Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('LM402', 128, 48);
+    const tex = new THREE.CanvasTexture(c);
+    const signMat = new THREE.MeshBasicMaterial({ map: tex });
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 1.2), signMat);
+    sign.position.set(0, s.size.h - 1.8, s.size.d / 2 + 0.05);
+    group.add(sign);
+  }
+
+  group.position.set(s.pos.x, 0, s.pos.z);
   scene.add(group);
-  buildingMeshes.push(mesh);
-  return group;
+  sceneMeshes.push(mesh);
 }
 
-BUILDINGS.forEach(makeBuilding);
+SCENES.forEach(makeBuilding);
 
-/* ─── 樹木 (隨機 100 棵分布) ─── */
+/* 樹木 隨機 80 棵 */
 const treeMat = new THREE.MeshStandardMaterial({ color: 0x3a5840, roughness: 0.92 });
 const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a3220, roughness: 0.95 });
-for (let i = 0; i < 100; i++) {
-  const x = (Math.random() - 0.5) * 220;
-  const z = (Math.random() - 0.5) * 220;
-  /* 不放在路上 / 不放在建築上 */
+for (let i = 0; i < 80; i++) {
+  const x = (Math.random() - 0.5) * 200;
+  const z = (Math.random() - 0.5) * 200;
   if (Math.abs(x) < 4 && Math.abs(z) < 80) continue;
-  if (Math.abs(z + 20) < 3 && Math.abs(x) < 60) continue;
+  if (Math.abs(z + 20) < 3 && Math.abs(x) < 55) continue;
   let collide = false;
-  for (const b of BUILDINGS) {
-    if (Math.abs(x - b.pos.x) < b.size.w / 2 + 2 && Math.abs(z - b.pos.z) < b.size.d / 2 + 2) {
+  for (const s of SCENES) {
+    if (Math.abs(x - s.pos.x) < s.size.w / 2 + 2 && Math.abs(z - s.pos.z) < s.size.d / 2 + 2) {
       collide = true; break;
     }
   }
   if (collide) continue;
-
   const tree = new THREE.Group();
   const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 1.8, 6), trunkMat);
   trunk.position.y = 0.9;
@@ -450,14 +506,14 @@ for (let i = 0; i < 100; i++) {
   scene.add(tree);
 }
 
-/* ─── 第一人稱控制 ─── */
-const lockPrompt = document.getElementById('lockPrompt');
-const keys = { w: false, a: false, s: false, d: false, shift: false, e: false };
+/* 控制 */
+const introOverlay = document.getElementById('introOverlay');
+const keys = { w: false, a: false, s: false, d: false, shift: false };
 let yaw = Math.PI;
 let pitch = 0;
 const mouseSens = 0.0024;
 
-lockPrompt.addEventListener('click', () => {
+introOverlay.addEventListener('click', () => {
   canvas.requestPointerLock();
 });
 canvas.addEventListener('click', () => {
@@ -466,9 +522,9 @@ canvas.addEventListener('click', () => {
 });
 document.addEventListener('pointerlockchange', () => {
   if (document.pointerLockElement === canvas) {
-    lockPrompt.classList.add('hide');
+    introOverlay.classList.add('hide');
   } else {
-    lockPrompt.classList.remove('hide');
+    /* 不要 unmount intro overlay after first lock — only show on first */
   }
 });
 document.addEventListener('mousemove', e => {
@@ -498,48 +554,49 @@ document.addEventListener('keyup', e => {
   }
 });
 
-/* 互動 ray 偵測 */
+/* 互動 raycast */
 const raycaster = new THREE.Raycaster();
-raycaster.far = 18;
+raycaster.far = 22;
 const focusPrompt = document.getElementById('focusPrompt');
-let focusedBuilding = null;
-
+let focusedScene = null;
 function updateFocus() {
   raycaster.setFromCamera({ x: 0, y: 0 }, cam);
-  const hits = raycaster.intersectObjects(buildingMeshes, false);
+  const hits = raycaster.intersectObjects(sceneMeshes, false);
   if (hits.length > 0) {
-    focusedBuilding = hits[0].object.userData.building;
+    focusedScene = hits[0].object.userData.scene;
     focusPrompt.classList.add('show');
   } else {
-    focusedBuilding = null;
+    focusedScene = null;
     focusPrompt.classList.remove('show');
   }
 }
-
 function tryInteract() {
-  if (!focusedBuilding) return;
-  showBuildingTip(focusedBuilding);
+  if (!focusedScene) return;
+  showScenePopup(focusedScene);
 }
 
-/* building tip popup */
-const buildingTip = document.getElementById('buildingTip');
-const btName = document.getElementById('btName');
-const btEp = document.getElementById('btEp');
-const btDesc = document.getElementById('btDesc');
-const btClose = document.getElementById('btClose');
-function showBuildingTip(b) {
-  btName.textContent = b.name;
-  btEp.textContent = b.ep;
-  btDesc.textContent = b.desc;
-  buildingTip.classList.add('show');
+/* popup */
+const scenePopup = document.getElementById('scenePopup');
+const spEp = document.getElementById('spEp');
+const spName = document.getElementById('spName');
+const spQuote = document.getElementById('spQuote');
+const spSource = document.getElementById('spSource');
+const spReadBtn = document.getElementById('spReadBtn');
+const spClose = document.getElementById('spClose');
+function showScenePopup(s) {
+  spEp.textContent = s.ep;
+  spName.textContent = s.name;
+  spQuote.textContent = s.quote;
+  spSource.textContent = '原文出處 · ' + s.source;
+  spReadBtn.href = s.href || 'reader.html';
+  scenePopup.classList.add('show');
   if (document.exitPointerLock) document.exitPointerLock();
 }
-btClose.addEventListener('click', () => {
-  buildingTip.classList.remove('show');
+spClose.addEventListener('click', () => {
+  scenePopup.classList.remove('show');
   canvas.requestPointerLock();
 });
 
-/* compass UI */
 const compass = document.getElementById('compass');
 function updateCompass() {
   const deg = ((yaw * 180 / Math.PI) % 360 + 540) % 360 - 180;
@@ -553,19 +610,16 @@ function updateCompass() {
   compass.textContent = dir + ' ' + Math.round(((deg + 360) % 360)) + '°';
 }
 
-/* 主迴圈 */
 let last = performance.now();
 function loop() {
   const now = performance.now();
   const dt = Math.min(0.06, (now - last) / 1000);
   last = now;
 
-  /* movement */
   const forwardX = -Math.sin(yaw);
   const forwardZ = -Math.cos(yaw);
   const rightX = Math.cos(yaw);
   const rightZ = -Math.sin(yaw);
-
   let dx = 0, dz = 0;
   if (keys.w) { dx += forwardX; dz += forwardZ; }
   if (keys.s) { dx -= forwardX; dz -= forwardZ; }
@@ -575,13 +629,12 @@ function loop() {
   if (mag > 0) { dx /= mag; dz /= mag; }
   const speed = keys.shift ? 11 : 4.8;
 
-  /* collision: 不能穿建築 */
   const nx = cam.position.x + dx * speed * dt;
   const nz = cam.position.z + dz * speed * dt;
   let blocked = false;
-  for (const b of BUILDINGS) {
-    if (Math.abs(nx - b.pos.x) < b.size.w / 2 + 0.6 &&
-        Math.abs(nz - b.pos.z) < b.size.d / 2 + 0.6) {
+  for (const s of SCENES) {
+    if (Math.abs(nx - s.pos.x) < s.size.w / 2 + 0.6 &&
+        Math.abs(nz - s.pos.z) < s.size.d / 2 + 0.6) {
       blocked = true; break;
     }
   }
@@ -589,9 +642,8 @@ function loop() {
     cam.position.x = nx;
     cam.position.z = nz;
   }
-  /* 校園邊界 */
-  cam.position.x = Math.max(-130, Math.min(130, cam.position.x));
-  cam.position.z = Math.max(-130, Math.min(130, cam.position.z));
+  cam.position.x = Math.max(-120, Math.min(120, cam.position.x));
+  cam.position.z = Math.max(-120, Math.min(120, cam.position.z));
   cam.position.y = 1.7;
 
   cam.rotation.y = yaw;
@@ -610,19 +662,17 @@ addEventListener('resize', () => {
   renderer.setSize(innerWidth, innerHeight);
 });
 
-/* console api */
-window.__CAMPUS__ = {
+window.__SCENE_TOUR__ = {
   cam: cam,
-  scene: scene,
-  buildings: BUILDINGS,
+  scenes: SCENES,
   teleportTo: function (name) {
-    const b = BUILDINGS.find(x => x.name === name);
-    if (!b) return false;
-    cam.position.set(b.pos.x + b.size.w / 2 + 4, 1.7, b.pos.z + b.size.d / 2 + 4);
-    yaw = Math.atan2(b.pos.x - cam.position.x, b.pos.z - cam.position.z) + Math.PI;
+    const s = SCENES.find(x => x.name === name);
+    if (!s) return false;
+    cam.position.set(s.pos.x + s.size.w / 2 + 4, 1.7, s.pos.z + s.size.d / 2 + 4);
+    yaw = Math.atan2(s.pos.x - cam.position.x, s.pos.z - cam.position.z) + Math.PI;
     return true;
   },
-  version: 'r62-poc-1'
+  version: 'r62-r2-1'
 };
 </script>
 </body>

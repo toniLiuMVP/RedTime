@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v15-20260606';  // unchanged: GLB / vendor 無變動
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v35-20260527';  // bumped: r62 Path D Tier 1+2 (art tokens --thread-1~4 + --amber-glow / lm402-parallel godRays 0.35→0.12 / fan quiz 100→500 題 50 月台 + BGM 紅線時間.mp3 + extend API / 科普 10 博士 EP_EXPERTS / campus-tour.html PoC)
+const RUNTIME_VERSION = 'runtime-v36-20260527';  // bumped: r62 round-2 review (hide campus-tour link / reader.html lm402+platform-run links → 三線入口 -time.html / mobile tour-overlay safe-area-inset-bottom + 100dvh / campus-tour v2 真實樓名 + toni 原文 quote)
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;

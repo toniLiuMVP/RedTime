@@ -1699,6 +1699,40 @@
         padding: 32px 40px;
         box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.04);
       }
+      /* r62 round-2 #1 ｜ 手機優化：避開 iOS Safari URL bar + safe-area-inset-bottom
+         toni 紀律「避免手機用戶根本點擊不到下方」— 底部留 100+px buffer, card 上頂 */
+      @supports (height: 100dvh) {
+        .tour-card { max-height: 88dvh; }
+      }
+      @media (max-width: 640px) {
+        .tour-overlay {
+          align-items: flex-start;
+          padding: max(16px, env(safe-area-inset-top, 0px))
+                   max(12px, env(safe-area-inset-right, 0px))
+                   calc(env(safe-area-inset-bottom, 0px) + 120px)
+                   max(12px, env(safe-area-inset-left, 0px));
+        }
+        .tour-card {
+          max-height: calc(100svh - 140px - env(safe-area-inset-bottom, 0px));
+          margin-top: 12px;
+          padding: 20px 18px;
+        }
+        /* tour-bottom (上一步/下一步/5-of-5) sticky 在 card 內部底部 + 漸層遮罩
+           避免 scroll 時被 content 吃掉 + iOS Safari URL bar 不擋 */
+        .tour-card .tour-bottom {
+          position: sticky;
+          bottom: -1px;
+          background: linear-gradient(180deg,
+            rgba(15, 15, 22, 0),
+            rgba(15, 15, 22, 0.92) 24%,
+            rgba(15, 15, 22, 0.96) 100%);
+          padding: 12px 0 4px 0;
+          margin-top: 20px;
+        }
+        .tour-card .tour-final-actions {
+          padding-bottom: 4px;
+        }
+      }
       .tour-topbar {
         display: flex;
         justify-content: space-between;
@@ -2825,9 +2859,7 @@
               <a class="btn-ghost" href="demos/platform-run-time.html"
                 >🏃 &nbsp; 月台上的狂奔</a
               >
-              <a class="btn-ghost" href="campus-tour.html"
-                >🌳 &nbsp; 校園巡禮</a
-              >
+              <!-- r62 #5 ｜ 校園巡禮 PoC 待改進為真實輔大 + 故事文本對位,隱藏入口 -->
             </div>
           </div>
         </div>
