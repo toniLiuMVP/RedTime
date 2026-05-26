@@ -2212,48 +2212,58 @@ body.lm402-page #cinematic-gate .cinematic-gate-kicker {
   </script>
 
   <!-- 意識菜市場 dedicated mode: ?mode=consciousness
-       default 用 'low' 避免高 preset 共用學妹頭部 anchor 形成過曝白塊
-       badge 點擊可循環 4 階 (low → mid → high → off) -->
+       lights (5 SpotLight) 共用學妹頭部 anchor + breath animation + additive 疊加
+       → 任何 lights > 0 都會在學妹頭頂形成 light-cone halo (白球)
+       修法:四階全無 lights,只動 particles + text -->
   <script>
     (function () {
       const params = new URLSearchParams(window.location.search);
       const mode = (params.get('mode') || '').toLowerCase();
       if (mode !== 'consciousness' && mode !== 'consc') return;
 
-      const PRESETS = ['low', 'mid', 'high', 'off'];
-      const LABELS = {
-        low:  '淡 (低)',
-        mid:  '中 (默認偏弱)',
-        high: '強 (易過曝)',
-        off:  '關'
+      /* 四階,前三階全 lights = 0 (絕對沒白球),第三階可選微光 */
+      const STATES = [
+        { key: 'text',      label: '字 · 淡',           lights: 0,    particles: 0,    text: 0.30 },
+        { key: 'textdust',  label: '字 + 粒 · 淡',      lights: 0,    particles: 0.15, text: 0.30 },
+        { key: 'tinyglow',  label: '字 + 粒 + 微光',    lights: 0.05, particles: 0.15, text: 0.40 },
+        { key: 'off',       label: '關',                lights: 0,    particles: 0,    text: 0    }
+      ];
+
+      /* 從 URL 可指定起點(text / textdust / tinyglow / off) — 大小寫不敏感
+         向下兼容舊 low/mid/high/off 對應 */
+      const aliasMap = {
+        low:  'text',      mid:  'textdust',
+        high: 'tinyglow',  off:  'off'
       };
-      /* 從 URL 可指定起點 — 預設 low, 大小寫不敏感 */
-      const startLevel = (params.get('level') || '').toLowerCase();
-      let currentIdx = PRESETS.indexOf(startLevel);
+      let startKey = (params.get('level') || params.get('state') || '').toLowerCase();
+      if (aliasMap[startKey]) startKey = aliasMap[startKey];
+      let currentIdx = STATES.findIndex(function (s) { return s.key === startKey; });
       if (currentIdx < 0) currentIdx = 0;
 
       let badge = null;
 
-      function applyPreset(idx) {
-        const preset = PRESETS[idx];
+      function applyState(idx) {
+        const s = STATES[idx];
         try {
-          window.__TWIN_BALANCE__(preset);
+          if (window.__CONSC_LIGHTS__)    window.__CONSC_LIGHTS__.setIntensity(s.lights);
+          if (window.__CONSC_PARTICLES__) window.__CONSC_PARTICLES__.setIntensity(s.particles);
+          if (window.__CONSC_TEXT__)      window.__CONSC_TEXT__.setIntensity(s.text);
         } catch (e) {
-          console.warn('[consciousness-mode] preset apply failed:', e);
-          return; /* 失敗就不更新 badge,避免 UI 顯示成功 */
+          console.warn('[consciousness-mode] state apply failed:', e);
+          return;
         }
         if (badge) {
-          badge.textContent = '意識菜市場 · ' + LABELS[preset] + ' · 點擊切換';
-          badge.style.opacity = preset === 'off' ? '0.55' : '1';
+          badge.textContent = '意識菜市場 · ' + s.label + ' · 點擊切換';
+          badge.style.opacity = s.key === 'off' ? '0.55' : '1';
         }
-        console.info('[consciousness-mode] preset →', preset);
+        console.info('[consciousness-mode] state →', s.key, s);
       }
 
-      /* renderer 透過動態 import 才 expose __TWIN_BALANCE__,
-         玩家可能停留 cinematic gate 超過 30 秒;改 indefinite 輪詢 */
       function tryEnable() {
-        if (typeof window.__TWIN_BALANCE__ === 'function') {
-          /* 用 <button> 而非 div 取得鍵盤焦點 + a11y 標籤 */
+        const ready = typeof window.__CONSC_LIGHTS__ !== 'undefined'
+                   && typeof window.__CONSC_PARTICLES__ !== 'undefined'
+                   && typeof window.__CONSC_TEXT__ !== 'undefined';
+        if (ready) {
           badge = document.createElement('button');
           badge.type = 'button';
           badge.setAttribute('aria-label', '意識菜市場強度切換');
@@ -2267,13 +2277,13 @@ body.lm402-page #cinematic-gate .cinematic-gate-kicker {
             'box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55); cursor: pointer; ' +
             'transition: opacity 0.2s ease, background 0.2s ease;';
           badge.addEventListener('click', function () {
-            currentIdx = (currentIdx + 1) % PRESETS.length;
-            applyPreset(currentIdx);
+            currentIdx = (currentIdx + 1) % STATES.length;
+            applyState(currentIdx);
           });
           document.body.appendChild(badge);
-          applyPreset(currentIdx);
+          applyState(currentIdx);
         } else {
-          /* 無 max attempts,玩家可能久候 cinematic gate 才進場景 */
+          /* indefinite poll: renderer 動態 import,玩家可能在 cinematic gate 久候 */
           setTimeout(tryEnable, 500);
         }
       }

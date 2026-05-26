@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v15-20260606';  // unchanged: GLB / vendor 無變動
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v41-20260527';  // bumped: consciousness mode polish — indefinite polling (was 30s, may miss cinematic gate hold) + badge uses <button> for a11y/keyboard + applyPreset bails on failure (no UI lie) + URL param case-insensitive
+const RUNTIME_VERSION = 'runtime-v42-20260527';  // bumped: consciousness mode no longer routes through __TWIN_BALANCE__; calls individual CONSC_LIGHTS / PARTICLES / TEXT so 4 states all keep lights at 0 (no over-glow halo around junior head). One state offers a very faint glow (0.05) for users who want a trace of light
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
