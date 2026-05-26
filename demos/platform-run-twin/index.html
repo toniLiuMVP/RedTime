@@ -5553,6 +5553,29 @@ function showFinalResult() {
   lastSavedHighlight = -1;
   /* Change retry text */
   dom.resultRetry.textContent = "\u518D\u73A9\u4E00\u6B21";
+
+  /* r61c A5 ｜ Steam-3 manual: 月台 10 關通關後加 button「→ 進入 LM402 一眼瞬間」 */
+  try {
+    if (!document.getElementById('pt-bridge-lm402')) {
+      var bridge = document.createElement('a');
+      bridge.id = 'pt-bridge-lm402';
+      bridge.href = '../../lm402-twin.html?from=platform';
+      bridge.textContent = '→ 進入 LM402 一眼瞬間';
+      bridge.style.cssText = 'display:inline-block;margin-top:24px;padding:11px 30px;background:linear-gradient(135deg,rgba(228,70,80,0.18),rgba(170,31,45,0.10));border:1px solid rgba(228,70,80,0.55);border-radius:2px;color:rgba(248,168,152,0.96);font-family:"Cormorant Garamond","Noto Serif TC",serif;font-size:14px;letter-spacing:0.22em;text-indent:0.22em;text-decoration:none;cursor:pointer;transition:background 0.3s ease;';
+      bridge.addEventListener('mouseover', function () { bridge.style.background = 'linear-gradient(135deg,rgba(228,70,80,0.32),rgba(170,31,45,0.20))'; });
+      bridge.addEventListener('mouseout', function () { bridge.style.background = 'linear-gradient(135deg,rgba(228,70,80,0.18),rgba(170,31,45,0.10))'; });
+      var bridgeWrap = document.createElement('div');
+      bridgeWrap.style.cssText = 'text-align:center;margin-top:8px;';
+      bridgeWrap.appendChild(bridge);
+      var bridgeHint = document.createElement('div');
+      bridgeHint.textContent = '他抬頭。 她也抬頭。 30 秒擁抱換來的這一秒。';
+      bridgeHint.style.cssText = 'margin-top:10px;font-size:11px;color:rgba(218,184,168,0.62);letter-spacing:0.18em;font-family:"Noto Serif TC",serif;';
+      bridgeWrap.appendChild(bridgeHint);
+      dom.resultBody.appendChild(bridgeWrap);
+    }
+  } catch (e_bridge) {
+    console.warn('[r61c-bridge] platform→lm402 button setup failed:', e_bridge && e_bridge.message);
+  }
 }
 
 function failure() {

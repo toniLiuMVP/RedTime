@@ -1250,6 +1250,10 @@
           <div class="lt-dot" data-step="2"></div>
           <div class="lt-line"></div>
           <div class="lt-dot" data-step="3"></div>
+          <div class="lt-line"></div>
+          <div class="lt-dot" data-step="4"></div>
+          <div class="lt-line"></div>
+          <div class="lt-dot" data-step="5"></div>
         </div>
 
         <div class="lm402-tutorial-step active" data-step="1">
@@ -1283,9 +1287,28 @@
           </div>
         </div>
 
+        <div class="lm402-tutorial-step" data-step="4">
+          <h2 class="lt-step-title">手機玩家小提醒</h2>
+          <div class="lt-step-body">
+            <p><strong>iPhone / Android：</strong></p>
+            <p>橫向握持效果最好。<br>戴耳機，11:00 那聲鐘響不要錯過。</p>
+            <p>螢幕底下會浮出兩根搖桿，<br>螢幕中央會浮出 ✦ 跟 ☆ 按鈕。</p>
+            <p>覺得卡 → 重整一次，<br>SW 會把上次的 cache 還給你。</p>
+          </div>
+        </div>
+
+        <div class="lm402-tutorial-step" data-step="5">
+          <h2 class="lt-step-title">劇情小提示</h2>
+          <div class="lt-step-body">
+            <p>學長在 2005 第一次看見學妹。<br>學妹其實已經是 29 歲的身體，<br>承載著 18 歲剛畢業的意識。</p>
+            <p>她在心裡跟未來的自己開會，<br>49 歲的她說：<br>「去愛這一次吧。」</p>
+            <p>進去 LM402 後，看看走廊另一頭，<br>那秒鐘會被命運按存檔鍵。</p>
+          </div>
+        </div>
+
         <div class="lm402-tutorial-bottom">
           <button class="lt-btn-prev" type="button" onclick="lm402TourPrev()" hidden>← 上一步</button>
-          <div class="lt-step-indicator">1 / 3</div>
+          <div class="lt-step-indicator">1 / 5</div>
           <button class="lt-btn-next" type="button" onclick="lm402TourNext()">下一步 →</button>
         </div>
         <button class="lt-skip" type="button" onclick="closeLM402Tutorial()">之後再玩</button>
@@ -1295,7 +1318,7 @@
     /* r60a C10:LM402 新手引路 tutorial JS(對位 r58 modal 紀律) */
     (function () {
       const TOUR_KEY = "redtime_lm402_newcomer_done";
-      const TOUR_STEPS = 3;
+      const TOUR_STEPS = 5;
       let currentStep = 1;
 
       window.openLM402Tutorial = function () {

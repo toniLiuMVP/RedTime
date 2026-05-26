@@ -5758,6 +5758,29 @@ function showFinalResult() {
   lastSavedHighlight = -1;
   /* Change retry text */
   dom.resultRetry.textContent = "\u518D\u73A9\u4E00\u6B21";
+
+  /* r61c A5 ｜ Steam-3 manual: 月台 10 關通關後加 button「→ 進入 LM402 一眼瞬間」 */
+  try {
+    if (!document.getElementById('pt-bridge-lm402')) {
+      var bridge = document.createElement('a');
+      bridge.id = 'pt-bridge-lm402';
+      bridge.href = '../../lm402-twin.html?from=platform';
+      bridge.textContent = '→ 進入 LM402 一眼瞬間';
+      bridge.style.cssText = 'display:inline-block;margin-top:24px;padding:11px 30px;background:linear-gradient(135deg,rgba(228,70,80,0.18),rgba(170,31,45,0.10));border:1px solid rgba(228,70,80,0.55);border-radius:2px;color:rgba(248,168,152,0.96);font-family:"Cormorant Garamond","Noto Serif TC",serif;font-size:14px;letter-spacing:0.22em;text-indent:0.22em;text-decoration:none;cursor:pointer;transition:background 0.3s ease;';
+      bridge.addEventListener('mouseover', function () { bridge.style.background = 'linear-gradient(135deg,rgba(228,70,80,0.32),rgba(170,31,45,0.20))'; });
+      bridge.addEventListener('mouseout', function () { bridge.style.background = 'linear-gradient(135deg,rgba(228,70,80,0.18),rgba(170,31,45,0.10))'; });
+      var bridgeWrap = document.createElement('div');
+      bridgeWrap.style.cssText = 'text-align:center;margin-top:8px;';
+      bridgeWrap.appendChild(bridge);
+      var bridgeHint = document.createElement('div');
+      bridgeHint.textContent = '他抬頭。 她也抬頭。 30 秒擁抱換來的這一秒。';
+      bridgeHint.style.cssText = 'margin-top:10px;font-size:11px;color:rgba(218,184,168,0.62);letter-spacing:0.18em;font-family:"Noto Serif TC",serif;';
+      bridgeWrap.appendChild(bridgeHint);
+      dom.resultBody.appendChild(bridgeWrap);
+    }
+  } catch (e_bridge) {
+    console.warn('[r61c-bridge] platform→lm402 button setup failed:', e_bridge && e_bridge.message);
+  }
 }
 
 function failure() {
@@ -5825,23 +5848,29 @@ function failure() {
       var C7_KEY = "redtime_pt_parallel_failures";
       var n = parseInt(localStorage.getItem(C7_KEY) || "0", 10) + 1;
       localStorage.setItem(C7_KEY, String(n));
+      /* r61c A2 \uFF5C Steam-2 \u5B78\u59B9\u56DE\u671B: \u5931\u6557 3+ \u6B21, \u52A0\u300C\u5979\u4E5F\u8A66\u4E86 N \u6B21\u300Dreframe + button label
+         \u300C\u518D\u8A66\u4E00\u6B21\u300D \u2192 \u300C\u8B93\u5979\u518D\u5E6B\u4F60\u4E00\u6B21\u300D(\u96E3\u5EA6\u4E0D\u8B8A, \u5C0D\u4F4D EP41 keystone) */
       var c7msg = null;
       if (n >= 7) {
-        c7msg = "\u5DF2\u91CD\u4F86 " + n + " \u6B21\u3002canon \u5DF2\u89E3\u9396\uFF1A\u4F60\u8A18\u5F97\u9019\u689D\u6708\u53F0\u7684\u9577\u5EA6\u4E86\u3002";
+        c7msg = "\u7B2C " + n + " \u6B21\u4E86\u3002 \u5979\u4E5F\u8A66\u4E86 " + n + " \u6B21\u3002\ncanon \u5DF2\u89E3\u9396: \u4F60\u8A18\u5F97\u9019\u689D\u6708\u53F0\u7684\u9577\u5EA6\u4E86\u3002\n\u96E3\u5EA6\u4E0D\u8B8A, \u4F46\u4F60\u4E0D\u662F\u4E00\u500B\u4EBA\u5728\u8DD1\u3002";
       } else if (n >= 5) {
-        c7msg = "\u5DF2\u91CD\u4F86 " + n + " \u6B21\u3002\u7DF4\u7FD2\u8D95\u8DEF\uFF0C\u4E5F\u662F canon \u7684\u4E00\u90E8\u5206\u3002";
+        c7msg = "\u7B2C " + n + " \u6B21\u4E86\u3002 \u5979\u4E5F\u8A66\u4E86 " + n + " \u6B21\u3002\n\u7DF4\u7FD2\u8D95\u8DEF, \u4E5F\u662F canon \u7684\u4E00\u90E8\u5206\u3002";
       } else if (n >= 3) {
-        c7msg = "\u5DF2\u91CD\u4F86 " + n + " \u6B21\u3002\u5931\u6557\uFF0C\u4E5F\u662F canon\u3002";
+        c7msg = "\u7B2C " + n + " \u6B21\u4E86\u3002 \u5979\u4E5F\u8A66\u4E86 " + n + " \u6B21\u3002\n\u5931\u6557, \u4E5F\u662F canon\u3002";
       }
       if (c7msg) {
         var c7wrap = document.createElement("div");
         c7wrap.className = "c7-canon-unlock";
-        c7wrap.style.cssText = "margin-top:18px;padding:14px 18px;border-top:1px solid rgba(218,176,124,0.35);font-size:14px;line-height:1.85;color:rgba(218,176,124,0.92);letter-spacing:0.06em;text-align:center;opacity:0;transition:opacity 1.2s ease 0.6s;";
+        c7wrap.style.cssText = "margin-top:18px;padding:14px 18px;border-top:1px solid rgba(218,176,124,0.35);font-size:14px;line-height:1.95;color:rgba(218,176,124,0.92);letter-spacing:0.06em;text-align:center;opacity:0;transition:opacity 1.2s ease 0.6s;white-space:pre-line;";
         c7wrap.textContent = c7msg;
         dom.resultBody.appendChild(c7wrap);
         requestAnimationFrame(function () {
           requestAnimationFrame(function () { c7wrap.style.opacity = "1"; });
         });
+        /* r61c A2 \uFF5C button label\u300C\u518D\u8A66\u4E00\u6B21\u300D\u2192\u300C\u8B93\u5979\u518D\u5E6B\u4F60\u4E00\u6B21\u300D(\u5C0D\u4F4D N-fail) */
+        if (n >= 3 && dom.resultRetry) {
+          dom.resultRetry.textContent = "\u8B93\u5979\u518D\u5E6B\u4F60\u4E00\u6B21";
+        }
       }
       /* Debug: console inspection */
       window.__C7_FAILURE_COUNT__ = n;

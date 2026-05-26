@@ -4843,6 +4843,30 @@ function showFinalResult() {
   lastSavedHighlight = -1;
   /* Change retry text */
   dom.resultRetry.textContent = "\u518D\u73A9\u4E00\u6B21";
+
+  /* r61c A5 \uFF5C Steam-3 manual: \u6708\u53F0 10 \u95DC\u901A\u95DC\u5F8C\u52A0 button\u300C\u2192 \u9032\u5165 LM402 \u4E00\u773C\u77AC\u9593\u300D
+     (\u5C0D\u4F4D EP36 \u6708\u53F0 + EP3/EP38 LM402 \u96D9 keystone, manual transition \u4E0D auto-navigate) */
+  try {
+    if (!document.getElementById('pt-bridge-lm402')) {
+      var bridge = document.createElement('a');
+      bridge.id = 'pt-bridge-lm402';
+      bridge.href = '../../lm402-twin.html?from=platform';
+      bridge.textContent = '\u2192 \u9032\u5165 LM402 \u4E00\u773C\u77AC\u9593';
+      bridge.style.cssText = 'display:inline-block;margin-top:24px;padding:11px 30px;background:linear-gradient(135deg,rgba(228,70,80,0.18),rgba(170,31,45,0.10));border:1px solid rgba(228,70,80,0.55);border-radius:2px;color:rgba(248,168,152,0.96);font-family:"Cormorant Garamond","Noto Serif TC",serif;font-size:14px;letter-spacing:0.22em;text-indent:0.22em;text-decoration:none;cursor:pointer;transition:background 0.3s ease;';
+      bridge.addEventListener('mouseover', function () { bridge.style.background = 'linear-gradient(135deg,rgba(228,70,80,0.32),rgba(170,31,45,0.20))'; });
+      bridge.addEventListener('mouseout', function () { bridge.style.background = 'linear-gradient(135deg,rgba(228,70,80,0.18),rgba(170,31,45,0.10))'; });
+      var bridgeWrap = document.createElement('div');
+      bridgeWrap.style.cssText = 'text-align:center;margin-top:8px;';
+      bridgeWrap.appendChild(bridge);
+      var bridgeHint = document.createElement('div');
+      bridgeHint.textContent = '\u4ED6\u62AC\u982D\u3002 \u5979\u4E5F\u62AC\u982D\u3002 30 \u79D2\u64C1\u62B1\u63DB\u4F86\u7684\u9019\u4E00\u79D2\u3002';
+      bridgeHint.style.cssText = 'margin-top:10px;font-size:11px;color:rgba(218,184,168,0.62);letter-spacing:0.18em;font-family:"Noto Serif TC",serif;';
+      bridgeWrap.appendChild(bridgeHint);
+      dom.resultBody.appendChild(bridgeWrap);
+    }
+  } catch (e_bridge) {
+    console.warn('[r61c-bridge] platform\u2192lm402 button setup failed:', e_bridge && e_bridge.message);
+  }
 }
 
 function failure() {
