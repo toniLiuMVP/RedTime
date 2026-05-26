@@ -317,7 +317,7 @@
       校園主軸：從南端正門， 沿著真善美聖廣場長軸， 走到北端的中美堂。
     </div>
     <div class="io-disclaimer">
-      ※ 配置依輔大官方校園地圖 + 建築代號 (LM / LF / BS / DG) 整理， 經 Gemini 查證： 利瑪竇大樓 (LM) 是管理學院， 中美堂位北端， 淨心堂位中央偏南。 為了讓玩家在一個畫面裡走完故事的場景， 建築相對位置略為壓縮， 但東西分區 + 南北主軸維持真實校園結構。
+      ※ 配置依輔仁大學官方校園地圖 + 建築代號 (LM / LF / BS / DG) 整理： 利瑪竇大樓 (LM) 是管理學院， 中美堂位北端， 淨心堂位中央偏南。 為了讓玩家在一個畫面裡走完故事的場景， 建築相對位置略為壓縮， 但東西分區 + 南北主軸維持真實校園結構。
     </div>
     <div class="io-hint">點擊任意處 開始 / 鎖定滑鼠</div>
   </div>
@@ -326,10 +326,10 @@
 <script type="module">
 import * as THREE from './assets/lm402/vendor-three.module.js';
 
-/* r62 round-3 #1 ｜ 校園巡禮 v3 — Gemini 查證真實輔大配置 + toni 原文 quote
-   配置來源:輔大官方 https://www.fju.edu.tw/aboutFju.jsp?labelID=22 (Gemini 查證 A 級)
+/* 校園巡禮 — 真實輔大配置 + 故事原文 quote
+   配置依輔大官方校園地圖 + 建築代號 (LM / LF / BS / DG)
    主軸 Y(z): 校門(南,+85) → 真善美聖廣場 → 淨心堂(中央,~0) → 中美堂(北,-65)
-   東西分區: 東側(管理 LM/社科 BS) / 西側(傳播 LF) / 中央軸 */
+   東西分區: 東側(管理 LM / 社科 BS) / 西側(傳播 LF) / 中央軸 */
 
 const canvas = document.getElementById('scene-canvas');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -344,9 +344,9 @@ scene.background = new THREE.Color(0xc4d4e0);
 scene.fog = new THREE.FogExp2(0xc4d4e0, 0.011);
 
 const cam = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.1, 600);
-cam.position.set(0, 1.7, 88);
+cam.position.set(0, 1.7, 95); /* 校門南側 5m, 看著校園方向 */
 cam.rotation.order = 'YXZ';
-cam.rotation.y = Math.PI; /* face -z (north) */
+cam.rotation.y = 0; /* face -z (north,校園內) - Three.js convention: yaw=0 → 朝 -z */
 
 /* 地面 + 主軸大道 (校門 → 中美堂) */
 const groundMat = new THREE.MeshStandardMaterial({ color: 0x4a6850, roughness: 0.95, metalness: 0.02 });
@@ -392,9 +392,9 @@ scene.add(sun);
 scene.add(new THREE.AmbientLight(0xb0b8c8, 0.55));
 scene.add(new THREE.HemisphereLight(0xc8d4e0, 0x4a3820, 0.32));
 
-/* ─── 真實輔大建築 (Gemini A 級官方來源驗證) ─── */
+/* ─── 真實輔大建築 (依官方校園地圖整理) ─── */
 /* 主軸方向: -z = 北 (中美堂), +z = 南 (校門)
-   東西:    +x = 東 (LM/BS/DG), -x = 西 (LF/文德) */
+   東西:    +x = 東 (LM / BS / DG), -x = 西 (LF / 文德) */
 const SCENES = [
   /* 1. 校門 — 真實:中正路 510 號正門 */
   {
@@ -444,7 +444,7 @@ const SCENES = [
     size: { w: 16, h: 12, d: 18 },
     color: 0xa89878,
     type: 'building',
-    quote: '輔大傳播學院主大樓 (代號 LF), 內有知名烏龜池。\n\n是文學院/傳播學院學生的日常路徑, toni 故事中沒指名場景, 但學妹「會計系」與此區距離不遠 (Gemini: 商學院/管院在東側 LM)。',
+    quote: '輔大傳播學院主大樓 (代號 LF), 內有知名烏龜池。\n\n是文學院 / 傳播學院學生的日常路徑, toni 故事中沒指名場景, 但學妹「會計系」與此區距離不遠 (商管學院在東側 LM)。',
     source: '輔大官方建築代號 · 非故事場景',
     href: ''
   },
@@ -477,7 +477,7 @@ const SCENES = [
   /* 7. 淨心堂 — 真實:校園中央, 利瑪竇樓前方, 輔大靈魂建築 */
   {
     name: '淨心堂',
-    code: '輔大主聖堂 · 校園靈魂建築 (Gemini 訂正：不是玫瑰聖母堂)',
+    code: '輔大主聖堂 · 校園靈魂建築 (非校外玫瑰聖母堂)',
     ep: '故事未明確提及',
     pos: { x: 0, y: 0, z: -16 },
     size: { w: 12, h: 16, d: 14 },
@@ -509,7 +509,7 @@ function makeBuilding(s) {
   const group = new THREE.Group();
   let mesh;
   if (s.type === 'auditorium') {
-    /* 中美堂 = 圓形 (Gemini A 級確認) */
+    /* 中美堂 = 圓形 (依官方校園地圖) */
     const radius = s.size.w / 2;
     const geo = new THREE.CylinderGeometry(radius, radius, s.size.h, 24);
     const mat = new THREE.MeshStandardMaterial({ color: s.color, roughness: 0.72, metalness: 0.05 });
@@ -621,10 +621,11 @@ function makeBuilding(s) {
   mesh.userData.scene = s;
   group.add(mesh);
 
-  /* LM402 / 建築代號 標牌 */
-  if (s.type === 'lm402' || s.code.match(/^[A-Z]{2,3}\s/) || s.code.match(/\s[A-Z]{2}\s/)) {
+  /* LM402 / 建築代號 標牌 (defensive: 防 s.code 未定義) */
+  const codeStr = s.code || '';
+  if (s.type === 'lm402' || codeStr.match(/^[A-Z]{2,3}\s/) || codeStr.match(/\s[A-Z]{2}\s/)) {
     const lblCode = s.type === 'lm402' ? 'LM402' :
-                    (s.code.match(/[A-Z]{2,3}/) ? s.code.match(/[A-Z]{2,3}/)[0] : '');
+                    (codeStr.match(/[A-Z]{2,3}/) ? codeStr.match(/[A-Z]{2,3}/)[0] : '');
     if (lblCode) {
       const c = document.createElement('canvas');
       c.width = 256; c.height = 96;
@@ -682,7 +683,7 @@ for (let i = 0; i < 100; i++) {
 /* 控制 */
 const introOverlay = document.getElementById('introOverlay');
 const keys = { w: false, a: false, s: false, d: false, shift: false };
-let yaw = Math.PI;
+let yaw = 0; /* 初始朝 -z = 校園方向, 與 cam.rotation.y 一致 (Codex r3 訂正) */
 let pitch = 0;
 const mouseSens = 0.0024;
 
@@ -731,6 +732,8 @@ function updateFocus() {
   const hits = raycaster.intersectObjects(sceneMeshes, false);
   if (hits.length > 0) {
     focusedScene = hits[0].object.userData.scene;
+    /* 場景有故事 → 「看故事原文」; 純地標 → 「看建築介紹」 */
+    focusPrompt.textContent = focusedScene.href ? '點擊 / E 鍵 看故事原文' : '點擊 / E 鍵 看建築介紹';
     focusPrompt.classList.add('show');
   } else {
     focusedScene = null;
@@ -816,6 +819,14 @@ function loop() {
   const nz = cam.position.z + dz * speed * dt;
   let blocked = false;
   for (const s of SCENES) {
+    /* 校門中央通道留通行: 雙柱在 x=±s.size.w/2, 中間 (|x| < w/2 - 1.5) 不擋 */
+    if (s.type === 'gate') {
+      const halfW = s.size.w / 2;
+      const hitPillar = (Math.abs(nx - s.pos.x + halfW) < 1.4 || Math.abs(nx - s.pos.x - halfW) < 1.4)
+                        && Math.abs(nz - s.pos.z) < s.size.d / 2 + 0.6;
+      if (hitPillar) { blocked = true; break; }
+      continue;
+    }
     if (Math.abs(nx - s.pos.x) < s.size.w / 2 + 0.6 &&
         Math.abs(nz - s.pos.z) < s.size.d / 2 + 0.6) {
       blocked = true; break;

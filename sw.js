@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v15-20260606';  // unchanged: GLB / vendor 無變動
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v37-20260527';  // bumped: r62 round-3 review (campus-tour v3 真實輔大配置 Gemini A 級官方來源 + 8 建築 + 中美堂圓形 dome + 淨心堂尖頂 + 校門雙柱牌 + 訪客進度 / 全面手機新手模式優化 5 步驟壓縮間距 + 觸控目標 ≥44px + 超小螢幕 380px 適配)
+const RUNTIME_VERSION = 'runtime-v38-20260527';  // bumped: campus tour real Fu Jen layout (8 buildings + circular auditorium + chapel + gate) + mobile onboarding refinements + post-review fixes (yaw direction, gate collision, css specificity, defensive code)
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
