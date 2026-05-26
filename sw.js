@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v15-20260606';  // unchanged: GLB / vendor 無變動
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v31-20260526';  // bumped: r61 batch (100-question fan quiz with 7-tier title system / 15-entry physics-astronomy-quantum science companion)
+const RUNTIME_VERSION = 'runtime-v32-20260526';  // bumped: r61b fix (science companion relocated inline per-episode; fan title displayed in sidebar header per toni clarification)
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;

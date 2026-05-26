@@ -881,6 +881,43 @@
           letter-spacing: 0.2em;
           text-transform: uppercase;
         }
+        /* r61b #9 ｜ 鋼鐵粉絲稱號 sidebar display (toni 紀律：稱號顯示在網站適合的地方) */
+        .sb-fan-title {
+          margin-top: 10px;
+          padding: 6px 10px;
+          background: linear-gradient(135deg, rgba(228, 70, 80, 0.12), rgba(170, 31, 45, 0.10));
+          border: 1px solid rgba(228, 70, 80, 0.32);
+          border-radius: 3px;
+          display: none;
+          align-items: center;
+          gap: 8px;
+        }
+        .sb-fan-title.visible { display: flex; }
+        .sb-fan-title .sft-icon {
+          font-size: 13px;
+          color: rgba(228, 70, 80, 0.95);
+          flex-shrink: 0;
+        }
+        .sb-fan-title .sft-text {
+          font-family: "Noto Serif TC", "Cormorant Garamond", serif;
+          font-size: 11.5px;
+          letter-spacing: 0.18em;
+          color: rgba(248, 168, 152, 0.96);
+          flex: 1;
+        }
+        .sb-fan-title .sft-num {
+          font-family: "DM Mono", monospace;
+          font-size: 9px;
+          color: rgba(218, 184, 168, 0.78);
+          letter-spacing: 0.06em;
+        }
+        body.day-mode .sb-fan-title {
+          background: linear-gradient(135deg, rgba(228, 70, 80, 0.06), rgba(170, 31, 45, 0.04));
+          border-color: rgba(228, 70, 80, 0.42);
+        }
+        body.day-mode .sb-fan-title .sft-text {
+          color: rgba(170, 31, 45, 0.92);
+        }
         .sb-filter {
           display: flex;
           flex-wrap: wrap;
@@ -3341,6 +3378,101 @@
       .ep-granny-body.open {
         display: block;
       }
+      /* r61b #10 ｜ per-EP 科普小單元（mirrors .ep-granny with teal） */
+      .ep-science {
+        margin-bottom: 16px;
+        border: 1px solid rgba(120, 196, 198, 0.22);
+        border-radius: 8px;
+        overflow: hidden;
+        background: rgba(120, 196, 198, 0.03);
+      }
+      .ep-science-toggle {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 14px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+      }
+      .ep-science-toggle:active {
+        background: rgba(120, 196, 198, 0.05);
+      }
+      .es-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2a565e, #4a8a8d);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border: 1px solid rgba(120, 196, 198, 0.4);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+        color: #e8f4f0;
+        font-size: 16px;
+        line-height: 1;
+      }
+      .es-label {
+        /* r61b ｜ Codex caught: teal-toned to match science palette (not purple var(--f6)) */
+        font-family: "Noto Sans TC", sans-serif;
+        font-size: 12px;
+        color: rgba(184, 220, 220, 0.88);
+        flex: 1;
+        letter-spacing: 0.06em;
+        font-weight: 400;
+      }
+      body.day-mode .es-label {
+        color: rgba(60, 110, 116, 0.92);
+      }
+      .es-arrow {
+        font-size: 10px;
+        color: rgba(120, 196, 198, 0.55);
+        transition: transform 0.2s;
+      }
+      .ep-science-toggle.open .es-arrow {
+        transform: rotate(180deg);
+      }
+      .ep-science-body {
+        display: none;
+        padding: 14px 16px 16px;
+        border-top: 1px solid rgba(120, 196, 198, 0.15);
+      }
+      .ep-science-body.open {
+        display: block;
+      }
+      .es-kicker {
+        font-family: "DM Mono", monospace;
+        font-size: 8.1px;
+        color: rgba(168, 220, 220, 0.72);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+      .es-title {
+        font-family: "Cormorant Garamond", "Noto Serif TC", serif;
+        font-size: 15px;
+        color: var(--t1);
+        margin-bottom: 8px;
+        font-weight: 400;
+        line-height: 1.45;
+        letter-spacing: 0.02em;
+      }
+      .es-text {
+        font-family: "Noto Sans TC", sans-serif;
+        font-size: 12.5px;
+        color: var(--t1);
+        line-height: 1.95;
+        font-weight: 400;
+        white-space: pre-wrap;
+      }
+      body.day-mode .ep-science {
+        background: rgba(120, 196, 198, 0.06);
+        border-color: rgba(120, 196, 198, 0.32);
+      }
+      body.day-mode .ep-science-toggle:active {
+        background: rgba(120, 196, 198, 0.08);
+      }
       .eg-kicker {
         font-family: "DM Mono", monospace;
         font-size: 8.1px;
@@ -4795,6 +4927,12 @@
         <div class="sb-head">
           <div class="sb-logo">時間裡的兩個妳</div>
           <div class="sb-sub">EP0 — EP41 · 全集</div>
+          <!-- r61b #9 ｜ 鋼鐵粉絲稱號 sidebar display -->
+          <div class="sb-fan-title" id="sbFanTitle" role="status" aria-live="polite">
+            <span class="sft-icon" aria-hidden="true">☆</span>
+            <span class="sft-text" id="sbFanTitleText"></span>
+            <span class="sft-num" id="sbFanTitleNum"></span>
+          </div>
         </div>
         <div class="sb-filter">
           <button
@@ -6332,6 +6470,29 @@
         },
       ];
 
+      /* r61b #10 ｜ 物理／天文／量子 科普小單元（toni 拍板：在 reader 一鍵展開的資訊裡，每集科普）
+         對應 EP4/7/11/12/14/15/18/21/22/23/28/32/36/37/38。
+         主題：MWI / 量子糾纏 / 廣義相對論 / 蝴蝶效應 / 黑洞 / 閔可夫斯基時空 /
+         神經科學瀕死記憶 / 心理時間 / no-signaling / 快子 / 多重自我心理學。
+         設計理念：不為了賣弄物理，而是讓 toni 敘事學選擇更被看清。 */
+      const SCIENCE = [
+        {ep: 4, topic: "多重世界詮釋 (Many-Worlds Interpretation, MWI)", body: "EP4 把拔說「奇異博士當時看過 14000605 種未來，而妳就是時光中無可取代的第 14000606 種」。這對應到量子力學的多重世界詮釋（Hugh Everett, 1957）：每一次量子測量都會讓宇宙分裂成多個版本，每個版本對應一種測量結果。在這個圖景裡，任何「會發生」的事都會在某個分支真實發生。漫威電影裡讓奇異博士「看過 14000605 種未來」，就是這個多重宇宙的通俗化版本。把拔加上的那「無可取代的 14000606 種」，是把女兒從統計分支中拉出來、用語言確認唯一性 — 在無限分支中宣稱「妳就是這一個」。"},
+        {ep: 7, topic: "MSN 隱身 7 秒 — 訊號延遲 vs 心理錨點", body: "EP7「我都會等妳上線 7 秒後，我再現身」。7 秒不是工程上的延遲（MSN 在線狀態本質上是即時的），而是心理上的「錨」：把第一個訊號延後一個可預測的時間窗，創造出「我永遠在你出現後 7 秒登場」的儀式感。心理學上，這種「可預期但帶有等待」的訊號模式，比立即回應更容易留下記憶痕跡 — 對應到「間歇增強」(intermittent reinforcement) 的學習效應。"},
+        {ep: 11, topic: "廣義相對論 — 重力時間膨脹", body: "EP11 學妹說「離世界的中心越近，時間會過得越慢」。這對應到愛因斯坦廣義相對論的「重力時間膨脹」(gravitational time dilation)：重力場越強，時間流逝越慢。在地球，GPS 衛星每天比地表時鐘快約 38 微秒，已是工程上必須校正的量。在黑洞事件視界附近，從外部觀察者看，時間流會逼近無限慢。學妹用這句話描述「每次的牽手，一瞬間像永遠」 — 把愛轉成重力。"},
+        {ep: 12, topic: "蝴蝶效應 / 時間線敏感性", body: "EP12「時間線的破裂，會產生多大的蝴蝶效應，時間恐懼那一切」。蝴蝶效應出自氣象學家 Edward Lorenz 1972 的演講，指非線性動力系統對初始條件高度敏感：巴西一隻蝴蝶拍翅，可能在德州造成龍捲風。學妹擔心一個擁抱「本該不存在」就會撕裂未來，是把時間線當成 Lorenz 吸子在敘事 — 一個微小擾動可被放大成完全不同的軌跡。"},
+        {ep: 14, topic: "黑洞奇異點 — 時間方向的終結", body: "EP14「我就會掉入一個虛無的時間黑洞。直到地球的時間過去 17 年，才能驗證這一次修正是否成功。」黑洞的「奇異點」是時空曲率發散的位置，古典廣義相對論中時間方向會在那裡終結。學妹的「時間黑洞」是文學化挪用：不是物理意義的黑洞，而是一段「無法被外界觀察、也無法回頭」的等待。在這 17 年裡，她沒有訊號、沒有時鐘，只有抵達後才能驗證的命運修正。"},
+        {ep: 15, topic: "閔可夫斯基時空 / 四維空間", body: "EP15「過去、現在及未來是『同時』存在，那代表只有眼前是客觀的事實」，把拔在這裡帶入「四維空間」（Minkowski spacetime, 1908）：空間三維 + 時間一維。在四維方塊宇宙論（block universe）中，所有時刻同時存在，只是我們的意識在其中沿著時間方向「滑動」。哲學上對應 B 系列時間（B-series）。把拔說「活在當下，才是王道」是 A 系列（A-series）時間觀的反叛 — 在方塊宇宙裡，「當下」並沒有特別優先，但對人類經驗來說，它是唯一的觸點。"},
+        {ep: 18, topic: "神經科學 — 將死記憶高速回放", body: "EP18 學長半夜遇到警匪追逐撞車，「人生跑馬燈跑了 10 秒鐘」。神經科學研究（如 Greyson 1983, van Lommel 2001）發現，瀕死或極端壓力下大腦會出現「life review」現象：海馬迴與顳葉皮層在短時間內以異常高速度重播長期記憶。主觀上時間被拉長，是因為大腦在單位時間內處理了異常密集的資訊。學長 10 秒回憶了「跟學妹的一生」，是這個神經機制的文學描寫。"},
+        {ep: 21, topic: "自由意志 vs 決定論 — 命運阿嬤的悖論", body: "EP21 命運阿嬤說「不能干預任何事件，也不能和任何人有互動」。這對應到哲學上的「自由意志 vs 決定論」千年辯論：如果未來已存在（block universe），那「選擇」是否還有意義？命運阿嬤的規則是相容論（compatibilism）的一種敘事化版本：觀察者可以看見全部時間線，但不能改變因果鏈，因為改變會撕裂讓觀察者得以存在的那條線（grandfather paradox）。女兒「在劇本上做記號」，但不能「改劇本」，就是這個悖論的縫合方式。"},
+        {ep: 22, topic: "量子糾纏 (Quantum Entanglement) — 紅線的物理對位", body: "EP22 命運阿嬤說「紅線代表命中注定」。在物理學中最接近這個概念的是「量子糾纏」：兩個粒子在製備後共享波函數，即使相距百萬光年，對其中一個的測量會瞬時決定另一個的狀態。Einstein 嘲諷為「spooky action at a distance」，但 Bell 不等式（1964）+ Aspect 實驗（1982）+ 2022 諾貝爾物理獎得主 Clauser/Aspect/Zeilinger 已實驗證實這是物理真實。但糾纏不能用來傳遞訊息（no-signaling theorem），所以紅線只能「記得」，不能「傳話」 — 這正是學妹必須穿越 17 年才能驗證命運的原因。"},
+        {ep: 23, topic: "量子糾纏 explicit — EPR 與心的版本", body: "EP23 女兒說「把拔和阿姨就是一種量子糾纏」。1935 年 EPR 論文（Einstein-Podolsky-Rosen）提出這個假想實驗試圖反駁量子力學完備性，結果反而開啟了量子訊息理論。EP23 把這個延伸成「只要把拔一個心碎，阿姨就會在遠方加倍難過」 — 在物理上，糾纏粒子的測量結果是相關的（correlated），不是因果的（causal）。你不能「讓」對方難過，但兩人狀態在被觀察時總是合奏。女兒「就是兩顆悲傷的心裡，唯一會發亮的光點」，是把糾纏關係的觀察者效應放進親情。"},
+        {ep: 28, topic: "no-signaling theorem — 量子糾纏不能傳訊息", body: "EP28「我們是量子糾纏，彼此狀態相依，卻沒有訊息穿越的捷徑」。這精準對應到量子力學中的「no-signaling theorem」（不可傳信定理）：糾纏無法被用來進行超光速通信。為什麼？因為對糾纏粒子的測量結果在你這邊看起來是完全隨機的，只有當你拿到對方的測量結果做對照，才能看到關聯。對方無法「主動傳訊號」 — 否則整個相對論的因果結構會崩潰。學長與學妹 2018-2022 的 4 年靜默，就是糾纏存在但無法通訊的物理寓言。"},
+        {ep: 32, topic: "心理時間 vs 物理時間 — 1994 / 2005 的並列", body: "EP32 阿姨 1994 高三第一次意識穿越，跳到 2005 LM402。物理時間是線性、單向、不可逆的（thermodynamic arrow of time）。但「心理時間」（William James 1890 的「specious present」）是有厚度的：任何「現在」實際上包含過去的記憶和未來的預期。EP32 的穿越是把心理時間的厚度具象化 — 阿姨在 1994 的當下，已經攜帶 2005 LM402 的「未來記憶」。神經科學上，海馬迴在記憶提取時的活動模式，與經歷該事件時非常接近 — 記憶與時間旅行共用同一個神經迴路。"},
+        {ep: 36, topic: "拉得再長也不會斷的線 — 量子糾纏的宏觀寓言", body: "EP36「我們之間，就還有一條拉得再長也不會斷的線」。在量子力學裡，糾纏關係不受空間距離影響 — 你把糾纏粒子分開到太陽系兩端，糾纏依然存在。但糾纏是「脆弱」的：環境噪音（decoherence）會在毫秒級別摧毀它。文學上，「拉得再長也不會斷的線」是用人類關係的尺度去想像一個量子尺度才存在的純粹相依 — 父女之間的線之所以「不會斷」，是因為一個被觀察者持續觀察、持續記得的糾纏關係。月台狂奔的 30 秒擁抱，是觀察的瞬間 — 也是糾纏被確認的瞬間。"},
+        {ep: 37, topic: "快子 (Tachyon) — 比光速快的假想粒子", body: "EP37 把拔把「我也會想妳的」寫成「快子（比光速快）」。快子是 1967 年由 Gerald Feinberg 提出的假想粒子，它的靜止質量是虛數，從未被實驗發現。在相對論中，快子可以從未來向過去傳遞訊息，造成因果悖論（Tolman antitelephone）。把拔把「思念」寫成快子，等於宣告：思念可以違反光速、違反因果方向、從未來抵達過去。這是 EP37「把拔不能穿越，是為了讓心變成真的」的反命題 — 物理上不可能，詩學上必須。"},
+        {ep: 38, topic: "多重自我 / 意識菜市場 — 心理學的對位", body: "EP38 學妹 29 歲身體裡承載 18 歲意識，同時「菜市場」裡擠進 29/33/39/49 歲的「我」。心理學上對應「多重自我」（multiple selves theory, Pronin & Ross 2006）：同一個人對不同時間點的自己，會像對待陌生人。在決策心理學上，「未來自我折扣」（future self discounting）解釋為什麼我們對 1 個月後的自己比 10 年後的自己更友善 — 因為意識上他比較像「我」。EP38 把這四個未來自我同時拉進當下，對 18 歲說「不要逃，也不要做奇怪的事情」，是把多重自我問題具象化成「會議室」 — 而且 18 歲還是有最終決定權。"},
+      ];
+
       const ARC_LBL = {
         father: "把拔視角",
         male: "學長視角",
@@ -6912,7 +7073,9 @@
         sec.id = "ep-" + ep.ep;
         const granny = GRANNY.find((g) => g.ep === ep.ep) || null;
         const grannyH = granny ? buildGranny(granny) : "";
-        sec.innerHTML = `<div class="ep-bg-num">${fmtEp(ep.ep).replace("EP", "")}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${escapeHtml(ARC_LBL[arc] || arc)}</span></div><div class="ep-title">${escapeHtml(cT)}</div><div class="ep-meta-row"><span>${readMins(ep.html)} 分鐘</span><span class="ep-meta-dot"></span><span>${escapeHtml(ep.chars || "")} 字</span></div></div><div class="ep-info-strip"><div class="ep-info-head" onclick="toggleEpInfo(this)"><span class="eih-icon">${renderIcon("guide")}</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>${tline ? `<div class="ep-tline-wrap"><div class="ep-tline-toggle" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${escapeHtml(tline)}</span></div></div>` : ""}${note ? `<div class="ep-note"><div class="ep-note-toggle" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${escapeHtml(note)}</div></div>` : ""}${grannyH}<div class="ep-body-wrap"></div>${tH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
+        const science = SCIENCE.find((s) => s.ep === ep.ep) || null;
+        const scienceH = science ? buildScience(science) : "";
+        sec.innerHTML = `<div class="ep-bg-num">${fmtEp(ep.ep).replace("EP", "")}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${escapeHtml(ARC_LBL[arc] || arc)}</span></div><div class="ep-title">${escapeHtml(cT)}</div><div class="ep-meta-row"><span>${readMins(ep.html)} 分鐘</span><span class="ep-meta-dot"></span><span>${escapeHtml(ep.chars || "")} 字</span></div></div><div class="ep-info-strip"><div class="ep-info-head" onclick="toggleEpInfo(this)"><span class="eih-icon">${renderIcon("guide")}</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>${tline ? `<div class="ep-tline-wrap"><div class="ep-tline-toggle" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${escapeHtml(tline)}</span></div></div>` : ""}${note ? `<div class="ep-note"><div class="ep-note-toggle" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${escapeHtml(note)}</div></div>` : ""}${grannyH}${scienceH}<div class="ep-body-wrap"></div>${tH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
         const bd = document.createElement("div");
         bd.className = "ep-body";
         bd.innerHTML = ep.html;
@@ -7535,6 +7698,16 @@
         h.classList.toggle("open");
         h.nextElementSibling.classList.toggle("open");
       }
+      /* r61b #10 ｜ buildScience — per-EP 科普小單元 (mimics buildGranny);
+         r61b ｜ Codex caught: aria-expanded sync for a11y */
+      function buildScience(s) {
+        return `<div class="ep-science"><div class="ep-science-toggle" onclick="toggleScience(this)" role="button" tabindex="0" aria-expanded="false" aria-controls="science-body-${s.ep}"><div class="es-avatar"><span aria-hidden="true">⚛</span></div><span class="es-label">物理科普 · <span style="font-size:10px;opacity:.7;letter-spacing:.08em">${escapeHtml(s.topic.split('—')[0].split('/')[0].trim())}</span></span><span class="es-arrow">▾</span></div><div class="ep-science-body" id="science-body-${s.ep}"><div class="es-kicker">EP${s.ep} · 科普小單元</div><div class="es-title">${escapeHtml(s.topic)}</div><div class="es-text">${escapeHtml(s.body)}</div></div></div>`;
+      }
+      function toggleScience(h) {
+        h.classList.toggle("open");
+        h.nextElementSibling.classList.toggle("open");
+        h.setAttribute('aria-expanded', h.classList.contains('open') ? 'true' : 'false');
+      }
       function buildGrannySVG(g) {
         const W = 318,
           H = 116;
@@ -8131,11 +8304,15 @@
     try { localStorage.setItem(KEY_PROGRESS, JSON.stringify(state)); } catch (e) {}
   }
   function saveTitle(t, n) {
+    /* r61b ｜ Codex caught: keep title locked to BEST streak (not current n),
+       so a restart after a 100 won't downgrade the sidebar display. */
     try {
-      localStorage.setItem(KEY_TITLE, t);
       const bestRaw = localStorage.getItem(KEY_BEST);
       const best = bestRaw ? parseInt(bestRaw, 10) : 0;
-      if (n > best) localStorage.setItem(KEY_BEST, String(n));
+      if (n > best) {
+        localStorage.setItem(KEY_BEST, String(n));
+        localStorage.setItem(KEY_TITLE, t);
+      }
     } catch (e) {}
   }
   function currentTitle(n) {
@@ -8185,6 +8362,29 @@
         fab.title = '鋼鐵粉絲挑戰 · ' + title + ' (' + best + ')';
       } else {
         badge.hidden = true;
+      }
+    } catch (e) {}
+    /* r61b #9 ｜ toni 紀律：稱號顯示在網站適合的地方 → sidebar header */
+    renderSidebarTitle();
+  }
+
+  /* r61b #9 ｜ sidebar fan title display */
+  function renderSidebarTitle() {
+    const wrap = document.getElementById('sbFanTitle');
+    const txt = document.getElementById('sbFanTitleText');
+    const num = document.getElementById('sbFanTitleNum');
+    if (!wrap || !txt || !num) return;
+    try {
+      const title = localStorage.getItem(KEY_TITLE);
+      const best = parseInt(localStorage.getItem(KEY_BEST) || '0', 10);
+      if (title && title !== '尚未開始' && best > 0) {
+        txt.textContent = title;
+        num.textContent = best + ' / 100';
+        wrap.classList.add('visible');
+      } else {
+        wrap.classList.remove('visible');
+        txt.textContent = '';
+        num.textContent = '';
       }
     } catch (e) {}
   }
@@ -8359,165 +8559,6 @@
 </script>
 
 
-<style>
-
-/* r61 #10 ｜ 物理科普一鍵展開 */
-#scienceFab {
-  position: fixed; bottom: 152px; right: 18px; z-index: 1280;
-  width: 52px; height: 52px; border-radius: 50%;
-  background: linear-gradient(135deg, #4a8a8d, #2a565e);
-  border: 1px solid rgba(180, 224, 218, 0.4);
-  color: #fff; font-size: 20px; line-height: 50px; text-align: center;
-  cursor: pointer; box-shadow: 0 6px 18px rgba(8, 20, 18, 0.45);
-  transition: transform 0.2s ease;
-}
-@media (max-width: 767px) {
-  #scienceFab { bottom: calc(234px + env(safe-area-inset-bottom, 0px)); }
-}
-#scienceFab:hover { transform: scale(1.06); }
-#scienceFab:active { transform: scale(0.96); }
-#scienceOverlay {
-  position: fixed; inset: 0; z-index: 1285;
-  background: rgba(4, 8, 12, 0.84); backdrop-filter: blur(18px);
-  display: none; align-items: center; justify-content: center;
-  padding: 20px;
-}
-#scienceOverlay.show { display: flex; }
-#scienceCard {
-  width: min(680px, 94vw); max-height: 88vh; overflow: auto;
-  background: linear-gradient(180deg, #0e1a1c 0%, #0a1418 100%);
-  border: 1px solid rgba(120, 196, 198, 0.32);
-  border-radius: 6px; padding: 24px 22px 18px;
-  color: rgba(232, 244, 240, 0.92);
-  font-family: "Noto Serif TC", "Cormorant Garamond", Georgia, serif;
-}
-#scienceCard .sc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-#scienceCard .sc-title { font-size: 16px; letter-spacing: 0.22em; text-indent: 0.22em; color: rgba(168, 220, 220, 0.95); }
-#scienceCard .sc-close { background: transparent; border: 0; color: rgba(232, 244, 240, 0.6); font-size: 22px; cursor: pointer; padding: 4px 10px; }
-#scienceCard .sc-close:hover { color: rgba(220, 244, 244, 0.95); }
-#scienceCard .sc-intro { font-size: 13px; line-height: 1.85; color: rgba(184, 220, 220, 0.78); margin-bottom: 18px; letter-spacing: 0.06em; }
-#scienceCard .sc-toc { margin: 0 0 18px; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
-#scienceCard .sc-toc li button { padding: 4px 12px; background: rgba(120, 196, 198, 0.10); border: 1px solid rgba(120, 196, 198, 0.32); border-radius: 2px; color: rgba(184, 220, 220, 0.85); font-size: 11px; letter-spacing: 0.10em; font-family: inherit; cursor: pointer; }
-#scienceCard .sc-toc li button:hover { background: rgba(120, 196, 198, 0.22); color: rgba(232, 244, 240, 0.96); }
-#scienceCard .sc-entry { margin-bottom: 20px; padding-bottom: 18px; border-bottom: 1px solid rgba(120, 196, 198, 0.15); }
-#scienceCard .sc-entry:last-child { border-bottom: 0; }
-#scienceCard .sc-entry-ep { font-size: 11px; letter-spacing: 0.32em; text-indent: 0.32em; color: rgba(184, 220, 220, 0.6); margin-bottom: 4px; text-transform: uppercase; }
-#scienceCard .sc-entry-topic { font-size: 15px; letter-spacing: 0.06em; color: rgba(220, 244, 240, 0.96); margin-bottom: 10px; line-height: 1.55; }
-#scienceCard .sc-entry-body { font-size: 13.5px; line-height: 1.95; color: rgba(220, 236, 232, 0.88); letter-spacing: 0.03em; }
-@media (prefers-reduced-motion: reduce) {
-  #scienceFab { transition: none; }
-}
-
-</style>
-
-<!-- r61 #10 ｜ 物理／天文／量子 科普模組 (toni 拍板) -->
-<button id="scienceFab" type="button" aria-label="物理科普 一鍵展開" title="物理科普">
-  <span aria-hidden="true">⚛</span>
-</button>
-<div id="scienceOverlay" role="dialog" aria-modal="true" aria-label="物理科普一鍵展開">
-  <div id="scienceCard">
-    <div class="sc-head">
-      <div class="sc-title">⚛ 物理／天文／量子 科普一鍵展開</div>
-      <button type="button" class="sc-close" id="scienceClose" aria-label="關閉">✕</button>
-    </div>
-    <div class="sc-intro">
-      EP 中出現的物理概念， 從多重世界詮釋、 量子糾纏、 重力時間膨脹， 到神經科學的瀕死記憶與心理時間。 每集對應一個科普小單元， 不為了賣弄物理， 而是讓 toni 的敘事學選擇更被看清。
-    </div>
-    <ul class="sc-toc" id="scienceToc"></ul>
-    <div id="scienceList"></div>
-  </div>
-</div>
-
-<script>
-/* r61 #10 ｜ 物理科普一鍵展開 orchestrator */
-(function () {
-  const SCIENCE = [{"ep": 4, "topic": "多重世界詮釋 (Many-Worlds Interpretation, MWI)", "body": "EP4 把拔說「奇異博士當時看過 14000605 種未來， 而妳就是時光中無可取代的第 14000606 種」。 這對應到量子力學的多重世界詮釋（Hugh Everett, 1957）： 每一次量子測量都會讓宇宙分裂成多個版本， 每個版本對應一種測量結果。 在這個圖景裡， 任何「會發生」的事都會在某個分支真實發生。 漫威電影裡讓奇異博士「看過 14000605 種未來」， 就是這個多重宇宙的通俗化版本。 把拔加上的那「無可取代的 14000606 種」， 是把女兒從統計分支中拉出來、 用語言確認唯一性 — 在無限分支中宣稱「妳就是這一個」。"}, {"ep": 7, "topic": "MSN 隱身 7 秒 — 訊號延遲 vs 心理錨點", "body": "EP7 「我都會等妳上線 7 秒後， 我再現身」。 7 秒不是工程上的延遲（MSN 在線狀態本質上是即時的）， 而是心理上的「錨」： 把第一個訊號延後一個可預測的時間窗， 創造出「我永遠在你出現後 7 秒登場」的儀式感。 心理學上， 這種「可預期但帶有等待」的訊號模式， 比立即回應更容易留下記憶痕跡 — 對應到「間歇增強」(intermittent reinforcement) 的學習效應。"}, {"ep": 11, "topic": "廣義相對論 — 重力時間膨脹", "body": "EP11 學妹說「離世界的中心越近， 時間會過得越慢」。 這對應到愛因斯坦廣義相對論的「重力時間膨脹」(gravitational time dilation)： 重力場越強， 時間流逝越慢。 在地球， GPS 衛星每天比地表時鐘快約 38 微秒， 已是工程上必須校正的量。 在黑洞事件視界附近， 從外部觀察者看， 時間流會逼近無限慢。 學妹用這句話描述「每次的牽手， 一瞬間像永遠」— 把愛轉成重力。"}, {"ep": 12, "topic": "蝴蝶效應 / 時間線敏感性", "body": "EP12 「時間線的破裂， 會產生多大的蝴蝶效應， 時間恐懼那一切」。 蝴蝶效應出自氣象學家 Edward Lorenz 1972 的演講， 指非線性動力系統對初始條件高度敏感： 巴西一隻蝴蝶拍翅， 可能在德州造成龍捲風。 學妹擔心一個擁抱「本該不存在」就會撕裂未來， 是把時間線當成 Lorenz 吸子在敘事 — 一個微小擾動可被放大成完全不同的軌跡。"}, {"ep": 14, "topic": "黑洞奇異點 — 時間方向的終結", "body": "EP14 「我就會掉入一個虛無的時間黑洞。 直到地球的時間過去 17 年， 才能驗證這一次修正是否成功。」 黑洞的「奇異點」是時空曲率發散的位置， 古典廣義相對論中時間方向會在那裡終結。 學妹的「時間黑洞」是文學化挪用： 不是物理意義的黑洞， 而是一段「無法被外界觀察、 也無法回頭」的等待。 在這 17 年裡， 她沒有訊號、 沒有時鐘， 只有抵達後才能驗證的命運修正。"}, {"ep": 15, "topic": "閔可夫斯基時空 / 四維空間", "body": "EP15 「過去、 現在及未來是『同時』存在， 那代表只有眼前是客觀的事實」， 把拔在這裡帶入「四維空間」（Minkowski spacetime, 1908）： 空間三維 + 時間一維。 在四維方塊宇宙論（block universe）中， 所有時刻同時存在， 只是我們的意識在其中沿著時間方向「滑動」。 哲學上對應 B 系列時間（B-series）。 把拔說「活在當下， 才是王道」是 A 系列（A-series）時間觀的反叛 — 在方塊宇宙裡， 「當下」並沒有特別優先， 但對人類經驗來說， 它是唯一的觸點。"}, {"ep": 18, "topic": "神經科學 — 將死記憶高速回放", "body": "EP18 學長半夜遇到警匪追逐撞車， 「人生跑馬燈跑了 10 秒鐘」。 神經科學研究（如 Greyson 1983, van Lommel 2001 ）發現， 瀕死或極端壓力下大腦會出現「life review」現象： 海馬迴與顳葉皮層在短時間內以異常高速度重播長期記憶。 主觀上時間被拉長， 是因為大腦在單位時間內處理了異常密集的資訊。 學長 10 秒回憶了「跟學妹的一生」， 是這個神經機制的文學描寫。"}, {"ep": 21, "topic": "自由意志 vs 決定論 — 命運阿嬤的悖論", "body": "EP21 命運阿嬤說「不能干預任何事件， 也不能和任何人有互動」。 這對應到哲學上的「自由意志 vs 決定論」千年辯論： 如果未來已存在（block universe）， 那「選擇」是否還有意義？ 命運阿嬤的規則是相容論（compatibilism）的一種敘事化版本： 觀察者可以看見全部時間線， 但不能改變因果鏈， 因為改變會撕裂讓觀察者得以存在的那條線（grandfather paradox）。 女兒「在劇本上做記號」， 但不能「改劇本」， 就是這個悖論的縫合方式。"}, {"ep": 22, "topic": "量子糾纏 (Quantum Entanglement) — 紅線的物理對位", "body": "EP22 命運阿嬤說「紅線代表命中注定」。 在物理學中最接近這個概念的是「量子糾纏」： 兩個粒子在製備後共享波函數， 即使相距百萬光年， 對其中一個的測量會瞬時決定另一個的狀態。 Einstein 嘲諷為「spooky action at a distance」， 但 Bell 不等式（1964）+ Aspect 實驗（1982）+ 2022 諾貝爾物理獎得主 Clauser/Aspect/Zeilinger 已實驗證實這是物理真實。 但糾纏不能用來傳遞訊息（no-signaling theorem）， 所以紅線只能「記得」， 不能「傳話」 — 這正是學妹必須穿越 17 年才能驗證命運的原因。"}, {"ep": 23, "topic": "量子糾纏 explicit — EPR 與心的版本", "body": "EP23 女兒說「把拔和阿姨就是一種量子糾纏」。 1935 年 EPR 論文（Einstein-Podolsky-Rosen）提出這個假想實驗試圖反駁量子力學完備性， 結果反而開啟了量子訊息理論。 EP23 把這個延伸成「只要把拔一個心碎， 阿姨就會在遠方加倍難過」 — 在物理上， 糾纏粒子的測量結果是相關的（correlated）， 不是因果的（causal）。 你不能「讓」對方難過， 但兩人狀態在被觀察時總是合奏。 女兒「就是兩顆悲傷的心裡， 唯一會發亮的光點」， 是把糾纏關係的觀察者效應放進親情。"}, {"ep": 28, "topic": "no-signaling theorem — 量子糾纏不能傳訊息", "body": "EP28 「我們是量子糾纏， 彼此狀態相依， 卻沒有訊息穿越的捷徑」。 這精準對應到量子力學中的「no-signaling theorem」（不可傳信定理）： 糾纏無法被用來進行超光速通信。 為什麼？ 因為對糾纏粒子的測量結果在你這邊看起來是完全隨機的， 只有當你拿到對方的測量結果做對照， 才能看到關聯。 對方無法「主動傳訊號」 — 否則整個相對論的因果結構會崩潰。 學長與學妹 2018-2022 的 4 年靜默， 就是糾纏存在但無法通訊的物理寓言。"}, {"ep": 32, "topic": "心理時間 vs 物理時間 — 1994 / 2005 的並列", "body": "EP32 阿姨 1994 高三第一次意識穿越， 跳到 2005 LM402。 物理時間是線性、 單向、 不可逆的（thermodynamic arrow of time）。 但「心理時間」（William James 1890 的「specious present」）是有厚度的： 任何「現在」實際上包含過去的記憶和未來的預期。 EP32 的穿越是把心理時間的厚度具象化 — 阿姨在 1994 的當下， 已經攜帶 2005 LM402 的「未來記憶」。 神經科學上， 海馬迴在記憶提取時的活動模式， 與經歷該事件時非常接近 — 記憶與時間旅行共用同一個神經迴路。"}, {"ep": 36, "topic": "拉得再長也不會斷的線 — 量子糾纏的宏觀寓言", "body": "EP36 「我們之間， 就還有一條拉得再長也不會斷的線」。 在量子力學裡， 糾纏關係不受空間距離影響 — 你把糾纏粒子分開到太陽系兩端， 糾纏依然存在。 但糾纏是「脆弱」的： 環境噪音（decoherence）會在毫秒級別摧毀它。 文學上， 「拉得再長也不會斷的線」是用人類關係的尺度去想像一個量子尺度才存在的純粹相依 — 父女之間的線之所以「不會斷」， 是因為一個被觀察者持續觀察、 持續記得的糾纏關係。 月台狂奔的 30 秒擁抱， 是觀察的瞬間 — 也是糾纏被確認的瞬間。"}, {"ep": 37, "topic": "快子 (Tachyon) — 比光速快的假想粒子", "body": "EP37 把拔把「我也會想妳的」寫成「快子（比光速快）」。 快子是 1967 年由 Gerald Feinberg 提出的假想粒子， 它的靜止質量是虛數， 從未被實驗發現。 在相對論中， 快子可以從未來向過去傳遞訊息， 造成因果悖論（Tolman antitelephone）。 把拔把「思念」寫成快子， 等於宣告： 思念可以違反光速、 違反因果方向、 從未來抵達過去。 這是 EP37「把拔不能穿越， 是為了讓心變成真的」的反命題 — 物理上不可能， 詩學上必須。"}, {"ep": 38, "topic": "多重自我 / 意識菜市場 — 心理學的對位", "body": "EP38 學妹 29 歲身體裡承載 18 歲意識， 同時「菜市場」裡擠進 29/33/39/49 歲的「我」。 心理學上對應「多重自我」（multiple selves theory, Pronin & Ross 2006）： 同一個人對不同時間點的自己， 會像對待陌生人。 在決策心理學上， 「未來自我折扣」（future self discounting）解釋為什麼我們對 1 個月後的自己比 10 年後的自己更友善 — 因為意識上他比較像「我」。 EP38 把這四個未來自我同時拉進當下， 對 18 歲說「不要逃， 也不要做奇怪的事情」， 是把多重自我問題具象化成「會議室」 — 而且 18 歲還是有最終決定權。"}];
-
-  function clearChildren(el) {
-    while (el && el.firstChild) el.removeChild(el.firstChild);
-  }
-  function makeEl(tag, cls, txt) {
-    const e = document.createElement(tag);
-    if (cls) e.className = cls;
-    if (txt !== undefined) e.textContent = txt;
-    return e;
-  }
-
-  /* r61 ｜ Codex caught: focus trap + return for a11y */
-  let _sciPrevFocus = null;
-  function open() {
-    _sciPrevFocus = document.activeElement;
-    document.getElementById('scienceOverlay').classList.add('show');
-    renderList();
-    setTimeout(function () {
-      const closeBtn = document.getElementById('scienceClose');
-      if (closeBtn) closeBtn.focus();
-    }, 60);
-  }
-  function close() {
-    document.getElementById('scienceOverlay').classList.remove('show');
-    if (_sciPrevFocus && typeof _sciPrevFocus.focus === 'function') {
-      try { _sciPrevFocus.focus(); } catch (e) {}
-    }
-    _sciPrevFocus = null;
-  }
-
-  function renderList() {
-    const toc = document.getElementById('scienceToc');
-    const list = document.getElementById('scienceList');
-    if (!toc || !list) return;
-    clearChildren(toc);
-    clearChildren(list);
-    SCIENCE.forEach(function (sc) {
-      const li = document.createElement('li');
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.textContent = 'EP' + sc.ep;
-      btn.onclick = function () {
-        const el = document.getElementById('sc-entry-' + sc.ep);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      };
-      li.appendChild(btn);
-      toc.appendChild(li);
-
-      const entry = makeEl('div', 'sc-entry');
-      entry.id = 'sc-entry-' + sc.ep;
-      entry.appendChild(makeEl('div', 'sc-entry-ep', 'EP' + sc.ep));
-      entry.appendChild(makeEl('div', 'sc-entry-topic', sc.topic));
-      entry.appendChild(makeEl('div', 'sc-entry-body', sc.body));
-      list.appendChild(entry);
-    });
-  }
-
-  document.addEventListener('DOMContentLoaded', function () {
-    const fab = document.getElementById('scienceFab');
-    if (fab) fab.addEventListener('click', open);
-    const closeBtn = document.getElementById('scienceClose');
-    if (closeBtn) closeBtn.addEventListener('click', close);
-    const overlay = document.getElementById('scienceOverlay');
-    if (overlay) overlay.addEventListener('click', function (e) {
-      if (e.target === overlay) close();
-    });
-    document.addEventListener('keydown', function (e) {
-      const ov = document.getElementById('scienceOverlay');
-      if (e.key === 'Escape' && ov && ov.classList.contains('show')) close();
-    });
-  });
-
-  window.__SCIENCE__ = {
-    open: open, close: close,
-    list: function () { return SCIENCE.map(function (s) { return { ep: s.ep, topic: s.topic }; }); },
-    show: function (ep) {
-      open();
-      setTimeout(function () {
-        const el = document.getElementById('sc-entry-' + ep);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 200);
-    },
-    version: 'r61-1'
-  };
-})();
-</script>
 
   </body>
 </html>
