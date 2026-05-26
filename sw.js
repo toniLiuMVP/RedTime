@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v15-20260606';  // unchanged: GLB / vendor 無變動
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v34-20260527';  // bumped: r62 Tier 0 (鐵粉 FAB → toolbar embed / 物理科普→科普 label / hide game photo buttons / mobile hero CTA center align)
+const RUNTIME_VERSION = 'runtime-v35-20260527';  // bumped: r62 Path D Tier 1+2 (art tokens --thread-1~4 + --amber-glow / lm402-parallel godRays 0.35→0.12 / fan quiz 100→500 題 50 月台 + BGM 紅線時間.mp3 + extend API / 科普 10 博士 EP_EXPERTS / campus-tour.html PoC)
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;

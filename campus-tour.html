@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>輔仁大學校園巡禮 — 時間裡的兩個妳</title>
+<link rel="icon" href="data:,">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+  body {
+    background: #050608;
+    color: #eae6de;
+    font-family: "Noto Serif TC", "Cormorant Garamond", Georgia, serif;
+  }
+  #scene-canvas { position: fixed; inset: 0; z-index: 0; cursor: crosshair; }
+  #ui { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+
+  .top-bar {
+    position: absolute; top: 14px; left: 14px; right: 14px;
+    display: flex; justify-content: space-between; align-items: center;
+    pointer-events: auto;
+  }
+  .title-block {
+    background: rgba(8, 6, 10, 0.72); backdrop-filter: blur(10px);
+    padding: 8px 16px;
+    border: 1px solid rgba(255, 220, 200, 0.22);
+    border-radius: 3px;
+  }
+  .title-block .t1 {
+    font-family: "Cormorant Garamond", "Noto Serif TC", serif;
+    font-size: 14px; letter-spacing: 0.22em;
+    color: rgba(255, 220, 200, 0.95);
+  }
+  .title-block .t2 {
+    font-family: "DM Mono", monospace;
+    font-size: 9px; letter-spacing: 0.22em;
+    color: rgba(218, 184, 168, 0.55);
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .back-link {
+    padding: 8px 14px;
+    background: rgba(8, 6, 10, 0.72); backdrop-filter: blur(10px);
+    color: rgba(238, 232, 220, 0.78);
+    text-decoration: none;
+    font-size: 11px; letter-spacing: 0.18em;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 3px;
+    pointer-events: auto;
+    transition: all 0.15s ease;
+  }
+  .back-link:hover {
+    color: rgba(255, 255, 255, 0.95);
+    border-color: rgba(255, 220, 200, 0.55);
+  }
+
+  .controls-card {
+    position: absolute; left: 14px; bottom: 14px;
+    background: rgba(8, 6, 10, 0.78); backdrop-filter: blur(10px);
+    padding: 12px 16px;
+    border: 1px solid rgba(218, 184, 168, 0.28);
+    border-radius: 4px;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: rgba(238, 232, 220, 0.82);
+    max-width: 260px;
+    line-height: 1.85;
+  }
+  .controls-card kbd {
+    display: inline-block;
+    padding: 1px 6px;
+    background: rgba(228, 70, 80, 0.22);
+    border: 1px solid rgba(228, 70, 80, 0.55);
+    border-radius: 2px;
+    font-family: "DM Mono", monospace;
+    font-size: 10px;
+    color: rgba(248, 168, 152, 0.95);
+    margin: 0 2px;
+  }
+  .controls-card .ctrl-title {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    color: rgba(255, 220, 200, 0.95);
+    margin-bottom: 6px;
+  }
+
+  .compass {
+    position: absolute; right: 14px; bottom: 14px;
+    background: rgba(8, 6, 10, 0.72); backdrop-filter: blur(10px);
+    padding: 10px 14px;
+    border: 1px solid rgba(218, 184, 168, 0.28);
+    border-radius: 4px;
+    font-family: "DM Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: rgba(218, 184, 168, 0.78);
+    pointer-events: auto;
+  }
+
+  .building-tip {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(8, 6, 10, 0.92); backdrop-filter: blur(14px);
+    padding: 18px 24px;
+    border: 1px solid rgba(228, 70, 80, 0.55);
+    border-radius: 4px;
+    max-width: 420px;
+    display: none;
+    pointer-events: auto;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+  }
+  .building-tip.show { display: block; }
+  .building-tip .bt-name {
+    font-family: "Cormorant Garamond", "Noto Serif TC", serif;
+    font-size: 22px; letter-spacing: 0.16em;
+    color: rgba(255, 220, 200, 0.95);
+    margin-bottom: 4px;
+  }
+  .building-tip .bt-ep {
+    font-family: "DM Mono", monospace;
+    font-size: 10px; letter-spacing: 0.22em;
+    color: rgba(248, 168, 152, 0.92);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .building-tip .bt-desc {
+    font-size: 13px; line-height: 1.85;
+    color: rgba(238, 232, 220, 0.85);
+    margin-bottom: 14px;
+  }
+  .building-tip .bt-close {
+    padding: 6px 18px;
+    background: rgba(228, 70, 80, 0.22);
+    border: 1px solid rgba(228, 70, 80, 0.55);
+    border-radius: 2px;
+    color: rgba(248, 168, 152, 0.95);
+    font-family: inherit;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    cursor: pointer;
+  }
+  .building-tip .bt-close:hover {
+    background: rgba(228, 70, 80, 0.42);
+  }
+
+  .crosshair {
+    position: absolute; top: 50%; left: 50%;
+    width: 6px; height: 6px;
+    margin: -3px 0 0 -3px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.42);
+    box-shadow: 0 0 6px rgba(228, 70, 80, 0.62);
+    pointer-events: none;
+  }
+
+  .focus-prompt {
+    position: absolute; top: 60%; left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 14px;
+    background: rgba(8, 6, 10, 0.72); backdrop-filter: blur(6px);
+    border: 1px solid rgba(228, 70, 80, 0.55);
+    border-radius: 2px;
+    font-family: "DM Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    color: rgba(248, 168, 152, 0.95);
+    pointer-events: none;
+    display: none;
+  }
+  .focus-prompt.show { display: block; }
+
+  .pointer-lock-prompt {
+    position: absolute; inset: 0;
+    background: rgba(5, 6, 8, 0.78);
+    backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: auto;
+    cursor: pointer;
+  }
+  .pointer-lock-prompt.hide { display: none; }
+  .pointer-lock-prompt .plp-card {
+    text-align: center;
+    padding: 24px 32px;
+    background: rgba(8, 6, 10, 0.92);
+    border: 1px solid rgba(228, 70, 80, 0.55);
+    border-radius: 4px;
+  }
+  .pointer-lock-prompt .plp-title {
+    font-family: "Cormorant Garamond", "Noto Serif TC", serif;
+    font-size: 26px; letter-spacing: 0.22em;
+    color: rgba(255, 220, 200, 0.95);
+  }
+  .pointer-lock-prompt .plp-sub {
+    font-size: 13px; letter-spacing: 0.12em;
+    color: rgba(218, 184, 168, 0.65);
+    margin-top: 12px;
+  }
+  .pointer-lock-prompt .plp-hint {
+    font-family: "DM Mono", monospace;
+    font-size: 10px; letter-spacing: 0.22em;
+    color: rgba(238, 232, 220, 0.55);
+    margin-top: 18px;
+  }
+</style>
+</head>
+<body>
+<canvas id="scene-canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="title-block">
+      <div class="t1">輔仁大學校園巡禮</div>
+      <div class="t2">FU JEN CATHOLIC UNIVERSITY · 第一人稱漫步</div>
+    </div>
+    <a class="back-link" href="index.html">← 回首頁</a>
+  </div>
+
+  <div class="crosshair"></div>
+  <div class="focus-prompt" id="focusPrompt">點擊 / E 鍵 看故事連結</div>
+
+  <div class="controls-card">
+    <div class="ctrl-title">CONTROLS</div>
+    <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移動 ·
+    <kbd>Shift</kbd> 衝刺<br>
+    <kbd>滑鼠</kbd> 視角 ·
+    <kbd>E</kbd> / <kbd>左鍵</kbd> 互動<br>
+    <kbd>Esc</kbd> 釋放滑鼠
+  </div>
+
+  <div class="compass" id="compass">N 0°</div>
+
+  <div class="building-tip" id="buildingTip">
+    <div class="bt-name" id="btName"></div>
+    <div class="bt-ep" id="btEp"></div>
+    <div class="bt-desc" id="btDesc"></div>
+    <button type="button" class="bt-close" id="btClose">關閉 · 繼續漫步</button>
+  </div>
+</div>
+
+<div class="pointer-lock-prompt" id="lockPrompt">
+  <div class="plp-card">
+    <div class="plp-title">輔仁大學校園巡禮</div>
+    <div class="plp-sub">2005-10-17 · 一眼瞬間 前的清晨</div>
+    <div class="plp-hint">點擊任意處 開始 / 鎖定滑鼠</div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from './assets/lm402/vendor-three.module.js';
+
+/* r62 #5 ｜ 校園巡禮 PoC — toni 4 方向 3D 第一個
+   設計理念：toni 親自走過的輔大校園地標 mapping 到故事 narrative。 */
+
+const canvas = document.getElementById('scene-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.98;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xc4d4e0);  // 晨曦霧色
+scene.fog = new THREE.FogExp2(0xc4d4e0, 0.012);
+
+const cam = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.1, 600);
+cam.position.set(0, 1.7, 80);  // 從校門口進入
+cam.rotation.order = 'YXZ';
+cam.rotation.y = Math.PI;       // face -z (校園方向)
+
+/* ─── 地面 (草地 + 主幹道) ─── */
+const groundMat = new THREE.MeshStandardMaterial({ color: 0x4a6850, roughness: 0.95, metalness: 0.02 });
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(280, 280, 1, 1), groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = 0;
+scene.add(ground);
+
+/* 主幹道 — 校門口往南北延伸 */
+const pathMat = new THREE.MeshStandardMaterial({ color: 0x8a7a6a, roughness: 0.78 });
+const mainPath = new THREE.Mesh(new THREE.PlaneGeometry(6, 180), pathMat);
+mainPath.rotation.x = -Math.PI / 2;
+mainPath.position.set(0, 0.01, 0);
+scene.add(mainPath);
+
+/* 橫向路 */
+const crossPath = new THREE.Mesh(new THREE.PlaneGeometry(120, 4), pathMat);
+crossPath.rotation.x = -Math.PI / 2;
+crossPath.position.set(0, 0.01, -20);
+scene.add(crossPath);
+
+const crossPath2 = new THREE.Mesh(new THREE.PlaneGeometry(120, 4), pathMat);
+crossPath2.rotation.x = -Math.PI / 2;
+crossPath2.position.set(0, 0.01, -55);
+scene.add(crossPath2);
+
+/* ─── Sky 半圓 dome ─── */
+const skyMat = new THREE.MeshBasicMaterial({
+  color: 0xb8c4d4,
+  side: THREE.BackSide,
+  fog: false,
+});
+const skyDome = new THREE.Mesh(new THREE.SphereGeometry(300, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), skyMat);
+skyDome.position.y = -50;
+scene.add(skyDome);
+
+/* ─── 光照 ─── */
+const sun = new THREE.DirectionalLight(0xfff4d8, 1.0);
+sun.position.set(60, 80, 40);
+scene.add(sun);
+const ambient = new THREE.AmbientLight(0xb0b8c8, 0.55);
+scene.add(ambient);
+const fillSky = new THREE.HemisphereLight(0xc8d4e0, 0x4a3820, 0.32);
+scene.add(fillSky);
+
+/* ─── 校園建築 (interactive) ─── */
+const BUILDINGS = [
+  {
+    name: '輔大校門',
+    ep: 'EP3 序章 · 2005-10-17 上午',
+    desc: '中山北路六段。 學長從這裡騎機車進來， 學妹的「群人」也從這走過去食堂。 1961 年復校時的羅馬式拱門， 是這個 narrative 的進站閘門。',
+    pos: { x: 0, y: 0, z: 78 },
+    size: { w: 14, h: 8, d: 2 },
+    color: 0xc8b890,
+    type: 'gate'
+  },
+  {
+    name: 'LM402 教學大樓',
+    ep: 'EP3 · 11:00 一眼瞬間',
+    desc: '文友樓 4 樓 · 402 教室。 學長 11:00 從 LM401 樓梯上來在前門外打電話， 學妹從教室裡叫他繞到後門。 整本書的鐘響時刻。',
+    pos: { x: 22, y: 0, z: -10 },
+    size: { w: 18, h: 14, d: 22 },
+    color: 0xd4b888,
+    type: 'lm402'
+  },
+  {
+    name: 'LM401 樓梯',
+    ep: 'EP3 · 學長走上來',
+    desc: '連通 401 教室與 402 教室的內梯。 學長要不是 11:00 鐘響時走錯這道樓梯， 就不會在 LM402 前門外停下來打電話。',
+    pos: { x: 14, y: 0, z: -10 },
+    size: { w: 4, h: 13, d: 8 },
+    color: 0xb8a878,
+    type: 'stairs'
+  },
+  {
+    name: '伯達樓',
+    ep: 'EP13 · 2005-12-22',
+    desc: '學妹打完那通分手電話之後， 學長在伯達樓轉角站了好久， 「眼睛早已泛紅」。 失戀的轉角， toni 親自走過的真實地點。',
+    pos: { x: -22, y: 0, z: -25 },
+    size: { w: 16, h: 12, d: 16 },
+    color: 0xa89878,
+    type: 'building'
+  },
+  {
+    name: '中美堂',
+    ep: 'EP13 · 聖誕晚會',
+    desc: '本該是學長學妹一起去的聖誕晚會場地。 學妹沒有出現， 學長一個人站在斜坡上， 看煙火升起又落下。',
+    pos: { x: -32, y: 0, z: -52 },
+    size: { w: 26, h: 14, d: 20 },
+    color: 0xd8c8a0,
+    type: 'auditorium'
+  },
+  {
+    name: '文學院圖書館',
+    ep: 'EP9 / EP31 · 大二大三',
+    desc: '學長學妹一起念書的圖書館。 從這裡出去就是華江橋方向。 阿 Q 兔子的 PTT 認養文最初是在這裡寫的。',
+    pos: { x: 0, y: 0, z: -65 },
+    size: { w: 20, h: 12, d: 18 },
+    color: 0xc8b898,
+    type: 'library'
+  },
+  {
+    name: '機車停車場',
+    ep: 'EP12 · 2005 紙條',
+    desc: '學妹來這裡把那張紙條放在學長機車儀表板。 「我走了。 你要好好照顧自己。」 兩天後學長騎車回來看到了。',
+    pos: { x: 28, y: 0, z: 25 },
+    size: { w: 16, h: 2.4, d: 12 },
+    color: 0x6a5a48,
+    type: 'parking'
+  }
+];
+
+const buildingMeshes = [];
+function makeBuilding(b) {
+  const group = new THREE.Group();
+  const geo = new THREE.BoxGeometry(b.size.w, b.size.h, b.size.d);
+  const mat = new THREE.MeshStandardMaterial({ color: b.color, roughness: 0.72, metalness: 0.05 });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(0, b.size.h / 2, 0);
+  mesh.userData.building = b;
+  group.add(mesh);
+
+  /* 屋頂 (深色片) */
+  const roofGeo = new THREE.BoxGeometry(b.size.w + 0.4, 0.4, b.size.d + 0.4);
+  const roofMat = new THREE.MeshStandardMaterial({ color: 0x3a2820, roughness: 0.6 });
+  const roof = new THREE.Mesh(roofGeo, roofMat);
+  roof.position.set(0, b.size.h + 0.2, 0);
+  group.add(roof);
+
+  /* 窗戶 (4-8 排 emissive 暖光) */
+  const winCols = Math.max(2, Math.floor(b.size.w / 3));
+  const winRows = Math.max(1, Math.floor(b.size.h / 3.6));
+  const winMat = new THREE.MeshBasicMaterial({ color: 0xffe0a0, fog: true });
+  for (let r = 0; r < winRows; r++) {
+    for (let c = 0; c < winCols; c++) {
+      if (Math.random() > 0.62) continue;  // 隨機些窗戶亮
+      const w = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.9), winMat);
+      w.position.set(
+        -b.size.w / 2 + 1.5 + c * ((b.size.w - 3) / Math.max(1, winCols - 1)),
+        1.8 + r * 3.6,
+        b.size.d / 2 + 0.01
+      );
+      group.add(w);
+    }
+  }
+
+  group.position.set(b.pos.x, 0, b.pos.z);
+  scene.add(group);
+  buildingMeshes.push(mesh);
+  return group;
+}
+
+BUILDINGS.forEach(makeBuilding);
+
+/* ─── 樹木 (隨機 100 棵分布) ─── */
+const treeMat = new THREE.MeshStandardMaterial({ color: 0x3a5840, roughness: 0.92 });
+const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a3220, roughness: 0.95 });
+for (let i = 0; i < 100; i++) {
+  const x = (Math.random() - 0.5) * 220;
+  const z = (Math.random() - 0.5) * 220;
+  /* 不放在路上 / 不放在建築上 */
+  if (Math.abs(x) < 4 && Math.abs(z) < 80) continue;
+  if (Math.abs(z + 20) < 3 && Math.abs(x) < 60) continue;
+  let collide = false;
+  for (const b of BUILDINGS) {
+    if (Math.abs(x - b.pos.x) < b.size.w / 2 + 2 && Math.abs(z - b.pos.z) < b.size.d / 2 + 2) {
+      collide = true; break;
+    }
+  }
+  if (collide) continue;
+
+  const tree = new THREE.Group();
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 1.8, 6), trunkMat);
+  trunk.position.y = 0.9;
+  tree.add(trunk);
+  const leaves = new THREE.Mesh(new THREE.SphereGeometry(1.2 + Math.random() * 0.4, 8, 6), treeMat);
+  leaves.position.y = 2.4 + Math.random() * 0.4;
+  tree.add(leaves);
+  tree.position.set(x, 0, z);
+  scene.add(tree);
+}
+
+/* ─── 第一人稱控制 ─── */
+const lockPrompt = document.getElementById('lockPrompt');
+const keys = { w: false, a: false, s: false, d: false, shift: false, e: false };
+let yaw = Math.PI;
+let pitch = 0;
+const mouseSens = 0.0024;
+
+lockPrompt.addEventListener('click', () => {
+  canvas.requestPointerLock();
+});
+canvas.addEventListener('click', () => {
+  if (document.pointerLockElement !== canvas) canvas.requestPointerLock();
+  else tryInteract();
+});
+document.addEventListener('pointerlockchange', () => {
+  if (document.pointerLockElement === canvas) {
+    lockPrompt.classList.add('hide');
+  } else {
+    lockPrompt.classList.remove('hide');
+  }
+});
+document.addEventListener('mousemove', e => {
+  if (document.pointerLockElement === canvas) {
+    yaw -= e.movementX * mouseSens;
+    pitch -= e.movementY * mouseSens;
+    pitch = Math.max(-Math.PI / 2 + 0.05, Math.min(Math.PI / 2 - 0.05, pitch));
+  }
+});
+document.addEventListener('keydown', e => {
+  switch (e.code) {
+    case 'KeyW': keys.w = true; break;
+    case 'KeyA': keys.a = true; break;
+    case 'KeyS': keys.s = true; break;
+    case 'KeyD': keys.d = true; break;
+    case 'ShiftLeft': case 'ShiftRight': keys.shift = true; break;
+    case 'KeyE': tryInteract(); break;
+  }
+});
+document.addEventListener('keyup', e => {
+  switch (e.code) {
+    case 'KeyW': keys.w = false; break;
+    case 'KeyA': keys.a = false; break;
+    case 'KeyS': keys.s = false; break;
+    case 'KeyD': keys.d = false; break;
+    case 'ShiftLeft': case 'ShiftRight': keys.shift = false; break;
+  }
+});
+
+/* 互動 ray 偵測 */
+const raycaster = new THREE.Raycaster();
+raycaster.far = 18;
+const focusPrompt = document.getElementById('focusPrompt');
+let focusedBuilding = null;
+
+function updateFocus() {
+  raycaster.setFromCamera({ x: 0, y: 0 }, cam);
+  const hits = raycaster.intersectObjects(buildingMeshes, false);
+  if (hits.length > 0) {
+    focusedBuilding = hits[0].object.userData.building;
+    focusPrompt.classList.add('show');
+  } else {
+    focusedBuilding = null;
+    focusPrompt.classList.remove('show');
+  }
+}
+
+function tryInteract() {
+  if (!focusedBuilding) return;
+  showBuildingTip(focusedBuilding);
+}
+
+/* building tip popup */
+const buildingTip = document.getElementById('buildingTip');
+const btName = document.getElementById('btName');
+const btEp = document.getElementById('btEp');
+const btDesc = document.getElementById('btDesc');
+const btClose = document.getElementById('btClose');
+function showBuildingTip(b) {
+  btName.textContent = b.name;
+  btEp.textContent = b.ep;
+  btDesc.textContent = b.desc;
+  buildingTip.classList.add('show');
+  if (document.exitPointerLock) document.exitPointerLock();
+}
+btClose.addEventListener('click', () => {
+  buildingTip.classList.remove('show');
+  canvas.requestPointerLock();
+});
+
+/* compass UI */
+const compass = document.getElementById('compass');
+function updateCompass() {
+  const deg = ((yaw * 180 / Math.PI) % 360 + 540) % 360 - 180;
+  let dir = 'N';
+  const a = Math.abs(deg);
+  if (a < 22.5) dir = 'N';
+  else if (a < 67.5) dir = deg < 0 ? 'NW' : 'NE';
+  else if (a < 112.5) dir = deg < 0 ? 'W' : 'E';
+  else if (a < 157.5) dir = deg < 0 ? 'SW' : 'SE';
+  else dir = 'S';
+  compass.textContent = dir + ' ' + Math.round(((deg + 360) % 360)) + '°';
+}
+
+/* 主迴圈 */
+let last = performance.now();
+function loop() {
+  const now = performance.now();
+  const dt = Math.min(0.06, (now - last) / 1000);
+  last = now;
+
+  /* movement */
+  const forwardX = -Math.sin(yaw);
+  const forwardZ = -Math.cos(yaw);
+  const rightX = Math.cos(yaw);
+  const rightZ = -Math.sin(yaw);
+
+  let dx = 0, dz = 0;
+  if (keys.w) { dx += forwardX; dz += forwardZ; }
+  if (keys.s) { dx -= forwardX; dz -= forwardZ; }
+  if (keys.a) { dx -= rightX;   dz -= rightZ; }
+  if (keys.d) { dx += rightX;   dz += rightZ; }
+  const mag = Math.hypot(dx, dz);
+  if (mag > 0) { dx /= mag; dz /= mag; }
+  const speed = keys.shift ? 11 : 4.8;
+
+  /* collision: 不能穿建築 */
+  const nx = cam.position.x + dx * speed * dt;
+  const nz = cam.position.z + dz * speed * dt;
+  let blocked = false;
+  for (const b of BUILDINGS) {
+    if (Math.abs(nx - b.pos.x) < b.size.w / 2 + 0.6 &&
+        Math.abs(nz - b.pos.z) < b.size.d / 2 + 0.6) {
+      blocked = true; break;
+    }
+  }
+  if (!blocked) {
+    cam.position.x = nx;
+    cam.position.z = nz;
+  }
+  /* 校園邊界 */
+  cam.position.x = Math.max(-130, Math.min(130, cam.position.x));
+  cam.position.z = Math.max(-130, Math.min(130, cam.position.z));
+  cam.position.y = 1.7;
+
+  cam.rotation.y = yaw;
+  cam.rotation.x = pitch;
+
+  updateFocus();
+  updateCompass();
+  renderer.render(scene, cam);
+  requestAnimationFrame(loop);
+}
+loop();
+
+addEventListener('resize', () => {
+  cam.aspect = innerWidth / innerHeight;
+  cam.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+/* console api */
+window.__CAMPUS__ = {
+  cam: cam,
+  scene: scene,
+  buildings: BUILDINGS,
+  teleportTo: function (name) {
+    const b = BUILDINGS.find(x => x.name === name);
+    if (!b) return false;
+    cam.position.set(b.pos.x + b.size.w / 2 + 4, 1.7, b.pos.z + b.size.d / 2 + 4);
+    yaw = Math.atan2(b.pos.x - cam.position.x, b.pos.z - cam.position.z) + Math.PI;
+    return true;
+  },
+  version: 'r62-poc-1'
+};
+</script>
+</body>
+</html>

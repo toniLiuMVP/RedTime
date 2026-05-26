@@ -451,7 +451,7 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     msaa: 4,                                                    // MSAA samples（取代 FXAA）
     lensDirt:  { amount: 0 },                                  // Tier 6 鏡頭髒污（toni 不要白點，預設關 — 可從 console 開）
     // Tier 7：太陽光體積特效（screen-space）
-    godRays:   { strength: 0.35 },                             // 從太陽方向放射的光柱（0=關，0.6=戲劇）
+    godRays:   { strength: 0.12 },                             // 從太陽方向放射的光柱（0=關，0.6=戲劇）r62 art batch 從 0.35 降 0.12（避免過亮）
     lensFlare: { strength: 0.4 },                              // 鏡頭眩光 ghost
     // F7 Rain on lens — 鏡頭上的雨滴（劇情可動態切「下雨場景」）
     rain:      { amount: 0 },                                  // 預設關，console 開：0.4~0.8
