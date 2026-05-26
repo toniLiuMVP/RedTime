@@ -2211,41 +2211,68 @@ body.lm402-page #cinematic-gate .cinematic-gate-kicker {
     })();
   </script>
 
-  <!-- Path D #3 ｜ 意識菜市場 dedicated mode: ?mode=consciousness -->
+  <!-- 意識菜市場 dedicated mode: ?mode=consciousness
+       default 用 'low' 避免高 preset 共用學妹頭部 anchor 形成過曝白塊
+       badge 點擊可循環 4 階 (low → mid → high → off) -->
   <script>
     (function () {
       const params = new URLSearchParams(window.location.search);
       const mode = params.get('mode');
       if (mode !== 'consciousness' && mode !== 'consc') return;
 
-      /* 等 __TWIN_BALANCE__ ready (renderer 載完才會 expose) */
+      const PRESETS = ['low', 'mid', 'high', 'off'];
+      const LABELS = {
+        low:  '淡 (低)',
+        mid:  '中 (默認偏弱)',
+        high: '強 (易過曝)',
+        off:  '關'
+      };
+      /* 從 URL 可指定起點,預設 low */
+      const startLevel = params.get('level');
+      let currentIdx = PRESETS.indexOf(startLevel);
+      if (currentIdx < 0) currentIdx = 0;
+
       let attempts = 0;
-      const maxAttempts = 60; /* 30 秒 */
+      const maxAttempts = 60;
+      let badge = null;
+
+      function applyPreset(idx) {
+        const preset = PRESETS[idx];
+        try {
+          window.__TWIN_BALANCE__(preset);
+        } catch (e) {
+          console.warn('[consciousness-mode] preset apply failed:', e);
+        }
+        if (badge) {
+          badge.textContent = '意識菜市場 · ' + LABELS[preset] + ' · 點擊切換';
+          badge.style.opacity = preset === 'off' ? '0.55' : '1';
+        }
+        console.info('[consciousness-mode] preset →', preset);
+      }
+
       function tryEnable() {
         attempts++;
         if (typeof window.__TWIN_BALANCE__ === 'function') {
-          window.__TWIN_BALANCE__('high');
-          /* show a small mode badge */
-          const badge = document.createElement('div');
+          badge = document.createElement('div');
           badge.style.cssText =
             'position: fixed; top: 14px; left: 50%; transform: translateX(-50%); ' +
-            'padding: 8px 16px; background: rgba(8, 6, 10, 0.78); backdrop-filter: blur(10px); ' +
+            'padding: 8px 16px; background: rgba(8, 6, 10, 0.84); backdrop-filter: blur(10px); ' +
+            '-webkit-backdrop-filter: blur(10px); ' +
             'border: 1px solid rgba(200, 144, 248, 0.42); border-radius: 4px; ' +
             'color: rgba(218, 200, 244, 0.92); font-family: "Noto Serif TC", serif; ' +
-            'font-size: 12px; letter-spacing: 0.22em; z-index: 99999; ' +
-            'box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55); cursor: pointer;';
-          badge.textContent = '意識菜市場 · ON · 點擊收起';
+            'font-size: 12px; letter-spacing: 0.18em; z-index: 99999; ' +
+            'box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55); cursor: pointer; ' +
+            'transition: opacity 0.2s ease, background 0.2s ease;';
           badge.onclick = function () {
-            window.__TWIN_BALANCE__('off');
-            badge.style.opacity = '0.42';
-            badge.textContent = '意識菜市場 · OFF · 重新整理重啟';
+            currentIdx = (currentIdx + 1) % PRESETS.length;
+            applyPreset(currentIdx);
           };
           document.body.appendChild(badge);
-          console.info('[consciousness-mode] __TWIN_BALANCE__("high") activated via URL param');
+          applyPreset(currentIdx);
         } else if (attempts < maxAttempts) {
           setTimeout(tryEnable, 500);
         } else {
-          console.warn('[consciousness-mode] __TWIN_BALANCE__ not available after 30s, mode failed');
+          console.warn('[consciousness-mode] __TWIN_BALANCE__ not available after 30s');
         }
       }
       if (document.readyState === 'loading') {

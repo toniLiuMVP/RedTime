@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v15-20260606';  // unchanged: GLB / vendor 無變動
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v39-20260527';  // bumped: mobile onboarding bottom nav switched to position:fixed (was sticky, sticky failed under iOS Safari URL bar overlay) + consciousness dedicated mode via ?mode=consciousness URL param on lm402-twin (auto enable __TWIN_BALANCE__ high)
+const RUNTIME_VERSION = 'runtime-v40-20260527';  // bumped: consciousness dedicated mode default lowered from 'high' to 'low' (avoid over-glow white blob around junior head from 3-layer additive stacking) + badge now cycles 4 levels (low/mid/high/off) for on-screen tuning
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
