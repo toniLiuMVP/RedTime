@@ -2211,5 +2211,50 @@ body.lm402-page #cinematic-gate .cinematic-gate-kicker {
     })();
   </script>
 
+  <!-- Path D #3 ｜ 意識菜市場 dedicated mode: ?mode=consciousness -->
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const mode = params.get('mode');
+      if (mode !== 'consciousness' && mode !== 'consc') return;
+
+      /* 等 __TWIN_BALANCE__ ready (renderer 載完才會 expose) */
+      let attempts = 0;
+      const maxAttempts = 60; /* 30 秒 */
+      function tryEnable() {
+        attempts++;
+        if (typeof window.__TWIN_BALANCE__ === 'function') {
+          window.__TWIN_BALANCE__('high');
+          /* show a small mode badge */
+          const badge = document.createElement('div');
+          badge.style.cssText =
+            'position: fixed; top: 14px; left: 50%; transform: translateX(-50%); ' +
+            'padding: 8px 16px; background: rgba(8, 6, 10, 0.78); backdrop-filter: blur(10px); ' +
+            'border: 1px solid rgba(200, 144, 248, 0.42); border-radius: 4px; ' +
+            'color: rgba(218, 200, 244, 0.92); font-family: "Noto Serif TC", serif; ' +
+            'font-size: 12px; letter-spacing: 0.22em; z-index: 99999; ' +
+            'box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55); cursor: pointer;';
+          badge.textContent = '意識菜市場 · ON · 點擊收起';
+          badge.onclick = function () {
+            window.__TWIN_BALANCE__('off');
+            badge.style.opacity = '0.42';
+            badge.textContent = '意識菜市場 · OFF · 重新整理重啟';
+          };
+          document.body.appendChild(badge);
+          console.info('[consciousness-mode] __TWIN_BALANCE__("high") activated via URL param');
+        } else if (attempts < maxAttempts) {
+          setTimeout(tryEnable, 500);
+        } else {
+          console.warn('[consciousness-mode] __TWIN_BALANCE__ not available after 30s, mode failed');
+        }
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', tryEnable, { once: true });
+      } else {
+        tryEnable();
+      }
+    })();
+  </script>
+
   </body>
 </html>

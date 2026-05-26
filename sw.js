@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v15-20260606';  // unchanged: GLB / vendor 無變動
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v38-20260527';  // bumped: campus tour real Fu Jen layout (8 buildings + circular auditorium + chapel + gate) + mobile onboarding refinements + post-review fixes (yaw direction, gate collision, css specificity, defensive code)
+const RUNTIME_VERSION = 'runtime-v39-20260527';  // bumped: mobile onboarding bottom nav switched to position:fixed (was sticky, sticky failed under iOS Safari URL bar overlay) + consciousness dedicated mode via ?mode=consciousness URL param on lm402-twin (auto enable __TWIN_BALANCE__ high)
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;

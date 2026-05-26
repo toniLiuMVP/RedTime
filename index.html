@@ -1936,13 +1936,14 @@
           align-items: flex-start;
           padding: max(16px, env(safe-area-inset-top, 0px))
                    max(12px, env(safe-area-inset-right, 0px))
-                   calc(env(safe-area-inset-bottom, 0px) + 120px)
+                   calc(env(safe-area-inset-bottom, 0px) + 160px)
                    max(12px, env(safe-area-inset-left, 0px));
         }
         .tour-card {
-          max-height: calc(100svh - 140px - env(safe-area-inset-bottom, 0px));
+          /* 用 100dvh (dynamic) 配合 iOS Safari URL bar 動態高度 */
+          max-height: calc(100dvh - 180px - env(safe-area-inset-bottom, 0px));
           margin-top: 12px;
-          padding: 18px 18px;
+          padding: 18px 18px 140px 18px; /* 底部留 140px 給浮動 nav */
           border-radius: 8px;
         }
         /* 全面手機新手模式優化 — 所有 5 步驟壓縮間距 + 放大 hit target */
@@ -2024,27 +2025,56 @@
           text-align: center;
           letter-spacing: 0.2em;
         }
-        /* tour-bottom (上一步/下一步/5-of-5) sticky 在 card 內部底部 + 漸層遮罩
-           避免 scroll 時被 content 吃掉 + iOS Safari URL bar 不擋 */
+        /* r62 round-4 ｜ tour-bottom 用 position:fixed 浮在 viewport 底,
+           iOS Safari URL bar 跟 sticky 在 backdrop-filter overlay 下不可靠
+           toni 紀律「新手引導最下方還是被擋住」 — 改用 fixed + 大 safe-area buffer */
         .tour-card .tour-bottom {
-          position: sticky;
-          bottom: -1px;
-          background: linear-gradient(180deg,
-            rgba(15, 15, 22, 0),
-            rgba(15, 15, 22, 0.92) 24%,
-            rgba(15, 15, 22, 0.96) 100%);
-          padding: 14px 0 6px 0;
-          margin-top: 18px;
+          position: fixed;
+          left: max(12px, env(safe-area-inset-left, 0px));
+          right: max(12px, env(safe-area-inset-right, 0px));
+          bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+          margin: 0;
+          padding: 12px 16px;
+          background: rgba(8, 10, 16, 0.96);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          border: 1px solid rgba(232, 90, 58, 0.42);
+          border-radius: 10px;
+          box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.55);
+          z-index: 10010;
         }
         .tour-btn-prev,
         .tour-btn-next {
           padding: 12px 16px;
           font-size: 11px;
           min-height: 44px;
-          min-width: 76px;
+          min-width: 80px;
+          flex: 1;
+          max-width: 120px;
+        }
+        .tour-btn-prev[hidden] {
+          /* 第 1 步「上一步」hidden 時, next 不靠右靠中 */
+          display: none;
         }
         .tour-step-indicator {
+          font-size: 11px;
+          flex: 0 0 auto;
+          padding: 0 12px;
+        }
+        /* tour-skip (之後再說) 也浮在 viewport 底, 在 tour-bottom 上方 */
+        .tour-card .tour-skip {
+          position: fixed;
+          left: 50%;
+          transform: translateX(-50%);
+          bottom: calc(env(safe-area-inset-bottom, 0px) + 86px);
+          margin: 0;
+          padding: 8px 16px;
           font-size: 10px;
+          z-index: 10009;
+          background: rgba(8, 10, 16, 0.78);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border-radius: 14px;
         }
         .tour-card .tour-final-actions {
           padding-bottom: 6px;
