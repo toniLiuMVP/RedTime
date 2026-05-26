@@ -982,7 +982,7 @@
     <button id="lm402-polaroid-btn" type="button" aria-label="拍立得留念" title="拍立得留念">📷</button>
     <style>
       #lm402-polaroid-btn,
-      #lm402-polaroid-flash { display: none !important; } /* r62 #10 toni: 隱藏遊戲拍照按鈕 (console API 保留) */
+      #lm402-polaroid-flash { display: none !important; } /* toni: 隱藏遊戲拍照按鈕 (console API 保留) */
       #lm402-polaroid-btn {
         position: fixed;
         right: 18px;
@@ -1024,7 +1024,7 @@
         opacity: 0.85;
       }
 
-      /* r60a C10:LM402 新手引路 tutorial(對位 r58 modal 紀律) */
+      /* C10:LM402 新手引路 tutorial(對位 modal 紀律) */
       .cinematic-gate-tutorial {
         display: inline-flex;
         align-items: center;
@@ -1239,7 +1239,7 @@
       })();
     </script>
 
-    <!-- r60a C10:LM402 新手引路 modal -->
+    <!-- C10:LM402 新手引路 modal -->
     <div id="lm402-tutorial" class="lm402-tutorial-overlay" hidden>
       <div class="lm402-tutorial-card" role="dialog" aria-labelledby="lm402-tutorial-title" aria-modal="true">
         <div class="lm402-tutorial-topbar">
@@ -1317,7 +1317,7 @@
       </div>
     </div>
     <script>
-    /* r60a C10:LM402 新手引路 tutorial JS(對位 r58 modal 紀律) */
+    /* C10:LM402 新手引路 tutorial JS(對位 modal 紀律) */
     (function () {
       const TOUR_KEY = "redtime_lm402_newcomer_done";
       const TOUR_STEPS = 5;
@@ -1406,10 +1406,10 @@
     </script>
 
   <script>
-    // r60b C1 ｜ GLB scene render still placeholder
+    // C1 — GLB scene render still placeholder
     // 用法 (console)：__LM402_PHOTO__.capture()
     //   options： { filename }
-    //   高倍率 supersample 留 r60d+ 真實作， 目前僅輸出 canvas.toBlob 原解析度。
+    //   高倍率 supersample 留 later 真實作， 目前僅輸出 canvas.toBlob 原解析度。
     (function () {
       const LINE = 'lm402';
       const LABEL = 'LM402';
@@ -1467,7 +1467,7 @@
         line: LINE,
         label: LABEL,
         capture: capture,
-        version: 'r60b-placeholder'
+        version: 'v1'
       };
       // Brief boot log only when devtools likely open (no production noise).
       if (window.__lm402DebugPhoto) {

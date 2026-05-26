@@ -215,10 +215,10 @@ canvas{display:block;width:100%;height:100%}
   }
 }
 
-/* r60b C10:platform-run 新手引路 tutorial(對位 r60a LM402 pattern) */
+/* C10:platform-run 新手引路 tutorial(對位 LM402 pattern) */
 .pt-tutorial-trigger {
-  /* r60b ｜ Gemini caught conflict with #mute-btn (top:12px); offset to 60px */
-  /* r60b ｜ Codex caught z-index:200 floats over result/leaderboard; hide via :has() */
+  /* review caught conflict with #mute-btn (top:12px); offset to 60px */
+  /* review caught z-index:200 floats over result/leaderboard; hide via :has() */
   position: fixed;
   top: 60px;
   right: 16px;
@@ -244,7 +244,7 @@ canvas{display:block;width:100%;height:100%}
   transform: translateY(-1px);
 }
 .pt-trigger-icon { font-size: 12px; color: rgba(224, 72, 96, 0.95); letter-spacing: 0; }
-/* r60b ｜ Codex a11y: trigger only visible while title-screen is up (uses :has)  */
+/* a11y review: trigger only visible while title-screen is up (uses :has)  */
 body:has(#title-screen.hide) .pt-tutorial-trigger { display: none !important; }
 .pt-tutorial-overlay {
   position: fixed; inset: 0; z-index: 9999;
@@ -339,7 +339,7 @@ body:has(#title-screen.hide) .pt-tutorial-trigger { display: none !important; }
 </script>
 </head>
 <body role="application" aria-label="月台上的狂奔 互動遊戲">
-<!-- r60b C10:platform-run 新手引路 tutorial trigger -->
+<!-- C10:platform-run 新手引路 tutorial trigger -->
 <button
   type="button"
   class="pt-tutorial-trigger"
@@ -4844,7 +4844,7 @@ function showFinalResult() {
   /* Change retry text */
   dom.resultRetry.textContent = "\u518D\u73A9\u4E00\u6B21";
 
-  /* r61c A5 \uFF5C Steam-3 manual: \u6708\u53F0 10 \u95DC\u901A\u95DC\u5F8C\u52A0 button\u300C\u2192 \u9032\u5165 LM402 \u4E00\u773C\u77AC\u9593\u300D
+  /* A5 \uFF5C Steam-3 manual: \u6708\u53F0 10 \u95DC\u901A\u95DC\u5F8C\u52A0 button\u300C\u2192 \u9032\u5165 LM402 \u4E00\u773C\u77AC\u9593\u300D
      (\u5C0D\u4F4D EP36 \u6708\u53F0 + EP3/EP38 LM402 \u96D9 keystone, manual transition \u4E0D auto-navigate) */
   try {
     if (!document.getElementById('pt-bridge-lm402')) {
@@ -4865,7 +4865,7 @@ function showFinalResult() {
       dom.resultBody.appendChild(bridgeWrap);
     }
   } catch (e_bridge) {
-    console.warn('[r61c-bridge] platform\u2192lm402 button setup failed:', e_bridge && e_bridge.message);
+    console.warn('[bridge] platform\u2192lm402 button setup failed:', e_bridge && e_bridge.message);
   }
 }
 
@@ -5501,7 +5501,7 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
-<!-- r60b C10:platform-run 新手引路 modal -->
+<!-- C10:platform-run 新手引路 modal -->
 <div id="pt-tutorial" class="pt-tutorial-overlay" hidden>
   <div class="pt-tutorial-card" role="dialog" aria-label="新手引路 — 5 秒看怎麼玩" aria-modal="true">
     <div class="pt-tutorial-topbar">
@@ -5563,9 +5563,9 @@ if ('serviceWorker' in navigator) {
   </div>
 </div>
 <script>
-/* r60b C10:platform-run 新手引路 tutorial JS */
+/* C10:platform-run 新手引路 tutorial JS */
 (function () {
-  /* r60b ｜ TOUR_KEY removed (manual trigger, no first-time gating per Codex 🟡) */
+  /* TOUR_KEY removed (manual trigger, no first-time gating per review) */
   const TOUR_STEPS = 4;
   let currentStep = 1;
 
@@ -5589,7 +5589,7 @@ if ('serviceWorker' in navigator) {
     if (!overlay) return;
     overlay.hidden = true;
     document.body.style.overflow = "";
-    /* r60b ｜ Codex: manual trigger, no first-time gating; localStorage 寫入移除 */
+    /* Codex: manual trigger, no first-time gating; localStorage 寫入移除 */
   };
 
   window.ptTourNext = function (e) {
@@ -5654,14 +5654,14 @@ if ('serviceWorker' in navigator) {
 </script>
 
 <script>
-/* r60c C8 ｜ 月台 10 關 mechanic 變化 (visual layer foundation)
+/* C8 — 月台 10 關 mechanic 變化 (visual layer foundation)
    8 個關卡 (L3-L10) 加 visual mechanic overlay：
      L3 風    L4 雨    L5 排隊    L6 嬰兒
      L7 廣播  L8 長椅  L9 燈閃    L10 紅線
    實作策略：
      - DOM/CSS 純 overlay， 不動 game physics
      - 監測 #narr-text 文字變化「第 N 關開始」 → 自動啟動該關 mechanic
-     - 完整 physics 整合留 r60d+
+     - 完整 physics 整合留 later
    Console API：
      __LEVEL_MECHANICS__.activate(N) / deactivate() / list()
 */
@@ -5816,9 +5816,9 @@ if ('serviceWorker' in navigator) {
       @media (prefers-reduced-motion: reduce) {
         #${ROOT_ID} *,
         #${ROOT_ID} *::before { animation: none !important; }
-        /* r60c ｜ Gemini caught: keep L10 redline visible in static mode */
+        /* review caught: keep L10 redline visible in static mode */
         #${ROOT_ID}.active[data-mech="redline"] .c8-mech-redline { opacity: 1; }
-        /* r60c ｜ Codex caught: L7 announce stranded off-screen w/o anim — pin into view */
+        /* review caught: L7 announce stranded off-screen w/o anim — pin into view */
         #${ROOT_ID}.active[data-mech="announce"] .c8-mech-announce { right: 18px; }
         /* Free GPU layers when inactive */
         #${ROOT_ID}:not(.active) > div { visibility: hidden; }
@@ -5911,7 +5911,7 @@ if ('serviceWorker' in navigator) {
     deactivate: deactivate,
     list: list,
     get level() { return activeLevel; },
-    version: 'r60c-1'
+    version: 'v1'
   };
 })();
 </script>

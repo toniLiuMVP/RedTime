@@ -80,7 +80,7 @@
         --f4: #30c850;
         --f5: #3880ff;
         --f6: #9040f0;
-        /* r62 art batch — 4-tier 紅線 + amber-glow tokens */
+        /* art batch — 4-tier 紅線 + amber-glow tokens */
         --thread-1: rgba(214, 50, 64, 0.18);
         --thread-2: rgba(214, 50, 64, 0.42);
         --thread-3: rgba(214, 50, 64, 0.72);
@@ -330,10 +330,10 @@
       }
       .hero-title {
         font-family: "Cormorant Garamond", serif;
-        font-weight: 400;        /* r55:C3 中文 300→400 補回字重 */
+        font-weight: 400;        /* C3 中文 300→400 補回字重 */
         font-size: clamp(62px, 15vw, 110px);
         line-height: 0.98;
-        letter-spacing: -0.01em; /* r55:C3 中文書法「字緊行寬」紀律 — 0.06em→-0.01em */
+        letter-spacing: -0.01em; /* C3 中文書法「字緊行寬」紀律 — 0.06em→-0.01em */
         color: var(--parchment);
         margin-bottom: 36px;
         opacity: 0;
@@ -999,10 +999,10 @@
       }
       .section-title {
         font-family: "Cormorant Garamond", serif;
-        font-weight: 400;        /* r55:C3 中文 300→400 補回字重 */
+        font-weight: 400;        /* C3 中文 300→400 補回字重 */
         font-size: clamp(28px, 5vw, 52px);
         line-height: 1.15;
-        letter-spacing: 0.02em;  /* r55:C3 0.06em→0.02em 中文書法字緊紀律 */
+        letter-spacing: 0.02em;  /* C3 0.06em→0.02em 中文書法字緊紀律 */
         color: var(--parchment);
       }
       .reveal {
@@ -1343,7 +1343,7 @@
         padding-top: 14px;
         letter-spacing: 0.12em;
       }
-      /* r56 B6:女兒 arc-card 內秘密手勢文字版(EP37) */
+      /* B6:女兒 arc-card 內秘密手勢文字版(EP37) */
       .arc-card-secret {
         margin-top: 10px;
         padding: 10px 12px;
@@ -1502,7 +1502,7 @@
         max-width: 600px;
         margin: 0 auto;
       }
-      /* r54 D1:三集試讀路徑 */
+      /* D1:三集試讀路徑 */
       .sample-path {
         max-width: 920px;
         margin: 0 auto;
@@ -1594,7 +1594,7 @@
       .sample-card-keystone:hover {
         border-color: rgba(232, 90, 58, 0.6);
       }
-      /* r56 B9:相信 echo end card(對位 about-quote 形成 EP39/40 → EP41 母題 echo) */
+      /* B9:相信 echo end card(對位 about-quote 形成 EP39/40 → EP41 母題 echo) */
       .end-echo {
         text-align: center;
         max-width: 38em;
@@ -1618,7 +1618,7 @@
         letter-spacing: 0.2em;
         color: var(--amber);
       }
-      /* r57 P1-5:end-echo 大字升級(三世代相信傳遞 EP39 → EP40 → EP41) */
+      /* P1-5:end-echo 大字升級(三世代相信傳遞 EP39 → EP40 → EP41) */
       .end-echo-main {
         font-family: "Cormorant Garamond", "Noto Serif TC", serif;
         font-size: clamp(38px, 6vw, 56px);
@@ -1640,7 +1640,7 @@
         font-style: italic;
       }
 
-      /* r58 P0-1:新讀者引路按鈕 + modal tour */
+      /* P0-1:新讀者引路按鈕 + modal tour */
       .btn-newcomer {
         background: linear-gradient(135deg, rgba(232, 90, 58, 0.18), rgba(200, 144, 16, 0.10));
         border: 1px solid rgba(232, 90, 58, 0.55);
@@ -1699,8 +1699,8 @@
         padding: 32px 40px;
         box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.04);
       }
-      /* r62 round-2 #1 ｜ 手機優化：避開 iOS Safari URL bar + safe-area-inset-bottom
-         toni 紀律「避免手機用戶根本點擊不到下方」— 底部留 100+px buffer, card 上頂 */
+      /* round-2 手機優化：避開 iOS Safari URL bar + safe-area-inset-bottom
+         「避免手機用戶根本點擊不到下方」— 底部留 100+px buffer, card 上頂 */
       @supports (height: 100dvh) {
         .tour-card { max-height: 88dvh; }
       }
@@ -2025,9 +2025,9 @@
           text-align: center;
           letter-spacing: 0.2em;
         }
-        /* r62 round-4 ｜ tour-bottom 用 position:fixed 浮在 viewport 底,
+        /* round-4 — tour-bottom 用 position:fixed 浮在 viewport 底,
            iOS Safari URL bar 跟 sticky 在 backdrop-filter overlay 下不可靠
-           toni 紀律「新手引導最下方還是被擋住」 — 改用 fixed + 大 safe-area buffer */
+           「新手引導最下方還是被擋住」 — 改用 fixed + 大 safe-area buffer */
         .tour-card .tour-bottom {
           position: fixed;
           left: max(12px, env(safe-area-inset-left, 0px));
@@ -2098,7 +2098,7 @@
         }
       }
 
-      /* r57 P1-3:EP28 紅線翻轉 mid-echo(對位 about-quote / end-echo 三幕結構) */
+      /* P1-3:EP28 紅線翻轉 mid-echo(對位 about-quote / end-echo 三幕結構) */
       .mid-echo {
         text-align: center;
         max-width: 38em;
@@ -2441,14 +2441,14 @@
       }
       .site-font-btn {
         min-width: 0;
-        min-height: 44px;  /* r54:WCAG 2.5.5 AAA + iOS HIG touch target */
-        padding: 10px 14px;  /* r54:7→10 / 10→14 */
+        min-height: 44px;  /* WCAG 2.5.5 AAA + iOS HIG touch target */
+        padding: 10px 14px;  /* 7→10 / 10→14 */
         border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 999px;
         background: rgba(255, 255, 255, 0.03);
         color: rgba(234, 230, 222, 0.72);
         font-family: "Noto Sans TC", sans-serif;
-        font-size: 13px;   /* r54:11→13 中文字最小可讀 */
+        font-size: 13px;   /* 11→13 中文字最小可讀 */
         line-height: 1;
         cursor: pointer;
         transition:
@@ -2466,7 +2466,7 @@
         background: rgba(22, 168, 100, 0.12);
         color: #9af0c5;
       }
-      /* r52:放大鏡按鈕 — 跟字體選項區別色(amber 系)讓長輩注意 */
+      /* 放大鏡按鈕 — 跟字體選項區別色(amber 系)讓長輩注意 */
       .site-font-magnify {
         margin-left: 4px;
         font-size: 14px !important;
@@ -2514,7 +2514,7 @@
           margin-bottom: 32px;
         }
         .hero-actions {
-          /* r62 #1 ｜ toni: 「你是第一次來嗎?」對齊置中 (手機) — buttons full-width 但 text 置中 */
+          /* toni: 「你是第一次來嗎?」對齊置中 (手機) — buttons full-width 但 text 置中 */
           flex-direction: column;
           align-items: stretch;
           gap: 10px;
@@ -2601,7 +2601,7 @@
         }
         .site-font-btn {
           flex: 1;
-          padding: 12px 0;  /* r54:8→12 mobile touch target */
+          padding: 12px 0;  /* 8→12 mobile touch target */
           min-height: 44px;
           font-size: 13px;
         }
@@ -2744,7 +2744,7 @@
         }
       }
     
-      /* Codex 🔵 a11y skip link */
+      /* note a11y skip link */
       .skip-link {
         position: absolute;
         left: -9999px;
@@ -2998,7 +2998,7 @@
               <a class="btn-ghost" href="demos/platform-run-time.html"
                 >🏃 &nbsp; 月台上的狂奔</a
               >
-              <!-- r62 #5 ｜ 校園巡禮 PoC 待改進為真實輔大 + 故事文本對位,隱藏入口 -->
+              <!-- 校園巡禮 PoC 待改進為真實輔大 + 故事文本對位,隱藏入口 -->
             </div>
           </div>
         </div>
@@ -3008,7 +3008,7 @@
         <div class="scroll-line"></div>
       </div>
     </section>
-    <!-- r58 P0-1: 新讀者引路 modal(toni 顯式 ask)— 5-step onboarding overlay -->
+    <!-- P0-1: 新讀者引路 modal— 5-step onboarding overlay -->
     <div id="newcomer-tour" class="tour-overlay" hidden aria-hidden="true">
       <div class="tour-card" role="dialog" aria-labelledby="tour-title" aria-modal="true">
         <div class="tour-topbar">
@@ -3359,7 +3359,7 @@
             她飛遍所有時間線，卻被禁止干預。她什麼都知道，直到她發現，「知道」救不了現在的他。
           </div>
           <div class="arc-card-quote">「我不是因為『我看過了』才相信。我是因為『我願意相信』，所以相信。就跟把拔一樣。」</div>
-          <!-- r56 B6:EP37 秘密手勢文字版(toni 親寫描述) -->
+          <!-- B6:EP37 秘密手勢文字版 -->
           <div class="arc-card-secret">
             <div class="secret-label">秘密手勢 · EP37</div>
             <div class="secret-desc">先敲胸口兩下，用食指指著對方，用手比數字 7 放在下巴下面，最後跟對方比讚，代表你很棒！</div>
@@ -3384,7 +3384,7 @@
       </div>
     </section>
 
-    <!-- r57 P1-3:EP28 紅線翻轉 mid-echo(學長視角的 EP28 拱心石 — 紅線從宿命論升級為自由意志) -->
+    <!-- P1-3:EP28 紅線翻轉 mid-echo(學長視角的 EP28 拱心石 — 紅線從宿命論升級為自由意志) -->
     <div class="reveal mid-echo">
       <blockquote class="mid-echo-quote">「不是紅線先牽住我們；<br>是我們先伸手，<br>是『選擇』讓紅線成形。」</blockquote>
       <div class="mid-echo-src">學長 · EP28</div>
@@ -3542,7 +3542,7 @@
           </div>
         </div>
 
-        <!-- r54 D1:三集試讀路徑(出版總編 + 網站專家共建)— 給 42 集太重的新讀者 -->
+        <!-- D1:三集試讀路徑(出版總編 + 網站專家共建)— 給 42 集太重的新讀者 -->
         <div class="reveal sample-path" style="margin-top: 64px">
           <div class="sample-label">第一次來？三集試讀</div>
           <p class="sample-intro">如果 42 集太重，先讀這三集。它們是這座橋的三塊承重結構，讀完你就會知道要不要回頭從 EP0 開始。</p>
@@ -3571,7 +3571,7 @@
           </div>
         </div>
 
-        <!-- r56 B9:相信 echo end card(對位 about-quote「我相信『相信的力量』」EP39/40 學長/把拔) -->
+        <!-- B9:相信 echo end card(對位 about-quote「我相信『相信的力量』」EP39/40 學長/把拔) -->
         <div class="reveal end-echo" style="margin-top: 64px">
           <div class="end-echo-main">「我也相信。」</div>
           <div class="end-echo-src">女兒 · EP41 · 對位 EP39 / EP40</div>
@@ -3763,7 +3763,7 @@
       );
       document.querySelectorAll(".reveal").forEach((el) => ro.observe(el));
 
-      // Homepage font scale — r52:6 階(加超特大)+ site-wide localStorage 同步 + 放大鏡 elderly mode
+      // Homepage font scale — :6 階(加超特大)+ site-wide localStorage 同步 + 放大鏡 elderly mode
       (() => {
         const LEGACY_KEY = "redtime_home_font_scale_v1";  // 舊鍵 fallback
         const SITE_KEY = "redtime_site_font_v2";          // 新鍵:跨頁面同步(reader 也讀此鍵)
@@ -3773,7 +3773,7 @@
           large: 1.08,
           xlarge: 1.16,
           xxlarge: 1.24,
-          xxxlarge: 1.34,   // r52:新增超特大階(長輩友善)
+          xxxlarge: 1.34,   // 新增超特大階(長輩友善)
         };
         const buttons = Array.from(
           document.querySelectorAll("[data-font-scale]"),
@@ -3793,7 +3793,7 @@
             );
           });
         };
-        // r52:優先讀新 site key,fallback 到舊 home key
+        // 優先讀新 site key,fallback 到舊 home key
         let saved = "medium";
         try {
           saved = localStorage.getItem(SITE_KEY) || localStorage.getItem(LEGACY_KEY) || "medium";
@@ -3810,7 +3810,7 @@
             applyScale(level);
           });
         });
-        // r52:放大鏡按鈕 — 一鍵跳到最大階「超特大」(長輩友善 elderly mode)
+        // 放大鏡按鈕 — 一鍵跳到最大階「超特大」(長輩友善 elderly mode)
         const magnifyBtn = document.getElementById("site-font-magnify");
         if (magnifyBtn) {
           magnifyBtn.addEventListener("click", () => {
@@ -3862,7 +3862,7 @@
           var segments = 120;
           var breathe = 0.5 + 0.5 * Math.sin(time * 0.4);
 
-          // Outer glow — r54:偏黃暖紅(EP41 toni 親寫「我跟把拔的紅線，有點偏黃色」fidelity)
+          // Outer glow — :偏黃暖紅(EP41 toni 親寫「我跟把拔的紅線，有點偏黃色」fidelity)
           ctx.save();
           ctx.globalAlpha = 0.06 + breathe * 0.04;
           ctx.strokeStyle = "#e85a3a";  // 從 #ff4858 純朱紅 → 暖琥珀紅
@@ -3992,7 +3992,7 @@
     </script>
 
     <script>
-      /* r58 P0-1: 新讀者引路 modal tour controller */
+      /* P0-1: 新讀者引路 modal tour controller */
       (function () {
         const TOUR_KEY = "redtime_newcomer_done";
         const TOUR_STEPS = 5;

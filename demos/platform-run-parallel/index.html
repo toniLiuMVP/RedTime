@@ -243,10 +243,10 @@ canvas{display:block;width:100%;height:100%}
   }
 }
 
-/* r60b C10:platform-run 新手引路 tutorial(對位 r60a LM402 pattern) */
+/* C10:platform-run 新手引路 tutorial(對位 LM402 pattern) */
 .pt-tutorial-trigger {
-  /* r60b ｜ Gemini caught conflict with #mute-btn (top:12px); offset to 60px */
-  /* r60b ｜ Codex caught z-index:200 floats over result/leaderboard; hide via :has() */
+  /* review caught conflict with #mute-btn (top:12px); offset to 60px */
+  /* review caught z-index:200 floats over result/leaderboard; hide via :has() */
   position: fixed;
   top: 60px;
   right: 16px;
@@ -272,7 +272,7 @@ canvas{display:block;width:100%;height:100%}
   transform: translateY(-1px);
 }
 .pt-trigger-icon { font-size: 12px; color: rgba(224, 72, 96, 0.95); letter-spacing: 0; }
-/* r60b ｜ Codex a11y: trigger only visible while title-screen is up (uses :has)  */
+/* a11y review: trigger only visible while title-screen is up (uses :has)  */
 body:has(#title-screen.hide) .pt-tutorial-trigger { display: none !important; }
 .pt-tutorial-overlay {
   position: fixed; inset: 0; z-index: 9999;
@@ -378,7 +378,7 @@ body:has(#title-screen.hide) .pt-tutorial-trigger { display: none !important; }
 </script>
 </head>
 <body role="application" aria-label="月台上的狂奔 互動遊戲">
-<!-- r60b C10:platform-run 新手引路 tutorial trigger -->
+<!-- C10:platform-run 新手引路 tutorial trigger -->
 <button
   type="button"
   class="pt-tutorial-trigger"
@@ -1780,7 +1780,7 @@ scene.add(platformFill);
     console.info('[__WEBGPU_DISPOSE__] ✅ disposed');
   };
 
-  /* 3. __USE_WEBGPU_SCENE__() — Sprint H Step 2 starter(toni 點才嘗試,break 即 abort)
+  /* 3. __USE_WEBGPU_SCENE__() — Sprint H Step 2 starter
      對齊 Gemini insight:ShaderMaterial / EffectComposer 在 WebGPU 下 break,
      僅嘗試「初始化 main scene 為 WebGPU 模式」+ check 是否能 render 1 frame,
      fail 立刻 fallback,success 顯示 GPU 標籤,但 game logic 不變 */
@@ -5759,7 +5759,7 @@ function showFinalResult() {
   /* Change retry text */
   dom.resultRetry.textContent = "\u518D\u73A9\u4E00\u6B21";
 
-  /* r61c A5 ｜ Steam-3 manual: 月台 10 關通關後加 button「→ 進入 LM402 一眼瞬間」 */
+  /* A5 — Steam-3 manual: 月台 10 關通關後加 button「→ 進入 LM402 一眼瞬間」 */
   try {
     if (!document.getElementById('pt-bridge-lm402')) {
       var bridge = document.createElement('a');
@@ -5779,7 +5779,7 @@ function showFinalResult() {
       dom.resultBody.appendChild(bridgeWrap);
     }
   } catch (e_bridge) {
-    console.warn('[r61c-bridge] platform→lm402 button setup failed:', e_bridge && e_bridge.message);
+    console.warn('[bridge] platform→lm402 button setup failed:', e_bridge && e_bridge.message);
   }
 }
 
@@ -5840,7 +5840,7 @@ function failure() {
     dom.resultRetry.textContent = "\u91CD\u65B0\u6311\u6230";
 
     /* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-       r60b-2 C7 \uFF5C \u5E73\u884C \u300C\u5931\u6557\u4E5F\u662F canon\u300D N-failure unlock
+       -2 C7 \uFF5C \u5E73\u884C \u300C\u5931\u6557\u4E5F\u662F canon\u300D N-failure unlock
        localStorage counter,3/5/7 \u4E09\u968E\u6BB5 reveal,
        \u7D14 game-mechanical \u8A0A\u606F(\u975E\u5287\u60C5\u6587\u672C)\u3002
        \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
@@ -5848,7 +5848,7 @@ function failure() {
       var C7_KEY = "redtime_pt_parallel_failures";
       var n = parseInt(localStorage.getItem(C7_KEY) || "0", 10) + 1;
       localStorage.setItem(C7_KEY, String(n));
-      /* r61c A2 \uFF5C Steam-2 \u5B78\u59B9\u56DE\u671B: \u5931\u6557 3+ \u6B21, \u52A0\u300C\u5979\u4E5F\u8A66\u4E86 N \u6B21\u300Dreframe + button label
+      /* A2 \uFF5C Steam-2 \u5B78\u59B9\u56DE\u671B: \u5931\u6557 3+ \u6B21, \u52A0\u300C\u5979\u4E5F\u8A66\u4E86 N \u6B21\u300Dreframe + button label
          \u300C\u518D\u8A66\u4E00\u6B21\u300D \u2192 \u300C\u8B93\u5979\u518D\u5E6B\u4F60\u4E00\u6B21\u300D(\u96E3\u5EA6\u4E0D\u8B8A, \u5C0D\u4F4D EP41 keystone) */
       var c7msg = null;
       if (n >= 7) {
@@ -5867,7 +5867,7 @@ function failure() {
         requestAnimationFrame(function () {
           requestAnimationFrame(function () { c7wrap.style.opacity = "1"; });
         });
-        /* r61c A2 \uFF5C button label\u300C\u518D\u8A66\u4E00\u6B21\u300D\u2192\u300C\u8B93\u5979\u518D\u5E6B\u4F60\u4E00\u6B21\u300D(\u5C0D\u4F4D N-fail) */
+        /* A2 \uFF5C button label\u300C\u518D\u8A66\u4E00\u6B21\u300D\u2192\u300C\u8B93\u5979\u518D\u5E6B\u4F60\u4E00\u6B21\u300D(\u5C0D\u4F4D N-fail) */
         if (n >= 3 && dom.resultRetry) {
           dom.resultRetry.textContent = "\u8B93\u5979\u518D\u5E6B\u4F60\u4E00\u6B21";
         }
@@ -6459,7 +6459,7 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
-<!-- r60b C10:platform-run 新手引路 modal -->
+<!-- C10:platform-run 新手引路 modal -->
 <div id="pt-tutorial" class="pt-tutorial-overlay" hidden>
   <div class="pt-tutorial-card" role="dialog" aria-label="新手引路 — 5 秒看怎麼玩" aria-modal="true">
     <div class="pt-tutorial-topbar">
@@ -6521,9 +6521,9 @@ if ('serviceWorker' in navigator) {
   </div>
 </div>
 <script>
-/* r60b C10:platform-run 新手引路 tutorial JS */
+/* C10:platform-run 新手引路 tutorial JS */
 (function () {
-  /* r60b ｜ TOUR_KEY removed (manual trigger, no first-time gating per Codex 🟡) */
+  /* TOUR_KEY removed (manual trigger, no first-time gating per review) */
   const TOUR_STEPS = 4;
   let currentStep = 1;
 
@@ -6547,7 +6547,7 @@ if ('serviceWorker' in navigator) {
     if (!overlay) return;
     overlay.hidden = true;
     document.body.style.overflow = "";
-    /* r60b ｜ Codex: manual trigger, no first-time gating; localStorage 寫入移除 */
+    /* Codex: manual trigger, no first-time gating; localStorage 寫入移除 */
   };
 
   window.ptTourNext = function (e) {
@@ -6612,14 +6612,14 @@ if ('serviceWorker' in navigator) {
 </script>
 
 <script>
-/* r60c C8 ｜ 月台 10 關 mechanic 變化 (visual layer foundation)
+/* C8 — 月台 10 關 mechanic 變化 (visual layer foundation)
    8 個關卡 (L3-L10) 加 visual mechanic overlay：
      L3 風    L4 雨    L5 排隊    L6 嬰兒
      L7 廣播  L8 長椅  L9 燈閃    L10 紅線
    實作策略：
      - DOM/CSS 純 overlay， 不動 game physics
      - 監測 #narr-text 文字變化「第 N 關開始」 → 自動啟動該關 mechanic
-     - 完整 physics 整合留 r60d+
+     - 完整 physics 整合留 later
    Console API：
      __LEVEL_MECHANICS__.activate(N) / deactivate() / list()
 */
@@ -6774,9 +6774,9 @@ if ('serviceWorker' in navigator) {
       @media (prefers-reduced-motion: reduce) {
         #${ROOT_ID} *,
         #${ROOT_ID} *::before { animation: none !important; }
-        /* r60c ｜ Gemini caught: keep L10 redline visible in static mode */
+        /* review caught: keep L10 redline visible in static mode */
         #${ROOT_ID}.active[data-mech="redline"] .c8-mech-redline { opacity: 1; }
-        /* r60c ｜ Codex caught: L7 announce stranded off-screen w/o anim — pin into view */
+        /* review caught: L7 announce stranded off-screen w/o anim — pin into view */
         #${ROOT_ID}.active[data-mech="announce"] .c8-mech-announce { right: 18px; }
         /* Free GPU layers when inactive */
         #${ROOT_ID}:not(.active) > div { visibility: hidden; }
@@ -6869,7 +6869,7 @@ if ('serviceWorker' in navigator) {
     deactivate: deactivate,
     list: list,
     get level() { return activeLevel; },
-    version: 'r60c-1'
+    version: 'v1'
   };
 })();
 </script>

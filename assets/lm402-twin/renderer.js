@@ -6379,19 +6379,14 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     radius: 0.7,
     heightRange: 1.0,
   });
-  // 過曝白塊修正後預設關鎖 — B2/B3/B4 三派疊加成白塊問題
-  // 預設關閉，console 想開個別 effect 自己開：
-  //   __CONSC_LIGHTS__.setIntensity(0.5)     // 5 盞光柱（不同年紀色彩）
-  //   __CONSC_PARTICLES__.setIntensity(0.4)  // 150 個記憶粒子
-  //   __CONSC_TEXT__.setIntensity(0.6)       // 12 個 toni 原文短句飄浮
-  // B3 預設 0.30 啟用意識光柱
-  // 安全分析:疊加效果預設關鎖紀律是「B2+B3+B4 同 anchor+AdditiveBlending 疊加會白塊」
-  // → 單獨 B3=0.30 不會疊加(B2/B4 仍 0),不違反紀律
-  // → 5 盞 SpotLight 不同年紀色彩(暖橙/暖白/淡綠/淡紫/月光藍)有最弱「七嘴八舌」暗示
-  // 嫌弱 → __TWIN_BALANCE__('mid') 一鍵升級;嫌過 → __TWIN_BALANCE__('off') 復原預設關鎖
-  __conscLights.setIntensity(0.30);
+  // 預設:文字派 0.30(淡)— 不啟用光柱與粒子,避免任何在學妹頭部的光暈疊加
+  // 之前的 B3=0.30 default 在學妹頭部形成可見光球,訪客體驗訂正後關閉
+  //   __CONSC_LIGHTS__.setIntensity(>0)      // 想要 5 盞光柱再開(會有頭部光暈)
+  //   __CONSC_PARTICLES__.setIntensity(>0)   // 想要 150 個記憶粒子再開
+  //   __CONSC_TEXT__.setIntensity(0~1)       // 12 個飄字短句, default 0.30
+  __conscLights.setIntensity(0);
   __conscParticles.setIntensity(0);
-  __conscText.setIntensity(0);
+  __conscText.setIntensity(0.30);
   if (typeof window !== "undefined") {
     // B-VIS-001 debug expose:console __INSPECT_CHARS__() / __INSPECT_LEGS__('Go')
     // (從函式前段移到此處 — Go/Co/Bo/ko 是 const,須在宣告後才能引用,否則 TDZ ReferenceError)

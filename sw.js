@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v15-20260606';  // unchanged: GLB / vendor 無變動
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v44-20260527';  // bumped: consciousness mode locked to single text-only state (no lights, particles, glow — no white halo around junior head); story-3d and rpg PoC files removed (3D fidelity below required quality bar)
+const RUNTIME_VERSION = 'runtime-v45-20260527';  // bumped: consciousness layer default in lm402-twin set to text-only (lights 0, particles 0, text 0.30) so visitors entering naturally see no head halo; URL param handler removed (redundant). Site-wide source comment cleanup: removed internal round labels, process markers, and reviewer name references from visitor-visible HTML / JS comments
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
