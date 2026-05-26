@@ -1715,7 +1715,87 @@
         .tour-card {
           max-height: calc(100svh - 140px - env(safe-area-inset-bottom, 0px));
           margin-top: 12px;
-          padding: 20px 18px;
+          padding: 18px 18px;
+          border-radius: 8px;
+        }
+        /* r62 round-3 #2 ｜ 全面手機新手模式優化 — 所有 5 步驟壓縮間距+放大 hit target */
+        .tour-topbar {
+          margin-bottom: 16px;
+        }
+        .tour-tag {
+          font-size: 9px;
+          letter-spacing: 0.22em;
+        }
+        .tour-close {
+          width: 40px;
+          height: 40px;
+          font-size: 16px;
+        }
+        .tour-stepper {
+          margin-bottom: 18px;
+          gap: 6px;
+        }
+        .tour-dot {
+          width: 8px;
+          height: 8px;
+        }
+        .tour-step-title {
+          font-size: 22px;
+          margin-bottom: 14px;
+          line-height: 1.36;
+          letter-spacing: 0.04em;
+        }
+        .tour-step-body {
+          font-size: 15px;
+          line-height: 1.88;
+        }
+        .tour-step-body p {
+          margin-bottom: 14px;
+        }
+        .tour-step-body .tour-intro {
+          margin-bottom: 16px;
+          font-size: 14px;
+        }
+        .tour-chars {
+          gap: 12px;
+          margin-top: 8px;
+        }
+        .tour-char {
+          padding: 12px 14px;
+        }
+        .tour-char-name {
+          font-size: 15px;
+          margin-bottom: 4px;
+        }
+        .tour-char-pitch {
+          font-size: 13px;
+          line-height: 1.72;
+        }
+        .tour-samples {
+          margin-top: 8px;
+        }
+        .tour-sample {
+          margin-bottom: 12px;
+          padding: 11px 13px;
+        }
+        .tour-sample-tag {
+          font-size: 10.5px;
+        }
+        .tour-sample-desc {
+          font-size: 13px;
+          line-height: 1.75;
+        }
+        .tour-final-actions {
+          flex-direction: column;
+          gap: 10px;
+          margin-top: 20px;
+        }
+        .tour-final-primary,
+        .tour-final-secondary {
+          padding: 14px 18px;
+          font-size: 12px;
+          text-align: center;
+          letter-spacing: 0.2em;
         }
         /* tour-bottom (上一步/下一步/5-of-5) sticky 在 card 內部底部 + 漸層遮罩
            避免 scroll 時被 content 吃掉 + iOS Safari URL bar 不擋 */
@@ -1726,11 +1806,38 @@
             rgba(15, 15, 22, 0),
             rgba(15, 15, 22, 0.92) 24%,
             rgba(15, 15, 22, 0.96) 100%);
-          padding: 12px 0 4px 0;
-          margin-top: 20px;
+          padding: 14px 0 6px 0;
+          margin-top: 18px;
+        }
+        .tour-btn-prev,
+        .tour-btn-next {
+          padding: 12px 16px;
+          font-size: 11px;
+          min-height: 44px;
+          min-width: 76px;
+        }
+        .tour-step-indicator {
+          font-size: 10px;
         }
         .tour-card .tour-final-actions {
-          padding-bottom: 4px;
+          padding-bottom: 6px;
+        }
+      }
+      /* 超小螢幕 (iPhone SE 等 < 380px) 再壓縮 */
+      @media (max-width: 380px) {
+        .tour-card {
+          padding: 14px 14px;
+        }
+        .tour-step-title {
+          font-size: 20px;
+          margin-bottom: 12px;
+        }
+        .tour-step-body {
+          font-size: 14.5px;
+          line-height: 1.82;
+        }
+        .tour-stepper {
+          margin-bottom: 14px;
         }
       }
       .tour-topbar {
