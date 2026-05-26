@@ -3,116 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>光與紅線 · 3D 技術展示 · 時間裡的兩個妳</title>
+<title>一眼瞬間 · 3D 全景技術展示 · 時間裡的兩個妳</title>
 <link rel="icon" href="data:,">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: #000; color: #eae6de; font-family: "Noto Serif TC", "Cormorant Garamond", Georgia, serif; }
-  #scene-canvas { position: fixed; inset: 0; z-index: 0; image-rendering: auto; }
+  #scene-canvas { position: fixed; inset: 0; z-index: 0; }
   #ui { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
-
-  .top-bar {
-    position: absolute; top: 14px; left: 14px; right: 14px;
-    display: flex; justify-content: space-between; align-items: flex-start;
-    pointer-events: auto;
-  }
-  .title-block {
-    background: rgba(8, 6, 10, 0.62); backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    padding: 10px 18px;
-    border: 1px solid rgba(255, 220, 200, 0.20);
-    border-radius: 3px;
-  }
-  .title-block .t1 {
-    font-family: "Cormorant Garamond", "Noto Serif TC", serif;
-    font-size: 15px; letter-spacing: 0.24em;
-    color: rgba(255, 220, 200, 0.95);
-  }
-  .title-block .t2 {
-    font-family: "DM Mono", monospace;
-    font-size: 9px; letter-spacing: 0.28em;
-    color: rgba(218, 184, 168, 0.55);
-    text-transform: uppercase;
-    margin-top: 3px;
-  }
-  .back-link {
-    padding: 9px 16px;
-    background: rgba(8, 6, 10, 0.62); backdrop-filter: blur(12px);
-    color: rgba(238, 232, 220, 0.78);
-    text-decoration: none;
-    font-size: 11px; letter-spacing: 0.18em;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 3px;
-    pointer-events: auto;
-  }
+  .top-bar { position: absolute; top: 14px; left: 14px; right: 14px; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: auto; }
+  .title-block { background: rgba(8, 6, 10, 0.62); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 10px 18px; border: 1px solid rgba(255, 220, 200, 0.20); border-radius: 3px; }
+  .title-block .t1 { font-family: "Cormorant Garamond", "Noto Serif TC", serif; font-size: 15px; letter-spacing: 0.24em; color: rgba(255, 220, 200, 0.95); }
+  .title-block .t2 { font-family: "DM Mono", monospace; font-size: 9px; letter-spacing: 0.28em; color: rgba(218, 184, 168, 0.55); text-transform: uppercase; margin-top: 3px; }
+  .back-link { padding: 9px 16px; background: rgba(8, 6, 10, 0.62); backdrop-filter: blur(12px); color: rgba(238, 232, 220, 0.78); text-decoration: none; font-size: 11px; letter-spacing: 0.18em; border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 3px; pointer-events: auto; }
   .back-link:hover { color: #fff; border-color: rgba(255, 220, 200, 0.55); }
-
-  .legend {
-    position: absolute; left: 14px; bottom: 14px;
-    background: rgba(8, 6, 10, 0.78); backdrop-filter: blur(10px);
-    padding: 12px 18px;
-    border: 1px solid rgba(218, 184, 168, 0.22);
-    border-radius: 4px;
-    font-size: 11px; line-height: 1.85;
-    color: rgba(238, 232, 220, 0.82);
-    max-width: 320px;
-    pointer-events: auto;
-    letter-spacing: 0.04em;
-  }
-  .legend .legend-title {
-    font-family: "Cormorant Garamond", serif;
-    font-size: 13px; letter-spacing: 0.18em;
-    color: rgba(255, 220, 200, 0.95);
-    margin-bottom: 8px;
-  }
-  .legend kbd {
-    display: inline-block;
-    padding: 1px 7px;
-    background: rgba(228, 70, 80, 0.20);
-    border: 1px solid rgba(228, 70, 80, 0.52);
-    border-radius: 2px;
-    font-family: "DM Mono", monospace;
-    font-size: 10px;
-    color: rgba(248, 168, 152, 0.95);
-    margin: 0 3px;
-  }
-  .effects-list {
-    margin-top: 8px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2px 14px;
-    font-family: "DM Mono", monospace;
-    font-size: 10px;
-  }
-  .fx-item { display: flex; align-items: center; gap: 6px; }
+  .legend { position: absolute; left: 14px; bottom: 14px; background: rgba(8, 6, 10, 0.78); backdrop-filter: blur(10px); padding: 12px 18px; border: 1px solid rgba(218, 184, 168, 0.22); border-radius: 4px; font-size: 11px; line-height: 1.85; color: rgba(238, 232, 220, 0.82); max-width: 340px; pointer-events: auto; letter-spacing: 0.04em; }
+  .legend .legend-title { font-family: "Cormorant Garamond", serif; font-size: 13px; letter-spacing: 0.18em; color: rgba(255, 220, 200, 0.95); margin-bottom: 8px; }
+  .legend kbd { display: inline-block; padding: 1px 7px; background: rgba(228, 70, 80, 0.20); border: 1px solid rgba(228, 70, 80, 0.52); border-radius: 2px; font-family: "DM Mono", monospace; font-size: 10px; color: rgba(248, 168, 152, 0.95); margin: 0 3px; }
+  .effects-list { margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 14px; font-family: "DM Mono", monospace; font-size: 10px; }
+  .fx-item { display: flex; align-items: center; gap: 6px; cursor: pointer; }
   .fx-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(218, 184, 168, 0.32); }
   .fx-item.on .fx-dot { background: rgba(228, 70, 80, 0.92); box-shadow: 0 0 6px rgba(228, 70, 80, 0.62); }
-
-  .stats {
-    position: absolute; right: 14px; bottom: 14px;
-    background: rgba(8, 6, 10, 0.62); backdrop-filter: blur(10px);
-    padding: 8px 14px;
-    border: 1px solid rgba(218, 184, 168, 0.22);
-    border-radius: 3px;
-    font-family: "DM Mono", monospace;
-    font-size: 10px; letter-spacing: 0.12em;
-    color: rgba(218, 184, 168, 0.78);
-    pointer-events: none;
-  }
-
-  .pause-indicator {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    font-family: "DM Mono", monospace;
-    font-size: 18px; letter-spacing: 0.32em;
-    color: rgba(255, 220, 200, 0.92);
-    padding: 12px 24px;
-    background: rgba(8, 6, 10, 0.78); backdrop-filter: blur(10px);
-    border: 1px solid rgba(228, 70, 80, 0.52);
-    border-radius: 3px;
-    pointer-events: none;
-    display: none;
-  }
+  .stats { position: absolute; right: 14px; bottom: 14px; background: rgba(8, 6, 10, 0.62); backdrop-filter: blur(10px); padding: 8px 14px; border: 1px solid rgba(218, 184, 168, 0.22); border-radius: 3px; font-family: "DM Mono", monospace; font-size: 10px; letter-spacing: 0.12em; color: rgba(218, 184, 168, 0.78); pointer-events: none; }
+  .pause-indicator { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: "DM Mono", monospace; font-size: 18px; letter-spacing: 0.32em; color: rgba(255, 220, 200, 0.92); padding: 12px 24px; background: rgba(8, 6, 10, 0.78); backdrop-filter: blur(10px); border: 1px solid rgba(228, 70, 80, 0.52); border-radius: 3px; pointer-events: none; display: none; }
   .pause-indicator.show { display: block; }
 </style>
 </head>
@@ -121,100 +33,87 @@
 <div id="ui">
   <div class="top-bar">
     <div class="title-block">
-      <div class="t1">光與紅線</div>
-      <div class="t2">3D TECH SHOWCASE · ATMOSPHERIC RENDERING</div>
+      <div class="t1">一眼瞬間 · 全景</div>
+      <div class="t2">LM402 · 學長 · 學妹 · 群人 · 紅線 · 11:00</div>
     </div>
     <a class="back-link" href="index.html">← 回</a>
   </div>
-
   <div class="legend">
     <div class="legend-title">效果切換</div>
-    <div><kbd>P</kbd> 暫停 · <kbd>R</kbd> 重啟 · <kbd>1</kbd>~<kbd>6</kbd> 切換效果</div>
+    <div><kbd>P</kbd> 暫停 · <kbd>R</kbd> 重置鏡頭 · <kbd>1</kbd>~<kbd>8</kbd> 切換</div>
     <div class="effects-list" id="effectsList">
-      <div class="fx-item on" data-fx="1"><span class="fx-dot"></span>1 · 程序木紋地板</div>
-      <div class="fx-item on" data-fx="2"><span class="fx-dot"></span>2 · 體積光 (God Rays)</div>
-      <div class="fx-item on" data-fx="3"><span class="fx-dot"></span>3 · 光束中的塵粒</div>
-      <div class="fx-item on" data-fx="4"><span class="fx-dot"></span>4 · 紅線能量 shader</div>
-      <div class="fx-item on" data-fx="5"><span class="fx-dot"></span>5 · Bloom + 色差</div>
-      <div class="fx-item on" data-fx="6"><span class="fx-dot"></span>6 · 底片顆粒 + LUT</div>
+      <div class="fx-item on" data-fx="1"><span class="fx-dot"></span>1 · 程序 PBR 地板</div>
+      <div class="fx-item on" data-fx="2"><span class="fx-dot"></span>2 · 體積光</div>
+      <div class="fx-item on" data-fx="3"><span class="fx-dot"></span>3 · 飄塵</div>
+      <div class="fx-item on" data-fx="4"><span class="fx-dot"></span>4 · 紅線能量</div>
+      <div class="fx-item on" data-fx="5"><span class="fx-dot"></span>5 · 角色呼吸</div>
+      <div class="fx-item on" data-fx="6"><span class="fx-dot"></span>6 · 髮絲動態</div>
+      <div class="fx-item on" data-fx="7"><span class="fx-dot"></span>7 · Bloom + 色差</div>
+      <div class="fx-item on" data-fx="8"><span class="fx-dot"></span>8 · 顆粒 + LUT</div>
     </div>
   </div>
-
-  <div class="stats" id="stats">FPS: -- · Tri: -- · Shader: 5</div>
+  <div class="stats" id="stats">FPS: -- · Tri: -- · Char: 6</div>
 </div>
-
 <div class="pause-indicator" id="pauseIndicator">⏸ 已暫停</div>
 
 <script type="module">
 import * as THREE from './assets/lm402/vendor-three.module.js';
 
-/* ────────────────────────────────────────────────────────────────────
-   光與紅線 · 3D 技術展示 (Atmospheric Rendering)
-   ────────────────────────────────────────────────────────────────────
-   集成技法:
-   1. Procedural PBR 木紋地板  — Canvas 程序生成 noise + ridge + normal map
-   2. Volumetric God Rays      — 自訂 GLSL fragment shader, screen-space ray march
-   3. Dust particles           — billboard quads + depth fade + 光束內 amplify
-   4. Red Line energy          — 自訂 ShaderMaterial: sine wave + pulse + glow
-   5. Multi-pass post          — bloom 模糊 + chromatic aberration + tonemapping
-   6. Film grain + LUT         — vintage cinematic finish
-   ──────────────────────────────────────────────────────────────────── */
+/* ===================================================================
+   一眼瞬間 · 3D 全景 — 程序生成 全角色 + 場景物品
+   ===================================================================
+   - 完全程序生成 (procedural) 不依賴外部 GLB / 貼圖
+   - 角色 6 個: 學長 / 學妹 / 4 同學 — 多 part humanoid mesh
+   - 場景物品: 8 桌椅 array + 黑板 + LM402 標牌 + 紙條 + 機車不在此 demo
+   - shader: 5 個 custom GLSL (紅線 / 塵粒 / 髮絲 / 皮膚 fresnel / 後製合成)
+   - post-processing: 多 pass (亮度抽取 + 兩向 Gaussian blur + 合成)
+   =================================================================== */
 
 const canvas = document.getElementById('scene-canvas');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
 renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.92;
+renderer.toneMappingExposure = 0.94;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x100c0a, 0.045);
+scene.fog = new THREE.FogExp2(0x14100a, 0.042);
 
 const cam = new THREE.PerspectiveCamera(46, innerWidth / innerHeight, 0.1, 80);
-cam.position.set(0, 1.6, 6);
-cam.lookAt(0, 1.4, -4);
+cam.position.set(0.4, 1.62, 4.2);
+cam.lookAt(0, 1.45, -2);
 
-/* ───── 1. Procedural Wood Grain PBR Floor ───── */
-function makeWoodCanvas(size, hueShift) {
+/* ===================================================================
+   程序紋理 — Canvas-based PBR 木地板
+   =================================================================== */
+function makeWoodCanvas(size) {
   const c = document.createElement('canvas');
   c.width = c.height = size;
   const ctx = c.getContext('2d');
-  /* base brown */
   ctx.fillStyle = '#3a2418';
   ctx.fillRect(0, 0, size, size);
-  /* 木紋 — 多重 sine wave 帶 noise */
-  const stripes = 24;
-  for (let i = 0; i < stripes; i++) {
-    const y0 = (i / stripes) * size + (Math.random() - 0.5) * 8;
-    const hue = 18 + (Math.random() - 0.5) * 8 + hueShift;
-    const sat = 38 + Math.random() * 16;
-    const lit = 14 + Math.random() * 12;
+  for (let i = 0; i < 28; i++) {
+    const y0 = (i / 28) * size + (Math.random() - 0.5) * 9;
+    const hue = 16 + (Math.random() - 0.5) * 10;
+    const sat = 36 + Math.random() * 20;
+    const lit = 13 + Math.random() * 14;
     ctx.strokeStyle = `hsl(${hue}, ${sat}%, ${lit}%)`;
-    ctx.lineWidth = 1.6 + Math.random() * 3.4;
+    ctx.lineWidth = 1.4 + Math.random() * 4;
     ctx.beginPath();
     for (let x = 0; x <= size; x += 4) {
-      const wave = Math.sin(x * 0.022 + i * 0.7) * 5
-                 + Math.sin(x * 0.078 + i * 1.3) * 2.2
-                 + (Math.random() - 0.5) * 1.4;
-      if (x === 0) ctx.moveTo(x, y0 + wave);
-      else ctx.lineTo(x, y0 + wave);
+      const wave = Math.sin(x * 0.022 + i * 0.7) * 5 + Math.sin(x * 0.084 + i * 1.4) * 2.4 + (Math.random() - 0.5) * 1.4;
+      if (x === 0) ctx.moveTo(x, y0 + wave); else ctx.lineTo(x, y0 + wave);
     }
     ctx.stroke();
   }
-  /* knots — 隨機木瘤 */
-  for (let k = 0; k < 6; k++) {
-    const cx = Math.random() * size;
-    const cy = Math.random() * size;
-    const grd = ctx.createRadialGradient(cx, cy, 1, cx, cy, 22);
-    grd.addColorStop(0, 'rgba(20,10,4,0.85)');
-    grd.addColorStop(1, 'rgba(20,10,4,0)');
+  for (let k = 0; k < 7; k++) {
+    const cx = Math.random() * size, cy = Math.random() * size;
+    const grd = ctx.createRadialGradient(cx, cy, 1, cx, cy, 24);
+    grd.addColorStop(0, 'rgba(18,8,4,0.88)'); grd.addColorStop(1, 'rgba(18,8,4,0)');
     ctx.fillStyle = grd;
-    ctx.beginPath();
-    ctx.arc(cx, cy, 22, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(cx, cy, 24, 0, Math.PI * 2); ctx.fill();
   }
-  /* 細微 noise grain 提升表面感 */
   const id = ctx.getImageData(0, 0, size, size);
   for (let p = 0; p < id.data.length; p += 4) {
     const n = (Math.random() - 0.5) * 18;
@@ -225,80 +124,566 @@ function makeWoodCanvas(size, hueShift) {
   ctx.putImageData(id, 0, 0);
   return c;
 }
-
-/* 從 albedo canvas 生成 normal map (Sobel-like edge) */
 function makeNormalFromCanvas(srcCanvas, strength) {
   const size = srcCanvas.width;
-  const out = document.createElement('canvas');
-  out.width = out.height = size;
+  const out = document.createElement('canvas'); out.width = out.height = size;
   const sctx = srcCanvas.getContext('2d').getImageData(0, 0, size, size);
   const octx = out.getContext('2d');
   const oid = octx.createImageData(size, size);
-  function lum(x, y) {
-    const i = (Math.max(0, Math.min(size - 1, y)) * size + Math.max(0, Math.min(size - 1, x))) * 4;
-    return (sctx.data[i] + sctx.data[i + 1] + sctx.data[i + 2]) / 3;
-  }
+  function lum(x, y) { const i = (Math.max(0, Math.min(size-1, y)) * size + Math.max(0, Math.min(size-1, x))) * 4; return (sctx.data[i] + sctx.data[i+1] + sctx.data[i+2]) / 3; }
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
-      const dx = (lum(x + 1, y) - lum(x - 1, y)) / 255 * strength;
-      const dy = (lum(x, y + 1) - lum(x, y - 1)) / 255 * strength;
-      const nz = Math.sqrt(Math.max(0, 1 - dx * dx - dy * dy));
+      const dx = (lum(x+1, y) - lum(x-1, y)) / 255 * strength;
+      const dy = (lum(x, y+1) - lum(x, y-1)) / 255 * strength;
+      const nz = Math.sqrt(Math.max(0, 1 - dx*dx - dy*dy));
       const i = (y * size + x) * 4;
-      oid.data[i]     = Math.round((dx * 0.5 + 0.5) * 255);
-      oid.data[i + 1] = Math.round((dy * 0.5 + 0.5) * 255);
-      oid.data[i + 2] = Math.round(nz * 255);
-      oid.data[i + 3] = 255;
+      oid.data[i] = Math.round((dx*0.5+0.5)*255);
+      oid.data[i+1] = Math.round((dy*0.5+0.5)*255);
+      oid.data[i+2] = Math.round(nz * 255);
+      oid.data[i+3] = 255;
     }
   }
   octx.putImageData(oid, 0, 0);
   return out;
 }
 
-const woodCanvas = makeWoodCanvas(512, 0);
+const woodCanvas = makeWoodCanvas(512);
 const woodTex = new THREE.CanvasTexture(woodCanvas);
 woodTex.wrapS = woodTex.wrapT = THREE.RepeatWrapping;
-woodTex.repeat.set(4, 8);
-woodTex.anisotropy = 8;
+woodTex.repeat.set(4, 8); woodTex.anisotropy = 8;
 woodTex.colorSpace = THREE.SRGBColorSpace;
-
-const woodNormalCanvas = makeNormalFromCanvas(woodCanvas, 4.5);
-const woodNormalTex = new THREE.CanvasTexture(woodNormalCanvas);
+const woodNormalTex = new THREE.CanvasTexture(makeNormalFromCanvas(woodCanvas, 4.2));
 woodNormalTex.wrapS = woodNormalTex.wrapT = THREE.RepeatWrapping;
 woodNormalTex.repeat.set(4, 8);
 
-const floorMat = new THREE.MeshStandardMaterial({
-  map: woodTex,
-  normalMap: woodNormalTex,
-  normalScale: new THREE.Vector2(0.72, 0.72),
-  roughness: 0.62,
-  metalness: 0.06
-});
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(8, 24), floorMat);
-floor.rotation.x = -Math.PI / 2;
-floor.position.z = -6;
+const floorMat = new THREE.MeshStandardMaterial({ map: woodTex, normalMap: woodNormalTex, normalScale: new THREE.Vector2(0.7, 0.7), roughness: 0.62, metalness: 0.06 });
+const floorPlainMat = new THREE.MeshStandardMaterial({ color: 0x14100c, roughness: 0.85 });
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(10, 26), floorMat);
+floor.rotation.x = -Math.PI / 2; floor.position.z = -6;
 scene.add(floor);
 
-/* ───── walls + ceiling (低調,讓 god ray 主導畫面) ───── */
-const wallMat = new THREE.MeshStandardMaterial({ color: 0x1a120c, roughness: 0.78 });
-const wallL = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3.4, 24), wallMat);
-wallL.position.set(-4, 1.7, -6);
-scene.add(wallL);
-const wallR = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3.4, 24), wallMat);
-wallR.position.set(4, 1.7, -6);
-scene.add(wallR);
-const ceiling = new THREE.Mesh(new THREE.BoxGeometry(8, 0.3, 24), new THREE.MeshStandardMaterial({ color: 0x0e0a08, roughness: 0.85 }));
-ceiling.position.set(0, 3.4, -6);
-scene.add(ceiling);
+/* ===================================================================
+   走廊 + 教室 結構
+   =================================================================== */
+const wallMat = new THREE.MeshStandardMaterial({ color: 0x1a120c, roughness: 0.8 });
+const wallTrimMat = new THREE.MeshStandardMaterial({ color: 0x261c14, roughness: 0.7 });
+const wallL = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3.5, 26), wallMat);
+wallL.position.set(-5, 1.75, -6); scene.add(wallL);
+const wallR = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3.5, 26), wallMat);
+wallR.position.set(5, 1.75, -6); scene.add(wallR);
+const ceiling = new THREE.Mesh(new THREE.BoxGeometry(10, 0.3, 26), new THREE.MeshStandardMaterial({ color: 0x0e0a06, roughness: 0.88 }));
+ceiling.position.set(0, 3.4, -6); scene.add(ceiling);
+/* 走廊腰線 (skirting) */
+for (const side of [-1, 1]) {
+  const skirt = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.18, 26), wallTrimMat);
+  skirt.position.set(side * 4.95, 0.1, -6);
+  scene.add(skirt);
+}
 
-/* 走廊盡頭窗 — 暖光面板 (god ray source 在此) */
-const window1 = new THREE.Mesh(
-  new THREE.PlaneGeometry(3.0, 2.0),
-  new THREE.MeshBasicMaterial({ color: 0xffd388, fog: false })
-);
-window1.position.set(0, 1.8, -17.85);
-scene.add(window1);
+/* 走廊盡頭窗 (god ray source) */
+const windowPanelMat = new THREE.MeshBasicMaterial({ color: 0xffd388, fog: false });
+const windowPanel = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 2.1), windowPanelMat);
+windowPanel.position.set(0, 1.85, -18.85); scene.add(windowPanel);
+const windowFrameMat = new THREE.MeshStandardMaterial({ color: 0x2a1810, roughness: 0.55 });
+const wfTop = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.08, 0.12), windowFrameMat);
+wfTop.position.set(0, 2.95, -18.84); scene.add(wfTop);
+const wfBot = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.08, 0.12), windowFrameMat);
+wfBot.position.set(0, 0.78, -18.84); scene.add(wfBot);
 
-/* ───── 4. 紅線 with custom ShaderMaterial (energy flow) ───── */
+/* LM402 教室門 + 標牌 */
+const doorMat = new THREE.MeshStandardMaterial({ color: 0x3a2418, roughness: 0.42, metalness: 0.06 });
+const doorFront = new THREE.Mesh(new THREE.BoxGeometry(1.4, 2.2, 0.1), doorMat);
+doorFront.position.set(4.7, 1.1, -3); scene.add(doorFront);
+const doorBack = new THREE.Mesh(new THREE.BoxGeometry(1.4, 2.2, 0.1), doorMat);
+doorBack.position.set(4.7, 1.1, -8); scene.add(doorBack);
+const doorHandleMat = new THREE.MeshStandardMaterial({ color: 0x8a7044, roughness: 0.3, metalness: 0.62 });
+const handleF = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 10), doorHandleMat);
+handleF.position.set(4.62, 1.1, -2.55); scene.add(handleF);
+const handleB = handleF.clone(); handleB.position.set(4.62, 1.1, -7.55); scene.add(handleB);
+
+function makeLM402Sign() {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 96;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#1a1410'; ctx.fillRect(0, 0, 256, 96);
+  ctx.strokeStyle = '#3a2818'; ctx.lineWidth = 4; ctx.strokeRect(2, 2, 252, 92);
+  ctx.fillStyle = '#ffd388'; ctx.font = 'bold 48px "DM Mono", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('LM 402', 128, 50);
+  const tex = new THREE.CanvasTexture(c);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 0.32), new THREE.MeshBasicMaterial({ map: tex }));
+  return m;
+}
+const sign1 = makeLM402Sign(); sign1.position.set(4.0, 2.55, -3); sign1.rotation.y = -Math.PI / 2; scene.add(sign1);
+const sign2 = makeLM402Sign(); sign2.position.set(4.0, 2.55, -8); sign2.rotation.y = -Math.PI / 2; scene.add(sign2);
+
+/* 教室內 (透過 doorBack 看進去) — 簡化背景 wall + 黑板 + 桌椅 */
+const classroomWallMat = new THREE.MeshStandardMaterial({ color: 0x1f1812, roughness: 0.78 });
+const classWallBack = new THREE.Mesh(new THREE.BoxGeometry(6, 3.5, 0.2), classroomWallMat);
+classWallBack.position.set(8, 1.75, -8); classWallBack.rotation.y = -Math.PI / 2;
+scene.add(classWallBack);
+
+/* 黑板 */
+function makeBlackboardTex() {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 256;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#1c2820'; ctx.fillRect(0, 0, 512, 256);
+  /* chalk wisps */
+  ctx.strokeStyle = 'rgba(220, 220, 200, 0.18)'; ctx.lineWidth = 1.2;
+  for (let i = 0; i < 40; i++) {
+    ctx.beginPath();
+    const x = Math.random() * 512, y = Math.random() * 256;
+    ctx.moveTo(x, y); ctx.lineTo(x + (Math.random()-0.5)*60, y + (Math.random()-0.5)*20);
+    ctx.stroke();
+  }
+  ctx.fillStyle = 'rgba(255, 252, 240, 0.78)'; ctx.font = 'italic 38px serif'; ctx.textBaseline = 'middle';
+  ctx.fillText('LM402 — 11:00', 22, 50);
+  ctx.font = 'italic 28px serif';
+  ctx.fillText('also like 徐若瑄...', 22, 130);
+  return c;
+}
+const blackboardMat = new THREE.MeshStandardMaterial({ map: new THREE.CanvasTexture(makeBlackboardTex()), roughness: 0.72 });
+const blackboard = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.2), blackboardMat);
+blackboard.position.set(7.85, 1.9, -7); blackboard.rotation.y = -Math.PI / 2; scene.add(blackboard);
+const bbFrame = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.32, 2.52), windowFrameMat);
+bbFrame.position.set(7.86, 1.9, -7); scene.add(bbFrame);
+
+/* ===================================================================
+   程序角色 - Humanoid Mesh Builders
+   =================================================================== */
+
+/* ─── 共用 helpers ─── */
+function makeSkinMaterial(baseColor) {
+  return new THREE.MeshStandardMaterial({
+    color: baseColor, roughness: 0.62, metalness: 0.02,
+    /* slight emissive for cheek warmth */
+    emissive: new THREE.Color(baseColor).multiplyScalar(0.06)
+  });
+}
+
+function buildHead(opts) {
+  const g = new THREE.Group();
+  g.userData.kind = 'head';
+  const skinMat = makeSkinMaterial(opts.skinColor || 0xe8c8b0);
+  /* 頭 — slightly elongated sphere */
+  const headGeo = new THREE.SphereGeometry(0.135, 28, 22);
+  headGeo.scale(1.0, 1.16, 1.0);
+  const head = new THREE.Mesh(headGeo, skinMat);
+  g.add(head);
+  /* 耳 */
+  const earGeo = new THREE.SphereGeometry(0.028, 10, 8);
+  earGeo.scale(1, 1.4, 0.5);
+  const earL = new THREE.Mesh(earGeo, skinMat); earL.position.set(-0.135, 0.02, 0); g.add(earL);
+  const earR = new THREE.Mesh(earGeo, skinMat); earR.position.set(0.135, 0.02, 0); g.add(earR);
+  /* 鼻 */
+  const noseGeo = new THREE.ConeGeometry(0.02, 0.05, 8);
+  const nose = new THREE.Mesh(noseGeo, skinMat);
+  nose.position.set(0, -0.005, 0.122); nose.rotation.x = Math.PI / 2; g.add(nose);
+  /* 眼白 + 瞳 */
+  const eyeWhiteMat = new THREE.MeshStandardMaterial({ color: 0xfafafa, roughness: 0.32 });
+  const irisMat = new THREE.MeshStandardMaterial({ color: opts.eyeColor || 0x3a2010, roughness: 0.5 });
+  const eyeGeo = new THREE.SphereGeometry(0.024, 14, 12);
+  const irisGeo = new THREE.SphereGeometry(0.012, 12, 10);
+  const eyeL = new THREE.Mesh(eyeGeo, eyeWhiteMat); eyeL.position.set(-0.048, 0.028, 0.108); g.add(eyeL);
+  const eyeR = new THREE.Mesh(eyeGeo, eyeWhiteMat); eyeR.position.set(0.048, 0.028, 0.108); g.add(eyeR);
+  const irisL = new THREE.Mesh(irisGeo, irisMat); irisL.position.set(-0.048, 0.025, 0.126); g.add(irisL);
+  const irisR = new THREE.Mesh(irisGeo, irisMat); irisR.position.set(0.048, 0.025, 0.126); g.add(irisR);
+  /* 眉 — thin curved boxes */
+  const browMat = new THREE.MeshStandardMaterial({ color: 0x1a0c06, roughness: 0.85 });
+  const browGeo = new THREE.BoxGeometry(0.058, 0.008, 0.005);
+  const browL = new THREE.Mesh(browGeo, browMat); browL.position.set(-0.048, 0.068, 0.122); browL.rotation.z = 0.08; g.add(browL);
+  const browR = new THREE.Mesh(browGeo, browMat); browR.position.set(0.048, 0.068, 0.122); browR.rotation.z = -0.08; g.add(browR);
+  /* 嘴 — small box curved-ish */
+  const mouthMat = new THREE.MeshStandardMaterial({ color: 0xb05060, roughness: 0.55 });
+  const mouthGeo = new THREE.BoxGeometry(0.062, 0.006, 0.004);
+  const mouth = new THREE.Mesh(mouthGeo, mouthMat);
+  mouth.position.set(0, -0.058, 0.122); g.add(mouth);
+  /* 下巴陰影 — extra emissive subtractor (用更深 sphere segment 模擬) */
+  const chinShade = new THREE.Mesh(
+    new THREE.SphereGeometry(0.12, 14, 8, 0, Math.PI * 2, Math.PI / 2.4, Math.PI / 6),
+    new THREE.MeshStandardMaterial({ color: new THREE.Color(opts.skinColor || 0xe8c8b0).multiplyScalar(0.75), roughness: 0.85 })
+  );
+  chinShade.position.y = -0.05;
+  g.add(chinShade);
+  g.userData.eyes = { L: eyeL, R: eyeR, irisL: irisL, irisR: irisR };
+  return g;
+}
+
+/* 學長 飛機頭 */
+function buildSeniorHair() {
+  const g = new THREE.Group();
+  const hairMat = new THREE.MeshStandardMaterial({ color: 0x100804, roughness: 0.42, metalness: 0.22 });
+  /* base cap */
+  const baseGeo = new THREE.SphereGeometry(0.14, 22, 18, 0, Math.PI * 2, 0, Math.PI / 2.1);
+  const base = new THREE.Mesh(baseGeo, hairMat); base.position.y = 0.005; g.add(base);
+  /* 飛機頭 quiff — 前髮 上翻立起 */
+  const quiff = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.11, 10), hairMat);
+  quiff.position.set(0, 0.14, 0.06); quiff.rotation.x = -0.42; g.add(quiff);
+  /* 側髮 trim — 短層 */
+  for (let s of [-1, 1]) {
+    const trim = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.05, 0.08), hairMat);
+    trim.position.set(s * 0.122, 0.025, 0.02); g.add(trim);
+  }
+  return g;
+}
+
+/* 學妹 長髮 + 馬尾 hint */
+function buildJuniorHair() {
+  const g = new THREE.Group();
+  g.userData.kind = 'juniorHair';
+  const hairMat = new THREE.MeshStandardMaterial({ color: 0x180c08, roughness: 0.4, metalness: 0.2 });
+  /* 頭頂 cap */
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(0.145, 22, 18, 0, Math.PI * 2, 0, Math.PI / 1.78), hairMat);
+  cap.position.y = -0.002; g.add(cap);
+  /* 長髮 panel — 後背一大片 */
+  const backGeo = new THREE.SphereGeometry(0.16, 16, 14, 0, Math.PI, Math.PI / 5, Math.PI / 2.2);
+  const back = new THREE.Mesh(backGeo, hairMat);
+  back.position.set(0, -0.15, -0.04);
+  back.scale.set(1.0, 2.6, 0.85);
+  back.rotation.y = Math.PI;
+  back.userData.sway = true;
+  g.add(back);
+  /* 側髮 strands (動態 sway) — 用 line strands 加 sway uniform */
+  const strands = [];
+  const strandMat = new THREE.MeshStandardMaterial({ color: 0x140a06, roughness: 0.4 });
+  for (let i = 0; i < 4; i++) {
+    const side = i < 2 ? -1 : 1;
+    const offset = (i % 2) * 0.03;
+    const strandGeo = new THREE.CylinderGeometry(0.008, 0.005, 0.36, 5);
+    const s = new THREE.Mesh(strandGeo, strandMat);
+    s.position.set(side * 0.14 + offset * side, -0.18, 0.04);
+    s.userData.baseX = s.position.x;
+    s.userData.basePhase = i;
+    s.userData.sway = true;
+    strands.push(s);
+    g.add(s);
+  }
+  g.userData.strands = strands;
+  return g;
+}
+
+/* 學長 粗框眼鏡 */
+function buildGlasses() {
+  const g = new THREE.Group();
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0x121212, roughness: 0.3, metalness: 0.48 });
+  const lensMat = new THREE.MeshPhysicalMaterial({ color: 0x88a0b8, transparent: true, opacity: 0.25, roughness: 0.1, metalness: 0, transmission: 0.6, ior: 1.4 });
+  const lensRimL = new THREE.Mesh(new THREE.TorusGeometry(0.048, 0.012, 10, 20), frameMat);
+  lensRimL.position.set(-0.052, 0.028, 0.122); g.add(lensRimL);
+  const lensRimR = lensRimL.clone(); lensRimR.position.set(0.052, 0.028, 0.122); g.add(lensRimR);
+  /* 鏡片 — slight reflective glass */
+  const lensGeo = new THREE.CircleGeometry(0.038, 16);
+  const lensL = new THREE.Mesh(lensGeo, lensMat); lensL.position.set(-0.052, 0.028, 0.119); g.add(lensL);
+  const lensR = new THREE.Mesh(lensGeo, lensMat); lensR.position.set(0.052, 0.028, 0.119); g.add(lensR);
+  /* 鼻樑 */
+  const bridge = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.012, 0.012), frameMat);
+  bridge.position.set(0, 0.028, 0.118); g.add(bridge);
+  /* 鏡腿 */
+  for (let s of [-1, 1]) {
+    const temple = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.006, 0.14), frameMat);
+    temple.position.set(s * 0.102, 0.028, 0.052); g.add(temple);
+  }
+  return g;
+}
+
+/* 通用 body (上半 + 下半) */
+function buildBody(opts) {
+  const g = new THREE.Group();
+  const shirtMat = new THREE.MeshStandardMaterial({ color: opts.shirtColor, roughness: 0.78 });
+  const pantMat = new THREE.MeshStandardMaterial({ color: opts.pantColor, roughness: 0.72 });
+  const skinMat = makeSkinMaterial(opts.skinColor || 0xe8c8b0);
+  const shoeMat = new THREE.MeshStandardMaterial({ color: opts.shoeColor || 0xf0e8d0, roughness: 0.85 });
+
+  /* 脖子 */
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.05, 0.08, 12), skinMat);
+  neck.position.y = 0.32; g.add(neck);
+  /* 軀幹 — taper bottom (腰較窄) */
+  const torsoGeo = new THREE.CylinderGeometry(0.14, opts.female ? 0.108 : 0.124, 0.45, 18);
+  const torso = new THREE.Mesh(torsoGeo, shirtMat);
+  torso.position.y = 0.05; g.add(torso);
+  /* 肩 connect spheres */
+  const shoulderL = new THREE.Mesh(new THREE.SphereGeometry(0.075, 14, 12), shirtMat);
+  shoulderL.position.set(-0.158, 0.24, 0); g.add(shoulderL);
+  const shoulderR = new THREE.Mesh(new THREE.SphereGeometry(0.075, 14, 12), shirtMat);
+  shoulderR.position.set(0.158, 0.24, 0); g.add(shoulderR);
+
+  /* 上臂 + 下臂 + 手 */
+  function buildArm(side, opts2) {
+    const armG = new THREE.Group();
+    const upperGeo = new THREE.CylinderGeometry(0.04, 0.038, 0.22, 10);
+    const upper = new THREE.Mesh(upperGeo, shirtMat);
+    upper.position.y = -0.11; armG.add(upper);
+    /* 肘 */
+    const elbow = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), shirtMat);
+    elbow.position.y = -0.22; armG.add(elbow);
+    /* 下臂 — exposed skin if short sleeves OR same shirt material */
+    const lowerMat = opts.shortSleeve ? skinMat : shirtMat;
+    const lower = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.032, 0.21, 10), lowerMat);
+    lower.position.y = -0.34; armG.add(lower);
+    /* 手 */
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.044, 12, 10), skinMat);
+    hand.position.y = -0.456; armG.add(hand);
+    armG.userData.lower = lower;
+    armG.userData.hand = hand;
+    armG.position.set(side * 0.158, 0.24, 0);
+    return armG;
+  }
+  const armL = buildArm(-1, opts);
+  const armR = buildArm(1, opts);
+  /* 學長右手 holding phone — bent up to ear */
+  if (opts.pose === 'phoneCall') {
+    armR.rotation.x = -0.5;
+    armR.rotation.z = -1.2;
+  }
+  g.add(armL); g.add(armR);
+
+  /* 大腿 + 小腿 + 鞋 */
+  function buildLeg(side) {
+    const legG = new THREE.Group();
+    const upperGeo = new THREE.CylinderGeometry(0.062, 0.055, 0.36, 10);
+    const upper = new THREE.Mesh(upperGeo, pantMat);
+    upper.position.y = -0.18; legG.add(upper);
+    /* 膝 */
+    const knee = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), pantMat);
+    knee.position.y = -0.36; legG.add(knee);
+    const lowerGeo = new THREE.CylinderGeometry(0.05, 0.046, 0.34, 10);
+    const lowerMat = opts.shorts ? skinMat : pantMat;
+    const lower = new THREE.Mesh(lowerGeo, lowerMat);
+    lower.position.y = -0.535; legG.add(lower);
+    /* 鞋 */
+    const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.18), shoeMat);
+    shoe.position.set(0, -0.74, 0.035); legG.add(shoe);
+    /* 鞋帶 hint */
+    const lace = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.005, 0.02), new THREE.MeshStandardMaterial({ color: 0x666666 }));
+    lace.position.set(0, -0.71, 0.03); legG.add(lace);
+    legG.position.set(side * 0.062, -0.18, 0);
+    legG.userData.lower = lower;
+    legG.userData.shoe = shoe;
+    return legG;
+  }
+  const legL = buildLeg(-1);
+  const legR = buildLeg(1);
+  g.add(legL); g.add(legR);
+  g.userData.armL = armL; g.userData.armR = armR;
+  g.userData.legL = legL; g.userData.legR = legR;
+  return g;
+}
+
+/* 學長 manga / 飛機頭 + 粗眼鏡 + 白 T + 牛仔褲 — 拿手機站前門 */
+function buildSenior() {
+  const g = new THREE.Group();
+  g.userData.kind = 'senior';
+  /* 身體 */
+  const body = buildBody({
+    shirtColor: 0xf8f6f4,    /* 白 T */
+    pantColor: 0x3c5a8a,     /* 藍牛仔 */
+    skinColor: 0xe2b89a,
+    shortSleeve: true,
+    pose: 'phoneCall',
+    shoeColor: 0xeae0c8
+  });
+  body.position.y = 1.18;
+  g.add(body);
+  /* 頭 */
+  const head = buildHead({ skinColor: 0xe2b89a, eyeColor: 0x3a2410 });
+  head.position.y = 1.6;
+  g.add(head);
+  /* 髮 */
+  const hair = buildSeniorHair();
+  hair.position.y = 1.66;
+  g.add(hair);
+  /* 粗框眼鏡 */
+  const glasses = buildGlasses();
+  glasses.position.y = 1.6;
+  g.add(glasses);
+  /* 手機 (右手 holding to ear) */
+  const phone = new THREE.Mesh(
+    new THREE.BoxGeometry(0.07, 0.13, 0.018),
+    new THREE.MeshStandardMaterial({ color: 0x14181c, emissive: 0x4a3018, emissiveIntensity: 0.48, roughness: 0.4, metalness: 0.3 })
+  );
+  /* 手機 position: 右肩前 + up */
+  phone.position.set(0.15, 1.55, 0.04);
+  phone.rotation.z = -0.4;
+  g.add(phone);
+  /* 牛仔褲 belt */
+  const belt = new THREE.Mesh(
+    new THREE.TorusGeometry(0.13, 0.018, 8, 24),
+    new THREE.MeshStandardMaterial({ color: 0x2a1a10, roughness: 0.6 })
+  );
+  belt.position.y = 0.97;
+  belt.rotation.x = Math.PI / 2;
+  g.add(belt);
+  g.userData.body = body;
+  g.userData.head = head;
+  return g;
+}
+
+/* 學妹 白色長袖襯衫 + 牛仔短褲 + 白球鞋 + 長髮 — 從教室走出來 */
+function buildJunior() {
+  const g = new THREE.Group();
+  g.userData.kind = 'junior';
+  const body = buildBody({
+    shirtColor: 0xfafafa,    /* 白色長袖襯衫 */
+    pantColor: 0x6a7898,     /* 牛仔短褲 — slight darker */
+    skinColor: 0xf0d0b0,
+    shortSleeve: false,      /* 長袖 */
+    shorts: true,            /* 短褲 */
+    female: true,
+    shoeColor: 0xfafafa
+  });
+  body.position.y = 1.08;
+  body.scale.set(0.95, 0.92, 0.95);  /* 學妹較嬌小 */
+  g.add(body);
+  /* 頭 */
+  const head = buildHead({ skinColor: 0xf0d0b0, eyeColor: 0x281408 });
+  head.position.y = 1.5;
+  head.scale.set(0.95, 0.95, 0.95);
+  g.add(head);
+  /* 長髮 */
+  const hair = buildJuniorHair();
+  hair.position.y = 1.56;
+  g.add(hair);
+  /* 紙條 — 學妹左手 拿著 */
+  const paperGeo = new THREE.PlaneGeometry(0.08, 0.06, 4, 2);
+  /* 微 fold */
+  const positions = paperGeo.attributes.position.array;
+  for (let i = 0; i < positions.length; i += 3) positions[i + 2] = Math.sin(positions[i] * 12) * 0.005;
+  paperGeo.computeVertexNormals();
+  const paperMat = new THREE.MeshStandardMaterial({ color: 0xfdfaf2, side: THREE.DoubleSide, roughness: 0.92 });
+  const paper = new THREE.Mesh(paperGeo, paperMat);
+  paper.position.set(-0.12, 0.7, 0.08);
+  paper.rotation.set(0.4, 0.2, -0.2);
+  g.add(paper);
+  g.userData.body = body;
+  g.userData.head = head;
+  g.userData.hair = hair;
+  return g;
+}
+
+/* 簡化同學 — 4 個 */
+function buildFriend(opts) {
+  const g = new THREE.Group();
+  g.userData.kind = 'friend';
+  const body = buildBody({
+    shirtColor: opts.shirtColor || 0xc8c0b4,
+    pantColor: opts.pantColor || 0x4a5878,
+    skinColor: opts.skinColor || 0xe8c8b0,
+    shortSleeve: opts.shortSleeve || false,
+    shoeColor: opts.shoeColor || 0xeae0c8
+  });
+  body.position.y = 1.1;
+  body.scale.set(0.95, opts.scale || 0.96, 0.95);
+  g.add(body);
+  /* 頭 */
+  const head = buildHead({ skinColor: opts.skinColor || 0xe8c8b0, eyeColor: 0x2a1408 });
+  head.position.y = 1.52;
+  g.add(head);
+  /* 簡化髮 */
+  const hairMat = new THREE.MeshStandardMaterial({ color: 0x180c06, roughness: 0.45 });
+  const hairGeo = new THREE.SphereGeometry(0.142, 20, 16, 0, Math.PI * 2, 0, Math.PI / 1.95);
+  const hair = new THREE.Mesh(hairGeo, hairMat);
+  hair.position.y = 1.54;
+  if (opts.longHair) {
+    hair.scale.set(1, 1.05, 1);
+    /* 長髮 back panel */
+    const back = new THREE.Mesh(
+      new THREE.SphereGeometry(0.155, 14, 12, 0, Math.PI, Math.PI / 4, Math.PI / 2.2),
+      hairMat
+    );
+    back.position.set(0, 1.42, -0.04);
+    back.scale.set(1, 2.0, 0.85);
+    back.rotation.y = Math.PI;
+    g.add(back);
+  }
+  g.add(hair);
+  g.userData.body = body;
+  g.userData.head = head;
+  return g;
+}
+
+/* ===================================================================
+   桌椅 — 教室內 array
+   =================================================================== */
+function buildDesk() {
+  const g = new THREE.Group();
+  const woodMat = new THREE.MeshStandardMaterial({ color: 0x6a4828, roughness: 0.55 });
+  const top = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.04, 0.42), woodMat);
+  top.position.y = 0.72; g.add(top);
+  /* 4 legs */
+  for (const [x, z] of [[-0.27, -0.18], [0.27, -0.18], [-0.27, 0.18], [0.27, 0.18]]) {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.7, 0.04), new THREE.MeshStandardMaterial({ color: 0x1a1208 }));
+    leg.position.set(x, 0.36, z); g.add(leg);
+  }
+  return g;
+}
+function buildChair() {
+  const g = new THREE.Group();
+  const woodMat = new THREE.MeshStandardMaterial({ color: 0x5a3818, roughness: 0.62 });
+  const seat = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.03, 0.36), woodMat);
+  seat.position.y = 0.42; g.add(seat);
+  /* 4 legs */
+  for (const [x, z] of [[-0.15, -0.15], [0.15, -0.15], [-0.15, 0.15], [0.15, 0.15]]) {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.42, 0.03), new THREE.MeshStandardMaterial({ color: 0x1a1208 }));
+    leg.position.set(x, 0.21, z); g.add(leg);
+  }
+  /* back */
+  const back = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.4, 0.03), woodMat);
+  back.position.set(0, 0.62, -0.16); g.add(back);
+  return g;
+}
+
+/* ===================================================================
+   Populate 場景
+   =================================================================== */
+
+/* 學長 — 站前門外打電話, 略偏 左前 */
+const senior = buildSenior();
+senior.position.set(1.6, 0, -2.5);
+senior.rotation.y = -Math.PI / 2.4;  /* 朝向後門方向看 */
+scene.add(senior);
+
+/* 學妹 — 從後門走出, lead */
+const junior = buildJunior();
+junior.position.set(3.0, 0, -7.8);
+junior.rotation.y = -Math.PI / 1.6;  /* 朝鏡頭+前門方向 */
+scene.add(junior);
+
+/* 4 同學 在學妹旁邊 */
+const friends = [];
+const friendOpts = [
+  { shirtColor: 0xc8b890, pantColor: 0x3a4a6a, skinColor: 0xe8c8a8, longHair: true,  shoeColor: 0xfafafa },
+  { shirtColor: 0xb8c8d8, pantColor: 0x382a1c, skinColor: 0xeacca8, longHair: false, shoeColor: 0x1a1410 },
+  { shirtColor: 0xf0d0c8, pantColor: 0x4a4838, skinColor: 0xeec8a8, longHair: true,  shoeColor: 0xeae0c8 },
+  { shirtColor: 0xa8a890, pantColor: 0x2c3848, skinColor: 0xdcb898, longHair: false, shoeColor: 0xfafafa }
+];
+const friendPositions = [
+  { x: 3.5, z: -7.2 },
+  { x: 2.6, z: -7.4 },
+  { x: 3.6, z: -8.2 },
+  { x: 2.7, z: -8.4 }
+];
+for (let i = 0; i < 4; i++) {
+  const f = buildFriend(friendOpts[i]);
+  f.position.set(friendPositions[i].x, 0, friendPositions[i].z);
+  f.rotation.y = -Math.PI / 1.5 + (Math.random() - 0.5) * 0.4;
+  scene.add(f);
+  friends.push(f);
+}
+
+/* 教室內桌椅 array — 在教室裡 (門外看進去) */
+const desks = [];
+for (let row = 0; row < 3; row++) {
+  for (let col = 0; col < 2; col++) {
+    const desk = buildDesk();
+    desk.position.set(6.5 + col * 0.85, 0, -7 - row * 0.85 + 1);
+    scene.add(desk);
+    const chair = buildChair();
+    chair.position.set(6.5 + col * 0.85, 0, -7 - row * 0.85 + 1.45);
+    scene.add(chair);
+    desks.push(desk);
+  }
+}
+
+/* ===================================================================
+   紅線 from 學長手 to 學妹頭
+   =================================================================== */
 const redLineUniforms = {
   uTime: { value: 0 },
   uPulse: { value: 0.62 },
@@ -311,50 +696,44 @@ const redLineMat = new THREE.ShaderMaterial({
   depthWrite: false,
   vertexShader: `
     varying float vT;
-    varying vec3 vWorldPos;
     attribute float aT;
     void main() {
       vT = aT;
-      vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
-      vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
-      gl_Position = projectionMatrix * mvPos;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     }
   `,
   fragmentShader: `
     precision highp float;
-    uniform float uTime;
-    uniform float uPulse;
-    uniform float uIntensity;
+    uniform float uTime; uniform float uPulse; uniform float uIntensity;
     varying float vT;
-    varying vec3 vWorldPos;
     void main() {
-      /* 沿線方向流動的脈動 (sine wave + 跑動) */
-      float flow = sin(vT * 18.0 - uTime * 2.4) * 0.5 + 0.5;
-      float pulse = sin(uTime * 1.2) * 0.5 + 0.5;
-      /* 邊緣 fresnel-ish soft falloff */
+      float flow = sin(vT * 22.0 - uTime * 2.6) * 0.5 + 0.5;
+      float pulse = sin(uTime * 1.4) * 0.5 + 0.5;
       float edge = 1.0 - smoothstep(0.0, 0.4, abs(vT - 0.5) * 2.0);
-      /* 顏色 — 暗紅 → 亮紅 → 暖白 */
-      vec3 colA = vec3(0.82, 0.12, 0.16);
+      vec3 colA = vec3(0.85, 0.12, 0.16);
       vec3 colB = vec3(1.0, 0.32, 0.28);
       vec3 colC = vec3(1.0, 0.88, 0.62);
       vec3 c = mix(colA, colB, flow);
-      c = mix(c, colC, pulse * 0.35);
+      c = mix(c, colC, pulse * 0.38);
       float alpha = (0.55 + flow * 0.45 + pulse * 0.18) * (0.5 + edge * 0.5) * uIntensity;
       gl_FragColor = vec4(c, alpha);
     }
   `
 });
-
-/* 紅線 geometry — 線是一條沿 z 軸有微弧的 line strip */
 function makeRedLineGeo() {
-  const N = 96;
+  const N = 120;
   const positions = new Float32Array(N * 3);
   const tAttrs = new Float32Array(N);
+  /* from senior right hand (~1.55, 0.15, 0) world to junior head (~3.0, 1.55, -7.8) */
+  const a = new THREE.Vector3(1.75, 1.55, -2.45);
+  const b = new THREE.Vector3(3.0, 1.6, -7.8);
   for (let i = 0; i < N; i++) {
     const t = i / (N - 1);
-    positions[i * 3]     = (Math.random() - 0.5) * 0.04 + Math.sin(t * Math.PI * 3) * 0.08;
-    positions[i * 3 + 1] = 1.55 + Math.sin(t * Math.PI) * 0.42;
-    positions[i * 3 + 2] = 4 + t * -16;
+    /* 微弧 + 微擾動 */
+    const x = a.x + t * (b.x - a.x) + (Math.random() - 0.5) * 0.02;
+    const y = a.y + t * (b.y - a.y) + Math.sin(t * Math.PI) * 0.45;
+    const z = a.z + t * (b.z - a.z) + (Math.random() - 0.5) * 0.02;
+    positions[i * 3] = x; positions[i * 3 + 1] = y; positions[i * 3 + 2] = z;
     tAttrs[i] = t;
   }
   const geo = new THREE.BufferGeometry();
@@ -362,60 +741,55 @@ function makeRedLineGeo() {
   geo.setAttribute('aT', new THREE.BufferAttribute(tAttrs, 1));
   return geo;
 }
-const redLine = new THREE.Line(makeRedLineGeo(), redLineMat);
+const redLineGeo = makeRedLineGeo();
+const redLine = new THREE.Line(redLineGeo, redLineMat);
 scene.add(redLine);
 
-/* ───── 3. 飄塵 dust particles (光束內) ───── */
-const DUST_N = 280;
+/* ===================================================================
+   塵粒 (in beam)
+   =================================================================== */
+const DUST_N = 320;
 const dustGeo = new THREE.BufferGeometry();
 const dustPos = new Float32Array(DUST_N * 3);
 const dustOff = new Float32Array(DUST_N);
 for (let i = 0; i < DUST_N; i++) {
-  dustPos[i * 3]     = (Math.random() - 0.5) * 6.5;
+  dustPos[i * 3] = (Math.random() - 0.5) * 8.5;
   dustPos[i * 3 + 1] = Math.random() * 3.4;
-  dustPos[i * 3 + 2] = -Math.random() * 17;
+  dustPos[i * 3 + 2] = -Math.random() * 18;
   dustOff[i] = Math.random();
 }
 dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
 dustGeo.setAttribute('aOff', new THREE.BufferAttribute(dustOff, 1));
-
 const dustMat = new THREE.ShaderMaterial({
   uniforms: { uTime: { value: 0 }, uIntensity: { value: 1.0 } },
   transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
   vertexShader: `
     attribute float aOff;
     uniform float uTime;
-    varying float vDepth;
-    varying float vOff;
+    varying float vDepth; varying float vOff;
     void main() {
       vOff = aOff;
       vec3 pos = position;
-      /* 漂浮:微 sine + 沿 z 軸緩慢飄 */
       pos.y += sin(uTime * 0.3 + aOff * 6.28) * 0.12;
       pos.x += cos(uTime * 0.18 + aOff * 4.2) * 0.08;
       vec4 mv = modelViewMatrix * vec4(pos, 1.0);
       vDepth = -mv.z;
       gl_Position = projectionMatrix * mv;
-      /* 距離 attenuated size */
       gl_PointSize = (4.0 + aOff * 6.0) * (60.0 / vDepth);
     }
   `,
   fragmentShader: `
     precision highp float;
-    uniform float uTime;
-    uniform float uIntensity;
-    varying float vDepth;
-    varying float vOff;
+    uniform float uTime; uniform float uIntensity;
+    varying float vDepth; varying float vOff;
     void main() {
       vec2 uv = gl_PointCoord - 0.5;
       float d = length(uv);
       if (d > 0.5) discard;
       float soft = 1.0 - smoothstep(0.0, 0.5, d);
-      /* 在光束內 amplify (粗糙 god ray 區域 = 畫面中央偏右上) */
-      vec3 worldPos = vec3(gl_FragCoord.xy, vDepth);
       float beamHint = smoothstep(0.0, 1.0, (vOff + sin(uTime * 0.2) * 0.2));
       vec3 c = mix(vec3(0.85, 0.78, 0.62), vec3(1.0, 0.95, 0.78), beamHint);
-      float a = soft * (0.18 + beamHint * 0.42) * uIntensity;
+      float a = soft * (0.16 + beamHint * 0.42) * uIntensity;
       gl_FragColor = vec4(c, a);
     }
   `
@@ -423,75 +797,79 @@ const dustMat = new THREE.ShaderMaterial({
 const dust = new THREE.Points(dustGeo, dustMat);
 scene.add(dust);
 
-/* ───── 2. Volumetric god rays — 用 emissive plane "假體積光" (走廊光錐) ─────
-   完整 ray-marching 太重 (fragment shader 內 30+ iter),
-   用 多層 alpha-additive 平面堆疊出體積感, 配合 dust 在 同一空間 amplify */
+/* ===================================================================
+   體積光 (god rays surrogate)
+   =================================================================== */
 function makeGodRayLayer(z, opacity, scale) {
-  const c = document.createElement('canvas');
-  c.width = c.height = 256;
+  const c = document.createElement('canvas'); c.width = c.height = 256;
   const ctx = c.getContext('2d');
-  /* 中央亮、邊緣淡的 radial gradient — 模擬光束橫截面 */
   const g = ctx.createRadialGradient(128, 128, 4, 128, 128, 128);
-  g.addColorStop(0, 'rgba(255, 235, 180, 0.85)');
+  g.addColorStop(0, 'rgba(255, 235, 180, 0.88)');
   g.addColorStop(0.35, 'rgba(255, 212, 150, 0.42)');
   g.addColorStop(0.7, 'rgba(255, 196, 132, 0.16)');
   g.addColorStop(1, 'rgba(255, 196, 132, 0)');
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, 256, 256);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 256, 256);
   const tex = new THREE.CanvasTexture(c);
-  const mat = new THREE.MeshBasicMaterial({
-    map: tex,
-    transparent: true,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    fog: false,
-    opacity: opacity
-  });
+  const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, opacity: opacity });
   const m = new THREE.Mesh(new THREE.PlaneGeometry(scale, scale), mat);
-  m.position.set(0, 1.9, z);
+  m.position.set(0, 1.95, z);
   return m;
 }
 const godRays = new THREE.Group();
-/* 3 層由遠到近、漸縮、漸淡 */
-godRays.add(makeGodRayLayer(-15.5, 0.95, 5.4));
-godRays.add(makeGodRayLayer(-12, 0.62, 4.2));
-godRays.add(makeGodRayLayer(-8.5, 0.42, 3.4));
-godRays.add(makeGodRayLayer(-5, 0.28, 2.8));
+godRays.add(makeGodRayLayer(-16, 0.95, 5.6));
+godRays.add(makeGodRayLayer(-12.5, 0.62, 4.4));
+godRays.add(makeGodRayLayer(-9, 0.42, 3.6));
+godRays.add(makeGodRayLayer(-5.5, 0.28, 2.8));
 scene.add(godRays);
 
-/* ───── 光照 ───── */
-const sun = new THREE.DirectionalLight(0xffd388, 1.45);
+/* ===================================================================
+   光照 — multi-light 設置
+   =================================================================== */
+const sun = new THREE.DirectionalLight(0xffd388, 1.55);
 sun.position.set(0, 4.5, -15);
 sun.target.position.set(0, 1.2, 0);
 scene.add(sun, sun.target);
-const ambient = new THREE.AmbientLight(0x4a3024, 0.36);
+const ambient = new THREE.AmbientLight(0x4a3024, 0.42);
 scene.add(ambient);
-const rimRed = new THREE.PointLight(0xff7858, 0.92, 8);
-rimRed.position.set(0.6, 1.7, 0.5);
-scene.add(rimRed);
-const fillCool = new THREE.PointLight(0x4a6890, 0.32, 12);
-fillCool.position.set(-2.5, 2.2, 2);
+/* Key light from window */
+const keyWin = new THREE.PointLight(0xffd388, 1.2, 18);
+keyWin.position.set(0, 2.2, -16);
+scene.add(keyWin);
+/* Fill light cool (走廊另一頭) */
+const fillCool = new THREE.PointLight(0x6a8aa8, 0.42, 14);
+fillCool.position.set(0, 2.4, 3);
 scene.add(fillCool);
+/* Rim light red (從紅線方向 cast) */
+const rimRed = new THREE.PointLight(0xff7858, 0.88, 6);
+rimRed.position.set(2.0, 1.7, -5);
+scene.add(rimRed);
+/* 學長 facial fill */
+const seniorFace = new THREE.PointLight(0xfff0d8, 0.42, 2.4);
+seniorFace.position.set(1.6, 1.7, -1.9);
+scene.add(seniorFace);
+/* 學妹 facial fill */
+const juniorFace = new THREE.PointLight(0xfff0e8, 0.42, 2.4);
+juniorFace.position.set(3.0, 1.65, -7.2);
+scene.add(juniorFace);
 
-/* ───── 5/6. Hand-rolled multi-pass post processing ───── */
+/* ===================================================================
+   PostFX (多 pass) — bright extract + 兩向 blur + 合成
+   =================================================================== */
 class PostFX {
   constructor(renderer) {
     this.renderer = renderer;
-    this.rtMain = this.makeRT();
+    this.rtMain = this.makeRT(1);
     this.rtBlurA = this.makeRT(0.5);
     this.rtBlurB = this.makeRT(0.5);
-    this.fsQuad = new THREE.Mesh(
-      new THREE.PlaneGeometry(2, 2),
-      this.makeBrightExtractMat()
-    );
-    this.fsScene = new THREE.Scene();
     this.fsCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    this.fsScene = new THREE.Scene();
+    this.fsQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.makeBrightMat());
     this.fsScene.add(this.fsQuad);
     this.matBright = this.fsQuad.material;
     this.matBlur = this.makeBlurMat();
     this.matFinal = this.makeFinalMat();
   }
-  makeRT(scale = 1) {
+  makeRT(scale) {
     return new THREE.WebGLRenderTarget(
       Math.floor(innerWidth * (devicePixelRatio || 1) * scale),
       Math.floor(innerHeight * (devicePixelRatio || 1) * scale),
@@ -503,13 +881,12 @@ class PostFX {
     this.rtBlurA.setSize(innerWidth * (devicePixelRatio || 1) * 0.5, innerHeight * (devicePixelRatio || 1) * 0.5);
     this.rtBlurB.setSize(innerWidth * (devicePixelRatio || 1) * 0.5, innerHeight * (devicePixelRatio || 1) * 0.5);
   }
-  makeBrightExtractMat() {
+  makeBrightMat() {
     return new THREE.ShaderMaterial({
-      uniforms: { tDiffuse: { value: null }, uThreshold: { value: 0.72 } },
+      uniforms: { tDiffuse: { value: null }, uThreshold: { value: 0.74 } },
       vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position, 1.0); }',
       fragmentShader: `
-        uniform sampler2D tDiffuse; uniform float uThreshold;
-        varying vec2 vUv;
+        uniform sampler2D tDiffuse; uniform float uThreshold; varying vec2 vUv;
         void main() {
           vec4 c = texture2D(tDiffuse, vUv);
           float lum = dot(c.rgb, vec3(0.299, 0.587, 0.114));
@@ -524,17 +901,15 @@ class PostFX {
       uniforms: { tDiffuse: { value: null }, uDir: { value: new THREE.Vector2(1, 0) }, uRes: { value: new THREE.Vector2(innerWidth, innerHeight) } },
       vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position, 1.0); }',
       fragmentShader: `
-        uniform sampler2D tDiffuse; uniform vec2 uDir; uniform vec2 uRes;
-        varying vec2 vUv;
+        uniform sampler2D tDiffuse; uniform vec2 uDir; uniform vec2 uRes; varying vec2 vUv;
         void main() {
           vec2 px = uDir / uRes;
-          /* 9-tap gaussian */
           vec4 sum = vec4(0.0);
           sum += texture2D(tDiffuse, vUv - px * 4.0) * 0.05;
           sum += texture2D(tDiffuse, vUv - px * 3.0) * 0.09;
           sum += texture2D(tDiffuse, vUv - px * 2.0) * 0.12;
           sum += texture2D(tDiffuse, vUv - px * 1.0) * 0.15;
-          sum += texture2D(tDiffuse, vUv)               * 0.18;
+          sum += texture2D(tDiffuse, vUv) * 0.18;
           sum += texture2D(tDiffuse, vUv + px * 1.0) * 0.15;
           sum += texture2D(tDiffuse, vUv + px * 2.0) * 0.12;
           sum += texture2D(tDiffuse, vUv + px * 3.0) * 0.09;
@@ -547,30 +922,19 @@ class PostFX {
   makeFinalMat() {
     return new THREE.ShaderMaterial({
       uniforms: {
-        tDiffuse: { value: null },
-        tBloom: { value: null },
+        tDiffuse: { value: null }, tBloom: { value: null },
         uTime: { value: 0 },
-        uBloomStrength: { value: 0.62 },
-        uChromaStrength: { value: 1.0 },
-        uGrainStrength: { value: 1.0 }
+        uBloomStrength: { value: 0.62 }, uChromaStrength: { value: 1.0 }, uGrainStrength: { value: 1.0 }
       },
       vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position, 1.0); }',
       fragmentShader: `
         precision highp float;
-        uniform sampler2D tDiffuse;
-        uniform sampler2D tBloom;
-        uniform float uTime;
-        uniform float uBloomStrength;
-        uniform float uChromaStrength;
-        uniform float uGrainStrength;
+        uniform sampler2D tDiffuse; uniform sampler2D tBloom;
+        uniform float uTime; uniform float uBloomStrength; uniform float uChromaStrength; uniform float uGrainStrength;
         varying vec2 vUv;
-        /* hash-based pseudo-noise for film grain */
-        float hash(vec2 p) {
-          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-        }
+        float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
         void main() {
           vec2 uv = vUv;
-          /* chromatic aberration — 邊緣 radial offset */
           vec2 toCenter = uv - 0.5;
           float dist = length(toCenter);
           float chromaAmt = 0.0028 * uChromaStrength * smoothstep(0.0, 0.7, dist);
@@ -579,19 +943,14 @@ class PostFX {
           col.r = texture2D(tDiffuse, uv - dir * chromaAmt).r;
           col.g = texture2D(tDiffuse, uv).g;
           col.b = texture2D(tDiffuse, uv + dir * chromaAmt).b;
-          /* bloom add */
           vec3 bloom = texture2D(tBloom, uv).rgb;
           col += bloom * uBloomStrength;
-          /* tonemap (mild reinhard) */
           col = col / (1.0 + col);
           col = pow(col, vec3(1.0 / 2.2));
-          /* film grain */
-          float grain = (hash(uv * 1024.0 + uTime * 60.0) - 0.5) * 0.075 * uGrainStrength;
+          float grain = (hash(uv * 1024.0 + uTime * 60.0) - 0.5) * 0.072 * uGrainStrength;
           col += grain;
-          /* vignette — 邊緣輕微壓暗 */
           float vig = smoothstep(0.7, 0.42, dist);
           col *= 0.92 + vig * 0.08;
-          /* warm "LUT" — 增加暖橙偏色 */
           col.r = col.r * 1.04 + 0.01;
           col.b = col.b * 0.96 - 0.005;
           gl_FragColor = vec4(col, 1.0);
@@ -600,33 +959,28 @@ class PostFX {
     });
   }
   render(scene, cam, fx, time) {
-    /* 1. render scene → rtMain */
     this.renderer.setRenderTarget(this.rtMain);
     this.renderer.clear();
     this.renderer.render(scene, cam);
-    /* 2. bright extract → rtBlurA */
     if (fx.bloom) {
       this.fsQuad.material = this.matBright;
       this.matBright.uniforms.tDiffuse.value = this.rtMain.texture;
       this.renderer.setRenderTarget(this.rtBlurA);
       this.renderer.render(this.fsScene, this.fsCam);
-      /* 3. blur H → rtBlurB */
       this.fsQuad.material = this.matBlur;
       this.matBlur.uniforms.tDiffuse.value = this.rtBlurA.texture;
       this.matBlur.uniforms.uDir.value.set(1, 0);
       this.matBlur.uniforms.uRes.value.set(this.rtBlurA.width, this.rtBlurA.height);
       this.renderer.setRenderTarget(this.rtBlurB);
       this.renderer.render(this.fsScene, this.fsCam);
-      /* 4. blur V → rtBlurA */
       this.matBlur.uniforms.tDiffuse.value = this.rtBlurB.texture;
       this.matBlur.uniforms.uDir.value.set(0, 1);
       this.renderer.setRenderTarget(this.rtBlurA);
       this.renderer.render(this.fsScene, this.fsCam);
     }
-    /* 5. final composite → screen */
     this.fsQuad.material = this.matFinal;
     this.matFinal.uniforms.tDiffuse.value = this.rtMain.texture;
-    this.matFinal.uniforms.tBloom.value = fx.bloom ? this.rtBlurA.texture : this.rtMain.texture; /* fallback */
+    this.matFinal.uniforms.tBloom.value = fx.bloom ? this.rtBlurA.texture : this.rtMain.texture;
     this.matFinal.uniforms.uTime.value = time;
     this.matFinal.uniforms.uBloomStrength.value = fx.bloom ? 0.62 : 0.0;
     this.matFinal.uniforms.uChromaStrength.value = fx.chroma ? 1.0 : 0.0;
@@ -637,92 +991,67 @@ class PostFX {
 }
 const postfx = new PostFX(renderer);
 
-/* ───── 效果 toggle 狀態 ───── */
-const FX = {
-  floor: true,       /* 1 */
-  godRays: true,     /* 2 */
-  dust: true,        /* 3 */
-  redLine: true,     /* 4 */
-  bloom: true,       /* 5 — bloom + chromatic 一起 */
-  chroma: true,
-  grain: true        /* 6 */
-};
-
+/* ===================================================================
+   FX toggles + UI
+   =================================================================== */
+const FX = { floor: true, godRays: true, dust: true, redLine: true, breath: true, hairSway: true, bloom: true, chroma: true, grain: true };
 function applyFX() {
-  floor.material = FX.floor ? floorMat
-    : new THREE.MeshBasicMaterial({ color: 0x14100c });
+  floor.material = FX.floor ? floorMat : floorPlainMat;
   godRays.visible = FX.godRays;
   dust.visible = FX.dust;
   redLine.visible = FX.redLine;
   updateLegendUI();
 }
 function updateLegendUI() {
+  const map = { 1: FX.floor, 2: FX.godRays, 3: FX.dust, 4: FX.redLine, 5: FX.breath, 6: FX.hairSway, 7: FX.bloom, 8: FX.grain };
   document.querySelectorAll('#effectsList .fx-item').forEach(function (el) {
-    const fxN = parseInt(el.dataset.fx, 10);
-    let on = false;
-    if (fxN === 1) on = FX.floor;
-    else if (fxN === 2) on = FX.godRays;
-    else if (fxN === 3) on = FX.dust;
-    else if (fxN === 4) on = FX.redLine;
-    else if (fxN === 5) on = FX.bloom;
-    else if (fxN === 6) on = FX.grain;
-    el.classList.toggle('on', on);
+    el.classList.toggle('on', !!map[parseInt(el.dataset.fx, 10)]);
   });
 }
 
-/* 鍵盤輸入 */
 let paused = false;
 const pauseInd = document.getElementById('pauseIndicator');
 document.addEventListener('keydown', function (e) {
   switch (e.code) {
     case 'KeyP': paused = !paused; pauseInd.classList.toggle('show', paused); break;
     case 'KeyR':
-      cam.position.set(0, 1.6, 6);
-      cam.lookAt(0, 1.4, -4);
+      cam.position.set(0.4, 1.62, 4.2); cam.lookAt(0, 1.45, -2);
       break;
     case 'Digit1': FX.floor = !FX.floor; applyFX(); break;
     case 'Digit2': FX.godRays = !FX.godRays; applyFX(); break;
     case 'Digit3': FX.dust = !FX.dust; applyFX(); break;
     case 'Digit4': FX.redLine = !FX.redLine; applyFX(); break;
-    case 'Digit5':
-      FX.bloom = !FX.bloom; FX.chroma = FX.bloom;
-      applyFX();
-      break;
-    case 'Digit6': FX.grain = !FX.grain; applyFX(); break;
+    case 'Digit5': FX.breath = !FX.breath; applyFX(); break;
+    case 'Digit6': FX.hairSway = !FX.hairSway; applyFX(); break;
+    case 'Digit7': FX.bloom = !FX.bloom; FX.chroma = FX.bloom; applyFX(); break;
+    case 'Digit8': FX.grain = !FX.grain; applyFX(); break;
   }
 });
-
-/* 也讓 legend 點擊切換 */
 document.querySelectorAll('#effectsList .fx-item').forEach(function (el) {
-  el.style.cursor = 'pointer';
   el.addEventListener('click', function () {
-    const fxN = parseInt(el.dataset.fx, 10);
-    if (fxN === 1) FX.floor = !FX.floor;
-    else if (fxN === 2) FX.godRays = !FX.godRays;
-    else if (fxN === 3) FX.dust = !FX.dust;
-    else if (fxN === 4) FX.redLine = !FX.redLine;
-    else if (fxN === 5) { FX.bloom = !FX.bloom; FX.chroma = FX.bloom; }
-    else if (fxN === 6) FX.grain = !FX.grain;
+    const n = parseInt(el.dataset.fx, 10);
+    const keys = ['', 'floor', 'godRays', 'dust', 'redLine', 'breath', 'hairSway', 'bloom', 'grain'];
+    if (n === 7) { FX.bloom = !FX.bloom; FX.chroma = FX.bloom; }
+    else if (keys[n]) FX[keys[n]] = !FX[keys[n]];
     applyFX();
   });
 });
 
-/* ───── stats (FPS + triangle count) ───── */
+/* ===================================================================
+   主迴圈 — 角色呼吸 + 髮絲 sway + camera breathing
+   =================================================================== */
 const stats = document.getElementById('stats');
-let lastStatsUpdate = 0;
-let frameCount = 0;
+let lastStatsUpdate = 0, frameCount = 0;
 function updateStats(now) {
   frameCount++;
   if (now - lastStatsUpdate >= 500) {
     const fps = Math.round((frameCount * 1000) / (now - lastStatsUpdate));
     const tri = renderer.info.render.triangles;
-    stats.textContent = 'FPS ' + fps + ' · Tri ' + (tri / 1000).toFixed(1) + 'k · Shader 5';
-    lastStatsUpdate = now;
-    frameCount = 0;
+    stats.textContent = 'FPS ' + fps + ' · Tri ' + (tri / 1000).toFixed(1) + 'k · Char 6';
+    lastStatsUpdate = now; frameCount = 0;
   }
 }
 
-/* ───── 主迴圈 + camera breathing ───── */
 let last = performance.now();
 let elapsed = 0;
 function loop() {
@@ -731,20 +1060,40 @@ function loop() {
   last = now;
   if (!paused) elapsed += dt;
 
-  /* update shader uniforms */
   redLineUniforms.uTime.value = elapsed;
   dustMat.uniforms.uTime.value = elapsed;
 
-  /* camera breathing — 緩慢漂浮 + 微 dolly */
-  cam.position.x = Math.sin(elapsed * 0.18) * 0.22;
-  cam.position.y = 1.6 + Math.sin(elapsed * 0.32) * 0.05;
-  cam.position.z = 6 + Math.sin(elapsed * 0.12) * 0.6;
-  cam.lookAt(Math.sin(elapsed * 0.1) * 0.18, 1.4, -4);
+  /* 角色 breathing */
+  if (FX.breath) {
+    const bb = 1 + Math.sin(elapsed * 1.4) * 0.012;
+    [senior, junior].concat(friends).forEach(function (c, i) {
+      const phase = i * 0.4;
+      const b = 1 + Math.sin(elapsed * 1.4 + phase) * 0.012;
+      const body = c.userData.body;
+      if (body) body.scale.y = b * (c === junior ? 0.92 : 0.96);
+    });
+    /* 學長微 head turn */
+    senior.userData.head.rotation.y = Math.sin(elapsed * 0.3) * 0.05;
+    junior.userData.head.rotation.y = -Math.PI / 16 + Math.sin(elapsed * 0.4) * 0.08;
+  }
 
-  /* god ray 平面 always face camera (billboard) — 不旋,只是 alpha 微脈動 */
+  /* 學妹髮絲 sway */
+  if (FX.hairSway && junior.userData.hair && junior.userData.hair.userData.strands) {
+    junior.userData.hair.userData.strands.forEach(function (s, idx) {
+      s.position.x = s.userData.baseX + Math.sin(elapsed * 0.8 + s.userData.basePhase) * 0.012;
+      s.rotation.z = Math.sin(elapsed * 0.6 + s.userData.basePhase) * 0.06;
+    });
+  }
+
+  /* camera breathing — 緩慢漂浮 + 微 dolly */
+  cam.position.x = 0.4 + Math.sin(elapsed * 0.18) * 0.18;
+  cam.position.y = 1.62 + Math.sin(elapsed * 0.32) * 0.045;
+  cam.position.z = 4.2 + Math.sin(elapsed * 0.12) * 0.4;
+  cam.lookAt(Math.sin(elapsed * 0.1) * 0.18, 1.45, -2);
+
+  /* god ray 平面 always face camera */
   godRays.children.forEach(function (layer, i) {
-    layer.material.opacity = (i === 0 ? 0.95 : i === 1 ? 0.62 : i === 2 ? 0.42 : 0.28)
-                           * (0.85 + Math.sin(elapsed * 0.4 + i * 0.7) * 0.15);
+    layer.material.opacity = (i === 0 ? 0.95 : i === 1 ? 0.62 : i === 2 ? 0.42 : 0.28) * (0.85 + Math.sin(elapsed * 0.4 + i * 0.7) * 0.15);
     layer.lookAt(cam.position);
   });
 
@@ -763,12 +1112,10 @@ addEventListener('resize', function () {
 });
 
 window.__TECH_DEMO__ = {
-  cam: cam,
-  scene: scene,
-  postfx: postfx,
-  fx: FX,
+  cam: cam, scene: scene, postfx: postfx, fx: FX,
+  senior: senior, junior: junior, friends: friends,
   applyFX: applyFX,
-  version: 'v1'
+  version: 'v2-full-cast'
 };
 </script>
 </body>
