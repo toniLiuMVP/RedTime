@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>光與紅線 · 3D 技術展示 · 時間裡的兩個妳</title>
+<link rel="icon" href="data:,">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; color: #eae6de; font-family: "Noto Serif TC", "Cormorant Garamond", Georgia, serif; }
+  #scene-canvas { position: fixed; inset: 0; z-index: 0; image-rendering: auto; }
+  #ui { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+
+  .top-bar {
+    position: absolute; top: 14px; left: 14px; right: 14px;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    pointer-events: auto;
+  }
+  .title-block {
+    background: rgba(8, 6, 10, 0.62); backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 10px 18px;
+    border: 1px solid rgba(255, 220, 200, 0.20);
+    border-radius: 3px;
+  }
+  .title-block .t1 {
+    font-family: "Cormorant Garamond", "Noto Serif TC", serif;
+    font-size: 15px; letter-spacing: 0.24em;
+    color: rgba(255, 220, 200, 0.95);
+  }
+  .title-block .t2 {
+    font-family: "DM Mono", monospace;
+    font-size: 9px; letter-spacing: 0.28em;
+    color: rgba(218, 184, 168, 0.55);
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+  .back-link {
+    padding: 9px 16px;
+    background: rgba(8, 6, 10, 0.62); backdrop-filter: blur(12px);
+    color: rgba(238, 232, 220, 0.78);
+    text-decoration: none;
+    font-size: 11px; letter-spacing: 0.18em;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 3px;
+    pointer-events: auto;
+  }
+  .back-link:hover { color: #fff; border-color: rgba(255, 220, 200, 0.55); }
+
+  .legend {
+    position: absolute; left: 14px; bottom: 14px;
+    background: rgba(8, 6, 10, 0.78); backdrop-filter: blur(10px);
+    padding: 12px 18px;
+    border: 1px solid rgba(218, 184, 168, 0.22);
+    border-radius: 4px;
+    font-size: 11px; line-height: 1.85;
+    color: rgba(238, 232, 220, 0.82);
+    max-width: 320px;
+    pointer-events: auto;
+    letter-spacing: 0.04em;
+  }
+  .legend .legend-title {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 13px; letter-spacing: 0.18em;
+    color: rgba(255, 220, 200, 0.95);
+    margin-bottom: 8px;
+  }
+  .legend kbd {
+    display: inline-block;
+    padding: 1px 7px;
+    background: rgba(228, 70, 80, 0.20);
+    border: 1px solid rgba(228, 70, 80, 0.52);
+    border-radius: 2px;
+    font-family: "DM Mono", monospace;
+    font-size: 10px;
+    color: rgba(248, 168, 152, 0.95);
+    margin: 0 3px;
+  }
+  .effects-list {
+    margin-top: 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px 14px;
+    font-family: "DM Mono", monospace;
+    font-size: 10px;
+  }
+  .fx-item { display: flex; align-items: center; gap: 6px; }
+  .fx-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(218, 184, 168, 0.32); }
+  .fx-item.on .fx-dot { background: rgba(228, 70, 80, 0.92); box-shadow: 0 0 6px rgba(228, 70, 80, 0.62); }
+
+  .stats {
+    position: absolute; right: 14px; bottom: 14px;
+    background: rgba(8, 6, 10, 0.62); backdrop-filter: blur(10px);
+    padding: 8px 14px;
+    border: 1px solid rgba(218, 184, 168, 0.22);
+    border-radius: 3px;
+    font-family: "DM Mono", monospace;
+    font-size: 10px; letter-spacing: 0.12em;
+    color: rgba(218, 184, 168, 0.78);
+    pointer-events: none;
+  }
+
+  .pause-indicator {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: "DM Mono", monospace;
+    font-size: 18px; letter-spacing: 0.32em;
+    color: rgba(255, 220, 200, 0.92);
+    padding: 12px 24px;
+    background: rgba(8, 6, 10, 0.78); backdrop-filter: blur(10px);
+    border: 1px solid rgba(228, 70, 80, 0.52);
+    border-radius: 3px;
+    pointer-events: none;
+    display: none;
+  }
+  .pause-indicator.show { display: block; }
+</style>
+</head>
+<body>
+<canvas id="scene-canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="title-block">
+      <div class="t1">光與紅線</div>
+      <div class="t2">3D TECH SHOWCASE · ATMOSPHERIC RENDERING</div>
+    </div>
+    <a class="back-link" href="index.html">← 回</a>
+  </div>
+
+  <div class="legend">
+    <div class="legend-title">效果切換</div>
+    <div><kbd>P</kbd> 暫停 · <kbd>R</kbd> 重啟 · <kbd>1</kbd>~<kbd>6</kbd> 切換效果</div>
+    <div class="effects-list" id="effectsList">
+      <div class="fx-item on" data-fx="1"><span class="fx-dot"></span>1 · 程序木紋地板</div>
+      <div class="fx-item on" data-fx="2"><span class="fx-dot"></span>2 · 體積光 (God Rays)</div>
+      <div class="fx-item on" data-fx="3"><span class="fx-dot"></span>3 · 光束中的塵粒</div>
+      <div class="fx-item on" data-fx="4"><span class="fx-dot"></span>4 · 紅線能量 shader</div>
+      <div class="fx-item on" data-fx="5"><span class="fx-dot"></span>5 · Bloom + 色差</div>
+      <div class="fx-item on" data-fx="6"><span class="fx-dot"></span>6 · 底片顆粒 + LUT</div>
+    </div>
+  </div>
+
+  <div class="stats" id="stats">FPS: -- · Tri: -- · Shader: 5</div>
+</div>
+
+<div class="pause-indicator" id="pauseIndicator">⏸ 已暫停</div>
+
+<script type="module">
+import * as THREE from './assets/lm402/vendor-three.module.js';
+
+/* ────────────────────────────────────────────────────────────────────
+   光與紅線 · 3D 技術展示 (Atmospheric Rendering)
+   ────────────────────────────────────────────────────────────────────
+   集成技法:
+   1. Procedural PBR 木紋地板  — Canvas 程序生成 noise + ridge + normal map
+   2. Volumetric God Rays      — 自訂 GLSL fragment shader, screen-space ray march
+   3. Dust particles           — billboard quads + depth fade + 光束內 amplify
+   4. Red Line energy          — 自訂 ShaderMaterial: sine wave + pulse + glow
+   5. Multi-pass post          — bloom 模糊 + chromatic aberration + tonemapping
+   6. Film grain + LUT         — vintage cinematic finish
+   ──────────────────────────────────────────────────────────────────── */
+
+const canvas = document.getElementById('scene-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.92;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x100c0a, 0.045);
+
+const cam = new THREE.PerspectiveCamera(46, innerWidth / innerHeight, 0.1, 80);
+cam.position.set(0, 1.6, 6);
+cam.lookAt(0, 1.4, -4);
+
+/* ───── 1. Procedural Wood Grain PBR Floor ───── */
+function makeWoodCanvas(size, hueShift) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  /* base brown */
+  ctx.fillStyle = '#3a2418';
+  ctx.fillRect(0, 0, size, size);
+  /* 木紋 — 多重 sine wave 帶 noise */
+  const stripes = 24;
+  for (let i = 0; i < stripes; i++) {
+    const y0 = (i / stripes) * size + (Math.random() - 0.5) * 8;
+    const hue = 18 + (Math.random() - 0.5) * 8 + hueShift;
+    const sat = 38 + Math.random() * 16;
+    const lit = 14 + Math.random() * 12;
+    ctx.strokeStyle = `hsl(${hue}, ${sat}%, ${lit}%)`;
+    ctx.lineWidth = 1.6 + Math.random() * 3.4;
+    ctx.beginPath();
+    for (let x = 0; x <= size; x += 4) {
+      const wave = Math.sin(x * 0.022 + i * 0.7) * 5
+                 + Math.sin(x * 0.078 + i * 1.3) * 2.2
+                 + (Math.random() - 0.5) * 1.4;
+      if (x === 0) ctx.moveTo(x, y0 + wave);
+      else ctx.lineTo(x, y0 + wave);
+    }
+    ctx.stroke();
+  }
+  /* knots — 隨機木瘤 */
+  for (let k = 0; k < 6; k++) {
+    const cx = Math.random() * size;
+    const cy = Math.random() * size;
+    const grd = ctx.createRadialGradient(cx, cy, 1, cx, cy, 22);
+    grd.addColorStop(0, 'rgba(20,10,4,0.85)');
+    grd.addColorStop(1, 'rgba(20,10,4,0)');
+    ctx.fillStyle = grd;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 22, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  /* 細微 noise grain 提升表面感 */
+  const id = ctx.getImageData(0, 0, size, size);
+  for (let p = 0; p < id.data.length; p += 4) {
+    const n = (Math.random() - 0.5) * 18;
+    id.data[p] = Math.max(0, Math.min(255, id.data[p] + n));
+    id.data[p + 1] = Math.max(0, Math.min(255, id.data[p + 1] + n * 0.9));
+    id.data[p + 2] = Math.max(0, Math.min(255, id.data[p + 2] + n * 0.7));
+  }
+  ctx.putImageData(id, 0, 0);
+  return c;
+}
+
+/* 從 albedo canvas 生成 normal map (Sobel-like edge) */
+function makeNormalFromCanvas(srcCanvas, strength) {
+  const size = srcCanvas.width;
+  const out = document.createElement('canvas');
+  out.width = out.height = size;
+  const sctx = srcCanvas.getContext('2d').getImageData(0, 0, size, size);
+  const octx = out.getContext('2d');
+  const oid = octx.createImageData(size, size);
+  function lum(x, y) {
+    const i = (Math.max(0, Math.min(size - 1, y)) * size + Math.max(0, Math.min(size - 1, x))) * 4;
+    return (sctx.data[i] + sctx.data[i + 1] + sctx.data[i + 2]) / 3;
+  }
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const dx = (lum(x + 1, y) - lum(x - 1, y)) / 255 * strength;
+      const dy = (lum(x, y + 1) - lum(x, y - 1)) / 255 * strength;
+      const nz = Math.sqrt(Math.max(0, 1 - dx * dx - dy * dy));
+      const i = (y * size + x) * 4;
+      oid.data[i]     = Math.round((dx * 0.5 + 0.5) * 255);
+      oid.data[i + 1] = Math.round((dy * 0.5 + 0.5) * 255);
+      oid.data[i + 2] = Math.round(nz * 255);
+      oid.data[i + 3] = 255;
+    }
+  }
+  octx.putImageData(oid, 0, 0);
+  return out;
+}
+
+const woodCanvas = makeWoodCanvas(512, 0);
+const woodTex = new THREE.CanvasTexture(woodCanvas);
+woodTex.wrapS = woodTex.wrapT = THREE.RepeatWrapping;
+woodTex.repeat.set(4, 8);
+woodTex.anisotropy = 8;
+woodTex.colorSpace = THREE.SRGBColorSpace;
+
+const woodNormalCanvas = makeNormalFromCanvas(woodCanvas, 4.5);
+const woodNormalTex = new THREE.CanvasTexture(woodNormalCanvas);
+woodNormalTex.wrapS = woodNormalTex.wrapT = THREE.RepeatWrapping;
+woodNormalTex.repeat.set(4, 8);
+
+const floorMat = new THREE.MeshStandardMaterial({
+  map: woodTex,
+  normalMap: woodNormalTex,
+  normalScale: new THREE.Vector2(0.72, 0.72),
+  roughness: 0.62,
+  metalness: 0.06
+});
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(8, 24), floorMat);
+floor.rotation.x = -Math.PI / 2;
+floor.position.z = -6;
+scene.add(floor);
+
+/* ───── walls + ceiling (低調,讓 god ray 主導畫面) ───── */
+const wallMat = new THREE.MeshStandardMaterial({ color: 0x1a120c, roughness: 0.78 });
+const wallL = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3.4, 24), wallMat);
+wallL.position.set(-4, 1.7, -6);
+scene.add(wallL);
+const wallR = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3.4, 24), wallMat);
+wallR.position.set(4, 1.7, -6);
+scene.add(wallR);
+const ceiling = new THREE.Mesh(new THREE.BoxGeometry(8, 0.3, 24), new THREE.MeshStandardMaterial({ color: 0x0e0a08, roughness: 0.85 }));
+ceiling.position.set(0, 3.4, -6);
+scene.add(ceiling);
+
+/* 走廊盡頭窗 — 暖光面板 (god ray source 在此) */
+const window1 = new THREE.Mesh(
+  new THREE.PlaneGeometry(3.0, 2.0),
+  new THREE.MeshBasicMaterial({ color: 0xffd388, fog: false })
+);
+window1.position.set(0, 1.8, -17.85);
+scene.add(window1);
+
+/* ───── 4. 紅線 with custom ShaderMaterial (energy flow) ───── */
+const redLineUniforms = {
+  uTime: { value: 0 },
+  uPulse: { value: 0.62 },
+  uIntensity: { value: 1.0 }
+};
+const redLineMat = new THREE.ShaderMaterial({
+  uniforms: redLineUniforms,
+  transparent: true,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+  vertexShader: `
+    varying float vT;
+    varying vec3 vWorldPos;
+    attribute float aT;
+    void main() {
+      vT = aT;
+      vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+      vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
+      gl_Position = projectionMatrix * mvPos;
+    }
+  `,
+  fragmentShader: `
+    precision highp float;
+    uniform float uTime;
+    uniform float uPulse;
+    uniform float uIntensity;
+    varying float vT;
+    varying vec3 vWorldPos;
+    void main() {
+      /* 沿線方向流動的脈動 (sine wave + 跑動) */
+      float flow = sin(vT * 18.0 - uTime * 2.4) * 0.5 + 0.5;
+      float pulse = sin(uTime * 1.2) * 0.5 + 0.5;
+      /* 邊緣 fresnel-ish soft falloff */
+      float edge = 1.0 - smoothstep(0.0, 0.4, abs(vT - 0.5) * 2.0);
+      /* 顏色 — 暗紅 → 亮紅 → 暖白 */
+      vec3 colA = vec3(0.82, 0.12, 0.16);
+      vec3 colB = vec3(1.0, 0.32, 0.28);
+      vec3 colC = vec3(1.0, 0.88, 0.62);
+      vec3 c = mix(colA, colB, flow);
+      c = mix(c, colC, pulse * 0.35);
+      float alpha = (0.55 + flow * 0.45 + pulse * 0.18) * (0.5 + edge * 0.5) * uIntensity;
+      gl_FragColor = vec4(c, alpha);
+    }
+  `
+});
+
+/* 紅線 geometry — 線是一條沿 z 軸有微弧的 line strip */
+function makeRedLineGeo() {
+  const N = 96;
+  const positions = new Float32Array(N * 3);
+  const tAttrs = new Float32Array(N);
+  for (let i = 0; i < N; i++) {
+    const t = i / (N - 1);
+    positions[i * 3]     = (Math.random() - 0.5) * 0.04 + Math.sin(t * Math.PI * 3) * 0.08;
+    positions[i * 3 + 1] = 1.55 + Math.sin(t * Math.PI) * 0.42;
+    positions[i * 3 + 2] = 4 + t * -16;
+    tAttrs[i] = t;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('aT', new THREE.BufferAttribute(tAttrs, 1));
+  return geo;
+}
+const redLine = new THREE.Line(makeRedLineGeo(), redLineMat);
+scene.add(redLine);
+
+/* ───── 3. 飄塵 dust particles (光束內) ───── */
+const DUST_N = 280;
+const dustGeo = new THREE.BufferGeometry();
+const dustPos = new Float32Array(DUST_N * 3);
+const dustOff = new Float32Array(DUST_N);
+for (let i = 0; i < DUST_N; i++) {
+  dustPos[i * 3]     = (Math.random() - 0.5) * 6.5;
+  dustPos[i * 3 + 1] = Math.random() * 3.4;
+  dustPos[i * 3 + 2] = -Math.random() * 17;
+  dustOff[i] = Math.random();
+}
+dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+dustGeo.setAttribute('aOff', new THREE.BufferAttribute(dustOff, 1));
+
+const dustMat = new THREE.ShaderMaterial({
+  uniforms: { uTime: { value: 0 }, uIntensity: { value: 1.0 } },
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  vertexShader: `
+    attribute float aOff;
+    uniform float uTime;
+    varying float vDepth;
+    varying float vOff;
+    void main() {
+      vOff = aOff;
+      vec3 pos = position;
+      /* 漂浮:微 sine + 沿 z 軸緩慢飄 */
+      pos.y += sin(uTime * 0.3 + aOff * 6.28) * 0.12;
+      pos.x += cos(uTime * 0.18 + aOff * 4.2) * 0.08;
+      vec4 mv = modelViewMatrix * vec4(pos, 1.0);
+      vDepth = -mv.z;
+      gl_Position = projectionMatrix * mv;
+      /* 距離 attenuated size */
+      gl_PointSize = (4.0 + aOff * 6.0) * (60.0 / vDepth);
+    }
+  `,
+  fragmentShader: `
+    precision highp float;
+    uniform float uTime;
+    uniform float uIntensity;
+    varying float vDepth;
+    varying float vOff;
+    void main() {
+      vec2 uv = gl_PointCoord - 0.5;
+      float d = length(uv);
+      if (d > 0.5) discard;
+      float soft = 1.0 - smoothstep(0.0, 0.5, d);
+      /* 在光束內 amplify (粗糙 god ray 區域 = 畫面中央偏右上) */
+      vec3 worldPos = vec3(gl_FragCoord.xy, vDepth);
+      float beamHint = smoothstep(0.0, 1.0, (vOff + sin(uTime * 0.2) * 0.2));
+      vec3 c = mix(vec3(0.85, 0.78, 0.62), vec3(1.0, 0.95, 0.78), beamHint);
+      float a = soft * (0.18 + beamHint * 0.42) * uIntensity;
+      gl_FragColor = vec4(c, a);
+    }
+  `
+});
+const dust = new THREE.Points(dustGeo, dustMat);
+scene.add(dust);
+
+/* ───── 2. Volumetric god rays — 用 emissive plane "假體積光" (走廊光錐) ─────
+   完整 ray-marching 太重 (fragment shader 內 30+ iter),
+   用 多層 alpha-additive 平面堆疊出體積感, 配合 dust 在 同一空間 amplify */
+function makeGodRayLayer(z, opacity, scale) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 256;
+  const ctx = c.getContext('2d');
+  /* 中央亮、邊緣淡的 radial gradient — 模擬光束橫截面 */
+  const g = ctx.createRadialGradient(128, 128, 4, 128, 128, 128);
+  g.addColorStop(0, 'rgba(255, 235, 180, 0.85)');
+  g.addColorStop(0.35, 'rgba(255, 212, 150, 0.42)');
+  g.addColorStop(0.7, 'rgba(255, 196, 132, 0.16)');
+  g.addColorStop(1, 'rgba(255, 196, 132, 0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 256, 256);
+  const tex = new THREE.CanvasTexture(c);
+  const mat = new THREE.MeshBasicMaterial({
+    map: tex,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    fog: false,
+    opacity: opacity
+  });
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(scale, scale), mat);
+  m.position.set(0, 1.9, z);
+  return m;
+}
+const godRays = new THREE.Group();
+/* 3 層由遠到近、漸縮、漸淡 */
+godRays.add(makeGodRayLayer(-15.5, 0.95, 5.4));
+godRays.add(makeGodRayLayer(-12, 0.62, 4.2));
+godRays.add(makeGodRayLayer(-8.5, 0.42, 3.4));
+godRays.add(makeGodRayLayer(-5, 0.28, 2.8));
+scene.add(godRays);
+
+/* ───── 光照 ───── */
+const sun = new THREE.DirectionalLight(0xffd388, 1.45);
+sun.position.set(0, 4.5, -15);
+sun.target.position.set(0, 1.2, 0);
+scene.add(sun, sun.target);
+const ambient = new THREE.AmbientLight(0x4a3024, 0.36);
+scene.add(ambient);
+const rimRed = new THREE.PointLight(0xff7858, 0.92, 8);
+rimRed.position.set(0.6, 1.7, 0.5);
+scene.add(rimRed);
+const fillCool = new THREE.PointLight(0x4a6890, 0.32, 12);
+fillCool.position.set(-2.5, 2.2, 2);
+scene.add(fillCool);
+
+/* ───── 5/6. Hand-rolled multi-pass post processing ───── */
+class PostFX {
+  constructor(renderer) {
+    this.renderer = renderer;
+    this.rtMain = this.makeRT();
+    this.rtBlurA = this.makeRT(0.5);
+    this.rtBlurB = this.makeRT(0.5);
+    this.fsQuad = new THREE.Mesh(
+      new THREE.PlaneGeometry(2, 2),
+      this.makeBrightExtractMat()
+    );
+    this.fsScene = new THREE.Scene();
+    this.fsCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    this.fsScene.add(this.fsQuad);
+    this.matBright = this.fsQuad.material;
+    this.matBlur = this.makeBlurMat();
+    this.matFinal = this.makeFinalMat();
+  }
+  makeRT(scale = 1) {
+    return new THREE.WebGLRenderTarget(
+      Math.floor(innerWidth * (devicePixelRatio || 1) * scale),
+      Math.floor(innerHeight * (devicePixelRatio || 1) * scale),
+      { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, type: THREE.HalfFloatType }
+    );
+  }
+  resize() {
+    this.rtMain.setSize(innerWidth * (devicePixelRatio || 1), innerHeight * (devicePixelRatio || 1));
+    this.rtBlurA.setSize(innerWidth * (devicePixelRatio || 1) * 0.5, innerHeight * (devicePixelRatio || 1) * 0.5);
+    this.rtBlurB.setSize(innerWidth * (devicePixelRatio || 1) * 0.5, innerHeight * (devicePixelRatio || 1) * 0.5);
+  }
+  makeBrightExtractMat() {
+    return new THREE.ShaderMaterial({
+      uniforms: { tDiffuse: { value: null }, uThreshold: { value: 0.72 } },
+      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position, 1.0); }',
+      fragmentShader: `
+        uniform sampler2D tDiffuse; uniform float uThreshold;
+        varying vec2 vUv;
+        void main() {
+          vec4 c = texture2D(tDiffuse, vUv);
+          float lum = dot(c.rgb, vec3(0.299, 0.587, 0.114));
+          float w = smoothstep(uThreshold, uThreshold + 0.18, lum);
+          gl_FragColor = vec4(c.rgb * w, c.a);
+        }
+      `
+    });
+  }
+  makeBlurMat() {
+    return new THREE.ShaderMaterial({
+      uniforms: { tDiffuse: { value: null }, uDir: { value: new THREE.Vector2(1, 0) }, uRes: { value: new THREE.Vector2(innerWidth, innerHeight) } },
+      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position, 1.0); }',
+      fragmentShader: `
+        uniform sampler2D tDiffuse; uniform vec2 uDir; uniform vec2 uRes;
+        varying vec2 vUv;
+        void main() {
+          vec2 px = uDir / uRes;
+          /* 9-tap gaussian */
+          vec4 sum = vec4(0.0);
+          sum += texture2D(tDiffuse, vUv - px * 4.0) * 0.05;
+          sum += texture2D(tDiffuse, vUv - px * 3.0) * 0.09;
+          sum += texture2D(tDiffuse, vUv - px * 2.0) * 0.12;
+          sum += texture2D(tDiffuse, vUv - px * 1.0) * 0.15;
+          sum += texture2D(tDiffuse, vUv)               * 0.18;
+          sum += texture2D(tDiffuse, vUv + px * 1.0) * 0.15;
+          sum += texture2D(tDiffuse, vUv + px * 2.0) * 0.12;
+          sum += texture2D(tDiffuse, vUv + px * 3.0) * 0.09;
+          sum += texture2D(tDiffuse, vUv + px * 4.0) * 0.05;
+          gl_FragColor = sum;
+        }
+      `
+    });
+  }
+  makeFinalMat() {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        tDiffuse: { value: null },
+        tBloom: { value: null },
+        uTime: { value: 0 },
+        uBloomStrength: { value: 0.62 },
+        uChromaStrength: { value: 1.0 },
+        uGrainStrength: { value: 1.0 }
+      },
+      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position, 1.0); }',
+      fragmentShader: `
+        precision highp float;
+        uniform sampler2D tDiffuse;
+        uniform sampler2D tBloom;
+        uniform float uTime;
+        uniform float uBloomStrength;
+        uniform float uChromaStrength;
+        uniform float uGrainStrength;
+        varying vec2 vUv;
+        /* hash-based pseudo-noise for film grain */
+        float hash(vec2 p) {
+          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+        }
+        void main() {
+          vec2 uv = vUv;
+          /* chromatic aberration — 邊緣 radial offset */
+          vec2 toCenter = uv - 0.5;
+          float dist = length(toCenter);
+          float chromaAmt = 0.0028 * uChromaStrength * smoothstep(0.0, 0.7, dist);
+          vec2 dir = normalize(toCenter + 1e-5);
+          vec3 col;
+          col.r = texture2D(tDiffuse, uv - dir * chromaAmt).r;
+          col.g = texture2D(tDiffuse, uv).g;
+          col.b = texture2D(tDiffuse, uv + dir * chromaAmt).b;
+          /* bloom add */
+          vec3 bloom = texture2D(tBloom, uv).rgb;
+          col += bloom * uBloomStrength;
+          /* tonemap (mild reinhard) */
+          col = col / (1.0 + col);
+          col = pow(col, vec3(1.0 / 2.2));
+          /* film grain */
+          float grain = (hash(uv * 1024.0 + uTime * 60.0) - 0.5) * 0.075 * uGrainStrength;
+          col += grain;
+          /* vignette — 邊緣輕微壓暗 */
+          float vig = smoothstep(0.7, 0.42, dist);
+          col *= 0.92 + vig * 0.08;
+          /* warm "LUT" — 增加暖橙偏色 */
+          col.r = col.r * 1.04 + 0.01;
+          col.b = col.b * 0.96 - 0.005;
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `
+    });
+  }
+  render(scene, cam, fx, time) {
+    /* 1. render scene → rtMain */
+    this.renderer.setRenderTarget(this.rtMain);
+    this.renderer.clear();
+    this.renderer.render(scene, cam);
+    /* 2. bright extract → rtBlurA */
+    if (fx.bloom) {
+      this.fsQuad.material = this.matBright;
+      this.matBright.uniforms.tDiffuse.value = this.rtMain.texture;
+      this.renderer.setRenderTarget(this.rtBlurA);
+      this.renderer.render(this.fsScene, this.fsCam);
+      /* 3. blur H → rtBlurB */
+      this.fsQuad.material = this.matBlur;
+      this.matBlur.uniforms.tDiffuse.value = this.rtBlurA.texture;
+      this.matBlur.uniforms.uDir.value.set(1, 0);
+      this.matBlur.uniforms.uRes.value.set(this.rtBlurA.width, this.rtBlurA.height);
+      this.renderer.setRenderTarget(this.rtBlurB);
+      this.renderer.render(this.fsScene, this.fsCam);
+      /* 4. blur V → rtBlurA */
+      this.matBlur.uniforms.tDiffuse.value = this.rtBlurB.texture;
+      this.matBlur.uniforms.uDir.value.set(0, 1);
+      this.renderer.setRenderTarget(this.rtBlurA);
+      this.renderer.render(this.fsScene, this.fsCam);
+    }
+    /* 5. final composite → screen */
+    this.fsQuad.material = this.matFinal;
+    this.matFinal.uniforms.tDiffuse.value = this.rtMain.texture;
+    this.matFinal.uniforms.tBloom.value = fx.bloom ? this.rtBlurA.texture : this.rtMain.texture; /* fallback */
+    this.matFinal.uniforms.uTime.value = time;
+    this.matFinal.uniforms.uBloomStrength.value = fx.bloom ? 0.62 : 0.0;
+    this.matFinal.uniforms.uChromaStrength.value = fx.chroma ? 1.0 : 0.0;
+    this.matFinal.uniforms.uGrainStrength.value = fx.grain ? 1.0 : 0.0;
+    this.renderer.setRenderTarget(null);
+    this.renderer.render(this.fsScene, this.fsCam);
+  }
+}
+const postfx = new PostFX(renderer);
+
+/* ───── 效果 toggle 狀態 ───── */
+const FX = {
+  floor: true,       /* 1 */
+  godRays: true,     /* 2 */
+  dust: true,        /* 3 */
+  redLine: true,     /* 4 */
+  bloom: true,       /* 5 — bloom + chromatic 一起 */
+  chroma: true,
+  grain: true        /* 6 */
+};
+
+function applyFX() {
+  floor.material = FX.floor ? floorMat
+    : new THREE.MeshBasicMaterial({ color: 0x14100c });
+  godRays.visible = FX.godRays;
+  dust.visible = FX.dust;
+  redLine.visible = FX.redLine;
+  updateLegendUI();
+}
+function updateLegendUI() {
+  document.querySelectorAll('#effectsList .fx-item').forEach(function (el) {
+    const fxN = parseInt(el.dataset.fx, 10);
+    let on = false;
+    if (fxN === 1) on = FX.floor;
+    else if (fxN === 2) on = FX.godRays;
+    else if (fxN === 3) on = FX.dust;
+    else if (fxN === 4) on = FX.redLine;
+    else if (fxN === 5) on = FX.bloom;
+    else if (fxN === 6) on = FX.grain;
+    el.classList.toggle('on', on);
+  });
+}
+
+/* 鍵盤輸入 */
+let paused = false;
+const pauseInd = document.getElementById('pauseIndicator');
+document.addEventListener('keydown', function (e) {
+  switch (e.code) {
+    case 'KeyP': paused = !paused; pauseInd.classList.toggle('show', paused); break;
+    case 'KeyR':
+      cam.position.set(0, 1.6, 6);
+      cam.lookAt(0, 1.4, -4);
+      break;
+    case 'Digit1': FX.floor = !FX.floor; applyFX(); break;
+    case 'Digit2': FX.godRays = !FX.godRays; applyFX(); break;
+    case 'Digit3': FX.dust = !FX.dust; applyFX(); break;
+    case 'Digit4': FX.redLine = !FX.redLine; applyFX(); break;
+    case 'Digit5':
+      FX.bloom = !FX.bloom; FX.chroma = FX.bloom;
+      applyFX();
+      break;
+    case 'Digit6': FX.grain = !FX.grain; applyFX(); break;
+  }
+});
+
+/* 也讓 legend 點擊切換 */
+document.querySelectorAll('#effectsList .fx-item').forEach(function (el) {
+  el.style.cursor = 'pointer';
+  el.addEventListener('click', function () {
+    const fxN = parseInt(el.dataset.fx, 10);
+    if (fxN === 1) FX.floor = !FX.floor;
+    else if (fxN === 2) FX.godRays = !FX.godRays;
+    else if (fxN === 3) FX.dust = !FX.dust;
+    else if (fxN === 4) FX.redLine = !FX.redLine;
+    else if (fxN === 5) { FX.bloom = !FX.bloom; FX.chroma = FX.bloom; }
+    else if (fxN === 6) FX.grain = !FX.grain;
+    applyFX();
+  });
+});
+
+/* ───── stats (FPS + triangle count) ───── */
+const stats = document.getElementById('stats');
+let lastStatsUpdate = 0;
+let frameCount = 0;
+function updateStats(now) {
+  frameCount++;
+  if (now - lastStatsUpdate >= 500) {
+    const fps = Math.round((frameCount * 1000) / (now - lastStatsUpdate));
+    const tri = renderer.info.render.triangles;
+    stats.textContent = 'FPS ' + fps + ' · Tri ' + (tri / 1000).toFixed(1) + 'k · Shader 5';
+    lastStatsUpdate = now;
+    frameCount = 0;
+  }
+}
+
+/* ───── 主迴圈 + camera breathing ───── */
+let last = performance.now();
+let elapsed = 0;
+function loop() {
+  const now = performance.now();
+  const dt = Math.min(0.06, (now - last) / 1000);
+  last = now;
+  if (!paused) elapsed += dt;
+
+  /* update shader uniforms */
+  redLineUniforms.uTime.value = elapsed;
+  dustMat.uniforms.uTime.value = elapsed;
+
+  /* camera breathing — 緩慢漂浮 + 微 dolly */
+  cam.position.x = Math.sin(elapsed * 0.18) * 0.22;
+  cam.position.y = 1.6 + Math.sin(elapsed * 0.32) * 0.05;
+  cam.position.z = 6 + Math.sin(elapsed * 0.12) * 0.6;
+  cam.lookAt(Math.sin(elapsed * 0.1) * 0.18, 1.4, -4);
+
+  /* god ray 平面 always face camera (billboard) — 不旋,只是 alpha 微脈動 */
+  godRays.children.forEach(function (layer, i) {
+    layer.material.opacity = (i === 0 ? 0.95 : i === 1 ? 0.62 : i === 2 ? 0.42 : 0.28)
+                           * (0.85 + Math.sin(elapsed * 0.4 + i * 0.7) * 0.15);
+    layer.lookAt(cam.position);
+  });
+
+  postfx.render(scene, cam, FX, elapsed);
+  updateStats(now);
+  requestAnimationFrame(loop);
+}
+applyFX();
+loop();
+
+addEventListener('resize', function () {
+  cam.aspect = innerWidth / innerHeight;
+  cam.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  postfx.resize();
+});
+
+window.__TECH_DEMO__ = {
+  cam: cam,
+  scene: scene,
+  postfx: postfx,
+  fx: FX,
+  applyFX: applyFX,
+  version: 'v1'
+};
+</script>
+</body>
+</html>
