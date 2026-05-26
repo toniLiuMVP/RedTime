@@ -986,6 +986,8 @@
     <!-- E10 Polaroid 拍照按鈕（固定右下角） -->
     <button id="lm402-polaroid-btn" type="button" aria-label="拍立得留念" title="拍立得留念">📷</button>
     <style>
+      #lm402-polaroid-btn,
+      #lm402-polaroid-flash { display: none !important; } /* r62 #10 toni: 隱藏遊戲拍照按鈕 (console API 保留) */
       #lm402-polaroid-btn {
         position: fixed;
         right: 18px;

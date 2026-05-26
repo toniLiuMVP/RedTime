@@ -2335,9 +2335,17 @@
           margin-bottom: 32px;
         }
         .hero-actions {
+          /* r62 #1 ｜ toni: 「你是第一次來嗎?」對齊置中 (手機) — buttons full-width 但 text 置中 */
           flex-direction: column;
           align-items: stretch;
           gap: 10px;
+          text-align: center;
+        }
+        .hero-actions .btn-newcomer,
+        .hero-actions .btn-primary,
+        .hero-actions .btn-ghost {
+          justify-content: center;
+          text-align: center;
         }
         .hero-side-stack {
           gap: 14px;

@@ -942,6 +942,39 @@
           border-color: var(--amber);
           color: var(--amber);
         }
+        /* r62 #2 ｜ 鐵粉常駐 sidebar button (desktop only — fab-bar 那邊處理 mobile) */
+        .sb-fan-btn {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin: 8px 12px 4px;
+          padding: 6px 12px;
+          background: linear-gradient(135deg, rgba(228, 70, 80, 0.12), rgba(170, 31, 45, 0.10));
+          border: 1px solid rgba(228, 70, 80, 0.45);
+          border-radius: 14px;
+          color: rgba(248, 168, 152, 0.95);
+          font-family: "Noto Sans TC", sans-serif;
+          font-size: 11px;
+          letter-spacing: 0.06em;
+          cursor: pointer;
+          transition: background 0.12s, border-color 0.12s, color 0.12s;
+        }
+        .sb-fan-btn:hover {
+          background: linear-gradient(135deg, rgba(228, 70, 80, 0.24), rgba(170, 31, 45, 0.18));
+          border-color: rgba(228, 70, 80, 0.85);
+          color: rgba(255, 220, 200, 1);
+        }
+        .sb-fan-btn .sfb-icon { color: rgba(228, 70, 80, 0.95); font-size: 12px; }
+        .sb-fan-btn .sfb-label { flex: 1; }
+        .sb-fan-btn .sfb-num {
+          font-family: "DM Mono", monospace;
+          font-size: 9px;
+          color: rgba(218, 184, 168, 0.78);
+          letter-spacing: 0.05em;
+        }
+        .sb-fan-btn .sfb-num:empty { display: none; }
+        /* fab-fan style (mobile fab-bar 鐵粉 icon 紅色) */
+        .fab-item.fab-fan #fab-fan-icon { color: rgba(228, 70, 80, 0.95); }
         #sb-ep-list {
           flex: 1;
           overflow-y: auto;
@@ -2480,7 +2513,8 @@
       }
       .fab-main-row {
         display: grid;
-        grid-template-columns: repeat(7, minmax(0, 1fr));
+        /* r62 #2 ｜ +鐵粉 → 9 cols 一列 (mobile) */
+        grid-template-columns: repeat(9, minmax(0, 1fr));
         gap: 4px;
       }
       .fab-nav-row {
@@ -4960,6 +4994,12 @@
             複合
           </button>
         </div>
+        <!-- r62 #2 ｜ 鐵粉常駐 sidebar (desktop), 從 floating FAB 移入 -->
+        <button id="sb-fan-btn" class="sb-fan-btn" type="button" onclick="window.__FAN_QUIZ__ && window.__FAN_QUIZ__.open()" aria-label="鐵粉挑戰 — 500 題連續答對">
+          <span class="sfb-icon" aria-hidden="true">☆</span>
+          <span class="sfb-label">鐵粉</span>
+          <span class="sfb-num" id="sb-fan-btn-num"></span>
+        </button>
         <div id="sb-ep-list"></div>
       </div>
 
@@ -5274,6 +5314,11 @@
         <button class="fab-item" type="button" onclick="openEggShelf()" aria-label="打開彩蛋收藏架">
           <span class="fab-icon" id="egg-icon" data-ui-icon="egg"></span
           ><span class="fab-label">彩蛋</span>
+        </button>
+        <!-- r62 #2 ｜ 鐵粉 (從 floating fanQuizFab 移進工具列, toni 紀律: 不擋 UI) -->
+        <button class="fab-item fab-fan" type="button" onclick="window.__FAN_QUIZ__ && window.__FAN_QUIZ__.open()" aria-label="鐵粉挑戰 — 500 題連續答對">
+          <span class="fab-icon" id="fab-fan-icon" aria-hidden="true">☆</span
+          ><span class="fab-label">鐵粉</span>
         </button>
       </div>
       <div class="fab-nav-row">
@@ -7728,7 +7773,7 @@
       /* r61b #10 ｜ buildScience — per-EP 科普小單元 (mimics buildGranny);
          r61b ｜ Codex caught: aria-expanded sync for a11y */
       function buildScience(s) {
-        return `<div class="ep-science"><div class="ep-science-toggle" onclick="toggleScience(this)" role="button" tabindex="0" aria-expanded="false" aria-controls="science-body-${s.ep}"><div class="es-avatar"><span aria-hidden="true">⚛</span></div><span class="es-label">物理科普 · <span style="font-size:10px;opacity:.7;letter-spacing:.08em">${escapeHtml(s.topic.split('—')[0].split('/')[0].trim())}</span></span><span class="es-arrow">▾</span></div><div class="ep-science-body" id="science-body-${s.ep}"><div class="es-kicker">EP${s.ep} · 科普小單元</div><div class="es-title">${escapeHtml(s.topic)}</div><div class="es-text">${escapeHtml(s.body)}</div></div></div>`;
+        return `<div class="ep-science"><div class="ep-science-toggle" onclick="toggleScience(this)" role="button" tabindex="0" aria-expanded="false" aria-controls="science-body-${s.ep}"><div class="es-avatar"><span aria-hidden="true">⚛</span></div><span class="es-label">科普 · <span style="font-size:10px;opacity:.7;letter-spacing:.08em">${escapeHtml(s.topic.split('—')[0].split('/')[0].trim())}</span></span><span class="es-arrow">▾</span></div><div class="ep-science-body" id="science-body-${s.ep}"><div class="es-kicker">EP${s.ep} · 科普小單元</div><div class="es-title">${escapeHtml(s.topic)}</div><div class="es-text">${escapeHtml(s.body)}</div></div></div>`;
       }
       function toggleScience(h) {
         h.classList.toggle("open");
@@ -8222,9 +8267,9 @@
 <style>
 
 /* r61 #9 ｜ 鋼鐵粉絲 100 題 quiz
-   r61 ｜ Codex caught: mobile #fab-bar (z 400, dual-row ~150px tall) at bottom:0
-   → use @media to push FABs above on mobile */
-#fanQuizFab {
+   r62 #2 ｜ toni 紀律: 移除 floating FAB, 嵌入工具列 (sb-filter + fab-main-row) */
+#fanQuizFab { display: none !important; }
+#fanQuizFab_LEGACY_HIDDEN {
   position: fixed; bottom: 88px; right: 18px; z-index: 1280;
   width: 52px; height: 52px; border-radius: 50%;
   background: linear-gradient(135deg, #e44650, #aa1f2d);
@@ -8395,23 +8440,30 @@
     renderSidebarTitle();
   }
 
-  /* r61b #9 ｜ sidebar fan title display */
+  /* r61b #9 ｜ sidebar fan title display
+     r62 #2 ｜ sync new sb-fan-btn num + fab-fan icon best streak */
   function renderSidebarTitle() {
     const wrap = document.getElementById('sbFanTitle');
     const txt = document.getElementById('sbFanTitleText');
     const num = document.getElementById('sbFanTitleNum');
-    if (!wrap || !txt || !num) return;
     try {
       const title = localStorage.getItem(KEY_TITLE);
       const best = parseInt(localStorage.getItem(KEY_BEST) || '0', 10);
-      if (title && title !== '尚未開始' && best > 0) {
-        txt.textContent = title;
-        num.textContent = best + ' / 100';
-        wrap.classList.add('visible');
-      } else {
-        wrap.classList.remove('visible');
-        txt.textContent = '';
-        num.textContent = '';
+      if (wrap && txt && num) {
+        if (title && title !== '尚未開始' && best > 0) {
+          txt.textContent = title;
+          num.textContent = best + ' / 100';
+          wrap.classList.add('visible');
+        } else {
+          wrap.classList.remove('visible');
+          txt.textContent = '';
+          num.textContent = '';
+        }
+      }
+      /* r62 #2 ｜ sb-fan-btn 旁邊小 badge 顯示 best */
+      const sbFanNum = document.getElementById('sb-fan-btn-num');
+      if (sbFanNum) {
+        sbFanNum.textContent = best > 0 ? best : '';
       }
     } catch (e) {}
   }
