@@ -8018,5 +8018,506 @@
         if (window.console) console.log('[reader.html] a11y patch applied: div→button role + tabs ARIA + Esc-close');
       })();
     </script>
+
+<style>
+
+/* r61 #9 ｜ 鋼鐵粉絲 100 題 quiz
+   r61 ｜ Codex caught: mobile #fab-bar (z 400, dual-row ~150px tall) at bottom:0
+   → use @media to push FABs above on mobile */
+#fanQuizFab {
+  position: fixed; bottom: 88px; right: 18px; z-index: 1280;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: linear-gradient(135deg, #e44650, #aa1f2d);
+  border: 1px solid rgba(255, 220, 200, 0.4);
+  color: #fff; font-size: 22px; line-height: 50px; text-align: center;
+  cursor: pointer; box-shadow: 0 6px 18px rgba(20, 8, 12, 0.45);
+  transition: transform 0.2s ease;
+}
+@media (max-width: 767px) {
+  #fanQuizFab { bottom: calc(170px + env(safe-area-inset-bottom, 0px)); }
+}
+#fanQuizFab:hover { transform: scale(1.06); }
+#fanQuizFab:active { transform: scale(0.96); }
+#fanQuizFab .fq-badge {
+  position: absolute; top: -4px; right: -4px;
+  min-width: 22px; height: 22px; padding: 0 6px;
+  background: #fff; color: #aa1f2d; border-radius: 11px;
+  font-size: 11px; line-height: 22px; font-weight: 700;
+  border: 1px solid #aa1f2d;
+}
+#fanQuizFab .fq-badge[hidden] { display: none; }
+#fanQuizOverlay {
+  position: fixed; inset: 0; z-index: 1290;
+  background: rgba(8, 6, 10, 0.84); backdrop-filter: blur(18px);
+  display: none; align-items: center; justify-content: center;
+  padding: 20px;
+}
+#fanQuizOverlay.show { display: flex; }
+#fanQuizCard {
+  width: min(560px, 92vw); max-height: 88vh; overflow: auto;
+  background: linear-gradient(180deg, #1c1419 0%, #150e12 100%);
+  border: 1px solid rgba(228, 70, 80, 0.32);
+  border-radius: 6px; padding: 24px 22px 18px;
+  color: rgba(248, 232, 220, 0.92);
+  font-family: "Noto Serif TC", "Cormorant Garamond", Georgia, serif;
+}
+#fanQuizCard .fq-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+#fanQuizCard .fq-title { font-size: 16px; letter-spacing: 0.22em; text-indent: 0.22em; color: rgba(248, 168, 152, 0.95); }
+#fanQuizCard .fq-close { background: transparent; border: 0; color: rgba(248, 232, 220, 0.6); font-size: 22px; cursor: pointer; padding: 4px 10px; }
+#fanQuizCard .fq-close:hover { color: rgba(255, 220, 200, 0.95); }
+#fanQuizCard .fq-progress { font-size: 12px; letter-spacing: 0.16em; color: rgba(218, 184, 168, 0.7); margin-bottom: 8px; }
+#fanQuizCard .fq-tier-badge { display: inline-block; padding: 3px 12px; border: 1px solid rgba(228, 70, 80, 0.42); border-radius: 2px; font-size: 11px; letter-spacing: 0.22em; color: rgba(248, 168, 152, 0.92); margin-bottom: 14px; }
+#fanQuizCard .fq-question { font-size: 16px; line-height: 1.85; margin-bottom: 14px; color: rgba(248, 232, 220, 0.96); white-space: pre-wrap; }
+#fanQuizCard .fq-input { width: 100%; padding: 10px 14px; box-sizing: border-box; background: rgba(20, 12, 16, 0.55); border: 1px solid rgba(218, 184, 168, 0.32); border-radius: 2px; color: rgba(248, 232, 220, 0.96); font-size: 15px; font-family: inherit; letter-spacing: 0.05em; }
+#fanQuizCard .fq-input:focus { outline: 1px solid rgba(228, 70, 80, 0.55); }
+#fanQuizCard .fq-hint { font-size: 11px; color: rgba(184, 156, 144, 0.65); margin: 6px 0 14px; letter-spacing: 0.08em; }
+#fanQuizCard .fq-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+#fanQuizCard .fq-btn { padding: 9px 22px; border-radius: 2px; cursor: pointer; font-size: 13px; letter-spacing: 0.22em; font-family: inherit; background: rgba(228, 70, 80, 0.18); border: 1px solid rgba(228, 70, 80, 0.5); color: rgba(248, 168, 152, 0.95); }
+#fanQuizCard .fq-btn:hover { background: rgba(228, 70, 80, 0.32); }
+#fanQuizCard .fq-btn.fq-btn-ghost { background: transparent; color: rgba(218, 184, 168, 0.55); border-color: rgba(218, 184, 168, 0.32); }
+#fanQuizCard .fq-result { margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(218, 184, 168, 0.18); text-align: center; }
+#fanQuizCard .fq-result .fq-final-title { font-size: 24px; letter-spacing: 0.32em; text-indent: 0.32em; color: rgba(248, 168, 152, 0.96); margin: 8px 0; }
+#fanQuizCard .fq-result .fq-final-msg { font-size: 14px; line-height: 1.85; color: rgba(248, 232, 220, 0.86); margin: 12px 0; }
+#fanQuizCard .fq-result .fq-final-score { font-size: 12px; color: rgba(218, 184, 168, 0.65); letter-spacing: 0.16em; }
+#fanQuizCard .fq-feedback { font-size: 13px; color: rgba(248, 168, 152, 0.88); margin-top: 10px; }
+@media (prefers-reduced-motion: reduce) {
+  #fanQuizFab { transition: none; }
+}
+
+</style>
+
+<!-- r61 #9 ｜ 鋼鐵粉絲 100 題 quiz mode (toni 拍板) -->
+<button id="fanQuizFab" type="button" aria-label="鋼鐵粉絲 100 題挑戰" title="鋼鐵粉絲挑戰">
+  <span aria-hidden="true">☆</span>
+  <span class="fq-badge" id="fanQuizBadge" hidden></span>
+</button>
+<div id="fanQuizOverlay" role="dialog" aria-modal="true" aria-label="鋼鐵粉絲 100 題挑戰">
+  <div id="fanQuizCard">
+    <div class="fq-head">
+      <div class="fq-title">鋼鐵粉絲 100 題挑戰</div>
+      <button type="button" class="fq-close" id="fanQuizClose" aria-label="關閉">✕</button>
+    </div>
+    <div id="fanQuizBody"></div>
+  </div>
+</div>
+
+<script>
+/* r61 #9 ｜ 鋼鐵粉絲 100 題 quiz orchestrator */
+(function () {
+  const QUESTIONS = [{"q": "EP3：學長第一眼看到學妹， 在心裡說的那句話是？（填關鍵詞）", "a": ["徐若瑄", "也太像徐若瑄了吧"]}, {"q": "EP3：學妹在 LM402 教室， 叫學長走到哪一道門？", "a": ["後門"]}, {"q": "EP7：MSN 隱身上線後， 學長等幾秒才「現身」？", "a": ["7", "七", "7 秒", "七秒"]}, {"q": "EP4：奇異博士看過 14000605 種未來， 女兒是第幾種？", "a": ["14000606"]}, {"q": "EP9：學妹身高是幾公分？", "a": ["155"]}, {"q": "EP24：醫院急診室天花板有幾盞白光？", "a": ["7", "七", "7 盞", "七盞"]}, {"q": "EP12：學妹 2005 年用的手機是什麼牌？", "a": ["Nokia", "nokia"]}, {"q": "EP14：學妹發出第一封「生日快樂」訊息給學長， 是哪一年？", "a": ["2022"]}, {"q": "EP6：學妹要求「不加蛋、 不加番茄醬、 半糖、 溫的」， 是什麼飲料？", "a": ["奶", "牛奶", "豆奶"]}, {"q": "EP9：學長與學妹去敦化南路免費吃到飽， 是什麼料理？", "a": ["泰式", "泰國", "泰式料理"]}, {"q": "EP13：學妹打電話跟學長提分手， 是哪一年月日？（YYYY-MM-DD）", "a": ["2005-12-22", "2005/12/22"]}, {"q": "EP13：學長與學妹原本約好參加聖誕晚會在哪一棟？", "a": ["中美堂"]}, {"q": "EP17：學妹失憶後醒來看到日曆， 是哪一天？", "a": ["2006-02-07", "2006/2/7", "2006/02/07"]}, {"q": "EP24：學妹 2006 年小年夜暈倒在哪裡前面？", "a": ["建國中學"]}, {"q": "EP12：2005-10-16 學妹在 MSN 約學長隔天哪裡？", "a": ["LM402"]}, {"q": "EP21：女兒幾歲生日學會控制穿越能力？", "a": ["18", "十八", "18 歲", "十八歲"]}, {"q": "EP21：女兒穿越時陪在身邊的時空老師叫什麼？", "a": ["命運阿嬤"]}, {"q": "EP23：命運阿嬤送女兒的 7 歲生日禮物是？", "a": ["時空手錶"]}, {"q": "EP22：女兒用什麼工具描出紅線路徑？", "a": ["時空螢光筆"]}, {"q": "EP23：命運阿嬤送女兒的另一樣道具， 用來貼時間線、 變色提醒？", "a": ["時空便利貼"]}, {"q": "EP34：女兒戴上什麼道具才聽到把拔與阿姨心裡穿梭的聲音？", "a": ["時空耳機"]}, {"q": "EP21：在 2006 年初阿姨在把拔機車前面貼了同一張紙條幾次？", "a": ["2", "兩", "兩次", "2 次"]}, {"q": "EP21：阿姨第一次貼紙條時的表情是？（哭 / 笑）", "a": ["哭"]}, {"q": "EP15：把拔提到「同時存在」的時空維度是？", "a": ["四維", "四維空間"]}, {"q": "EP11：愛因斯坦提到的世界， 離中心越近時間會怎樣？", "a": ["越慢", "慢", "過得越慢"]}, {"q": "EP18：學長 2023 年 6 月遇到什麼意外？", "a": ["車禍", "倒車", "警匪", "撞", "倒著開車"]}, {"q": "EP4：把拔遊戲高手， 但身材怎樣？（女兒原話形容）", "a": ["胖", "胖了點"]}, {"q": "EP10：女兒問阿姨「妳怎麼會喜歡他」， 把拔搶答的理由？", "a": ["暈船"]}, {"q": "EP9：學長 21 歲時學妹幾歲？（暗示）", "a": ["20", "二十", "大二"]}, {"q": "EP3：學妹從教室站起來走出來時， 身邊有什麼？", "a": ["一群人", "群人"]}, {"q": "EP3 + EP12 + EP23 + EP38 反覆出現的「一眼瞬間」鐘響時間？（HH:MM）", "a": ["11:00", "11", "十一"]}, {"q": "EP25：把拔 NAS 容量是多少 TB？", "a": ["44", "44TB", "44 TB"]}, {"q": "EP25：把拔 iCloud 容量是多少 TB？", "a": ["2.2", "2.2TB", "2.2 TB"]}, {"q": "EP11/23/28 反覆出現的物理學名詞？（描述兩心相依）", "a": ["量子糾纏", "糾纏"]}, {"q": "EP9：學長把學妹比喻為哪一位武俠角色？（給過張無忌一劍）", "a": ["周芷若"]}, {"q": "EP19：學長提早入伍進入哪一部隊？", "a": ["海軍陸戰隊", "陸戰隊"]}, {"q": "EP17：學長退伍後與學妹見面在哪一家餐廳？", "a": ["陶板屋"]}, {"q": "EP27：2025 年夏天， 學長與學妹去南機場夜市哪一家水餃店？", "a": ["來來"]}, {"q": "EP27：來來水餃他們點了幾顆韭菜水餃？", "a": ["25", "二十五", "25 顆"]}, {"q": "EP30：把拔少年離家後， 大姨婆問他哪一句話？", "a": ["肚子會餓嗎", "肚子餓", "肚子"]}, {"q": "EP30：大姨婆帶把拔吃哪一家早餐？", "a": ["永和豆漿", "永和"]}, {"q": "EP31：學長大二時養的迷你兔叫什麼名字？", "a": ["阿Q", "AQ", "Q"]}, {"q": "EP31：學長在哪個論壇徵求兔子的認養人？", "a": ["PTT"]}, {"q": "EP15：每一個決定就會產生什麼？", "a": ["平行時空", "平行世界", "時空"]}, {"q": "EP35：阿姨高一裙邊縫到膝上幾指寬？", "a": ["兩指", "2", "2 指"]}, {"q": "EP35：阿姨高一參加什麼校隊？", "a": ["羽球", "羽球隊"]}, {"q": "EP35：阿姨高二在朝會擔任什麼？", "a": ["司儀"]}, {"q": "EP33：把拔國一深夜離家， 把外套怎麼穿？", "a": ["反穿", "翻", "藏起來"]}, {"q": "EP25：把拔小時候蒐集什麼亮卡？", "a": ["七龍珠", "龍珠"]}, {"q": "EP10：把拔最愛的 BLACKPINK 成員是？", "a": ["Lisa", "lisa"]}, {"q": "EP28：苦盡柑來遇見你 影集中扮演媽媽和長大後女兒的是哪位韓國演員？", "a": ["IU"]}, {"q": "EP29：2022 年秋天， 學長與學妹重逢的「老地方」緊挨著什麼？", "a": ["警局"]}, {"q": "EP29：學長媽媽塞給學妹的咖啡品牌？", "a": ["G7"]}, {"q": "EP19：2024 年那年發生什麼大事件？", "a": ["求婚", "結婚", "託付"]}, {"q": "EP12：學妹希望學長能像「以前」一樣， 用手替她做什麼？", "a": ["擦眼淚", "擦淚"]}, {"q": "EP9：學妹蹲坐在哪一座橋下放空？", "a": ["華江", "華江橋"]}, {"q": "EP9：學妹說「我想在 2005 年就跟他長相思守」， 但是不可以， 因為過程需要經歷幾年？", "a": ["17", "十七"]}, {"q": "EP21：女兒在哪一年初看到阿姨貼紙條兩次的場景？", "a": ["2006"]}, {"q": "EP36：把拔 2018 年在台中火車站「我趕上了」， 是趕上女兒幾秒的擁抱？", "a": ["30", "三十", "30 秒", "三十秒"]}, {"q": "EP36：把拔與女兒之間的紅線顏色是？", "a": ["粉紅", "粉紅色"]}, {"q": "EP36：EP36 把拔對女兒的承諾的核心畫面是？（5 字短語）", "a": ["月台狂奔", "拉得再長也不會斷", "趕上了"]}, {"q": "EP37：女兒第一次寫給把拔的父親節禮物是用什麼字？", "a": ["注音", "ㄅㄆㄇ"]}, {"q": "EP37：女兒透明片上寫的那句話是？（注音對應的中文）", "a": ["把拔我會想你的", "我會想你"]}, {"q": "EP37：命運阿嬤說把拔是「不能穿越的人」， 因為他要怎樣？", "a": ["相信", "讓心變成真的", "珍惜"]}, {"q": "EP37：女兒與把拔的秘密手勢有幾個動作？", "a": ["4", "四", "4 個", "四個"]}, {"q": "EP37：秘密手勢的最後一個動作是？", "a": ["讚", "大拇指"]}, {"q": "EP12：學妹 2005 年寫了什麼留給學長？（地點在學長機車上）", "a": ["紙條", "我走了"]}, {"q": "EP12：紙條原文是？（包含關鍵動詞）", "a": ["我走了你要好好照顧自己", "我走了", "好好照顧自己"]}, {"q": "EP26：學妹的決定句「我不是不想等而是？」", "a": ["等太久了", "等太久"]}, {"q": "EP28：學長與學妹之間的相依關係用什麼物理術語？", "a": ["量子糾纏"]}, {"q": "EP38：意識菜市場有幾個年紀的「我」？", "a": ["5", "五"]}, {"q": "EP38：意識菜市場 5 個年紀中最年長的是幾歲？", "a": ["49", "四十九"]}, {"q": "EP38：意識菜市場最年輕的意識是幾歲？", "a": ["18", "十八"]}, {"q": "EP38：29 歲身體內承載的意識是幾歲？", "a": ["18", "十八"]}, {"q": "EP38：學妹 2005 一眼瞬間時穿什麼衣服？", "a": ["白色長袖襯衫", "白襯衫", "白色襯衫"]}, {"q": "EP38：學妹 2005 一眼瞬間時下半身穿什麼？", "a": ["牛仔短褲", "短褲"]}, {"q": "EP38：學妹 33 歲說「喜歡不是？」的下一句是？", "a": ["佔有", "靠近要經過同意"]}, {"q": "EP38：49 歲學妹回憶她笑學長像？", "a": ["員外"]}, {"q": "EP38：49 歲學妹自喻為？", "a": ["丫鬟"]}, {"q": "EP32：阿姨第一次意識穿越是 1994 年哪一個典禮？", "a": ["畢業", "畢業典禮"]}, {"q": "EP32：阿姨第一次意識穿越在哪個地點外面？", "a": ["訓導處"]}, {"q": "EP35：阿姨在哪邊發現自己被選入「乾乾淨淨的舞台光」？", "a": ["體育館", "羽球", "操場"]}, {"q": "EP35：阿姨高二「白手套在晨光裡起霧」場景是？", "a": ["朝會", "司儀", "升旗"]}, {"q": "EP35：把拔七歲時在大姨婆家被縫紉機什麼？", "a": ["針", "扎到", "戳到", "刺到"]}, {"q": "EP32：阿姨在 1994 訓導處外把指尖貼在哪裡像在搜尋命運密碼？", "a": ["脈搏"]}, {"q": "EP38：鐘響時間是？（HH:MM）", "a": ["11:00", "11"]}, {"q": "EP38：學長第一次見到學妹， 因為什麼還沒學會看穿人類？", "a": ["3秒", "三秒", "三秒看穿"]}, {"q": "EP38：紅線在阿姨第一次穿越時的觸發物是？（畢業歌的歌詞起首）", "a": ["畢業歌", "傷離別"]}, {"q": "EP10：女兒在公園問阿姨「妳跑得快不快」， 阿姨回什麼？", "a": ["羽球", "羽球隊", "我以前羽球隊的"]}, {"q": "EP38：學妹 39 歲說「先留在座位上， 把這一排桌子當成妳的什麼」？", "a": ["界線"]}, {"q": "EP19：學長提早入伍進的兩棲是什麼部隊？", "a": ["蛙人", "兩棲蛙人"]}, {"q": "EP35：學長的服裝特徵：白 T、 藍牛仔褲、 加什麼？", "a": ["眼鏡", "粗框眼鏡"]}, {"q": "EP35：學長 2005 的髮型是？", "a": ["飛機頭"]}, {"q": "EP4：女兒幼稚園時形容把拔是什麼超人？", "a": ["3C", "3C 超人"]}, {"q": "EP1：把拔笑說「我海軍陸戰隊」的目的是？", "a": ["抱妳一輩子", "永遠抱"]}, {"q": "EP16：女兒從幾年級開始知道把拔與媽媽分開？", "a": ["幼稚園"]}, {"q": "EP10：女兒大五歲的大哥的金句「你不是一直要她一直陪在你身邊」， 後半句的關鍵詞？", "a": ["想起", "她會想起你"]}, {"q": "EP30：把拔少年離家那晚在哪裡睡覺？", "a": ["廟", "大廟", "神桌下"]}, {"q": "EP25：學長與學妹「最初的時間點」（紙條未貼前）所對應的午夜是？", "a": ["小年夜"]}, {"q": "全集累積最終題：請完整寫出 EP3 學長心裡那句話（不論大小寫、 標點符號）。", "a": ["也太像徐若瑄了吧"]}];
+  const TIERS = [{"min": 0, "max": 0, "title": "尚未開始", "msg": "歡迎進入鋼鐵粉絲模式。 連續答對， 答錯則終止。"}, {"min": 1, "max": 10, "title": "紅線新手", "msg": "繼續加油！"}, {"min": 11, "max": 30, "title": "紅線老手", "msg": "很棒喔！"}, {"min": 31, "max": 50, "title": "紅線專家", "msg": "你看很多遍了對不對！"}, {"min": 51, "max": 70, "title": "紅線時空者", "msg": "謝謝你支持《時間裡的兩個妳》， 謝謝你也喜歡。"}, {"min": 71, "max": 90, "title": "女主角", "msg": "你是不是女兒本人或學妹本人？"}, {"min": 91, "max": 99, "title": "男主角", "msg": "你是不是 toni 本人？"}, {"min": 100, "max": 100, "title": "時間裡的兩個妳", "msg": "你一定就是 toni。"}];
+  const KEY_PROGRESS = 'redtime_fan_quiz_progress';
+  const KEY_TITLE = 'redtime_fan_title';
+  const KEY_BEST = 'redtime_fan_best_streak';
+  let state = { idx: 0, finished: false };
+
+  function clearChildren(el) {
+    while (el && el.firstChild) el.removeChild(el.firstChild);
+  }
+  function loadState() {
+    /* r61 ｜ Codex caught: validate localStorage to avoid bad-state crash */
+    try {
+      const raw = localStorage.getItem(KEY_PROGRESS);
+      if (raw) {
+        const p = JSON.parse(raw);
+        if (Number.isInteger(p.idx) && p.idx >= 0 && p.idx <= QUESTIONS.length) {
+          state.idx = p.idx;
+        }
+        if (typeof p.finished === 'boolean') state.finished = p.finished;
+      }
+    } catch (e) {}
+  }
+  function saveState() {
+    try { localStorage.setItem(KEY_PROGRESS, JSON.stringify(state)); } catch (e) {}
+  }
+  function saveTitle(t, n) {
+    try {
+      localStorage.setItem(KEY_TITLE, t);
+      const bestRaw = localStorage.getItem(KEY_BEST);
+      const best = bestRaw ? parseInt(bestRaw, 10) : 0;
+      if (n > best) localStorage.setItem(KEY_BEST, String(n));
+    } catch (e) {}
+  }
+  function currentTitle(n) {
+    for (let i = TIERS.length - 1; i >= 0; i--) {
+      const t = TIERS[i];
+      if (n >= t.min && n <= t.max) return t;
+    }
+    return TIERS[0];
+  }
+  function normalize(s) {
+    return (s || '').toString().trim().toLowerCase()
+      .replace(/[\s，,．.。、；;：:！!？?]/g, '');
+  }
+  function judge(ans, accepts) {
+    /* r61 ｜ Codex caught: too-loose match.
+       Strict mode for short answers (≤4 chars) or digits/dates: must match exactly
+       OR user-input must contain exact answer.
+       Lenient mode for longer prose: reverse-substring requires ≥3 chars and ≥50%. */
+    const n = normalize(ans);
+    if (!n) return false;
+    const isDigitOrDate = function (s) { return /^[0-9./-]+$/.test(s); };
+    for (const a of accepts) {
+      const na = normalize(a);
+      if (!na) continue;
+      if (n === na) return true;
+      const isStrict = na.length <= 4 || isDigitOrDate(na);
+      if (isStrict) {
+        if (n.includes(na)) return true;
+      } else {
+        if (n.includes(na)) return true;
+        if (n.length >= 3 && n.length >= Math.ceil(na.length / 2) && na.includes(n)) return true;
+      }
+    }
+    return false;
+  }
+
+  function renderBadge() {
+    const fab = document.getElementById('fanQuizFab');
+    const badge = document.getElementById('fanQuizBadge');
+    if (!fab || !badge) return;
+    try {
+      const title = localStorage.getItem(KEY_TITLE);
+      if (title && title !== '尚未開始') {
+        const best = parseInt(localStorage.getItem(KEY_BEST) || '0', 10);
+        badge.hidden = false;
+        badge.textContent = best;
+        fab.title = '鋼鐵粉絲挑戰 · ' + title + ' (' + best + ')';
+      } else {
+        badge.hidden = true;
+      }
+    } catch (e) {}
+  }
+
+  /* r61 ｜ Codex caught: focus trap + return for a11y */
+  let _quizPrevFocus = null;
+  function open() {
+    _quizPrevFocus = document.activeElement;
+    document.getElementById('fanQuizOverlay').classList.add('show');
+    renderBody();
+    setTimeout(function () {
+      const closeBtn = document.getElementById('fanQuizClose');
+      if (closeBtn) closeBtn.focus();
+    }, 60);
+  }
+  function close() {
+    document.getElementById('fanQuizOverlay').classList.remove('show');
+    if (_quizPrevFocus && typeof _quizPrevFocus.focus === 'function') {
+      try { _quizPrevFocus.focus(); } catch (e) {}
+    }
+    _quizPrevFocus = null;
+  }
+
+  function makeDiv(cls, txt) {
+    const d = document.createElement('div');
+    if (cls) d.className = cls;
+    if (txt !== undefined) d.textContent = txt;
+    return d;
+  }
+
+  function renderBody() {
+    const body = document.getElementById('fanQuizBody');
+    if (!body) return;
+    if (state.finished || state.idx >= QUESTIONS.length) {
+      renderFinal(body, null);
+      return;
+    }
+    const n = state.idx;
+    const q = QUESTIONS[n];
+    const tier = currentTitle(n);
+    clearChildren(body);
+    body.appendChild(makeDiv('fq-progress', '第 ' + (n + 1) + ' 題 / 共 ' + QUESTIONS.length + ' 題 · 當前累積 ' + n + ' 題答對'));
+    body.appendChild(makeDiv('fq-tier-badge', n >= 1 ? '稱號 · ' + tier.title : '尚未開始 · 答對第 1 題啟動'));
+    body.appendChild(makeDiv('fq-question', q.q));
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'fq-input';
+    input.id = 'fanQuizInput';
+    input.placeholder = '輸入你的答案';
+    input.autocomplete = 'off';
+    input.spellcheck = false;
+    body.appendChild(input);
+    body.appendChild(makeDiv('fq-hint', '提示： 不區分大小寫、 空白、 標點。 接受關鍵詞含答案即可。'));
+    const actions = makeDiv('fq-actions');
+    const reset = document.createElement('button');
+    reset.type = 'button';
+    reset.className = 'fq-btn fq-btn-ghost';
+    reset.textContent = '重來';
+    reset.onclick = function () {
+      if (!confirm('確定重新開始？ 進度與稱號會清空。')) return;
+      state = { idx: 0, finished: false };
+      saveState();
+      try { localStorage.removeItem(KEY_TITLE); } catch (e) {}
+      renderBody();
+      renderBadge();
+    };
+    actions.appendChild(reset);
+    const submit = document.createElement('button');
+    submit.type = 'button';
+    submit.className = 'fq-btn';
+    submit.textContent = '提交答案';
+    submit.onclick = handleSubmit;
+    actions.appendChild(submit);
+    body.appendChild(actions);
+    setTimeout(function () { input.focus(); }, 80);
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleSubmit();
+      }
+    });
+  }
+
+  function handleSubmit() {
+    const input = document.getElementById('fanQuizInput');
+    if (!input) return;
+    const ans = input.value;
+    if (!ans.trim()) {
+      input.focus();
+      return;
+    }
+    const q = QUESTIONS[state.idx];
+    const ok = judge(ans, q.a);
+    if (ok) {
+      state.idx += 1;
+      const tier = currentTitle(state.idx);
+      saveTitle(tier.title, state.idx);
+      if (state.idx >= QUESTIONS.length) {
+        state.finished = true;
+      }
+      saveState();
+      renderBody();
+      renderBadge();
+    } else {
+      state.finished = true;
+      saveState();
+      renderFinal(document.getElementById('fanQuizBody'), { wrongAt: state.idx + 1, wrongAns: ans, accepts: q.a });
+    }
+  }
+
+  function renderFinal(body, wrongInfo) {
+    const n = state.idx;
+    const tier = currentTitle(n);
+    clearChildren(body);
+    body.appendChild(makeDiv('fq-progress', (n === 100 ? '🏆 全 100 題通關 🏆' : (wrongInfo ? '挑戰終止 · 第 ' + wrongInfo.wrongAt + ' 題答錯' : '挑戰結束'))));
+    const res = makeDiv('fq-result');
+    res.appendChild(makeDiv('fq-final-title', '☆ ' + tier.title + ' ☆'));
+    res.appendChild(makeDiv('fq-final-msg', tier.msg));
+    res.appendChild(makeDiv('fq-final-score', '連續答對：' + n + ' 題'));
+    if (wrongInfo) {
+      res.appendChild(makeDiv('fq-feedback', '你的答案： 「' + wrongInfo.wrongAns + '」 · 參考答案： 「' + wrongInfo.accepts[0] + '」'));
+    }
+    const actions = makeDiv('fq-actions');
+    const again = document.createElement('button');
+    again.type = 'button';
+    again.className = 'fq-btn';
+    again.textContent = '再來一次';
+    again.onclick = function () {
+      state = { idx: 0, finished: false };
+      saveState();
+      try { localStorage.removeItem(KEY_TITLE); } catch (e) {}
+      renderBody();
+      renderBadge();
+    };
+    actions.appendChild(again);
+    res.appendChild(actions);
+    body.appendChild(res);
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    loadState();
+    renderBadge();
+    const fab = document.getElementById('fanQuizFab');
+    if (fab) fab.addEventListener('click', open);
+    const closeBtn = document.getElementById('fanQuizClose');
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    const overlay = document.getElementById('fanQuizOverlay');
+    if (overlay) overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) close();
+    });
+    document.addEventListener('keydown', function (e) {
+      const ov = document.getElementById('fanQuizOverlay');
+      if (e.key === 'Escape' && ov && ov.classList.contains('show')) close();
+    });
+  });
+
+  window.__FAN_QUIZ__ = {
+    open: open, close: close,
+    reset: function () {
+      try {
+        localStorage.removeItem(KEY_PROGRESS);
+        localStorage.removeItem(KEY_TITLE);
+        localStorage.removeItem(KEY_BEST);
+      } catch (e) {}
+      state = { idx: 0, finished: false };
+      renderBadge();
+    },
+    state: function () { return Object.assign({}, state); },
+    version: 'r61-1'
+  };
+})();
+</script>
+
+
+<style>
+
+/* r61 #10 ｜ 物理科普一鍵展開 */
+#scienceFab {
+  position: fixed; bottom: 152px; right: 18px; z-index: 1280;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: linear-gradient(135deg, #4a8a8d, #2a565e);
+  border: 1px solid rgba(180, 224, 218, 0.4);
+  color: #fff; font-size: 20px; line-height: 50px; text-align: center;
+  cursor: pointer; box-shadow: 0 6px 18px rgba(8, 20, 18, 0.45);
+  transition: transform 0.2s ease;
+}
+@media (max-width: 767px) {
+  #scienceFab { bottom: calc(234px + env(safe-area-inset-bottom, 0px)); }
+}
+#scienceFab:hover { transform: scale(1.06); }
+#scienceFab:active { transform: scale(0.96); }
+#scienceOverlay {
+  position: fixed; inset: 0; z-index: 1285;
+  background: rgba(4, 8, 12, 0.84); backdrop-filter: blur(18px);
+  display: none; align-items: center; justify-content: center;
+  padding: 20px;
+}
+#scienceOverlay.show { display: flex; }
+#scienceCard {
+  width: min(680px, 94vw); max-height: 88vh; overflow: auto;
+  background: linear-gradient(180deg, #0e1a1c 0%, #0a1418 100%);
+  border: 1px solid rgba(120, 196, 198, 0.32);
+  border-radius: 6px; padding: 24px 22px 18px;
+  color: rgba(232, 244, 240, 0.92);
+  font-family: "Noto Serif TC", "Cormorant Garamond", Georgia, serif;
+}
+#scienceCard .sc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+#scienceCard .sc-title { font-size: 16px; letter-spacing: 0.22em; text-indent: 0.22em; color: rgba(168, 220, 220, 0.95); }
+#scienceCard .sc-close { background: transparent; border: 0; color: rgba(232, 244, 240, 0.6); font-size: 22px; cursor: pointer; padding: 4px 10px; }
+#scienceCard .sc-close:hover { color: rgba(220, 244, 244, 0.95); }
+#scienceCard .sc-intro { font-size: 13px; line-height: 1.85; color: rgba(184, 220, 220, 0.78); margin-bottom: 18px; letter-spacing: 0.06em; }
+#scienceCard .sc-toc { margin: 0 0 18px; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
+#scienceCard .sc-toc li button { padding: 4px 12px; background: rgba(120, 196, 198, 0.10); border: 1px solid rgba(120, 196, 198, 0.32); border-radius: 2px; color: rgba(184, 220, 220, 0.85); font-size: 11px; letter-spacing: 0.10em; font-family: inherit; cursor: pointer; }
+#scienceCard .sc-toc li button:hover { background: rgba(120, 196, 198, 0.22); color: rgba(232, 244, 240, 0.96); }
+#scienceCard .sc-entry { margin-bottom: 20px; padding-bottom: 18px; border-bottom: 1px solid rgba(120, 196, 198, 0.15); }
+#scienceCard .sc-entry:last-child { border-bottom: 0; }
+#scienceCard .sc-entry-ep { font-size: 11px; letter-spacing: 0.32em; text-indent: 0.32em; color: rgba(184, 220, 220, 0.6); margin-bottom: 4px; text-transform: uppercase; }
+#scienceCard .sc-entry-topic { font-size: 15px; letter-spacing: 0.06em; color: rgba(220, 244, 240, 0.96); margin-bottom: 10px; line-height: 1.55; }
+#scienceCard .sc-entry-body { font-size: 13.5px; line-height: 1.95; color: rgba(220, 236, 232, 0.88); letter-spacing: 0.03em; }
+@media (prefers-reduced-motion: reduce) {
+  #scienceFab { transition: none; }
+}
+
+</style>
+
+<!-- r61 #10 ｜ 物理／天文／量子 科普模組 (toni 拍板) -->
+<button id="scienceFab" type="button" aria-label="物理科普 一鍵展開" title="物理科普">
+  <span aria-hidden="true">⚛</span>
+</button>
+<div id="scienceOverlay" role="dialog" aria-modal="true" aria-label="物理科普一鍵展開">
+  <div id="scienceCard">
+    <div class="sc-head">
+      <div class="sc-title">⚛ 物理／天文／量子 科普一鍵展開</div>
+      <button type="button" class="sc-close" id="scienceClose" aria-label="關閉">✕</button>
+    </div>
+    <div class="sc-intro">
+      EP 中出現的物理概念， 從多重世界詮釋、 量子糾纏、 重力時間膨脹， 到神經科學的瀕死記憶與心理時間。 每集對應一個科普小單元， 不為了賣弄物理， 而是讓 toni 的敘事學選擇更被看清。
+    </div>
+    <ul class="sc-toc" id="scienceToc"></ul>
+    <div id="scienceList"></div>
+  </div>
+</div>
+
+<script>
+/* r61 #10 ｜ 物理科普一鍵展開 orchestrator */
+(function () {
+  const SCIENCE = [{"ep": 4, "topic": "多重世界詮釋 (Many-Worlds Interpretation, MWI)", "body": "EP4 把拔說「奇異博士當時看過 14000605 種未來， 而妳就是時光中無可取代的第 14000606 種」。 這對應到量子力學的多重世界詮釋（Hugh Everett, 1957）： 每一次量子測量都會讓宇宙分裂成多個版本， 每個版本對應一種測量結果。 在這個圖景裡， 任何「會發生」的事都會在某個分支真實發生。 漫威電影裡讓奇異博士「看過 14000605 種未來」， 就是這個多重宇宙的通俗化版本。 把拔加上的那「無可取代的 14000606 種」， 是把女兒從統計分支中拉出來、 用語言確認唯一性 — 在無限分支中宣稱「妳就是這一個」。"}, {"ep": 7, "topic": "MSN 隱身 7 秒 — 訊號延遲 vs 心理錨點", "body": "EP7 「我都會等妳上線 7 秒後， 我再現身」。 7 秒不是工程上的延遲（MSN 在線狀態本質上是即時的）， 而是心理上的「錨」： 把第一個訊號延後一個可預測的時間窗， 創造出「我永遠在你出現後 7 秒登場」的儀式感。 心理學上， 這種「可預期但帶有等待」的訊號模式， 比立即回應更容易留下記憶痕跡 — 對應到「間歇增強」(intermittent reinforcement) 的學習效應。"}, {"ep": 11, "topic": "廣義相對論 — 重力時間膨脹", "body": "EP11 學妹說「離世界的中心越近， 時間會過得越慢」。 這對應到愛因斯坦廣義相對論的「重力時間膨脹」(gravitational time dilation)： 重力場越強， 時間流逝越慢。 在地球， GPS 衛星每天比地表時鐘快約 38 微秒， 已是工程上必須校正的量。 在黑洞事件視界附近， 從外部觀察者看， 時間流會逼近無限慢。 學妹用這句話描述「每次的牽手， 一瞬間像永遠」— 把愛轉成重力。"}, {"ep": 12, "topic": "蝴蝶效應 / 時間線敏感性", "body": "EP12 「時間線的破裂， 會產生多大的蝴蝶效應， 時間恐懼那一切」。 蝴蝶效應出自氣象學家 Edward Lorenz 1972 的演講， 指非線性動力系統對初始條件高度敏感： 巴西一隻蝴蝶拍翅， 可能在德州造成龍捲風。 學妹擔心一個擁抱「本該不存在」就會撕裂未來， 是把時間線當成 Lorenz 吸子在敘事 — 一個微小擾動可被放大成完全不同的軌跡。"}, {"ep": 14, "topic": "黑洞奇異點 — 時間方向的終結", "body": "EP14 「我就會掉入一個虛無的時間黑洞。 直到地球的時間過去 17 年， 才能驗證這一次修正是否成功。」 黑洞的「奇異點」是時空曲率發散的位置， 古典廣義相對論中時間方向會在那裡終結。 學妹的「時間黑洞」是文學化挪用： 不是物理意義的黑洞， 而是一段「無法被外界觀察、 也無法回頭」的等待。 在這 17 年裡， 她沒有訊號、 沒有時鐘， 只有抵達後才能驗證的命運修正。"}, {"ep": 15, "topic": "閔可夫斯基時空 / 四維空間", "body": "EP15 「過去、 現在及未來是『同時』存在， 那代表只有眼前是客觀的事實」， 把拔在這裡帶入「四維空間」（Minkowski spacetime, 1908）： 空間三維 + 時間一維。 在四維方塊宇宙論（block universe）中， 所有時刻同時存在， 只是我們的意識在其中沿著時間方向「滑動」。 哲學上對應 B 系列時間（B-series）。 把拔說「活在當下， 才是王道」是 A 系列（A-series）時間觀的反叛 — 在方塊宇宙裡， 「當下」並沒有特別優先， 但對人類經驗來說， 它是唯一的觸點。"}, {"ep": 18, "topic": "神經科學 — 將死記憶高速回放", "body": "EP18 學長半夜遇到警匪追逐撞車， 「人生跑馬燈跑了 10 秒鐘」。 神經科學研究（如 Greyson 1983, van Lommel 2001 ）發現， 瀕死或極端壓力下大腦會出現「life review」現象： 海馬迴與顳葉皮層在短時間內以異常高速度重播長期記憶。 主觀上時間被拉長， 是因為大腦在單位時間內處理了異常密集的資訊。 學長 10 秒回憶了「跟學妹的一生」， 是這個神經機制的文學描寫。"}, {"ep": 21, "topic": "自由意志 vs 決定論 — 命運阿嬤的悖論", "body": "EP21 命運阿嬤說「不能干預任何事件， 也不能和任何人有互動」。 這對應到哲學上的「自由意志 vs 決定論」千年辯論： 如果未來已存在（block universe）， 那「選擇」是否還有意義？ 命運阿嬤的規則是相容論（compatibilism）的一種敘事化版本： 觀察者可以看見全部時間線， 但不能改變因果鏈， 因為改變會撕裂讓觀察者得以存在的那條線（grandfather paradox）。 女兒「在劇本上做記號」， 但不能「改劇本」， 就是這個悖論的縫合方式。"}, {"ep": 22, "topic": "量子糾纏 (Quantum Entanglement) — 紅線的物理對位", "body": "EP22 命運阿嬤說「紅線代表命中注定」。 在物理學中最接近這個概念的是「量子糾纏」： 兩個粒子在製備後共享波函數， 即使相距百萬光年， 對其中一個的測量會瞬時決定另一個的狀態。 Einstein 嘲諷為「spooky action at a distance」， 但 Bell 不等式（1964）+ Aspect 實驗（1982）+ 2022 諾貝爾物理獎得主 Clauser/Aspect/Zeilinger 已實驗證實這是物理真實。 但糾纏不能用來傳遞訊息（no-signaling theorem）， 所以紅線只能「記得」， 不能「傳話」 — 這正是學妹必須穿越 17 年才能驗證命運的原因。"}, {"ep": 23, "topic": "量子糾纏 explicit — EPR 與心的版本", "body": "EP23 女兒說「把拔和阿姨就是一種量子糾纏」。 1935 年 EPR 論文（Einstein-Podolsky-Rosen）提出這個假想實驗試圖反駁量子力學完備性， 結果反而開啟了量子訊息理論。 EP23 把這個延伸成「只要把拔一個心碎， 阿姨就會在遠方加倍難過」 — 在物理上， 糾纏粒子的測量結果是相關的（correlated）， 不是因果的（causal）。 你不能「讓」對方難過， 但兩人狀態在被觀察時總是合奏。 女兒「就是兩顆悲傷的心裡， 唯一會發亮的光點」， 是把糾纏關係的觀察者效應放進親情。"}, {"ep": 28, "topic": "no-signaling theorem — 量子糾纏不能傳訊息", "body": "EP28 「我們是量子糾纏， 彼此狀態相依， 卻沒有訊息穿越的捷徑」。 這精準對應到量子力學中的「no-signaling theorem」（不可傳信定理）： 糾纏無法被用來進行超光速通信。 為什麼？ 因為對糾纏粒子的測量結果在你這邊看起來是完全隨機的， 只有當你拿到對方的測量結果做對照， 才能看到關聯。 對方無法「主動傳訊號」 — 否則整個相對論的因果結構會崩潰。 學長與學妹 2018-2022 的 4 年靜默， 就是糾纏存在但無法通訊的物理寓言。"}, {"ep": 32, "topic": "心理時間 vs 物理時間 — 1994 / 2005 的並列", "body": "EP32 阿姨 1994 高三第一次意識穿越， 跳到 2005 LM402。 物理時間是線性、 單向、 不可逆的（thermodynamic arrow of time）。 但「心理時間」（William James 1890 的「specious present」）是有厚度的： 任何「現在」實際上包含過去的記憶和未來的預期。 EP32 的穿越是把心理時間的厚度具象化 — 阿姨在 1994 的當下， 已經攜帶 2005 LM402 的「未來記憶」。 神經科學上， 海馬迴在記憶提取時的活動模式， 與經歷該事件時非常接近 — 記憶與時間旅行共用同一個神經迴路。"}, {"ep": 36, "topic": "拉得再長也不會斷的線 — 量子糾纏的宏觀寓言", "body": "EP36 「我們之間， 就還有一條拉得再長也不會斷的線」。 在量子力學裡， 糾纏關係不受空間距離影響 — 你把糾纏粒子分開到太陽系兩端， 糾纏依然存在。 但糾纏是「脆弱」的： 環境噪音（decoherence）會在毫秒級別摧毀它。 文學上， 「拉得再長也不會斷的線」是用人類關係的尺度去想像一個量子尺度才存在的純粹相依 — 父女之間的線之所以「不會斷」， 是因為一個被觀察者持續觀察、 持續記得的糾纏關係。 月台狂奔的 30 秒擁抱， 是觀察的瞬間 — 也是糾纏被確認的瞬間。"}, {"ep": 37, "topic": "快子 (Tachyon) — 比光速快的假想粒子", "body": "EP37 把拔把「我也會想妳的」寫成「快子（比光速快）」。 快子是 1967 年由 Gerald Feinberg 提出的假想粒子， 它的靜止質量是虛數， 從未被實驗發現。 在相對論中， 快子可以從未來向過去傳遞訊息， 造成因果悖論（Tolman antitelephone）。 把拔把「思念」寫成快子， 等於宣告： 思念可以違反光速、 違反因果方向、 從未來抵達過去。 這是 EP37「把拔不能穿越， 是為了讓心變成真的」的反命題 — 物理上不可能， 詩學上必須。"}, {"ep": 38, "topic": "多重自我 / 意識菜市場 — 心理學的對位", "body": "EP38 學妹 29 歲身體裡承載 18 歲意識， 同時「菜市場」裡擠進 29/33/39/49 歲的「我」。 心理學上對應「多重自我」（multiple selves theory, Pronin & Ross 2006）： 同一個人對不同時間點的自己， 會像對待陌生人。 在決策心理學上， 「未來自我折扣」（future self discounting）解釋為什麼我們對 1 個月後的自己比 10 年後的自己更友善 — 因為意識上他比較像「我」。 EP38 把這四個未來自我同時拉進當下， 對 18 歲說「不要逃， 也不要做奇怪的事情」， 是把多重自我問題具象化成「會議室」 — 而且 18 歲還是有最終決定權。"}];
+
+  function clearChildren(el) {
+    while (el && el.firstChild) el.removeChild(el.firstChild);
+  }
+  function makeEl(tag, cls, txt) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (txt !== undefined) e.textContent = txt;
+    return e;
+  }
+
+  /* r61 ｜ Codex caught: focus trap + return for a11y */
+  let _sciPrevFocus = null;
+  function open() {
+    _sciPrevFocus = document.activeElement;
+    document.getElementById('scienceOverlay').classList.add('show');
+    renderList();
+    setTimeout(function () {
+      const closeBtn = document.getElementById('scienceClose');
+      if (closeBtn) closeBtn.focus();
+    }, 60);
+  }
+  function close() {
+    document.getElementById('scienceOverlay').classList.remove('show');
+    if (_sciPrevFocus && typeof _sciPrevFocus.focus === 'function') {
+      try { _sciPrevFocus.focus(); } catch (e) {}
+    }
+    _sciPrevFocus = null;
+  }
+
+  function renderList() {
+    const toc = document.getElementById('scienceToc');
+    const list = document.getElementById('scienceList');
+    if (!toc || !list) return;
+    clearChildren(toc);
+    clearChildren(list);
+    SCIENCE.forEach(function (sc) {
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = 'EP' + sc.ep;
+      btn.onclick = function () {
+        const el = document.getElementById('sc-entry-' + sc.ep);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+      li.appendChild(btn);
+      toc.appendChild(li);
+
+      const entry = makeEl('div', 'sc-entry');
+      entry.id = 'sc-entry-' + sc.ep;
+      entry.appendChild(makeEl('div', 'sc-entry-ep', 'EP' + sc.ep));
+      entry.appendChild(makeEl('div', 'sc-entry-topic', sc.topic));
+      entry.appendChild(makeEl('div', 'sc-entry-body', sc.body));
+      list.appendChild(entry);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const fab = document.getElementById('scienceFab');
+    if (fab) fab.addEventListener('click', open);
+    const closeBtn = document.getElementById('scienceClose');
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    const overlay = document.getElementById('scienceOverlay');
+    if (overlay) overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) close();
+    });
+    document.addEventListener('keydown', function (e) {
+      const ov = document.getElementById('scienceOverlay');
+      if (e.key === 'Escape' && ov && ov.classList.contains('show')) close();
+    });
+  });
+
+  window.__SCIENCE__ = {
+    open: open, close: close,
+    list: function () { return SCIENCE.map(function (s) { return { ep: s.ep, topic: s.topic }; }); },
+    show: function (ep) {
+      open();
+      setTimeout(function () {
+        const el = document.getElementById('sc-entry-' + ep);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 200);
+    },
+    version: 'r61-1'
+  };
+})();
+</script>
+
   </body>
 </html>
