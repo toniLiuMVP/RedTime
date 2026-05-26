@@ -2217,7 +2217,7 @@ body.lm402-page #cinematic-gate .cinematic-gate-kicker {
   <script>
     (function () {
       const params = new URLSearchParams(window.location.search);
-      const mode = params.get('mode');
+      const mode = (params.get('mode') || '').toLowerCase();
       if (mode !== 'consciousness' && mode !== 'consc') return;
 
       const PRESETS = ['low', 'mid', 'high', 'off'];
@@ -2227,13 +2227,11 @@ body.lm402-page #cinematic-gate .cinematic-gate-kicker {
         high: '強 (易過曝)',
         off:  '關'
       };
-      /* 從 URL 可指定起點,預設 low */
-      const startLevel = params.get('level');
+      /* 從 URL 可指定起點 — 預設 low, 大小寫不敏感 */
+      const startLevel = (params.get('level') || '').toLowerCase();
       let currentIdx = PRESETS.indexOf(startLevel);
       if (currentIdx < 0) currentIdx = 0;
 
-      let attempts = 0;
-      const maxAttempts = 60;
       let badge = null;
 
       function applyPreset(idx) {
@@ -2242,6 +2240,7 @@ body.lm402-page #cinematic-gate .cinematic-gate-kicker {
           window.__TWIN_BALANCE__(preset);
         } catch (e) {
           console.warn('[consciousness-mode] preset apply failed:', e);
+          return; /* 失敗就不更新 badge,避免 UI 顯示成功 */
         }
         if (badge) {
           badge.textContent = '意識菜市場 · ' + LABELS[preset] + ' · 點擊切換';
@@ -2250,10 +2249,14 @@ body.lm402-page #cinematic-gate .cinematic-gate-kicker {
         console.info('[consciousness-mode] preset →', preset);
       }
 
+      /* renderer 透過動態 import 才 expose __TWIN_BALANCE__,
+         玩家可能停留 cinematic gate 超過 30 秒;改 indefinite 輪詢 */
       function tryEnable() {
-        attempts++;
         if (typeof window.__TWIN_BALANCE__ === 'function') {
-          badge = document.createElement('div');
+          /* 用 <button> 而非 div 取得鍵盤焦點 + a11y 標籤 */
+          badge = document.createElement('button');
+          badge.type = 'button';
+          badge.setAttribute('aria-label', '意識菜市場強度切換');
           badge.style.cssText =
             'position: fixed; top: 14px; left: 50%; transform: translateX(-50%); ' +
             'padding: 8px 16px; background: rgba(8, 6, 10, 0.84); backdrop-filter: blur(10px); ' +
@@ -2263,16 +2266,15 @@ body.lm402-page #cinematic-gate .cinematic-gate-kicker {
             'font-size: 12px; letter-spacing: 0.18em; z-index: 99999; ' +
             'box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55); cursor: pointer; ' +
             'transition: opacity 0.2s ease, background 0.2s ease;';
-          badge.onclick = function () {
+          badge.addEventListener('click', function () {
             currentIdx = (currentIdx + 1) % PRESETS.length;
             applyPreset(currentIdx);
-          };
+          });
           document.body.appendChild(badge);
           applyPreset(currentIdx);
-        } else if (attempts < maxAttempts) {
-          setTimeout(tryEnable, 500);
         } else {
-          console.warn('[consciousness-mode] __TWIN_BALANCE__ not available after 30s');
+          /* 無 max attempts,玩家可能久候 cinematic gate 才進場景 */
+          setTimeout(tryEnable, 500);
         }
       }
       if (document.readyState === 'loading') {
