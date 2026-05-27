@@ -1,0 +1,2880 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>選手 4 號 · 三 AI 協作 · LM402 一眼瞬間</title>
+<meta name="description" content="Claude+Codex+Gemini 協作 · 同場景三範式即時切換 (cinematic / scrubber / wireframe) · LM402 一眼瞬間。">
+<meta name="theme-color" content="#050608">
+<meta name="color-scheme" content="dark">
+<meta property="og:type" content="website">
+<meta property="og:title" content="選手 4 號 · 三 AI 協作 · LM402 一眼瞬間">
+<meta property="og:description" content="Claude+Codex+Gemini 學習 c1/c2/c3 後協作，同場景三範式切換。">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="選手 4 號 · 三 AI 協作 · LM402 一眼瞬間">
+<link rel="icon" href="data:,">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; color: #eae6de; font-family: "Noto Serif TC", "Cormorant Garamond", Georgia, serif; }
+  #scene-canvas { position: fixed; inset: 0; z-index: 0; }
+  #ui { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+  .top-bar { position: absolute; top: 14px; left: 14px; right: 14px; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: auto; }
+  .title-block { background: rgba(8, 6, 10, 0.62); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 10px 18px; border: 1px solid rgba(255, 220, 200, 0.20); border-radius: 3px; }
+  .title-block .t1 { font-family: "Cormorant Garamond", "Noto Serif TC", serif; font-size: 15px; letter-spacing: 0.24em; color: rgba(255, 220, 200, 0.95); }
+  .title-block .t2 { font-family: "DM Mono", monospace; font-size: 9px; letter-spacing: 0.28em; color: rgba(218, 184, 168, 0.55); text-transform: uppercase; margin-top: 3px; }
+  .back-link { padding: 9px 16px; background: rgba(8, 6, 10, 0.62); backdrop-filter: blur(12px); color: rgba(238, 232, 220, 0.78); text-decoration: none; font-size: 11px; letter-spacing: 0.18em; border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 3px; pointer-events: auto; }
+  .back-link:hover { color: #fff; border-color: rgba(255, 220, 200, 0.55); }
+  .legend { position: absolute; left: 14px; bottom: 14px; background: rgba(8, 6, 10, 0.78); backdrop-filter: blur(10px); padding: 12px 18px; border: 1px solid rgba(218, 184, 168, 0.22); border-radius: 4px; font-size: 11px; line-height: 1.85; color: rgba(238, 232, 220, 0.82); max-width: 340px; pointer-events: auto; letter-spacing: 0.04em; }
+  .legend .legend-title { font-family: "Cormorant Garamond", serif; font-size: 13px; letter-spacing: 0.18em; color: rgba(255, 220, 200, 0.95); margin-bottom: 8px; }
+  .legend kbd { display: inline-block; padding: 1px 7px; background: rgba(228, 70, 80, 0.20); border: 1px solid rgba(228, 70, 80, 0.52); border-radius: 2px; font-family: "DM Mono", monospace; font-size: 10px; color: rgba(248, 168, 152, 0.95); margin: 0 3px; }
+  .effects-list { margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 14px; font-family: "DM Mono", monospace; font-size: 10px; }
+  .fx-item { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .fx-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(218, 184, 168, 0.32); }
+  .fx-item.on .fx-dot { background: rgba(228, 70, 80, 0.92); box-shadow: 0 0 6px rgba(228, 70, 80, 0.62); }
+  .stats { position: absolute; right: 14px; bottom: 14px; background: rgba(8, 6, 10, 0.62); backdrop-filter: blur(10px); padding: 8px 14px; border: 1px solid rgba(218, 184, 168, 0.22); border-radius: 3px; font-family: "DM Mono", monospace; font-size: 10px; letter-spacing: 0.12em; color: rgba(218, 184, 168, 0.78); pointer-events: none; }
+  .pause-indicator { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: "DM Mono", monospace; font-size: 18px; letter-spacing: 0.32em; color: rgba(255, 220, 200, 0.92); padding: 12px 24px; background: rgba(8, 6, 10, 0.78); backdrop-filter: blur(10px); border: 1px solid rgba(228, 70, 80, 0.52); border-radius: 3px; pointer-events: none; display: none; }
+  .pause-indicator.show { display: block; }
+</style>
+</head>
+<body>
+<canvas id="scene-canvas"></canvas>
+<div id="ui">
+  <div class="top-bar">
+    <div class="title-block">
+      <div class="t1">LM402 · 三 AI 協作</div>
+      <div class="t2" id="narrativeBeat">2005/10/17 · 11:00 · CINEMATIC MODE</div>
+    </div>
+    <a class="back-link" href="index.html">← 回</a>
+  </div>
+
+  <!-- 三範式 mode badge (Codex 設計:單一 interaction state) — 右上方靠下 -->
+  <div id="modeBadges" style="position:absolute; top:64px; right:14px; display:flex; gap:6px; pointer-events:auto;" role="radiogroup" aria-label="範式切換">
+    <button class="mode-badge active" type="button" role="radio" aria-checked="true" data-mode="1" title="Mode 1: Cinematic (Claude 風格)"
+      style="padding:8px 14px; border-radius:3px; border:1px solid rgba(255,220,200,.55); background:rgba(228,70,80,.18); color:rgba(255,220,200,.95); font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.18em; cursor:pointer; backdrop-filter:blur(8px);">M1 · Cinematic</button>
+    <button class="mode-badge" type="button" role="radio" aria-checked="false" data-mode="2" title="Mode 2: Scrubber (Codex 風格)"
+      style="padding:8px 14px; border-radius:3px; border:1px solid rgba(218,184,168,.32); background:rgba(8,6,10,.62); color:rgba(238,232,220,.85); font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.18em; cursor:pointer; backdrop-filter:blur(8px);">M2 · Scrubber</button>
+    <button class="mode-badge" type="button" role="radio" aria-checked="false" data-mode="3" title="Mode 3: Wireframe (Gemini 風格)"
+      style="padding:8px 14px; border-radius:3px; border:1px solid rgba(218,184,168,.32); background:rgba(8,6,10,.62); color:rgba(238,232,220,.85); font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.18em; cursor:pointer; backdrop-filter:blur(8px);">M3 · Wireframe</button>
+  </div>
+
+  <!-- Mode 2 scrubber (Codex 設計) — 底部時間軸 -->
+  <div id="scrubber" style="position:absolute; left:50%; bottom:14px; transform:translateX(-50%); display:none; width:min(720px, 92vw); padding:14px 22px; background:rgba(8,6,10,.78); border:1px solid rgba(255,255,255,.18); border-radius:4px; backdrop-filter:blur(12px); pointer-events:auto;">
+    <div style="display:flex; justify-content:space-between; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.18em; color:rgba(218,184,168,.7); margin-bottom:8px;">
+      <span id="scrubTs">11:00:00</span>
+      <span id="scrubText">學長從 LM401 樓梯上來</span>
+    </div>
+    <input id="scrubBar" type="range" min="0" max="1000" value="0" step="1" aria-label="時間軸"
+      style="width:100%; height:4px; background:rgba(218,184,168,.22); appearance:none; outline:none; border-radius:2px;">
+    <div style="display:flex; justify-content:space-between; margin-top:8px; gap:4px;">
+      <button class="beat-jump" data-beat="0" type="button" title="10:40 意識菜市場" style="flex:1; padding:6px; font-family:'DM Mono',monospace; font-size:9px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.18); color:rgba(238,232,220,.7); cursor:pointer; border-radius:3px;">01 意識</button>
+      <button class="beat-jump" data-beat="1" type="button" title="11:00 前門電話" style="flex:1; padding:6px; font-family:'DM Mono',monospace; font-size:9px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.18); color:rgba(238,232,220,.7); cursor:pointer; border-radius:3px;">02 前門</button>
+      <button class="beat-jump" data-beat="2" type="button" title="11:00:30 後門" style="flex:1; padding:6px; font-family:'DM Mono',monospace; font-size:9px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.18); color:rgba(238,232,220,.7); cursor:pointer; border-radius:3px;">03 後門</button>
+      <button class="beat-jump" data-beat="3" type="button" title="11:01 一眼瞬間" style="flex:1; padding:6px; font-family:'DM Mono',monospace; font-size:9px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.18); color:rgba(238,232,220,.7); cursor:pointer; border-radius:3px;">04 一眼</button>
+      <button class="beat-jump" data-beat="4" type="button" title="2025 女兒回望" style="flex:1; padding:6px; font-family:'DM Mono',monospace; font-size:9px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.18); color:rgba(238,232,220,.7); cursor:pointer; border-radius:3px;">05 回望</button>
+    </div>
+  </div>
+
+  <!-- Mode 3 age switcher (Gemini 設計) — 左側垂直 5 age 圓圈 + 青瓷藍→珊瑚紅 配色 -->
+  <div id="ageNodes" style="position:absolute; left:20px; top:50%; transform:translateY(-50%); display:none; flex-direction:column; gap:12px; pointer-events:auto;" role="radiogroup" aria-label="意識年紀切換 (Mode 3)">
+    <button class="age-node" type="button" role="radio" aria-checked="false" data-age="18" title="18 歲 · 1994 · 青瓷藍 · 初遇純粹"
+      style="width:44px; height:44px; border-radius:22px; border:1px solid rgba(120,180,200,.6); background:rgba(40,80,100,.35); color:rgba(180,220,235,.92); font-family:'DM Mono',monospace; font-size:13px; cursor:pointer; backdrop-filter:blur(8px);">18</button>
+    <button class="age-node active" type="button" role="radio" aria-checked="true" data-age="29" title="29 歲 · 2005 · 暖白 · 一眼瞬間"
+      style="width:44px; height:44px; border-radius:22px; border:1px solid rgba(255,220,200,.7); background:rgba(140,100,80,.45); color:rgba(255,235,210,.96); font-family:'DM Mono',monospace; font-size:13px; cursor:pointer; backdrop-filter:blur(8px);">29</button>
+    <button class="age-node" type="button" role="radio" aria-checked="false" data-age="33" title="33 歲 · 2009 · 暖橙 · 職場掙扎"
+      style="width:44px; height:44px; border-radius:22px; border:1px solid rgba(228,180,140,.55); background:rgba(120,80,55,.32); color:rgba(248,210,180,.9); font-family:'DM Mono',monospace; font-size:13px; cursor:pointer; backdrop-filter:blur(8px);">33</button>
+    <button class="age-node" type="button" role="radio" aria-checked="false" data-age="39" title="39 歲 · 2015 · 沉紅 · 看穿世事"
+      style="width:44px; height:44px; border-radius:22px; border:1px solid rgba(228,140,120,.5); background:rgba(120,55,50,.32); color:rgba(248,180,170,.88); font-family:'DM Mono',monospace; font-size:13px; cursor:pointer; backdrop-filter:blur(8px);">39</button>
+    <button class="age-node" type="button" role="radio" aria-checked="false" data-age="49" title="49 歲 · 2025 · 珊瑚紅 · 智慧告別"
+      style="width:44px; height:44px; border-radius:22px; border:1px solid rgba(255,108,90,.55); background:rgba(140,50,45,.36); color:rgba(255,180,165,.92); font-family:'DM Mono',monospace; font-size:13px; cursor:pointer; backdrop-filter:blur(8px);">49</button>
+  </div>
+
+  <!-- Performance telemetry (Codex C3 設計) — 右下方小 HUD -->
+  <div id="perfHUD" style="position:absolute; right:14px; bottom:14px; padding:6px 10px; background:rgba(8,6,10,.62); border:1px solid rgba(218,184,168,.22); border-radius:3px; font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.14em; color:rgba(218,184,168,.75); pointer-events:none;">
+    <span id="perfFps">FPS --</span> · <span id="perfMode">M1</span> · <span id="perfQuality">HQ</span>
+  </div>
+  <!-- 三 AI 協作 keyboard hint (左下) -->
+  <div class="legend">
+    <div class="legend-title">三 AI 協作 · 學習綜合</div>
+    <div style="margin-bottom: 6px; font-size: 10px; color: rgba(218,184,168,.6); line-height: 1.7;">
+      <span style="color:rgba(228,70,80,.95);">Claude</span> · <span style="color:rgba(255,220,140,.95);">Codex</span> · <span style="color:rgba(140,200,235,.95);">Gemini</span>
+    </div>
+    <div><kbd>M</kbd> 切換範式 · <kbd>Space</kbd> 播放</div>
+    <div style="margin-top:4px; opacity:.75;"><kbd>R</kbd> 重置 · 點 mode badge 切 1/2/3</div>
+    <div style="margin-top:8px; font-size:9px; opacity:.55; line-height: 1.6;">
+      <strong style="color:rgba(228,70,80,.85);">M1</strong> Cinematic (Claude 寫實 5-beat)<br>
+      <strong style="color:rgba(255,220,140,.85);">M2</strong> Scrubber (Codex 互動時間軸)<br>
+      <strong style="color:rgba(140,200,235,.85);">M3</strong> Wireframe (Gemini 極簡意識層)
+    </div>
+  </div>
+  <div class="stats" id="stats" style="display:none;">FPS: -- · Tri: -- · Char: 6</div>
+  <!-- 時空手錶 HUD — 移到左下避開 M1/M2/M3 mode badges (c4 整合調整) -->
+  <div id="timeWatch" style="position:absolute; bottom:14px; left:14px; background:rgba(8,6,10,.78); backdrop-filter:blur(10px); padding:10px 16px; border:1px solid rgba(218,184,168,.30); border-radius:4px; font-family:'DM Mono',monospace; font-size:11px; color:rgba(255,220,200,.92); letter-spacing:.16em; pointer-events:none; min-width:200px; text-align:center; opacity:0; transition:opacity .6s; display:none;">
+    <div style="font-size:9px; opacity:.6; margin-bottom:3px; letter-spacing:.3em;">⏱ 時空手錶</div>
+    <div id="timeWatchTs" style="font-size:14px; letter-spacing:.08em;">2005-10-17 11:00:00</div>
+    <div id="timeWatchSub" style="font-size:9px; opacity:.55; margin-top:3px; letter-spacing:.2em;">紅線 · 命中注定</div>
+  </div>
+  <!-- 旁白 caption — 女兒視角 (EP21-23) — aria-live="polite" 讓 screen reader 唸 beat 旁白 (Gemini r5) -->
+  <div id="narration" role="status" aria-live="polite" aria-atomic="true" style="position:absolute; left:50%; bottom:78px; transform:translateX(-50%); max-width:78%; background:linear-gradient(to bottom, rgba(8,6,10,.4), rgba(8,6,10,.88)); padding:18px 32px; font-family:'Noto Serif TC',serif; font-size:15px; line-height:1.75; color:rgba(255,238,216,.96); letter-spacing:.06em; text-align:center; pointer-events:none; opacity:0; transition:opacity .8s; border-left:2px solid rgba(228,70,80,.6); border-right:2px solid rgba(228,70,80,.6);">
+    <span id="narrationText"></span>
+  </div>
+  <!-- (c1 touchPad 移除 — c4 mode badges + scrubber + age nodes 已覆蓋觸控操作) -->
+</div>
+<div class="pause-indicator" id="pauseIndicator">⏸ 已暫停</div>
+
+<script type="module">
+import * as THREE from './assets/lm402/vendor-three.module.js';
+
+/* ===================================================================
+   一眼瞬間 · 3D 全景 — 程序生成 全角色 + 場景物品
+   ===================================================================
+   - 完全程序生成 (procedural) 不依賴外部 GLB / 貼圖
+   - 角色 6 個: 學長 / 學妹 / 4 同學 — 多 part humanoid mesh
+   - 場景物品: 8 桌椅 array + 黑板 + LM402 標牌 + 紙條 + 機車不在此 demo
+   - shader: 5 個 custom GLSL (紅線 / 塵粒 / 髮絲 / 皮膚 fresnel / 後製合成)
+   - post-processing: 多 pass (亮度抽取 + 兩向 Gaussian blur + 合成)
+   =================================================================== */
+
+const canvas = document.getElementById('scene-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.94;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+/* Soft shadows — PCF 5x5 kernel for smoother edges than basic shadow map */
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x14100a, 0.042);
+
+const cam = new THREE.PerspectiveCamera(46, innerWidth / innerHeight, 0.1, 80);
+cam.position.set(0.4, 1.62, 4.2);
+cam.lookAt(0, 1.45, -2);
+
+/* ===================================================================
+   IBL — 程序天空 → PMREM convolved envMap
+   給 MeshPhysicalMaterial 真實的環境反射(reflections / clearcoat / iris)
+   warm-window-light gradient + 走廊 cold tint + 天花板暗
+   =================================================================== */
+function makeProceduralEnvCanvas() {
+  /* equirectangular layout — 4:2 寬高比 */
+  const W = 1024, H = 512;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const ctx = c.getContext('2d');
+  /* 天頂 → 地平線:窗口暖橘 → 走廊冷藍 */
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0.00, '#1a1006');  /* 天花板暗 */
+  grad.addColorStop(0.35, '#3a2818');  /* 暖暗 */
+  grad.addColorStop(0.55, '#a06030');  /* 地平線暖光 */
+  grad.addColorStop(0.78, '#6a5848');  /* 地板反射 */
+  grad.addColorStop(1.00, '#2a1c10');  /* 地面 */
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+  /* 窗戶 hot spot — equirect 中央偏上 */
+  const sunGrad = ctx.createRadialGradient(W * 0.5, H * 0.42, 8, W * 0.5, H * 0.42, 220);
+  sunGrad.addColorStop(0,    'rgba(255, 230, 165, 1.0)');
+  sunGrad.addColorStop(0.18, 'rgba(255, 196, 120, 0.85)');
+  sunGrad.addColorStop(0.55, 'rgba(160, 96, 56, 0.30)');
+  sunGrad.addColorStop(1,    'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = sunGrad; ctx.fillRect(0, 0, W, H);
+  /* 走廊冷光 — 左右兩側 */
+  const coldL = ctx.createRadialGradient(W * 0.05, H * 0.55, 4, W * 0.05, H * 0.55, 180);
+  coldL.addColorStop(0,   'rgba(120, 150, 180, 0.42)');
+  coldL.addColorStop(1,   'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = coldL; ctx.fillRect(0, 0, W, H);
+  const coldR = ctx.createRadialGradient(W * 0.95, H * 0.55, 4, W * 0.95, H * 0.55, 180);
+  coldR.addColorStop(0,   'rgba(120, 150, 180, 0.42)');
+  coldR.addColorStop(1,   'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = coldR; ctx.fillRect(0, 0, W, H);
+  /* 微 noise — 避免 banding */
+  const imgData = ctx.getImageData(0, 0, W, H);
+  const d = imgData.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const n = (Math.random() - 0.5) * 6;
+    d[i] = Math.max(0, Math.min(255, d[i] + n));
+    d[i+1] = Math.max(0, Math.min(255, d[i+1] + n));
+    d[i+2] = Math.max(0, Math.min(255, d[i+2] + n));
+  }
+  ctx.putImageData(imgData, 0, 0);
+  return c;
+}
+const envCanvasTex = new THREE.CanvasTexture(makeProceduralEnvCanvas());
+envCanvasTex.mapping = THREE.EquirectangularReflectionMapping;
+envCanvasTex.colorSpace = THREE.SRGBColorSpace;
+/* PMREM convolves the equirect into roughness-prefiltered cubemap mips */
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envMap = pmrem.fromEquirectangular(envCanvasTex).texture;
+envCanvasTex.dispose();  /* PMREM has its own copy */
+pmrem.dispose();
+scene.environment = envMap;
+scene.environmentIntensity = 0.42;  /* r179 supported scalar — dialled lower so warm sky doesn't over-tint */
+scene.background = null;            /* keep dark void background */
+
+/* ===================================================================
+   程序紋理 — Canvas-based PBR 木地板
+   =================================================================== */
+function makeWoodCanvas(size) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#3a2418';
+  ctx.fillRect(0, 0, size, size);
+  for (let i = 0; i < 28; i++) {
+    const y0 = (i / 28) * size + (Math.random() - 0.5) * 9;
+    const hue = 16 + (Math.random() - 0.5) * 10;
+    const sat = 36 + Math.random() * 20;
+    const lit = 13 + Math.random() * 14;
+    ctx.strokeStyle = `hsl(${hue}, ${sat}%, ${lit}%)`;
+    ctx.lineWidth = 1.4 + Math.random() * 4;
+    ctx.beginPath();
+    for (let x = 0; x <= size; x += 4) {
+      const wave = Math.sin(x * 0.022 + i * 0.7) * 5 + Math.sin(x * 0.084 + i * 1.4) * 2.4 + (Math.random() - 0.5) * 1.4;
+      if (x === 0) ctx.moveTo(x, y0 + wave); else ctx.lineTo(x, y0 + wave);
+    }
+    ctx.stroke();
+  }
+  for (let k = 0; k < 7; k++) {
+    const cx = Math.random() * size, cy = Math.random() * size;
+    const grd = ctx.createRadialGradient(cx, cy, 1, cx, cy, 24);
+    grd.addColorStop(0, 'rgba(18,8,4,0.88)'); grd.addColorStop(1, 'rgba(18,8,4,0)');
+    ctx.fillStyle = grd;
+    ctx.beginPath(); ctx.arc(cx, cy, 24, 0, Math.PI * 2); ctx.fill();
+  }
+  const id = ctx.getImageData(0, 0, size, size);
+  for (let p = 0; p < id.data.length; p += 4) {
+    const n = (Math.random() - 0.5) * 18;
+    id.data[p] = Math.max(0, Math.min(255, id.data[p] + n));
+    id.data[p + 1] = Math.max(0, Math.min(255, id.data[p + 1] + n * 0.9));
+    id.data[p + 2] = Math.max(0, Math.min(255, id.data[p + 2] + n * 0.7));
+  }
+  ctx.putImageData(id, 0, 0);
+  return c;
+}
+function makeNormalFromCanvas(srcCanvas, strength) {
+  const size = srcCanvas.width;
+  const out = document.createElement('canvas'); out.width = out.height = size;
+  const sctx = srcCanvas.getContext('2d').getImageData(0, 0, size, size);
+  const octx = out.getContext('2d');
+  const oid = octx.createImageData(size, size);
+  function lum(x, y) { const i = (Math.max(0, Math.min(size-1, y)) * size + Math.max(0, Math.min(size-1, x))) * 4; return (sctx.data[i] + sctx.data[i+1] + sctx.data[i+2]) / 3; }
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const dx = (lum(x+1, y) - lum(x-1, y)) / 255 * strength;
+      const dy = (lum(x, y+1) - lum(x, y-1)) / 255 * strength;
+      const nz = Math.sqrt(Math.max(0, 1 - dx*dx - dy*dy));
+      const i = (y * size + x) * 4;
+      oid.data[i] = Math.round((dx*0.5+0.5)*255);
+      oid.data[i+1] = Math.round((dy*0.5+0.5)*255);
+      oid.data[i+2] = Math.round(nz * 255);
+      oid.data[i+3] = 255;
+    }
+  }
+  octx.putImageData(oid, 0, 0);
+  return out;
+}
+
+const woodCanvas = makeWoodCanvas(512);
+const woodTex = new THREE.CanvasTexture(woodCanvas);
+woodTex.wrapS = woodTex.wrapT = THREE.RepeatWrapping;
+woodTex.repeat.set(4, 8); woodTex.anisotropy = 8;
+woodTex.colorSpace = THREE.SRGBColorSpace;
+const woodNormalTex = new THREE.CanvasTexture(makeNormalFromCanvas(woodCanvas, 4.2));
+woodNormalTex.wrapS = woodNormalTex.wrapT = THREE.RepeatWrapping;
+woodNormalTex.repeat.set(4, 8);
+
+const floorMat = new THREE.MeshStandardMaterial({ map: woodTex, normalMap: woodNormalTex, normalScale: new THREE.Vector2(0.7, 0.7), roughness: 0.62, metalness: 0.06 });
+const floorPlainMat = new THREE.MeshStandardMaterial({ color: 0x14100c, roughness: 0.85 });
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(10, 26), floorMat);
+floor.rotation.x = -Math.PI / 2; floor.position.z = -6;
+floor.receiveShadow = true;
+scene.add(floor);
+
+/* ===================================================================
+   走廊 + 教室 結構
+   =================================================================== */
+const wallMat = new THREE.MeshStandardMaterial({ color: 0x1a120c, roughness: 0.8 });
+const wallTrimMat = new THREE.MeshStandardMaterial({ color: 0x261c14, roughness: 0.7 });
+const wallL = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3.5, 26), wallMat);
+wallL.position.set(-5, 1.75, -6); scene.add(wallL);
+const wallR = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3.5, 26), wallMat);
+wallR.position.set(5, 1.75, -6); scene.add(wallR);
+const ceiling = new THREE.Mesh(new THREE.BoxGeometry(10, 0.3, 26), new THREE.MeshStandardMaterial({ color: 0x0e0a06, roughness: 0.88 }));
+ceiling.position.set(0, 3.4, -6); scene.add(ceiling);
+/* 走廊腰線 (skirting) */
+for (const side of [-1, 1]) {
+  const skirt = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.18, 26), wallTrimMat);
+  skirt.position.set(side * 4.95, 0.1, -6);
+  scene.add(skirt);
+}
+
+/* 走廊盡頭窗 (god ray source) */
+/* Window — high-intensity emissive so bloom mask picks it up cleanly + IBL doesn't fight */
+const windowPanelMat = new THREE.MeshBasicMaterial({ color: 0xfff0d2, fog: false, toneMapped: false });
+const windowPanel = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 2.1), windowPanelMat);
+windowPanel.position.set(0, 1.85, -18.85);
+windowPanel.userData.bloomLayer = true;   /* tag for selective-bloom mask */
+scene.add(windowPanel);
+/* Bright window halo — additive glow plate behind to fake atmospheric scattering */
+const windowHaloMat = new THREE.MeshBasicMaterial({
+  color: 0xffe5a8, fog: false, transparent: true, opacity: 0.55,
+  blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false
+});
+const windowHalo = new THREE.Mesh(new THREE.PlaneGeometry(5.4, 4.0), windowHaloMat);
+windowHalo.position.set(0, 1.85, -18.83);
+scene.add(windowHalo);
+const windowFrameMat = new THREE.MeshStandardMaterial({ color: 0x2a1810, roughness: 0.55 });
+const wfTop = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.08, 0.12), windowFrameMat);
+wfTop.position.set(0, 2.95, -18.84); scene.add(wfTop);
+const wfBot = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.08, 0.12), windowFrameMat);
+wfBot.position.set(0, 0.78, -18.84); scene.add(wfBot);
+
+/* LM402 教室門 + 標牌 */
+const doorMat = new THREE.MeshStandardMaterial({ color: 0x3a2418, roughness: 0.42, metalness: 0.06 });
+const doorFront = new THREE.Mesh(new THREE.BoxGeometry(1.4, 2.2, 0.1), doorMat);
+doorFront.position.set(4.7, 1.1, -3); scene.add(doorFront);
+const doorBack = new THREE.Mesh(new THREE.BoxGeometry(1.4, 2.2, 0.1), doorMat);
+doorBack.position.set(4.7, 1.1, -8); scene.add(doorBack);
+const doorHandleMat = new THREE.MeshStandardMaterial({ color: 0x8a7044, roughness: 0.3, metalness: 0.62 });
+const handleF = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 10), doorHandleMat);
+handleF.position.set(4.62, 1.1, -2.55); scene.add(handleF);
+const handleB = handleF.clone(); handleB.position.set(4.62, 1.1, -7.55); scene.add(handleB);
+
+function makeLM402Sign() {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 96;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#1a1410'; ctx.fillRect(0, 0, 256, 96);
+  ctx.strokeStyle = '#3a2818'; ctx.lineWidth = 4; ctx.strokeRect(2, 2, 252, 92);
+  ctx.fillStyle = '#ffd388'; ctx.font = 'bold 48px "DM Mono", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('LM 402', 128, 50);
+  const tex = new THREE.CanvasTexture(c);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 0.32), new THREE.MeshBasicMaterial({ map: tex }));
+  return m;
+}
+const sign1 = makeLM402Sign(); sign1.position.set(4.0, 2.55, -3); sign1.rotation.y = -Math.PI / 2; scene.add(sign1);
+const sign2 = makeLM402Sign(); sign2.position.set(4.0, 2.55, -8); sign2.rotation.y = -Math.PI / 2; scene.add(sign2);
+
+/* 教室內 (透過 doorBack 看進去) — 簡化背景 wall + 黑板 + 桌椅 */
+const classroomWallMat = new THREE.MeshStandardMaterial({ color: 0x1f1812, roughness: 0.78 });
+const classWallBack = new THREE.Mesh(new THREE.BoxGeometry(6, 3.5, 0.2), classroomWallMat);
+classWallBack.position.set(8, 1.75, -8); classWallBack.rotation.y = -Math.PI / 2;
+scene.add(classWallBack);
+
+/* 黑板 */
+function makeBlackboardTex() {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 256;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#1c2820'; ctx.fillRect(0, 0, 512, 256);
+  /* chalk wisps */
+  ctx.strokeStyle = 'rgba(220, 220, 200, 0.18)'; ctx.lineWidth = 1.2;
+  for (let i = 0; i < 40; i++) {
+    ctx.beginPath();
+    const x = Math.random() * 512, y = Math.random() * 256;
+    ctx.moveTo(x, y); ctx.lineTo(x + (Math.random()-0.5)*60, y + (Math.random()-0.5)*20);
+    ctx.stroke();
+  }
+  ctx.fillStyle = 'rgba(255, 252, 240, 0.78)'; ctx.font = 'italic 38px serif'; ctx.textBaseline = 'middle';
+  ctx.fillText('LM402 — 11:00', 22, 50);
+  ctx.font = 'italic 28px serif';
+  ctx.fillText('also like 徐若瑄...', 22, 130);
+  return c;
+}
+const blackboardMat = new THREE.MeshStandardMaterial({ map: new THREE.CanvasTexture(makeBlackboardTex()), roughness: 0.72 });
+const blackboard = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.2), blackboardMat);
+blackboard.position.set(7.85, 1.9, -7); blackboard.rotation.y = -Math.PI / 2; scene.add(blackboard);
+const bbFrame = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.32, 2.52), windowFrameMat);
+bbFrame.position.set(7.86, 1.9, -7); scene.add(bbFrame);
+
+/* ===================================================================
+   程序角色 - Humanoid Mesh Builders
+   =================================================================== */
+
+/* ─── 共用 helpers ─── */
+/* Skin pore + freckle canvas — subtle micro-variation that picks up under close light.
+ * We return the raw canvas (for color tex) so a Sobel normal map can be derived later. */
+function makeSkinCanvas(baseColor) {
+  const size = 512;
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const col = new THREE.Color(baseColor);
+  const r0 = Math.round(col.r * 255), g0 = Math.round(col.g * 255), b0 = Math.round(col.b * 255);
+  ctx.fillStyle = `rgb(${r0}, ${g0}, ${b0})`;
+  ctx.fillRect(0, 0, size, size);
+  /* pore dots — slightly darker, ~3500 */
+  for (let i = 0; i < 3500; i++) {
+    const x = Math.random() * size, y = Math.random() * size;
+    const k = 0.86 + Math.random() * 0.08;
+    const a = 0.04 + Math.random() * 0.06;
+    ctx.fillStyle = `rgba(${Math.round(r0*k)}, ${Math.round(g0*k)}, ${Math.round(b0*k)}, ${a})`;
+    ctx.beginPath(); ctx.arc(x, y, 0.7 + Math.random() * 1.1, 0, Math.PI * 2); ctx.fill();
+  }
+  /* lighter highlights — sebum sheen — ~1200 */
+  for (let i = 0; i < 1200; i++) {
+    const x = Math.random() * size, y = Math.random() * size;
+    const k = 1.06 + Math.random() * 0.06;
+    const a = 0.025 + Math.random() * 0.04;
+    ctx.fillStyle = `rgba(${Math.min(255, Math.round(r0*k))}, ${Math.min(255, Math.round(g0*k))}, ${Math.min(255, Math.round(b0*k))}, ${a})`;
+    ctx.beginPath(); ctx.arc(x, y, 0.5 + Math.random() * 0.9, 0, Math.PI * 2); ctx.fill();
+  }
+  /* freckles cluster on upper-mid (cheek band) — only sparse */
+  for (let i = 0; i < 24; i++) {
+    const x = 180 + Math.random() * 152;  /* mid-band only */
+    const y = 220 + Math.random() * 80;
+    ctx.fillStyle = `rgba(${Math.round(r0*0.72)}, ${Math.round(g0*0.66)}, ${Math.round(b0*0.6)}, ${0.22 + Math.random() * 0.18})`;
+    ctx.beginPath(); ctx.arc(x, y, 0.9 + Math.random() * 1.3, 0, Math.PI * 2); ctx.fill();
+  }
+  return c;   /* return raw canvas — caller wraps in CanvasTexture + builds normal map */
+}
+
+/* Cached { colorTex, normalTex } keyed by base color — Sobel-derived skin micro-relief */
+const _skinTexCache = new Map();
+function getSkinTexBundle(baseColor) {
+  const k = '' + baseColor;
+  if (!_skinTexCache.has(k)) {
+    const canvas = makeSkinCanvas(baseColor);
+    const colorTex = new THREE.CanvasTexture(canvas);
+    colorTex.wrapS = colorTex.wrapT = THREE.RepeatWrapping;
+    colorTex.colorSpace = THREE.SRGBColorSpace;
+    /* Sobel normal — gentle strength so pores/freckles don't read as gravel */
+    const normalCanvas = makeNormalFromCanvas(canvas, 1.4);
+    const normalTex = new THREE.CanvasTexture(normalCanvas);
+    normalTex.wrapS = normalTex.wrapT = THREE.RepeatWrapping;
+    _skinTexCache.set(k, { colorTex, normalTex });
+  }
+  return _skinTexCache.get(k);
+}
+
+/* Skin material with SSS approximation via onBeforeCompile —
+ * Fresnel-edge red bleed simulates light scattering through thin tissue (ears, nose tip, edges).
+ * Cheaper than real BSSRDF; visually close enough for stylised realism. */
+function makeSkinMaterial(baseColor) {
+  const col = new THREE.Color(baseColor);
+  const skin = getSkinTexBundle(baseColor);
+  const mat = new THREE.MeshPhysicalMaterial({
+    color: baseColor,
+    map: skin.colorTex,
+    normalMap: skin.normalTex,
+    normalScale: new THREE.Vector2(0.22, 0.22),  /* dermal hint only — too high amplifies polygon facets */
+    roughness: 0.58,
+    metalness: 0.02,
+    clearcoat: 0.18,           /* very faint dermal sheen */
+    clearcoatRoughness: 0.62,
+    emissive: col.clone().multiplyScalar(0.05),
+    sheen: 0.22,
+    sheenColor: new THREE.Color(0xff8d70),  /* warm-edge sheen */
+    sheenRoughness: 0.42
+  });
+  /* SSS injection — Fresnel-weighted red glow on silhouette via opaque_fragment hook (r179).
+   * `normal` is in scope after normal_fragment_maps; `vViewPosition` is a Physical-material varying. */
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms.uSSSColor = { value: new THREE.Color(0xc05438) };
+    shader.uniforms.uSSSStrength = { value: 0.32 };
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>',
+        '#include <common>\nuniform vec3 uSSSColor;\nuniform float uSSSStrength;')
+      .replace('#include <opaque_fragment>',
+        'float sssFres = pow(1.0 - max(0.0, dot(normalize(normal), normalize(vViewPosition))), 3.0);\n' +
+        'outgoingLight += uSSSColor * uSSSStrength * sssFres;\n' +
+        '#include <opaque_fragment>');
+  };
+  return mat;
+}
+
+/* 程序生成虹膜紋路 texture — radial gradient + 隨機 streaks */
+function makeIrisTexture(baseHex) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const ctx = c.getContext('2d');
+  const col = new THREE.Color(baseHex);
+  const r0 = Math.round(col.r * 255), g0 = Math.round(col.g * 255), b0 = Math.round(col.b * 255);
+  /* 環境暈染:深 ↔ 中 ↔ 邊緣暗環 */
+  const grd = ctx.createRadialGradient(64, 64, 6, 64, 64, 60);
+  grd.addColorStop(0,   `rgb(${Math.round(r0*0.32)}, ${Math.round(g0*0.32)}, ${Math.round(b0*0.32)})`);
+  grd.addColorStop(0.55, `rgb(${r0}, ${g0}, ${b0})`);
+  grd.addColorStop(0.92, `rgb(${Math.round(r0*0.7)}, ${Math.round(g0*0.7)}, ${Math.round(b0*0.7)})`);
+  grd.addColorStop(1,   `rgb(${Math.round(r0*0.25)}, ${Math.round(g0*0.25)}, ${Math.round(b0*0.25)})`);
+  ctx.fillStyle = grd; ctx.fillRect(0, 0, 128, 128);
+  /* 放射 streak (32 條) */
+  ctx.lineWidth = 0.8;
+  for (let a = 0; a < 36; a++) {
+    const ang = (a / 36) * Math.PI * 2 + (Math.random() - 0.5) * 0.18;
+    const inner = 10 + Math.random() * 4;
+    const outer = 50 + Math.random() * 8;
+    const alpha = 0.18 + Math.random() * 0.3;
+    ctx.strokeStyle = `rgba(${Math.min(255, Math.round(r0*1.4))}, ${Math.min(255, Math.round(g0*1.4))}, ${Math.min(255, Math.round(b0*1.4))}, ${alpha})`;
+    ctx.beginPath();
+    ctx.moveTo(64 + Math.cos(ang) * inner, 64 + Math.sin(ang) * inner);
+    ctx.lineTo(64 + Math.cos(ang) * outer, 64 + Math.sin(ang) * outer);
+    ctx.stroke();
+  }
+  /* 邊緣 limbal ring (暗環) */
+  ctx.strokeStyle = `rgba(${Math.round(r0*0.3)}, ${Math.round(g0*0.3)}, ${Math.round(b0*0.3)}, 0.55)`;
+  ctx.lineWidth = 2.2;
+  ctx.beginPath(); ctx.arc(64, 64, 56, 0, Math.PI * 2); ctx.stroke();
+  return c;
+}
+
+/* 5-layer 真實眼 — sclera + cornea (折射) + iris (procedural) + pupil + eyelashes */
+function buildEye(opts, side) {
+  const g = new THREE.Group();
+  const skinMat = makeSkinMaterial(opts.skinColor || 0xe8c8b0);
+  /* sclera (眼白) — 球體 */
+  const sclera = new THREE.Mesh(
+    new THREE.SphereGeometry(0.026, 18, 14),
+    new THREE.MeshStandardMaterial({ color: 0xf8f5ee, roughness: 0.26, metalness: 0.02 })
+  );
+  g.add(sclera);
+  /* 微 redness — sclera 外側淡紅 (vein hint via emissive tint) */
+  const veinTint = new THREE.Mesh(
+    new THREE.SphereGeometry(0.0258, 14, 10, 0, Math.PI, 0, Math.PI),
+    new THREE.MeshStandardMaterial({ color: 0xf8e8d8, roughness: 0.32, transparent: true, opacity: 0.4 })
+  );
+  veinTint.rotation.y = side * Math.PI / 6;
+  g.add(veinTint);
+  /* cornea (角膜) — 透明凸起,折射感 */
+  const cornea = new THREE.Mesh(
+    new THREE.SphereGeometry(0.015, 14, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+    new THREE.MeshPhysicalMaterial({
+      color: 0xddeef2, transparent: true, opacity: 0.32,
+      roughness: 0.05, metalness: 0, transmission: 0.55, ior: 1.376
+    })
+  );
+  cornea.position.z = 0.016;
+  g.add(cornea);
+  /* iris (虹膜) — procedural texture + view-dependent parallax fake refraction.
+   * Cornea bulges forward → looking at the eye off-axis, light bends so the iris
+   * appears to shift opposite the view direction. A small UV offset along the
+   * view-space XY direction creates the depth illusion without raymarching. */
+  const irisTex = new THREE.CanvasTexture(makeIrisTexture(opts.eyeColor || 0x4a2a14));
+  const irisMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uIrisMap: { value: irisTex },
+      uParallax: { value: 0.06 },
+      uLimbalDarken: { value: 0.55 }
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      varying vec3 vViewDir;
+      varying vec3 vNormalEye;
+      void main() {
+        vUv = uv;
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        vViewDir = -mv.xyz;
+        vNormalEye = normalize(normalMatrix * normal);
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader: `
+      precision highp float;
+      uniform sampler2D uIrisMap;
+      uniform float uParallax;
+      uniform float uLimbalDarken;
+      varying vec2 vUv;
+      varying vec3 vViewDir;
+      varying vec3 vNormalEye;
+      void main() {
+        vec3 V = normalize(vViewDir);
+        /* parallax in view-space XY (eye is roughly flat in this projection) */
+        vec2 offset = -V.xy * uParallax;
+        vec2 uv = vUv + offset;
+        vec4 col = texture2D(uIrisMap, uv);
+        /* limbal ring — darken at outer edge */
+        vec2 c = vUv - 0.5;
+        float r = length(c) * 2.0;
+        col.rgb *= 1.0 - smoothstep(0.78, 1.0, r) * uLimbalDarken;
+        /* slight rim sparkle when normal aligns with view (specular hint) */
+        float NdotV = max(0.0, dot(vNormalEye, V));
+        col.rgb += pow(NdotV, 4.0) * 0.06;
+        gl_FragColor = vec4(col.rgb, 1.0);
+      }
+    `
+  });
+  const iris = new THREE.Mesh(new THREE.CircleGeometry(0.0098, 28), irisMat);
+  iris.position.z = 0.022;
+  iris.userData.isIris = true;
+  g.add(iris);
+  /* pupil (瞳孔) — 黑點 */
+  const pupil = new THREE.Mesh(
+    new THREE.CircleGeometry(0.0042, 18),
+    new THREE.MeshBasicMaterial({ color: 0x040404 })
+  );
+  pupil.position.z = 0.0224;
+  g.add(pupil);
+  /* highlight catch — 高光小白點(眼神光) */
+  const catchLight = new THREE.Mesh(
+    new THREE.CircleGeometry(0.0014, 12),
+    new THREE.MeshBasicMaterial({ color: 0xffffff })
+  );
+  catchLight.position.set(-0.0028 * side, 0.003, 0.0225);
+  g.add(catchLight);
+  /* 上眼瞼 (upper lid) — 厚 sphere segment */
+  const upperLid = new THREE.Mesh(
+    new THREE.SphereGeometry(0.029, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2.4),
+    skinMat
+  );
+  upperLid.scale.set(1, 0.42, 1);
+  upperLid.position.set(0, 0.005, 0.0015);
+  upperLid.userData.baseScaleY = 0.42;
+  upperLid.userData.baseY = 0.005;
+  g.add(upperLid);
+  /* 下眼瞼 (lower lid) — 較薄 */
+  const lowerLid = new THREE.Mesh(
+    new THREE.SphereGeometry(0.028, 16, 10, 0, Math.PI * 2, Math.PI / 1.8, Math.PI / 3),
+    skinMat
+  );
+  lowerLid.scale.set(1, 0.32, 1);
+  lowerLid.position.set(0, -0.003, 0.0015);
+  lowerLid.userData.baseScaleY = 0.32;
+  lowerLid.userData.baseY = -0.003;
+  g.add(lowerLid);
+  /* 記下兩眼皮 ref 給外部 blink 用 */
+  g.userData.upperLid = upperLid;
+  g.userData.lowerLid = lowerLid;
+  /* 記下 iris/pupil/catch refs 給外部 saccade(視線抖) */
+  g.userData.iris = iris;
+  g.userData.pupil = pupil;
+  g.userData.catchLight = catchLight;
+  /* 眼睫毛 — 6 strand 細短 curved cylinder 朝上 */
+  const lashMat = new THREE.MeshBasicMaterial({ color: 0x0a0604 });
+  for (let i = 0; i < 6; i++) {
+    const t = (i / 5) - 0.5;  /* -0.5 ~ +0.5 */
+    const lash = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.0006, 0.00018, 0.009, 4),
+      lashMat
+    );
+    lash.position.set(t * 0.024, 0.014, 0.019);
+    lash.rotation.x = -0.45;
+    lash.rotation.z = t * 0.35;
+    g.add(lash);
+  }
+  g.position.set(side * 0.048, 0.022, 0.105);
+  return g;
+}
+
+/* sculpted head — 細分 icosahedron + 5 區域 vertex 位移 */
+function buildHead(opts) {
+  const g = new THREE.Group();
+  g.userData.kind = 'head';
+  const skinColor = opts.skinColor || 0xe8c8b0;
+  const skinMat = makeSkinMaterial(skinColor);
+  /* === 1. 雕刻 head shape — subdivided icosahedron, detail=5 (~2560 tri / head) === */
+  const headGeo = new THREE.IcosahedronGeometry(0.13, 5);
+  const pos = headGeo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    let x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+    /* 縱向 elongate */
+    y *= 1.16;
+    /* 後腦勺 — z<0 拉長 */
+    if (z < 0) z *= 1.18;
+    /* 顴骨 cheekbone — 在臉側 y~-0.02, |x|>0.06, z>0.05 推外 */
+    if (Math.abs(x) > 0.06 && y > -0.08 && y < 0.05 && z > 0.04) {
+      const cheekW = 1 - Math.abs((y + 0.02)) / 0.07;
+      x += Math.sign(x) * cheekW * 0.014;
+    }
+    /* 下巴 jaw — taper bottom inward */
+    if (y < -0.04) {
+      const t = (0.13 + y) / 0.09;
+      const tap = 0.88 + 0.12 * Math.max(0, t);
+      x *= tap;
+      z *= tap;
+    }
+    /* 額頭 forehead — 微 flatten */
+    if (y > 0.08 && z > 0.07) z *= 0.96;
+    /* 眼窩 eye socket — 內凹 */
+    const eyeDistL = Math.sqrt((x + 0.05) ** 2 + (y - 0.025) ** 2);
+    const eyeDistR = Math.sqrt((x - 0.05) ** 2 + (y - 0.025) ** 2);
+    const minD = Math.min(eyeDistL, eyeDistR);
+    if (minD < 0.038 && z > 0.07) {
+      const amt = (1 - minD / 0.038) * 0.014;
+      z -= amt;
+    }
+    /* 鼻樑 bridge — 中央前推 */
+    if (Math.abs(x) < 0.018 && y > -0.04 && y < 0.04 && z > 0.1) {
+      z += (1 - Math.abs(y) / 0.04) * 0.013;
+    }
+    /* 嘴周 (philtrum + 唇下) — 微 inward */
+    if (y < -0.04 && y > -0.075 && z > 0.1) z -= 0.006;
+    /* 下巴尖 chin — 凸 */
+    if (y < -0.08 && Math.abs(x) < 0.04) z += 0.008;
+    pos.setXYZ(i, x, y, z);
+  }
+  headGeo.computeVertexNormals();
+  const head = new THREE.Mesh(headGeo, skinMat);
+  g.add(head);
+  /* === 2. 耳 — 多 part: 外輪廓 + 內凹 === */
+  function buildEar(side) {
+    const eg = new THREE.Group();
+    /* 外耳輪 */
+    const outerGeo = new THREE.SphereGeometry(0.028, 12, 10);
+    outerGeo.scale(0.8, 1.5, 0.5);
+    const outer = new THREE.Mesh(outerGeo, skinMat);
+    eg.add(outer);
+    /* 內凹 (concha) — 較深陰影 */
+    const innerMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(skinColor).multiplyScalar(0.7), roughness: 0.85 });
+    const innerGeo = new THREE.SphereGeometry(0.018, 10, 8);
+    innerGeo.scale(0.7, 1.2, 0.3);
+    const inner = new THREE.Mesh(innerGeo, innerMat);
+    inner.position.set(side * 0.005, 0, 0.012);
+    eg.add(inner);
+    /* 耳垂 (lobe) */
+    const lobe = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), skinMat);
+    lobe.position.set(side * -0.005, -0.028, 0);
+    eg.add(lobe);
+    eg.position.set(side * 0.135, 0.012, 0);
+    return eg;
+  }
+  g.add(buildEar(-1));
+  g.add(buildEar(1));
+  /* === 3. 鼻 lathe — 用 LatheGeometry 旋轉 profile 形成立體鼻 === */
+  const nosePoints = [
+    new THREE.Vector2(0.000, 0.000),
+    new THREE.Vector2(0.008, 0.005),
+    new THREE.Vector2(0.012, 0.015),
+    new THREE.Vector2(0.014, 0.030),
+    new THREE.Vector2(0.012, 0.045),
+    new THREE.Vector2(0.005, 0.055),
+    new THREE.Vector2(0.000, 0.058)
+  ];
+  const noseGeo = new THREE.LatheGeometry(nosePoints, 18);
+  noseGeo.rotateX(Math.PI / 2);
+  noseGeo.translate(0, -0.018, 0.13);
+  const nose = new THREE.Mesh(noseGeo, skinMat);
+  g.add(nose);
+  /* 鼻孔 — 兩個小暗點 */
+  const nostrilMat = new THREE.MeshStandardMaterial({ color: 0x4a2818, roughness: 0.9 });
+  for (let s of [-1, 1]) {
+    const nostril = new THREE.Mesh(new THREE.SphereGeometry(0.0035, 8, 6), nostrilMat);
+    nostril.position.set(s * 0.007, -0.038, 0.142);
+    g.add(nostril);
+  }
+  /* === 4. 真實眼睛 === */
+  const eyeL = buildEye(opts, -1);
+  const eyeR = buildEye(opts, 1);
+  g.add(eyeL); g.add(eyeR);
+  /* === 5. 眉毛 — 多 strand 模擬 (每邊 9 條短 cylinder) === */
+  const browMat = new THREE.MeshStandardMaterial({ color: 0x180b04, roughness: 0.78 });
+  for (let s of [-1, 1]) {
+    for (let i = 0; i < 9; i++) {
+      const t = (i / 8) - 0.5;  /* -0.5 ~ +0.5 */
+      const strand = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.0014, 0.0006, 0.012, 4),
+        browMat
+      );
+      const baseX = s * (0.05 + t * 0.025);
+      strand.position.set(baseX, 0.063 + Math.abs(t) * 0.005, 0.122);
+      strand.rotation.x = Math.PI / 2;
+      strand.rotation.z = s * 0.12 - t * 0.4;
+      g.add(strand);
+    }
+  }
+  /* === 6. 嘴 — 上下唇 (兩 curved sliver) + 唇縫 === */
+  const lipUpperMat = new THREE.MeshStandardMaterial({ color: 0xb86068, roughness: 0.5 });
+  const lipLowerMat = new THREE.MeshStandardMaterial({ color: 0xc66878, roughness: 0.48 });
+  /* 上唇 — slight arch */
+  const upperLipGeo = new THREE.SphereGeometry(0.022, 14, 8, 0, Math.PI, 0, Math.PI / 2);
+  upperLipGeo.scale(1.4, 0.32, 0.55);
+  const upperLip = new THREE.Mesh(upperLipGeo, lipUpperMat);
+  upperLip.position.set(0, -0.054, 0.124);
+  upperLip.rotation.x = -0.15;
+  g.add(upperLip);
+  /* 下唇 — 較豐潤 */
+  const lowerLipGeo = new THREE.SphereGeometry(0.024, 14, 8, 0, Math.PI, Math.PI / 2, Math.PI / 2);
+  lowerLipGeo.scale(1.35, 0.42, 0.65);
+  const lowerLip = new THREE.Mesh(lowerLipGeo, lipLowerMat);
+  lowerLip.position.set(0, -0.064, 0.124);
+  g.add(lowerLip);
+  /* 唇縫 line */
+  const mouthLine = new THREE.Mesh(
+    new THREE.BoxGeometry(0.038, 0.0008, 0.001),
+    new THREE.MeshBasicMaterial({ color: 0x5a2828 })
+  );
+  mouthLine.position.set(0, -0.0595, 0.133);
+  g.add(mouthLine);
+  /* === 7. 下巴陰影 (subtle warm gradient) === */
+  const chinShade = new THREE.Mesh(
+    new THREE.SphereGeometry(0.118, 16, 10, 0, Math.PI * 2, Math.PI / 2.5, Math.PI / 6),
+    new THREE.MeshStandardMaterial({ color: new THREE.Color(skinColor).multiplyScalar(0.78), roughness: 0.88 })
+  );
+  chinShade.position.y = -0.06;
+  g.add(chinShade);
+  /* 脖子 connector (subtle skin column) — 已由 body 處理, 此處只 face 區塊 */
+  g.userData.eyes = { L: eyeL, R: eyeR };
+  return g;
+}
+
+/* Anisotropic hair material — shimmer band perpendicular to strand axis.
+ * CylinderGeometry's local Y is the strand long axis. We pass it as a view-space
+ * tangent varying and compute a Gaussian highlight when view direction is
+ * perpendicular to the strand (classic Marschner / Kajiya–Kay surrogate).
+ * Also stacks: sheen for fly-aways, iridescence for color shimmer, slight clearcoat. */
+function makeHairMaterial(baseColor, opts) {
+  opts = opts || {};
+  const c = new THREE.Color(baseColor);
+  const mat = new THREE.MeshPhysicalMaterial({
+    color: baseColor,
+    roughness: opts.roughness != null ? opts.roughness : 0.38,
+    metalness: opts.metalness != null ? opts.metalness : 0.55,
+    emissive: c.clone().multiplyScalar(0.04),
+    sheen: 0.32,
+    sheenColor: new THREE.Color(0x4a2a18),
+    sheenRoughness: 0.42,
+    iridescence: 0.16,
+    iridescenceIOR: 1.18,
+    clearcoat: 0.22,
+    clearcoatRoughness: 0.5
+  });
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms.uHairBandColor = { value: new THREE.Color(opts.bandColor || 0x8a5028) };
+    shader.uniforms.uHairBandPower = { value: opts.bandPower || 26.0 };
+    shader.uniforms.uHairBandStrength = { value: opts.bandStrength || 0.55 };
+    /* Vertex — emit cylinder local-Y in view space (strand tangent) */
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>',
+        '#include <common>\nvarying vec3 vHairTangent;')
+      .replace('#include <project_vertex>',
+        '#include <project_vertex>\nvHairTangent = (modelViewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz;');
+    /* Fragment — Gaussian band when view perpendicular to tangent */
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>',
+        '#include <common>\nvarying vec3 vHairTangent;\nuniform vec3 uHairBandColor;\nuniform float uHairBandPower;\nuniform float uHairBandStrength;')
+      .replace('#include <opaque_fragment>', [
+        'vec3 hairT = normalize(vHairTangent);',
+        'vec3 hairV = normalize(vViewPosition);',
+        '/* TdotV near 0 => view perpendicular to strand => brightest shimmer */',
+        'float hairTV = dot(hairT, hairV);',
+        'float hairBand = exp(-hairTV * hairTV * uHairBandPower);',
+        '/* Secondary slightly offset band for double-highlight Marschner approximation */',
+        'float hairBand2 = exp(-(hairTV - 0.18) * (hairTV - 0.18) * (uHairBandPower * 1.6)) * 0.4;',
+        'outgoingLight += (hairBand + hairBand2) * uHairBandColor * uHairBandStrength;',
+        '#include <opaque_fragment>'
+      ].join('\n'));
+  };
+  return mat;
+}
+
+/* 學長 飛機頭 — strand-based (60+ 條 cylinder 模擬髮絲), 上翻 quiff 由 strand grouping 形成 */
+function buildSeniorHair() {
+  const g = new THREE.Group();
+  const hairMat = makeHairMaterial(0x0a0402, { roughness: 0.36, bandColor: 0x8c4e22, bandStrength: 0.58 });
+  const hairMat2 = makeHairMaterial(0x140a04, { roughness: 0.40, bandColor: 0x9a5828, bandStrength: 0.5 });
+  /* 1. 頭皮 base (緊貼頭骨, 短) */
+  const baseGeo = new THREE.SphereGeometry(0.135, 22, 18, 0, Math.PI * 2, 0, Math.PI / 2.4);
+  const base = new THREE.Mesh(baseGeo, hairMat);
+  base.position.y = 0.003;
+  g.add(base);
+  /* 2. 飛機頭 quiff — 前髮 strands 上翻立起 */
+  const quiffMat = makeHairMaterial(0x080300, { roughness: 0.34, metalness: 0.62, bandColor: 0xa05a28, bandStrength: 0.68, bandPower: 30 });
+  for (let i = 0; i < 28; i++) {
+    const tx = (Math.random() - 0.5) * 0.085;
+    const tz = 0.04 + Math.random() * 0.045;
+    const len = 0.085 + Math.random() * 0.04;
+    const strand = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.0025, 0.0009, len, 5),
+      quiffMat
+    );
+    /* 從 額頭 anchor 升起,中央更高 */
+    const centerBias = 1 - Math.abs(tx) / 0.045;
+    strand.position.set(tx, 0.13 + centerBias * 0.04, tz);
+    /* upturn rotation */
+    strand.rotation.x = -0.45 - centerBias * 0.18 + (Math.random() - 0.5) * 0.12;
+    strand.rotation.z = tx * 1.8 + (Math.random() - 0.5) * 0.12;
+    g.add(strand);
+  }
+  /* 3. 側髮 short trim (兩側 18 strands) */
+  for (let s of [-1, 1]) {
+    for (let i = 0; i < 18; i++) {
+      const yOff = -0.02 + (i / 18) * 0.1;
+      const zOff = -0.05 + Math.random() * 0.12;
+      const strand = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.0018, 0.0007, 0.04 + Math.random() * 0.02, 4),
+        hairMat
+      );
+      strand.position.set(s * (0.118 + Math.random() * 0.02), yOff, zOff);
+      strand.rotation.x = (Math.random() - 0.5) * 0.3;
+      strand.rotation.z = s * (0.22 + (Math.random() - 0.5) * 0.18);
+      g.add(strand);
+    }
+  }
+  /* 4. 後腦勺 strands (30 條) — 沿後半球分布 */
+  for (let i = 0; i < 30; i++) {
+    const ang = -Math.PI / 2 + (Math.random() - 0.5) * 1.4;
+    const yOff = -0.04 + Math.random() * 0.13;
+    const r = 0.132 + Math.random() * 0.012;
+    const x0 = Math.cos(ang) * r;
+    const z0 = Math.sin(ang) * r;
+    const strand = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.002, 0.0008, 0.045 + Math.random() * 0.02, 4),
+      hairMat2
+    );
+    strand.position.set(x0, yOff, z0);
+    strand.rotation.x = (Math.random() - 0.5) * 0.25;
+    strand.rotation.z = Math.cos(ang) * 0.45 + (Math.random() - 0.5) * 0.1;
+    g.add(strand);
+  }
+  return g;
+}
+
+/* 學妹 長髮 — 60+ 條 strand 從頭頂往背後下垂, 12 條動態 sway 瀏海 */
+function buildJuniorHair() {
+  const g = new THREE.Group();
+  g.userData.kind = 'juniorHair';
+  const hairMat = makeHairMaterial(0x150a06, { roughness: 0.34, bandColor: 0x8a5028, bandStrength: 0.6 });
+  const hairMat2 = makeHairMaterial(0x1c1108, { roughness: 0.38, bandColor: 0x9c5c30, bandStrength: 0.54 });
+  /* 1. 頭頂 cap (覆蓋頭皮) */
+  const cap = new THREE.Mesh(
+    new THREE.SphereGeometry(0.142, 24, 18, 0, Math.PI * 2, 0, Math.PI / 1.85),
+    hairMat
+  );
+  cap.position.y = -0.002;
+  g.add(cap);
+  /* 2. 長髮 strands (50 條 從頭頂後半圈下垂, 動態 sway) */
+  const longStrands = [];
+  for (let i = 0; i < 50; i++) {
+    /* 沿後半圈 (ang 從 -π/2 到 -3π/2 ≡ π/2~3π/2) random */
+    const ang = Math.PI / 2 + (Math.random() - 0.5) * 0.4 + ((i / 50) - 0.5) * Math.PI * 1.4;
+    const r = 0.135 + Math.random() * 0.018;
+    const x0 = Math.cos(ang) * r;
+    const z0 = Math.sin(ang) * r;
+    /* 長度隨機 0.35~0.50m */
+    const len = 0.36 + Math.random() * 0.14;
+    const strand = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.003, 0.0012, len, 6),
+      Math.random() > 0.5 ? hairMat : hairMat2
+    );
+    strand.position.set(x0, -len / 2 + 0.01, z0);
+    /* 微 outward + 微 forward random */
+    strand.rotation.x = (Math.random() - 0.5) * 0.18;
+    strand.rotation.z = x0 * 0.35 + (Math.random() - 0.5) * 0.12;
+    strand.userData.sway = true;
+    strand.userData.baseX = x0;
+    strand.userData.baseRotZ = strand.rotation.z;
+    strand.userData.basePhase = i * 0.13;
+    /* Verlet state — current + previous position drive velocity implicitly */
+    strand.userData.vx = x0;       /* current */
+    strand.userData.vpx = x0;      /* previous (initially equal) */
+    strand.userData.stiffness = 50 + Math.random() * 18;
+    strand.userData.damping = 0.93 + Math.random() * 0.04;
+    longStrands.push(strand);
+    g.add(strand);
+  }
+  /* 3. 瀏海 (前髮) — 14 條短 strand 從額頭垂下 */
+  for (let i = 0; i < 14; i++) {
+    const tx = (Math.random() - 0.5) * 0.11;
+    const len = 0.06 + Math.random() * 0.04;
+    const strand = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.0025, 0.001, len, 5),
+      hairMat
+    );
+    strand.position.set(tx, 0.05 + (Math.random() - 0.5) * 0.02, 0.108 + Math.random() * 0.012);
+    strand.rotation.x = 0.55 + (Math.random() - 0.5) * 0.25;
+    strand.rotation.z = tx * 2.4 + (Math.random() - 0.5) * 0.15;
+    g.add(strand);
+  }
+  /* 4. 髮絲 hint — 兩側更外突幾條 (動態 sway, 框臉的長髮) */
+  for (let s of [-1, 1]) {
+    for (let i = 0; i < 4; i++) {
+      const len = 0.32 + Math.random() * 0.1;
+      const strand = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.0028, 0.001, len, 5),
+        hairMat
+      );
+      const baseX = s * (0.13 + Math.random() * 0.02);
+      strand.position.set(baseX, -len / 2 + 0.03, 0.03 + Math.random() * 0.04);
+      strand.rotation.z = s * 0.18 + (Math.random() - 0.5) * 0.1;
+      strand.userData.sway = true;
+      strand.userData.baseX = baseX;
+      strand.userData.baseRotZ = strand.rotation.z;
+      strand.userData.basePhase = i * 0.4 + (s > 0 ? Math.PI : 0);
+      /* Verlet — slightly heavier side strands swing more on head turn */
+      strand.userData.vx = baseX;
+      strand.userData.vpx = baseX;
+      strand.userData.stiffness = 44 + Math.random() * 12;
+      strand.userData.damping = 0.94;
+      longStrands.push(strand);
+      g.add(strand);
+    }
+  }
+  g.userData.strands = longStrands;
+  return g;
+}
+
+/* 學長 粗框眼鏡 */
+function buildGlasses() {
+  const g = new THREE.Group();
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0x121212, roughness: 0.3, metalness: 0.48 });
+  const lensMat = new THREE.MeshPhysicalMaterial({ color: 0x88a0b8, transparent: true, opacity: 0.25, roughness: 0.1, metalness: 0, transmission: 0.6, ior: 1.4 });
+  const lensRimL = new THREE.Mesh(new THREE.TorusGeometry(0.048, 0.012, 10, 20), frameMat);
+  lensRimL.position.set(-0.052, 0.028, 0.122); g.add(lensRimL);
+  const lensRimR = lensRimL.clone(); lensRimR.position.set(0.052, 0.028, 0.122); g.add(lensRimR);
+  /* 鏡片 — slight reflective glass */
+  const lensGeo = new THREE.CircleGeometry(0.038, 16);
+  const lensL = new THREE.Mesh(lensGeo, lensMat); lensL.position.set(-0.052, 0.028, 0.119); g.add(lensL);
+  const lensR = new THREE.Mesh(lensGeo, lensMat); lensR.position.set(0.052, 0.028, 0.119); g.add(lensR);
+  /* 鼻樑 */
+  const bridge = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.012, 0.012), frameMat);
+  bridge.position.set(0, 0.028, 0.118); g.add(bridge);
+  /* 鏡腿 */
+  for (let s of [-1, 1]) {
+    const temple = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.006, 0.14), frameMat);
+    temple.position.set(s * 0.102, 0.028, 0.052); g.add(temple);
+  }
+  return g;
+}
+
+/* 通用 body (上半 + 下半) */
+/* Palm + 5 finger cylinders — replaces the previous sphere hand */
+function buildHand(skinMat, side) {
+  const handG = new THREE.Group();
+  /* palm — rounded box (4 segments per side enables vertex smoothing) */
+  const palmGeo = new THREE.BoxGeometry(0.062, 0.018, 0.072, 3, 2, 3);
+  const ppos = palmGeo.attributes.position;
+  for (let i = 0; i < ppos.count; i++) {
+    const x = ppos.getX(i), y = ppos.getY(i), z = ppos.getZ(i);
+    /* Smooth edges by scaling corner vertices toward an inscribed ellipsoid */
+    const nx = x / 0.031, ny = y / 0.009, nz = z / 0.036;
+    const d = Math.sqrt(nx*nx + ny*ny + nz*nz);
+    if (d > 0.95) {
+      const k = 0.95 / d;
+      ppos.setXYZ(i, x * (0.85 + 0.15*k), y * (0.85 + 0.15*k), z * (0.85 + 0.15*k));
+    }
+  }
+  palmGeo.computeVertexNormals();
+  const palm = new THREE.Mesh(palmGeo, skinMat);
+  handG.add(palm);
+  /* knuckle ridge — slight bump at top */
+  const knuckle = new THREE.Mesh(new THREE.BoxGeometry(0.058, 0.005, 0.018), skinMat);
+  knuckle.position.set(0, 0.011, -0.024);
+  handG.add(knuckle);
+  /* 4 fingers (index→pinky) + thumb */
+  const fingerSpecs = [
+    /* x offset,  base radius, tip radius, length, z offset (forward = -) */
+    { x: -0.022, rB: 0.0075, rT: 0.0058, L: 0.058, z: -0.038, bend: 0.10 },  /* index */
+    { x: -0.007, rB: 0.0078, rT: 0.006,  L: 0.062, z: -0.040, bend: 0.08 },  /* middle */
+    { x:  0.008, rB: 0.0075, rT: 0.0058, L: 0.058, z: -0.038, bend: 0.10 },  /* ring */
+    { x:  0.022, rB: 0.0068, rT: 0.0052, L: 0.048, z: -0.034, bend: 0.14 }   /* pinky */
+  ];
+  for (const f of fingerSpecs) {
+    const fingerG = new THREE.Group();
+    const fg = new THREE.CylinderGeometry(f.rT, f.rB, f.L, 8);
+    fg.translate(0, -f.L / 2, 0);
+    const finger = new THREE.Mesh(fg, skinMat);
+    /* slight curl forward */
+    finger.rotation.x = Math.PI / 2 + f.bend;
+    fingerG.add(finger);
+    /* knuckle joint */
+    const joint = new THREE.Mesh(new THREE.SphereGeometry(f.rB + 0.0008, 8, 6), skinMat);
+    fingerG.add(joint);
+    /* nail — small light box at tip */
+    const nail = new THREE.Mesh(
+      new THREE.BoxGeometry(f.rT * 1.4, 0.0006, f.rT * 1.8),
+      new THREE.MeshStandardMaterial({ color: 0xf8e4cf, roughness: 0.32, metalness: 0.08 })
+    );
+    /* place nail at the curved-forward tip — derived from rotated finger geometry */
+    const tipZ = f.z - Math.sin(f.bend) * f.L * 0.6 - Math.cos(f.bend) * 0.001;
+    const tipY = -Math.cos(f.bend) * f.L * 0.6 + 0.005;
+    nail.position.set(0, tipY, tipZ);
+    nail.rotation.x = -0.3 - f.bend;
+    fingerG.add(nail);
+    fingerG.position.set(f.x, 0.002, f.z * 0.0);  /* fingers attach at palm front */
+    fingerG.position.z = f.z;
+    handG.add(fingerG);
+  }
+  /* thumb — offset to side, rotated outward */
+  const thumbG = new THREE.Group();
+  const thumbGeo = new THREE.CylinderGeometry(0.0062, 0.008, 0.048, 8);
+  thumbGeo.translate(0, -0.024, 0);
+  const thumb = new THREE.Mesh(thumbGeo, skinMat);
+  thumb.rotation.z = -side * 0.6;
+  thumb.rotation.x = 1.0;
+  thumbG.add(thumb);
+  const thumbJoint = new THREE.Mesh(new THREE.SphereGeometry(0.009, 8, 6), skinMat);
+  thumbG.add(thumbJoint);
+  thumbG.position.set(side * 0.028, -0.005, -0.012);
+  handG.add(thumbG);
+  return handG;
+}
+
+function buildBody(opts) {
+  const g = new THREE.Group();
+  /* Sheen layer on cloth approximates fabric weave catching grazing light */
+  const shirtMat = new THREE.MeshPhysicalMaterial({
+    color: opts.shirtColor, roughness: 0.78, metalness: 0.0,
+    sheen: 0.45, sheenColor: new THREE.Color(opts.shirtColor).lerp(new THREE.Color(0xffffff), 0.5),
+    sheenRoughness: 0.7
+  });
+  const pantMat = new THREE.MeshPhysicalMaterial({
+    color: opts.pantColor, roughness: 0.7, metalness: 0.02,
+    sheen: 0.35, sheenColor: new THREE.Color(opts.pantColor).lerp(new THREE.Color(0xffffff), 0.3),
+    sheenRoughness: 0.8
+  });
+  const skinMat = makeSkinMaterial(opts.skinColor || 0xe8c8b0);
+  const shoeMat = new THREE.MeshStandardMaterial({ color: opts.shoeColor || 0xf0e8d0, roughness: 0.85 });
+
+  /* 脖子 */
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.05, 0.08, 12), skinMat);
+  neck.position.y = 0.32; g.add(neck);
+  /* 軀幹 — taper bottom (腰較窄) — add cloth wrinkles via vertex displacement */
+  const torsoGeo = new THREE.CylinderGeometry(0.14, opts.female ? 0.108 : 0.124, 0.45, 24, 12);
+  /* shirt wrinkles — vertical fold lines + horizontal stretch ripples */
+  const tpos = torsoGeo.attributes.position;
+  for (let i = 0; i < tpos.count; i++) {
+    const x = tpos.getX(i), y = tpos.getY(i), z = tpos.getZ(i);
+    const r = Math.sqrt(x*x + z*z);
+    if (r < 0.001) continue;
+    const ang = Math.atan2(z, x);
+    /* vertical folds — 6 around the body, depth varies with height */
+    const fold = Math.sin(ang * 6) * 0.0028 * Math.max(0, 1 - Math.abs(y) * 2.2);
+    /* horizontal stretch ripple near waist + chest */
+    const ripple = Math.sin(y * 18) * 0.0012;
+    /* combined inward/outward displacement along radial direction */
+    const scl = 1 + (fold + ripple) / r;
+    tpos.setXYZ(i, x * scl, y, z * scl);
+  }
+  torsoGeo.computeVertexNormals();
+  const torso = new THREE.Mesh(torsoGeo, shirtMat);
+  torso.position.y = 0.05; g.add(torso);
+  /* 肩 connect spheres */
+  const shoulderL = new THREE.Mesh(new THREE.SphereGeometry(0.075, 14, 12), shirtMat);
+  shoulderL.position.set(-0.158, 0.24, 0); g.add(shoulderL);
+  const shoulderR = new THREE.Mesh(new THREE.SphereGeometry(0.075, 14, 12), shirtMat);
+  shoulderR.position.set(0.158, 0.24, 0); g.add(shoulderR);
+
+  /* 上臂 + 下臂 + 手 */
+  function buildArm(side, opts2) {
+    const armG = new THREE.Group();
+    const upperGeo = new THREE.CylinderGeometry(0.04, 0.038, 0.22, 10);
+    const upper = new THREE.Mesh(upperGeo, shirtMat);
+    upper.position.y = -0.11; armG.add(upper);
+    /* 肘 */
+    const elbow = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), shirtMat);
+    elbow.position.y = -0.22; armG.add(elbow);
+    /* 下臂 — exposed skin if short sleeves OR same shirt material */
+    const lowerMat = opts.shortSleeve ? skinMat : shirtMat;
+    const lower = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.032, 0.21, 10), lowerMat);
+    lower.position.y = -0.34; armG.add(lower);
+    /* 手 — palm + 5 fingers (replaces previous sphere) */
+    const hand = buildHand(skinMat, side);
+    hand.position.y = -0.456;
+    /* fingers curl forward (downward when arm hangs) */
+    hand.rotation.x = 0.1;
+    armG.add(hand);
+    armG.userData.lower = lower;
+    armG.userData.hand = hand;
+    armG.position.set(side * 0.158, 0.24, 0);
+    return armG;
+  }
+  const armL = buildArm(-1, opts);
+  const armR = buildArm(1, opts);
+  /* 學長右手 holding phone — bent up to ear */
+  if (opts.pose === 'phoneCall') {
+    armR.rotation.x = -0.5;
+    armR.rotation.z = -1.2;
+  }
+  g.add(armL); g.add(armR);
+
+  /* 大腿 + 小腿 + 鞋 */
+  function buildLeg(side) {
+    const legG = new THREE.Group();
+    const upperGeo = new THREE.CylinderGeometry(0.062, 0.055, 0.36, 10);
+    const upper = new THREE.Mesh(upperGeo, pantMat);
+    upper.position.y = -0.18; legG.add(upper);
+    /* 膝 */
+    const knee = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), pantMat);
+    knee.position.y = -0.36; legG.add(knee);
+    const lowerGeo = new THREE.CylinderGeometry(0.05, 0.046, 0.34, 10);
+    const lowerMat = opts.shorts ? skinMat : pantMat;
+    const lower = new THREE.Mesh(lowerGeo, lowerMat);
+    lower.position.y = -0.535; legG.add(lower);
+    /* 鞋 */
+    const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.18), shoeMat);
+    shoe.position.set(0, -0.74, 0.035); legG.add(shoe);
+    /* 鞋帶 hint */
+    const lace = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.005, 0.02), new THREE.MeshStandardMaterial({ color: 0x666666 }));
+    lace.position.set(0, -0.71, 0.03); legG.add(lace);
+    legG.position.set(side * 0.062, -0.18, 0);
+    legG.userData.lower = lower;
+    legG.userData.shoe = shoe;
+    return legG;
+  }
+  const legL = buildLeg(-1);
+  const legR = buildLeg(1);
+  g.add(legL); g.add(legR);
+  g.userData.armL = armL; g.userData.armR = armR;
+  g.userData.legL = legL; g.userData.legR = legR;
+  return g;
+}
+
+/* 學長 manga / 飛機頭 + 粗眼鏡 + 白 T + 牛仔褲 — 拿手機站前門 */
+function buildSenior() {
+  const g = new THREE.Group();
+  g.userData.kind = 'senior';
+  /* 身體 */
+  const body = buildBody({
+    shirtColor: 0xf8f6f4,    /* 白 T */
+    pantColor: 0x3c5a8a,     /* 藍牛仔 */
+    skinColor: 0xe2b89a,
+    shortSleeve: true,
+    pose: 'phoneCall',
+    shoeColor: 0xeae0c8
+  });
+  body.position.y = 1.18;
+  g.add(body);
+  /* 頭 */
+  const head = buildHead({ skinColor: 0xe2b89a, eyeColor: 0x3a2410 });
+  head.position.y = 1.6;
+  g.add(head);
+  /* 髮 */
+  const hair = buildSeniorHair();
+  hair.position.y = 1.66;
+  g.add(hair);
+  /* 粗框眼鏡 */
+  const glasses = buildGlasses();
+  glasses.position.y = 1.6;
+  g.add(glasses);
+  /* 手機 (右手 holding to ear) */
+  const phone = new THREE.Mesh(
+    new THREE.BoxGeometry(0.07, 0.13, 0.018),
+    new THREE.MeshStandardMaterial({ color: 0x14181c, emissive: 0x4a3018, emissiveIntensity: 0.48, roughness: 0.4, metalness: 0.3 })
+  );
+  /* 手機 position: 右肩前 + up */
+  phone.position.set(0.15, 1.55, 0.04);
+  phone.rotation.z = -0.4;
+  g.add(phone);
+  /* 牛仔褲 belt */
+  const belt = new THREE.Mesh(
+    new THREE.TorusGeometry(0.13, 0.018, 8, 24),
+    new THREE.MeshStandardMaterial({ color: 0x2a1a10, roughness: 0.6 })
+  );
+  belt.position.y = 0.97;
+  belt.rotation.x = Math.PI / 2;
+  g.add(belt);
+  g.userData.body = body;
+  g.userData.head = head;
+  return g;
+}
+
+/* 學妹 白色長袖襯衫 + 牛仔短褲 + 白球鞋 + 長髮 — 從教室走出來 */
+function buildJunior() {
+  const g = new THREE.Group();
+  g.userData.kind = 'junior';
+  const body = buildBody({
+    shirtColor: 0xfafafa,    /* 白色長袖襯衫 */
+    pantColor: 0x6a7898,     /* 牛仔短褲 — slight darker */
+    skinColor: 0xf0d0b0,
+    shortSleeve: false,      /* 長袖 */
+    shorts: true,            /* 短褲 */
+    female: true,
+    shoeColor: 0xfafafa
+  });
+  body.position.y = 1.08;
+  body.scale.set(0.95, 0.92, 0.95);  /* 學妹較嬌小 */
+  g.add(body);
+  /* 頭 */
+  const head = buildHead({ skinColor: 0xf0d0b0, eyeColor: 0x281408 });
+  head.position.y = 1.5;
+  head.scale.set(0.95, 0.95, 0.95);
+  g.add(head);
+  /* 長髮 */
+  const hair = buildJuniorHair();
+  hair.position.y = 1.56;
+  g.add(hair);
+  /* 紙條 — 學妹左手 拿著 */
+  const paperGeo = new THREE.PlaneGeometry(0.08, 0.06, 4, 2);
+  /* 微 fold */
+  const positions = paperGeo.attributes.position.array;
+  for (let i = 0; i < positions.length; i += 3) positions[i + 2] = Math.sin(positions[i] * 12) * 0.005;
+  paperGeo.computeVertexNormals();
+  const paperMat = new THREE.MeshStandardMaterial({ color: 0xfdfaf2, side: THREE.DoubleSide, roughness: 0.92 });
+  const paper = new THREE.Mesh(paperGeo, paperMat);
+  paper.position.set(-0.12, 0.7, 0.08);
+  paper.rotation.set(0.4, 0.2, -0.2);
+  g.add(paper);
+  g.userData.body = body;
+  g.userData.head = head;
+  g.userData.hair = hair;
+  return g;
+}
+
+/* 簡化同學 — 4 個 */
+function buildFriend(opts) {
+  const g = new THREE.Group();
+  g.userData.kind = 'friend';
+  const body = buildBody({
+    shirtColor: opts.shirtColor || 0xc8c0b4,
+    pantColor: opts.pantColor || 0x4a5878,
+    skinColor: opts.skinColor || 0xe8c8b0,
+    shortSleeve: opts.shortSleeve || false,
+    shoeColor: opts.shoeColor || 0xeae0c8
+  });
+  body.position.y = 1.1;
+  body.scale.set(0.95, opts.scale || 0.96, 0.95);
+  g.add(body);
+  /* 頭 */
+  const head = buildHead({ skinColor: opts.skinColor || 0xe8c8b0, eyeColor: 0x2a1408 });
+  head.position.y = 1.52;
+  g.add(head);
+  /* 簡化髮 */
+  const hairMat = makeHairMaterial(0x180c06, { roughness: 0.4, bandColor: 0x8a5028, bandStrength: 0.5 });
+  const hairGeo = new THREE.SphereGeometry(0.142, 20, 16, 0, Math.PI * 2, 0, Math.PI / 1.95);
+  const hair = new THREE.Mesh(hairGeo, hairMat);
+  hair.position.y = 1.54;
+  if (opts.longHair) {
+    hair.scale.set(1, 1.05, 1);
+    /* 長髮 back panel */
+    const back = new THREE.Mesh(
+      new THREE.SphereGeometry(0.155, 14, 12, 0, Math.PI, Math.PI / 4, Math.PI / 2.2),
+      hairMat
+    );
+    back.position.set(0, 1.42, -0.04);
+    back.scale.set(1, 2.0, 0.85);
+    back.rotation.y = Math.PI;
+    g.add(back);
+  }
+  g.add(hair);
+  g.userData.body = body;
+  g.userData.head = head;
+  return g;
+}
+
+/* ===================================================================
+   桌椅 — 教室內 array
+   =================================================================== */
+function buildDesk() {
+  const g = new THREE.Group();
+  const woodMat = new THREE.MeshStandardMaterial({ color: 0x6a4828, roughness: 0.55 });
+  const top = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.04, 0.42), woodMat);
+  top.position.y = 0.72; g.add(top);
+  /* 4 legs */
+  for (const [x, z] of [[-0.27, -0.18], [0.27, -0.18], [-0.27, 0.18], [0.27, 0.18]]) {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.7, 0.04), new THREE.MeshStandardMaterial({ color: 0x1a1208 }));
+    leg.position.set(x, 0.36, z); g.add(leg);
+  }
+  return g;
+}
+function buildChair() {
+  const g = new THREE.Group();
+  const woodMat = new THREE.MeshStandardMaterial({ color: 0x5a3818, roughness: 0.62 });
+  const seat = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.03, 0.36), woodMat);
+  seat.position.y = 0.42; g.add(seat);
+  /* 4 legs */
+  for (const [x, z] of [[-0.15, -0.15], [0.15, -0.15], [-0.15, 0.15], [0.15, 0.15]]) {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.42, 0.03), new THREE.MeshStandardMaterial({ color: 0x1a1208 }));
+    leg.position.set(x, 0.21, z); g.add(leg);
+  }
+  /* back */
+  const back = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.4, 0.03), woodMat);
+  back.position.set(0, 0.62, -0.16); g.add(back);
+  return g;
+}
+
+/* ===================================================================
+   Populate 場景
+   =================================================================== */
+
+/* Helper — toggle shadows on a character subtree */
+function enableShadows(obj) {
+  obj.traverse(m => {
+    if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; }
+  });
+}
+
+/* 學長 — 站前門外打電話, 略偏 左前 */
+const senior = buildSenior();
+senior.position.set(1.6, 0, -2.5);
+senior.rotation.y = -Math.PI / 2.4;  /* 朝向後門方向看 */
+enableShadows(senior);
+scene.add(senior);
+
+/* 學妹 — 從後門走出, lead — slight contrapposto: head tilt + body lean */
+const junior = buildJunior();
+junior.position.set(3.0, 0, -7.8);
+junior.rotation.y = -Math.PI / 1.6;  /* 朝鏡頭+前門方向 */
+/* asymmetric stance — natural standing weight on one leg */
+if (junior.userData.head) junior.userData.head.rotation.z = 0.08;
+if (junior.userData.body) {
+  junior.userData.body.rotation.z = -0.04;
+  if (junior.userData.body.userData.armL) junior.userData.body.userData.armL.rotation.z = 0.18;
+  if (junior.userData.body.userData.armR) junior.userData.body.userData.armR.rotation.z = -0.06;
+}
+enableShadows(junior);
+scene.add(junior);
+
+/* 4 同學 在學妹旁邊 */
+const friends = [];
+const friendOpts = [
+  { shirtColor: 0xc8b890, pantColor: 0x3a4a6a, skinColor: 0xe8c8a8, longHair: true,  shoeColor: 0xfafafa },
+  { shirtColor: 0xb8c8d8, pantColor: 0x382a1c, skinColor: 0xeacca8, longHair: false, shoeColor: 0x1a1410 },
+  { shirtColor: 0xf0d0c8, pantColor: 0x4a4838, skinColor: 0xeec8a8, longHair: true,  shoeColor: 0xeae0c8 },
+  { shirtColor: 0xa8a890, pantColor: 0x2c3848, skinColor: 0xdcb898, longHair: false, shoeColor: 0xfafafa }
+];
+const friendPositions = [
+  { x: 3.5, z: -7.2 },
+  { x: 2.6, z: -7.4 },
+  { x: 3.6, z: -8.2 },
+  { x: 2.7, z: -8.4 }
+];
+for (let i = 0; i < 4; i++) {
+  const f = buildFriend(friendOpts[i]);
+  f.position.set(friendPositions[i].x, 0, friendPositions[i].z);
+  f.rotation.y = -Math.PI / 1.5 + (Math.random() - 0.5) * 0.4;
+  enableShadows(f);
+  scene.add(f);
+  friends.push(f);
+}
+
+/* 教室內桌椅 array — 在教室裡 (門外看進去) */
+const desks = [];
+for (let row = 0; row < 3; row++) {
+  for (let col = 0; col < 2; col++) {
+    const desk = buildDesk();
+    desk.position.set(6.5 + col * 0.85, 0, -7 - row * 0.85 + 1);
+    scene.add(desk);
+    const chair = buildChair();
+    chair.position.set(6.5 + col * 0.85, 0, -7 - row * 0.85 + 1.45);
+    scene.add(chair);
+    desks.push(desk);
+  }
+}
+
+/* ===================================================================
+   紅線 from 學長手 to 學妹頭
+   =================================================================== */
+const redLineUniforms = {
+  uTime: { value: 0 },
+  uPulse: { value: 0.62 },
+  uIntensity: { value: 1.0 }
+};
+const redLineMat = new THREE.ShaderMaterial({
+  uniforms: redLineUniforms,
+  transparent: true,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+  vertexShader: `
+    varying float vT;
+    attribute float aT;
+    void main() {
+      vT = aT;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    precision highp float;
+    uniform float uTime; uniform float uPulse; uniform float uIntensity;
+    varying float vT;
+    void main() {
+      float flow = sin(vT * 22.0 - uTime * 2.6) * 0.5 + 0.5;
+      float pulse = sin(uTime * 1.4) * 0.5 + 0.5;
+      float edge = 1.0 - smoothstep(0.0, 0.4, abs(vT - 0.5) * 2.0);
+      vec3 colA = vec3(0.85, 0.12, 0.16);
+      vec3 colB = vec3(1.0, 0.32, 0.28);
+      vec3 colC = vec3(1.0, 0.88, 0.62);
+      vec3 c = mix(colA, colB, flow);
+      c = mix(c, colC, pulse * 0.38);
+      float alpha = (0.55 + flow * 0.45 + pulse * 0.18) * (0.5 + edge * 0.5) * uIntensity;
+      gl_FragColor = vec4(c, alpha);
+    }
+  `
+});
+function makeRedLineGeo() {
+  const N = 120;
+  const positions = new Float32Array(N * 3);
+  const tAttrs = new Float32Array(N);
+  /* from senior right hand (~1.55, 0.15, 0) world to junior head (~3.0, 1.55, -7.8) */
+  const a = new THREE.Vector3(1.75, 1.55, -2.45);
+  const b = new THREE.Vector3(3.0, 1.6, -7.8);
+  for (let i = 0; i < N; i++) {
+    const t = i / (N - 1);
+    /* 微弧 + 微擾動 */
+    const x = a.x + t * (b.x - a.x) + (Math.random() - 0.5) * 0.02;
+    const y = a.y + t * (b.y - a.y) + Math.sin(t * Math.PI) * 0.45;
+    const z = a.z + t * (b.z - a.z) + (Math.random() - 0.5) * 0.02;
+    positions[i * 3] = x; positions[i * 3 + 1] = y; positions[i * 3 + 2] = z;
+    tAttrs[i] = t;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('aT', new THREE.BufferAttribute(tAttrs, 1));
+  return geo;
+}
+const redLineGeo = makeRedLineGeo();
+const redLine = new THREE.Line(redLineGeo, redLineMat);
+scene.add(redLine);
+
+/* ===================================================================
+   塵粒 (in beam)
+   =================================================================== */
+const DUST_N = 320;
+const dustGeo = new THREE.BufferGeometry();
+const dustPos = new Float32Array(DUST_N * 3);
+const dustOff = new Float32Array(DUST_N);
+for (let i = 0; i < DUST_N; i++) {
+  dustPos[i * 3] = (Math.random() - 0.5) * 8.5;
+  dustPos[i * 3 + 1] = Math.random() * 3.4;
+  dustPos[i * 3 + 2] = -Math.random() * 18;
+  dustOff[i] = Math.random();
+}
+dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+dustGeo.setAttribute('aOff', new THREE.BufferAttribute(dustOff, 1));
+const dustMat = new THREE.ShaderMaterial({
+  uniforms: { uTime: { value: 0 }, uIntensity: { value: 1.0 } },
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  vertexShader: `
+    attribute float aOff;
+    uniform float uTime;
+    varying float vDepth; varying float vOff;
+    void main() {
+      vOff = aOff;
+      vec3 pos = position;
+      pos.y += sin(uTime * 0.3 + aOff * 6.28) * 0.12;
+      pos.x += cos(uTime * 0.18 + aOff * 4.2) * 0.08;
+      vec4 mv = modelViewMatrix * vec4(pos, 1.0);
+      vDepth = -mv.z;
+      gl_Position = projectionMatrix * mv;
+      gl_PointSize = (4.0 + aOff * 6.0) * (60.0 / vDepth);
+    }
+  `,
+  fragmentShader: `
+    precision highp float;
+    uniform float uTime; uniform float uIntensity;
+    varying float vDepth; varying float vOff;
+    void main() {
+      vec2 uv = gl_PointCoord - 0.5;
+      float d = length(uv);
+      if (d > 0.5) discard;
+      float soft = 1.0 - smoothstep(0.0, 0.5, d);
+      float beamHint = smoothstep(0.0, 1.0, (vOff + sin(uTime * 0.2) * 0.2));
+      vec3 c = mix(vec3(0.85, 0.78, 0.62), vec3(1.0, 0.95, 0.78), beamHint);
+      float a = soft * (0.16 + beamHint * 0.42) * uIntensity;
+      gl_FragColor = vec4(c, a);
+    }
+  `
+});
+const dust = new THREE.Points(dustGeo, dustMat);
+scene.add(dust);
+
+/* ===================================================================
+   體積光 (god rays surrogate)
+   =================================================================== */
+function makeGodRayLayer(z, opacity, scale) {
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(128, 128, 4, 128, 128, 128);
+  g.addColorStop(0, 'rgba(255, 235, 180, 0.88)');
+  g.addColorStop(0.35, 'rgba(255, 212, 150, 0.42)');
+  g.addColorStop(0.7, 'rgba(255, 196, 132, 0.16)');
+  g.addColorStop(1, 'rgba(255, 196, 132, 0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 256, 256);
+  const tex = new THREE.CanvasTexture(c);
+  const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, opacity: opacity });
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(scale, scale), mat);
+  m.position.set(0, 1.95, z);
+  return m;
+}
+const godRays = new THREE.Group();
+godRays.add(makeGodRayLayer(-16, 0.95, 5.6));
+godRays.add(makeGodRayLayer(-12.5, 0.62, 4.4));
+godRays.add(makeGodRayLayer(-9, 0.42, 3.6));
+godRays.add(makeGodRayLayer(-5.5, 0.28, 2.8));
+scene.add(godRays);
+
+/* ===================================================================
+   光照 — multi-light 設置
+   =================================================================== */
+const sun = new THREE.DirectionalLight(0xffd388, 1.55);
+sun.position.set(0, 4.5, -15);
+sun.target.position.set(0, 1.2, 0);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+sun.shadow.camera.left = -7;  sun.shadow.camera.right = 7;
+sun.shadow.camera.top = 6;    sun.shadow.camera.bottom = -2;
+sun.shadow.camera.near = 0.5; sun.shadow.camera.far = 28;
+sun.shadow.bias = -0.0004;
+sun.shadow.normalBias = 0.02;
+scene.add(sun, sun.target);
+const ambient = new THREE.AmbientLight(0x4a3024, 0.42);
+scene.add(ambient);
+/* Key light from window */
+const keyWin = new THREE.PointLight(0xffd388, 1.2, 18);
+keyWin.position.set(0, 2.2, -16);
+scene.add(keyWin);
+/* Fill light cool (走廊另一頭) */
+const fillCool = new THREE.PointLight(0x6a8aa8, 0.42, 14);
+fillCool.position.set(0, 2.4, 3);
+scene.add(fillCool);
+/* Rim light red (從紅線方向 cast) */
+const rimRed = new THREE.PointLight(0xff7858, 0.88, 6);
+rimRed.position.set(2.0, 1.7, -5);
+scene.add(rimRed);
+/* 學長 facial fill */
+const seniorFace = new THREE.PointLight(0xfff0d8, 0.42, 2.4);
+seniorFace.position.set(1.6, 1.7, -1.9);
+scene.add(seniorFace);
+/* 學妹 facial fill */
+const juniorFace = new THREE.PointLight(0xfff0e8, 0.42, 2.4);
+juniorFace.position.set(3.0, 1.65, -7.2);
+scene.add(juniorFace);
+
+/* ===================================================================
+   PostFX (多 pass) — bright extract + 兩向 blur + 合成
+   =================================================================== */
+class PostFX {
+  constructor(renderer) {
+    this.renderer = renderer;
+    this.rtMain = this.makeRT(1, true);   /* with depth texture */
+    this.rtBlurA = this.makeRT(0.5);
+    this.rtBlurB = this.makeRT(0.5);
+    this.rtDofA = this.makeRT(0.5);      /* DOF blur target — large blur for far field */
+    this.rtDofB = this.makeRT(0.5);
+    this.rtSSAO = this.makeRT(0.5);      /* SSAO occlusion */
+    this.rtSSAOBlur = this.makeRT(0.5);
+    this.fsCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    this.fsScene = new THREE.Scene();
+    this.fsQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.makeBrightMat());
+    this.fsScene.add(this.fsQuad);
+    this.matBright = this.fsQuad.material;
+    this.matBlur = this.makeBlurMat();
+    this.matSSAO = this.makeSSAOMat();
+    this.matFinal = this.makeFinalMat();
+  }
+  makeRT(scale, withDepth) {
+    /* Clamp DPR to 2 — must match renderer.setPixelRatio above. Otherwise iPhone
+     * (DPR=3) creates 6 HalfFloat RTs at 9x size → ~600MB VRAM (Codex r1 catch). */
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    const w = Math.floor(innerWidth * dpr * scale);
+    const h = Math.floor(innerHeight * dpr * scale);
+    const opts = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, type: THREE.HalfFloatType };
+    if (withDepth) {
+      const dt = new THREE.DepthTexture(w, h);
+      dt.format = THREE.DepthFormat;
+      dt.type = THREE.UnsignedShortType;
+      opts.depthTexture = dt;
+    }
+    return new THREE.WebGLRenderTarget(w, h, opts);
+  }
+  resize() {
+    /* Same DPR clamp as makeRT — keep all post-fx targets in sync with renderer */
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    this.rtMain.setSize(innerWidth * dpr, innerHeight * dpr);
+    this.rtBlurA.setSize(innerWidth * dpr * 0.5, innerHeight * dpr * 0.5);
+    this.rtBlurB.setSize(innerWidth * dpr * 0.5, innerHeight * dpr * 0.5);
+    this.rtDofA.setSize(innerWidth * dpr * 0.5, innerHeight * dpr * 0.5);
+    this.rtDofB.setSize(innerWidth * dpr * 0.5, innerHeight * dpr * 0.5);
+    this.rtSSAO.setSize(innerWidth * dpr * 0.5, innerHeight * dpr * 0.5);
+    this.rtSSAOBlur.setSize(innerWidth * dpr * 0.5, innerHeight * dpr * 0.5);
+  }
+  /* SSAO — sample 8 hemispheric points around each pixel; count those occluded by deeper geometry */
+  makeSSAOMat() {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        tDepth: { value: null },
+        uRes: { value: new THREE.Vector2(innerWidth, innerHeight) },
+        uNear: { value: 0.1 }, uFar: { value: 80 },
+        uRadius: { value: 0.012 },          /* sample radius in normalized depth */
+        uStrength: { value: 1.3 },           /* AO darkening multiplier */
+        uBias: { value: 0.0008 }
+      },
+      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position, 1.0); }',
+      fragmentShader: `
+        precision highp float;
+        uniform sampler2D tDepth;
+        uniform vec2 uRes;
+        uniform float uNear; uniform float uFar;
+        uniform float uRadius; uniform float uStrength; uniform float uBias;
+        varying vec2 vUv;
+        float linearDepth(float z) {
+          float ndc = z * 2.0 - 1.0;
+          float view = (2.0 * uNear * uFar) / (uFar + uNear - ndc * (uFar - uNear));
+          return view / uFar;
+        }
+        /* 8 stratified hemisphere samples (in 2D screen space, weighted by distance) */
+        const vec2 kSamples[8] = vec2[8](
+          vec2( 0.30,  0.10), vec2(-0.18,  0.34), vec2(-0.40, -0.14), vec2( 0.12, -0.38),
+          vec2( 0.62,  0.42), vec2(-0.56,  0.50), vec2(-0.48, -0.62), vec2( 0.50, -0.58)
+        );
+        float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+        void main() {
+          float z = texture2D(tDepth, vUv).r;
+          float d = linearDepth(z);
+          if (z >= 0.999) { gl_FragColor = vec4(1.0); return; }   /* sky / background */
+          float rot = hash(vUv * 1024.0) * 6.2832;
+          float cs = cos(rot), sn = sin(rot);
+          mat2 R = mat2(cs, -sn, sn, cs);
+          float occ = 0.0;
+          for (int i = 0; i < 8; i++) {
+            vec2 off = R * kSamples[i] * uRadius;
+            float sz = texture2D(tDepth, vUv + off).r;
+            float sd = linearDepth(sz);
+            float depthDelta = d - sd;
+            /* occluded if sampled depth is closer to camera + within range */
+            float rangeMask = smoothstep(uRadius * 2.0, 0.0, abs(depthDelta));
+            occ += step(uBias, depthDelta) * rangeMask;
+          }
+          occ /= 8.0;
+          float ao = 1.0 - occ * uStrength;
+          gl_FragColor = vec4(ao, ao, ao, 1.0);
+        }
+      `
+    });
+  }
+  makeBrightMat() {
+    return new THREE.ShaderMaterial({
+      uniforms: { tDiffuse: { value: null }, uThreshold: { value: 0.74 } },
+      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position, 1.0); }',
+      fragmentShader: `
+        uniform sampler2D tDiffuse; uniform float uThreshold; varying vec2 vUv;
+        void main() {
+          vec4 c = texture2D(tDiffuse, vUv);
+          float lum = dot(c.rgb, vec3(0.299, 0.587, 0.114));
+          float w = smoothstep(uThreshold, uThreshold + 0.18, lum);
+          gl_FragColor = vec4(c.rgb * w, c.a);
+        }
+      `
+    });
+  }
+  makeBlurMat() {
+    return new THREE.ShaderMaterial({
+      uniforms: { tDiffuse: { value: null }, uDir: { value: new THREE.Vector2(1, 0) }, uRes: { value: new THREE.Vector2(innerWidth, innerHeight) } },
+      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position, 1.0); }',
+      fragmentShader: `
+        uniform sampler2D tDiffuse; uniform vec2 uDir; uniform vec2 uRes; varying vec2 vUv;
+        void main() {
+          vec2 px = uDir / uRes;
+          vec4 sum = vec4(0.0);
+          sum += texture2D(tDiffuse, vUv - px * 4.0) * 0.05;
+          sum += texture2D(tDiffuse, vUv - px * 3.0) * 0.09;
+          sum += texture2D(tDiffuse, vUv - px * 2.0) * 0.12;
+          sum += texture2D(tDiffuse, vUv - px * 1.0) * 0.15;
+          sum += texture2D(tDiffuse, vUv) * 0.18;
+          sum += texture2D(tDiffuse, vUv + px * 1.0) * 0.15;
+          sum += texture2D(tDiffuse, vUv + px * 2.0) * 0.12;
+          sum += texture2D(tDiffuse, vUv + px * 3.0) * 0.09;
+          sum += texture2D(tDiffuse, vUv + px * 4.0) * 0.05;
+          gl_FragColor = sum;
+        }
+      `
+    });
+  }
+  makeFinalMat() {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        tDiffuse: { value: null }, tBloom: { value: null },
+        tDof: { value: null }, tDepth: { value: null },
+        tSSAO: { value: null },
+        uTime: { value: 0 },
+        uBloomStrength: { value: 0.62 }, uChromaStrength: { value: 1.0 }, uGrainStrength: { value: 1.0 },
+        uDofStrength: { value: 1.0 },
+        uSSAOStrength: { value: 1.0 },
+        uFocusDepth: { value: 0.92 },     /* normalized depth where focus is sharp */
+        uFocusRange: { value: 0.06 },     /* sharp band half-width */
+        uNear: { value: 0.1 }, uFar: { value: 80 }
+      },
+      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position, 1.0); }',
+      fragmentShader: `
+        precision highp float;
+        uniform sampler2D tDiffuse; uniform sampler2D tBloom; uniform sampler2D tDof; uniform sampler2D tDepth; uniform sampler2D tSSAO;
+        uniform float uTime; uniform float uBloomStrength; uniform float uChromaStrength; uniform float uGrainStrength;
+        uniform float uDofStrength; uniform float uSSAOStrength; uniform float uFocusDepth; uniform float uFocusRange;
+        uniform float uNear; uniform float uFar;
+        varying vec2 vUv;
+        float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+        /* perspective depth → linear 0..1 across far range */
+        float linearDepth(float z) {
+          float ndc = z * 2.0 - 1.0;
+          float view = (2.0 * uNear * uFar) / (uFar + uNear - ndc * (uFar - uNear));
+          return view / uFar;
+        }
+        void main() {
+          vec2 uv = vUv;
+          vec2 toCenter = uv - 0.5;
+          float dist = length(toCenter);
+          float chromaAmt = 0.0028 * uChromaStrength * smoothstep(0.0, 0.7, dist);
+          vec2 dir = normalize(toCenter + 1e-5);
+          /* sharp sample */
+          vec3 sharp;
+          sharp.r = texture2D(tDiffuse, uv - dir * chromaAmt).r;
+          sharp.g = texture2D(tDiffuse, uv).g;
+          sharp.b = texture2D(tDiffuse, uv + dir * chromaAmt).b;
+          /* DOF — depth-aware blur mix */
+          float depthRaw = texture2D(tDepth, uv).r;
+          float depth = linearDepth(depthRaw);
+          float coc = clamp(abs(depth - uFocusDepth) / uFocusRange - 1.0, 0.0, 1.0);
+          /* heavier blur for far field, lighter for near */
+          coc *= uDofStrength;
+          vec3 blur = texture2D(tDof, uv).rgb;
+          vec3 col = mix(sharp, blur, coc);
+          /* SSAO multiply — darken occluded crevices */
+          float ao = texture2D(tSSAO, uv).r;
+          float aoApplied = mix(1.0, ao, uSSAOStrength);
+          col *= aoApplied;
+          /* bloom add */
+          vec3 bloom = texture2D(tBloom, uv).rgb;
+          col += bloom * uBloomStrength;
+          col = col / (1.0 + col);
+          col = pow(col, vec3(1.0 / 2.2));
+          float grain = (hash(uv * 1024.0 + uTime * 60.0) - 0.5) * 0.072 * uGrainStrength;
+          col += grain;
+          float vig = smoothstep(0.7, 0.42, dist);
+          col *= 0.92 + vig * 0.08;
+          col.r = col.r * 1.04 + 0.01;
+          col.b = col.b * 0.96 - 0.005;
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `
+    });
+  }
+  render(scene, cam, fx, time) {
+    this.renderer.setRenderTarget(this.rtMain);
+    this.renderer.clear();
+    this.renderer.render(scene, cam);
+    if (fx.bloom) {
+      this.fsQuad.material = this.matBright;
+      this.matBright.uniforms.tDiffuse.value = this.rtMain.texture;
+      this.renderer.setRenderTarget(this.rtBlurA);
+      this.renderer.render(this.fsScene, this.fsCam);
+      this.fsQuad.material = this.matBlur;
+      this.matBlur.uniforms.tDiffuse.value = this.rtBlurA.texture;
+      this.matBlur.uniforms.uDir.value.set(1, 0);
+      this.matBlur.uniforms.uRes.value.set(this.rtBlurA.width, this.rtBlurA.height);
+      this.renderer.setRenderTarget(this.rtBlurB);
+      this.renderer.render(this.fsScene, this.fsCam);
+      this.matBlur.uniforms.tDiffuse.value = this.rtBlurB.texture;
+      this.matBlur.uniforms.uDir.value.set(0, 1);
+      this.renderer.setRenderTarget(this.rtBlurA);
+      this.renderer.render(this.fsScene, this.fsCam);
+    }
+    /* SSAO — sample depth, occlusion-darken creases; cheap blur to soften */
+    if (fx.ssao) {
+      this.fsQuad.material = this.matSSAO;
+      this.matSSAO.uniforms.tDepth.value = this.rtMain.depthTexture;
+      this.matSSAO.uniforms.uNear.value = cam.near;
+      this.matSSAO.uniforms.uFar.value = cam.far;
+      this.matSSAO.uniforms.uRes.value.set(this.rtSSAO.width, this.rtSSAO.height);
+      this.renderer.setRenderTarget(this.rtSSAO);
+      this.renderer.render(this.fsScene, this.fsCam);
+      /* one Gaussian pass to denoise the SSAO */
+      this.fsQuad.material = this.matBlur;
+      this.matBlur.uniforms.tDiffuse.value = this.rtSSAO.texture;
+      this.matBlur.uniforms.uDir.value.set(1, 0);
+      this.matBlur.uniforms.uRes.value.set(this.rtSSAOBlur.width, this.rtSSAOBlur.height);
+      this.renderer.setRenderTarget(this.rtSSAOBlur);
+      this.renderer.render(this.fsScene, this.fsCam);
+      this.matBlur.uniforms.tDiffuse.value = this.rtSSAOBlur.texture;
+      this.matBlur.uniforms.uDir.value.set(0, 1);
+      this.renderer.setRenderTarget(this.rtSSAO);
+      this.renderer.render(this.fsScene, this.fsCam);
+    }
+    /* DOF — separable Gaussian blur of full scene (not just bright pixels) into rtDofA */
+    if (fx.dof) {
+      this.fsQuad.material = this.matBlur;
+      this.matBlur.uniforms.tDiffuse.value = this.rtMain.texture;
+      this.matBlur.uniforms.uDir.value.set(1, 0);
+      this.matBlur.uniforms.uRes.value.set(this.rtDofA.width, this.rtDofA.height);
+      this.renderer.setRenderTarget(this.rtDofB);
+      this.renderer.render(this.fsScene, this.fsCam);
+      this.matBlur.uniforms.tDiffuse.value = this.rtDofB.texture;
+      this.matBlur.uniforms.uDir.value.set(0, 1);
+      this.renderer.setRenderTarget(this.rtDofA);
+      this.renderer.render(this.fsScene, this.fsCam);
+    }
+    this.fsQuad.material = this.matFinal;
+    this.matFinal.uniforms.tDiffuse.value = this.rtMain.texture;
+    this.matFinal.uniforms.tBloom.value = fx.bloom ? this.rtBlurA.texture : this.rtMain.texture;
+    this.matFinal.uniforms.tDof.value = fx.dof ? this.rtDofA.texture : this.rtMain.texture;
+    this.matFinal.uniforms.tDepth.value = this.rtMain.depthTexture;
+    this.matFinal.uniforms.tSSAO.value = fx.ssao ? this.rtSSAO.texture : this.rtMain.texture;
+    this.matFinal.uniforms.uTime.value = time;
+    this.matFinal.uniforms.uBloomStrength.value = fx.bloom ? 0.62 : 0.0;
+    this.matFinal.uniforms.uChromaStrength.value = fx.chroma ? 1.0 : 0.0;
+    this.matFinal.uniforms.uGrainStrength.value = fx.grain ? 1.0 : 0.0;
+    this.matFinal.uniforms.uDofStrength.value = fx.dof ? 1.0 : 0.0;
+    this.matFinal.uniforms.uSSAOStrength.value = fx.ssao ? 0.48 : 0.0;
+    this.matFinal.uniforms.uNear.value = cam.near;
+    this.matFinal.uniforms.uFar.value = cam.far;
+    this.renderer.setRenderTarget(null);
+    this.renderer.render(this.fsScene, this.fsCam);
+  }
+}
+const postfx = new PostFX(renderer);
+
+/* ===================================================================
+   FX toggles + UI
+   =================================================================== */
+const FX = { floor: true, godRays: true, dust: true, redLine: true, breath: true, hairSway: true, bloom: true, chroma: true, grain: true, dof: true, ssao: true };
+function applyFX() {
+  floor.material = FX.floor ? floorMat : floorPlainMat;
+  godRays.visible = FX.godRays;
+  dust.visible = FX.dust;
+  /* 月台舊紅線在 narrative 模式關掉,避免跟 LM402-narrative 紅線疊圖 (Codex r5) */
+  redLine.visible = FX.redLine && !narrative.active;
+  updateLegendUI();
+}
+function updateLegendUI() {
+  const map = { 1: FX.floor, 2: FX.godRays, 3: FX.dust, 4: FX.redLine, 5: FX.breath, 6: FX.hairSway, 7: FX.bloom, 8: FX.grain };
+  document.querySelectorAll('#effectsList .fx-item').forEach(function (el) {
+    el.classList.toggle('on', !!map[parseInt(el.dataset.fx, 10)]);
+  });
+}
+
+let paused = false;
+/* Camera lock — sweep (default auto pan) vs junior/senior close-ups (fixed) */
+const camLock = { mode: 'sweep' };
+const pauseInd = document.getElementById('pauseIndicator');
+document.addEventListener('keydown', function (e) {
+  switch (e.code) {
+    case 'KeyP': paused = !paused; pauseInd.classList.toggle('show', paused); break;
+    case 'KeyR':
+      camLock.mode = 'sweep';
+      cam.position.set(0.4, 1.62, 4.2); cam.lookAt(0, 1.45, -2);
+      break;
+    case 'KeyC':
+      /* close-up on junior — inspect skin SSS / hair strands / hand fingers / cloth wrinkles */
+      camLock.mode = 'junior';
+      cam.position.set(2.6, 1.55, -7.0);
+      cam.lookAt(3.0, 1.5, -7.8);
+      break;
+    case 'KeyS':
+      /* close-up on senior — inspect glasses, pompadour strands, phone-call pose */
+      camLock.mode = 'senior';
+      cam.position.set(0.7, 1.55, -1.4);
+      cam.lookAt(1.6, 1.5, -2.5);
+      break;
+    case 'Digit1': FX.floor = !FX.floor; applyFX(); break;
+    case 'Digit2': FX.godRays = !FX.godRays; applyFX(); break;
+    case 'Digit3': FX.dust = !FX.dust; applyFX(); break;
+    case 'Digit4': FX.redLine = !FX.redLine; applyFX(); break;
+    case 'Digit5': FX.breath = !FX.breath; applyFX(); break;
+    case 'Digit6': FX.hairSway = !FX.hairSway; applyFX(); break;
+    case 'Digit7': FX.bloom = !FX.bloom; FX.chroma = FX.bloom; applyFX(); break;
+    case 'Digit8': FX.grain = !FX.grain; applyFX(); break;
+  }
+});
+document.querySelectorAll('#effectsList .fx-item').forEach(function (el) {
+  el.addEventListener('click', function () {
+    const n = parseInt(el.dataset.fx, 10);
+    const keys = ['', 'floor', 'godRays', 'dust', 'redLine', 'breath', 'hairSway', 'bloom', 'grain'];
+    if (n === 7) { FX.bloom = !FX.bloom; FX.chroma = FX.bloom; }
+    else if (keys[n]) FX[keys[n]] = !FX[keys[n]];
+    applyFX();
+  });
+});
+
+/* ===================================================================
+   主迴圈 — 角色呼吸 + 髮絲 sway + camera breathing
+   =================================================================== */
+const stats = document.getElementById('stats');
+let lastStatsUpdate = 0, frameCount = 0;
+function updateStats(now) {
+  frameCount++;
+  if (now - lastStatsUpdate >= 500) {
+    const fps = Math.round((frameCount * 1000) / (now - lastStatsUpdate));
+    const tri = renderer.info.render.triangles;
+    stats.textContent = 'FPS ' + fps + ' · Tri ' + (tri / 1000).toFixed(1) + 'k · Char 6';
+    lastStatsUpdate = now; frameCount = 0;
+  }
+}
+
+let last = performance.now();
+let elapsed = 0;
+function loop() {
+  const now = performance.now();
+  const dt = Math.min(0.06, (now - last) / 1000);
+  last = now;
+  if (!paused) elapsed += dt;
+
+  redLineUniforms.uTime.value = elapsed;
+  dustMat.uniforms.uTime.value = elapsed;
+
+  /* 角色 breathing */
+  if (FX.breath) {
+    const bb = 1 + Math.sin(elapsed * 1.4) * 0.012;
+    [senior, junior].concat(friends).forEach(function (c, i) {
+      const phase = i * 0.4;
+      const b = 1 + Math.sin(elapsed * 1.4 + phase) * 0.012;
+      const body = c.userData.body;
+      if (body) body.scale.y = b * (c === junior ? 0.92 : 0.96);
+    });
+    /* 學長微 head turn */
+    senior.userData.head.rotation.y = Math.sin(elapsed * 0.3) * 0.05;
+    junior.userData.head.rotation.y = -Math.PI / 16 + Math.sin(elapsed * 0.4) * 0.08;
+  }
+
+  /* 學妹髮絲 Verlet sway — 真實物理 spring + 阻尼,head 轉動會帶動慣性 */
+  if (FX.hairSway && junior.userData.hair && junior.userData.hair.userData.strands) {
+    /* head velocity (用 head.rotation.y 變化作 X 平移源) */
+    const headRotY = junior.userData.head ? junior.userData.head.rotation.y : 0;
+    if (junior.userData._lastHeadY === undefined) junior.userData._lastHeadY = headRotY;
+    const headVelX = (headRotY - junior.userData._lastHeadY) / Math.max(dt, 0.0001);
+    junior.userData._lastHeadY = headRotY;
+    /* breath wobble — body breathing pushes hair downward periodic accel */
+    const breathAccel = Math.cos(elapsed * 1.4) * 0.012;
+    const dtClamp = Math.min(0.033, dt);
+    const dt2 = dtClamp * dtClamp;
+    junior.userData.hair.userData.strands.forEach(function (s) {
+      const u = s.userData;
+      /* acceleration: spring back to rest + head velocity drag + breath jitter + ambient noise */
+      const ambient = Math.sin(elapsed * 0.6 + u.basePhase) * 0.05 + Math.sin(elapsed * 1.3 + u.basePhase * 2) * 0.03;
+      const accel = (u.baseX - u.vx) * u.stiffness
+                  + headVelX * 0.22
+                  + ambient
+                  + breathAccel;
+      /* Verlet step: x_new = 2 * x - x_prev (damped) + a * dt² */
+      const next = u.vx + (u.vx - u.vpx) * u.damping + accel * dt2;
+      u.vpx = u.vx;
+      u.vx = next;
+      /* clamp to prevent runaway */
+      const dx = next - u.baseX;
+      const clamped = Math.max(-0.045, Math.min(0.045, dx));
+      s.position.x = u.baseX + clamped;
+      /* rotation responds to lateral displacement (whip effect at tip) */
+      s.rotation.z = u.baseRotZ + clamped * 4.5;
+    });
+  }
+
+  /* 眨眼 + 視線抖 saccade — 每個角色用自己的相位,避免同步眨眼像機器人 */
+  [senior, junior].concat(friends).forEach(function (c, i) {
+    if (!c.userData.head || !c.userData.head.userData.eyes) return;
+    const eyes = c.userData.head.userData.eyes;
+    /* blink:每 3.5±2s 一次,持續 110ms,用 1-smoothstep 雙峰快速 close→open */
+    const blinkPeriod = 3.5 + (i * 0.7);
+    const t = (elapsed + i * 1.3) % blinkPeriod;
+    const blink = t < 0.11 ? Math.sin(t / 0.11 * Math.PI) : 0;   /* 0→1→0 in 110ms */
+    [eyes.L, eyes.R].forEach(function (eye) {
+      if (!eye || !eye.userData.upperLid) return;
+      const u = eye.userData.upperLid;
+      const l = eye.userData.lowerLid;
+      /* upper lid 下壓(scaleY 拉大 + Y 下移 cover iris) */
+      u.scale.y = u.userData.baseScaleY + blink * 1.45;
+      u.position.y = u.userData.baseY - blink * 0.012;
+      /* lower lid 微上移 */
+      l.scale.y = l.userData.baseScaleY + blink * 0.42;
+      l.position.y = l.userData.baseY + blink * 0.005;
+    });
+    /* saccade:每 1.8±1s 微跳到隨機 ±0.0015 x 偏移 */
+    const sacPeriod = 1.8 + (i * 0.4);
+    const sacT = (elapsed + i * 0.9) % sacPeriod;
+    const sacPhase = Math.floor((elapsed + i * 0.9) / sacPeriod);
+    const sacX = (Math.sin(sacPhase * 12.9898) * 43758.5453 % 1) * 0.003 - 0.0015;
+    const sacY = (Math.cos(sacPhase * 78.233) * 43758.5453 % 1) * 0.002 - 0.001;
+    [eyes.L, eyes.R].forEach(function (eye) {
+      if (!eye || !eye.userData.iris) return;
+      const it = Math.min(1, sacT / 0.08);  /* snap-fast saccade */
+      eye.userData.iris.position.x = sacX * it;
+      eye.userData.iris.position.y = 0 + sacY * it;
+      if (eye.userData.pupil) {
+        eye.userData.pupil.position.x = sacX * it;
+        eye.userData.pupil.position.y = 0 + sacY * it;
+      }
+      if (eye.userData.catchLight) {
+        /* catch light tracks slightly less for realism */
+        eye.userData.catchLight.position.x = -0.0028 * (eye === eyes.L ? -1 : 1) + sacX * it * 0.6;
+      }
+    });
+  });
+
+  /* camera breathing — 緩慢漂浮 + 微 dolly (sweep mode only; close-ups stay fixed) */
+  let focusTarget = new THREE.Vector3(0, 1.45, -2);
+  if (camLock.mode === 'sweep') {
+    cam.position.x = 0.4 + Math.sin(elapsed * 0.18) * 0.18;
+    cam.position.y = 1.62 + Math.sin(elapsed * 0.32) * 0.045;
+    cam.position.z = 4.2 + Math.sin(elapsed * 0.12) * 0.4;
+    focusTarget.set(Math.sin(elapsed * 0.1) * 0.18, 1.45, -2);
+    cam.lookAt(focusTarget);
+  } else if (camLock.mode === 'junior') {
+    /* micro hover for life — re-lookAt every frame */
+    cam.position.x = 2.6 + Math.sin(elapsed * 0.5) * 0.04;
+    cam.position.y = 1.55 + Math.sin(elapsed * 0.7) * 0.015;
+    focusTarget.set(3.0, 1.5, -7.8);
+    cam.lookAt(focusTarget);
+  } else if (camLock.mode === 'senior') {
+    cam.position.x = 0.7 + Math.sin(elapsed * 0.5) * 0.04;
+    cam.position.y = 1.55 + Math.sin(elapsed * 0.7) * 0.015;
+    focusTarget.set(1.6, 1.5, -2.5);
+    cam.lookAt(focusTarget);
+  } else if (camLock.mode === 'narrative') {
+    /* narrative beat 之 focus target — 鎖在當下 beat 主角 */
+    const bi = narrative.beatIndex;
+    if (bi === 0) focusTarget.set(3.0, 1.55, -7.8);          /* junior */
+    else if (bi === 1) focusTarget.set(1.6, 1.55, -2.5);     /* senior */
+    else if (bi === 2) focusTarget.set(2.5, 1.55, -5.5);     /* corridor mid */
+    else if (bi === 3) focusTarget.set(2.4, 1.5, -6.0);      /* both */
+    else focusTarget.set(2.5, 1.4, -6.5);                     /* daughter view */
+  }
+  /* Dynamic DOF — focus depth = distance(cam → target) / cam.far, normalized */
+  const focusDist = cam.position.distanceTo(focusTarget);
+  postfx.matFinal.uniforms.uFocusDepth.value = focusDist / cam.far;
+  /* sweep cam (long view) wants wider focus range; close-ups tighter */
+  postfx.matFinal.uniforms.uFocusRange.value =
+    camLock.mode === 'sweep' ? 0.045
+    : (camLock.mode === 'narrative' ? 0.030 : 0.015);
+
+  /* god ray 平面 always face camera */
+  godRays.children.forEach(function (layer, i) {
+    layer.material.opacity = (i === 0 ? 0.95 : i === 1 ? 0.62 : i === 2 ? 0.42 : 0.28) * (0.85 + Math.sin(elapsed * 0.4 + i * 0.7) * 0.15);
+    layer.lookAt(cam.position);
+  });
+
+  /* === Narrative layer updates === */
+  if (narrative.active) updateNarrative(elapsed, dt);
+
+  postfx.render(scene, cam, FX, elapsed);
+  updateStats(now);
+  requestAnimationFrame(loop);
+}
+
+/* ===================================================================
+   NARRATIVE LAYER — 故事核心元素
+   - 紅線:CatmullRomCurve3 → TubeGeometry,沿學長 ↔ 學妹腰部連接,
+     顏色 gradient 表達情感狀態(EP22/26/34:紅 / 灰濛 = 傷口)
+   - 意識菜市場:5 個發光球體環繞學妹頭部,標籤 18/29/33/39/49 歲
+     (EP38 詳細:29 歲身體裡的 18 歲意識,加 33/39/49 退場提醒)
+   - 女兒 ghost:半透明藍光 outline 形體在天花板飄,只有 narrative
+     模式才顯現,呼應 EP21 的「我從天上看著把拔和阿姨」
+   - 紙條雙影:兩張半透明紙條疊影,EP21 的「第一次哭著貼,第二次
+     笑著貼」narrative beat
+   - 時空閃電 + 時空手錶 HUD:UI 元素呼應 EP21/23/24
+   =================================================================== */
+
+const narrative = {
+  active: false,
+  beatIndex: 0,        /* 0..4 — 五個 narrative beats */
+  beatStart: 0,        /* elapsed at beat start */
+  beats: [
+    { name: '10:40 意識菜市場', dur: 8, ts: '2005-10-17 10:40:00', sub: '29 歲身體裡的 18 歲',
+      text: '十八歲的妳，第二次對準同一個時間點跳進來。LM402 的百葉窗縫落下斜光，妳的心跳聲，比 1994 年畢業典禮的第一次穿越還大。' },
+    { name: '11:00 前門電話', dur: 7, ts: '2005-10-17 11:00:00', sub: '學長 · 21 歲',
+      text: '鐘響，學長從 LM401 樓梯走上來，站在前門外打電話：「妳在哪裡？」' },
+    { name: '11:00:30 妳走到後門', dur: 6, ts: '2005-10-17 11:00:30', sub: '請走到後門',
+      text: '「你走到後門。」妳深呼吸，往後門走去。每一步，心跳就跳得更大一次。' },
+    { name: '11:01 一眼瞬間', dur: 9, ts: '2005-10-17 11:01:00', sub: '時間卡在那一格清澈的光裡',
+      text: '兩條視線對上的瞬間。整個人被釘在原地的那種看見。「也太像徐若瑄了吧！」' },
+    { name: '2025 女兒回望', dur: 8, ts: '2025-XX-XX 國一', sub: '把拔的時間線上 · 五顆星 ⭐⭐⭐⭐⭐',
+      text: '紅線從那一秒亮起，被女兒從 2025 年看見：「這是把拔右邊第一個光點，被打上五顆星星的那一個。」' }
+  ],
+  redLine: null,
+  redLineCurve: null,
+  redLineSegments: 64,
+  consciousness: [],  /* 5 voices around junior head */
+  daughterGhost: null,
+  noteSlips: [],
+  spaceLightning: null,
+  cinematic: { progress: 0 }
+};
+
+/* === 紅線 — CatmullRomCurve3 + TubeGeometry === */
+function buildRedLine() {
+  /* 起點:學妹腰部(後門位置)→ 中段:走廊弧線 → 終點:學長腰部(前門) */
+  const startV = new THREE.Vector3(junior.position.x, junior.position.y + 1.0, junior.position.z);
+  const endV = new THREE.Vector3(senior.position.x, senior.position.y + 1.0, senior.position.z);
+  const ctrlPts = [];
+  for (let i = 0; i <= narrative.redLineSegments; i++) {
+    const t = i / narrative.redLineSegments;
+    /* sine arc — bulge upward at midpoint to suggest connecting through air */
+    const x = startV.x + (endV.x - startV.x) * t;
+    const z = startV.z + (endV.z - startV.z) * t;
+    const y = startV.y + (endV.y - startV.y) * t + Math.sin(t * Math.PI) * 0.45;
+    ctrlPts.push(new THREE.Vector3(x, y, z));
+  }
+  narrative.redLineCurve = new THREE.CatmullRomCurve3(ctrlPts);
+  const geo = new THREE.TubeGeometry(narrative.redLineCurve, 96, 0.018, 8, false);
+  const mat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uBrightness: { value: 0 },     /* 0 = hidden, 1 = full red */
+      uHurt: { value: 0 }            /* 0..1 — increases hurt-grey tint */
+    },
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    vertexShader: `
+      varying float vT;
+      varying vec3 vNormalW;
+      varying vec3 vPosW;
+      void main() {
+        vT = uv.x;   /* 0 at junior, 1 at senior */
+        vec4 wp = modelMatrix * vec4(position, 1.0);
+        vPosW = wp.xyz;
+        vNormalW = normalize(mat3(modelMatrix) * normal);
+        gl_Position = projectionMatrix * viewMatrix * wp;
+      }
+    `,
+    fragmentShader: `
+      uniform float uTime; uniform float uBrightness; uniform float uHurt;
+      varying float vT;
+      varying vec3 vNormalW;
+      varying vec3 vPosW;
+      void main() {
+        /* travelling pulse along the line */
+        float pulse = sin(vT * 18.0 - uTime * 3.0) * 0.5 + 0.5;
+        pulse = pow(pulse, 3.0);
+        /* hurt-grey (灰濛濛 = 傷口顏色 — EP34) vs healthy red */
+        vec3 healthy = vec3(0.92, 0.24, 0.30);
+        vec3 hurt    = vec3(0.55, 0.50, 0.50);
+        vec3 col = mix(healthy, hurt, uHurt);
+        col *= 0.5 + pulse * 1.3;
+        gl_FragColor = vec4(col, uBrightness * (0.35 + pulse * 0.65));
+      }
+    `
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.frustumCulled = false;
+  scene.add(mesh);
+  narrative.redLine = mesh;
+  return mesh;
+}
+
+/* === 意識菜市場 — 5 個年紀 voice orbs 環繞學妹頭部 === */
+function buildConsciousnessMarket() {
+  const ages = [
+    { age: 18, color: 0xffd28a, label: '十八' },     /* youngest — warm gold */
+    { age: 29, color: 0xffe8d2, label: '廿九' },     /* present — white-warm */
+    { age: 33, color: 0xc8d8ea, label: '卅三' },     /* career hustle — cool */
+    { age: 39, color: 0xa8b8d8, label: '卅九' },     /* sober — sober blue */
+    { age: 49, color: 0xd8c0a0, label: '四九' }      /* tender — warm beige */
+  ];
+  ages.forEach((spec, i) => {
+    const g = new THREE.Group();
+    /* core glow sphere */
+    const orb = new THREE.Mesh(
+      new THREE.SphereGeometry(0.038, 16, 12),
+      new THREE.MeshBasicMaterial({
+        color: spec.color, transparent: true, opacity: 0.85,
+        blending: THREE.AdditiveBlending, depthWrite: false
+      })
+    );
+    g.add(orb);
+    /* outer halo */
+    const halo = new THREE.Mesh(
+      new THREE.SphereGeometry(0.065, 14, 10),
+      new THREE.MeshBasicMaterial({
+        color: spec.color, transparent: true, opacity: 0.18,
+        blending: THREE.AdditiveBlending, depthWrite: false
+      })
+    );
+    g.add(halo);
+    g.userData.age = spec.age;
+    g.userData.angle = (i / 5) * Math.PI * 2;
+    g.userData.color = spec.color;
+    narrative.consciousness.push(g);
+    scene.add(g);
+  });
+}
+
+/* === 女兒 ghost — 半透明藍光體 + outline 漂浮在天花板 === */
+function buildDaughterGhost() {
+  const g = new THREE.Group();
+  /* core form — small humanoid silhouette */
+  const body = new THREE.Mesh(
+    new THREE.SphereGeometry(0.12, 12, 10),
+    new THREE.MeshBasicMaterial({
+      color: 0xa8c8f0, transparent: true, opacity: 0.32,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    })
+  );
+  body.scale.set(0.7, 1.4, 0.7);  /* elongate to vaguely humanoid */
+  g.add(body);
+  /* outer aura ring */
+  const aura = new THREE.Mesh(
+    new THREE.RingGeometry(0.18, 0.24, 32),
+    new THREE.MeshBasicMaterial({
+      color: 0xc8d8f8, transparent: true, opacity: 0.22, side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    })
+  );
+  aura.rotation.x = -Math.PI / 2;
+  g.add(aura);
+  /* hover at ceiling level above the action */
+  g.position.set(2.2, 3.1, -5.0);
+  g.visible = false;
+  scene.add(g);
+  narrative.daughterGhost = g;
+}
+
+/* === 紙條雙影 — EP21/24 兩次貼紙條 (哭著貼 vs 笑著貼) === */
+function buildNoteSlips() {
+  const noteGeo = new THREE.PlaneGeometry(0.18, 0.12, 4, 3);
+  /* slight wave fold */
+  const np = noteGeo.attributes.position.array;
+  for (let i = 0; i < np.length; i += 3) np[i + 2] = Math.sin(np[i] * 8) * 0.005;
+  noteGeo.computeVertexNormals();
+  /* first slip — hurt-grey (original timeline, crying) */
+  const m1 = new THREE.MeshBasicMaterial({
+    color: 0xc8c0b0, transparent: true, opacity: 0,
+    side: THREE.DoubleSide, depthWrite: false
+  });
+  const slip1 = new THREE.Mesh(noteGeo, m1);
+  slip1.position.set(-2.4, 1.9, -3.2);
+  slip1.rotation.set(-0.2, 0.4, -0.15);
+  slip1.userData.role = 'crying';
+  scene.add(slip1);
+  /* second slip — warm-toned (corrected timeline, smiling) */
+  const m2 = new THREE.MeshBasicMaterial({
+    color: 0xfaf0dc, transparent: true, opacity: 0,
+    side: THREE.DoubleSide, depthWrite: false
+  });
+  const slip2 = new THREE.Mesh(noteGeo.clone(), m2);
+  slip2.position.set(-2.35, 1.87, -3.18);
+  slip2.rotation.set(-0.18, 0.4, -0.12);
+  slip2.userData.role = 'smiling';
+  scene.add(slip2);
+  narrative.noteSlips.push(slip1, slip2);
+}
+
+/* === 時空閃電 — 強烈情緒造成的時空震動 (EP23/24) === */
+function buildSpaceLightning() {
+  const pts = [];
+  let x = 0, y = 3.2, z = -8;
+  for (let i = 0; i < 18; i++) {
+    pts.push(new THREE.Vector3(x, y, z));
+    x += (Math.random() - 0.5) * 0.4;
+    y -= 0.15;
+    z += (Math.random() - 0.5) * 0.2;
+  }
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  const mat = new THREE.LineBasicMaterial({
+    color: 0xc8b0ff, transparent: true, opacity: 0,
+    blending: THREE.AdditiveBlending, depthWrite: false, linewidth: 2
+  });
+  const line = new THREE.Line(geo, mat);
+  scene.add(line);
+  narrative.spaceLightning = line;
+}
+
+/* Build all narrative elements once */
+buildRedLine();
+buildConsciousnessMarket();
+buildDaughterGhost();
+buildNoteSlips();
+buildSpaceLightning();
+
+/* === Narrative tick — drives all narrative animation === */
+const _narrUI = {
+  watch: document.getElementById('timeWatch'),
+  ts: document.getElementById('timeWatchTs'),
+  sub: document.getElementById('timeWatchSub'),
+  narration: document.getElementById('narration'),
+  narrationText: document.getElementById('narrationText'),
+  beatLabel: document.getElementById('narrativeBeat')
+};
+
+function updateNarrative(t, dt) {
+  /* progress current beat */
+  const beat = narrative.beats[narrative.beatIndex];
+  const localT = t - narrative.beatStart;
+  if (localT > beat.dur) {
+    /* advance to next beat (loop at end) */
+    narrative.beatIndex = (narrative.beatIndex + 1) % narrative.beats.length;
+    narrative.beatStart = t;
+    showBeatUI(narrative.beats[narrative.beatIndex]);
+  }
+
+  /* red line — visible during beats 0..3, fades after beat 3 */
+  if (narrative.redLine) {
+    const u = narrative.redLine.material.uniforms;
+    u.uTime.value = t;
+    let target = 0;
+    if (narrative.beatIndex === 0) target = 0.4;
+    else if (narrative.beatIndex === 1) target = 0.6;
+    else if (narrative.beatIndex === 2) target = 0.8;
+    else if (narrative.beatIndex === 3) target = 1.0;
+    else target = 0.5;
+    u.uBrightness.value += (target - u.uBrightness.value) * Math.min(1, dt * 1.2);
+    u.uHurt.value = narrative.beatIndex >= 4 ? 0.5 : 0.0;
+  }
+
+  /* 意識菜市場 — 5 orbs orbit junior head, glow on beat 0 (10:40) */
+  const juniorHeadPos = junior.position.clone();
+  juniorHeadPos.y += 1.55;
+  narrative.consciousness.forEach((g, i) => {
+    const baseAngle = g.userData.angle;
+    const orbitT = t * 0.4 + i * 0.18;
+    /* radius pulses subtly */
+    const r = 0.28 + Math.sin(t * 0.7 + i) * 0.04;
+    g.position.x = juniorHeadPos.x + Math.cos(baseAngle + orbitT) * r;
+    g.position.z = juniorHeadPos.z + Math.sin(baseAngle + orbitT) * r;
+    g.position.y = juniorHeadPos.y + Math.sin(t * 0.5 + i * 0.7) * 0.08;
+    /* visibility — bright in beat 0 (意識菜市場 active), fading thereafter */
+    let opacity = 0;
+    if (narrative.beatIndex === 0) opacity = 0.85 + Math.sin(t * 2 + i * 0.7) * 0.15;
+    else if (narrative.beatIndex === 1 || narrative.beatIndex === 2) opacity = 0.35;
+    else if (narrative.beatIndex === 3) opacity = 0.55;  /* 一眼瞬間 — two 18s overlap */
+    else opacity = 0.18;
+    /* core + halo */
+    g.children[0].material.opacity = opacity;
+    g.children[1].material.opacity = opacity * 0.22;
+  });
+
+  /* 女兒 ghost — visible on beat 4 (2025 回望), hover float */
+  if (narrative.daughterGhost) {
+    const d = narrative.daughterGhost;
+    d.visible = narrative.beatIndex === 4 || narrative.beatIndex === 0;
+    d.position.y = 3.0 + Math.sin(t * 0.5) * 0.12;
+    d.position.x = 2.2 + Math.sin(t * 0.3) * 0.2;
+    d.rotation.y = t * 0.2;
+  }
+
+  /* 紙條雙影 — fade in during beat 2 (學妹走到後門 narrative beat = 紙條 future) */
+  narrative.noteSlips.forEach((slip, i) => {
+    let target = 0;
+    if (narrative.beatIndex === 4) target = 0.55;   /* 女兒回望時 — 看見兩條紙條 */
+    slip.material.opacity += (target - slip.material.opacity) * Math.min(1, dt * 0.6);
+    /* gentle drift */
+    slip.position.y += Math.sin(t * 0.8 + i * 1.5) * 0.0005;
+  });
+
+  /* 時空閃電 — flash at beat 3 (一眼瞬間 transition) */
+  if (narrative.spaceLightning) {
+    const lm = narrative.spaceLightning.material;
+    let target = 0;
+    if (narrative.beatIndex === 3 && localT < 0.5) target = 0.6 + Math.random() * 0.4;
+    else if (narrative.beatIndex === 3 && localT < 1.2) target = 0.18;
+    lm.opacity += (target - lm.opacity) * Math.min(1, dt * 4);
+  }
+
+  /* cinematic camera — moves through narrative beats */
+  narrative.cinematic.progress = (narrative.beatIndex + Math.min(1, localT / beat.dur));
+  driveNarrativeCamera(t, localT, narrative.beatIndex, beat);
+}
+
+function driveNarrativeCamera(t, localT, beatIdx, beat) {
+  /* slow ease into each beat's framing */
+  const ease = Math.min(1, localT / 1.4);
+  const ease2 = ease * ease * (3 - 2 * ease);   /* smoothstep */
+  const target = new THREE.Vector3();
+  const lookAt = new THREE.Vector3();
+  if (beatIdx === 0) {
+    /* 10:40 — close on junior + her consciousness orbs */
+    target.set(2.3 + Math.sin(t * 0.3) * 0.12, 1.62, -6.6 + Math.sin(t * 0.2) * 0.18);
+    lookAt.set(3.0, 1.55, -7.8);
+  } else if (beatIdx === 1) {
+    /* 11:00 — exterior of front door, senior calling */
+    target.set(0.6 + Math.sin(t * 0.25) * 0.18, 1.65, -1.4 + Math.sin(t * 0.18) * 0.2);
+    lookAt.set(1.6, 1.55, -2.5);
+  } else if (beatIdx === 2) {
+    /* 11:00:30 — wide tracking shot — corridor between front & back doors */
+    const sweepT = Math.min(1, localT / beat.dur);
+    const x = 2.0 - sweepT * 1.4;
+    const z = -3.5 - sweepT * 3.5;
+    target.set(x, 1.62, z);
+    lookAt.set(2.5, 1.55, -5.5);
+  } else if (beatIdx === 3) {
+    /* 11:01 — the EYE: tight on junior + senior with red line at peak */
+    target.set(2.0 + Math.sin(t * 0.4) * 0.06, 1.55, -4.4 + Math.sin(t * 0.3) * 0.08);
+    lookAt.set(2.4, 1.5, -6.0);
+  } else if (beatIdx === 4) {
+    /* 2025 daughter — high angle, ghost in frame */
+    target.set(2.6 + Math.sin(t * 0.2) * 0.3, 2.4, -2.6 + Math.sin(t * 0.15) * 0.3);
+    lookAt.set(2.5, 1.4, -6.5);
+  }
+  /* Tight follow on small lerp factor — feels cinematic without snap */
+  cam.position.lerp(target, ease2 * 0.06);
+  cam.lookAt(lookAt);
+}
+
+function showBeatUI(beat) {
+  if (!_narrUI.watch) return;
+  _narrUI.watch.style.opacity = '1';
+  _narrUI.ts.textContent = beat.ts;
+  _narrUI.sub.textContent = beat.sub;
+  _narrUI.narration.style.opacity = '0';
+  setTimeout(() => {
+    _narrUI.narrationText.textContent = beat.text;
+    _narrUI.narration.style.opacity = '1';
+  }, 250);
+  _narrUI.beatLabel.textContent = beat.name;
+}
+
+function hideNarrativeUI() {
+  if (_narrUI.watch) _narrUI.watch.style.opacity = '0';
+  if (_narrUI.narration) _narrUI.narration.style.opacity = '0';
+  if (_narrUI.beatLabel) _narrUI.beatLabel.textContent = '2005/10/17 · 11:00 · 利瑪竇大樓';
+}
+
+/* === N key triggers narrative mode === */
+document.addEventListener('keydown', function (e) {
+  if (e.code === 'KeyN') {
+    narrative.active = !narrative.active;
+    if (narrative.active) {
+      camLock.mode = 'narrative';
+      narrative.beatIndex = 0;
+      narrative.beatStart = elapsed;
+      showBeatUI(narrative.beats[0]);
+    } else {
+      camLock.mode = 'sweep';
+      hideNarrativeUI();
+      /* hide narrative elements */
+      if (narrative.redLine) narrative.redLine.material.uniforms.uBrightness.value = 0;
+      narrative.consciousness.forEach(g => {
+        g.children[0].material.opacity = 0;
+        g.children[1].material.opacity = 0;
+      });
+      if (narrative.daughterGhost) narrative.daughterGhost.visible = false;
+      narrative.noteSlips.forEach(s => { s.material.opacity = 0; });
+      if (narrative.spaceLightning) narrative.spaceLightning.material.opacity = 0;
+    }
+    /* 重新跑 applyFX 讓舊紅線可見性跟著 narrative.active 翻面 (Codex r5) */
+    applyFX();
+  }
+});
+
+/* ===================================================================
+   ★ 競賽 4 號:三 AI 協作層 (Claude + Codex + Gemini 學習綜合)
+   設計三方共識記錄:docs/competition-4-plan-final.md
+   =================================================================== */
+
+/* === 單一 interaction state (Codex 提案:抽成 single state machine) === */
+const c4 = {
+  mode: 1,                /* 1 = Cinematic / 2 = Scrubber / 3 = Wireframe */
+  modeTransition: 1,      /* 0..1 — lerp during mode switch (Gemini 提案:慣性權重) */
+  targetMode: 1,
+  modeStart: 0,
+  age: 29,                /* mode 3 only — 18/29/33/39/49 */
+  playing: true,
+  scrubProgress: 0,       /* 0..1 across all 5 beats (mode 2) */
+  perf: {                 /* Codex C3:performance telemetry + adaptive quality */
+    fpsAvg: 60,
+    fpsBuf: new Array(30).fill(60),
+    fpsIdx: 0,
+    quality: 'HQ'         /* HQ / MQ / LQ */
+  },
+  lastModeSwitchAt: 0
+};
+
+/* === Gemini 配色:1994 青瓷藍 → 2025 珊瑚紅 age 漸層 === */
+const AGE_COLORS = {
+  18: { core: 0x4a8aa8, glow: 0x78b4d0, label: '青瓷藍 · 1994' },
+  29: { core: 0xc8a080, glow: 0xffe2b8, label: '暖白 · 2005' },
+  33: { core: 0xb87858, glow: 0xf0c090, label: '暖橙 · 2009' },
+  39: { core: 0xa86058, glow: 0xe09080, label: '沉紅 · 2015' },
+  49: { core: 0xc05848, glow: 0xff8a78, label: '珊瑚紅 · 2025' }
+};
+
+/* === Codex C1:材質 registry + cache — 避免切模式時 hot rebuild === */
+const c4Registry = {
+  ghostAges: {},   /* per-age ghost junior body — pre-built once,visible toggle */
+  wireframeOverlays: []   /* per-mesh wireframe LineSegments overlay */
+};
+
+/* Build Mode 3 wireframe overlays for principal scene meshes — toggleable */
+function buildWireframeOverlays() {
+  const targets = [floor, senior, junior].concat(friends);
+  targets.forEach((obj) => {
+    if (!obj) return;
+    obj.traverse((m) => {
+      if (m.isMesh && m.geometry && !m.userData._isWireSrc) {
+        try {
+          /* EdgesGeometry 比 wireframe:true 邊乾淨,且不犧牲 source material */
+          const edges = new THREE.EdgesGeometry(m.geometry, 25);
+          const wire = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({
+            color: 0x6abce0, transparent: true, opacity: 0, depthWrite: false
+          }));
+          wire.userData._wireOverlay = true;
+          wire.userData._mesh = m;
+          c4Registry.wireframeOverlays.push(wire);
+          m.add(wire);
+        } catch (e) { /* skip if geom invalid */ }
+      }
+    });
+  });
+}
+
+/* Build per-age ghost humanoid — abstract capsule-like outlines that ONLY
+ * show up in Mode 3,one per age,with Gemini 漸層配色 */
+function buildAgeGhosts() {
+  const baseGeo = new THREE.CapsuleGeometry(0.18, 0.55, 6, 12);
+  const headGeo = new THREE.SphereGeometry(0.13, 12, 10);
+  Object.keys(AGE_COLORS).forEach((ageKey) => {
+    const age = parseInt(ageKey);
+    const spec = AGE_COLORS[age];
+    const g = new THREE.Group();
+    const mat = new THREE.LineBasicMaterial({ color: spec.core, transparent: true, opacity: 0 });
+    /* Body wire */
+    const bodyEdges = new THREE.EdgesGeometry(baseGeo);
+    const body = new THREE.LineSegments(bodyEdges, mat);
+    body.position.y = 1.05;
+    g.add(body);
+    /* Head wire */
+    const headEdges = new THREE.EdgesGeometry(headGeo);
+    const head = new THREE.LineSegments(headEdges, mat);
+    head.position.y = 1.55;
+    g.add(head);
+    /* Glow halo dot */
+    const halo = new THREE.Mesh(
+      new THREE.SphereGeometry(0.04, 10, 8),
+      new THREE.MeshBasicMaterial({
+        color: spec.glow, transparent: true, opacity: 0,
+        blending: THREE.AdditiveBlending, depthWrite: false
+      })
+    );
+    halo.position.y = 1.7;
+    g.add(halo);
+    /* Position at junior's location with slight offset per age (a fan) */
+    const idx = Object.keys(AGE_COLORS).indexOf(ageKey);
+    g.position.set(junior.position.x + (idx - 2) * 0.55, junior.position.y, junior.position.z);
+    g.userData._ageGhost = true;
+    g.userData._age = age;
+    g.userData._mat = mat;
+    g.userData._halo = halo;
+    g.visible = false;
+    scene.add(g);
+    c4Registry.ghostAges[age] = g;
+  });
+}
+
+buildWireframeOverlays();
+buildAgeGhosts();
+
+/* === Mode switch trigger — keyboard / button / scrubber ===
+ * Codex r1 audit: previously early-returned when m === targetMode, so the
+ * initial setMode(1) skipped narrative.active wiring. Now we allow the call
+ * through and let the lerp short-circuit only when state is fully settled. */
+function setMode(m) {
+  const sameAsTarget = m === c4.targetMode;
+  const fullySettled = c4.modeTransition >= 1 && c4.mode === c4.targetMode;
+  /* skip only when truly nothing to do (already locked at target, not init) */
+  if (sameAsTarget && fullySettled && c4._modeApplied) return;
+  c4.targetMode = m;
+  c4.modeTransition = sameAsTarget && fullySettled ? 1 : 0;
+  c4.modeStart = elapsed;
+  c4._modeApplied = true;
+  /* update badge ARIA */
+  document.querySelectorAll('.mode-badge').forEach((btn) => {
+    const active = parseInt(btn.dataset.mode) === m;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-checked', active ? 'true' : 'false');
+    btn.style.background = active ? 'rgba(228,70,80,.18)' : 'rgba(8,6,10,.62)';
+    btn.style.borderColor = active ? 'rgba(255,220,200,.55)' : 'rgba(218,184,168,.32)';
+  });
+  /* show/hide mode-specific UI */
+  document.getElementById('scrubber').style.display = (m === 2) ? 'block' : 'none';
+  document.getElementById('ageNodes').style.display = (m === 3) ? 'flex' : 'none';
+  /* update title sub-label */
+  const sub = document.getElementById('narrativeBeat');
+  if (sub) sub.textContent = m === 1 ? '2005/10/17 · 11:00 · CINEMATIC MODE'
+    : m === 2 ? '2005/10/17 · 11:00 · SCRUBBER MODE'
+    : '2005/10/17 · 11:00 · WIREFRAME MODE';
+  /* perf HUD mode */
+  const pm = document.getElementById('perfMode');
+  if (pm) pm.textContent = 'M' + m;
+  /* mode 1 auto-enables narrative cinematic; mode 2/3 disable + show alternate UI */
+  if (m === 1) {
+    /* turn on narrative auto-play */
+    if (!narrative.active) {
+      narrative.active = true;
+      camLock.mode = 'narrative';
+      narrative.beatIndex = 0;
+      narrative.beatStart = elapsed;
+    }
+  } else if (m === 2) {
+    /* mode 2 — manual scrubber drives beat */
+    narrative.active = false;
+    camLock.mode = 'narrative';   /* still use narrative camera positions */
+  } else {
+    /* mode 3 — drag explore + age switcher */
+    narrative.active = false;
+    camLock.mode = 'sweep';
+  }
+  applyFX();
+}
+
+function setAge(age) {
+  c4.age = age;
+  document.querySelectorAll('.age-node').forEach((btn) => {
+    const active = parseInt(btn.dataset.age) === age;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-checked', active ? 'true' : 'false');
+  });
+}
+
+/* === Wire mode badges + scrubber + age-node UI to setMode/setAge === */
+document.querySelectorAll('.mode-badge').forEach((btn) => {
+  btn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setMode(parseInt(btn.dataset.mode));
+  });
+});
+document.querySelectorAll('.age-node').forEach((btn) => {
+  btn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setAge(parseInt(btn.dataset.age));
+  });
+});
+document.querySelectorAll('.beat-jump').forEach((btn) => {
+  btn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const b = parseInt(btn.dataset.beat);
+    narrative.beatIndex = b;
+    narrative.beatStart = elapsed;
+    c4.scrubProgress = b / narrative.beats.length;
+    const scrub = document.getElementById('scrubBar');
+    if (scrub) scrub.value = String(Math.floor(c4.scrubProgress * 1000));
+  });
+});
+
+const scrubBarEl = document.getElementById('scrubBar');
+if (scrubBarEl) {
+  scrubBarEl.addEventListener('input', (e) => {
+    const v = parseFloat(e.target.value) / 1000;
+    c4.scrubProgress = v;
+    const beatF = v * narrative.beats.length;
+    const newBeat = Math.min(narrative.beats.length - 1, Math.floor(beatF));
+    if (newBeat !== narrative.beatIndex) {
+      narrative.beatIndex = newBeat;
+      narrative.beatStart = elapsed - (beatF - newBeat) * narrative.beats[newBeat].dur;
+    }
+    /* update scrubber caption */
+    const beat = narrative.beats[newBeat];
+    document.getElementById('scrubTs').textContent = beat.ts.split(' ')[1] || beat.ts;
+    document.getElementById('scrubText').textContent = beat.text.slice(0, 30) + '…';
+  });
+}
+
+/* === Keyboard shortcuts — M cycles modes (Codex r2: Digit1/2/3 removed,
+ * was conflicting with c1's existing 1-8 FX toggles). === */
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'KeyM') setMode((c4.mode % 3) + 1);
+  else if (e.code === 'Space') { e.preventDefault(); c4.playing = !c4.playing; }
+});
+
+/* === Per-frame c4 update (called from inside loop()) === */
+function updateC4(time, dt) {
+  /* Mode transition lerp — 300ms ease (Gemini 慣性權重) */
+  if (c4.modeTransition < 1) {
+    const elapsedSinceStart = time - c4.modeStart;
+    const t = Math.min(1, elapsedSinceStart / 0.3);
+    c4.modeTransition = t * t * (3 - 2 * t);  /* smoothstep */
+    if (t >= 1) {
+      c4.mode = c4.targetMode;
+      c4.modeTransition = 1;
+    }
+  }
+
+  /* Wireframe overlay opacity — visible when fully in Mode 3 */
+  const wireOpacity = (c4.targetMode === 3 ? c4.modeTransition : (c4.mode === 3 ? (1 - c4.modeTransition) : 0)) * 0.7;
+  c4Registry.wireframeOverlays.forEach((wire) => {
+    wire.material.opacity = wireOpacity;
+  });
+
+  /* Age ghost visibility — only in Mode 3, with the selected age primary + neighbours faded */
+  Object.keys(c4Registry.ghostAges).forEach((ageKey) => {
+    const g = c4Registry.ghostAges[ageKey];
+    const age = parseInt(ageKey);
+    const isModeThree = (c4.targetMode === 3 || c4.mode === 3);
+    if (!isModeThree) { g.visible = false; return; }
+    g.visible = true;
+    /* distance from selected age — closer = brighter (Gemini ghost lerp) */
+    const dist = Math.abs(age - c4.age);
+    const t = Math.max(0, 1 - dist * 0.25);
+    const baseOpacity = (c4.targetMode === 3 ? c4.modeTransition : 1 - c4.modeTransition);
+    g.userData._mat.opacity = baseOpacity * (0.25 + t * 0.5);
+    g.userData._halo.material.opacity = baseOpacity * (0.15 + t * 0.55);
+    /* gentle bob */
+    g.position.y = junior.position.y + Math.sin(time * 0.7 + age * 0.13) * 0.04;
+  });
+
+  /* If Mode 2 playing, advance scrubber automatically + sync to narrative beat
+   * (Codex r3 audit: previously only updated bar value, not narrative state). */
+  if (c4.mode === 2 && c4.playing) {
+    c4.scrubProgress = Math.min(1, c4.scrubProgress + dt * 0.04);
+    if (scrubBarEl) scrubBarEl.value = String(Math.floor(c4.scrubProgress * 1000));
+    const beatF = c4.scrubProgress * narrative.beats.length;
+    const newBeat = Math.min(narrative.beats.length - 1, Math.floor(beatF));
+    if (newBeat !== narrative.beatIndex) {
+      narrative.beatIndex = newBeat;
+      narrative.beatStart = time - (beatF - newBeat) * narrative.beats[newBeat].dur;
+      const beat = narrative.beats[newBeat];
+      const tsEl = document.getElementById('scrubTs');
+      const txtEl = document.getElementById('scrubText');
+      if (tsEl) tsEl.textContent = beat.ts.split(' ')[1] || beat.ts;
+      if (txtEl) txtEl.textContent = beat.text.slice(0, 30) + '…';
+      /* trigger narrative HUD update (caption + timeWatch) */
+      try { showBeatUI(beat); } catch (e) { /* ignore if helper missing */ }
+    }
+    /* loop scrubber back to 0 when done */
+    if (c4.scrubProgress >= 1) {
+      c4.scrubProgress = 0;
+      narrative.beatIndex = 0;
+      narrative.beatStart = time;
+    }
+  }
+
+  /* Performance telemetry (Codex C3) */
+  const inst = 1 / Math.max(dt, 0.001);
+  c4.perf.fpsBuf[c4.perf.fpsIdx] = inst;
+  c4.perf.fpsIdx = (c4.perf.fpsIdx + 1) % c4.perf.fpsBuf.length;
+  c4.perf.fpsAvg = c4.perf.fpsBuf.reduce((a, b) => a + b, 0) / c4.perf.fpsBuf.length;
+  /* Adaptive quality:if FPS < 50 for sustained period,降低 SSAO/DOF */
+  const fpsHUD = document.getElementById('perfFps');
+  if (fpsHUD) fpsHUD.textContent = 'FPS ' + Math.round(c4.perf.fpsAvg);
+  const qHUD = document.getElementById('perfQuality');
+  if (c4.perf.fpsAvg < 50 && c4.perf.quality === 'HQ') {
+    c4.perf.quality = 'MQ';
+    FX.dust = false;
+    applyFX();
+    if (qHUD) qHUD.textContent = 'MQ';
+  } else if (c4.perf.fpsAvg < 35 && c4.perf.quality === 'MQ') {
+    c4.perf.quality = 'LQ';
+    FX.ssao = false;
+    FX.dof = false;
+    if (qHUD) qHUD.textContent = 'LQ';
+  } else if (c4.perf.fpsAvg > 65 && c4.perf.quality === 'LQ') {
+    c4.perf.quality = 'MQ';
+    FX.ssao = true;
+    FX.dof = true;
+    if (qHUD) qHUD.textContent = 'MQ';
+  } else if (c4.perf.fpsAvg > 75 && c4.perf.quality === 'MQ') {
+    c4.perf.quality = 'HQ';
+    FX.dust = true;
+    applyFX();
+    if (qHUD) qHUD.textContent = 'HQ';
+  }
+}
+
+/* === Hook updateC4 into the existing loop (wrap original loop reference) === */
+const __origLoop = loop;
+function loopC4() {
+  /* We piggyback by re-calling __origLoop's logic via setTimeout-free approach:
+   * inside the next animation frame, we just call updateC4 with current time
+   * and let __origLoop's requestAnimationFrame do its own work. */
+}
+/* Instead of wrapping loop (which has internal RAF + state),we splice c4 update
+ * via a per-RAF tick that runs alongside loop(). Both RAFs interleave naturally. */
+let __c4LastT = performance.now();
+function c4Tick() {
+  const now = performance.now();
+  const dt = Math.min(0.06, (now - __c4LastT) / 1000);
+  __c4LastT = now;
+  updateC4(now / 1000, dt);
+  requestAnimationFrame(c4Tick);
+}
+
+/* Initial mode — start in Mode 1 (Cinematic) by default */
+setMode(1);
+
+/* 觸控 UI dispatcher 已移除 (touchPad 不存在於 c4 — mode badges 取代) */
+
+applyFX();
+loop();
+c4Tick();
+
+addEventListener('resize', function () {
+  cam.aspect = innerWidth / innerHeight;
+  cam.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  postfx.resize();
+});
+
+window.__COMPETITION_1__ = window.__TECH_DEMO__ = {
+  cam: cam, scene: scene, postfx: postfx, fx: FX,
+  senior: senior, junior: junior, friends: friends,
+  applyFX: applyFX,
+  narrative: narrative,
+  toggleNarrative: () => {
+    document.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyN' }));
+  },
+  version: 'competition-1-v1'
+};
+</script>
+</body>
+</html>
