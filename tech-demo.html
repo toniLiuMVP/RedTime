@@ -252,9 +252,20 @@ for (const side of [-1, 1]) {
 }
 
 /* 走廊盡頭窗 (god ray source) */
-const windowPanelMat = new THREE.MeshBasicMaterial({ color: 0xffd388, fog: false });
+/* Window — high-intensity emissive so bloom mask picks it up cleanly + IBL doesn't fight */
+const windowPanelMat = new THREE.MeshBasicMaterial({ color: 0xfff0d2, fog: false, toneMapped: false });
 const windowPanel = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 2.1), windowPanelMat);
-windowPanel.position.set(0, 1.85, -18.85); scene.add(windowPanel);
+windowPanel.position.set(0, 1.85, -18.85);
+windowPanel.userData.bloomLayer = true;   /* tag for selective-bloom mask */
+scene.add(windowPanel);
+/* Bright window halo — additive glow plate behind to fake atmospheric scattering */
+const windowHaloMat = new THREE.MeshBasicMaterial({
+  color: 0xffe5a8, fog: false, transparent: true, opacity: 0.55,
+  blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false
+});
+const windowHalo = new THREE.Mesh(new THREE.PlaneGeometry(5.4, 4.0), windowHaloMat);
+windowHalo.position.set(0, 1.85, -18.83);
+scene.add(windowHalo);
 const windowFrameMat = new THREE.MeshStandardMaterial({ color: 0x2a1810, roughness: 0.55 });
 const wfTop = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.08, 0.12), windowFrameMat);
 wfTop.position.set(0, 2.95, -18.84); scene.add(wfTop);
@@ -322,8 +333,9 @@ bbFrame.position.set(7.86, 1.9, -7); scene.add(bbFrame);
    =================================================================== */
 
 /* ─── 共用 helpers ─── */
-/* Skin pore + freckle canvas — subtle micro-variation that picks up under close light */
-function makeSkinTexture(baseColor) {
+/* Skin pore + freckle canvas — subtle micro-variation that picks up under close light.
+ * We return the raw canvas (for color tex) so a Sobel normal map can be derived later. */
+function makeSkinCanvas(baseColor) {
   const size = 512;
   const c = document.createElement('canvas');
   c.width = c.height = size;
@@ -355,17 +367,24 @@ function makeSkinTexture(baseColor) {
     ctx.fillStyle = `rgba(${Math.round(r0*0.72)}, ${Math.round(g0*0.66)}, ${Math.round(b0*0.6)}, ${0.22 + Math.random() * 0.18})`;
     ctx.beginPath(); ctx.arc(x, y, 0.9 + Math.random() * 1.3, 0, Math.PI * 2); ctx.fill();
   }
-  const tex = new THREE.CanvasTexture(c);
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.colorSpace = THREE.SRGBColorSpace;
-  return tex;
+  return c;   /* return raw canvas — caller wraps in CanvasTexture + builds normal map */
 }
 
-/* Cached skin textures keyed by base color (avoid duplicate canvas work per character) */
+/* Cached { colorTex, normalTex } keyed by base color — Sobel-derived skin micro-relief */
 const _skinTexCache = new Map();
-function getSkinTex(baseColor) {
+function getSkinTexBundle(baseColor) {
   const k = '' + baseColor;
-  if (!_skinTexCache.has(k)) _skinTexCache.set(k, makeSkinTexture(baseColor));
+  if (!_skinTexCache.has(k)) {
+    const canvas = makeSkinCanvas(baseColor);
+    const colorTex = new THREE.CanvasTexture(canvas);
+    colorTex.wrapS = colorTex.wrapT = THREE.RepeatWrapping;
+    colorTex.colorSpace = THREE.SRGBColorSpace;
+    /* Sobel normal — gentle strength so pores/freckles don't read as gravel */
+    const normalCanvas = makeNormalFromCanvas(canvas, 1.4);
+    const normalTex = new THREE.CanvasTexture(normalCanvas);
+    normalTex.wrapS = normalTex.wrapT = THREE.RepeatWrapping;
+    _skinTexCache.set(k, { colorTex, normalTex });
+  }
   return _skinTexCache.get(k);
 }
 
@@ -374,9 +393,12 @@ function getSkinTex(baseColor) {
  * Cheaper than real BSSRDF; visually close enough for stylised realism. */
 function makeSkinMaterial(baseColor) {
   const col = new THREE.Color(baseColor);
+  const skin = getSkinTexBundle(baseColor);
   const mat = new THREE.MeshPhysicalMaterial({
     color: baseColor,
-    map: getSkinTex(baseColor),
+    map: skin.colorTex,
+    normalMap: skin.normalTex,
+    normalScale: new THREE.Vector2(0.22, 0.22),  /* dermal hint only — too high amplifies polygon facets */
     roughness: 0.58,
     metalness: 0.02,
     clearcoat: 0.18,           /* very faint dermal sheen */
@@ -579,8 +601,8 @@ function buildHead(opts) {
   g.userData.kind = 'head';
   const skinColor = opts.skinColor || 0xe8c8b0;
   const skinMat = makeSkinMaterial(skinColor);
-  /* === 1. 雕刻 head shape — start with subdivided icosahedron === */
-  const headGeo = new THREE.IcosahedronGeometry(0.13, 4);
+  /* === 1. 雕刻 head shape — subdivided icosahedron, detail=5 (~2560 tri / head) === */
+  const headGeo = new THREE.IcosahedronGeometry(0.13, 5);
   const pos = headGeo.attributes.position;
   for (let i = 0; i < pos.count; i++) {
     let x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
@@ -871,6 +893,11 @@ function buildJuniorHair() {
     strand.userData.baseX = x0;
     strand.userData.baseRotZ = strand.rotation.z;
     strand.userData.basePhase = i * 0.13;
+    /* Verlet state — current + previous position drive velocity implicitly */
+    strand.userData.vx = x0;       /* current */
+    strand.userData.vpx = x0;      /* previous (initially equal) */
+    strand.userData.stiffness = 50 + Math.random() * 18;
+    strand.userData.damping = 0.93 + Math.random() * 0.04;
     longStrands.push(strand);
     g.add(strand);
   }
@@ -902,6 +929,11 @@ function buildJuniorHair() {
       strand.userData.baseX = baseX;
       strand.userData.baseRotZ = strand.rotation.z;
       strand.userData.basePhase = i * 0.4 + (s > 0 ? Math.PI : 0);
+      /* Verlet — slightly heavier side strands swing more on head turn */
+      strand.userData.vx = baseX;
+      strand.userData.vpx = baseX;
+      strand.userData.stiffness = 44 + Math.random() * 12;
+      strand.userData.damping = 0.94;
       longStrands.push(strand);
       g.add(strand);
     }
@@ -1537,12 +1569,15 @@ class PostFX {
     this.rtBlurB = this.makeRT(0.5);
     this.rtDofA = this.makeRT(0.5);      /* DOF blur target — large blur for far field */
     this.rtDofB = this.makeRT(0.5);
+    this.rtSSAO = this.makeRT(0.5);      /* SSAO occlusion */
+    this.rtSSAOBlur = this.makeRT(0.5);
     this.fsCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
     this.fsScene = new THREE.Scene();
     this.fsQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.makeBrightMat());
     this.fsScene.add(this.fsQuad);
     this.matBright = this.fsQuad.material;
     this.matBlur = this.makeBlurMat();
+    this.matSSAO = this.makeSSAOMat();
     this.matFinal = this.makeFinalMat();
   }
   makeRT(scale, withDepth) {
@@ -1563,6 +1598,62 @@ class PostFX {
     this.rtBlurB.setSize(innerWidth * (devicePixelRatio || 1) * 0.5, innerHeight * (devicePixelRatio || 1) * 0.5);
     this.rtDofA.setSize(innerWidth * (devicePixelRatio || 1) * 0.5, innerHeight * (devicePixelRatio || 1) * 0.5);
     this.rtDofB.setSize(innerWidth * (devicePixelRatio || 1) * 0.5, innerHeight * (devicePixelRatio || 1) * 0.5);
+    this.rtSSAO.setSize(innerWidth * (devicePixelRatio || 1) * 0.5, innerHeight * (devicePixelRatio || 1) * 0.5);
+    this.rtSSAOBlur.setSize(innerWidth * (devicePixelRatio || 1) * 0.5, innerHeight * (devicePixelRatio || 1) * 0.5);
+  }
+  /* SSAO — sample 8 hemispheric points around each pixel; count those occluded by deeper geometry */
+  makeSSAOMat() {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        tDepth: { value: null },
+        uRes: { value: new THREE.Vector2(innerWidth, innerHeight) },
+        uNear: { value: 0.1 }, uFar: { value: 80 },
+        uRadius: { value: 0.012 },          /* sample radius in normalized depth */
+        uStrength: { value: 1.3 },           /* AO darkening multiplier */
+        uBias: { value: 0.0008 }
+      },
+      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position, 1.0); }',
+      fragmentShader: `
+        precision highp float;
+        uniform sampler2D tDepth;
+        uniform vec2 uRes;
+        uniform float uNear; uniform float uFar;
+        uniform float uRadius; uniform float uStrength; uniform float uBias;
+        varying vec2 vUv;
+        float linearDepth(float z) {
+          float ndc = z * 2.0 - 1.0;
+          float view = (2.0 * uNear * uFar) / (uFar + uNear - ndc * (uFar - uNear));
+          return view / uFar;
+        }
+        /* 8 stratified hemisphere samples (in 2D screen space, weighted by distance) */
+        const vec2 kSamples[8] = vec2[8](
+          vec2( 0.30,  0.10), vec2(-0.18,  0.34), vec2(-0.40, -0.14), vec2( 0.12, -0.38),
+          vec2( 0.62,  0.42), vec2(-0.56,  0.50), vec2(-0.48, -0.62), vec2( 0.50, -0.58)
+        );
+        float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+        void main() {
+          float z = texture2D(tDepth, vUv).r;
+          float d = linearDepth(z);
+          if (z >= 0.999) { gl_FragColor = vec4(1.0); return; }   /* sky / background */
+          float rot = hash(vUv * 1024.0) * 6.2832;
+          float cs = cos(rot), sn = sin(rot);
+          mat2 R = mat2(cs, -sn, sn, cs);
+          float occ = 0.0;
+          for (int i = 0; i < 8; i++) {
+            vec2 off = R * kSamples[i] * uRadius;
+            float sz = texture2D(tDepth, vUv + off).r;
+            float sd = linearDepth(sz);
+            float depthDelta = d - sd;
+            /* occluded if sampled depth is closer to camera + within range */
+            float rangeMask = smoothstep(uRadius * 2.0, 0.0, abs(depthDelta));
+            occ += step(uBias, depthDelta) * rangeMask;
+          }
+          occ /= 8.0;
+          float ao = 1.0 - occ * uStrength;
+          gl_FragColor = vec4(ao, ao, ao, 1.0);
+        }
+      `
+    });
   }
   makeBrightMat() {
     return new THREE.ShaderMaterial({
@@ -1607,9 +1698,11 @@ class PostFX {
       uniforms: {
         tDiffuse: { value: null }, tBloom: { value: null },
         tDof: { value: null }, tDepth: { value: null },
+        tSSAO: { value: null },
         uTime: { value: 0 },
         uBloomStrength: { value: 0.62 }, uChromaStrength: { value: 1.0 }, uGrainStrength: { value: 1.0 },
         uDofStrength: { value: 1.0 },
+        uSSAOStrength: { value: 1.0 },
         uFocusDepth: { value: 0.92 },     /* normalized depth where focus is sharp */
         uFocusRange: { value: 0.06 },     /* sharp band half-width */
         uNear: { value: 0.1 }, uFar: { value: 80 }
@@ -1617,9 +1710,9 @@ class PostFX {
       vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position, 1.0); }',
       fragmentShader: `
         precision highp float;
-        uniform sampler2D tDiffuse; uniform sampler2D tBloom; uniform sampler2D tDof; uniform sampler2D tDepth;
+        uniform sampler2D tDiffuse; uniform sampler2D tBloom; uniform sampler2D tDof; uniform sampler2D tDepth; uniform sampler2D tSSAO;
         uniform float uTime; uniform float uBloomStrength; uniform float uChromaStrength; uniform float uGrainStrength;
-        uniform float uDofStrength; uniform float uFocusDepth; uniform float uFocusRange;
+        uniform float uDofStrength; uniform float uSSAOStrength; uniform float uFocusDepth; uniform float uFocusRange;
         uniform float uNear; uniform float uFar;
         varying vec2 vUv;
         float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -1648,6 +1741,10 @@ class PostFX {
           coc *= uDofStrength;
           vec3 blur = texture2D(tDof, uv).rgb;
           vec3 col = mix(sharp, blur, coc);
+          /* SSAO multiply — darken occluded crevices */
+          float ao = texture2D(tSSAO, uv).r;
+          float aoApplied = mix(1.0, ao, uSSAOStrength);
+          col *= aoApplied;
           /* bloom add */
           vec3 bloom = texture2D(tBloom, uv).rgb;
           col += bloom * uBloomStrength;
@@ -1684,6 +1781,27 @@ class PostFX {
       this.renderer.setRenderTarget(this.rtBlurA);
       this.renderer.render(this.fsScene, this.fsCam);
     }
+    /* SSAO — sample depth, occlusion-darken creases; cheap blur to soften */
+    if (fx.ssao) {
+      this.fsQuad.material = this.matSSAO;
+      this.matSSAO.uniforms.tDepth.value = this.rtMain.depthTexture;
+      this.matSSAO.uniforms.uNear.value = cam.near;
+      this.matSSAO.uniforms.uFar.value = cam.far;
+      this.matSSAO.uniforms.uRes.value.set(this.rtSSAO.width, this.rtSSAO.height);
+      this.renderer.setRenderTarget(this.rtSSAO);
+      this.renderer.render(this.fsScene, this.fsCam);
+      /* one Gaussian pass to denoise the SSAO */
+      this.fsQuad.material = this.matBlur;
+      this.matBlur.uniforms.tDiffuse.value = this.rtSSAO.texture;
+      this.matBlur.uniforms.uDir.value.set(1, 0);
+      this.matBlur.uniforms.uRes.value.set(this.rtSSAOBlur.width, this.rtSSAOBlur.height);
+      this.renderer.setRenderTarget(this.rtSSAOBlur);
+      this.renderer.render(this.fsScene, this.fsCam);
+      this.matBlur.uniforms.tDiffuse.value = this.rtSSAOBlur.texture;
+      this.matBlur.uniforms.uDir.value.set(0, 1);
+      this.renderer.setRenderTarget(this.rtSSAO);
+      this.renderer.render(this.fsScene, this.fsCam);
+    }
     /* DOF — separable Gaussian blur of full scene (not just bright pixels) into rtDofA */
     if (fx.dof) {
       this.fsQuad.material = this.matBlur;
@@ -1702,11 +1820,13 @@ class PostFX {
     this.matFinal.uniforms.tBloom.value = fx.bloom ? this.rtBlurA.texture : this.rtMain.texture;
     this.matFinal.uniforms.tDof.value = fx.dof ? this.rtDofA.texture : this.rtMain.texture;
     this.matFinal.uniforms.tDepth.value = this.rtMain.depthTexture;
+    this.matFinal.uniforms.tSSAO.value = fx.ssao ? this.rtSSAO.texture : this.rtMain.texture;
     this.matFinal.uniforms.uTime.value = time;
     this.matFinal.uniforms.uBloomStrength.value = fx.bloom ? 0.62 : 0.0;
     this.matFinal.uniforms.uChromaStrength.value = fx.chroma ? 1.0 : 0.0;
     this.matFinal.uniforms.uGrainStrength.value = fx.grain ? 1.0 : 0.0;
     this.matFinal.uniforms.uDofStrength.value = fx.dof ? 1.0 : 0.0;
+    this.matFinal.uniforms.uSSAOStrength.value = fx.ssao ? 0.48 : 0.0;
     this.matFinal.uniforms.uNear.value = cam.near;
     this.matFinal.uniforms.uFar.value = cam.far;
     this.renderer.setRenderTarget(null);
@@ -1718,7 +1838,7 @@ const postfx = new PostFX(renderer);
 /* ===================================================================
    FX toggles + UI
    =================================================================== */
-const FX = { floor: true, godRays: true, dust: true, redLine: true, breath: true, hairSway: true, bloom: true, chroma: true, grain: true, dof: true };
+const FX = { floor: true, godRays: true, dust: true, redLine: true, breath: true, hairSway: true, bloom: true, chroma: true, grain: true, dof: true, ssao: true };
 function applyFX() {
   floor.material = FX.floor ? floorMat : floorPlainMat;
   godRays.visible = FX.godRays;
@@ -1816,11 +1936,35 @@ function loop() {
     junior.userData.head.rotation.y = -Math.PI / 16 + Math.sin(elapsed * 0.4) * 0.08;
   }
 
-  /* 學妹髮絲 sway */
+  /* 學妹髮絲 Verlet sway — 真實物理 spring + 阻尼,head 轉動會帶動慣性 */
   if (FX.hairSway && junior.userData.hair && junior.userData.hair.userData.strands) {
-    junior.userData.hair.userData.strands.forEach(function (s, idx) {
-      s.position.x = s.userData.baseX + Math.sin(elapsed * 0.8 + s.userData.basePhase) * 0.012;
-      s.rotation.z = Math.sin(elapsed * 0.6 + s.userData.basePhase) * 0.06;
+    /* head velocity (用 head.rotation.y 變化作 X 平移源) */
+    const headRotY = junior.userData.head ? junior.userData.head.rotation.y : 0;
+    if (junior.userData._lastHeadY === undefined) junior.userData._lastHeadY = headRotY;
+    const headVelX = (headRotY - junior.userData._lastHeadY) / Math.max(dt, 0.0001);
+    junior.userData._lastHeadY = headRotY;
+    /* breath wobble — body breathing pushes hair downward periodic accel */
+    const breathAccel = Math.cos(elapsed * 1.4) * 0.012;
+    const dtClamp = Math.min(0.033, dt);
+    const dt2 = dtClamp * dtClamp;
+    junior.userData.hair.userData.strands.forEach(function (s) {
+      const u = s.userData;
+      /* acceleration: spring back to rest + head velocity drag + breath jitter + ambient noise */
+      const ambient = Math.sin(elapsed * 0.6 + u.basePhase) * 0.05 + Math.sin(elapsed * 1.3 + u.basePhase * 2) * 0.03;
+      const accel = (u.baseX - u.vx) * u.stiffness
+                  + headVelX * 0.22
+                  + ambient
+                  + breathAccel;
+      /* Verlet step: x_new = 2 * x - x_prev (damped) + a * dt² */
+      const next = u.vx + (u.vx - u.vpx) * u.damping + accel * dt2;
+      u.vpx = u.vx;
+      u.vx = next;
+      /* clamp to prevent runaway */
+      const dx = next - u.baseX;
+      const clamped = Math.max(-0.045, Math.min(0.045, dx));
+      s.position.x = u.baseX + clamped;
+      /* rotation responds to lateral displacement (whip effect at tip) */
+      s.rotation.z = u.baseRotZ + clamped * 4.5;
     });
   }
 
