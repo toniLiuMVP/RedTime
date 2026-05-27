@@ -681,6 +681,12 @@ function buildHead(opts) {
     }
     /* 額頭 forehead — 微 flatten */
     if (y > 0.08 && z > 0.07) z *= 0.96;
+    /* A4 眉骨突 browridge — 眼眶上方一道橫向脊,男生明顯女生淡 */
+    if (y > 0.04 && y < 0.075 && Math.abs(x) < 0.07 && z > 0.10) {
+      const browProminence = opts.female ? 0.004 : 0.008;
+      const fade = Math.exp(-Math.pow((y - 0.058) / 0.012, 2));
+      z += browProminence * fade;
+    }
     /* 眼窩 eye socket — 內凹 */
     const eyeDistL = Math.sqrt((x + 0.05) ** 2 + (y - 0.025) ** 2);
     const eyeDistR = Math.sqrt((x - 0.05) ** 2 + (y - 0.025) ** 2);
@@ -702,24 +708,55 @@ function buildHead(opts) {
   headGeo.computeVertexNormals();
   const head = new THREE.Mesh(headGeo, skinMat);
   g.add(head);
-  /* === 2. 耳 — 多 part: 外輪廓 + 內凹 === */
+  /* === 2. 耳 — A3 升級:LatheGeometry helix 真實耳廓 + 5 part === */
   function buildEar(side) {
     const eg = new THREE.Group();
-    /* 外耳輪 */
-    const outerGeo = new THREE.SphereGeometry(0.028, 12, 10);
-    outerGeo.scale(0.8, 1.5, 0.5);
-    const outer = new THREE.Mesh(outerGeo, skinMat);
-    eg.add(outer);
-    /* 內凹 (concha) — 較深陰影 */
-    const innerMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(skinColor).multiplyScalar(0.7), roughness: 0.85 });
-    const innerGeo = new THREE.SphereGeometry(0.018, 10, 8);
-    innerGeo.scale(0.7, 1.2, 0.3);
+    /* 外耳輪 helix — LatheGeometry 旋轉外耳邊緣 profile */
+    const helixPoints = [
+      new THREE.Vector2(0.000, 0.034),
+      new THREE.Vector2(0.012, 0.030),
+      new THREE.Vector2(0.020, 0.020),
+      new THREE.Vector2(0.024, 0.008),
+      new THREE.Vector2(0.026, -0.005),
+      new THREE.Vector2(0.024, -0.018),
+      new THREE.Vector2(0.020, -0.028),
+      new THREE.Vector2(0.014, -0.034),
+      new THREE.Vector2(0.000, -0.036)
+    ];
+    const helixGeo = new THREE.LatheGeometry(helixPoints, 16, 0, Math.PI);
+    helixGeo.rotateY(side * Math.PI / 2);
+    helixGeo.scale(0.55, 1.0, 0.55);
+    const helix = new THREE.Mesh(helixGeo, skinMat);
+    eg.add(helix);
+    /* Antihelix ridge — 內側脊 (less prominent fold inside the helix) */
+    const antihGeo = new THREE.TorusGeometry(0.018, 0.0035, 6, 14, Math.PI);
+    antihGeo.rotateY(side * Math.PI / 2);
+    antihGeo.rotateX(Math.PI / 2);
+    antihGeo.translate(side * 0.001, 0, 0.005);
+    const antihMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(skinColor).multiplyScalar(0.92), roughness: 0.78
+    });
+    eg.add(new THREE.Mesh(antihGeo, antihMat));
+    /* 內凹 concha — 深色陰影 bowl */
+    const innerMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(skinColor).multiplyScalar(0.62), roughness: 0.92
+    });
+    const innerGeo = new THREE.SphereGeometry(0.013, 12, 10, 0, Math.PI * 2, 0, Math.PI / 1.6);
+    innerGeo.scale(0.85, 1.0, 0.55);
     const inner = new THREE.Mesh(innerGeo, innerMat);
-    inner.position.set(side * 0.005, 0, 0.012);
+    inner.position.set(side * 0.003, -0.002, 0.010);
+    inner.rotation.y = side * 0.3;
     eg.add(inner);
-    /* 耳垂 (lobe) */
-    const lobe = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), skinMat);
-    lobe.position.set(side * -0.005, -0.028, 0);
+    /* Tragus — 耳屏 (small flap covering ear canal) */
+    const tragus = new THREE.Mesh(new THREE.SphereGeometry(0.0055, 8, 6), skinMat);
+    tragus.scale.set(0.7, 1.4, 0.5);
+    tragus.position.set(side * 0.006, -0.005, 0.018);
+    eg.add(tragus);
+    /* 耳垂 lobe — 略圓潤,稍微下垂 */
+    const lobeGeo = new THREE.SphereGeometry(0.013, 10, 8);
+    lobeGeo.scale(1.0, 1.2, 0.7);
+    const lobe = new THREE.Mesh(lobeGeo, skinMat);
+    lobe.position.set(side * -0.003, -0.030, 0.002);
     eg.add(lobe);
     eg.position.set(side * 0.135, 0.012, 0);
     return eg;
@@ -741,12 +778,29 @@ function buildHead(opts) {
   noseGeo.translate(0, -0.018, 0.13);
   const nose = new THREE.Mesh(noseGeo, skinMat);
   g.add(nose);
-  /* 鼻孔 — 兩個小暗點 */
-  const nostrilMat = new THREE.MeshStandardMaterial({ color: 0x4a2818, roughness: 0.9 });
+  /* 鼻孔 — A2:LatheGeometry 旋轉一個 nostril cavity profile 形成真實鼻翼凹陷 */
+  const nostrilMat = new THREE.MeshStandardMaterial({ color: 0x4a2818, roughness: 0.92 });
+  const nostrilProfile = [
+    new THREE.Vector2(0.000, 0.0000),
+    new THREE.Vector2(0.0028, 0.0006),
+    new THREE.Vector2(0.0036, 0.0020),
+    new THREE.Vector2(0.0032, 0.0042),
+    new THREE.Vector2(0.0014, 0.0054),
+    new THREE.Vector2(0.000, 0.0058)
+  ];
   for (let s of [-1, 1]) {
-    const nostril = new THREE.Mesh(new THREE.SphereGeometry(0.0035, 8, 6), nostrilMat);
-    nostril.position.set(s * 0.007, -0.038, 0.142);
+    const nostrilGeo = new THREE.LatheGeometry(nostrilProfile, 14);
+    nostrilGeo.scale(1.0, -1.0, 1.0);  /* flip downward = cavity opens down */
+    nostrilGeo.rotateZ(s * -0.18);     /* slight outward flare per side */
+    const nostril = new THREE.Mesh(nostrilGeo, nostrilMat);
+    nostril.position.set(s * 0.008, -0.036, 0.144);
     g.add(nostril);
+    /* 鼻翼 alar wing — 鼻翼軟骨外側突起 */
+    const alarGeo = new THREE.SphereGeometry(0.005, 8, 6);
+    alarGeo.scale(1.4, 1.0, 0.9);
+    const alar = new THREE.Mesh(alarGeo, skinMat);
+    alar.position.set(s * 0.011, -0.034, 0.140);
+    g.add(alar);
   }
   /* === 4. 真實眼睛 === */
   const eyeL = buildEye(opts, -1);
@@ -791,6 +845,30 @@ function buildHead(opts) {
   );
   mouthLine.position.set(0, -0.0595, 0.133);
   g.add(mouthLine);
+  /* A1 唇紋 — 14 條垂直細線在上下唇上,模擬唇紋 (lip wrinkles) */
+  const lipLineMat = new THREE.MeshBasicMaterial({ color: 0x6a3838, transparent: true, opacity: 0.42 });
+  for (let i = 0; i < 14; i++) {
+    const t = (i / 13) - 0.5;
+    const xOff = t * 0.034;
+    /* 上唇紋 */
+    const ul = new THREE.Mesh(new THREE.BoxGeometry(0.00035, 0.0046, 0.0005), lipLineMat);
+    ul.position.set(xOff, -0.0555, 0.1338);
+    ul.rotation.z = -t * 0.18;   /* 微 fan-out */
+    g.add(ul);
+    /* 下唇紋 */
+    const ll = new THREE.Mesh(new THREE.BoxGeometry(0.00035, 0.0056, 0.0005), lipLineMat);
+    ll.position.set(xOff, -0.064, 0.1338);
+    ll.rotation.z = -t * 0.12;
+    g.add(ll);
+  }
+  /* 唇邊 vermilion border — 唇的紅色邊緣輪廓比唇本身略亮 */
+  const vermilionMat = new THREE.MeshBasicMaterial({ color: 0xd8788c, transparent: true, opacity: 0.55 });
+  const vermBorderGeo = new THREE.TorusGeometry(0.022, 0.0014, 6, 24, Math.PI);
+  vermBorderGeo.scale(1.5, 0.55, 0.5);
+  const vermUpper = new THREE.Mesh(vermBorderGeo, vermilionMat);
+  vermUpper.position.set(0, -0.050, 0.134);
+  vermUpper.rotation.x = -0.15;
+  g.add(vermUpper);
   /* === 7. 下巴陰影 (subtle warm gradient) === */
   const chinShade = new THREE.Mesh(
     new THREE.SphereGeometry(0.118, 16, 10, 0, Math.PI * 2, Math.PI / 2.5, Math.PI / 6),
@@ -863,22 +941,36 @@ function buildSeniorHair() {
   const base = new THREE.Mesh(baseGeo, hairMat);
   base.position.y = 0.003;
   g.add(base);
-  /* 2. 飛機頭 quiff — 前髮 strands 上翻立起 */
+  /* 2. D1 飛機頭 quiff 升級 — 前髮 strands 真正立起 + 後掃 + 更長更厚 */
   const quiffMat = makeHairMaterial(0x080300, { roughness: 0.34, metalness: 0.62, bandColor: 0xa05a28, bandStrength: 0.68, bandPower: 30 });
-  for (let i = 0; i < 28; i++) {
-    const tx = (Math.random() - 0.5) * 0.085;
-    const tz = 0.04 + Math.random() * 0.045;
-    const len = 0.085 + Math.random() * 0.04;
+  /* root 色稍深 (Gemini 提建議:D3 髮絲根色漸層) */
+  const rootMat = makeHairMaterial(0x040100, { roughness: 0.38, metalness: 0.55, bandColor: 0x60341a, bandStrength: 0.42 });
+  for (let i = 0; i < 38; i++) {   /* 28 → 38 條,更密 */
+    const tx = (Math.random() - 0.5) * 0.090;
+    const tz = 0.035 + Math.random() * 0.055;
+    /* 中央 strands 更長,往兩側遞減 */
+    const centerBias = 1 - Math.abs(tx) / 0.045;
+    const len = 0.105 + centerBias * 0.045 + Math.random() * 0.025;   /* 0.085-0.125 → 0.105-0.175,更長 */
+    /* root segment — darker base */
+    const rootLen = len * 0.32;
+    const rootStrand = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.0030, 0.0024, rootLen, 5),
+      rootMat
+    );
+    rootStrand.position.set(tx, 0.115 + centerBias * 0.025, tz);
+    rootStrand.rotation.x = -0.78 - centerBias * 0.24 + (Math.random() - 0.5) * 0.08;
+    rootStrand.rotation.z = tx * 2.4 + (Math.random() - 0.5) * 0.10;
+    g.add(rootStrand);
+    /* main strand — extends up + back sweep,正面看起來真的立起 */
     const strand = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.0025, 0.0009, len, 5),
+      new THREE.CylinderGeometry(0.0024, 0.0007, len, 5),
       quiffMat
     );
-    /* 從 額頭 anchor 升起,中央更高 */
-    const centerBias = 1 - Math.abs(tx) / 0.045;
-    strand.position.set(tx, 0.13 + centerBias * 0.04, tz);
-    /* upturn rotation */
-    strand.rotation.x = -0.45 - centerBias * 0.18 + (Math.random() - 0.5) * 0.12;
-    strand.rotation.z = tx * 1.8 + (Math.random() - 0.5) * 0.12;
+    /* 中央 strand 升起更高 (0.13 → 0.155 + bias 0.06) */
+    strand.position.set(tx, 0.155 + centerBias * 0.06, tz - 0.012);
+    /* upturn 更陡 (-0.45 → -0.85) + back sweep (z rotation 加 +X bias 後掃) */
+    strand.rotation.x = -0.85 - centerBias * 0.22 + (Math.random() - 0.5) * 0.10;
+    strand.rotation.z = tx * 2.2 + (Math.random() - 0.5) * 0.10;
     g.add(strand);
   }
   /* 3. 側髮 short trim (兩側 18 strands) */
@@ -958,18 +1050,34 @@ function buildJuniorHair() {
     longStrands.push(strand);
     g.add(strand);
   }
-  /* 3. 瀏海 (前髮) — 14 條短 strand 從額頭垂下 */
-  for (let i = 0; i < 14; i++) {
-    const tx = (Math.random() - 0.5) * 0.11;
-    const len = 0.06 + Math.random() * 0.04;
-    const strand = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.0025, 0.001, len, 5),
-      hairMat
-    );
-    strand.position.set(tx, 0.05 + (Math.random() - 0.5) * 0.02, 0.108 + Math.random() * 0.012);
-    strand.rotation.x = 0.55 + (Math.random() - 0.5) * 0.25;
-    strand.rotation.z = tx * 2.4 + (Math.random() - 0.5) * 0.15;
-    g.add(strand);
+  /* 3. D2 瀏海升級 — 中分,左右各 9 條,中央有條分線 gap */
+  const rootMatJ = makeHairMaterial(0x0a0402, { roughness: 0.42, bandColor: 0x542a18, bandStrength: 0.4 });
+  for (let s of [-1, 1]) {
+    for (let i = 0; i < 9; i++) {
+      const tNorm = i / 8;             /* 0 (中央) → 1 (外側) */
+      /* 中分:每側從中央 +0.008 開始往外 */
+      const tx = s * (0.008 + tNorm * 0.060);
+      const len = 0.062 + Math.random() * 0.045;
+      /* 髮絲從頭頂 sweep 向兩側,中央起 */
+      const strand = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.0026, 0.0009, len, 5),
+        hairMat
+      );
+      strand.position.set(tx, 0.058 + Math.random() * 0.012, 0.108 + Math.random() * 0.014);
+      /* sweep angle:中央 ~0.55 (往下),外側更傾斜往側面 */
+      strand.rotation.x = 0.45 + tNorm * 0.20 + (Math.random() - 0.5) * 0.10;
+      strand.rotation.z = s * (0.18 + tNorm * 0.45) + (Math.random() - 0.5) * 0.08;
+      g.add(strand);
+      /* D3 root segment — 較深色 (髮絲根色漸層) */
+      const rootSeg = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.0030, 0.0024, len * 0.30, 4),
+        rootMatJ
+      );
+      rootSeg.position.set(tx, 0.063, 0.106 + Math.random() * 0.010);
+      rootSeg.rotation.x = 0.40 + tNorm * 0.18;
+      rootSeg.rotation.z = s * (0.12 + tNorm * 0.30);
+      g.add(rootSeg);
+    }
   }
   /* 4. 髮絲 hint — 兩側更外突幾條 (動態 sway, 框臉的長髮) */
   for (let s of [-1, 1]) {
@@ -1409,6 +1517,61 @@ function buildSenior() {
   belt.position.y = 0.97;
   belt.rotation.x = Math.PI / 2;
   g.add(belt);
+  /* B4 皮帶扣 — 金屬扣環在 belt 前中央 */
+  const buckleMat = new THREE.MeshStandardMaterial({
+    color: 0xc8b878, roughness: 0.18, metalness: 0.92
+  });
+  const buckle = new THREE.Mesh(
+    new THREE.BoxGeometry(0.046, 0.034, 0.012, 2, 1, 1),
+    buckleMat
+  );
+  buckle.position.set(0, 0.97, 0.130);
+  g.add(buckle);
+  /* buckle 中央扣孔 */
+  const buckleHole = new THREE.Mesh(
+    new THREE.BoxGeometry(0.018, 0.012, 0.004),
+    new THREE.MeshBasicMaterial({ color: 0x14100c })
+  );
+  buckleHole.position.set(0, 0.97, 0.137);
+  g.add(buckleHole);
+  /* B1 牛仔褲側縫線 — running stitch effect (兩條 dashed line 在大腿外側) */
+  const stitchMat = new THREE.MeshBasicMaterial({ color: 0xe8c878, transparent: true, opacity: 0.78 });
+  for (const ss of [-1, 1]) {
+    /* 多段短 dash 模擬縫線 */
+    for (let i = 0; i < 18; i++) {
+      const dash = new THREE.Mesh(
+        new THREE.BoxGeometry(0.0008, 0.012, 0.0008),
+        stitchMat
+      );
+      dash.position.set(ss * 0.118, 0.94 - i * 0.034, 0.045);
+      g.add(dash);
+    }
+  }
+  /* B5 後口袋輪廓線 (左右各一) */
+  for (const ps of [-1, 1]) {
+    const pocket = new THREE.Mesh(
+      new THREE.BoxGeometry(0.062, 0.058, 0.002),
+      new THREE.MeshBasicMaterial({ color: 0x2a3850, transparent: true, opacity: 0.55 })
+    );
+    pocket.position.set(ps * 0.06, 0.88, -0.118);
+    g.add(pocket);
+    /* 口袋上緣縫線 */
+    const pocketStitch = new THREE.Mesh(
+      new THREE.BoxGeometry(0.062, 0.001, 0.002),
+      stitchMat
+    );
+    pocketStitch.position.set(ps * 0.06, 0.91, -0.115);
+    g.add(pocketStitch);
+  }
+  /* B2 T-shirt 領口縫邊 — 在學長白 T 頸圈圍一圈線 (Senior only) */
+  const tStitchMat = new THREE.MeshBasicMaterial({ color: 0xe8e0d0, transparent: true, opacity: 0.62 });
+  const tCollarStitch = new THREE.Mesh(
+    new THREE.TorusGeometry(0.06, 0.0008, 5, 20),
+    tStitchMat
+  );
+  tCollarStitch.position.set(0, 1.46, 0.005);
+  tCollarStitch.rotation.x = Math.PI / 2.05;
+  g.add(tCollarStitch);
   g.userData.body = body;
   g.userData.head = head;
   return g;
@@ -1450,6 +1613,29 @@ function buildJunior() {
   paper.position.set(-0.12, 0.7, 0.08);
   paper.rotation.set(0.4, 0.2, -0.2);
   g.add(paper);
+  /* B3 學妹白色長袖襯衫鈕釦 — 5 顆從領口到下擺垂直排列 */
+  const buttonMat = new THREE.MeshStandardMaterial({
+    color: 0xfafafa, roughness: 0.32, metalness: 0.08
+  });
+  for (let i = 0; i < 5; i++) {
+    const button = new THREE.Mesh(
+      new THREE.SphereGeometry(0.0055, 10, 8),
+      buttonMat
+    );
+    button.scale.set(1, 0.4, 1);   /* 扁平鈕釦 */
+    button.position.set(0, 1.42 - i * 0.075, 0.135);
+    g.add(button);
+  }
+  /* B3+ 襯衫前襟 placket 中央條 — 鈕釦帶 */
+  const placketMat = new THREE.MeshStandardMaterial({
+    color: 0xeeeeee, roughness: 0.78
+  });
+  const placket = new THREE.Mesh(
+    new THREE.BoxGeometry(0.014, 0.42, 0.003),
+    placketMat
+  );
+  placket.position.set(0, 1.22, 0.132);
+  g.add(placket);
   g.userData.body = body;
   g.userData.head = head;
   g.userData.hair = hair;
@@ -2154,9 +2340,35 @@ function loop() {
       const body = c.userData.body;
       if (body) body.scale.y = b * (c === junior ? 0.92 : 0.96);
     });
-    /* 學長微 head turn */
-    senior.userData.head.rotation.y = Math.sin(elapsed * 0.3) * 0.05;
+    /* C1 學長頭側打電話 — 朝右肩傾,頭被手機輕推 + 微點頭 */
+    senior.userData.head.rotation.y = 0.12 + Math.sin(elapsed * 0.3) * 0.04;   /* 朝右轉 (向手機) */
+    senior.userData.head.rotation.z = 0.18 + Math.sin(elapsed * 0.55) * 0.02;  /* 頭側傾向肩 */
+    senior.userData.head.rotation.x = -0.06 + Math.sin(elapsed * 0.42) * 0.03;
+    /* 學長手機臂微抖 — armR (phoneCall pose) */
+    if (senior.userData.body && senior.userData.body.userData.armR) {
+      const sa = senior.userData.body.userData.armR;
+      sa.rotation.x = -0.5 + Math.sin(elapsed * 0.7) * 0.025;
+      sa.rotation.z = -1.2 + Math.sin(elapsed * 0.9) * 0.018;
+    }
+    /* C2 學妹 contrapposto — 一腳承重直,另一腳放鬆 hip drop */
     junior.userData.head.rotation.y = -Math.PI / 16 + Math.sin(elapsed * 0.4) * 0.08;
+    junior.userData.head.rotation.z = -0.04 + Math.sin(elapsed * 0.5) * 0.015;
+    if (junior.userData.body) {
+      /* hip 微傾向承重腳那側 (left = -1) */
+      junior.userData.body.rotation.z = -0.05 + Math.sin(elapsed * 0.45) * 0.008;
+      junior.userData.body.position.x = -0.005 + Math.sin(elapsed * 0.3) * 0.003;
+      /* 右腳放鬆 — 微外擺 */
+      if (junior.userData.body.userData.legR) {
+        junior.userData.body.userData.legR.rotation.z = 0.06 + Math.sin(elapsed * 0.45) * 0.01;
+      }
+      /* C3 學妹手指微 flex — left hand (拿紙條那隻) idle */
+      if (junior.userData.body.userData.armL && junior.userData.body.userData.armL.userData.hand) {
+        const handGrp = junior.userData.body.userData.armL.userData.hand;
+        const flex = 0.02 * Math.sin(elapsed * 1.2);
+        /* hand 本身做微抖,因為手指各 group 都已是 child;群體抖一個 simple 替代 per-finger IK */
+        handGrp.rotation.x = 0.1 + flex;
+      }
+    }
   }
 
   /* 學妹髮絲 Verlet sway — 真實物理 spring + 阻尼,head 轉動會帶動慣性 */
