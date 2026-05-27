@@ -1,0 +1,2006 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>選手 2 號 · 時間剖面 · LM402 一眼瞬間</title>
+<meta name="description" content="純 procedural Three.js r179：2005/10/17 11:00 LM402 一眼瞬間，以可操控時間剖面重構學長、學妹與五種內在意識。">
+<meta name="theme-color" content="#05070a">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    --ink: #f1eee6;
+    --muted: rgba(241, 238, 230, .68);
+    --line: rgba(255, 255, 255, .18);
+    --hot: #ff5c7a;
+    --warm: #ffd08b;
+    --cyan: #79e6ff;
+    --glass: rgba(5, 7, 10, .68);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #05070a;
+    color: var(--ink);
+    font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  }
+  button, input { font: inherit; }
+  #scene {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    touch-action: none;
+  }
+  #ui {
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+  }
+  .hud {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    top: 14px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .brand {
+    min-width: 270px;
+    max-width: min(520px, calc(100vw - 130px));
+    padding: 12px 14px 11px;
+    background: linear-gradient(135deg, rgba(5, 7, 10, .78), rgba(13, 18, 25, .52));
+    border: 1px solid rgba(255, 255, 255, .18);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, .32);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    pointer-events: auto;
+  }
+  .brand h1 {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: .18em;
+    line-height: 1.35;
+  }
+  .brand .sub {
+    margin-top: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 10px;
+    letter-spacing: .16em;
+    color: rgba(255, 208, 139, .78);
+    text-transform: uppercase;
+  }
+  .back {
+    flex: 0 0 auto;
+    padding: 10px 14px;
+    border: 1px solid rgba(255, 255, 255, .18);
+    color: rgba(241, 238, 230, .82);
+    background: rgba(5, 7, 10, .62);
+    text-decoration: none;
+    font-size: 12px;
+    letter-spacing: .08em;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    pointer-events: auto;
+  }
+  .back:hover { color: #fff; border-color: rgba(255, 208, 139, .54); }
+  .status {
+    position: absolute;
+    right: 16px;
+    top: 68px;
+    width: 240px;
+    padding: 12px 14px;
+    background: rgba(5, 7, 10, .64);
+    border: 1px solid rgba(255, 255, 255, .16);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    pointer-events: auto;
+  }
+  .status .row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 10px;
+    line-height: 1.7;
+    letter-spacing: .08em;
+    color: rgba(241, 238, 230, .72);
+  }
+  .status .row strong { color: rgba(121, 230, 255, .95); font-weight: 500; }
+  .timeline {
+    position: absolute;
+    left: 50%;
+    bottom: 18px;
+    width: min(760px, calc(100vw - 32px));
+    transform: translateX(-50%);
+    padding: 12px 14px 13px;
+    background: rgba(5, 7, 10, .72);
+    border: 1px solid rgba(255, 255, 255, .18);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, .35);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    pointer-events: auto;
+  }
+  .caption {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    align-items: baseline;
+    min-height: 38px;
+  }
+  .caption .stamp {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: .08em;
+    color: rgba(255, 208, 139, .92);
+    white-space: nowrap;
+  }
+  .caption .text {
+    min-width: 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: rgba(241, 238, 230, .92);
+  }
+  .caption .mode {
+    font-size: 11px;
+    letter-spacing: .12em;
+    color: rgba(121, 230, 255, .82);
+    white-space: nowrap;
+  }
+  .scrub {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    align-items: center;
+    margin-top: 8px;
+  }
+  .icon-btn {
+    width: 34px;
+    height: 30px;
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, .18);
+    background: rgba(255, 255, 255, .07);
+    color: rgba(241, 238, 230, .9);
+    cursor: pointer;
+  }
+  .icon-btn:hover,
+  .icon-btn.active {
+    color: #fff;
+    border-color: rgba(121, 230, 255, .68);
+    background: rgba(121, 230, 255, .13);
+  }
+  #timeSlider {
+    width: 100%;
+    accent-color: var(--cyan);
+  }
+  .beats {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-top: 9px;
+  }
+  .beat {
+    min-width: 0;
+    border: 1px solid rgba(255, 255, 255, .16);
+    background: rgba(255, 255, 255, .055);
+    color: rgba(241, 238, 230, .75);
+    padding: 7px 7px;
+    cursor: pointer;
+    font-size: 11px;
+    line-height: 1.25;
+    text-align: left;
+  }
+  .beat strong {
+    display: block;
+    color: rgba(241, 238, 230, .92);
+    font-size: 10px;
+    letter-spacing: .08em;
+    margin-bottom: 2px;
+  }
+  .beat.active {
+    border-color: rgba(255, 92, 122, .72);
+    box-shadow: inset 0 0 0 1px rgba(255, 92, 122, .22), 0 0 24px rgba(255, 92, 122, .15);
+    background: rgba(255, 92, 122, .13);
+  }
+  .focusbar {
+    position: absolute;
+    left: 16px;
+    top: 92px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    pointer-events: auto;
+  }
+  .focusbar button {
+    width: 42px;
+    height: 38px;
+    border: 1px solid rgba(255, 255, 255, .18);
+    background: rgba(5, 7, 10, .62);
+    color: rgba(241, 238, 230, .82);
+    cursor: pointer;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .focusbar button:hover,
+  .focusbar button.active {
+    border-color: rgba(255, 208, 139, .7);
+    color: #fff;
+    background: rgba(255, 208, 139, .12);
+  }
+  .help {
+    position: absolute;
+    left: 16px;
+    bottom: 18px;
+    width: 230px;
+    padding: 11px 13px;
+    border: 1px solid rgba(255, 255, 255, .15);
+    background: rgba(5, 7, 10, .54);
+    color: rgba(241, 238, 230, .68);
+    font-size: 11px;
+    line-height: 1.7;
+    letter-spacing: .04em;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    pointer-events: auto;
+  }
+  .help kbd {
+    display: inline-block;
+    min-width: 18px;
+    padding: 1px 5px;
+    border: 1px solid rgba(121, 230, 255, .45);
+    background: rgba(121, 230, 255, .08);
+    color: rgba(121, 230, 255, .9);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 10px;
+    text-align: center;
+  }
+  .toast {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    padding: 12px 18px;
+    border: 1px solid rgba(255, 92, 122, .62);
+    background: rgba(5, 7, 10, .82);
+    color: rgba(241, 238, 230, .94);
+    letter-spacing: .18em;
+    font-size: 14px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .18s ease;
+  }
+  .toast.show { opacity: 1; }
+  @media (max-width: 740px) {
+    .brand { min-width: 0; max-width: calc(100vw - 96px); }
+    .brand h1 { font-size: 13px; letter-spacing: .1em; }
+    .brand .sub { font-size: 9px; letter-spacing: .1em; }
+    .status { display: none; }
+    .help { display: none; }
+    .focusbar { top: 76px; }
+    .caption { grid-template-columns: 1fr; gap: 3px; }
+    .caption .mode { display: none; }
+    .beats { grid-template-columns: repeat(5, minmax(42px, 1fr)); }
+    .beat { padding: 6px 5px; font-size: 10px; text-align: center; }
+    .beat span { display: none; }
+  }
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+<div id="ui" aria-hidden="false">
+  <div class="hud">
+    <section class="brand" aria-label="作品標題">
+      <h1>選手 2 號 · 時間剖面 · LM402 一眼瞬間</h1>
+      <div class="sub">2005/10/17 · 11:00 · EP3/12/35/38</div>
+    </section>
+    <a class="back" href="index.html">回目錄</a>
+  </div>
+  <section class="status" aria-label="狀態">
+    <div class="row"><span>FOCUS</span><strong id="focusReadout">全景</strong></div>
+    <div class="row"><span>INNER</span><strong>18 / 29 / 33 / 39 / 49</strong></div>
+    <div class="row"><span>GEOM</span><strong id="geomReadout">procedural</strong></div>
+    <div class="row"><span>FPS</span><strong id="fpsReadout">--</strong></div>
+  </section>
+  <nav class="focusbar" aria-label="鏡頭">
+    <button data-focus="overview" class="active" title="全景">全</button>
+    <button data-focus="senior" title="學長">學</button>
+    <button data-focus="junior" title="學妹">妹</button>
+    <button data-focus="council" title="五種意識">5</button>
+    <button data-focus="floorplan" title="俯視動線">圖</button>
+  </nav>
+  <section class="help">
+    <div><kbd>Space</kbd> 自動播放 / 暫停</div>
+    <div><kbd>←</kbd><kbd>→</kbd> 切換敘事節點</div>
+    <div><kbd>1</kbd>-<kbd>5</kbd> 跳到節點</div>
+    <div>拖曳旋轉 · 滾輪縮放 · 點角色切鏡頭</div>
+  </section>
+  <section class="timeline" aria-label="時間軸">
+    <!-- caption 加 role=status + aria-live=polite,讓螢幕閱讀器同步唸 beat 切換 (Gemini r2) -->
+    <div class="caption" role="status" aria-live="polite" aria-atomic="true">
+      <div class="stamp" id="timeStamp">11:00:00</div>
+      <div class="text" id="captionText">學長從 LM401 樓梯上來，白 T、藍牛仔褲、粗框眼鏡，走到 LM402 前門。</div>
+      <div class="mode" id="modeText">互動剖面</div>
+    </div>
+    <div class="scrub">
+      <button class="icon-btn" id="playBtn" aria-label="播放">▶</button>
+      <input id="timeSlider" type="range" min="0" max="1000" step="1" value="0" aria-label="時間位置">
+      <button class="icon-btn" id="resetBtn" aria-label="重置">↺</button>
+    </div>
+    <div class="beats" id="beats">
+      <button class="beat active" data-beat="0"><strong>01 前門</strong><span>LM401 → LM402</span></button>
+      <button class="beat" data-beat="1"><strong>02 電話</strong><span>撥電話</span></button>
+      <button class="beat" data-beat="2"><strong>03 後門</strong><span>你走到後門</span></button>
+      <button class="beat" data-beat="3"><strong>04 相見</strong><span>兩個妳</span></button>
+      <button class="beat" data-beat="4"><strong>05 一眼</strong><span>也太像徐若瑄了吧</span></button>
+    </div>
+  </section>
+  <div class="toast" id="toast">PAUSED</div>
+</div>
+
+<script type="module">
+import * as THREE from './assets/lm402/vendor-three.module.js';
+
+const canvas = document.getElementById('scene');
+const ui = {
+  timeStamp: document.getElementById('timeStamp'),
+  captionText: document.getElementById('captionText'),
+  modeText: document.getElementById('modeText'),
+  timeSlider: document.getElementById('timeSlider'),
+  playBtn: document.getElementById('playBtn'),
+  resetBtn: document.getElementById('resetBtn'),
+  beats: [...document.querySelectorAll('.beat')],
+  focusButtons: [...document.querySelectorAll('[data-focus]')],
+  focusReadout: document.getElementById('focusReadout'),
+  fpsReadout: document.getElementById('fpsReadout'),
+  geomReadout: document.getElementById('geomReadout'),
+  toast: document.getElementById('toast')
+};
+
+const renderer = new THREE.WebGLRenderer({
+  canvas,
+  antialias: true,
+  alpha: false,
+  powerPreference: 'high-performance'
+});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.04;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x05070a);
+scene.fog = new THREE.FogExp2(0x05070a, 0.028);
+
+const camera = new THREE.PerspectiveCamera(46, window.innerWidth / window.innerHeight, 0.05, 120);
+camera.position.set(6.6, 5.2, 8.6);
+camera.lookAt(0, 1.2, 0);
+
+const clock = new THREE.Clock();
+const raycaster = new THREE.Raycaster();
+const pointerNdc = new THREE.Vector2();
+const tmpV = new THREE.Vector3();
+const tmpV2 = new THREE.Vector3();
+const tmpQ = new THREE.Quaternion();
+const tmpM = new THREE.Matrix4();
+const dummy = new THREE.Object3D();
+const pickables = [];
+const up = new THREE.Vector3(0, 1, 0);
+
+const beatData = [
+  {
+    id: 'front',
+    stamp: '11:00:00',
+    caption: '學長從 LM401 樓梯上來，白 T、藍牛仔褲、粗框眼鏡，走到 LM402 前門。',
+    progress: 0.00
+  },
+  {
+    id: 'phone',
+    stamp: '11:00:07',
+    caption: '他在前門撥電話；教室裡的學妹，是 29 歲外殼裡醒著的 18 歲意識。',
+    progress: 0.24
+  },
+  {
+    id: 'backdoor',
+    stamp: '11:00:18',
+    caption: '學妹說：「你走到後門。」聲音穿過門縫，也穿過五種年紀的內在會議。',
+    progress: 0.50
+  },
+  {
+    id: 'meeting',
+    stamp: '11:00:30',
+    caption: '後門相見；29 歲的身體、18 歲的意識，與 33、39、49 歲的回聲同時站在那一秒。',
+    progress: 0.74
+  },
+  {
+    id: 'glance',
+    stamp: '11:00:35',
+    caption: '一眼瞬間定格：「也太像徐若瑄了吧。」',
+    progress: 1.00
+  }
+];
+
+const state = {
+  progress: 0,
+  targetProgress: 0,
+  activeBeat: 0,
+  playing: false,
+  focus: 'overview',
+  orbitYaw: -0.76,
+  orbitPitch: 0.55,
+  orbitDistance: 11.2,
+  drag: null,
+  clickMoved: false,
+  postIntensity: 0.85,
+  pausedToastTimer: 0
+};
+
+const colors = {
+  wall: new THREE.Color(0x101821),
+  floorA: new THREE.Color(0x12151a),
+  floorB: new THREE.Color(0x2a1a18),
+  cyan: new THREE.Color(0x79e6ff),
+  hot: new THREE.Color(0xff5c7a),
+  warm: new THREE.Color(0xffd08b),
+  violet: new THREE.Color(0xb893ff),
+  green: new THREE.Color(0x8cffc1)
+};
+
+function clamp01(v) {
+  return Math.max(0, Math.min(1, v));
+}
+
+function smooth01(v) {
+  v = clamp01(v);
+  return v * v * (3 - 2 * v);
+}
+
+function remap(v, a, b) {
+  return clamp01((v - a) / (b - a));
+}
+
+function mixVec(a, b, t, out = new THREE.Vector3()) {
+  return out.copy(a).lerp(b, t);
+}
+
+function materialStandard(options) {
+  return new THREE.MeshStandardMaterial({
+    roughness: 0.68,
+    metalness: 0.02,
+    flatShading: true,
+    ...options
+  });
+}
+
+const mats = {
+  floor: materialStandard({ color: 0x161a1f, roughness: 0.86 }),
+  wall: materialStandard({ color: 0x111820, roughness: 0.78 }),
+  wallDark: materialStandard({ color: 0x090d12, roughness: 0.82 }),
+  trim: materialStandard({ color: 0x25323d, roughness: 0.62 }),
+  wood: materialStandard({ color: 0x51352a, roughness: 0.62 }),
+  woodDark: materialStandard({ color: 0x2f201c, roughness: 0.72 }),
+  metal: materialStandard({ color: 0x232b33, roughness: 0.4, metalness: 0.35 }),
+  paper: materialStandard({ color: 0xf1e3be, roughness: 0.85 }),
+  skin: materialStandard({ color: 0xd8a586, roughness: 0.56 }),
+  skinSoft: materialStandard({ color: 0xe5b493, roughness: 0.5, emissive: 0x25100a, emissiveIntensity: 0.05 }),
+  white: materialStandard({ color: 0xececeb, roughness: 0.52 }),
+  jeans: materialStandard({ color: 0x1e4f8f, roughness: 0.7 }),
+  black: materialStandard({ color: 0x050507, roughness: 0.5 }),
+  hair: materialStandard({ color: 0x171014, roughness: 0.74 }),
+  juniorCloth: materialStandard({ color: 0xc45166, roughness: 0.66 }),
+  juniorDark: materialStandard({ color: 0x2b2430, roughness: 0.7 }),
+  student: materialStandard({ color: 0x4c6b7a, roughness: 0.78 }),
+  glowCyan: new THREE.MeshBasicMaterial({ color: 0x79e6ff, transparent: true, opacity: 0.56, blending: THREE.AdditiveBlending, depthWrite: false }),
+  glowHot: new THREE.MeshBasicMaterial({ color: 0xff5c7a, transparent: true, opacity: 0.62, blending: THREE.AdditiveBlending, depthWrite: false }),
+  pick: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.001, depthWrite: false })
+};
+
+function makeTextTexture(lines, options = {}) {
+  const scale = 2;
+  const width = options.width || 512;
+  const height = options.height || 256;
+  const canvas = document.createElement('canvas');
+  canvas.width = width * scale;
+  canvas.height = height * scale;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(scale, scale);
+  ctx.clearRect(0, 0, width, height);
+  const bg = options.background || 'rgba(5,7,10,0.66)';
+  if (bg !== 'transparent') {
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, height);
+  }
+  if (options.border !== false) {
+    ctx.strokeStyle = options.borderColor || 'rgba(255,255,255,0.22)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(4, 4, width - 8, height - 8);
+  }
+  const list = Array.isArray(lines) ? lines : String(lines).split('\n');
+  ctx.textBaseline = 'top';
+  ctx.textAlign = options.align || 'left';
+  const x = options.align === 'center' ? width / 2 : 24;
+  let y = options.y || 22;
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i];
+    const isTitle = i === 0 && options.title !== false;
+    ctx.font = `${isTitle ? 700 : 500} ${isTitle ? (options.titleSize || 34) : (options.size || 20)}px "Noto Sans TC", "PingFang TC", sans-serif`;
+    ctx.fillStyle = isTitle ? (options.titleColor || '#ffd08b') : (options.color || 'rgba(241,238,230,.86)');
+    ctx.fillText(item, x, y);
+    y += isTitle ? (options.titleLine || 44) : (options.line || 31);
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 8;
+  return tex;
+}
+
+function makeLabelSprite(text, options = {}) {
+  const tex = makeTextTexture(text, {
+    width: options.width || 256,
+    height: options.height || 92,
+    background: options.background || 'rgba(5,7,10,.58)',
+    borderColor: options.borderColor || 'rgba(121,230,255,.42)',
+    titleSize: options.titleSize || 24,
+    size: options.size || 17,
+    align: options.align || 'center',
+    title: options.title ?? true,
+    y: options.y || 18
+  });
+  const mat = new THREE.SpriteMaterial({
+    map: tex,
+    transparent: true,
+    depthWrite: false,
+    depthTest: true
+  });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(options.scaleX || 1.2, options.scaleY || 0.42, 1);
+  sprite.userData.texture = tex;
+  return sprite;
+}
+
+function addBox(parent, size, pos, mat, name) {
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(size.x, size.y, size.z), mat);
+  mesh.position.copy(pos);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  mesh.name = name || '';
+  parent.add(mesh);
+  return mesh;
+}
+
+function cylinderBetween(a, b, radius, mat, radial = 10) {
+  const dir = tmpV.subVectors(b, a);
+  const len = dir.length();
+  const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, len, radial, 1), mat);
+  mesh.position.copy(a).addScaledVector(dir, 0.5);
+  mesh.quaternion.setFromUnitVectors(up, dir.normalize());
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  return mesh;
+}
+
+function addOutline(mesh, color = 0x05070a, scale = 1.035) {
+  const outline = new THREE.Mesh(mesh.geometry, new THREE.MeshBasicMaterial({
+    color,
+    side: THREE.BackSide,
+    transparent: true,
+    opacity: 0.86
+  }));
+  outline.position.copy(mesh.position);
+  outline.rotation.copy(mesh.rotation);
+  outline.quaternion.copy(mesh.quaternion);
+  outline.scale.copy(mesh.scale).multiplyScalar(scale);
+  outline.name = `${mesh.name || 'mesh'}_outline`;
+  mesh.parent.add(outline);
+  outline.renderOrder = -1;
+  return outline;
+}
+
+function makePlaneTextureMaterial(texture, opacity = 0.88) {
+  return new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    opacity,
+    side: THREE.DoubleSide,
+    depthWrite: false
+  });
+}
+
+function makeHologramMaterial(colorHex, opacity = 0.45) {
+  return new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    uniforms: {
+      time: { value: 0 },
+      color: { value: new THREE.Color(colorHex) },
+      opacity: { value: opacity }
+    },
+    vertexShader: `
+      varying vec3 vNormalW;
+      varying vec3 vWorld;
+      varying vec2 vUv;
+      uniform float time;
+      void main() {
+        vUv = uv;
+        vec3 p = position;
+        p.x += sin(position.y * 18.0 + time * 2.2) * 0.004;
+        vec4 world = modelMatrix * vec4(p, 1.0);
+        vWorld = world.xyz;
+        vNormalW = normalize(mat3(modelMatrix) * normal);
+        gl_Position = projectionMatrix * viewMatrix * world;
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vNormalW;
+      varying vec3 vWorld;
+      varying vec2 vUv;
+      uniform vec3 color;
+      uniform float opacity;
+      uniform float time;
+      void main() {
+        vec3 viewDir = normalize(cameraPosition - vWorld);
+        float rim = pow(1.0 - abs(dot(normalize(vNormalW), viewDir)), 2.4);
+        float scan = smoothstep(0.42, 0.52, sin((vWorld.y + time * 0.32) * 42.0) * 0.5 + 0.5);
+        float alpha = opacity * (0.18 + rim * 0.92 + scan * 0.08);
+        gl_FragColor = vec4(color * (0.65 + rim * 1.4), alpha);
+      }
+    `
+  });
+}
+
+const shaderMats = {
+  hologram18: makeHologramMaterial(0x79e6ff, 0.45),
+  hologram29: makeHologramMaterial(0xff5c7a, 0.32),
+  hologram33: makeHologramMaterial(0xffd08b, 0.32),
+  hologram39: makeHologramMaterial(0x8cffc1, 0.28),
+  hologram49: makeHologramMaterial(0xb893ff, 0.32),
+  ghostShell: makeHologramMaterial(0xffffff, 0.18)
+};
+
+const beamMat = new THREE.ShaderMaterial({
+  transparent: true,
+  depthWrite: false,
+  side: THREE.DoubleSide,
+  blending: THREE.AdditiveBlending,
+  uniforms: {
+    time: { value: 0 },
+    progress: { value: 0 },
+    colorA: { value: new THREE.Color(0xffd08b) },
+    colorB: { value: new THREE.Color(0x79e6ff) }
+  },
+  vertexShader: `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    varying vec2 vUv;
+    uniform float time;
+    uniform float progress;
+    uniform vec3 colorA;
+    uniform vec3 colorB;
+    void main() {
+      float edge = smoothstep(0.0, 0.18, vUv.x) * smoothstep(1.0, 0.72, vUv.x);
+      float fade = smoothstep(0.0, 0.12, vUv.y) * smoothstep(1.0, 0.2, vUv.y);
+      float ribs = 0.58 + 0.42 * sin(vUv.y * 40.0 + time * 1.8 + progress * 8.0);
+      vec3 col = mix(colorA, colorB, vUv.y);
+      gl_FragColor = vec4(col, edge * fade * ribs * 0.16);
+    }
+  `
+});
+
+const lineMat = new THREE.ShaderMaterial({
+  transparent: true,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending,
+  uniforms: {
+    time: { value: 0 },
+    progress: { value: 0 },
+    colorA: { value: new THREE.Color(0xff5c7a) },
+    colorB: { value: new THREE.Color(0x79e6ff) }
+  },
+  vertexShader: `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    varying vec2 vUv;
+    uniform float time;
+    uniform float progress;
+    uniform vec3 colorA;
+    uniform vec3 colorB;
+    void main() {
+      float wave = sin((vUv.x + progress * 0.65) * 46.0 - time * 5.0) * 0.5 + 0.5;
+      float dash = smoothstep(0.42, 0.88, wave);
+      vec3 col = mix(colorA, colorB, smoothstep(0.1, 0.95, vUv.x));
+      gl_FragColor = vec4(col * (1.0 + dash), 0.22 + dash * 0.52);
+    }
+  `
+});
+
+const corridor = new THREE.Group();
+const classroom = new THREE.Group();
+const narrative = new THREE.Group();
+scene.add(corridor, classroom, narrative);
+
+function buildLighting() {
+  scene.add(new THREE.HemisphereLight(0x8ab9ff, 0x1a0d08, 0.62));
+
+  const sun = new THREE.DirectionalLight(0xffd08b, 2.4);
+  sun.position.set(-4.8, 6.8, 2.2);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.near = 1;
+  sun.shadow.camera.far = 20;
+  sun.shadow.camera.left = -8;
+  sun.shadow.camera.right = 8;
+  sun.shadow.camera.top = 8;
+  sun.shadow.camera.bottom = -8;
+  scene.add(sun);
+
+  const doorLight = new THREE.PointLight(0x79e6ff, 1.65, 7.5, 2);
+  doorLight.position.set(3.55, 1.8, -4.35);
+  scene.add(doorLight);
+
+  const phoneGlow = new THREE.PointLight(0xff5c7a, 0.8, 4.2, 2);
+  phoneGlow.position.set(3.5, 1.5, 3.8);
+  phoneGlow.name = 'phoneGlow';
+  scene.add(phoneGlow);
+  return { sun, doorLight, phoneGlow };
+}
+
+const lights = buildLighting();
+
+function buildRoom() {
+  const floorGeo = new THREE.PlaneGeometry(9.6, 13.2, 18, 26);
+  const floor = new THREE.Mesh(floorGeo, mats.floor);
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.set(0.4, 0, 0);
+  floor.receiveShadow = true;
+  classroom.add(floor);
+
+  const grid = new THREE.GridHelper(12, 24, 0x274455, 0x182630);
+  grid.position.set(0.35, 0.012, 0);
+  grid.material.transparent = true;
+  grid.material.opacity = 0.32;
+  classroom.add(grid);
+
+  addBox(classroom, new THREE.Vector3(7.1, 3.0, 0.24), new THREE.Vector3(-0.1, 1.5, 5.35), mats.wall, 'frontWall');
+  addBox(classroom, new THREE.Vector3(7.1, 3.0, 0.24), new THREE.Vector3(-0.1, 1.5, -5.35), mats.wall, 'backWall');
+  addBox(classroom, new THREE.Vector3(0.24, 3.0, 10.7), new THREE.Vector3(-3.65, 1.5, 0), mats.wall, 'windowWall');
+
+  addBox(classroom, new THREE.Vector3(0.22, 3.0, 5.55), new THREE.Vector3(3.18, 1.5, 0), mats.wallDark, 'rightWallMid');
+  addBox(classroom, new THREE.Vector3(0.22, 3.0, 0.74), new THREE.Vector3(3.18, 1.5, 5.0), mats.wallDark, 'rightWallFrontCap');
+  addBox(classroom, new THREE.Vector3(0.22, 3.0, 0.74), new THREE.Vector3(3.18, 1.5, -5.0), mats.wallDark, 'rightWallBackCap');
+
+  for (const z of [4.15, -4.15]) {
+    const frame = new THREE.Group();
+    frame.position.set(3.17, 0, z);
+    addBox(frame, new THREE.Vector3(0.18, 2.35, 0.12), new THREE.Vector3(0, 1.18, -0.55), mats.trim, 'doorPost');
+    addBox(frame, new THREE.Vector3(0.18, 2.35, 0.12), new THREE.Vector3(0, 1.18, 0.55), mats.trim, 'doorPost');
+    addBox(frame, new THREE.Vector3(0.18, 0.14, 1.26), new THREE.Vector3(0, 2.34, 0), mats.trim, 'doorHeader');
+    classroom.add(frame);
+  }
+
+  const frontSignTex = makeTextTexture(['LM402', '前門'], { width: 256, height: 128, titleSize: 48, size: 23, align: 'center', background: 'rgba(8,12,16,.75)' });
+  const frontSign = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.45), makePlaneTextureMaterial(frontSignTex));
+  frontSign.position.set(3.04, 2.18, 4.15);
+  frontSign.rotation.y = -Math.PI / 2;
+  classroom.add(frontSign);
+
+  const backSignTex = makeTextTexture(['後門', '那一眼'], { width: 256, height: 128, titleSize: 42, size: 22, align: 'center', background: 'rgba(8,12,16,.72)', titleColor: '#79e6ff' });
+  const backSign = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.45), makePlaneTextureMaterial(backSignTex));
+  backSign.position.set(3.04, 2.18, -4.15);
+  backSign.rotation.y = -Math.PI / 2;
+  classroom.add(backSign);
+
+  const blackboardTex = makeTextTexture(['2005/10/17 11:00', 'LM402 · 一眼瞬間'], {
+    width: 768,
+    height: 256,
+    titleSize: 44,
+    size: 26,
+    align: 'center',
+    background: 'rgba(14,40,35,.88)',
+    borderColor: 'rgba(255,255,255,.28)',
+    titleColor: '#e9f5d0'
+  });
+  const board = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 1.2), makePlaneTextureMaterial(blackboardTex, 0.95));
+  board.position.set(-0.35, 1.72, 5.205);
+  board.rotation.y = Math.PI;
+  classroom.add(board);
+
+  for (let i = 0; i < 4; i++) {
+    const pane = new THREE.Mesh(new THREE.PlaneGeometry(0.03, 1.42), mats.glowCyan);
+    pane.position.set(-3.515, 1.65, -3.3 + i * 1.9);
+    pane.rotation.y = Math.PI / 2;
+    pane.scale.x = 16;
+    pane.material = pane.material.clone();
+    pane.material.opacity = 0.16;
+    classroom.add(pane);
+
+    const beam = new THREE.Mesh(new THREE.PlaneGeometry(4.3, 2.1), beamMat);
+    beam.position.set(-1.45, 1.18, -3.3 + i * 1.9);
+    beam.rotation.set(0, Math.PI / 2.8, 0);
+    classroom.add(beam);
+  }
+
+  const corridorFloor = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 13.8), mats.wallDark);
+  corridorFloor.rotation.x = -Math.PI / 2;
+  corridorFloor.position.set(4.35, 0.006, 0);
+  corridorFloor.receiveShadow = true;
+  corridor.add(corridorFloor);
+  const corridorGrid = new THREE.GridHelper(13, 13, 0x2f4756, 0x18232c);
+  corridorGrid.position.set(4.35, 0.018, 0);
+  corridorGrid.material.transparent = true;
+  corridorGrid.material.opacity = 0.26;
+  corridor.add(corridorGrid);
+
+  for (let i = 0; i < 7; i++) {
+    const step = addBox(corridor, new THREE.Vector3(1.9, 0.12, 0.42), new THREE.Vector3(4.25, 0.06 + i * 0.08, 6.05 + i * 0.36), mats.trim, 'lm401Step');
+    step.castShadow = false;
+  }
+  const stairLabel = makeLabelSprite(['LM401', '樓梯'], { width: 220, height: 104, titleColor: '#ffd08b', borderColor: 'rgba(255,208,139,.5)', scaleX: 1.0, scaleY: .46 });
+  stairLabel.position.set(4.35, 1.25, 6.55);
+  corridor.add(stairLabel);
+}
+
+buildRoom();
+
+function buildDesks() {
+  const positions = [];
+  for (let rz = 0; rz < 4; rz++) {
+    for (let cx = 0; cx < 4; cx++) {
+      positions.push({
+        x: -2.25 + cx * 1.28 + (rz % 2) * 0.12,
+        z: 2.5 - rz * 1.34,
+        r: (cx - 1.5) * 0.035
+      });
+    }
+  }
+  const topGeo = new THREE.BoxGeometry(0.82, 0.08, 0.56);
+  const seatGeo = new THREE.BoxGeometry(0.46, 0.08, 0.44);
+  const backGeo = new THREE.BoxGeometry(0.5, 0.54, 0.08);
+  const legGeo = new THREE.BoxGeometry(0.055, 0.56, 0.055);
+  const tops = new THREE.InstancedMesh(topGeo, mats.wood, positions.length);
+  const seats = new THREE.InstancedMesh(seatGeo, mats.woodDark, positions.length);
+  const backs = new THREE.InstancedMesh(backGeo, mats.woodDark, positions.length);
+  const legs = new THREE.InstancedMesh(legGeo, mats.metal, positions.length * 8);
+  tops.castShadow = seats.castShadow = backs.castShadow = legs.castShadow = true;
+  tops.receiveShadow = seats.receiveShadow = backs.receiveShadow = legs.receiveShadow = true;
+
+  let legIndex = 0;
+  positions.forEach((p, i) => {
+    dummy.position.set(p.x, 0.78, p.z);
+    dummy.rotation.set(0, p.r, 0);
+    dummy.scale.set(1, 1, 1);
+    dummy.updateMatrix();
+    tops.setMatrixAt(i, dummy.matrix);
+
+    dummy.position.set(p.x, 0.42, p.z - 0.62);
+    dummy.rotation.set(0, p.r, 0);
+    dummy.updateMatrix();
+    seats.setMatrixAt(i, dummy.matrix);
+
+    dummy.position.set(p.x, 0.76, p.z - 0.86);
+    dummy.rotation.set(-0.12, p.r, 0);
+    dummy.updateMatrix();
+    backs.setMatrixAt(i, dummy.matrix);
+
+    for (const dz of [-0.22, 0.22]) {
+      for (const dx of [-0.33, 0.33]) {
+        dummy.position.set(p.x + dx, 0.48, p.z + dz);
+        dummy.rotation.set(0, p.r, 0);
+        dummy.updateMatrix();
+        legs.setMatrixAt(legIndex++, dummy.matrix);
+      }
+    }
+    for (const dz of [-0.16, 0.16]) {
+      for (const dx of [-0.17, 0.17]) {
+        dummy.position.set(p.x + dx, 0.22, p.z - 0.62 + dz);
+        dummy.rotation.set(0, p.r, 0);
+        dummy.updateMatrix();
+        legs.setMatrixAt(legIndex++, dummy.matrix);
+      }
+    }
+  });
+
+  classroom.add(tops, seats, backs, legs);
+  return { positions, tops, seats, backs, legs };
+}
+
+const desks = buildDesks();
+
+function makeSimpleStudent(x, z, color, yaw = Math.PI) {
+  const g = new THREE.Group();
+  g.position.set(x, 0, z);
+  g.rotation.y = yaw;
+  const cloth = materialStandard({ color, roughness: 0.72 });
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.18, 0.38, 4, 8), cloth);
+  torso.position.set(0, 0.9, 0);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.15, 14, 10), mats.skin);
+  head.position.set(0, 1.28, -0.02);
+  const hair = new THREE.Mesh(new THREE.SphereGeometry(0.155, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55), mats.hair);
+  hair.position.set(0, 1.34, -0.02);
+  hair.rotation.x = -0.18;
+  g.add(torso, head, hair);
+  for (const m of [torso, head, hair]) {
+    m.castShadow = true;
+    m.receiveShadow = true;
+  }
+  classroom.add(g);
+  return g;
+}
+
+const backgroundStudents = [
+  makeSimpleStudent(-2.25, 2.0, 0x4a657d, Math.PI + 0.2),
+  makeSimpleStudent(-0.98, 0.7, 0x594a75, Math.PI - 0.12),
+  makeSimpleStudent(0.38, 1.2, 0x455f4e, Math.PI + 0.08),
+  makeSimpleStudent(-1.6, -1.05, 0x6f5546, Math.PI - 0.3)
+];
+
+function makeCharacter(options) {
+  const group = new THREE.Group();
+  group.name = options.name;
+  group.userData.baseHeight = options.height || 1.7;
+  group.userData.kind = options.kind;
+
+  const torsoMat = options.torsoMat;
+  const legMat = options.legMat;
+  const hairMat = options.hairMat || mats.hair;
+  const skinMat = options.skinMat || mats.skin;
+
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(options.torsoRadius || 0.23, options.torsoLength || 0.62, 5, 14), torsoMat);
+  torso.position.set(0, 1.0, 0);
+  torso.scale.set(options.shoulderScale || 1.0, 1, options.depthScale || 0.82);
+  torso.name = `${options.name}_torso`;
+  group.add(torso);
+
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.09, 0.12, 10), skinMat);
+  neck.position.set(0, 1.42, -0.005);
+  group.add(neck);
+
+  const head = new THREE.Mesh(new THREE.SphereGeometry(options.headRadius || 0.18, 22, 16), skinMat);
+  head.position.set(0, 1.62, -0.02);
+  head.scale.set(0.9, 1.08, 0.82);
+  head.name = `${options.name}_head`;
+  group.add(head);
+
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.028, 0.08, 8), skinMat);
+  nose.position.set(0, 1.61, -0.165);
+  nose.rotation.x = -Math.PI / 2;
+  group.add(nose);
+
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x101014 });
+  for (const sx of [-1, 1]) {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.015, 8, 6), eyeMat);
+    eye.position.set(sx * 0.065, 1.65, -0.168);
+    group.add(eye);
+  }
+
+  if (options.glasses) {
+    const rimMat = new THREE.MeshStandardMaterial({ color: 0x08080a, roughness: 0.3, metalness: 0.15 });
+    for (const sx of [-1, 1]) {
+      const rim = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.008, 8, 18), rimMat);
+      rim.position.set(sx * 0.064, 1.65, -0.178);
+      rim.scale.x = 1.18;
+      group.add(rim);
+    }
+    addBox(group, new THREE.Vector3(0.055, 0.012, 0.012), new THREE.Vector3(0, 1.65, -0.178), rimMat, 'glassesBridge');
+  }
+
+  const hairBase = new THREE.Mesh(new THREE.SphereGeometry(options.headRadius || 0.18, 18, 10, 0, Math.PI * 2, 0, Math.PI * 0.62), hairMat);
+  hairBase.position.set(0, 1.72, -0.015);
+  hairBase.scale.set(0.95, 0.72, 0.9);
+  group.add(hairBase);
+
+  if (options.planeHair) {
+    for (let i = 0; i < 7; i++) {
+      const blade = new THREE.Mesh(new THREE.ConeGeometry(0.038 - i * 0.002, 0.35 - i * 0.018, 6), hairMat);
+      blade.position.set((i - 3) * 0.034, 1.84 + Math.sin(i) * 0.01, -0.1 - Math.abs(i - 3) * 0.008);
+      blade.rotation.x = -0.82 + (i - 3) * 0.04;
+      blade.rotation.z = (i - 3) * 0.08;
+      group.add(blade);
+    }
+  } else if (options.longHair) {
+    const backHair = new THREE.Mesh(new THREE.CapsuleGeometry(0.19, 0.58, 6, 14), hairMat);
+    backHair.position.set(0, 1.45, 0.095);
+    backHair.scale.set(0.95, 1.0, 0.5);
+    group.add(backHair);
+    for (const sx of [-1, 1]) {
+      const sideHair = new THREE.Mesh(new THREE.CapsuleGeometry(0.055, 0.54, 5, 9), hairMat);
+      sideHair.position.set(sx * 0.17, 1.46, -0.04);
+      sideHair.rotation.z = sx * 0.12;
+      group.add(sideHair);
+    }
+  }
+
+  const upperArmL = cylinderBetween(new THREE.Vector3(-0.22, 1.27, -0.02), new THREE.Vector3(-0.38, 0.93, -0.08), 0.04, torsoMat, 10);
+  const upperArmR = cylinderBetween(new THREE.Vector3(0.22, 1.27, -0.02), new THREE.Vector3(0.38, 0.93, -0.08), 0.04, torsoMat, 10);
+  const foreArmL = cylinderBetween(new THREE.Vector3(-0.38, 0.93, -0.08), new THREE.Vector3(-0.32, 0.68, -0.05), 0.036, skinMat, 10);
+  const foreArmR = cylinderBetween(new THREE.Vector3(0.38, 0.93, -0.08), new THREE.Vector3(0.32, 0.68, -0.05), 0.036, skinMat, 10);
+  group.add(upperArmL, upperArmR, foreArmL, foreArmR);
+  group.userData.arms = { upperArmL, upperArmR, foreArmL, foreArmR };
+
+  const hipY = 0.64;
+  if (options.skirt) {
+    const skirt = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.43, 4), options.skirtMat || torsoMat);
+    skirt.position.set(0, 0.68, 0);
+    skirt.rotation.y = Math.PI / 4;
+    skirt.scale.z = 0.76;
+    group.add(skirt);
+  }
+  for (const sx of [-1, 1]) {
+    const leg = new THREE.Mesh(new THREE.CapsuleGeometry(0.06, 0.58, 4, 10), legMat);
+    leg.position.set(sx * 0.09, 0.36, 0);
+    leg.scale.z = 0.82;
+    group.add(leg);
+    const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.055, 0.22), mats.black);
+    shoe.position.set(sx * 0.09, 0.04, -0.05);
+    group.add(shoe);
+  }
+
+  const pick = new THREE.Mesh(new THREE.SphereGeometry(0.58, 12, 8), mats.pick);
+  pick.position.set(0, 1.08, 0);
+  pick.userData.pickTarget = options.kind;
+  group.add(pick);
+  pickables.push(pick);
+
+  group.traverse((obj) => {
+    if (obj.isMesh) {
+      obj.castShadow = obj.material !== mats.pick;
+      obj.receiveShadow = obj.material !== mats.pick;
+    }
+  });
+
+  for (const mesh of [torso, head]) addOutline(mesh, 0x05070a, 1.04);
+
+  if (options.phone) {
+    const phone = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.13, 0.025), new THREE.MeshBasicMaterial({ color: 0x121519 }));
+    phone.position.set(0.34, 1.36, -0.16);
+    phone.rotation.set(-0.25, 0.1, -0.22);
+    group.add(phone);
+    group.userData.phone = phone;
+  }
+
+  return group;
+}
+
+const senior = makeCharacter({
+  name: 'senior_21',
+  kind: 'senior',
+  torsoMat: mats.white,
+  legMat: mats.jeans,
+  hairMat: mats.hair,
+  skinMat: mats.skin,
+  glasses: true,
+  planeHair: true,
+  phone: true,
+  torsoRadius: 0.24,
+  torsoLength: 0.68,
+  shoulderScale: 1.06
+});
+senior.position.set(4.3, 0, 6.0);
+senior.rotation.y = Math.PI;
+scene.add(senior);
+
+const junior = makeCharacter({
+  name: 'junior_29_shell',
+  kind: 'junior',
+  torsoMat: mats.juniorCloth,
+  legMat: mats.juniorDark,
+  hairMat: mats.hair,
+  skinMat: mats.skinSoft,
+  longHair: true,
+  skirt: true,
+  skirtMat: mats.juniorDark,
+  torsoRadius: 0.21,
+  torsoLength: 0.58,
+  depthScale: 0.76
+});
+junior.position.set(2.35, 0, -4.15);
+junior.rotation.y = -Math.PI / 2;
+scene.add(junior);
+
+function makeGhostCharacter() {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.19, 0.58, 5, 12), shaderMats.ghostShell);
+  body.position.set(0, 1.0, 0);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.17, 18, 12), shaderMats.hologram18);
+  head.position.set(0, 1.62, -0.01);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.008, 6, 64), shaderMats.hologram18);
+  ring.position.set(0, 1.15, 0);
+  ring.rotation.x = Math.PI / 2;
+  g.add(body, head, ring);
+  g.position.set(-0.18, 0, 0.22);
+  g.scale.set(0.92, 0.92, 0.92);
+  return g;
+}
+
+const eighteenGhost = makeGhostCharacter();
+junior.add(eighteenGhost);
+
+function buildInnerCouncil() {
+  const ages = [
+    { age: '18', color: 0x79e6ff, mat: shaderMats.hologram18, angle: Math.PI * 0.04 },
+    { age: '29', color: 0xff5c7a, mat: shaderMats.hologram29, angle: Math.PI * 0.44 },
+    { age: '33', color: 0xffd08b, mat: shaderMats.hologram33, angle: Math.PI * 0.84 },
+    { age: '39', color: 0x8cffc1, mat: shaderMats.hologram39, angle: Math.PI * 1.24 },
+    { age: '49', color: 0xb893ff, mat: shaderMats.hologram49, angle: Math.PI * 1.64 }
+  ];
+  const council = new THREE.Group();
+  council.position.set(-0.02, 1.74, 0.05);
+  const orbit = new THREE.Mesh(new THREE.TorusGeometry(0.52, 0.008, 6, 96), shaderMats.hologram18);
+  orbit.rotation.x = Math.PI / 2;
+  council.add(orbit);
+  const members = [];
+  for (const item of ages) {
+    const seat = new THREE.Group();
+    const x = Math.cos(item.angle) * 0.52;
+    const z = Math.sin(item.angle) * 0.32;
+    seat.position.set(x, Math.sin(item.angle * 3) * 0.035, z);
+    const bust = new THREE.Mesh(new THREE.SphereGeometry(0.08, 16, 10), item.mat);
+    bust.scale.set(0.86, 1.08, 0.82);
+    bust.position.y = 0.06;
+    const body = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.18, 8), item.mat);
+    body.position.y = -0.08;
+    body.rotation.x = Math.PI;
+    const halo = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.006, 5, 32), item.mat);
+    halo.rotation.x = Math.PI / 2;
+    seat.add(bust, body, halo);
+    const label = makeLabelSprite([item.age], {
+      width: 128,
+      height: 86,
+      background: 'transparent',
+      border: false,
+      titleSize: 34,
+      titleColor: `#${item.color.toString(16).padStart(6, '0')}`,
+      scaleX: 0.26,
+      scaleY: 0.17,
+      y: 18
+    });
+    label.position.set(0, 0.22, 0);
+    seat.add(label);
+    council.add(seat);
+    members.push(seat);
+  }
+  const label = makeLabelSprite(['五種年紀', '同時開會'], {
+    width: 256,
+    height: 112,
+    titleColor: '#ffd08b',
+    borderColor: 'rgba(255,208,139,.5)',
+    scaleX: 0.8,
+    scaleY: 0.35
+  });
+  label.position.set(0, 0.56, 0);
+  council.add(label);
+  council.userData.members = members;
+  junior.add(council);
+  return council;
+}
+
+const innerCouncil = buildInnerCouncil();
+
+function buildClockAndPanels() {
+  const clockGroup = new THREE.Group();
+  clockGroup.name = 'clockFloor';
+  clockGroup.position.set(-0.28, 0.032, -0.35);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(1.75, 0.018, 8, 128), mats.glowCyan);
+  ring.rotation.x = Math.PI / 2;
+  ring.material = ring.material.clone();
+  ring.material.opacity = 0.42;
+  clockGroup.add(ring);
+  const ring2 = new THREE.Mesh(new THREE.TorusGeometry(1.18, 0.012, 8, 96), mats.glowHot);
+  ring2.rotation.x = Math.PI / 2;
+  ring2.material = ring2.material.clone();
+  ring2.material.opacity = 0.3;
+  clockGroup.add(ring2);
+  for (let h = 0; h < 12; h++) {
+    const angle = -Math.PI / 2 + h * Math.PI / 6;
+    const tick = new THREE.Mesh(new THREE.BoxGeometry(h % 3 === 0 ? 0.08 : 0.035, 0.018, h % 3 === 0 ? 0.28 : 0.16), mats.glowCyan);
+    tick.material = tick.material.clone();
+    tick.material.opacity = h % 3 === 0 ? 0.55 : 0.28;
+    tick.position.set(Math.cos(angle) * 1.55, 0.012, Math.sin(angle) * 1.55);
+    tick.rotation.y = -angle;
+    clockGroup.add(tick);
+  }
+  const center = new THREE.Vector3(0, 0.03, 0);
+  const minuteEnd = new THREE.Vector3(0, 0.03, -1.18);
+  const hourAngle = -Math.PI / 2 + (11 / 12) * Math.PI * 2;
+  const hourEnd = new THREE.Vector3(Math.cos(hourAngle) * 0.88, 0.03, Math.sin(hourAngle) * 0.88);
+  const minuteHand = cylinderBetween(center, minuteEnd, 0.026, mats.glowHot, 12);
+  const hourHand = cylinderBetween(center, hourEnd, 0.034, mats.glowCyan, 12);
+  clockGroup.add(minuteHand, hourHand);
+  const pick = new THREE.Mesh(new THREE.SphereGeometry(1.9, 10, 8), mats.pick);
+  pick.position.set(0, 0.55, 0);
+  pick.userData.pickTarget = 'floorplan';
+  clockGroup.add(pick);
+  pickables.push(pick);
+  classroom.add(clockGroup);
+
+  const panels = [
+    ['EP3', '記憶片段', '一眼之前的伏筆'],
+    ['EP12', '時間分岔', '同一秒被拉開'],
+    ['EP35', '回聲', '紙條與未說出口'],
+    ['EP38', '18/29/33/39/49', '五種內在意識']
+  ];
+  panels.forEach((lines, i) => {
+    const tex = makeTextTexture(lines, {
+      width: 384,
+      height: 230,
+      titleSize: 50,
+      size: 24,
+      line: 34,
+      align: 'center',
+      titleColor: i === 3 ? '#79e6ff' : '#ffd08b',
+      background: 'rgba(5,9,13,.45)',
+      borderColor: 'rgba(121,230,255,.34)'
+    });
+    const panel = new THREE.Mesh(new THREE.PlaneGeometry(1.46, 0.9), makePlaneTextureMaterial(tex, 0.82));
+    panel.position.set(-3.49, 1.36, 3.7 - i * 2.45);
+    panel.rotation.y = Math.PI / 2;
+    narrative.add(panel);
+    const beam = new THREE.Mesh(new THREE.PlaneGeometry(0.012, 0.98), mats.glowCyan);
+    beam.material = beam.material.clone();
+    beam.material.opacity = 0.32;
+    beam.position.set(-3.46, 1.36, 3.7 - i * 2.45);
+    narrative.add(beam);
+  });
+
+  const noteTex = makeTextTexture(['「你走到後門」', '電話裡的一句指令'], {
+    width: 512,
+    height: 190,
+    titleSize: 42,
+    size: 24,
+    align: 'center',
+    background: 'rgba(70,38,46,.62)',
+    borderColor: 'rgba(255,92,122,.48)',
+    titleColor: '#fff0e8'
+  });
+  const note = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 0.66), makePlaneTextureMaterial(noteTex, 0.86));
+  note.position.set(2.6, 1.74, -2.18);
+  note.rotation.set(0, -0.78, 0);
+  narrative.add(note);
+  narrative.userData.commandNote = note;
+
+  return clockGroup;
+}
+
+const clockFloor = buildClockAndPanels();
+
+function buildPhoneLine() {
+  const pts = [
+    new THREE.Vector3(3.38, 1.36, 3.95),
+    new THREE.Vector3(2.75, 2.14, 2.1),
+    new THREE.Vector3(2.94, 2.55, -0.3),
+    new THREE.Vector3(2.6, 2.12, -2.7),
+    new THREE.Vector3(2.38, 1.52, -4.05)
+  ];
+  const curve = new THREE.CatmullRomCurve3(pts);
+  const geo = new THREE.TubeGeometry(curve, 160, 0.022, 8, false);
+  const mesh = new THREE.Mesh(geo, lineMat);
+  mesh.name = 'telephoneTimeLine';
+  narrative.add(mesh);
+  const beads = new THREE.InstancedMesh(new THREE.SphereGeometry(0.055, 10, 8), mats.glowHot, 36);
+  beads.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  /* Disable frustum cull on animated instances — boundingSphere is stale once
+   * setMatrixAt moves instances every frame (Claude / Gemini joint audit). */
+  beads.frustumCulled = false;
+  beads.userData.curve = curve;
+  narrative.add(beads);
+  return { curve, mesh, beads };
+}
+
+const phoneLine = buildPhoneLine();
+
+function buildParticles() {
+  const count = 2400;
+  const positions = new Float32Array(count * 3);
+  const seeds = new Float32Array(count);
+  const colorsAttr = new Float32Array(count * 3);
+  const ages = new Float32Array(count);
+  const palette = [colors.cyan, colors.hot, colors.warm, colors.violet, colors.green];
+  for (let i = 0; i < count; i++) {
+    const lane = Math.random();
+    let x;
+    let z;
+    let y;
+    if (lane < 0.45) {
+      x = -3.1 + Math.random() * 5.7;
+      z = -4.85 + Math.random() * 9.8;
+      y = 0.35 + Math.random() * 2.25;
+    } else if (lane < 0.78) {
+      const a = Math.random() * Math.PI * 2;
+      const r = 0.35 + Math.random() * 1.1;
+      x = 2.35 + Math.cos(a) * r;
+      z = -4.15 + Math.sin(a) * r * 0.55;
+      y = 1.0 + Math.random() * 1.35;
+    } else {
+      x = 3.3 + Math.random() * 1.5;
+      z = -4.6 + Math.random() * 9.2;
+      y = 0.55 + Math.random() * 1.8;
+    }
+    positions[i * 3 + 0] = x;
+    positions[i * 3 + 1] = y;
+    positions[i * 3 + 2] = z;
+    seeds[i] = Math.random() * 1000;
+    ages[i] = Math.random();
+    const c = palette[Math.floor(Math.random() * palette.length)];
+    colorsAttr[i * 3 + 0] = c.r;
+    colorsAttr[i * 3 + 1] = c.g;
+    colorsAttr[i * 3 + 2] = c.b;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 1));
+  geo.setAttribute('aColor', new THREE.BufferAttribute(colorsAttr, 3));
+  geo.setAttribute('aAge', new THREE.BufferAttribute(ages, 1));
+  const mat = new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    uniforms: {
+      time: { value: 0 },
+      progress: { value: 0 },
+      pixelRatio: { value: renderer.getPixelRatio() }
+    },
+    vertexShader: `
+      attribute float aSeed;
+      attribute vec3 aColor;
+      attribute float aAge;
+      varying vec3 vColor;
+      varying float vAlpha;
+      uniform float time;
+      uniform float progress;
+      uniform float pixelRatio;
+      void main() {
+        vec3 p = position;
+        float pulse = sin(aSeed + time * (0.45 + aAge * 1.2) + progress * 9.0);
+        p.x += sin(time * 0.28 + aSeed * 1.71) * 0.05;
+        p.y += pulse * 0.04 + progress * 0.08 * sin(aSeed);
+        p.z += cos(time * 0.23 + aSeed * 1.37) * 0.05;
+        vec4 mv = modelViewMatrix * vec4(p, 1.0);
+        float nearDoor = smoothstep(0.0, 1.0, progress);
+        gl_PointSize = pixelRatio * (2.0 + aAge * 3.6 + nearDoor * 1.4) * (10.0 / max(2.5, -mv.z));
+        vColor = aColor;
+        vAlpha = 0.20 + 0.45 * (pulse * 0.5 + 0.5);
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vColor;
+      varying float vAlpha;
+      void main() {
+        vec2 p = gl_PointCoord - 0.5;
+        float d = length(p);
+        float alpha = smoothstep(0.5, 0.0, d) * vAlpha;
+        gl_FragColor = vec4(vColor, alpha);
+      }
+    `
+  });
+  const points = new THREE.Points(geo, mat);
+  narrative.add(points);
+  return { points, mat };
+}
+
+const particles = buildParticles();
+
+function buildTimeShards() {
+  const count = 180;
+  const geo = new THREE.PlaneGeometry(0.16, 0.82, 1, 4);
+  const mat = new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+    uniforms: {
+      time: { value: 0 },
+      progress: { value: 0 }
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      uniform float time;
+      void main() {
+        vUv = uv;
+        vec3 p = position;
+        p.x += sin(p.y * 7.0 + time * 1.6) * 0.012;
+        #ifdef USE_INSTANCING
+          gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(p, 1.0);
+        #else
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+        #endif
+      }
+    `,
+    fragmentShader: `
+      varying vec2 vUv;
+      uniform float time;
+      uniform float progress;
+      void main() {
+        float edge = smoothstep(0.0, 0.08, vUv.x) * smoothstep(1.0, 0.88, vUv.x);
+        float sweep = sin(vUv.y * 18.0 + time * 2.6 + progress * 8.0) * 0.5 + 0.5;
+        vec3 col = mix(vec3(1.0, 0.36, 0.48), vec3(0.48, 0.9, 1.0), vUv.y);
+        gl_FragColor = vec4(col, edge * (0.05 + sweep * 0.28));
+      }
+    `
+  });
+  const shards = new THREE.InstancedMesh(geo, mat, count);
+  const meta = [];
+  for (let i = 0; i < count; i++) {
+    const band = i / count;
+    const x = -3.0 + Math.random() * 6.1;
+    const z = 5.0 - band * 9.8 + (Math.random() - 0.5) * 0.4;
+    const y = 0.45 + Math.random() * 2.2;
+    const s = 0.4 + Math.random() * 1.8;
+    const yaw = Math.random() * Math.PI;
+    meta.push({ x, y, z, s, yaw, band, spin: (Math.random() - 0.5) * 0.45 });
+    dummy.position.set(x, y, z);
+    dummy.rotation.set(0.08, yaw, 0);
+    dummy.scale.set(s, s, s);
+    dummy.updateMatrix();
+    shards.setMatrixAt(i, dummy.matrix);
+  }
+  shards.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  shards.frustumCulled = false;  /* animated per-frame, see beads comment */
+  shards.userData.meta = meta;
+  narrative.add(shards);
+  return shards;
+}
+
+const timeShards = buildTimeShards();
+
+function buildSpeechBubbles() {
+  const bubbleTex = makeTextTexture(['你走到後門'], {
+    width: 420,
+    height: 136,
+    titleSize: 42,
+    align: 'center',
+    background: 'rgba(255,255,255,.9)',
+    borderColor: 'rgba(255,92,122,.72)',
+    titleColor: '#221015'
+  });
+  const bubble = new THREE.Mesh(new THREE.PlaneGeometry(1.38, 0.46), makePlaneTextureMaterial(bubbleTex, 0.92));
+  bubble.position.set(2.22, 2.18, -3.82);
+  bubble.rotation.set(0, -0.78, 0);
+  bubble.visible = false;
+  narrative.add(bubble);
+
+  const quoteTex = makeTextTexture(['也太像徐若瑄了吧'], {
+    width: 500,
+    height: 136,
+    titleSize: 38,
+    align: 'center',
+    background: 'rgba(255,92,122,.72)',
+    borderColor: 'rgba(255,255,255,.6)',
+    titleColor: '#fff7ef'
+  });
+  const quote = new THREE.Mesh(new THREE.PlaneGeometry(1.72, 0.47), makePlaneTextureMaterial(quoteTex, 0.92));
+  quote.position.set(3.06, 2.05, -4.72);
+  quote.rotation.set(0, -0.62, 0);
+  quote.visible = false;
+  narrative.add(quote);
+  return { bubble, quote };
+}
+
+const speech = buildSpeechBubbles();
+
+function buildPaperEchoes() {
+  const geo = new THREE.PlaneGeometry(0.22, 0.14);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0xf1e3be,
+    roughness: 0.86,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.78
+  });
+  const papers = new THREE.InstancedMesh(geo, mat, 64);
+  const meta = [];
+  for (let i = 0; i < 64; i++) {
+    const t = i / 63;
+    const a = t * Math.PI * 4.3;
+    const r = 0.3 + t * 2.1;
+    const x = 1.75 + Math.cos(a) * r * 0.7;
+    const z = -4.05 + Math.sin(a) * r * 0.35;
+    const y = 0.85 + t * 1.7;
+    const s = 0.6 + Math.random() * 1.2;
+    meta.push({ x, y, z, s, a, t });
+    dummy.position.set(x, y, z);
+    dummy.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+    dummy.scale.set(s, s, s);
+    dummy.updateMatrix();
+    papers.setMatrixAt(i, dummy.matrix);
+  }
+  papers.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  papers.frustumCulled = false;  /* animated per-frame, see beads comment */
+  papers.userData.meta = meta;
+  narrative.add(papers);
+  return papers;
+}
+
+const paperEchoes = buildPaperEchoes();
+
+function positionOnSeniorPath(p) {
+  const a = new THREE.Vector3(4.25, 0, 6.08);
+  const b = new THREE.Vector3(3.48, 0, 4.15);
+  const c = new THREE.Vector3(3.68, 0, 2.0);
+  const d = new THREE.Vector3(3.58, 0, -1.4);
+  const e = new THREE.Vector3(3.42, 0, -4.15);
+  const f = new THREE.Vector3(2.72, 0, -4.25);
+  if (p < 0.18) return mixVec(a, b, smooth01(p / 0.18), new THREE.Vector3());
+  if (p < 0.37) return b.clone();
+  if (p < 0.68) {
+    const q = smooth01((p - 0.37) / 0.31);
+    const r1 = mixVec(b, c, remap(q, 0, 0.34), new THREE.Vector3());
+    const r2 = mixVec(c, d, remap(q, 0.28, 0.72), new THREE.Vector3());
+    const r3 = mixVec(d, e, remap(q, 0.66, 1), new THREE.Vector3());
+    if (q < 0.34) return r1;
+    if (q < 0.72) return r2;
+    return r3;
+  }
+  if (p < 0.86) return mixVec(e, f, smooth01((p - 0.68) / 0.18), new THREE.Vector3());
+  return f.clone();
+}
+
+function setCharacterYawFromVelocity(group, current, previous, lookAt = null) {
+  const dir = lookAt ? tmpV.subVectors(lookAt, current) : tmpV.subVectors(current, previous);
+  dir.y = 0;
+  if (dir.lengthSq() < 0.0001) return;
+  dir.normalize();
+  const yaw = Math.atan2(dir.x, dir.z) + Math.PI;
+  group.rotation.y = THREE.MathUtils.lerp(group.rotation.y, yaw, 0.1);
+}
+
+function updateSeniorPose(p, dt) {
+  const now = positionOnSeniorPath(p);
+  const prev = positionOnSeniorPath(Math.max(0, p - 0.01));
+  senior.position.lerp(now, 1 - Math.pow(0.0001, dt));
+  const meetLook = p > 0.68 ? junior.position : null;
+  setCharacterYawFromVelocity(senior, now, prev, meetLook);
+
+  const phoneRaise = smooth01(remap(p, 0.18, 0.28)) * (1 - smooth01(remap(p, 0.43, 0.54)));
+  const arms = senior.userData.arms;
+  if (arms && senior.userData.phone) {
+    arms.upperArmR.rotation.z = THREE.MathUtils.lerp(arms.upperArmR.rotation.z, -0.9 * phoneRaise, 0.18);
+    arms.foreArmR.rotation.z = THREE.MathUtils.lerp(arms.foreArmR.rotation.z, -1.7 * phoneRaise, 0.18);
+    senior.userData.phone.visible = phoneRaise > 0.08;
+    senior.userData.phone.position.set(0.34 - phoneRaise * 0.19, 1.08 + phoneRaise * 0.38, -0.16);
+  }
+  lights.phoneGlow.intensity = 0.3 + phoneRaise * 2.1;
+  lights.phoneGlow.position.copy(senior.localToWorld(new THREE.Vector3(0.18, 1.45, -0.18)));
+}
+
+function updateJuniorPose(p, time, dt) {
+  junior.position.lerp(new THREE.Vector3(2.35, 0, -4.15), 1 - Math.pow(0.0001, dt));
+  const targetYaw = p > 0.68 ? -0.92 : -Math.PI / 2;
+  junior.rotation.y = THREE.MathUtils.lerp(junior.rotation.y, targetYaw, 0.06);
+  const breath = Math.sin(time * 2.0) * 0.012;
+  junior.scale.y = 1 + breath;
+  eighteenGhost.position.x = -0.18 + Math.sin(time * 1.7) * 0.025;
+  eighteenGhost.position.z = 0.22 + Math.cos(time * 1.2) * 0.025;
+  eighteenGhost.visible = p > 0.17;
+  innerCouncil.visible = p > 0.21;
+  innerCouncil.rotation.y = time * 0.34 + p * Math.PI * 0.8;
+  for (const m of innerCouncil.userData.members) {
+    m.lookAt(camera.position);
+    m.rotateY(Math.PI);
+  }
+}
+
+function updateNarrativeObjects(p, time) {
+  beamMat.uniforms.time.value = time;
+  beamMat.uniforms.progress.value = p;
+  lineMat.uniforms.time.value = time;
+  lineMat.uniforms.progress.value = p;
+  particles.mat.uniforms.time.value = time;
+  particles.mat.uniforms.progress.value = p;
+  timeShards.material.uniforms.time.value = time;
+  timeShards.material.uniforms.progress.value = p;
+  for (const key of Object.keys(shaderMats)) shaderMats[key].uniforms.time.value = time;
+
+  phoneLine.mesh.visible = p > 0.18;
+  phoneLine.mesh.material.opacity = 1;
+  for (let i = 0; i < phoneLine.beads.count; i++) {
+    const t = (i / phoneLine.beads.count + time * 0.08 + p * 0.45) % 1;
+    const pt = phoneLine.curve.getPoint(t);
+    const scale = (p > 0.18 ? 1 : 0) * (0.55 + Math.sin(time * 5 + i) * 0.18);
+    dummy.position.copy(pt);
+    dummy.scale.setScalar(scale);
+    dummy.updateMatrix();
+    phoneLine.beads.setMatrixAt(i, dummy.matrix);
+  }
+  phoneLine.beads.instanceMatrix.needsUpdate = true;
+
+  const shardMeta = timeShards.userData.meta;
+  for (let i = 0; i < shardMeta.length; i++) {
+    const m = shardMeta[i];
+    const sweep = Math.abs(p - m.band);
+    const active = smooth01(1 - Math.min(1, sweep * 5.2));
+    dummy.position.set(
+      m.x + Math.sin(time * 0.32 + m.band * 18) * active * 0.12,
+      m.y + active * 0.32,
+      m.z
+    );
+    dummy.rotation.set(0.08 + active * 0.4, m.yaw + time * m.spin, active * 0.3);
+    dummy.scale.setScalar(m.s * (0.45 + active * 0.95));
+    dummy.updateMatrix();
+    timeShards.setMatrixAt(i, dummy.matrix);
+  }
+  timeShards.instanceMatrix.needsUpdate = true;
+
+  const paperMeta = paperEchoes.userData.meta;
+  const paperPower = smooth01(remap(p, 0.64, 0.96));
+  paperEchoes.visible = paperPower > 0.03;
+  for (let i = 0; i < paperMeta.length; i++) {
+    const m = paperMeta[i];
+    const lift = paperPower * (0.25 + m.t * 1.2);
+    dummy.position.set(
+      m.x + Math.cos(time * 0.7 + m.a) * 0.05,
+      m.y + lift + Math.sin(time + m.a) * 0.04,
+      m.z + Math.sin(time * 0.5 + m.a) * 0.05
+    );
+    dummy.rotation.set(time * 0.25 + m.a, time * 0.4 + m.t * 4, Math.sin(time + m.a) * 0.4);
+    dummy.scale.setScalar(m.s * (0.65 + paperPower * 0.75));
+    dummy.updateMatrix();
+    paperEchoes.setMatrixAt(i, dummy.matrix);
+  }
+  paperEchoes.instanceMatrix.needsUpdate = true;
+
+  speech.bubble.visible = p > 0.36 && p < 0.66;
+  speech.quote.visible = p > 0.86;
+  if (speech.bubble.visible) speech.bubble.position.y = 2.18 + Math.sin(time * 2.2) * 0.035;
+  if (speech.quote.visible) speech.quote.position.y = 2.05 + Math.sin(time * 1.7) * 0.03;
+
+  narrative.userData.commandNote.visible = p > 0.28;
+  narrative.userData.commandNote.material.opacity = 0.2 + smooth01(remap(p, 0.28, 0.5)) * 0.66;
+
+  clockFloor.rotation.y = Math.sin(time * 0.15) * 0.03;
+}
+
+function getFocusLabel(focus) {
+  return {
+    overview: '全景',
+    senior: '學長',
+    junior: '學妹',
+    council: '五種意識',
+    floorplan: '俯視動線'
+  }[focus] || focus;
+}
+
+function setFocus(focus) {
+  state.focus = focus;
+  ui.focusReadout.textContent = getFocusLabel(focus);
+  for (const btn of ui.focusButtons) btn.classList.toggle('active', btn.dataset.focus === focus);
+}
+
+function getCameraPose() {
+  const p = state.progress;
+  const target = new THREE.Vector3(0.55, 1.22, -0.5);
+  const pos = new THREE.Vector3();
+  if (state.focus === 'senior') {
+    const head = senior.localToWorld(new THREE.Vector3(0, 1.58, -0.12));
+    const look = p > 0.66 ? junior.localToWorld(new THREE.Vector3(0, 1.55, 0)) : senior.localToWorld(new THREE.Vector3(0, 1.42, -1.6));
+    const side = p > 0.66 ? new THREE.Vector3(1.0, 0.55, 1.15) : new THREE.Vector3(-0.65, 0.32, -1.35);
+    pos.copy(head).add(side);
+    target.copy(look);
+  } else if (state.focus === 'junior') {
+    const head = junior.localToWorld(new THREE.Vector3(0, 1.56, -0.1));
+    pos.copy(head).add(new THREE.Vector3(-1.0, 0.42, 1.38));
+    target.copy(senior.localToWorld(new THREE.Vector3(0, 1.5, 0)));
+    if (p < 0.6) target.copy(junior.localToWorld(new THREE.Vector3(0, 1.48, -0.55)));
+  } else if (state.focus === 'council') {
+    const center = junior.localToWorld(new THREE.Vector3(0, 1.82, 0.08));
+    const a = performance.now() * 0.00022;
+    pos.copy(center).add(new THREE.Vector3(Math.cos(a) * 1.15, 0.45, Math.sin(a) * 1.15));
+    target.copy(center);
+  } else if (state.focus === 'floorplan') {
+    pos.set(0.3, 9.4, 0.25);
+    target.set(0.35, 0, -0.35);
+  } else {
+    const yaw = state.orbitYaw;
+    const pitch = state.orbitPitch;
+    const d = state.orbitDistance;
+    const focusDrift = new THREE.Vector3(1.1 * smooth01(remap(p, 0.52, 0.85)), 0, -2.2 * smooth01(remap(p, 0.38, 0.8)));
+    target.add(focusDrift);
+    pos.set(
+      target.x + Math.sin(yaw) * Math.cos(pitch) * d,
+      target.y + Math.sin(pitch) * d,
+      target.z + Math.cos(yaw) * Math.cos(pitch) * d
+    );
+  }
+  return { pos, target };
+}
+
+function updateCamera(dt) {
+  const pose = getCameraPose();
+  const t = 1 - Math.pow(0.0006, dt);
+  camera.position.lerp(pose.pos, t);
+  const currentTarget = tmpV2.set(0, 0, -1).applyQuaternion(camera.quaternion).multiplyScalar(5).add(camera.position);
+  currentTarget.lerp(pose.target, t);
+  camera.lookAt(currentTarget);
+}
+
+function setProgress(v, snap = false) {
+  state.targetProgress = clamp01(v);
+  if (snap) state.progress = state.targetProgress;
+  updateBeatUi();
+}
+
+function updateBeatUi() {
+  let idx = 0;
+  let best = Infinity;
+  for (let i = 0; i < beatData.length; i++) {
+    const d = Math.abs(state.targetProgress - beatData[i].progress);
+    if (d < best) {
+      best = d;
+      idx = i;
+    }
+  }
+  state.activeBeat = idx;
+  for (let i = 0; i < ui.beats.length; i++) ui.beats[i].classList.toggle('active', i === idx);
+  ui.timeStamp.textContent = beatData[idx].stamp;
+  ui.captionText.textContent = beatData[idx].caption;
+  ui.timeSlider.value = String(Math.round(state.targetProgress * 1000));
+}
+
+function setBeat(index) {
+  const beat = beatData[Math.max(0, Math.min(beatData.length - 1, index))];
+  setProgress(beat.progress);
+}
+
+function togglePlay() {
+  state.playing = !state.playing;
+  ui.playBtn.textContent = state.playing ? 'Ⅱ' : '▶';
+  ui.playBtn.classList.toggle('active', state.playing);
+  ui.toast.textContent = state.playing ? 'PLAY' : 'PAUSED';
+  ui.toast.classList.add('show');
+  state.pausedToastTimer = 0.55;
+}
+
+function updateUiRuntime(dt) {
+  if (state.pausedToastTimer > 0) {
+    state.pausedToastTimer -= dt;
+    if (state.pausedToastTimer <= 0) ui.toast.classList.remove('show');
+  }
+  ui.modeText.textContent = state.playing ? '自動巡航' : '互動剖面';
+}
+
+ui.playBtn.addEventListener('click', togglePlay);
+ui.resetBtn.addEventListener('click', () => {
+  state.playing = false;
+  ui.playBtn.textContent = '▶';
+  ui.playBtn.classList.remove('active');
+  setFocus('overview');
+  setProgress(0, true);
+});
+ui.timeSlider.addEventListener('input', () => {
+  state.playing = false;
+  ui.playBtn.textContent = '▶';
+  ui.playBtn.classList.remove('active');
+  setProgress(Number(ui.timeSlider.value) / 1000);
+});
+for (const beat of ui.beats) {
+  beat.addEventListener('click', () => setBeat(Number(beat.dataset.beat)));
+}
+for (const btn of ui.focusButtons) {
+  btn.addEventListener('click', () => setFocus(btn.dataset.focus));
+}
+
+canvas.addEventListener('pointerdown', (event) => {
+  state.drag = {
+    x: event.clientX,
+    y: event.clientY,
+    yaw: state.orbitYaw,
+    pitch: state.orbitPitch,
+    pointerId: event.pointerId
+  };
+  state.clickMoved = false;
+  canvas.setPointerCapture(event.pointerId);
+});
+
+canvas.addEventListener('pointermove', (event) => {
+  if (!state.drag) return;
+  const dx = event.clientX - state.drag.x;
+  const dy = event.clientY - state.drag.y;
+  if (Math.abs(dx) + Math.abs(dy) > 4) state.clickMoved = true;
+  if (state.focus === 'overview') {
+    state.orbitYaw = state.drag.yaw - dx * 0.006;
+    state.orbitPitch = THREE.MathUtils.clamp(state.drag.pitch + dy * 0.004, 0.16, 1.18);
+  }
+});
+
+canvas.addEventListener('pointerup', (event) => {
+  if (state.drag) {
+    try { canvas.releasePointerCapture(state.drag.pointerId); } catch (err) {}
+    state.drag = null;
+  }
+  if (!state.clickMoved) {
+    pointerNdc.x = (event.clientX / window.innerWidth) * 2 - 1;
+    pointerNdc.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(pointerNdc, camera);
+    const hits = raycaster.intersectObjects(pickables, false);
+    if (hits.length && hits[0].object.userData.pickTarget) {
+      setFocus(hits[0].object.userData.pickTarget);
+    }
+  }
+});
+
+canvas.addEventListener('wheel', (event) => {
+  state.orbitDistance = THREE.MathUtils.clamp(state.orbitDistance + event.deltaY * 0.006, 5.2, 16.5);
+}, { passive: true });
+
+window.addEventListener('keydown', (event) => {
+  if (event.code === 'Space') {
+    event.preventDefault();
+    togglePlay();
+  } else if (event.code === 'ArrowRight') {
+    event.preventDefault();
+    setBeat(Math.min(beatData.length - 1, state.activeBeat + 1));
+  } else if (event.code === 'ArrowLeft') {
+    event.preventDefault();
+    setBeat(Math.max(0, state.activeBeat - 1));
+  } else if (/^Digit[1-5]$/.test(event.code)) {
+    setBeat(Number(event.code.slice(-1)) - 1);
+  } else if (event.code === 'KeyO') {
+    setFocus('overview');
+  } else if (event.code === 'KeyS') {
+    setFocus('senior');
+  } else if (event.code === 'KeyJ') {
+    setFocus('junior');
+  } else if (event.code === 'KeyC') {
+    setFocus('council');
+  } else if (event.code === 'KeyF') {
+    setFocus('floorplan');
+  }
+});
+
+function createPost() {
+  const target = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, {
+    samples: 0,
+    colorSpace: THREE.SRGBColorSpace
+  });
+  target.texture.name = 'competition2.sceneTarget';
+  const postScene = new THREE.Scene();
+  const postCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  const mat = new THREE.ShaderMaterial({
+    uniforms: {
+      tDiffuse: { value: target.texture },
+      resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+      time: { value: 0 },
+      progress: { value: 0 },
+      intensity: { value: state.postIntensity }
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = vec4(position.xy, 0.0, 1.0);
+      }
+    `,
+    fragmentShader: `
+      varying vec2 vUv;
+      uniform sampler2D tDiffuse;
+      uniform vec2 resolution;
+      uniform float time;
+      uniform float progress;
+      uniform float intensity;
+      float hash(vec2 p) {
+        return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+      }
+      void main() {
+        vec2 uv = vUv;
+        vec2 center = vec2(0.5);
+        vec2 d = uv - center;
+        float radius = length(d);
+        float split = smoothstep(0.42, 1.0, progress);
+        float glitch = sin((uv.y + time * 0.09) * 70.0) * 0.0018 * intensity * split;
+        float chroma = (0.0015 + radius * 0.003) * intensity * (0.45 + split);
+        vec3 col;
+        col.r = texture2D(tDiffuse, uv + vec2(chroma + glitch, 0.0)).r;
+        col.g = texture2D(tDiffuse, uv).g;
+        col.b = texture2D(tDiffuse, uv - vec2(chroma - glitch, 0.0)).b;
+        float vignette = smoothstep(0.88, 0.18, radius);
+        float grain = hash(uv * resolution.xy + time * 31.0) - 0.5;
+        float scan = sin((uv.y * resolution.y) * 1.45) * 0.012;
+        vec3 warm = vec3(1.05, 0.94, 0.84);
+        vec3 cyan = vec3(0.82, 0.96, 1.08);
+        col *= mix(warm, cyan, smoothstep(0.25, 0.85, progress) * 0.55);
+        col += grain * 0.035 + scan;
+        col *= 0.42 + vignette * 0.72;
+        float freezeLine = smoothstep(0.012, 0.0, abs(uv.x - mix(0.18, 0.82, progress)));
+        col += freezeLine * vec3(0.4, 0.8, 1.0) * 0.12;
+        gl_FragColor = vec4(col, 1.0);
+      }
+    `
+  });
+  const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat);
+  postScene.add(quad);
+  return { target, scene: postScene, camera: postCam, material: mat };
+}
+
+const post = createPost();
+
+function resize() {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+  post.target.setSize(w, h);
+  post.material.uniforms.resolution.value.set(w, h);
+  particles.mat.uniforms.pixelRatio.value = renderer.getPixelRatio();
+}
+
+window.addEventListener('resize', resize);
+
+canvas.addEventListener('webglcontextlost', (event) => {
+  event.preventDefault();
+  ui.captionText.textContent = 'WebGL context lost；請重新整理頁面。';
+});
+
+let fpsAcc = 0;
+let fpsFrames = 0;
+let fpsLast = performance.now();
+
+function updateStats(now) {
+  fpsFrames++;
+  if (now - fpsLast > 500) {
+    const fps = Math.round((fpsFrames * 1000) / (now - fpsLast));
+    ui.fpsReadout.textContent = String(fps);
+    fpsFrames = 0;
+    fpsLast = now;
+    const info = renderer.info.render;
+    ui.geomReadout.textContent = `${info.calls} calls · ${info.triangles} tri`;
+  }
+}
+
+function animate() {
+  const dt = Math.min(0.05, clock.getDelta());
+  const time = clock.elapsedTime;
+  if (state.playing) {
+    const next = state.targetProgress + dt * 0.058;
+    state.targetProgress = next > 1 ? 0 : next;
+    updateBeatUi();
+  }
+  state.progress = THREE.MathUtils.damp(state.progress, state.targetProgress, 5.2, dt);
+
+  updateSeniorPose(state.progress, dt);
+  updateJuniorPose(state.progress, time, dt);
+  updateNarrativeObjects(state.progress, time);
+  updateCamera(dt);
+  updateUiRuntime(dt);
+
+  post.material.uniforms.time.value = time;
+  post.material.uniforms.progress.value = state.progress;
+  post.material.uniforms.intensity.value = state.postIntensity;
+
+  renderer.setRenderTarget(post.target);
+  renderer.clear();
+  renderer.render(scene, camera);
+  renderer.setRenderTarget(null);
+  renderer.render(post.scene, post.camera);
+
+  updateStats(performance.now());
+  requestAnimationFrame(animate);
+}
+
+setProgress(0, true);
+setFocus('overview');
+resize();
+animate();
+</script>
+</body>
+</html>
