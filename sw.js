@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v15-20260606';  // unchanged: GLB / vendor 無變動
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v49-20260527';  // bumped: tech-demo realism push — sculpted icosahedron head with cheekbone / jaw / brow ridge / eye socket / nose bridge vertex displacement; 5-layer eyes (sclera + cornea with transmission + procedural iris texture + pupil + catch light) + upper/lower lids + eyelash strands; multi-part ears; lathe-generated nose with nostrils; upper / lower lips with cleft; strand-based hair (60+ cylinders for senior pompadour + side trim + back; 60+ cylinders for junior long hair with sway)
+const RUNTIME_VERSION = 'runtime-v50-20260527';  // bumped: tech-demo realism push v2 — SSS skin shader (Fresnel-weighted edge bleed via onBeforeCompile opaque_fragment hook); procedural 512px skin texture (3500 pore dots + 1200 sheen highlights + 24 freckles); MeshPhysicalMaterial w/ clearcoat + sheen; 5-finger hands with nails + curl + thumb opposition replacing previous sphere hand; cloth wrinkle vertex displacement (6 folds + horizontal ripple) on shirt torso; PCFSoftShadowMap shadow casting from directional sun (1024x1024 shadow map, frustum tuned); asymmetric contrapposto for junior; close-up camera keys C / S for inspection
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;

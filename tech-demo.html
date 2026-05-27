@@ -48,7 +48,7 @@
   </div>
   <div class="legend">
     <div class="legend-title">效果切換</div>
-    <div><kbd>P</kbd> 暫停 · <kbd>R</kbd> 重置鏡頭 · <kbd>1</kbd>~<kbd>8</kbd> 切換</div>
+    <div><kbd>P</kbd> 暫停 · <kbd>R</kbd> 全景 · <kbd>C</kbd> 學妹特寫 · <kbd>S</kbd> 學長特寫 · <kbd>1</kbd>~<kbd>8</kbd> 切換</div>
     <div class="effects-list" id="effectsList">
       <div class="fx-item on" data-fx="1"><span class="fx-dot"></span>1 · 程序 PBR 地板</div>
       <div class="fx-item on" data-fx="2"><span class="fx-dot"></span>2 · 體積光</div>
@@ -84,6 +84,9 @@ renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.94;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+/* Soft shadows — PCF 5x5 kernel for smoother edges than basic shadow map */
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x14100a, 0.042);
@@ -168,6 +171,7 @@ const floorMat = new THREE.MeshStandardMaterial({ map: woodTex, normalMap: woodN
 const floorPlainMat = new THREE.MeshStandardMaterial({ color: 0x14100c, roughness: 0.85 });
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(10, 26), floorMat);
 floor.rotation.x = -Math.PI / 2; floor.position.z = -6;
+floor.receiveShadow = true;
 scene.add(floor);
 
 /* ===================================================================
@@ -259,12 +263,84 @@ bbFrame.position.set(7.86, 1.9, -7); scene.add(bbFrame);
    =================================================================== */
 
 /* ─── 共用 helpers ─── */
+/* Skin pore + freckle canvas — subtle micro-variation that picks up under close light */
+function makeSkinTexture(baseColor) {
+  const size = 512;
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const col = new THREE.Color(baseColor);
+  const r0 = Math.round(col.r * 255), g0 = Math.round(col.g * 255), b0 = Math.round(col.b * 255);
+  ctx.fillStyle = `rgb(${r0}, ${g0}, ${b0})`;
+  ctx.fillRect(0, 0, size, size);
+  /* pore dots — slightly darker, ~3500 */
+  for (let i = 0; i < 3500; i++) {
+    const x = Math.random() * size, y = Math.random() * size;
+    const k = 0.86 + Math.random() * 0.08;
+    const a = 0.04 + Math.random() * 0.06;
+    ctx.fillStyle = `rgba(${Math.round(r0*k)}, ${Math.round(g0*k)}, ${Math.round(b0*k)}, ${a})`;
+    ctx.beginPath(); ctx.arc(x, y, 0.7 + Math.random() * 1.1, 0, Math.PI * 2); ctx.fill();
+  }
+  /* lighter highlights — sebum sheen — ~1200 */
+  for (let i = 0; i < 1200; i++) {
+    const x = Math.random() * size, y = Math.random() * size;
+    const k = 1.06 + Math.random() * 0.06;
+    const a = 0.025 + Math.random() * 0.04;
+    ctx.fillStyle = `rgba(${Math.min(255, Math.round(r0*k))}, ${Math.min(255, Math.round(g0*k))}, ${Math.min(255, Math.round(b0*k))}, ${a})`;
+    ctx.beginPath(); ctx.arc(x, y, 0.5 + Math.random() * 0.9, 0, Math.PI * 2); ctx.fill();
+  }
+  /* freckles cluster on upper-mid (cheek band) — only sparse */
+  for (let i = 0; i < 24; i++) {
+    const x = 180 + Math.random() * 152;  /* mid-band only */
+    const y = 220 + Math.random() * 80;
+    ctx.fillStyle = `rgba(${Math.round(r0*0.72)}, ${Math.round(g0*0.66)}, ${Math.round(b0*0.6)}, ${0.22 + Math.random() * 0.18})`;
+    ctx.beginPath(); ctx.arc(x, y, 0.9 + Math.random() * 1.3, 0, Math.PI * 2); ctx.fill();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+/* Cached skin textures keyed by base color (avoid duplicate canvas work per character) */
+const _skinTexCache = new Map();
+function getSkinTex(baseColor) {
+  const k = '' + baseColor;
+  if (!_skinTexCache.has(k)) _skinTexCache.set(k, makeSkinTexture(baseColor));
+  return _skinTexCache.get(k);
+}
+
+/* Skin material with SSS approximation via onBeforeCompile —
+ * Fresnel-edge red bleed simulates light scattering through thin tissue (ears, nose tip, edges).
+ * Cheaper than real BSSRDF; visually close enough for stylised realism. */
 function makeSkinMaterial(baseColor) {
-  return new THREE.MeshStandardMaterial({
-    color: baseColor, roughness: 0.62, metalness: 0.02,
-    /* slight emissive for cheek warmth */
-    emissive: new THREE.Color(baseColor).multiplyScalar(0.06)
+  const col = new THREE.Color(baseColor);
+  const mat = new THREE.MeshPhysicalMaterial({
+    color: baseColor,
+    map: getSkinTex(baseColor),
+    roughness: 0.58,
+    metalness: 0.02,
+    clearcoat: 0.18,           /* very faint dermal sheen */
+    clearcoatRoughness: 0.62,
+    emissive: col.clone().multiplyScalar(0.05),
+    sheen: 0.22,
+    sheenColor: new THREE.Color(0xff8d70),  /* warm-edge sheen */
+    sheenRoughness: 0.42
   });
+  /* SSS injection — Fresnel-weighted red glow on silhouette via opaque_fragment hook (r179).
+   * `normal` is in scope after normal_fragment_maps; `vViewPosition` is a Physical-material varying. */
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms.uSSSColor = { value: new THREE.Color(0xc05438) };
+    shader.uniforms.uSSSStrength = { value: 0.32 };
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>',
+        '#include <common>\nuniform vec3 uSSSColor;\nuniform float uSSSStrength;')
+      .replace('#include <opaque_fragment>',
+        'float sssFres = pow(1.0 - max(0.0, dot(normalize(normal), normalize(vViewPosition))), 3.0);\n' +
+        'outgoingLight += uSSSColor * uSSSStrength * sssFres;\n' +
+        '#include <opaque_fragment>');
+  };
+  return mat;
 }
 
 /* 程序生成虹膜紋路 texture — radial gradient + 隨機 streaks */
@@ -694,18 +770,115 @@ function buildGlasses() {
 }
 
 /* 通用 body (上半 + 下半) */
+/* Palm + 5 finger cylinders — replaces the previous sphere hand */
+function buildHand(skinMat, side) {
+  const handG = new THREE.Group();
+  /* palm — rounded box (4 segments per side enables vertex smoothing) */
+  const palmGeo = new THREE.BoxGeometry(0.062, 0.018, 0.072, 3, 2, 3);
+  const ppos = palmGeo.attributes.position;
+  for (let i = 0; i < ppos.count; i++) {
+    const x = ppos.getX(i), y = ppos.getY(i), z = ppos.getZ(i);
+    /* Smooth edges by scaling corner vertices toward an inscribed ellipsoid */
+    const nx = x / 0.031, ny = y / 0.009, nz = z / 0.036;
+    const d = Math.sqrt(nx*nx + ny*ny + nz*nz);
+    if (d > 0.95) {
+      const k = 0.95 / d;
+      ppos.setXYZ(i, x * (0.85 + 0.15*k), y * (0.85 + 0.15*k), z * (0.85 + 0.15*k));
+    }
+  }
+  palmGeo.computeVertexNormals();
+  const palm = new THREE.Mesh(palmGeo, skinMat);
+  handG.add(palm);
+  /* knuckle ridge — slight bump at top */
+  const knuckle = new THREE.Mesh(new THREE.BoxGeometry(0.058, 0.005, 0.018), skinMat);
+  knuckle.position.set(0, 0.011, -0.024);
+  handG.add(knuckle);
+  /* 4 fingers (index→pinky) + thumb */
+  const fingerSpecs = [
+    /* x offset,  base radius, tip radius, length, z offset (forward = -) */
+    { x: -0.022, rB: 0.0075, rT: 0.0058, L: 0.058, z: -0.038, bend: 0.10 },  /* index */
+    { x: -0.007, rB: 0.0078, rT: 0.006,  L: 0.062, z: -0.040, bend: 0.08 },  /* middle */
+    { x:  0.008, rB: 0.0075, rT: 0.0058, L: 0.058, z: -0.038, bend: 0.10 },  /* ring */
+    { x:  0.022, rB: 0.0068, rT: 0.0052, L: 0.048, z: -0.034, bend: 0.14 }   /* pinky */
+  ];
+  for (const f of fingerSpecs) {
+    const fingerG = new THREE.Group();
+    const fg = new THREE.CylinderGeometry(f.rT, f.rB, f.L, 8);
+    fg.translate(0, -f.L / 2, 0);
+    const finger = new THREE.Mesh(fg, skinMat);
+    /* slight curl forward */
+    finger.rotation.x = Math.PI / 2 + f.bend;
+    fingerG.add(finger);
+    /* knuckle joint */
+    const joint = new THREE.Mesh(new THREE.SphereGeometry(f.rB + 0.0008, 8, 6), skinMat);
+    fingerG.add(joint);
+    /* nail — small light box at tip */
+    const nail = new THREE.Mesh(
+      new THREE.BoxGeometry(f.rT * 1.4, 0.0006, f.rT * 1.8),
+      new THREE.MeshStandardMaterial({ color: 0xf8e4cf, roughness: 0.32, metalness: 0.08 })
+    );
+    /* place nail at the curved-forward tip — derived from rotated finger geometry */
+    const tipZ = f.z - Math.sin(f.bend) * f.L * 0.6 - Math.cos(f.bend) * 0.001;
+    const tipY = -Math.cos(f.bend) * f.L * 0.6 + 0.005;
+    nail.position.set(0, tipY, tipZ);
+    nail.rotation.x = -0.3 - f.bend;
+    fingerG.add(nail);
+    fingerG.position.set(f.x, 0.002, f.z * 0.0);  /* fingers attach at palm front */
+    fingerG.position.z = f.z;
+    handG.add(fingerG);
+  }
+  /* thumb — offset to side, rotated outward */
+  const thumbG = new THREE.Group();
+  const thumbGeo = new THREE.CylinderGeometry(0.0062, 0.008, 0.048, 8);
+  thumbGeo.translate(0, -0.024, 0);
+  const thumb = new THREE.Mesh(thumbGeo, skinMat);
+  thumb.rotation.z = -side * 0.6;
+  thumb.rotation.x = 1.0;
+  thumbG.add(thumb);
+  const thumbJoint = new THREE.Mesh(new THREE.SphereGeometry(0.009, 8, 6), skinMat);
+  thumbG.add(thumbJoint);
+  thumbG.position.set(side * 0.028, -0.005, -0.012);
+  handG.add(thumbG);
+  return handG;
+}
+
 function buildBody(opts) {
   const g = new THREE.Group();
-  const shirtMat = new THREE.MeshStandardMaterial({ color: opts.shirtColor, roughness: 0.78 });
-  const pantMat = new THREE.MeshStandardMaterial({ color: opts.pantColor, roughness: 0.72 });
+  /* Sheen layer on cloth approximates fabric weave catching grazing light */
+  const shirtMat = new THREE.MeshPhysicalMaterial({
+    color: opts.shirtColor, roughness: 0.78, metalness: 0.0,
+    sheen: 0.45, sheenColor: new THREE.Color(opts.shirtColor).lerp(new THREE.Color(0xffffff), 0.5),
+    sheenRoughness: 0.7
+  });
+  const pantMat = new THREE.MeshPhysicalMaterial({
+    color: opts.pantColor, roughness: 0.7, metalness: 0.02,
+    sheen: 0.35, sheenColor: new THREE.Color(opts.pantColor).lerp(new THREE.Color(0xffffff), 0.3),
+    sheenRoughness: 0.8
+  });
   const skinMat = makeSkinMaterial(opts.skinColor || 0xe8c8b0);
   const shoeMat = new THREE.MeshStandardMaterial({ color: opts.shoeColor || 0xf0e8d0, roughness: 0.85 });
 
   /* 脖子 */
   const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.05, 0.08, 12), skinMat);
   neck.position.y = 0.32; g.add(neck);
-  /* 軀幹 — taper bottom (腰較窄) */
-  const torsoGeo = new THREE.CylinderGeometry(0.14, opts.female ? 0.108 : 0.124, 0.45, 18);
+  /* 軀幹 — taper bottom (腰較窄) — add cloth wrinkles via vertex displacement */
+  const torsoGeo = new THREE.CylinderGeometry(0.14, opts.female ? 0.108 : 0.124, 0.45, 24, 12);
+  /* shirt wrinkles — vertical fold lines + horizontal stretch ripples */
+  const tpos = torsoGeo.attributes.position;
+  for (let i = 0; i < tpos.count; i++) {
+    const x = tpos.getX(i), y = tpos.getY(i), z = tpos.getZ(i);
+    const r = Math.sqrt(x*x + z*z);
+    if (r < 0.001) continue;
+    const ang = Math.atan2(z, x);
+    /* vertical folds — 6 around the body, depth varies with height */
+    const fold = Math.sin(ang * 6) * 0.0028 * Math.max(0, 1 - Math.abs(y) * 2.2);
+    /* horizontal stretch ripple near waist + chest */
+    const ripple = Math.sin(y * 18) * 0.0012;
+    /* combined inward/outward displacement along radial direction */
+    const scl = 1 + (fold + ripple) / r;
+    tpos.setXYZ(i, x * scl, y, z * scl);
+  }
+  torsoGeo.computeVertexNormals();
   const torso = new THREE.Mesh(torsoGeo, shirtMat);
   torso.position.y = 0.05; g.add(torso);
   /* 肩 connect spheres */
@@ -727,9 +900,12 @@ function buildBody(opts) {
     const lowerMat = opts.shortSleeve ? skinMat : shirtMat;
     const lower = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.032, 0.21, 10), lowerMat);
     lower.position.y = -0.34; armG.add(lower);
-    /* 手 */
-    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.044, 12, 10), skinMat);
-    hand.position.y = -0.456; armG.add(hand);
+    /* 手 — palm + 5 fingers (replaces previous sphere) */
+    const hand = buildHand(skinMat, side);
+    hand.position.y = -0.456;
+    /* fingers curl forward (downward when arm hangs) */
+    hand.rotation.x = 0.1;
+    armG.add(hand);
     armG.userData.lower = lower;
     armG.userData.hand = hand;
     armG.position.set(side * 0.158, 0.24, 0);
@@ -943,16 +1119,32 @@ function buildChair() {
    Populate 場景
    =================================================================== */
 
+/* Helper — toggle shadows on a character subtree */
+function enableShadows(obj) {
+  obj.traverse(m => {
+    if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; }
+  });
+}
+
 /* 學長 — 站前門外打電話, 略偏 左前 */
 const senior = buildSenior();
 senior.position.set(1.6, 0, -2.5);
 senior.rotation.y = -Math.PI / 2.4;  /* 朝向後門方向看 */
+enableShadows(senior);
 scene.add(senior);
 
-/* 學妹 — 從後門走出, lead */
+/* 學妹 — 從後門走出, lead — slight contrapposto: head tilt + body lean */
 const junior = buildJunior();
 junior.position.set(3.0, 0, -7.8);
 junior.rotation.y = -Math.PI / 1.6;  /* 朝鏡頭+前門方向 */
+/* asymmetric stance — natural standing weight on one leg */
+if (junior.userData.head) junior.userData.head.rotation.z = 0.08;
+if (junior.userData.body) {
+  junior.userData.body.rotation.z = -0.04;
+  if (junior.userData.body.userData.armL) junior.userData.body.userData.armL.rotation.z = 0.18;
+  if (junior.userData.body.userData.armR) junior.userData.body.userData.armR.rotation.z = -0.06;
+}
+enableShadows(junior);
 scene.add(junior);
 
 /* 4 同學 在學妹旁邊 */
@@ -973,6 +1165,7 @@ for (let i = 0; i < 4; i++) {
   const f = buildFriend(friendOpts[i]);
   f.position.set(friendPositions[i].x, 0, friendPositions[i].z);
   f.rotation.y = -Math.PI / 1.5 + (Math.random() - 0.5) * 0.4;
+  enableShadows(f);
   scene.add(f);
   friends.push(f);
 }
@@ -1138,6 +1331,13 @@ scene.add(godRays);
 const sun = new THREE.DirectionalLight(0xffd388, 1.55);
 sun.position.set(0, 4.5, -15);
 sun.target.position.set(0, 1.2, 0);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+sun.shadow.camera.left = -7;  sun.shadow.camera.right = 7;
+sun.shadow.camera.top = 6;    sun.shadow.camera.bottom = -2;
+sun.shadow.camera.near = 0.5; sun.shadow.camera.far = 28;
+sun.shadow.bias = -0.0004;
+sun.shadow.normalBias = 0.02;
 scene.add(sun, sun.target);
 const ambient = new THREE.AmbientLight(0x4a3024, 0.42);
 scene.add(ambient);
@@ -1320,12 +1520,27 @@ function updateLegendUI() {
 }
 
 let paused = false;
+/* Camera lock — sweep (default auto pan) vs junior/senior close-ups (fixed) */
+const camLock = { mode: 'sweep' };
 const pauseInd = document.getElementById('pauseIndicator');
 document.addEventListener('keydown', function (e) {
   switch (e.code) {
     case 'KeyP': paused = !paused; pauseInd.classList.toggle('show', paused); break;
     case 'KeyR':
+      camLock.mode = 'sweep';
       cam.position.set(0.4, 1.62, 4.2); cam.lookAt(0, 1.45, -2);
+      break;
+    case 'KeyC':
+      /* close-up on junior — inspect skin SSS / hair strands / hand fingers / cloth wrinkles */
+      camLock.mode = 'junior';
+      cam.position.set(2.6, 1.55, -7.0);
+      cam.lookAt(3.0, 1.5, -7.8);
+      break;
+    case 'KeyS':
+      /* close-up on senior — inspect glasses, pompadour strands, phone-call pose */
+      camLock.mode = 'senior';
+      cam.position.set(0.7, 1.55, -1.4);
+      cam.lookAt(1.6, 1.5, -2.5);
       break;
     case 'Digit1': FX.floor = !FX.floor; applyFX(); break;
     case 'Digit2': FX.godRays = !FX.godRays; applyFX(); break;
@@ -1395,11 +1610,22 @@ function loop() {
     });
   }
 
-  /* camera breathing — 緩慢漂浮 + 微 dolly */
-  cam.position.x = 0.4 + Math.sin(elapsed * 0.18) * 0.18;
-  cam.position.y = 1.62 + Math.sin(elapsed * 0.32) * 0.045;
-  cam.position.z = 4.2 + Math.sin(elapsed * 0.12) * 0.4;
-  cam.lookAt(Math.sin(elapsed * 0.1) * 0.18, 1.45, -2);
+  /* camera breathing — 緩慢漂浮 + 微 dolly (sweep mode only; close-ups stay fixed) */
+  if (camLock.mode === 'sweep') {
+    cam.position.x = 0.4 + Math.sin(elapsed * 0.18) * 0.18;
+    cam.position.y = 1.62 + Math.sin(elapsed * 0.32) * 0.045;
+    cam.position.z = 4.2 + Math.sin(elapsed * 0.12) * 0.4;
+    cam.lookAt(Math.sin(elapsed * 0.1) * 0.18, 1.45, -2);
+  } else if (camLock.mode === 'junior') {
+    /* micro hover for life — re-lookAt every frame */
+    cam.position.x = 2.6 + Math.sin(elapsed * 0.5) * 0.04;
+    cam.position.y = 1.55 + Math.sin(elapsed * 0.7) * 0.015;
+    cam.lookAt(3.0, 1.5, -7.8);
+  } else if (camLock.mode === 'senior') {
+    cam.position.x = 0.7 + Math.sin(elapsed * 0.5) * 0.04;
+    cam.position.y = 1.55 + Math.sin(elapsed * 0.7) * 0.015;
+    cam.lookAt(1.6, 1.5, -2.5);
+  }
 
   /* god ray 平面 always face camera */
   godRays.children.forEach(function (layer, i) {
