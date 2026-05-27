@@ -61,8 +61,8 @@
     </div>
   </div>
   <div class="stats" id="stats">FPS: -- · Tri: -- · Char: 6</div>
-  <!-- 時空手錶 HUD — 命運阿嬤送的禮物 (EP21+) -->
-  <div id="timeWatch" style="position:absolute; top:14px; right:14px; background:rgba(8,6,10,.78); backdrop-filter:blur(10px); padding:10px 16px; border:1px solid rgba(218,184,168,.30); border-radius:4px; font-family:'DM Mono',monospace; font-size:11px; color:rgba(255,220,200,.92); letter-spacing:.16em; pointer-events:none; min-width:200px; text-align:center; opacity:0; transition:opacity .6s;">
+  <!-- 時空手錶 HUD — 命運阿嬤送的禮物 (EP21+) — top:64px 避開「回」按鈕 (Codex r2) -->
+  <div id="timeWatch" style="position:absolute; top:64px; right:14px; background:rgba(8,6,10,.78); backdrop-filter:blur(10px); padding:10px 16px; border:1px solid rgba(218,184,168,.30); border-radius:4px; font-family:'DM Mono',monospace; font-size:11px; color:rgba(255,220,200,.92); letter-spacing:.16em; pointer-events:none; min-width:200px; text-align:center; opacity:0; transition:opacity .6s;">
     <div style="font-size:9px; opacity:.6; margin-bottom:3px; letter-spacing:.3em;">⏱ 時空手錶</div>
     <div id="timeWatchTs" style="font-size:14px; letter-spacing:.08em;">2005-10-17 11:00:00</div>
     <div id="timeWatchSub" style="font-size:9px; opacity:.55; margin-top:3px; letter-spacing:.2em;">紅線 · 命中注定</div>
@@ -70,6 +70,14 @@
   <!-- 旁白 caption — 女兒視角 (EP21-23) -->
   <div id="narration" style="position:absolute; left:50%; bottom:78px; transform:translateX(-50%); max-width:78%; background:linear-gradient(to bottom, rgba(8,6,10,.4), rgba(8,6,10,.88)); padding:18px 32px; font-family:'Noto Serif TC',serif; font-size:15px; line-height:1.75; color:rgba(255,238,216,.96); letter-spacing:.06em; text-align:center; pointer-events:none; opacity:0; transition:opacity .8s; border-left:2px solid rgba(228,70,80,.6); border-right:2px solid rgba(228,70,80,.6);">
     <span id="narrationText"></span>
+  </div>
+  <!-- 行動裝置觸控 UI — N/R/C/S 鍵的觸控等價 (Codex r4: 手機無觸控操作) -->
+  <div id="touchPad" style="position:absolute; right:14px; bottom:14px; display:flex; flex-direction:column; gap:6px; pointer-events:auto;">
+    <button data-key="KeyN" aria-label="敘事模式" style="width:48px; height:48px; border-radius:24px; border:1px solid rgba(228,70,80,.55); background:rgba(228,70,80,.18); color:rgba(255,220,200,.95); font-family:'DM Mono',monospace; font-size:14px; font-weight:bold; backdrop-filter:blur(8px); cursor:pointer;">N</button>
+    <button data-key="KeyR" aria-label="全景" style="width:48px; height:48px; border-radius:24px; border:1px solid rgba(218,184,168,.32); background:rgba(8,6,10,.62); color:rgba(238,232,220,.85); font-family:'DM Mono',monospace; font-size:14px; backdrop-filter:blur(8px); cursor:pointer;">R</button>
+    <button data-key="KeyC" aria-label="學妹特寫" style="width:48px; height:48px; border-radius:24px; border:1px solid rgba(218,184,168,.32); background:rgba(8,6,10,.62); color:rgba(238,232,220,.85); font-family:'DM Mono',monospace; font-size:14px; backdrop-filter:blur(8px); cursor:pointer;">C</button>
+    <button data-key="KeyS" aria-label="學長特寫" style="width:48px; height:48px; border-radius:24px; border:1px solid rgba(218,184,168,.32); background:rgba(8,6,10,.62); color:rgba(238,232,220,.85); font-family:'DM Mono',monospace; font-size:14px; backdrop-filter:blur(8px); cursor:pointer;">S</button>
+    <button data-key="KeyP" aria-label="暫停" style="width:48px; height:48px; border-radius:24px; border:1px solid rgba(218,184,168,.32); background:rgba(8,6,10,.62); color:rgba(238,232,220,.85); font-family:'DM Mono',monospace; font-size:14px; backdrop-filter:blur(8px); cursor:pointer;">P</button>
   </div>
 </div>
 <div class="pause-indicator" id="pauseIndicator">⏸ 已暫停</div>
@@ -1591,8 +1599,11 @@ class PostFX {
     this.matFinal = this.makeFinalMat();
   }
   makeRT(scale, withDepth) {
-    const w = Math.floor(innerWidth * (devicePixelRatio || 1) * scale);
-    const h = Math.floor(innerHeight * (devicePixelRatio || 1) * scale);
+    /* Clamp DPR to 2 — must match renderer.setPixelRatio above. Otherwise iPhone
+     * (DPR=3) creates 6 HalfFloat RTs at 9x size → ~600MB VRAM (Codex r1 catch). */
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    const w = Math.floor(innerWidth * dpr * scale);
+    const h = Math.floor(innerHeight * dpr * scale);
     const opts = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, type: THREE.HalfFloatType };
     if (withDepth) {
       const dt = new THREE.DepthTexture(w, h);
@@ -1603,13 +1614,15 @@ class PostFX {
     return new THREE.WebGLRenderTarget(w, h, opts);
   }
   resize() {
-    this.rtMain.setSize(innerWidth * (devicePixelRatio || 1), innerHeight * (devicePixelRatio || 1));
-    this.rtBlurA.setSize(innerWidth * (devicePixelRatio || 1) * 0.5, innerHeight * (devicePixelRatio || 1) * 0.5);
-    this.rtBlurB.setSize(innerWidth * (devicePixelRatio || 1) * 0.5, innerHeight * (devicePixelRatio || 1) * 0.5);
-    this.rtDofA.setSize(innerWidth * (devicePixelRatio || 1) * 0.5, innerHeight * (devicePixelRatio || 1) * 0.5);
-    this.rtDofB.setSize(innerWidth * (devicePixelRatio || 1) * 0.5, innerHeight * (devicePixelRatio || 1) * 0.5);
-    this.rtSSAO.setSize(innerWidth * (devicePixelRatio || 1) * 0.5, innerHeight * (devicePixelRatio || 1) * 0.5);
-    this.rtSSAOBlur.setSize(innerWidth * (devicePixelRatio || 1) * 0.5, innerHeight * (devicePixelRatio || 1) * 0.5);
+    /* Same DPR clamp as makeRT — keep all post-fx targets in sync with renderer */
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    this.rtMain.setSize(innerWidth * dpr, innerHeight * dpr);
+    this.rtBlurA.setSize(innerWidth * dpr * 0.5, innerHeight * dpr * 0.5);
+    this.rtBlurB.setSize(innerWidth * dpr * 0.5, innerHeight * dpr * 0.5);
+    this.rtDofA.setSize(innerWidth * dpr * 0.5, innerHeight * dpr * 0.5);
+    this.rtDofB.setSize(innerWidth * dpr * 0.5, innerHeight * dpr * 0.5);
+    this.rtSSAO.setSize(innerWidth * dpr * 0.5, innerHeight * dpr * 0.5);
+    this.rtSSAOBlur.setSize(innerWidth * dpr * 0.5, innerHeight * dpr * 0.5);
   }
   /* SSAO — sample 8 hemispheric points around each pixel; count those occluded by deeper geometry */
   makeSSAOMat() {
@@ -1853,7 +1866,8 @@ function applyFX() {
   floor.material = FX.floor ? floorMat : floorPlainMat;
   godRays.visible = FX.godRays;
   dust.visible = FX.dust;
-  redLine.visible = FX.redLine;
+  /* 月台舊紅線在 narrative 模式關掉,避免跟 LM402-narrative 紅線疊圖 (Codex r5) */
+  redLine.visible = FX.redLine && !narrative.active;
   updateLegendUI();
 }
 function updateLegendUI() {
@@ -2457,7 +2471,18 @@ document.addEventListener('keydown', function (e) {
       narrative.noteSlips.forEach(s => { s.material.opacity = 0; });
       if (narrative.spaceLightning) narrative.spaceLightning.material.opacity = 0;
     }
+    /* 重新跑 applyFX 讓舊紅線可見性跟著 narrative.active 翻面 (Codex r5) */
+    applyFX();
   }
+});
+
+/* 觸控 UI dispatcher — pointerdown 比 click 反應快,並用 e.preventDefault 避免 mobile 雙觸 */
+document.querySelectorAll('#touchPad button').forEach((btn) => {
+  btn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    const code = btn.dataset.key;
+    if (code) document.dispatchEvent(new KeyboardEvent('keydown', { code, bubbles: true }));
+  });
 });
 
 applyFX();
