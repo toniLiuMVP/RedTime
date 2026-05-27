@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v15-20260606';  // unchanged: GLB / vendor 無變動
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v48-20260527';  // bumped: add meta tags (description / og / twitter / theme-color / color-scheme) to tech-demo and campus-tour so they share the social and dark-theme polish of the other pages
+const RUNTIME_VERSION = 'runtime-v49-20260527';  // bumped: tech-demo realism push — sculpted icosahedron head with cheekbone / jaw / brow ridge / eye socket / nose bridge vertex displacement; 5-layer eyes (sclera + cornea with transmission + procedural iris texture + pupil + catch light) + upper/lower lids + eyelash strands; multi-part ears; lathe-generated nose with nostrils; upper / lower lips with cleft; strand-based hair (60+ cylinders for senior pompadour + side trim + back; 60+ cylinders for junior long hair with sway)
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;

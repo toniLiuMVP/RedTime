@@ -267,104 +267,406 @@ function makeSkinMaterial(baseColor) {
   });
 }
 
+/* 程序生成虹膜紋路 texture — radial gradient + 隨機 streaks */
+function makeIrisTexture(baseHex) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const ctx = c.getContext('2d');
+  const col = new THREE.Color(baseHex);
+  const r0 = Math.round(col.r * 255), g0 = Math.round(col.g * 255), b0 = Math.round(col.b * 255);
+  /* 環境暈染:深 ↔ 中 ↔ 邊緣暗環 */
+  const grd = ctx.createRadialGradient(64, 64, 6, 64, 64, 60);
+  grd.addColorStop(0,   `rgb(${Math.round(r0*0.32)}, ${Math.round(g0*0.32)}, ${Math.round(b0*0.32)})`);
+  grd.addColorStop(0.55, `rgb(${r0}, ${g0}, ${b0})`);
+  grd.addColorStop(0.92, `rgb(${Math.round(r0*0.7)}, ${Math.round(g0*0.7)}, ${Math.round(b0*0.7)})`);
+  grd.addColorStop(1,   `rgb(${Math.round(r0*0.25)}, ${Math.round(g0*0.25)}, ${Math.round(b0*0.25)})`);
+  ctx.fillStyle = grd; ctx.fillRect(0, 0, 128, 128);
+  /* 放射 streak (32 條) */
+  ctx.lineWidth = 0.8;
+  for (let a = 0; a < 36; a++) {
+    const ang = (a / 36) * Math.PI * 2 + (Math.random() - 0.5) * 0.18;
+    const inner = 10 + Math.random() * 4;
+    const outer = 50 + Math.random() * 8;
+    const alpha = 0.18 + Math.random() * 0.3;
+    ctx.strokeStyle = `rgba(${Math.min(255, Math.round(r0*1.4))}, ${Math.min(255, Math.round(g0*1.4))}, ${Math.min(255, Math.round(b0*1.4))}, ${alpha})`;
+    ctx.beginPath();
+    ctx.moveTo(64 + Math.cos(ang) * inner, 64 + Math.sin(ang) * inner);
+    ctx.lineTo(64 + Math.cos(ang) * outer, 64 + Math.sin(ang) * outer);
+    ctx.stroke();
+  }
+  /* 邊緣 limbal ring (暗環) */
+  ctx.strokeStyle = `rgba(${Math.round(r0*0.3)}, ${Math.round(g0*0.3)}, ${Math.round(b0*0.3)}, 0.55)`;
+  ctx.lineWidth = 2.2;
+  ctx.beginPath(); ctx.arc(64, 64, 56, 0, Math.PI * 2); ctx.stroke();
+  return c;
+}
+
+/* 5-layer 真實眼 — sclera + cornea (折射) + iris (procedural) + pupil + eyelashes */
+function buildEye(opts, side) {
+  const g = new THREE.Group();
+  const skinMat = makeSkinMaterial(opts.skinColor || 0xe8c8b0);
+  /* sclera (眼白) — 球體 */
+  const sclera = new THREE.Mesh(
+    new THREE.SphereGeometry(0.026, 18, 14),
+    new THREE.MeshStandardMaterial({ color: 0xf8f5ee, roughness: 0.26, metalness: 0.02 })
+  );
+  g.add(sclera);
+  /* 微 redness — sclera 外側淡紅 (vein hint via emissive tint) */
+  const veinTint = new THREE.Mesh(
+    new THREE.SphereGeometry(0.0258, 14, 10, 0, Math.PI, 0, Math.PI),
+    new THREE.MeshStandardMaterial({ color: 0xf8e8d8, roughness: 0.32, transparent: true, opacity: 0.4 })
+  );
+  veinTint.rotation.y = side * Math.PI / 6;
+  g.add(veinTint);
+  /* cornea (角膜) — 透明凸起,折射感 */
+  const cornea = new THREE.Mesh(
+    new THREE.SphereGeometry(0.015, 14, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+    new THREE.MeshPhysicalMaterial({
+      color: 0xddeef2, transparent: true, opacity: 0.32,
+      roughness: 0.05, metalness: 0, transmission: 0.55, ior: 1.376
+    })
+  );
+  cornea.position.z = 0.016;
+  g.add(cornea);
+  /* iris (虹膜) — 用 procedural texture */
+  const irisTex = new THREE.CanvasTexture(makeIrisTexture(opts.eyeColor || 0x4a2a14));
+  const iris = new THREE.Mesh(
+    new THREE.CircleGeometry(0.0098, 28),
+    new THREE.MeshStandardMaterial({ map: irisTex, roughness: 0.34, metalness: 0.08 })
+  );
+  iris.position.z = 0.022;
+  g.add(iris);
+  /* pupil (瞳孔) — 黑點 */
+  const pupil = new THREE.Mesh(
+    new THREE.CircleGeometry(0.0042, 18),
+    new THREE.MeshBasicMaterial({ color: 0x040404 })
+  );
+  pupil.position.z = 0.0224;
+  g.add(pupil);
+  /* highlight catch — 高光小白點(眼神光) */
+  const catchLight = new THREE.Mesh(
+    new THREE.CircleGeometry(0.0014, 12),
+    new THREE.MeshBasicMaterial({ color: 0xffffff })
+  );
+  catchLight.position.set(-0.0028 * side, 0.003, 0.0225);
+  g.add(catchLight);
+  /* 上眼瞼 (upper lid) — 厚 sphere segment */
+  const upperLid = new THREE.Mesh(
+    new THREE.SphereGeometry(0.029, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2.4),
+    skinMat
+  );
+  upperLid.scale.set(1, 0.42, 1);
+  upperLid.position.set(0, 0.005, 0.0015);
+  g.add(upperLid);
+  /* 下眼瞼 (lower lid) — 較薄 */
+  const lowerLid = new THREE.Mesh(
+    new THREE.SphereGeometry(0.028, 16, 10, 0, Math.PI * 2, Math.PI / 1.8, Math.PI / 3),
+    skinMat
+  );
+  lowerLid.scale.set(1, 0.32, 1);
+  lowerLid.position.set(0, -0.003, 0.0015);
+  g.add(lowerLid);
+  /* 眼睫毛 — 6 strand 細短 curved cylinder 朝上 */
+  const lashMat = new THREE.MeshBasicMaterial({ color: 0x0a0604 });
+  for (let i = 0; i < 6; i++) {
+    const t = (i / 5) - 0.5;  /* -0.5 ~ +0.5 */
+    const lash = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.0006, 0.00018, 0.009, 4),
+      lashMat
+    );
+    lash.position.set(t * 0.024, 0.014, 0.019);
+    lash.rotation.x = -0.45;
+    lash.rotation.z = t * 0.35;
+    g.add(lash);
+  }
+  g.position.set(side * 0.048, 0.022, 0.105);
+  return g;
+}
+
+/* sculpted head — 細分 icosahedron + 5 區域 vertex 位移 */
 function buildHead(opts) {
   const g = new THREE.Group();
   g.userData.kind = 'head';
-  const skinMat = makeSkinMaterial(opts.skinColor || 0xe8c8b0);
-  /* 頭 — slightly elongated sphere */
-  const headGeo = new THREE.SphereGeometry(0.135, 28, 22);
-  headGeo.scale(1.0, 1.16, 1.0);
+  const skinColor = opts.skinColor || 0xe8c8b0;
+  const skinMat = makeSkinMaterial(skinColor);
+  /* === 1. 雕刻 head shape — start with subdivided icosahedron === */
+  const headGeo = new THREE.IcosahedronGeometry(0.13, 4);
+  const pos = headGeo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    let x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+    /* 縱向 elongate */
+    y *= 1.16;
+    /* 後腦勺 — z<0 拉長 */
+    if (z < 0) z *= 1.18;
+    /* 顴骨 cheekbone — 在臉側 y~-0.02, |x|>0.06, z>0.05 推外 */
+    if (Math.abs(x) > 0.06 && y > -0.08 && y < 0.05 && z > 0.04) {
+      const cheekW = 1 - Math.abs((y + 0.02)) / 0.07;
+      x += Math.sign(x) * cheekW * 0.014;
+    }
+    /* 下巴 jaw — taper bottom inward */
+    if (y < -0.04) {
+      const t = (0.13 + y) / 0.09;
+      const tap = 0.88 + 0.12 * Math.max(0, t);
+      x *= tap;
+      z *= tap;
+    }
+    /* 額頭 forehead — 微 flatten */
+    if (y > 0.08 && z > 0.07) z *= 0.96;
+    /* 眼窩 eye socket — 內凹 */
+    const eyeDistL = Math.sqrt((x + 0.05) ** 2 + (y - 0.025) ** 2);
+    const eyeDistR = Math.sqrt((x - 0.05) ** 2 + (y - 0.025) ** 2);
+    const minD = Math.min(eyeDistL, eyeDistR);
+    if (minD < 0.038 && z > 0.07) {
+      const amt = (1 - minD / 0.038) * 0.014;
+      z -= amt;
+    }
+    /* 鼻樑 bridge — 中央前推 */
+    if (Math.abs(x) < 0.018 && y > -0.04 && y < 0.04 && z > 0.1) {
+      z += (1 - Math.abs(y) / 0.04) * 0.013;
+    }
+    /* 嘴周 (philtrum + 唇下) — 微 inward */
+    if (y < -0.04 && y > -0.075 && z > 0.1) z -= 0.006;
+    /* 下巴尖 chin — 凸 */
+    if (y < -0.08 && Math.abs(x) < 0.04) z += 0.008;
+    pos.setXYZ(i, x, y, z);
+  }
+  headGeo.computeVertexNormals();
   const head = new THREE.Mesh(headGeo, skinMat);
   g.add(head);
-  /* 耳 */
-  const earGeo = new THREE.SphereGeometry(0.028, 10, 8);
-  earGeo.scale(1, 1.4, 0.5);
-  const earL = new THREE.Mesh(earGeo, skinMat); earL.position.set(-0.135, 0.02, 0); g.add(earL);
-  const earR = new THREE.Mesh(earGeo, skinMat); earR.position.set(0.135, 0.02, 0); g.add(earR);
-  /* 鼻 */
-  const noseGeo = new THREE.ConeGeometry(0.02, 0.05, 8);
+  /* === 2. 耳 — 多 part: 外輪廓 + 內凹 === */
+  function buildEar(side) {
+    const eg = new THREE.Group();
+    /* 外耳輪 */
+    const outerGeo = new THREE.SphereGeometry(0.028, 12, 10);
+    outerGeo.scale(0.8, 1.5, 0.5);
+    const outer = new THREE.Mesh(outerGeo, skinMat);
+    eg.add(outer);
+    /* 內凹 (concha) — 較深陰影 */
+    const innerMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(skinColor).multiplyScalar(0.7), roughness: 0.85 });
+    const innerGeo = new THREE.SphereGeometry(0.018, 10, 8);
+    innerGeo.scale(0.7, 1.2, 0.3);
+    const inner = new THREE.Mesh(innerGeo, innerMat);
+    inner.position.set(side * 0.005, 0, 0.012);
+    eg.add(inner);
+    /* 耳垂 (lobe) */
+    const lobe = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), skinMat);
+    lobe.position.set(side * -0.005, -0.028, 0);
+    eg.add(lobe);
+    eg.position.set(side * 0.135, 0.012, 0);
+    return eg;
+  }
+  g.add(buildEar(-1));
+  g.add(buildEar(1));
+  /* === 3. 鼻 lathe — 用 LatheGeometry 旋轉 profile 形成立體鼻 === */
+  const nosePoints = [
+    new THREE.Vector2(0.000, 0.000),
+    new THREE.Vector2(0.008, 0.005),
+    new THREE.Vector2(0.012, 0.015),
+    new THREE.Vector2(0.014, 0.030),
+    new THREE.Vector2(0.012, 0.045),
+    new THREE.Vector2(0.005, 0.055),
+    new THREE.Vector2(0.000, 0.058)
+  ];
+  const noseGeo = new THREE.LatheGeometry(nosePoints, 18);
+  noseGeo.rotateX(Math.PI / 2);
+  noseGeo.translate(0, -0.018, 0.13);
   const nose = new THREE.Mesh(noseGeo, skinMat);
-  nose.position.set(0, -0.005, 0.122); nose.rotation.x = Math.PI / 2; g.add(nose);
-  /* 眼白 + 瞳 */
-  const eyeWhiteMat = new THREE.MeshStandardMaterial({ color: 0xfafafa, roughness: 0.32 });
-  const irisMat = new THREE.MeshStandardMaterial({ color: opts.eyeColor || 0x3a2010, roughness: 0.5 });
-  const eyeGeo = new THREE.SphereGeometry(0.024, 14, 12);
-  const irisGeo = new THREE.SphereGeometry(0.012, 12, 10);
-  const eyeL = new THREE.Mesh(eyeGeo, eyeWhiteMat); eyeL.position.set(-0.048, 0.028, 0.108); g.add(eyeL);
-  const eyeR = new THREE.Mesh(eyeGeo, eyeWhiteMat); eyeR.position.set(0.048, 0.028, 0.108); g.add(eyeR);
-  const irisL = new THREE.Mesh(irisGeo, irisMat); irisL.position.set(-0.048, 0.025, 0.126); g.add(irisL);
-  const irisR = new THREE.Mesh(irisGeo, irisMat); irisR.position.set(0.048, 0.025, 0.126); g.add(irisR);
-  /* 眉 — thin curved boxes */
-  const browMat = new THREE.MeshStandardMaterial({ color: 0x1a0c06, roughness: 0.85 });
-  const browGeo = new THREE.BoxGeometry(0.058, 0.008, 0.005);
-  const browL = new THREE.Mesh(browGeo, browMat); browL.position.set(-0.048, 0.068, 0.122); browL.rotation.z = 0.08; g.add(browL);
-  const browR = new THREE.Mesh(browGeo, browMat); browR.position.set(0.048, 0.068, 0.122); browR.rotation.z = -0.08; g.add(browR);
-  /* 嘴 — small box curved-ish */
-  const mouthMat = new THREE.MeshStandardMaterial({ color: 0xb05060, roughness: 0.55 });
-  const mouthGeo = new THREE.BoxGeometry(0.062, 0.006, 0.004);
-  const mouth = new THREE.Mesh(mouthGeo, mouthMat);
-  mouth.position.set(0, -0.058, 0.122); g.add(mouth);
-  /* 下巴陰影 — extra emissive subtractor (用更深 sphere segment 模擬) */
-  const chinShade = new THREE.Mesh(
-    new THREE.SphereGeometry(0.12, 14, 8, 0, Math.PI * 2, Math.PI / 2.4, Math.PI / 6),
-    new THREE.MeshStandardMaterial({ color: new THREE.Color(opts.skinColor || 0xe8c8b0).multiplyScalar(0.75), roughness: 0.85 })
+  g.add(nose);
+  /* 鼻孔 — 兩個小暗點 */
+  const nostrilMat = new THREE.MeshStandardMaterial({ color: 0x4a2818, roughness: 0.9 });
+  for (let s of [-1, 1]) {
+    const nostril = new THREE.Mesh(new THREE.SphereGeometry(0.0035, 8, 6), nostrilMat);
+    nostril.position.set(s * 0.007, -0.038, 0.142);
+    g.add(nostril);
+  }
+  /* === 4. 真實眼睛 === */
+  const eyeL = buildEye(opts, -1);
+  const eyeR = buildEye(opts, 1);
+  g.add(eyeL); g.add(eyeR);
+  /* === 5. 眉毛 — 多 strand 模擬 (每邊 9 條短 cylinder) === */
+  const browMat = new THREE.MeshStandardMaterial({ color: 0x180b04, roughness: 0.78 });
+  for (let s of [-1, 1]) {
+    for (let i = 0; i < 9; i++) {
+      const t = (i / 8) - 0.5;  /* -0.5 ~ +0.5 */
+      const strand = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.0014, 0.0006, 0.012, 4),
+        browMat
+      );
+      const baseX = s * (0.05 + t * 0.025);
+      strand.position.set(baseX, 0.063 + Math.abs(t) * 0.005, 0.122);
+      strand.rotation.x = Math.PI / 2;
+      strand.rotation.z = s * 0.12 - t * 0.4;
+      g.add(strand);
+    }
+  }
+  /* === 6. 嘴 — 上下唇 (兩 curved sliver) + 唇縫 === */
+  const lipUpperMat = new THREE.MeshStandardMaterial({ color: 0xb86068, roughness: 0.5 });
+  const lipLowerMat = new THREE.MeshStandardMaterial({ color: 0xc66878, roughness: 0.48 });
+  /* 上唇 — slight arch */
+  const upperLipGeo = new THREE.SphereGeometry(0.022, 14, 8, 0, Math.PI, 0, Math.PI / 2);
+  upperLipGeo.scale(1.4, 0.32, 0.55);
+  const upperLip = new THREE.Mesh(upperLipGeo, lipUpperMat);
+  upperLip.position.set(0, -0.054, 0.124);
+  upperLip.rotation.x = -0.15;
+  g.add(upperLip);
+  /* 下唇 — 較豐潤 */
+  const lowerLipGeo = new THREE.SphereGeometry(0.024, 14, 8, 0, Math.PI, Math.PI / 2, Math.PI / 2);
+  lowerLipGeo.scale(1.35, 0.42, 0.65);
+  const lowerLip = new THREE.Mesh(lowerLipGeo, lipLowerMat);
+  lowerLip.position.set(0, -0.064, 0.124);
+  g.add(lowerLip);
+  /* 唇縫 line */
+  const mouthLine = new THREE.Mesh(
+    new THREE.BoxGeometry(0.038, 0.0008, 0.001),
+    new THREE.MeshBasicMaterial({ color: 0x5a2828 })
   );
-  chinShade.position.y = -0.05;
+  mouthLine.position.set(0, -0.0595, 0.133);
+  g.add(mouthLine);
+  /* === 7. 下巴陰影 (subtle warm gradient) === */
+  const chinShade = new THREE.Mesh(
+    new THREE.SphereGeometry(0.118, 16, 10, 0, Math.PI * 2, Math.PI / 2.5, Math.PI / 6),
+    new THREE.MeshStandardMaterial({ color: new THREE.Color(skinColor).multiplyScalar(0.78), roughness: 0.88 })
+  );
+  chinShade.position.y = -0.06;
   g.add(chinShade);
-  g.userData.eyes = { L: eyeL, R: eyeR, irisL: irisL, irisR: irisR };
+  /* 脖子 connector (subtle skin column) — 已由 body 處理, 此處只 face 區塊 */
+  g.userData.eyes = { L: eyeL, R: eyeR };
   return g;
 }
 
-/* 學長 飛機頭 */
+/* 學長 飛機頭 — strand-based (60+ 條 cylinder 模擬髮絲), 上翻 quiff 由 strand grouping 形成 */
 function buildSeniorHair() {
   const g = new THREE.Group();
-  const hairMat = new THREE.MeshStandardMaterial({ color: 0x100804, roughness: 0.42, metalness: 0.22 });
-  /* base cap */
-  const baseGeo = new THREE.SphereGeometry(0.14, 22, 18, 0, Math.PI * 2, 0, Math.PI / 2.1);
-  const base = new THREE.Mesh(baseGeo, hairMat); base.position.y = 0.005; g.add(base);
-  /* 飛機頭 quiff — 前髮 上翻立起 */
-  const quiff = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.11, 10), hairMat);
-  quiff.position.set(0, 0.14, 0.06); quiff.rotation.x = -0.42; g.add(quiff);
-  /* 側髮 trim — 短層 */
+  const hairMat = new THREE.MeshStandardMaterial({ color: 0x0a0402, roughness: 0.42, metalness: 0.22 });
+  const hairMat2 = new THREE.MeshStandardMaterial({ color: 0x140a04, roughness: 0.45, metalness: 0.18 });
+  /* 1. 頭皮 base (緊貼頭骨, 短) */
+  const baseGeo = new THREE.SphereGeometry(0.135, 22, 18, 0, Math.PI * 2, 0, Math.PI / 2.4);
+  const base = new THREE.Mesh(baseGeo, hairMat);
+  base.position.y = 0.003;
+  g.add(base);
+  /* 2. 飛機頭 quiff — 前髮 strands 上翻立起 */
+  const quiffMat = new THREE.MeshStandardMaterial({ color: 0x080300, roughness: 0.4, metalness: 0.28 });
+  for (let i = 0; i < 28; i++) {
+    const tx = (Math.random() - 0.5) * 0.085;
+    const tz = 0.04 + Math.random() * 0.045;
+    const len = 0.085 + Math.random() * 0.04;
+    const strand = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.0025, 0.0009, len, 5),
+      quiffMat
+    );
+    /* 從 額頭 anchor 升起,中央更高 */
+    const centerBias = 1 - Math.abs(tx) / 0.045;
+    strand.position.set(tx, 0.13 + centerBias * 0.04, tz);
+    /* upturn rotation */
+    strand.rotation.x = -0.45 - centerBias * 0.18 + (Math.random() - 0.5) * 0.12;
+    strand.rotation.z = tx * 1.8 + (Math.random() - 0.5) * 0.12;
+    g.add(strand);
+  }
+  /* 3. 側髮 short trim (兩側 18 strands) */
   for (let s of [-1, 1]) {
-    const trim = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.05, 0.08), hairMat);
-    trim.position.set(s * 0.122, 0.025, 0.02); g.add(trim);
+    for (let i = 0; i < 18; i++) {
+      const yOff = -0.02 + (i / 18) * 0.1;
+      const zOff = -0.05 + Math.random() * 0.12;
+      const strand = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.0018, 0.0007, 0.04 + Math.random() * 0.02, 4),
+        hairMat
+      );
+      strand.position.set(s * (0.118 + Math.random() * 0.02), yOff, zOff);
+      strand.rotation.x = (Math.random() - 0.5) * 0.3;
+      strand.rotation.z = s * (0.22 + (Math.random() - 0.5) * 0.18);
+      g.add(strand);
+    }
+  }
+  /* 4. 後腦勺 strands (30 條) — 沿後半球分布 */
+  for (let i = 0; i < 30; i++) {
+    const ang = -Math.PI / 2 + (Math.random() - 0.5) * 1.4;
+    const yOff = -0.04 + Math.random() * 0.13;
+    const r = 0.132 + Math.random() * 0.012;
+    const x0 = Math.cos(ang) * r;
+    const z0 = Math.sin(ang) * r;
+    const strand = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.002, 0.0008, 0.045 + Math.random() * 0.02, 4),
+      hairMat2
+    );
+    strand.position.set(x0, yOff, z0);
+    strand.rotation.x = (Math.random() - 0.5) * 0.25;
+    strand.rotation.z = Math.cos(ang) * 0.45 + (Math.random() - 0.5) * 0.1;
+    g.add(strand);
   }
   return g;
 }
 
-/* 學妹 長髮 + 馬尾 hint */
+/* 學妹 長髮 — 60+ 條 strand 從頭頂往背後下垂, 12 條動態 sway 瀏海 */
 function buildJuniorHair() {
   const g = new THREE.Group();
   g.userData.kind = 'juniorHair';
-  const hairMat = new THREE.MeshStandardMaterial({ color: 0x180c08, roughness: 0.4, metalness: 0.2 });
-  /* 頭頂 cap */
-  const cap = new THREE.Mesh(new THREE.SphereGeometry(0.145, 22, 18, 0, Math.PI * 2, 0, Math.PI / 1.78), hairMat);
-  cap.position.y = -0.002; g.add(cap);
-  /* 長髮 panel — 後背一大片 */
-  const backGeo = new THREE.SphereGeometry(0.16, 16, 14, 0, Math.PI, Math.PI / 5, Math.PI / 2.2);
-  const back = new THREE.Mesh(backGeo, hairMat);
-  back.position.set(0, -0.15, -0.04);
-  back.scale.set(1.0, 2.6, 0.85);
-  back.rotation.y = Math.PI;
-  back.userData.sway = true;
-  g.add(back);
-  /* 側髮 strands (動態 sway) — 用 line strands 加 sway uniform */
-  const strands = [];
-  const strandMat = new THREE.MeshStandardMaterial({ color: 0x140a06, roughness: 0.4 });
-  for (let i = 0; i < 4; i++) {
-    const side = i < 2 ? -1 : 1;
-    const offset = (i % 2) * 0.03;
-    const strandGeo = new THREE.CylinderGeometry(0.008, 0.005, 0.36, 5);
-    const s = new THREE.Mesh(strandGeo, strandMat);
-    s.position.set(side * 0.14 + offset * side, -0.18, 0.04);
-    s.userData.baseX = s.position.x;
-    s.userData.basePhase = i;
-    s.userData.sway = true;
-    strands.push(s);
-    g.add(s);
+  const hairMat = new THREE.MeshStandardMaterial({ color: 0x150a06, roughness: 0.4, metalness: 0.2 });
+  const hairMat2 = new THREE.MeshStandardMaterial({ color: 0x1c1108, roughness: 0.42, metalness: 0.18 });
+  /* 1. 頭頂 cap (覆蓋頭皮) */
+  const cap = new THREE.Mesh(
+    new THREE.SphereGeometry(0.142, 24, 18, 0, Math.PI * 2, 0, Math.PI / 1.85),
+    hairMat
+  );
+  cap.position.y = -0.002;
+  g.add(cap);
+  /* 2. 長髮 strands (50 條 從頭頂後半圈下垂, 動態 sway) */
+  const longStrands = [];
+  for (let i = 0; i < 50; i++) {
+    /* 沿後半圈 (ang 從 -π/2 到 -3π/2 ≡ π/2~3π/2) random */
+    const ang = Math.PI / 2 + (Math.random() - 0.5) * 0.4 + ((i / 50) - 0.5) * Math.PI * 1.4;
+    const r = 0.135 + Math.random() * 0.018;
+    const x0 = Math.cos(ang) * r;
+    const z0 = Math.sin(ang) * r;
+    /* 長度隨機 0.35~0.50m */
+    const len = 0.36 + Math.random() * 0.14;
+    const strand = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.003, 0.0012, len, 6),
+      Math.random() > 0.5 ? hairMat : hairMat2
+    );
+    strand.position.set(x0, -len / 2 + 0.01, z0);
+    /* 微 outward + 微 forward random */
+    strand.rotation.x = (Math.random() - 0.5) * 0.18;
+    strand.rotation.z = x0 * 0.35 + (Math.random() - 0.5) * 0.12;
+    strand.userData.sway = true;
+    strand.userData.baseX = x0;
+    strand.userData.baseRotZ = strand.rotation.z;
+    strand.userData.basePhase = i * 0.13;
+    longStrands.push(strand);
+    g.add(strand);
   }
-  g.userData.strands = strands;
+  /* 3. 瀏海 (前髮) — 14 條短 strand 從額頭垂下 */
+  for (let i = 0; i < 14; i++) {
+    const tx = (Math.random() - 0.5) * 0.11;
+    const len = 0.06 + Math.random() * 0.04;
+    const strand = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.0025, 0.001, len, 5),
+      hairMat
+    );
+    strand.position.set(tx, 0.05 + (Math.random() - 0.5) * 0.02, 0.108 + Math.random() * 0.012);
+    strand.rotation.x = 0.55 + (Math.random() - 0.5) * 0.25;
+    strand.rotation.z = tx * 2.4 + (Math.random() - 0.5) * 0.15;
+    g.add(strand);
+  }
+  /* 4. 髮絲 hint — 兩側更外突幾條 (動態 sway, 框臉的長髮) */
+  for (let s of [-1, 1]) {
+    for (let i = 0; i < 4; i++) {
+      const len = 0.32 + Math.random() * 0.1;
+      const strand = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.0028, 0.001, len, 5),
+        hairMat
+      );
+      const baseX = s * (0.13 + Math.random() * 0.02);
+      strand.position.set(baseX, -len / 2 + 0.03, 0.03 + Math.random() * 0.04);
+      strand.rotation.z = s * 0.18 + (Math.random() - 0.5) * 0.1;
+      strand.userData.sway = true;
+      strand.userData.baseX = baseX;
+      strand.userData.baseRotZ = strand.rotation.z;
+      strand.userData.basePhase = i * 0.4 + (s > 0 ? Math.PI : 0);
+      longStrands.push(strand);
+      g.add(strand);
+    }
+  }
+  g.userData.strands = longStrands;
   return g;
 }
 
