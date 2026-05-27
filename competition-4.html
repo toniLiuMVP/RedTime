@@ -1024,74 +1024,128 @@ function buildGlasses() {
 
 /* 通用 body (上半 + 下半) */
 /* Palm + 5 finger cylinders — replaces the previous sphere hand */
+/* ═══════════════════════════════════════════════════════════════════
+   4 號 anatomy v2 — 解剖學特寫升級
+   ═══════════════════════════════════════════════════════════════════
+   Build a 3-segment finger (proximal + middle + distal phalanx) joined at
+   PIP + DIP joints, each segment with independent curl angle.
+   Real anatomy: thumb has 2 phalanges; fingers 2-5 have 3 each.
+   We model bend angle propagating ~60% from proximal to distal. */
+function buildPhalanxFinger(skinMat, nailMat, opts) {
+  const g = new THREE.Group();
+  /* Three segment proportions: 0.42 / 0.30 / 0.28 of total length (real human ratio) */
+  const segL = [opts.L * 0.42, opts.L * 0.30, opts.L * 0.28];
+  const segR = [opts.rB, opts.rB * 0.86, opts.rT];     /* taper smoothly */
+  const baseBend = opts.bend;
+  /* Per-segment bend: thumb only uses 2 segments (skip middle); fingers use all 3.
+   * PIP joint adds 1.4x base, DIP adds 1.8x — fingers naturally curl more at tips. */
+  const segBend = opts.thumb ? [baseBend, 0, baseBend * 1.3] : [baseBend, baseBend * 1.4, baseBend * 1.7];
+
+  let parent = g;
+  for (let i = 0; i < 3; i++) {
+    if (opts.thumb && i === 1) continue;   /* thumb: skip middle phalanx (anatomy) */
+    const seg = new THREE.Group();
+    const cyl = new THREE.CylinderGeometry(segR[i] * 0.92, segR[i], segL[i], 8);
+    cyl.translate(0, -segL[i] / 2, 0);
+    const mesh = new THREE.Mesh(cyl, skinMat);
+    seg.add(mesh);
+    /* knuckle joint sphere at base of this segment */
+    const jSize = segR[i] + 0.0009;
+    const joint = new THREE.Mesh(new THREE.SphereGeometry(jSize, 10, 8), skinMat);
+    seg.add(joint);
+    /* Each segment rotates relative to parent (compound curl) */
+    seg.rotation.x = segBend[i];
+    if (i > 0) seg.position.y = -segL[i - 1] + 0.001;  /* attach to previous segment tip */
+    parent.add(seg);
+    parent = seg;  /* chain */
+  }
+  /* Distal tip nail — placed at the tip of the last segment */
+  const nail = new THREE.Mesh(
+    new THREE.BoxGeometry(opts.rT * 1.5, 0.0008, opts.rT * 1.9, 1, 1, 2),
+    nailMat
+  );
+  /* Slight curve on nail using vertex displacement */
+  const np = nail.geometry.attributes.position;
+  for (let i = 0; i < np.count; i++) {
+    const z = np.getZ(i);
+    np.setY(i, np.getY(i) + Math.abs(z) * 0.04);
+  }
+  nail.geometry.computeVertexNormals();
+  nail.position.set(0, -segL[opts.thumb ? 0 : 2] + 0.001, 0.001);
+  nail.rotation.x = -0.2;
+  parent.add(nail);
+  /* Optional: fingerprint pad emissive hint on volar (palm-side) of distal */
+  const pad = new THREE.Mesh(
+    new THREE.SphereGeometry(opts.rT * 0.92, 8, 6),
+    skinMat
+  );
+  pad.scale.set(1, 0.4, 1.1);
+  pad.position.set(0, -segL[opts.thumb ? 0 : 2] * 0.5, -opts.rT * 0.3);
+  parent.add(pad);
+  return g;
+}
+
 function buildHand(skinMat, side) {
   const handG = new THREE.Group();
-  /* palm — rounded box (4 segments per side enables vertex smoothing) */
-  const palmGeo = new THREE.BoxGeometry(0.062, 0.018, 0.072, 3, 2, 3);
+  /* Palm — rounded box, slight ellipsoid contour for naturalness */
+  const palmGeo = new THREE.BoxGeometry(0.062, 0.020, 0.078, 4, 3, 4);
   const ppos = palmGeo.attributes.position;
   for (let i = 0; i < ppos.count; i++) {
     const x = ppos.getX(i), y = ppos.getY(i), z = ppos.getZ(i);
-    /* Smooth edges by scaling corner vertices toward an inscribed ellipsoid */
-    const nx = x / 0.031, ny = y / 0.009, nz = z / 0.036;
+    /* Ellipsoid round-off — also add a slight valley along center (palm cup) */
+    const nx = x / 0.031, ny = y / 0.010, nz = z / 0.039;
     const d = Math.sqrt(nx*nx + ny*ny + nz*nz);
     if (d > 0.95) {
       const k = 0.95 / d;
       ppos.setXYZ(i, x * (0.85 + 0.15*k), y * (0.85 + 0.15*k), z * (0.85 + 0.15*k));
     }
+    /* palmar concavity — slight inward cup on lower face (positive y is back of hand) */
+    if (y < -0.004 && Math.abs(x) < 0.025 && Math.abs(z) < 0.030) {
+      ppos.setY(i, y - 0.0025);  /* cup depth */
+    }
   }
   palmGeo.computeVertexNormals();
   const palm = new THREE.Mesh(palmGeo, skinMat);
   handG.add(palm);
-  /* knuckle ridge — slight bump at top */
-  const knuckle = new THREE.Mesh(new THREE.BoxGeometry(0.058, 0.005, 0.018), skinMat);
-  knuckle.position.set(0, 0.011, -0.024);
-  handG.add(knuckle);
-  /* 4 fingers (index→pinky) + thumb */
+
+  /* Metacarpal knuckle ridges — 4 small bumps at base of fingers (more anatomical) */
+  const nailMat = new THREE.MeshStandardMaterial({
+    color: 0xf8e4cf, roughness: 0.30, metalness: 0.10
+  });
+  const knuckles = [-0.022, -0.007, 0.008, 0.022];
+  knuckles.forEach((kx) => {
+    const k = new THREE.Mesh(
+      new THREE.SphereGeometry(0.0072, 10, 8),
+      skinMat
+    );
+    k.scale.set(1, 0.5, 0.85);
+    k.position.set(kx, 0.011, -0.028);
+    handG.add(k);
+  });
+
+  /* 4 fingers — each is now a 3-segment phalanx chain (Anatomy v2 upgrade) */
   const fingerSpecs = [
-    /* x offset,  base radius, tip radius, length, z offset (forward = -) */
-    { x: -0.022, rB: 0.0075, rT: 0.0058, L: 0.058, z: -0.038, bend: 0.10 },  /* index */
-    { x: -0.007, rB: 0.0078, rT: 0.006,  L: 0.062, z: -0.040, bend: 0.08 },  /* middle */
-    { x:  0.008, rB: 0.0075, rT: 0.0058, L: 0.058, z: -0.038, bend: 0.10 },  /* ring */
-    { x:  0.022, rB: 0.0068, rT: 0.0052, L: 0.048, z: -0.034, bend: 0.14 }   /* pinky */
+    { x: -0.022, rB: 0.0075, rT: 0.0058, L: 0.060, z: -0.038, bend: 0.12 },  /* index */
+    { x: -0.007, rB: 0.0078, rT: 0.0060, L: 0.064, z: -0.040, bend: 0.10 },  /* middle */
+    { x:  0.008, rB: 0.0075, rT: 0.0058, L: 0.060, z: -0.038, bend: 0.12 },  /* ring */
+    { x:  0.022, rB: 0.0068, rT: 0.0052, L: 0.050, z: -0.034, bend: 0.16 }   /* pinky */
   ];
   for (const f of fingerSpecs) {
-    const fingerG = new THREE.Group();
-    const fg = new THREE.CylinderGeometry(f.rT, f.rB, f.L, 8);
-    fg.translate(0, -f.L / 2, 0);
-    const finger = new THREE.Mesh(fg, skinMat);
-    /* slight curl forward */
-    finger.rotation.x = Math.PI / 2 + f.bend;
-    fingerG.add(finger);
-    /* knuckle joint */
-    const joint = new THREE.Mesh(new THREE.SphereGeometry(f.rB + 0.0008, 8, 6), skinMat);
-    fingerG.add(joint);
-    /* nail — small light box at tip */
-    const nail = new THREE.Mesh(
-      new THREE.BoxGeometry(f.rT * 1.4, 0.0006, f.rT * 1.8),
-      new THREE.MeshStandardMaterial({ color: 0xf8e4cf, roughness: 0.32, metalness: 0.08 })
-    );
-    /* place nail at the curved-forward tip — derived from rotated finger geometry */
-    const tipZ = f.z - Math.sin(f.bend) * f.L * 0.6 - Math.cos(f.bend) * 0.001;
-    const tipY = -Math.cos(f.bend) * f.L * 0.6 + 0.005;
-    nail.position.set(0, tipY, tipZ);
-    nail.rotation.x = -0.3 - f.bend;
-    fingerG.add(nail);
-    fingerG.position.set(f.x, 0.002, f.z * 0.0);  /* fingers attach at palm front */
-    fingerG.position.z = f.z;
-    handG.add(fingerG);
+    const finger = buildPhalanxFinger(skinMat, nailMat, f);
+    /* Whole finger pointing roughly forward (-z), then per-segment bend curls it */
+    finger.rotation.x = Math.PI / 2;
+    finger.position.set(f.x, 0.004, f.z);
+    handG.add(finger);
   }
-  /* thumb — offset to side, rotated outward */
-  const thumbG = new THREE.Group();
-  const thumbGeo = new THREE.CylinderGeometry(0.0062, 0.008, 0.048, 8);
-  thumbGeo.translate(0, -0.024, 0);
-  const thumb = new THREE.Mesh(thumbGeo, skinMat);
-  thumb.rotation.z = -side * 0.6;
-  thumb.rotation.x = 1.0;
-  thumbG.add(thumb);
-  const thumbJoint = new THREE.Mesh(new THREE.SphereGeometry(0.009, 8, 6), skinMat);
-  thumbG.add(thumbJoint);
-  thumbG.position.set(side * 0.028, -0.005, -0.012);
-  handG.add(thumbG);
+
+  /* Thumb — anatomically only 2 phalanges, offset to side + rotated outward */
+  const thumb = buildPhalanxFinger(skinMat, nailMat, {
+    L: 0.050, rB: 0.0082, rT: 0.0062, bend: 0.20, thumb: true
+  });
+  thumb.rotation.set(1.05, 0, -side * 0.65);
+  thumb.position.set(side * 0.028, -0.003, -0.012);
+  handG.add(thumb);
+
   return handG;
 }
 
@@ -1111,9 +1165,36 @@ function buildBody(opts) {
   const skinMat = makeSkinMaterial(opts.skinColor || 0xe8c8b0);
   const shoeMat = new THREE.MeshStandardMaterial({ color: opts.shoeColor || 0xf0e8d0, roughness: 0.85 });
 
-  /* 脖子 */
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.05, 0.08, 12), skinMat);
+  /* 脖子 — Anatomy v2:加 sternocleidomastoid 兩條肌肉脊 + 喉結 (學長 only) */
+  const neckGeo = new THREE.CylinderGeometry(0.045, 0.05, 0.08, 16, 6);
+  const npos = neckGeo.attributes.position;
+  for (let i = 0; i < npos.count; i++) {
+    const x = npos.getX(i), y = npos.getY(i), z = npos.getZ(i);
+    const r = Math.sqrt(x*x + z*z);
+    if (r < 0.001) continue;
+    const ang = Math.atan2(z, x);
+    /* SCM muscle bulge — two diagonal ridges at ±35° front, fade with height */
+    const scm1 = Math.exp(-Math.pow(ang - 0.61, 2) * 20) * 0.0028 * Math.max(0, 0.5 + y * 5);
+    const scm2 = Math.exp(-Math.pow(ang - (Math.PI - 0.61), 2) * 20) * 0.0028 * Math.max(0, 0.5 + y * 5);
+    const scl = 1 + (scm1 + scm2) / r;
+    npos.setXYZ(i, x * scl, y, z * scl);
+  }
+  neckGeo.computeVertexNormals();
+  const neck = new THREE.Mesh(neckGeo, skinMat);
   neck.position.y = 0.32; g.add(neck);
+  /* 喉結 (Adam's apple) — only for senior (male), positioned at neck front-center */
+  if (!opts.female) {
+    const adamGeo = new THREE.SphereGeometry(0.012, 12, 10);
+    const adamApos = adamGeo.attributes.position;
+    for (let i = 0; i < adamApos.count; i++) {
+      const x = adamApos.getX(i), y = adamApos.getY(i), z = adamApos.getZ(i);
+      adamApos.setXYZ(i, x * 1.4, y * 0.7, z * 0.7);   /* horizontally elongated */
+    }
+    adamGeo.computeVertexNormals();
+    const adam = new THREE.Mesh(adamGeo, skinMat);
+    adam.position.set(0, 0.32, 0.044);
+    g.add(adam);
+  }
   /* 軀幹 — taper bottom (腰較窄) — add cloth wrinkles via vertex displacement */
   const torsoGeo = new THREE.CylinderGeometry(0.14, opts.female ? 0.108 : 0.124, 0.45, 24, 12);
   /* shirt wrinkles — vertical fold lines + horizontal stretch ripples */
@@ -1134,24 +1215,103 @@ function buildBody(opts) {
   torsoGeo.computeVertexNormals();
   const torso = new THREE.Mesh(torsoGeo, shirtMat);
   torso.position.y = 0.05; g.add(torso);
-  /* 肩 connect spheres */
-  const shoulderL = new THREE.Mesh(new THREE.SphereGeometry(0.075, 14, 12), shirtMat);
+  /* 肩 — Anatomy v2:三角肌 (deltoid) 隆起的橢球肩,而非單純球 */
+  function makeDeltoid(side) {
+    const sg = new THREE.SphereGeometry(0.078, 16, 12);
+    const sp = sg.attributes.position;
+    for (let i = 0; i < sp.count; i++) {
+      const x = sp.getX(i), y = sp.getY(i), z = sp.getZ(i);
+      /* deltoid rounds outward (away from body) + tapers down to bicep */
+      const outFactor = (Math.sign(x) === Math.sign(side) || side === 0) ? 1.15 : 0.95;
+      sp.setXYZ(i, x * outFactor, y * 0.92, z * 1.05);
+    }
+    sg.computeVertexNormals();
+    return new THREE.Mesh(sg, shirtMat);
+  }
+  const shoulderL = makeDeltoid(-1);
   shoulderL.position.set(-0.158, 0.24, 0); g.add(shoulderL);
-  const shoulderR = new THREE.Mesh(new THREE.SphereGeometry(0.075, 14, 12), shirtMat);
+  const shoulderR = makeDeltoid(1);
   shoulderR.position.set(0.158, 0.24, 0); g.add(shoulderR);
 
-  /* 上臂 + 下臂 + 手 */
+  /* 鎖骨 ridge — 兩條淡淡的鎖骨突起,在肩窩前方 (Anatomy v2) */
+  for (const s of [-1, 1]) {
+    const claviGeo = new THREE.BoxGeometry(0.10, 0.014, 0.008, 4, 1, 1);
+    /* curve the clavicle slightly */
+    const cp = claviGeo.attributes.position;
+    for (let i = 0; i < cp.count; i++) {
+      const x = cp.getX(i), y = cp.getY(i);
+      cp.setY(i, y - Math.cos(x * 30) * 0.003);
+    }
+    claviGeo.computeVertexNormals();
+    const clavi = new THREE.Mesh(claviGeo, skinMat);
+    clavi.position.set(s * 0.08, 0.30, 0.115);
+    clavi.rotation.z = s * 0.18;   /* angle inward toward sternum */
+    g.add(clavi);
+  }
+
+  /* V-neck collar 變形 — 在 torso 頂部加 V 字型衣領缺口 (學長白 T) */
+  if (!opts.female) {
+    const collarGeo = new THREE.PlaneGeometry(0.08, 0.06, 4, 3);
+    const cgp = collarGeo.attributes.position.array;
+    /* V-shape: 中央 dip down,邊緣翹起 */
+    for (let i = 0; i < cgp.length; i += 3) {
+      const x = cgp[i];
+      cgp[i + 1] -= Math.abs(x) * 0.4 - 0.012;
+    }
+    collarGeo.computeVertexNormals();
+    const collar = new THREE.Mesh(collarGeo, shirtMat);
+    collar.position.set(0, 0.275, 0.121);
+    collar.rotation.x = -0.15;
+    g.add(collar);
+  }
+
+  /* 上臂 + 下臂 + 手 — Anatomy v2:加二頭肌 / 三頭肌 / brachioradialis vertex 隆起 */
   function buildArm(side, opts2) {
     const armG = new THREE.Group();
-    const upperGeo = new THREE.CylinderGeometry(0.04, 0.038, 0.22, 10);
+    /* 上臂 — biceps bulge front + triceps bulge back (vertex displacement) */
+    const upperGeo = new THREE.CylinderGeometry(0.04, 0.038, 0.22, 16, 8);
+    const upos = upperGeo.attributes.position;
+    for (let i = 0; i < upos.count; i++) {
+      const x = upos.getX(i), y = upos.getY(i), z = upos.getZ(i);
+      const r = Math.sqrt(x*x + z*z);
+      if (r < 0.001) continue;
+      /* biceps: front (positive z) mid-upper bulge; peak at y≈0.02 */
+      const bicepsBulge = Math.exp(-Math.pow((y - 0.02) / 0.06, 2)) * Math.max(0, z / r) * 0.010;
+      /* triceps: back (negative z) bulge, broader and longer */
+      const tricepsBulge = Math.exp(-Math.pow((y + 0.01) / 0.08, 2)) * Math.max(0, -z / r) * 0.008;
+      const scl = 1 + (bicepsBulge + tricepsBulge) / r;
+      upos.setXYZ(i, x * scl, y, z * scl);
+    }
+    upperGeo.computeVertexNormals();
     const upper = new THREE.Mesh(upperGeo, shirtMat);
     upper.position.y = -0.11; armG.add(upper);
-    /* 肘 */
-    const elbow = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), shirtMat);
+    /* 肘 — ellipsoid not sphere (real elbow is a hinged joint) */
+    const elbowGeo = new THREE.SphereGeometry(0.045, 12, 10);
+    const ep = elbowGeo.attributes.position;
+    for (let i = 0; i < ep.count; i++) {
+      const x = ep.getX(i), y = ep.getY(i), z = ep.getZ(i);
+      /* elbow is wider mediolaterally, narrower anteroposteriorly */
+      ep.setXYZ(i, x * 1.05, y * 0.85, z * 0.92);
+    }
+    elbowGeo.computeVertexNormals();
+    const elbow = new THREE.Mesh(elbowGeo, shirtMat);
     elbow.position.y = -0.22; armG.add(elbow);
-    /* 下臂 — exposed skin if short sleeves OR same shirt material */
+    /* 下臂 — brachioradialis bulge on outer side (radial side) of upper forearm */
     const lowerMat = opts.shortSleeve ? skinMat : shirtMat;
-    const lower = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.032, 0.21, 10), lowerMat);
+    const lowerGeo = new THREE.CylinderGeometry(0.035, 0.032, 0.21, 14, 6);
+    const lp = lowerGeo.attributes.position;
+    for (let i = 0; i < lp.count; i++) {
+      const x = lp.getX(i), y = lp.getY(i), z = lp.getZ(i);
+      const r = Math.sqrt(x*x + z*z);
+      if (r < 0.001) continue;
+      /* brachioradialis: radial (thumb-side, depends on side) bulge near elbow */
+      const bulgeSide = Math.max(0, (side > 0 ? -x : x) / r);
+      const bulge = Math.exp(-Math.pow((y - 0.04) / 0.06, 2)) * bulgeSide * 0.007;
+      const scl = 1 + bulge / r;
+      lp.setXYZ(i, x * scl, y, z * scl);
+    }
+    lowerGeo.computeVertexNormals();
+    const lower = new THREE.Mesh(lowerGeo, lowerMat);
     lower.position.y = -0.34; armG.add(lower);
     /* 手 — palm + 5 fingers (replaces previous sphere) */
     const hand = buildHand(skinMat, side);
