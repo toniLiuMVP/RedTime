@@ -2890,11 +2890,17 @@ if (scrubBarEl) {
   });
 }
 
-/* === Keyboard shortcuts — M cycles modes (Codex r2: Digit1/2/3 removed,
- * was conflicting with c1's existing 1-8 FX toggles). === */
+/* === Keyboard shortcuts — M cycles modes (Codex r2 fix:Space now also
+ * controls the cinematic 'paused' flag,so M1 auto-narrative actually pauses;
+ * P key behaviour preserved for backward-compat with c1). === */
 document.addEventListener('keydown', (e) => {
   if (e.code === 'KeyM') setMode((c4.mode % 3) + 1);
-  else if (e.code === 'Space') { e.preventDefault(); c4.playing = !c4.playing; }
+  else if (e.code === 'Space') {
+    e.preventDefault();
+    c4.playing = !c4.playing;
+    paused = !c4.playing;                      /* mirror into c1 cinematic clock */
+    if (pauseInd) pauseInd.classList.toggle('show', paused);
+  }
 });
 
 /* === Per-frame c4 update (called from inside loop()) === */
@@ -2991,23 +2997,22 @@ function updateC4(time, dt) {
   }
 }
 
-/* === Hook updateC4 into the existing loop (wrap original loop reference) === */
-const __origLoop = loop;
-function loopC4() {
-  /* We piggyback by re-calling __origLoop's logic via setTimeout-free approach:
-   * inside the next animation frame, we just call updateC4 with current time
-   * and let __origLoop's requestAnimationFrame do its own work. */
-}
-/* Instead of wrapping loop (which has internal RAF + state),we splice c4 update
- * via a per-RAF tick that runs alongside loop(). Both RAFs interleave naturally. */
-let __c4LastT = performance.now();
-function c4Tick() {
-  const now = performance.now();
-  const dt = Math.min(0.06, (now - __c4LastT) / 1000);
-  __c4LastT = now;
-  updateC4(now / 1000, dt);
-  requestAnimationFrame(c4Tick);
-}
+/* === Codex r1 fix: merge updateC4 into main loop via hook,no second RAF.
+ * Override the existing loop()'s last instruction:set a flag c1's loop reads. */
+window.__c4UpdateHook = updateC4;
+/* loop() already calls updateNarrative + updateStats + postfx.render at the
+ * end. We tap in by monkey-wrapping requestAnimationFrame once,inserting our
+ * updateC4 before the next loop iteration. Single RAF, single clock. */
+const __origRAF = window.requestAnimationFrame.bind(window);
+let __lastTickT = performance.now();
+window.requestAnimationFrame = function (cb) {
+  return __origRAF((t) => {
+    const dt = Math.min(0.06, (t - __lastTickT) / 1000);
+    __lastTickT = t;
+    try { updateC4(t / 1000, dt); } catch (e) { /* don't break main loop */ }
+    cb(t);
+  });
+};
 
 /* Initial mode — start in Mode 1 (Cinematic) by default */
 setMode(1);
@@ -3016,7 +3021,8 @@ setMode(1);
 
 applyFX();
 loop();
-c4Tick();
+/* Codex r1 fix: c4Tick removed — RAF monkey-wrap above injects updateC4 into
+ * the same RAF cycle as loop(), so we now have a single clock + single tick. */
 
 addEventListener('resize', function () {
   cam.aspect = innerWidth / innerHeight;
