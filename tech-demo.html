@@ -96,6 +96,65 @@ cam.position.set(0.4, 1.62, 4.2);
 cam.lookAt(0, 1.45, -2);
 
 /* ===================================================================
+   IBL — 程序天空 → PMREM convolved envMap
+   給 MeshPhysicalMaterial 真實的環境反射(reflections / clearcoat / iris)
+   warm-window-light gradient + 走廊 cold tint + 天花板暗
+   =================================================================== */
+function makeProceduralEnvCanvas() {
+  /* equirectangular layout — 4:2 寬高比 */
+  const W = 1024, H = 512;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const ctx = c.getContext('2d');
+  /* 天頂 → 地平線:窗口暖橘 → 走廊冷藍 */
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0.00, '#1a1006');  /* 天花板暗 */
+  grad.addColorStop(0.35, '#3a2818');  /* 暖暗 */
+  grad.addColorStop(0.55, '#a06030');  /* 地平線暖光 */
+  grad.addColorStop(0.78, '#6a5848');  /* 地板反射 */
+  grad.addColorStop(1.00, '#2a1c10');  /* 地面 */
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+  /* 窗戶 hot spot — equirect 中央偏上 */
+  const sunGrad = ctx.createRadialGradient(W * 0.5, H * 0.42, 8, W * 0.5, H * 0.42, 220);
+  sunGrad.addColorStop(0,    'rgba(255, 230, 165, 1.0)');
+  sunGrad.addColorStop(0.18, 'rgba(255, 196, 120, 0.85)');
+  sunGrad.addColorStop(0.55, 'rgba(160, 96, 56, 0.30)');
+  sunGrad.addColorStop(1,    'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = sunGrad; ctx.fillRect(0, 0, W, H);
+  /* 走廊冷光 — 左右兩側 */
+  const coldL = ctx.createRadialGradient(W * 0.05, H * 0.55, 4, W * 0.05, H * 0.55, 180);
+  coldL.addColorStop(0,   'rgba(120, 150, 180, 0.42)');
+  coldL.addColorStop(1,   'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = coldL; ctx.fillRect(0, 0, W, H);
+  const coldR = ctx.createRadialGradient(W * 0.95, H * 0.55, 4, W * 0.95, H * 0.55, 180);
+  coldR.addColorStop(0,   'rgba(120, 150, 180, 0.42)');
+  coldR.addColorStop(1,   'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = coldR; ctx.fillRect(0, 0, W, H);
+  /* 微 noise — 避免 banding */
+  const imgData = ctx.getImageData(0, 0, W, H);
+  const d = imgData.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const n = (Math.random() - 0.5) * 6;
+    d[i] = Math.max(0, Math.min(255, d[i] + n));
+    d[i+1] = Math.max(0, Math.min(255, d[i+1] + n));
+    d[i+2] = Math.max(0, Math.min(255, d[i+2] + n));
+  }
+  ctx.putImageData(imgData, 0, 0);
+  return c;
+}
+const envCanvasTex = new THREE.CanvasTexture(makeProceduralEnvCanvas());
+envCanvasTex.mapping = THREE.EquirectangularReflectionMapping;
+envCanvasTex.colorSpace = THREE.SRGBColorSpace;
+/* PMREM convolves the equirect into roughness-prefiltered cubemap mips */
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envMap = pmrem.fromEquirectangular(envCanvasTex).texture;
+envCanvasTex.dispose();  /* PMREM has its own copy */
+pmrem.dispose();
+scene.environment = envMap;
+scene.environmentIntensity = 0.42;  /* r179 supported scalar — dialled lower so warm sky doesn't over-tint */
+scene.background = null;            /* keep dark void background */
+
+/* ===================================================================
    程序紋理 — Canvas-based PBR 木地板
    =================================================================== */
 function makeWoodCanvas(size) {
@@ -404,13 +463,57 @@ function buildEye(opts, side) {
   );
   cornea.position.z = 0.016;
   g.add(cornea);
-  /* iris (虹膜) — 用 procedural texture */
+  /* iris (虹膜) — procedural texture + view-dependent parallax fake refraction.
+   * Cornea bulges forward → looking at the eye off-axis, light bends so the iris
+   * appears to shift opposite the view direction. A small UV offset along the
+   * view-space XY direction creates the depth illusion without raymarching. */
   const irisTex = new THREE.CanvasTexture(makeIrisTexture(opts.eyeColor || 0x4a2a14));
-  const iris = new THREE.Mesh(
-    new THREE.CircleGeometry(0.0098, 28),
-    new THREE.MeshStandardMaterial({ map: irisTex, roughness: 0.34, metalness: 0.08 })
-  );
+  const irisMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uIrisMap: { value: irisTex },
+      uParallax: { value: 0.06 },
+      uLimbalDarken: { value: 0.55 }
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      varying vec3 vViewDir;
+      varying vec3 vNormalEye;
+      void main() {
+        vUv = uv;
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        vViewDir = -mv.xyz;
+        vNormalEye = normalize(normalMatrix * normal);
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader: `
+      precision highp float;
+      uniform sampler2D uIrisMap;
+      uniform float uParallax;
+      uniform float uLimbalDarken;
+      varying vec2 vUv;
+      varying vec3 vViewDir;
+      varying vec3 vNormalEye;
+      void main() {
+        vec3 V = normalize(vViewDir);
+        /* parallax in view-space XY (eye is roughly flat in this projection) */
+        vec2 offset = -V.xy * uParallax;
+        vec2 uv = vUv + offset;
+        vec4 col = texture2D(uIrisMap, uv);
+        /* limbal ring — darken at outer edge */
+        vec2 c = vUv - 0.5;
+        float r = length(c) * 2.0;
+        col.rgb *= 1.0 - smoothstep(0.78, 1.0, r) * uLimbalDarken;
+        /* slight rim sparkle when normal aligns with view (specular hint) */
+        float NdotV = max(0.0, dot(vNormalEye, V));
+        col.rgb += pow(NdotV, 4.0) * 0.06;
+        gl_FragColor = vec4(col.rgb, 1.0);
+      }
+    `
+  });
+  const iris = new THREE.Mesh(new THREE.CircleGeometry(0.0098, 28), irisMat);
   iris.position.z = 0.022;
+  iris.userData.isIris = true;
   g.add(iris);
   /* pupil (瞳孔) — 黑點 */
   const pupil = new THREE.Mesh(
@@ -433,6 +536,8 @@ function buildEye(opts, side) {
   );
   upperLid.scale.set(1, 0.42, 1);
   upperLid.position.set(0, 0.005, 0.0015);
+  upperLid.userData.baseScaleY = 0.42;
+  upperLid.userData.baseY = 0.005;
   g.add(upperLid);
   /* 下眼瞼 (lower lid) — 較薄 */
   const lowerLid = new THREE.Mesh(
@@ -441,7 +546,16 @@ function buildEye(opts, side) {
   );
   lowerLid.scale.set(1, 0.32, 1);
   lowerLid.position.set(0, -0.003, 0.0015);
+  lowerLid.userData.baseScaleY = 0.32;
+  lowerLid.userData.baseY = -0.003;
   g.add(lowerLid);
+  /* 記下兩眼皮 ref 給外部 blink 用 */
+  g.userData.upperLid = upperLid;
+  g.userData.lowerLid = lowerLid;
+  /* 記下 iris/pupil/catch refs 給外部 saccade(視線抖) */
+  g.userData.iris = iris;
+  g.userData.pupil = pupil;
+  g.userData.catchLight = catchLight;
   /* 眼睫毛 — 6 strand 細短 curved cylinder 朝上 */
   const lashMat = new THREE.MeshBasicMaterial({ color: 0x0a0604 });
   for (let i = 0; i < 6; i++) {
@@ -610,18 +724,68 @@ function buildHead(opts) {
   return g;
 }
 
+/* Anisotropic hair material — shimmer band perpendicular to strand axis.
+ * CylinderGeometry's local Y is the strand long axis. We pass it as a view-space
+ * tangent varying and compute a Gaussian highlight when view direction is
+ * perpendicular to the strand (classic Marschner / Kajiya–Kay surrogate).
+ * Also stacks: sheen for fly-aways, iridescence for color shimmer, slight clearcoat. */
+function makeHairMaterial(baseColor, opts) {
+  opts = opts || {};
+  const c = new THREE.Color(baseColor);
+  const mat = new THREE.MeshPhysicalMaterial({
+    color: baseColor,
+    roughness: opts.roughness != null ? opts.roughness : 0.38,
+    metalness: opts.metalness != null ? opts.metalness : 0.55,
+    emissive: c.clone().multiplyScalar(0.04),
+    sheen: 0.32,
+    sheenColor: new THREE.Color(0x4a2a18),
+    sheenRoughness: 0.42,
+    iridescence: 0.16,
+    iridescenceIOR: 1.18,
+    clearcoat: 0.22,
+    clearcoatRoughness: 0.5
+  });
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms.uHairBandColor = { value: new THREE.Color(opts.bandColor || 0x8a5028) };
+    shader.uniforms.uHairBandPower = { value: opts.bandPower || 26.0 };
+    shader.uniforms.uHairBandStrength = { value: opts.bandStrength || 0.55 };
+    /* Vertex — emit cylinder local-Y in view space (strand tangent) */
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>',
+        '#include <common>\nvarying vec3 vHairTangent;')
+      .replace('#include <project_vertex>',
+        '#include <project_vertex>\nvHairTangent = (modelViewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz;');
+    /* Fragment — Gaussian band when view perpendicular to tangent */
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>',
+        '#include <common>\nvarying vec3 vHairTangent;\nuniform vec3 uHairBandColor;\nuniform float uHairBandPower;\nuniform float uHairBandStrength;')
+      .replace('#include <opaque_fragment>', [
+        'vec3 hairT = normalize(vHairTangent);',
+        'vec3 hairV = normalize(vViewPosition);',
+        '/* TdotV near 0 => view perpendicular to strand => brightest shimmer */',
+        'float hairTV = dot(hairT, hairV);',
+        'float hairBand = exp(-hairTV * hairTV * uHairBandPower);',
+        '/* Secondary slightly offset band for double-highlight Marschner approximation */',
+        'float hairBand2 = exp(-(hairTV - 0.18) * (hairTV - 0.18) * (uHairBandPower * 1.6)) * 0.4;',
+        'outgoingLight += (hairBand + hairBand2) * uHairBandColor * uHairBandStrength;',
+        '#include <opaque_fragment>'
+      ].join('\n'));
+  };
+  return mat;
+}
+
 /* 學長 飛機頭 — strand-based (60+ 條 cylinder 模擬髮絲), 上翻 quiff 由 strand grouping 形成 */
 function buildSeniorHair() {
   const g = new THREE.Group();
-  const hairMat = new THREE.MeshStandardMaterial({ color: 0x0a0402, roughness: 0.42, metalness: 0.22 });
-  const hairMat2 = new THREE.MeshStandardMaterial({ color: 0x140a04, roughness: 0.45, metalness: 0.18 });
+  const hairMat = makeHairMaterial(0x0a0402, { roughness: 0.36, bandColor: 0x8c4e22, bandStrength: 0.58 });
+  const hairMat2 = makeHairMaterial(0x140a04, { roughness: 0.40, bandColor: 0x9a5828, bandStrength: 0.5 });
   /* 1. 頭皮 base (緊貼頭骨, 短) */
   const baseGeo = new THREE.SphereGeometry(0.135, 22, 18, 0, Math.PI * 2, 0, Math.PI / 2.4);
   const base = new THREE.Mesh(baseGeo, hairMat);
   base.position.y = 0.003;
   g.add(base);
   /* 2. 飛機頭 quiff — 前髮 strands 上翻立起 */
-  const quiffMat = new THREE.MeshStandardMaterial({ color: 0x080300, roughness: 0.4, metalness: 0.28 });
+  const quiffMat = makeHairMaterial(0x080300, { roughness: 0.34, metalness: 0.62, bandColor: 0xa05a28, bandStrength: 0.68, bandPower: 30 });
   for (let i = 0; i < 28; i++) {
     const tx = (Math.random() - 0.5) * 0.085;
     const tz = 0.04 + Math.random() * 0.045;
@@ -676,8 +840,8 @@ function buildSeniorHair() {
 function buildJuniorHair() {
   const g = new THREE.Group();
   g.userData.kind = 'juniorHair';
-  const hairMat = new THREE.MeshStandardMaterial({ color: 0x150a06, roughness: 0.4, metalness: 0.2 });
-  const hairMat2 = new THREE.MeshStandardMaterial({ color: 0x1c1108, roughness: 0.42, metalness: 0.18 });
+  const hairMat = makeHairMaterial(0x150a06, { roughness: 0.34, bandColor: 0x8a5028, bandStrength: 0.6 });
+  const hairMat2 = makeHairMaterial(0x1c1108, { roughness: 0.38, bandColor: 0x9c5c30, bandStrength: 0.54 });
   /* 1. 頭頂 cap (覆蓋頭皮) */
   const cap = new THREE.Mesh(
     new THREE.SphereGeometry(0.142, 24, 18, 0, Math.PI * 2, 0, Math.PI / 1.85),
@@ -1062,7 +1226,7 @@ function buildFriend(opts) {
   head.position.y = 1.52;
   g.add(head);
   /* 簡化髮 */
-  const hairMat = new THREE.MeshStandardMaterial({ color: 0x180c06, roughness: 0.45 });
+  const hairMat = makeHairMaterial(0x180c06, { roughness: 0.4, bandColor: 0x8a5028, bandStrength: 0.5 });
   const hairGeo = new THREE.SphereGeometry(0.142, 20, 16, 0, Math.PI * 2, 0, Math.PI / 1.95);
   const hair = new THREE.Mesh(hairGeo, hairMat);
   hair.position.y = 1.54;
@@ -1368,9 +1532,11 @@ scene.add(juniorFace);
 class PostFX {
   constructor(renderer) {
     this.renderer = renderer;
-    this.rtMain = this.makeRT(1);
+    this.rtMain = this.makeRT(1, true);   /* with depth texture */
     this.rtBlurA = this.makeRT(0.5);
     this.rtBlurB = this.makeRT(0.5);
+    this.rtDofA = this.makeRT(0.5);      /* DOF blur target — large blur for far field */
+    this.rtDofB = this.makeRT(0.5);
     this.fsCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
     this.fsScene = new THREE.Scene();
     this.fsQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.makeBrightMat());
@@ -1379,17 +1545,24 @@ class PostFX {
     this.matBlur = this.makeBlurMat();
     this.matFinal = this.makeFinalMat();
   }
-  makeRT(scale) {
-    return new THREE.WebGLRenderTarget(
-      Math.floor(innerWidth * (devicePixelRatio || 1) * scale),
-      Math.floor(innerHeight * (devicePixelRatio || 1) * scale),
-      { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, type: THREE.HalfFloatType }
-    );
+  makeRT(scale, withDepth) {
+    const w = Math.floor(innerWidth * (devicePixelRatio || 1) * scale);
+    const h = Math.floor(innerHeight * (devicePixelRatio || 1) * scale);
+    const opts = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, type: THREE.HalfFloatType };
+    if (withDepth) {
+      const dt = new THREE.DepthTexture(w, h);
+      dt.format = THREE.DepthFormat;
+      dt.type = THREE.UnsignedShortType;
+      opts.depthTexture = dt;
+    }
+    return new THREE.WebGLRenderTarget(w, h, opts);
   }
   resize() {
     this.rtMain.setSize(innerWidth * (devicePixelRatio || 1), innerHeight * (devicePixelRatio || 1));
     this.rtBlurA.setSize(innerWidth * (devicePixelRatio || 1) * 0.5, innerHeight * (devicePixelRatio || 1) * 0.5);
     this.rtBlurB.setSize(innerWidth * (devicePixelRatio || 1) * 0.5, innerHeight * (devicePixelRatio || 1) * 0.5);
+    this.rtDofA.setSize(innerWidth * (devicePixelRatio || 1) * 0.5, innerHeight * (devicePixelRatio || 1) * 0.5);
+    this.rtDofB.setSize(innerWidth * (devicePixelRatio || 1) * 0.5, innerHeight * (devicePixelRatio || 1) * 0.5);
   }
   makeBrightMat() {
     return new THREE.ShaderMaterial({
@@ -1433,26 +1606,49 @@ class PostFX {
     return new THREE.ShaderMaterial({
       uniforms: {
         tDiffuse: { value: null }, tBloom: { value: null },
+        tDof: { value: null }, tDepth: { value: null },
         uTime: { value: 0 },
-        uBloomStrength: { value: 0.62 }, uChromaStrength: { value: 1.0 }, uGrainStrength: { value: 1.0 }
+        uBloomStrength: { value: 0.62 }, uChromaStrength: { value: 1.0 }, uGrainStrength: { value: 1.0 },
+        uDofStrength: { value: 1.0 },
+        uFocusDepth: { value: 0.92 },     /* normalized depth where focus is sharp */
+        uFocusRange: { value: 0.06 },     /* sharp band half-width */
+        uNear: { value: 0.1 }, uFar: { value: 80 }
       },
       vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position, 1.0); }',
       fragmentShader: `
         precision highp float;
-        uniform sampler2D tDiffuse; uniform sampler2D tBloom;
+        uniform sampler2D tDiffuse; uniform sampler2D tBloom; uniform sampler2D tDof; uniform sampler2D tDepth;
         uniform float uTime; uniform float uBloomStrength; uniform float uChromaStrength; uniform float uGrainStrength;
+        uniform float uDofStrength; uniform float uFocusDepth; uniform float uFocusRange;
+        uniform float uNear; uniform float uFar;
         varying vec2 vUv;
         float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+        /* perspective depth → linear 0..1 across far range */
+        float linearDepth(float z) {
+          float ndc = z * 2.0 - 1.0;
+          float view = (2.0 * uNear * uFar) / (uFar + uNear - ndc * (uFar - uNear));
+          return view / uFar;
+        }
         void main() {
           vec2 uv = vUv;
           vec2 toCenter = uv - 0.5;
           float dist = length(toCenter);
           float chromaAmt = 0.0028 * uChromaStrength * smoothstep(0.0, 0.7, dist);
           vec2 dir = normalize(toCenter + 1e-5);
-          vec3 col;
-          col.r = texture2D(tDiffuse, uv - dir * chromaAmt).r;
-          col.g = texture2D(tDiffuse, uv).g;
-          col.b = texture2D(tDiffuse, uv + dir * chromaAmt).b;
+          /* sharp sample */
+          vec3 sharp;
+          sharp.r = texture2D(tDiffuse, uv - dir * chromaAmt).r;
+          sharp.g = texture2D(tDiffuse, uv).g;
+          sharp.b = texture2D(tDiffuse, uv + dir * chromaAmt).b;
+          /* DOF — depth-aware blur mix */
+          float depthRaw = texture2D(tDepth, uv).r;
+          float depth = linearDepth(depthRaw);
+          float coc = clamp(abs(depth - uFocusDepth) / uFocusRange - 1.0, 0.0, 1.0);
+          /* heavier blur for far field, lighter for near */
+          coc *= uDofStrength;
+          vec3 blur = texture2D(tDof, uv).rgb;
+          vec3 col = mix(sharp, blur, coc);
+          /* bloom add */
           vec3 bloom = texture2D(tBloom, uv).rgb;
           col += bloom * uBloomStrength;
           col = col / (1.0 + col);
@@ -1488,13 +1684,31 @@ class PostFX {
       this.renderer.setRenderTarget(this.rtBlurA);
       this.renderer.render(this.fsScene, this.fsCam);
     }
+    /* DOF — separable Gaussian blur of full scene (not just bright pixels) into rtDofA */
+    if (fx.dof) {
+      this.fsQuad.material = this.matBlur;
+      this.matBlur.uniforms.tDiffuse.value = this.rtMain.texture;
+      this.matBlur.uniforms.uDir.value.set(1, 0);
+      this.matBlur.uniforms.uRes.value.set(this.rtDofA.width, this.rtDofA.height);
+      this.renderer.setRenderTarget(this.rtDofB);
+      this.renderer.render(this.fsScene, this.fsCam);
+      this.matBlur.uniforms.tDiffuse.value = this.rtDofB.texture;
+      this.matBlur.uniforms.uDir.value.set(0, 1);
+      this.renderer.setRenderTarget(this.rtDofA);
+      this.renderer.render(this.fsScene, this.fsCam);
+    }
     this.fsQuad.material = this.matFinal;
     this.matFinal.uniforms.tDiffuse.value = this.rtMain.texture;
     this.matFinal.uniforms.tBloom.value = fx.bloom ? this.rtBlurA.texture : this.rtMain.texture;
+    this.matFinal.uniforms.tDof.value = fx.dof ? this.rtDofA.texture : this.rtMain.texture;
+    this.matFinal.uniforms.tDepth.value = this.rtMain.depthTexture;
     this.matFinal.uniforms.uTime.value = time;
     this.matFinal.uniforms.uBloomStrength.value = fx.bloom ? 0.62 : 0.0;
     this.matFinal.uniforms.uChromaStrength.value = fx.chroma ? 1.0 : 0.0;
     this.matFinal.uniforms.uGrainStrength.value = fx.grain ? 1.0 : 0.0;
+    this.matFinal.uniforms.uDofStrength.value = fx.dof ? 1.0 : 0.0;
+    this.matFinal.uniforms.uNear.value = cam.near;
+    this.matFinal.uniforms.uFar.value = cam.far;
     this.renderer.setRenderTarget(null);
     this.renderer.render(this.fsScene, this.fsCam);
   }
@@ -1504,7 +1718,7 @@ const postfx = new PostFX(renderer);
 /* ===================================================================
    FX toggles + UI
    =================================================================== */
-const FX = { floor: true, godRays: true, dust: true, redLine: true, breath: true, hairSway: true, bloom: true, chroma: true, grain: true };
+const FX = { floor: true, godRays: true, dust: true, redLine: true, breath: true, hairSway: true, bloom: true, chroma: true, grain: true, dof: true };
 function applyFX() {
   floor.material = FX.floor ? floorMat : floorPlainMat;
   godRays.visible = FX.godRays;
@@ -1610,22 +1824,73 @@ function loop() {
     });
   }
 
+  /* 眨眼 + 視線抖 saccade — 每個角色用自己的相位,避免同步眨眼像機器人 */
+  [senior, junior].concat(friends).forEach(function (c, i) {
+    if (!c.userData.head || !c.userData.head.userData.eyes) return;
+    const eyes = c.userData.head.userData.eyes;
+    /* blink:每 3.5±2s 一次,持續 110ms,用 1-smoothstep 雙峰快速 close→open */
+    const blinkPeriod = 3.5 + (i * 0.7);
+    const t = (elapsed + i * 1.3) % blinkPeriod;
+    const blink = t < 0.11 ? Math.sin(t / 0.11 * Math.PI) : 0;   /* 0→1→0 in 110ms */
+    [eyes.L, eyes.R].forEach(function (eye) {
+      if (!eye || !eye.userData.upperLid) return;
+      const u = eye.userData.upperLid;
+      const l = eye.userData.lowerLid;
+      /* upper lid 下壓(scaleY 拉大 + Y 下移 cover iris) */
+      u.scale.y = u.userData.baseScaleY + blink * 1.45;
+      u.position.y = u.userData.baseY - blink * 0.012;
+      /* lower lid 微上移 */
+      l.scale.y = l.userData.baseScaleY + blink * 0.42;
+      l.position.y = l.userData.baseY + blink * 0.005;
+    });
+    /* saccade:每 1.8±1s 微跳到隨機 ±0.0015 x 偏移 */
+    const sacPeriod = 1.8 + (i * 0.4);
+    const sacT = (elapsed + i * 0.9) % sacPeriod;
+    const sacPhase = Math.floor((elapsed + i * 0.9) / sacPeriod);
+    const sacX = (Math.sin(sacPhase * 12.9898) * 43758.5453 % 1) * 0.003 - 0.0015;
+    const sacY = (Math.cos(sacPhase * 78.233) * 43758.5453 % 1) * 0.002 - 0.001;
+    [eyes.L, eyes.R].forEach(function (eye) {
+      if (!eye || !eye.userData.iris) return;
+      const it = Math.min(1, sacT / 0.08);  /* snap-fast saccade */
+      eye.userData.iris.position.x = sacX * it;
+      eye.userData.iris.position.y = 0 + sacY * it;
+      if (eye.userData.pupil) {
+        eye.userData.pupil.position.x = sacX * it;
+        eye.userData.pupil.position.y = 0 + sacY * it;
+      }
+      if (eye.userData.catchLight) {
+        /* catch light tracks slightly less for realism */
+        eye.userData.catchLight.position.x = -0.0028 * (eye === eyes.L ? -1 : 1) + sacX * it * 0.6;
+      }
+    });
+  });
+
   /* camera breathing — 緩慢漂浮 + 微 dolly (sweep mode only; close-ups stay fixed) */
+  let focusTarget = new THREE.Vector3(0, 1.45, -2);
   if (camLock.mode === 'sweep') {
     cam.position.x = 0.4 + Math.sin(elapsed * 0.18) * 0.18;
     cam.position.y = 1.62 + Math.sin(elapsed * 0.32) * 0.045;
     cam.position.z = 4.2 + Math.sin(elapsed * 0.12) * 0.4;
-    cam.lookAt(Math.sin(elapsed * 0.1) * 0.18, 1.45, -2);
+    focusTarget.set(Math.sin(elapsed * 0.1) * 0.18, 1.45, -2);
+    cam.lookAt(focusTarget);
   } else if (camLock.mode === 'junior') {
     /* micro hover for life — re-lookAt every frame */
     cam.position.x = 2.6 + Math.sin(elapsed * 0.5) * 0.04;
     cam.position.y = 1.55 + Math.sin(elapsed * 0.7) * 0.015;
-    cam.lookAt(3.0, 1.5, -7.8);
+    focusTarget.set(3.0, 1.5, -7.8);
+    cam.lookAt(focusTarget);
   } else if (camLock.mode === 'senior') {
     cam.position.x = 0.7 + Math.sin(elapsed * 0.5) * 0.04;
     cam.position.y = 1.55 + Math.sin(elapsed * 0.7) * 0.015;
-    cam.lookAt(1.6, 1.5, -2.5);
+    focusTarget.set(1.6, 1.5, -2.5);
+    cam.lookAt(focusTarget);
   }
+  /* Dynamic DOF — focus depth = distance(cam → target) / cam.far, normalized */
+  const focusDist = cam.position.distanceTo(focusTarget);
+  postfx.matFinal.uniforms.uFocusDepth.value = focusDist / cam.far;
+  /* sweep cam (long view) wants wider focus range; close-ups tighter */
+  postfx.matFinal.uniforms.uFocusRange.value =
+    camLock.mode === 'sweep' ? 0.045 : 0.015;
 
   /* god ray 平面 always face camera */
   godRays.children.forEach(function (layer, i) {
