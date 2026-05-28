@@ -856,6 +856,39 @@ function S(t) {
     const s = n.clone();
     ((s.position.x = 0.264), o.add(n, s));
   }
+  // finger cluster (3D audit P0) — additive fingers as children of each hand sphere;
+  // production-scale, low-seg (iOS-safe); inherits hand position / closeup scale / phone rotation.
+  // fixes the "sphere hand with no fingers" (senior on the phone had no gripping fingers).
+  {
+    const _fR = t.female ? (n ? 0.038 : 0.048) : 0.054;
+    const _mkFingers = (side) => {
+      const fg = new e.Group();
+      const fspec = [-0.46, -0.16, 0.16, 0.46];
+      fspec.forEach((fx, i) => {
+        const len = _fR * (i === 0 || i === 3 ? 0.78 : 0.95);
+        const rad = _fR * 0.2;
+        const cy = new e.CylinderGeometry(rad * 0.8, rad, len, 6);
+        cy.translate(0, -len / 2, 0);
+        const fm = new e.Mesh(cy, c);
+        fm.position.set(fx * _fR, -_fR * 0.72, _fR * 0.16);
+        fm.rotation.x = 0.4;
+        const tp = new e.Mesh(new e.SphereGeometry(rad * 0.85, 6, 5), c);
+        tp.position.set(0, -len, 0);
+        fm.add(tp);
+        fg.add(fm);
+      });
+      const tl = _fR * 0.66, tr = _fR * 0.24;
+      const tcy = new e.CylinderGeometry(tr * 0.85, tr, tl, 6);
+      tcy.translate(0, -tl / 2, 0);
+      const th = new e.Mesh(tcy, c);
+      th.position.set(side * _fR * 0.5, -_fR * 0.32, _fR * 0.2);
+      th.rotation.set(0.4, 0, side * -0.7);
+      fg.add(th);
+      return fg;
+    };
+    V.add(_mkFingers(1));
+    E.add(_mkFingers(-1));
+  }
   const U = new e.CylinderGeometry(
       t.female ? (n ? 0.056 : 0.072) : 0.078,
       t.female ? (n ? 0.062 : 0.078) : 0.084,
