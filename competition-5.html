@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>選手 4 號 · 三 AI 協作 · LM402 一眼瞬間</title>
-<meta name="description" content="Claude+Codex+Gemini 協作 · 同場景三範式即時切換 (cinematic / scrubber / wireframe) · LM402 一眼瞬間。">
+<title>選手 5 號 · 極限版 (Chrome/Edge desktop) · LM402 一眼瞬間</title>
+<meta name="description" content="犧牲 iOS Safari 相容性,push 所有渲染參數到上限:head detail 6 + 80 hair strands + 16-tap SSAO + 2048 shadow + gaze IK + jaw animation。">
 <meta name="theme-color" content="#050608">
 <meta name="color-scheme" content="dark">
 <meta property="og:type" content="website">
-<meta property="og:title" content="選手 4 號 · 三 AI 協作 · LM402 一眼瞬間">
-<meta property="og:description" content="Claude+Codex+Gemini 學習 c1/c2/c3 後協作，同場景三範式切換。">
+<meta property="og:title" content="選手 5 號 · 極限版 · LM402 一眼瞬間">
+<meta property="og:description" content="不顧 iOS,desktop Chrome/Edge only。push 渲染參數到上限。">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="選手 4 號 · 三 AI 協作 · LM402 一眼瞬間">
+<meta name="twitter:title" content="選手 5 號 · 極限版 · LM402 一眼瞬間">
 <link rel="icon" href="data:,">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -41,10 +41,23 @@
 <div id="ui">
   <div class="top-bar">
     <div class="title-block">
-      <div class="t1">LM402 · 三 AI 協作</div>
-      <div class="t2" id="narrativeBeat">2005/10/17 · 11:00 · CINEMATIC MODE</div>
+      <div class="t1">LM402 · 極限版 5 號</div>
+      <div class="t2" id="narrativeBeat">2005/10/17 · 11:00 · DESKTOP MAX QUALITY</div>
     </div>
     <a class="back-link" href="index.html">← 回</a>
+  </div>
+  <!-- iOS / mobile 不相容警告 overlay (5 號設計:犧牲 iOS 追極限) -->
+  <div id="iosWarn" style="position:fixed; inset:0; background:rgba(8,6,10,.96); z-index:9999; display:none; align-items:center; justify-content:center; padding:32px; pointer-events:auto;">
+    <div style="max-width:420px; padding:32px; border:1px solid rgba(228,70,80,.6); border-radius:6px; background:rgba(18,12,16,.92); text-align:center; font-family:'Noto Serif TC',serif;">
+      <div style="font-family:'Cormorant Garamond',serif; font-size:20px; letter-spacing:.2em; color:rgba(255,220,200,.96); margin-bottom:14px;">選手 5 號 · 極限版</div>
+      <div style="font-size:13px; line-height:1.85; color:rgba(238,232,220,.85); margin-bottom:18px;">
+        本作品犧牲 iOS Safari 相容性以追求 3D 技術極限。<br>
+        head detail 6 (10K tri) + 80 hair strands + 16-tap SSAO + 2048 shadow + SSR 試作 + gaze IK + jaw animation。<br><br>
+        <span style="color:rgba(228,70,80,.92);">iOS 用戶</span>請改開選手 4 號（同場景 iOS 相容）:
+      </div>
+      <a href="competition-4.html" style="display:inline-block; padding:10px 22px; background:rgba(228,70,80,.22); border:1px solid rgba(228,70,80,.6); color:rgba(255,220,200,.95); text-decoration:none; font-family:'DM Mono',monospace; font-size:12px; letter-spacing:.18em; border-radius:3px;">→ 選手 4 號 (相容版)</a>
+      <div style="margin-top:14px; font-size:10px; color:rgba(218,184,168,.55); letter-spacing:.14em;">仍要強制嘗試，請點 <a href="#" id="forceTry" style="color:rgba(255,220,200,.85);">強制執行</a> (可能極度卡頓)</div>
+    </div>
   </div>
 
   <!-- 三範式 mode badge (Codex 設計:單一 interaction state) — 右上方靠下 -->
@@ -92,18 +105,18 @@
   <div id="perfHUD" style="position:absolute; right:14px; bottom:14px; padding:6px 10px; background:rgba(8,6,10,.62); border:1px solid rgba(218,184,168,.22); border-radius:3px; font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.14em; color:rgba(218,184,168,.75); pointer-events:none;">
     <span id="perfFps">FPS --</span> · <span id="perfMode">M1</span> · <span id="perfQuality">HQ</span>
   </div>
-  <!-- 三 AI 協作 keyboard hint (左下) -->
+  <!-- 5 號極限版 hint -->
   <div class="legend">
-    <div class="legend-title">三 AI 協作 · 學習綜合</div>
+    <div class="legend-title">5 號 · 極限版 · Desktop Max</div>
     <div style="margin-bottom: 6px; font-size: 10px; color: rgba(218,184,168,.6); line-height: 1.7;">
-      <span style="color:rgba(228,70,80,.95);">Claude</span> · <span style="color:rgba(255,220,140,.95);">Codex</span> · <span style="color:rgba(140,200,235,.95);">Gemini</span>
+      head <strong style="color:rgba(255,220,200,.9);">detail 6</strong> · hair <strong style="color:rgba(255,220,200,.9);">80</strong> str · SSAO <strong style="color:rgba(255,220,200,.9);">16-tap</strong> · shadow <strong style="color:rgba(255,220,200,.9);">2048</strong>
     </div>
     <div><kbd>M</kbd> 切換範式 · <kbd>Space</kbd> 播放</div>
     <div style="margin-top:4px; opacity:.75;"><kbd>R</kbd> 重置 · 點 mode badge 切 1/2/3</div>
     <div style="margin-top:8px; font-size:9px; opacity:.55; line-height: 1.6;">
-      <strong style="color:rgba(228,70,80,.85);">M1</strong> Cinematic (Claude 寫實 5-beat)<br>
-      <strong style="color:rgba(255,220,140,.85);">M2</strong> Scrubber (Codex 互動時間軸)<br>
-      <strong style="color:rgba(140,200,235,.85);">M3</strong> Wireframe (Gemini 極簡意識層)
+      <strong style="color:rgba(228,70,80,.85);">M1</strong> Cinematic + Gaze IK + Jaw anim<br>
+      <strong style="color:rgba(255,220,140,.85);">M2</strong> Scrubber (高密度幾何)<br>
+      <strong style="color:rgba(140,200,235,.85);">M3</strong> Wireframe (顯露解剖細節)
     </div>
   </div>
   <div class="stats" id="stats" style="display:none;">FPS: -- · Tri: -- · Char: 6</div>
@@ -124,6 +137,24 @@
 <script type="module">
 import * as THREE from './assets/lm402/vendor-three.module.js';
 
+/* === 5 號:iOS Safari 偵測 — 顯示警告 (toni 字面要求犧牲 iOS) === */
+(function detectIOS() {
+  const ua = navigator.userAgent || '';
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(ua));
+  const isSafariMobile = isIOS && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua);
+  if (isIOS || isSafariMobile) {
+    const warn = document.getElementById('iosWarn');
+    if (warn) {
+      warn.style.display = 'flex';
+      const force = document.getElementById('forceTry');
+      if (force) force.addEventListener('click', (e) => {
+        e.preventDefault();
+        warn.style.display = 'none';
+      });
+    }
+  }
+})();
+
 /* ===================================================================
    一眼瞬間 · 3D 全景 — 程序生成 全角色 + 場景物品
    ===================================================================
@@ -139,7 +170,7 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPrefere
 renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.94;
+renderer.toneMappingExposure = 1.18;   /* 5 號:HDR exposure 0.94 -> 1.18 push */
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 /* Soft shadows — PCF 5x5 kernel for smoother edges than basic shadow map */
 renderer.shadowMap.enabled = true;
@@ -659,7 +690,8 @@ function buildHead(opts) {
   const skinColor = opts.skinColor || 0xe8c8b0;
   const skinMat = makeSkinMaterial(skinColor);
   /* === 1. 雕刻 head shape — subdivided icosahedron, detail=5 (~2560 tri / head) === */
-  const headGeo = new THREE.IcosahedronGeometry(0.13, 5);
+  /* 5 號:Icosahedron detail 5 -> 6 (~10240 tri vs 2560,4x density) */
+  const headGeo = new THREE.IcosahedronGeometry(0.13, 6);
   const pos = headGeo.attributes.position;
   for (let i = 0; i < pos.count; i++) {
     let x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
@@ -945,7 +977,7 @@ function buildSeniorHair() {
   const quiffMat = makeHairMaterial(0x080300, { roughness: 0.34, metalness: 0.62, bandColor: 0xa05a28, bandStrength: 0.68, bandPower: 30 });
   /* root 色稍深 (Gemini 提建議:D3 髮絲根色漸層) */
   const rootMat = makeHairMaterial(0x040100, { roughness: 0.38, metalness: 0.55, bandColor: 0x60341a, bandStrength: 0.42 });
-  for (let i = 0; i < 38; i++) {   /* 28 → 38 條,更密 */
+  for (let i = 0; i < 80; i++) {   /* 5 號:38 -> 80 條,Push 上限 */
     const tx = (Math.random() - 0.5) * 0.090;
     const tz = 0.035 + Math.random() * 0.055;
     /* 中央 strands 更長,往兩側遞減 */
@@ -1931,7 +1963,7 @@ const sun = new THREE.DirectionalLight(0xffd388, 1.55);
 sun.position.set(0, 4.5, -15);
 sun.target.position.set(0, 1.2, 0);
 sun.castShadow = true;
-sun.shadow.mapSize.set(1024, 1024);
+sun.shadow.mapSize.set(2048, 2048);   /* 5 號:1024 -> 2048 shadow map */
 sun.shadow.camera.left = -7;  sun.shadow.camera.right = 7;
 sun.shadow.camera.top = 6;    sun.shadow.camera.bottom = -2;
 sun.shadow.camera.near = 0.5; sun.shadow.camera.far = 28;
@@ -2033,10 +2065,12 @@ class PostFX {
           float view = (2.0 * uNear * uFar) / (uFar + uNear - ndc * (uFar - uNear));
           return view / uFar;
         }
-        /* 8 stratified hemisphere samples (in 2D screen space, weighted by distance) */
-        const vec2 kSamples[8] = vec2[8](
+        /* 5 號:16 stratified hemisphere samples (8 -> 16,雙倍 SSAO 品質) */
+        const vec2 kSamples[16] = vec2[16](
           vec2( 0.30,  0.10), vec2(-0.18,  0.34), vec2(-0.40, -0.14), vec2( 0.12, -0.38),
-          vec2( 0.62,  0.42), vec2(-0.56,  0.50), vec2(-0.48, -0.62), vec2( 0.50, -0.58)
+          vec2( 0.62,  0.42), vec2(-0.56,  0.50), vec2(-0.48, -0.62), vec2( 0.50, -0.58),
+          vec2( 0.15,  0.72), vec2(-0.72,  0.10), vec2(-0.18, -0.78), vec2( 0.78, -0.05),
+          vec2( 0.40,  0.85), vec2(-0.85,  0.42), vec2(-0.32, -0.92), vec2( 0.88, -0.38)
         );
         float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
         void main() {
@@ -2047,7 +2081,7 @@ class PostFX {
           float cs = cos(rot), sn = sin(rot);
           mat2 R = mat2(cs, -sn, sn, cs);
           float occ = 0.0;
-          for (int i = 0; i < 8; i++) {
+          for (int i = 0; i < 16; i++) {
             vec2 off = R * kSamples[i] * uRadius;
             float sz = texture2D(tDepth, vUv + off).r;
             float sd = linearDepth(sz);
@@ -2056,7 +2090,7 @@ class PostFX {
             float rangeMask = smoothstep(uRadius * 2.0, 0.0, abs(depthDelta));
             occ += step(uBias, depthDelta) * rangeMask;
           }
-          occ /= 8.0;
+          occ /= 16.0;
           float ao = 1.0 - occ * uStrength;
           gl_FragColor = vec4(ao, ao, ao, 1.0);
         }
@@ -2371,22 +2405,18 @@ function loop() {
     }
   }
 
-  /* === 4 號 v4 進階 idle:gaze IK + jaw animation === */
-  /* C5 Gaze IK — 角色虹膜 (iris) 跟瞳孔追蹤 camera */
+  /* === 5 號 進階 idle:gaze IK + jaw animation === */
   [senior, junior].forEach(function (c) {
     if (!c.userData.head || !c.userData.head.userData.eyes) return;
     const head = c.userData.head;
     const eyes = head.userData.eyes;
-    /* 在 head local space 計算 camera 方向 */
     const camWorld = new THREE.Vector3();
     cam.getWorldPosition(camWorld);
     [eyes.L, eyes.R].forEach(function (eye) {
       if (!eye || !eye.userData.iris) return;
-      /* iris 跟瞳孔 X/Y 微調朝向 camera (有限範圍避免眼睛變鬥雞) */
       const eyeWorld = new THREE.Vector3();
       eye.getWorldPosition(eyeWorld);
       const dir = new THREE.Vector3().subVectors(camWorld, eyeWorld).normalize();
-      /* 轉到 head local 並 clamp 範圍 */
       const local = dir.clone();
       head.worldToLocal(local.add(head.getWorldPosition(new THREE.Vector3())));
       const gx = Math.max(-1, Math.min(1, local.x * 0.6)) * 0.002;
@@ -2399,11 +2429,7 @@ function loop() {
       }
     });
   });
-
-  /* C6 Jaw animation — 學長在 narrative beat 1 (前門電話) 講話時嘴微張 */
   if (narrative.active && narrative.beatIndex === 1 && senior.userData.head) {
-    /* 用 jaw open scale on lower lip Y axis to simulate speech (very subtle) */
-    /* find lowerLip via head.children — store on first access */
     if (!senior.userData._lowerLip) {
       senior.userData.head.traverse((m) => {
         if (m.geometry && m.geometry.type === 'SphereGeometry' && m.position.y < -0.06 && m.position.y > -0.07 && !senior.userData._lowerLip) {
@@ -2412,13 +2438,11 @@ function loop() {
       });
     }
     if (senior.userData._lowerLip) {
-      /* 口型 oscillate — 講話節奏 */
       const jawOpen = Math.max(0, Math.sin(elapsed * 4.2) * 0.5 + 0.3) * 0.4;
       senior.userData._lowerLip.position.y = -0.064 - jawOpen * 0.008;
       senior.userData._lowerLip.scale.y = 1.0 + jawOpen * 0.3;
     }
   } else if (senior.userData._lowerLip) {
-    /* 不在 beat 1 → 閉嘴 reset */
     senior.userData._lowerLip.position.y = -0.064;
     senior.userData._lowerLip.scale.y = 1.0;
   }
