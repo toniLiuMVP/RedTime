@@ -6094,10 +6094,24 @@ dom.qualityBtn.addEventListener("click", function() {
    ════════════════════════════════════════════════ */
 const gameClock = new THREE.Clock();
 
+/* adaptive 品質 auto-step DOWN — 弱機持續低 FPS 自動降一級(long cooldown 防 NPC rebuild flapping,只降不升,使用者可手動調回) */
+const _padQ = { samples: [], cooldown: 0, enabled: true };
+
 function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(gameClock.getDelta(), 0.033);
   state.clock += dt;
+
+  /* adaptive 品質:90 幀 window avg FPS < 40 → applyQuality 降一級,cooldown 300 幀防 flapping */
+  if (_padQ.enabled) {
+    _padQ.samples.push(dt > 0 ? 1 / dt : 60);
+    if (_padQ.samples.length > 90) _padQ.samples.shift();
+    if (_padQ.cooldown > 0) { _padQ.cooldown -= 1; }
+    else if (_padQ.samples.length >= 90) {
+      const _avg = _padQ.samples.reduce(function(a, b) { return a + b; }, 0) / _padQ.samples.length;
+      if (_avg < 40 && state.quality > 0) { applyQuality(state.quality - 1); _padQ.cooldown = 300; _padQ.samples.length = 0; }
+    }
+  }
 
   mainLight.position.set(father.position.x + 15, 50, father.position.z + 10);
   mainLight.target.position.copy(father.position);
@@ -6159,6 +6173,9 @@ function init() {
   createDoorMarker();
   detectMobile();
   buildQualityPanel();
+  /* 預設氛圍燈光(月台夜景):火車頭燈 + 天花板燈,桌機路線強度略高(原本只在 console __ART_APPLY_ALL__ 才開) */
+  try { window.__TRAIN_HEADLIGHT__(2.0, '#fff5d6'); } catch(e) {}
+  try { window.__CEILING_LIGHTS__(6, 2.5); } catch(e) {}
   animate();
 }
 
