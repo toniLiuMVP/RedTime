@@ -74,6 +74,9 @@ docs/session-logs/
 # Local memory store (Claude session continuity)
 .remember/
 
+# Dual-AI handoff zone (Claude Code ↔ Codex CLI local coordination)
+ClaudeCodeXCodex/
+
 # Visual mockup previews (toni 決策用,不上 GitHub Pages)
 mockup/
 
