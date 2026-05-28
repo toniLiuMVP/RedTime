@@ -173,6 +173,53 @@ const FS_DOF = /* glsl */ `
 `;
 
 // ─────────────────────────────────────────────────────────────
+//  SSAO — Depth-only Ambient Occlusion（full-res，8-tap unrolled，桌機）
+//  做法:linearize depth,8 方向 sample 鄰居深度,鄰居較近 → 遮擋累加。
+//  unroll(避 WebGL ES 1.0 array-index 限制)+ depth-only(不需 normal G-buffer)。
+//  full-res(桌機路線不省 fillrate)→ 無上採樣 banding。
+// ─────────────────────────────────────────────────────────────
+const FS_SSAO = /* glsl */ `
+  varying vec2 vUv;
+  uniform sampler2D tDepth;
+  uniform vec2 uTexel;
+  uniform float uNear;
+  uniform float uFar;
+  uniform float uRadius;
+  uniform float uIntensity;
+  uniform float uBias;
+
+  float linz(float d) {
+    float z = d * 2.0 - 1.0;
+    return (2.0 * uNear * uFar) / (uFar + uNear - z * (uFar - uNear));
+  }
+  float occAt(vec2 uv, float zC, vec2 dir, float rad) {
+    float dS = texture2D(tDepth, uv + dir * uTexel * rad).x;
+    float zS = linz(dS);
+    float diff = zC - zS;
+    float range = 1.0 - smoothstep(0.0, uRadius * 0.06, abs(diff));
+    return step(uBias, diff) * range;
+  }
+  void main() {
+    float dC = texture2D(tDepth, vUv).x;
+    if (dC >= 0.9999) { gl_FragColor = vec4(1.0); return; }
+    float zC = linz(dC);
+    float r = uRadius;
+    float occ = 0.0;
+    occ += occAt(vUv, zC, vec2( 1.0,   0.0  ), r * 0.50);
+    occ += occAt(vUv, zC, vec2( 0.707, 0.707), r * 0.70);
+    occ += occAt(vUv, zC, vec2( 0.0,   1.0  ), r * 0.90);
+    occ += occAt(vUv, zC, vec2(-0.707, 0.707), r * 0.60);
+    occ += occAt(vUv, zC, vec2(-1.0,   0.0  ), r * 1.00);
+    occ += occAt(vUv, zC, vec2(-0.707,-0.707), r * 0.75);
+    occ += occAt(vUv, zC, vec2( 0.0,  -1.0  ), r * 0.55);
+    occ += occAt(vUv, zC, vec2( 0.707,-0.707), r * 0.85);
+    occ = occ / 8.0;
+    float ao = 1.0 - occ * uIntensity;
+    gl_FragColor = vec4(vec3(clamp(ao, 0.0, 1.0)), 1.0);
+  }
+`;
+
+// ─────────────────────────────────────────────────────────────
 //  Final Pass — Vignette + FXAA + ACES (renderer 已做，但這裡再 sharpen)
 //  注意：renderer.toneMapping 在「直接 render to screen」時自動套用，
 //        但我們是 render to RT 再 blit 出來，所以最終 pass 要自己 tone map。
@@ -186,6 +233,9 @@ const FS_FINAL = /* glsl */ `
   uniform float uVignetteDarkness;
   uniform float uExposure;
   uniform bool  uFxaa;
+  // SSAO
+  uniform sampler2D uAO;
+  uniform float uAOAmount;
   // Tier 5 新加 uniforms
   uniform float uChromaStrength;
   uniform float uGrainAmount;
@@ -253,6 +303,9 @@ const FS_FINAL = /* glsl */ `
     c.r = texture2D(tDiffuse, vUv + caOff).r;
     c.g = texture2D(tDiffuse, vUv).g;
     c.b = texture2D(tDiffuse, vUv - caOff).b;
+
+    // === SSAO multiply（接地 / 角落環境光遮蔽,tone map 前 linear space 套用）===
+    c *= mix(1.0, texture2D(uAO, vUv).r, uAOAmount);
 
     // === Tone map（HDR → LDR） ===
     c *= uExposure;
@@ -438,6 +491,8 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     enabled: true,
     bloom:    { threshold: 0.86, softKnee: 0.5, strength: 0.32, mips: 4 },
     dof:      { focalRange: 0.6, maxBlur: 6.0, enabled: true },
+    // SSAO — depth-only ambient occlusion(full-res 8-tap unrolled)。桌機路線 intensity 拉高(0.5),AO 給 final pass multiply(接地 / 角落 / 摺痕環境光遮蔽)
+    ssao:     { enabled: true, intensity: 0.43, radius: 8.0, bias: 0.03 },  // 0.5→0.43:depth-only AO 無 normal buffer 會套到臉,比 twin 0.40 略richer(桌機)但守住臉部不髒
     vignette: { color: [0.18, 0.10, 0.05], offset: 0.55, darkness: 0.42 },
     fxaa:     false,  // Tier 5 改用 MSAA RT，FXAA 不需要
     exposure: 1.0,
@@ -474,7 +529,7 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
   });
   sceneRT.depthTexture = new THREE.DepthTexture();
   sceneRT.depthTexture.format = THREE.DepthFormat;
-  sceneRT.depthTexture.type = THREE.UnsignedShortType;
+  sceneRT.depthTexture.type = THREE.UnsignedIntType;  // 16-bit → 24-bit:near/far 在角色站位有足夠深度精度,消除 SSAO / DOF banding shimmer
 
   // ─── Bloom 多層 mip RT（每層 1/2 解析度） ───
   const makeRT = () => new THREE.WebGLRenderTarget(1, 1, {
@@ -489,6 +544,9 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
 
   // ─── DOF / Final 中間 RT ───
   const dofRT = makeRT();
+
+  // ─── SSAO RT（full-res,避免上採樣 banding;桌機路線單 8-tap pass 成本可控） ───
+  const ssaoRT = makeRT();
 
   // ─── Materials ───
   const matBright = new THREE.ShaderMaterial({
@@ -528,6 +586,19 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
       uFar:        { value: camera.far },
     },
   });
+  const matSSAO = new THREE.ShaderMaterial({
+    vertexShader: VS_FULLSCREEN, fragmentShader: FS_SSAO,
+    depthTest: false, depthWrite: false,
+    uniforms: {
+      tDepth:     { value: null },
+      uTexel:     { value: new THREE.Vector2() },
+      uNear:      { value: camera.near },
+      uFar:       { value: camera.far },
+      uRadius:    { value: tuning.ssao.radius },
+      uIntensity: { value: tuning.ssao.intensity },
+      uBias:      { value: tuning.ssao.bias },
+    },
+  });
   const matFinal = new THREE.ShaderMaterial({
     vertexShader: VS_FULLSCREEN, fragmentShader: FS_FINAL,
     uniforms: {
@@ -554,6 +625,9 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
       // F7 Rain on lens
       uRain:              { value: getRainTexture() },
       uRainAmount:        { value: tuning.rain.amount },
+      // SSAO（full-res AO texture,uAOAmount=0 時等效關閉）
+      uAO:                { value: ssaoRT.texture },
+      uAOAmount:          { value: 0.0 },
     },
   });
 
@@ -576,6 +650,7 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     sceneRT.setSize(W, H);
     bloomCompositeRT.setSize(W, H);
     dofRT.setSize(W, H);
+    ssaoRT.setSize(W, H);   // full-res(桌機,避免上採樣 banding)
 
     bloomMipRTs.forEach((mip, i) => {
       const div = Math.pow(2, i + 1);   // 1/2, 1/4, 1/8, 1/16
@@ -600,6 +675,21 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     renderer.clear();
     renderer.render(scene, camera);
     renderer.setRenderTarget(null);
+
+    // 1a. SSAO — depth-only AO 算到 full-res ssaoRT,final pass multiply
+    if (tuning.ssao.enabled && tuning.ssao.intensity > 0) {
+      matSSAO.uniforms.tDepth.value = sceneRT.depthTexture;
+      matSSAO.uniforms.uTexel.value.set(1 / ssaoRT.width, 1 / ssaoRT.height);
+      matSSAO.uniforms.uNear.value = camera.near;
+      matSSAO.uniforms.uFar.value = camera.far;
+      matSSAO.uniforms.uRadius.value = tuning.ssao.radius;
+      matSSAO.uniforms.uIntensity.value = tuning.ssao.intensity;
+      matSSAO.uniforms.uBias.value = tuning.ssao.bias;
+      fsq.render(renderer, matSSAO, ssaoRT);
+      matFinal.uniforms.uAOAmount.value = 1.0;
+    } else {
+      matFinal.uniforms.uAOAmount.value = 0.0;
+    }
 
     // 2. Bloom — bright pass → 多 mip down-sample blur → up-sample 疊加
     matBright.uniforms.tDiffuse.value = sceneRT.texture;
@@ -690,8 +780,9 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     sceneRT.dispose();
     bloomCompositeRT.dispose();
     dofRT.dispose();
+    ssaoRT.dispose();
     bloomMipRTs.forEach((m) => { m.a.dispose(); m.b.dispose(); });
-    [matBright, matBlur, matBloomAdd, matDOF, matFinal].forEach((m) => m.dispose());
+    [matBright, matBlur, matBloomAdd, matDOF, matSSAO, matFinal].forEach((m) => m.dispose());
     fsq.dispose();
   }
 
