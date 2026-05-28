@@ -2078,6 +2078,22 @@ function S(t) {
     z.position.set(-0.085, 0.11, 0.008);
     const P = z.clone();
     ((P.position.x = 0.085), o.add(z, P));
+    // (3D audit P1) shoe sole + toe — the cylinder was a vertical "leg cover"; add a forward sole + rounded toe so it reads as a shoe (full-body shots show feet)
+    {
+      const soleMat = new e.MeshStandardMaterial({ color: "#d8d0c2", roughness: 0.85, metalness: 0 });
+      const mkShoe = (sx) => {
+        const grp = new e.Group();
+        const sole = new e.Mesh(new e.BoxGeometry(0.076, 0.026, 0.175), soleMat);
+        sole.position.set(0, -0.06, 0.05);
+        grp.add(sole);
+        const toe = new e.Mesh(new e.SphereGeometry(0.04, 14, 12), S);
+        (toe.position.set(0, -0.048, 0.125), toe.scale.set(0.94, 0.7, 0.92));
+        grp.add(toe);
+        grp.position.set(sx, 0.11, 0.008);
+        return grp;
+      };
+      o.add(mkShoe(-0.085), mkShoe(0.085));
+    }
     const v = new e.Mesh(new e.SphereGeometry(0.056, 18, 18), d);
     (v.position.set(0.028, 1.698, -0.17), o.add(v));
     const G = new e.Mesh(
