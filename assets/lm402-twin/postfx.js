@@ -181,6 +181,59 @@ const FS_DOF = /* glsl */ `
 `;
 
 // ─────────────────────────────────────────────────────────────
+//  SSAO — Depth-only Ambient Occlusion（half-res，8-tap unrolled）
+//  做法：linearize depth，8 個方向 sample 鄰居深度，鄰居比中心近 → 遮擋累加。
+//  寫實感關鍵：角落 / 接地 / 摺痕的環境光遮蔽（學妹站牆邊、桌椅腳、衣摺）。
+//  為何 unroll + 不用 normal buffer：
+//    - WebGL ES 1.0（iOS Safari）對 array literal + loop-index array access 受限 →
+//      跟 DOF fix-5 一樣 unroll 8 taps，用 helper function 避開（GLSL1-safe）
+//    - depth-only（不需額外 normal G-buffer）→ 省一個 RT，mobile 友善
+//  range check：只算 radius 內的遮擋（避免遠景穿幫過暗）
+// ─────────────────────────────────────────────────────────────
+const FS_SSAO = /* glsl */ `
+  varying vec2 vUv;
+  uniform sampler2D tDepth;
+  uniform vec2 uTexel;       // 1.0 / half-res size
+  uniform float uNear;
+  uniform float uFar;
+  uniform float uRadius;     // screen-space sample 半徑（texel 倍數）
+  uniform float uIntensity;  // 遮蔽強度
+  uniform float uBias;       // 深度差 bias（避免自我遮蔽 acne）
+
+  float linz(float d) {
+    float z = d * 2.0 - 1.0;
+    return (2.0 * uNear * uFar) / (uFar + uNear - z * (uFar - uNear));
+  }
+  // 單一方向的遮擋量（rangeCheck 限制只算 radius 內）
+  float occAt(vec2 uv, float zC, vec2 dir, float rad) {
+    float dS = texture2D(tDepth, uv + dir * uTexel * rad).x;
+    float zS = linz(dS);
+    float diff = zC - zS;                          // 正 = 鄰居較近（遮擋）
+    float range = 1.0 - smoothstep(0.0, uRadius * 0.06, abs(diff));
+    return step(uBias, diff) * range;
+  }
+  void main() {
+    float dC = texture2D(tDepth, vUv).x;
+    if (dC >= 0.9999) { gl_FragColor = vec4(1.0); return; }  // 天空 / 背景 → 無 AO
+    float zC = linz(dC);
+    float r = uRadius;
+    float occ = 0.0;
+    // 8 方向 unrolled（不同半徑避免 ring artifact）
+    occ += occAt(vUv, zC, vec2( 1.0,   0.0  ), r * 0.50);
+    occ += occAt(vUv, zC, vec2( 0.707, 0.707), r * 0.70);
+    occ += occAt(vUv, zC, vec2( 0.0,   1.0  ), r * 0.90);
+    occ += occAt(vUv, zC, vec2(-0.707, 0.707), r * 0.60);
+    occ += occAt(vUv, zC, vec2(-1.0,   0.0  ), r * 1.00);
+    occ += occAt(vUv, zC, vec2(-0.707,-0.707), r * 0.75);
+    occ += occAt(vUv, zC, vec2( 0.0,  -1.0  ), r * 0.55);
+    occ += occAt(vUv, zC, vec2( 0.707,-0.707), r * 0.85);
+    occ = occ / 8.0;
+    float ao = 1.0 - occ * uIntensity;
+    gl_FragColor = vec4(vec3(clamp(ao, 0.0, 1.0)), 1.0);
+  }
+`;
+
+// ─────────────────────────────────────────────────────────────
 //  Final Pass — Vignette + FXAA + ACES (renderer 已做，但這裡再 sharpen)
 //  注意：renderer.toneMapping 在「直接 render to screen」時自動套用，
 //        但我們是 render to RT 再 blit 出來，所以最終 pass 要自己 tone map。
@@ -216,6 +269,9 @@ const FS_FINAL = /* glsl */ `
   uniform vec3 uVolFogColor;
   uniform float uCameraNearForFog;
   uniform float uCameraFarForFog;
+  // SSAO
+  uniform sampler2D uAO;
+  uniform float uAOAmount;
 
   // ACES tone map（與 renderer 一致）
   vec3 acesToneMap(vec3 x) {
@@ -267,6 +323,9 @@ const FS_FINAL = /* glsl */ `
     c.r = texture2D(tDiffuse, vUv + caOff).r;
     c.g = texture2D(tDiffuse, vUv).g;
     c.b = texture2D(tDiffuse, vUv - caOff).b;
+
+    // === SSAO multiply（接地 / 角落環境光遮蔽，tone map 前 linear space 套用）===
+    c *= mix(1.0, texture2D(uAO, vUv).r, uAOAmount);
 
     // === A5 Volumetric Fog（linearize depth + exp fog，避免近處也濛）===
     if (uVolFogDensity > 0.0) {
@@ -466,8 +525,10 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     enabled: true,
     // 過曝白塊修正後預設關鎖 — 全部「可能造成過曝」的 effect default = 0
     // console 想開個別 effect 自己開
-    bloom:    { threshold: 0.86, softKnee: 0.5, strength: 0, mips: 4 },     // 完全關
-    dof:      { focalRange: 0.6, maxBlur: 2.5, enabled: false },            // 完全關
+    bloom:    { threshold: 0.86, softKnee: 0.5, strength: 0.17, mips: 4 },  // 0.15→0.17 記憶暖光多一些,threshold 0.86 不動(白塊 guard 守住,不降到 0.84 放寬發光範圍)
+    dof:      { focalRange: 0.4, maxBlur: 3.5, enabled: true },             // maxBlur 2→3.5 + focalRange 0.6→0.4,背景真正溶解、焦平面貼學妹臉(服務一眼瞬間 portrait dissolve)
+    // SSAO — depth-only ambient occlusion(half-res 8-tap unrolled,iOS-safe)。AO 給 final pass multiply(接地 / 角落 / 摺痕環境光遮蔽)
+    ssao:     { enabled: true, intensity: 0.40, radius: 8.0, bias: 0.03 },  // full-res 8-tap,radius 8 texel = 接觸 AO 跨度(full-res texel 較小故 4→8 補償),intensity 0.40 / bias 0.03 留建築接觸區避免髒臉
     vignette: { color: [0.18, 0.10, 0.05], offset: 0.55, darkness: 0.32 },  // 0.42→0.32
     // Fix 4 (r29 Codex finding):⚠️ 假功能 — uFxaa uniform/fxaa() function 都 declare 但 main shader 沒呼叫 fxaa()
     // 改 toggle 視覺不會變(dead code)。保留 console API 不破 backward-compat,未來 sprint 真 wire FXAA 或 remove
@@ -497,7 +558,8 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
   // ─── DPR-aware 解析度（手機降畫質） ───
   let width = 1, height = 1;
   let dprScale = 1;
-  const isMobile = () => window.innerWidth <= 1080;
+  // 跟 renderer.js 陰影的 V = matchMedia("(pointer: coarse)") 對齊,避免 iPad / coarse-pointer laptop 預算不一致(shadow tier 跟 RT scale 用同一判據)
+  const isMobile = () => (typeof window !== "undefined" && window.matchMedia && window.matchMedia("(pointer: coarse)").matches) || window.innerWidth <= 1080;
 
   // ─── 主場景 RT（HalfFloat 保留 HDR；附 DepthTexture 給 DOF） ───
   const sceneRT = new THREE.WebGLRenderTarget(1, 1, {
@@ -511,7 +573,7 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
   });
   sceneRT.depthTexture = new THREE.DepthTexture();
   sceneRT.depthTexture.format = THREE.DepthFormat;
-  sceneRT.depthTexture.type = THREE.UnsignedShortType;
+  sceneRT.depthTexture.type = THREE.UnsignedIntType;  // 16-bit → 24-bit:near 0.03 / far 180 在 1-6m(學妹站位)有足夠深度精度,消除 iOS SSAO / DOF banding shimmer
 
   // ─── Bloom 多層 mip RT（每層 1/2 解析度） ───
   const makeRT = () => new THREE.WebGLRenderTarget(1, 1, {
@@ -527,6 +589,9 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
 
   // ─── DOF / Final 中間 RT ───
   const dofRT = makeRT();
+
+  // ─── SSAO RT（full-res，避免 half-res 上採樣 banding / 跨深度邊緣滲色;單 8-tap pass 成本可控 + adaptive 弱機先砍） ───
+  const ssaoRT = makeRT();
 
   // ─── Motion Blur 中間 RT(final pass 結果寫這,motion-blur composite 寫 canvas)──
   const finalRT = makeRT();
@@ -576,6 +641,19 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
       uFar:        { value: camera.far },
     },
   });
+  const matSSAO = new THREE.ShaderMaterial({
+    vertexShader: VS_FULLSCREEN, fragmentShader: FS_SSAO,
+    depthTest: false, depthWrite: false,
+    uniforms: {
+      tDepth:     { value: null },
+      uTexel:     { value: new THREE.Vector2() },
+      uNear:      { value: camera.near },
+      uFar:       { value: camera.far },
+      uRadius:    { value: tuning.ssao.radius },
+      uIntensity: { value: tuning.ssao.intensity },
+      uBias:      { value: tuning.ssao.bias },
+    },
+  });
   const matFinal = new THREE.ShaderMaterial({
     vertexShader: VS_FULLSCREEN, fragmentShader: FS_FINAL,
     depthTest: false, depthWrite: false,  // Codex r44 #1 同 fix
@@ -609,6 +687,9 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
       uDepthForFog:       { value: null },  // sceneRT.depthTexture
       uCameraNearForFog:  { value: 0.03 },
       uCameraFarForFog:   { value: 180 },
+      // SSAO（half-res AO texture，uAOAmount=0 時等效關閉）
+      uAO:                { value: ssaoRT.texture },
+      uAOAmount:          { value: 0.0 },
     },
   });
 
@@ -633,6 +714,8 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     bloomCompositeRTs.b.setSize(W, H);
     dofRT.setSize(W, H);
     finalRT.setSize(W, H);
+    // SSAO full-res（避免 half-res 上採樣 banding / 跨深度邊緣滲色,單 8-tap pass 成本可控 + adaptive 弱機先砍 SSAO）
+    ssaoRT.setSize(W, H);
     motionBlur.setSize(W, H);
 
     bloomMipRTs.forEach((mip, i) => {
@@ -658,6 +741,22 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     renderer.clear();
     renderer.render(scene, camera);
     renderer.setRenderTarget(null);
+
+    // 1a. SSAO — depth-only AO 算到 half-res ssaoRT，final pass multiply
+    //   (跳過條件：disabled / intensity 0 → uAOAmount=0 等效不套用)
+    if (tuning.ssao.enabled && tuning.ssao.intensity > 0) {
+      matSSAO.uniforms.tDepth.value = sceneRT.depthTexture;
+      matSSAO.uniforms.uTexel.value.set(1 / ssaoRT.width, 1 / ssaoRT.height);
+      matSSAO.uniforms.uNear.value = camera.near;
+      matSSAO.uniforms.uFar.value = camera.far;
+      matSSAO.uniforms.uRadius.value = tuning.ssao.radius;
+      matSSAO.uniforms.uIntensity.value = tuning.ssao.intensity;
+      matSSAO.uniforms.uBias.value = tuning.ssao.bias;
+      fsq.render(renderer, matSSAO, ssaoRT);
+      matFinal.uniforms.uAOAmount.value = 1.0;
+    } else {
+      matFinal.uniforms.uAOAmount.value = 0.0;
+    }
 
     // 2. Bloom — bright pass → 多 mip down-sample blur → up-sample 疊加
     // Fix 3 (r29 Codex finding):strength <= 0 跳整 pipeline,省 GPU 成本(預設 strength=0 也跑 = 浪費)
@@ -784,10 +883,11 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     bloomCompositeRTs.a.dispose();
     bloomCompositeRTs.b.dispose();
     dofRT.dispose();
+    ssaoRT.dispose();
     finalRT.dispose();
     motionBlur.dispose();
     bloomMipRTs.forEach((m) => { m.a.dispose(); m.b.dispose(); });
-    [matBright, matBlur, matBloomAdd, matDOF, matFinal].forEach((m) => m.dispose());
+    [matBright, matBlur, matBloomAdd, matDOF, matSSAO, matFinal].forEach((m) => m.dispose());
     fsq.dispose();
     // Codex r44 Phase 5 #4 (🟡):釋放全域 canvas texture cache(避免 GPU 累積)
     if (_lensDirtTexture) { _lensDirtTexture.dispose(); _lensDirtTexture = null; }

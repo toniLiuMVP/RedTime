@@ -3408,8 +3408,40 @@ export function createLm402Scene(D, runtimeOptions = {}) {
   const __sunsetEnvMap = buildSunsetEnvMap(U);
   W.environment = __sunsetEnvMap;
   const __postfx = createPostFX({ renderer: U, scene: W, camera: q });
+
+  // Adaptive quality auto-step — FPS 持續低就依序砍 SSAO → bloom → DOF,回升就還原。
+  // 純 postfx tuning flag toggle(不動 DPR / resize,避免 churn)。console API __ADAPTIVE_Q__ 可關。
+  const __adaptiveQ = { samples: [], last: (typeof performance !== "undefined" ? performance.now() : 0), level: 0, cooldown: 0, enabled: true, baseBloom: 0.17 };
+  function __adaptiveStep() {
+    if (!__adaptiveQ.enabled || !__postfx || !__postfx.tuning) return;
+    const now = performance.now();
+    const dt = now - __adaptiveQ.last;
+    __adaptiveQ.last = now;
+    if (dt <= 0 || dt > 200) return;            // 首幀 / 分頁切換 hiccup 跳過
+    const s = __adaptiveQ.samples;
+    s.push(1000 / dt);
+    if (s.length > 60) s.shift();
+    if (s.length < 45) return;                  // 需 ~45 幀才判斷
+    if (__adaptiveQ.cooldown > 0) { __adaptiveQ.cooldown -= 1; return; }
+    const avg = s.reduce((a, b) => a + b, 0) / s.length;
+    const t = __postfx.tuning;
+    if (avg < 45 && __adaptiveQ.level < 3) {
+      __adaptiveQ.level += 1;
+      if (__adaptiveQ.level === 1 && t.ssao) t.ssao.enabled = false;       // 先砍 SSAO
+      else if (__adaptiveQ.level === 2) { __adaptiveQ.baseBloom = t.bloom.strength || __adaptiveQ.baseBloom; t.bloom.strength = 0; }  // 再砍 bloom(先 cache 原值)
+      else if (__adaptiveQ.level === 3 && t.dof) t.dof.enabled = false;    // 最後砍 DOF
+      __adaptiveQ.cooldown = 120; s.length = 0;
+    } else if (avg > 56 && __adaptiveQ.level > 0) {
+      if (__adaptiveQ.level === 3 && t.dof) t.dof.enabled = true;
+      else if (__adaptiveQ.level === 2) t.bloom.strength = __adaptiveQ.baseBloom;  // 還原 cache 的原值(非硬編)
+      else if (__adaptiveQ.level === 1 && t.ssao) t.ssao.enabled = true;
+      __adaptiveQ.level -= 1;
+      __adaptiveQ.cooldown = 120; s.length = 0;
+    }
+  }
   if (typeof window !== "undefined") {
     window.__POSTFX__ = __postfx;
+    window.__ADAPTIVE_Q__ = __adaptiveQ;
     // B-3D-K item 3 (r31):NeutralToneMapping toggle(r179 新加)+ A/B compare console API
     // Usage: __TONE__.set('neutral' | 'aces' | 'reinhard' | 'cineon' | 'agx' | 'none')
     //        __TONE__.current()
@@ -4872,10 +4904,12 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     (Te.shadow.camera.bottom = -14),
     (Te.shadow.bias = -3e-4),
     (Te.shadow.normalBias = 0.026),
-    // Tier 9.1 VSM 軟陰影 + A7 推極限（雙時空）
-    (Te.shadow.radius = 14),               // 8 → 14（更軟）
-    (Te.shadow.blurSamples = 40),          // 25 → 40（更高品質）
-    (Te.shadow.mapSize.set(4096, 4096)),   // 提升解析度避免 blur 出鋸齒
+    // Tier 9.1 VSM 軟陰影 — device-aware（iOS-safe）：
+    //   mobile 走輕量(1536² / radius 7 / 16 samples)避免 4096² 在行動 GPU 過重,
+    //   desktop 保留 premium(4096² / radius 14 / 40 samples)。
+    (Te.shadow.radius = V ? 7 : 14),
+    (Te.shadow.blurSamples = V ? 16 : 40),
+    (Te.shadow.mapSize.set(V ? 1536 : 4096, V ? 1536 : 4096)),
     W.add(Te));
   // E3 季節時間環境 — 5 preset 切換（dusk/night/rainy/snowy/day）
   // 窗戶玻璃 + 窗框材質 — 提前宣告(下方 createEnvironmentPresets 需要 glassMaterial,
@@ -7595,6 +7629,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         // Tier 7：每幀計算太陽 NDC 位置（god rays + lens flare 用）
         __sunFar.copy(SUNSET_SUN_DIR).multiplyScalar(1000).add(q.position).project(q),
         __sunUv.set(__sunFar.x * 0.5 + 0.5, __sunFar.y * 0.5 + 0.5),
+        __adaptiveStep(),
         (__postfx ? __postfx.render(performance.now() / 1000, __sunUv) : U.render(W, q)));
     },
     resize: qo,

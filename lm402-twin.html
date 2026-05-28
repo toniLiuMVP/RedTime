@@ -2139,6 +2139,8 @@ body.lm402-page #cinematic-gate .cinematic-gate-kicker {
         function tick() {
           if (!_enabled) return;
           _rafId = requestAnimationFrame(tick);
+          /* adaptive 弱機 level>=2 砍 bloom 時讓位(否則每幀覆蓋 adaptive 降載),loop 續跑,adaptive 回升再恢復 */
+          if (window.__ADAPTIVE_Q__ && window.__ADAPTIVE_Q__.level >= 2) return;
           const rms = Math.max(rmsLowFreq(), 0.15);
           /* Map 0.15-1.0 → bloom.strength 0.30-0.55 (韓劇導演 spec; postfx uses .strength not .intensity) */
           const target = 0.30 + (rms - 0.15) / 0.85 * 0.25;
