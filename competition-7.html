@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>Player 7 Desktop Lightfield LM402</title>
-<meta name="description" content="Player 7 is a desktop-only WebGL2 lightfield stage with multi-pass volumetric shafts, instanced memory motes, screen-space refraction, and procedural shadow veil.">
+<title>選手 7 號 · Lightfield Witness · LM402</title>
+<meta name="description" content="選手 7 號是桌機限定 WebGL2 光場舞台：多通道體積光柱、instanced 記憶粒子、螢幕空間折射、程序化陰影帷幕。">
 <meta name="theme-color" content="#020204">
 <meta name="color-scheme" content="dark">
 <link rel="icon" href="data:,">
@@ -155,21 +155,21 @@
 <canvas id="scene-canvas"></canvas>
 <div id="ui">
   <section class="mast">
-    <div class="k">PLAYER 7 · DESKTOP WEBGL2 · MULTI PASS LIGHTFIELD</div>
+    <div class="k">選手 7 號 · 桌機版 WebGL2 · 多通道光場</div>
     <h1>Lightfield Witness</h1>
-    <p>Desktop-only render path: scene target, depth target, ray-marched light shafts, screen-space refraction, shadow veil, 720 instanced memory motes, and animated glass caustics.</p>
+    <p>桌機限定渲染路徑:scene target、depth target、ray-march 光柱、螢幕空間折射、陰影帷幕、720 顆 instanced 記憶粒子、動態玻璃焦散。</p>
   </section>
-  <a class="back" href="index.html">BACK</a>
+  <a class="back" href="index.html" aria-label="返回">返回</a>
   <div class="bottom">
-    <div class="caption">Mouse drag to orbit. Wheel to dolly. Press V to cycle volume depth. Press R to toggle the refraction veil. This one is intentionally not mobile safe.</div>
-    <div class="stats" id="stats">BOOTING</div>
+    <div class="caption">滑鼠拖曳旋轉視角，滾輪推軌。按 V 循環體積深度，按 R 切換折射帷幕。這個版本刻意不為行動裝置而設。</div>
+    <div class="stats" id="stats">啟動中</div>
   </div>
 </div>
 <div id="mobileBlock">
   <div class="block-card">
-    <h2>Desktop Render Path</h2>
-    <p>This scene intentionally uses a heavy desktop WebGL2 pipeline. Mobile Safari may stall, overheat, or drop the context.</p>
-    <button id="forceRun" type="button">FORCE RUN</button>
+    <h2>桌機渲染路徑</h2>
+    <p>這個場景刻意使用沉重的桌機 WebGL2 管線。行動版 Safari 可能卡頓、過熱或丟失 context。</p>
+    <button id="forceRun" type="button">強制執行</button>
   </div>
 </div>
 
