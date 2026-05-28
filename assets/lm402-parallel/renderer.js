@@ -246,6 +246,12 @@ function buildReferenceJuniorHeroHead(t = {}) {
   (b.position.set(-0.008, -0.056, 0.088), b.scale.set(0.72, 0.46, 0.7), o.add(b));
   const S = b.clone();
   ((S.position.x = 0.009), o.add(S));
+  // (3D audit P1) nostril cavities — 2 dark recessed openings under the nose tip between the alae (Asian nose-base realism; was only a flat semi-transparent hint)
+  const nostrilMat = new e.MeshStandardMaterial({ color: "#2a1714", roughness: 0.92, metalness: 0 });
+  const nostrilL = new e.Mesh(new e.SphereGeometry(0.0042, 12, 10), nostrilMat);
+  (nostrilL.position.set(-0.0066, -0.0575, 0.0862), nostrilL.scale.set(0.82, 0.5, 0.66), o.add(nostrilL));
+  const nostrilR = nostrilL.clone();
+  ((nostrilR.position.x = 0.0072), o.add(nostrilR));
   const P = new e.Mesh(
     new e.CapsuleGeometry(0.0022, 0.014, 4, 6),
     new e.MeshStandardMaterial({
