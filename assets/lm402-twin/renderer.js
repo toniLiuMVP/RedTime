@@ -296,6 +296,22 @@ function buildReferenceJuniorHeroHead(t = {}) {
     z.position.set(0, -0.1, 0.096),
     (z.rotation.z = Math.PI / 2),
     o.add(z));
+  // (3D audit P2) philtrum groove (人中) — faint vertical shadow hint between nose-base and upper-lip; additive + low-opacity so it is easily revertible
+  const philtrumMat = new e.MeshStandardMaterial({ color: "#9c6f68", roughness: 0.8, metalness: 0, transparent: !0, opacity: 0.4 });
+  const philtrum = new e.Mesh(new e.CapsuleGeometry(0.0011, 0.011, 3, 6), philtrumMat);
+  (philtrum.position.set(0, -0.071, 0.0902), philtrum.scale.set(1, 1, 0.55), (philtrum.renderOrder = 16), o.add(philtrum));
+  // (3D audit P2) cupid's bow (唇峰) — 2 subtle peaks on the upper-lip top edge suggesting the M-shape
+  const bowMat = JM.createLipMaterialHR("#c98f8d");
+  const bowL = new e.Mesh(new e.SphereGeometry(0.0034, 12, 10), bowMat);
+  (bowL.position.set(-0.0072, -0.0852, 0.0972), bowL.scale.set(0.92, 0.58, 0.7), (bowL.renderOrder = 17), o.add(bowL));
+  const bowR = bowL.clone();
+  ((bowR.position.x = 0.0072), o.add(bowR));
+  // (3D audit P2) ear concha (耳殼凹) — inner-ear shadow bowl so the ear reads as an ear, not a flat blob; per-side, additive
+  const conchaMat = new e.MeshStandardMaterial({ color: "#8f655f", roughness: 0.86, metalness: 0 });
+  const conchaL = new e.Mesh(new e.SphereGeometry(0.011, 14, 12), conchaMat);
+  (conchaL.position.set(-0.0786, -0.025, 0.013), conchaL.scale.set(0.32, 0.74, 0.4), (conchaL.rotation.z = 0.18), o.add(conchaL));
+  const conchaR = conchaL.clone();
+  ((conchaR.position.x = 0.0866), (conchaR.rotation.z = -0.18), o.add(conchaR));
   const eyeGroup = (t) => {
       const o = new e.Group();
       o.position.set(0.041 * t, -0.002, 0.082);
@@ -1569,6 +1585,11 @@ function S(t) {
         opacity: 0.56,
         tubularSegments: 24,
       },
+      // (3D audit P2) gap-fill fringe strands — 4 extra strands at forehead gaps for a slightly fuller fringe (modest, not over-densified; toni can request more on real device)
+      { points: [[-0.043, 1.613, 0.082], [-0.033, 1.584, 0.11], [-0.024, 1.503, 0.136]], radius: 0.0044, opacity: 0.86 },
+      { points: [[0.043, 1.613, 0.082], [0.033, 1.584, 0.11], [0.024, 1.503, 0.136]], radius: 0.0044, opacity: 0.86 },
+      { points: [[-0.072, 1.607, 0.08], [-0.06, 1.577, 0.107], [-0.048, 1.512, 0.134]], radius: 0.0047, opacity: 0.88 },
+      { points: [[0.072, 1.607, 0.08], [0.06, 1.577, 0.107], [0.048, 1.512, 0.134]], radius: 0.0047, opacity: 0.88 },
     ];
     const cheekShadowMaterial = new e.MeshStandardMaterial({
       color: "#2b1618",
