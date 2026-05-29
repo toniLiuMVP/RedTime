@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v15-20260606';  // unchanged: GLB / vendor 無變動
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v70-20260530';  // bumped: lm402 face detail (philtrum + cupid's bow + ear concha) + denser fringe (twin+parallel)
+const RUNTIME_VERSION = 'runtime-v71-20260530';  // bumped: allow data: URIs in media-src CSP (3 lm402 pages) so the silent audio autoplay primer is not blocked
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
