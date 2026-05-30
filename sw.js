@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v15-20260606';  // unchanged: GLB / vendor 無變動
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v71-20260530';  // bumped: allow data: URIs in media-src CSP (3 lm402 pages) so the silent audio autoplay primer is not blocked
+const RUNTIME_VERSION = 'runtime-v72-20260531';  // bumped: lm402-parallel Babylon.js WebGPU P1 scaffold (?webgpu=1 opt-in, default Three.js untouched)
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
@@ -92,6 +92,7 @@ const RUNTIME_PRECACHE_URLS = [
   '/RedTime/assets/lm402-parallel/data.js',
   '/RedTime/assets/lm402-parallel/webgpu-bootstrap.js',
   '/RedTime/assets/lm402-parallel/parallel-init.js',
+  '/RedTime/assets/lm402-parallel/babylon-bootstrap.js',
   // 月台奔跑入口頁 + 三線 SPA(r46 加平行世界)
   '/RedTime/demos/platform-run-time.html',
   '/RedTime/demos/platform-run/index.html',
@@ -106,7 +107,8 @@ function isStaticAsset(url) {
   return /\.(glb|woff2?|ttf|otf|png|jpg|jpeg|svg|ico)$/i.test(url) ||
          url.includes('/vendor-three') ||
          url.includes('/GLTFLoader') ||
-         url.includes('/three.core');
+         url.includes('/three.core') ||
+         url.includes('/babylon');   // Babylon UMD 8MB → STATIC cache（on-demand,僅 ?webgpu=1 抓）
 }
 
 self.addEventListener('install', event => {

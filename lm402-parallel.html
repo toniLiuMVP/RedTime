@@ -788,11 +788,18 @@
     <!-- C9: Deferred Three.js module import — 點擊玄關後才動態載入 app.js -->
     <script type="module">
       (function () {
+        // r67(2026-05-31):?webgpu=1 → Babylon.js 絕對天花板線(WebGPU-only,gate 非 WebGPU)
+        //                 否則走 Three.js app.js(預設完全不動)
+        const __useBabylon =
+          new URLSearchParams(location.search).has("webgpu") || window.__USE_WEBGPU__ === true;
+        const __sceneMod = __useBabylon
+          ? "./assets/lm402-parallel/babylon-bootstrap.js"
+          : "./assets/lm402-parallel/app.js";
         const gate = document.getElementById("cinematic-gate");
         const gateBtn = document.getElementById("cinematic-gate-enter");
         if (!gate || !gateBtn) {
           // 玄關不存在時退回原有行為，直接載入場景（安全網）
-          import("./assets/lm402-parallel/app.js")
+          import(__sceneMod)
             .then(() => { window.__lm402Ready = true; window.__lm402GateEntered = true; })
             .catch((err) => console.error("[lm402] scene load failed", err));
           return;
@@ -843,8 +850,8 @@
           gate.classList.add("gate-exiting");
           setTimeout(() => { if (gate.parentNode) gate.parentNode.removeChild(gate); }, 1200);
 
-          // 4. 動態 import app.js（觸發 Three.js 初始化）
-          import("./assets/lm402-parallel/app.js")
+          // 4. 動態 import 場景 module（Three.js app.js 或 Babylon bootstrap,依 ?webgpu）
+          import(__sceneMod)
             .then(() => { window.__lm402Ready = true; })
             .catch((err) => {
               console.error("[lm402] failed to load scene module", err);
@@ -1398,6 +1405,8 @@ body.lm402-page #cinematic-gate .cinematic-gate-kicker {
     </script>
     <!-- F1 平行世界 WebGPU 啟動器（detection + fallback / placeholder） -->
     <script type="module">
+      // r67: Babylon 模式(?webgpu=1)跳過此 Three.js WebGPU 偵測/placeholder,Babylon 自管 gate
+      if (!(new URLSearchParams(location.search).has("webgpu") || window.__USE_WEBGPU__ === true))
       import("./assets/lm402-parallel/webgpu-bootstrap.js")
         .then(async (mod) => {
           const result = await mod.detectWebGPU();
