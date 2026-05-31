@@ -9,6 +9,7 @@
 import { buildJunior } from "./babylon-junior.js";
 import { setupPipeline } from "./babylon-pipeline.js";
 import { setupConsciousness } from "./babylon-particles.js";
+import { setupCloseup } from "./babylon-closeup.js";
 
 const BABYLON_VENDOR = "./assets/lm402-parallel/vendor/babylon.9.10.1.js";
 
@@ -149,11 +150,14 @@ async function main() {
   gm.metallic = 0.0;
   gm.roughness = 0.85;
   ground.material = gm;
+  ground.receiveShadows = true; // P5 Codex fix: 讓 ShadowGenerator 的陰影真的投在地面上
 
   // P3: 後製 + 光影管線(bloom / ACES tonemap / SSAO2 / grain / CA + cinematic 補光)
   setupPipeline(BABYLON, scene, camera, junior.headCenter);
   // P4: 意識菜市場 compute 粒子(GPUParticleSystem,環繞頭部記憶碎片風暴)
   setupConsciousness(BABYLON, scene, junior.headCenter);
+  // P5: 一眼瞬間 max-raster closeup(暖窗光 + 程序 IBL + SSR + DoF closeup toggle)
+  setupCloseup(BABYLON, scene, camera, junior);
 
   engine.runRenderLoop(() => scene.render());
   window.addEventListener("resize", () => engine.resize());
@@ -163,7 +167,7 @@ async function main() {
   const ver = (BABYLON.Engine && BABYLON.Engine.Version) || "9.x";
   console.info("%c[parallel-babylon] P2 junior online — Babylon " + ver + " WebGPU", "color:#a8c5ff;font-weight:bold");
   console.info("  GPU adapter:", (det.adapter && det.adapter.info) || "(info n/a)");
-  console.info("  junior: window.__JUNIOR__ · consciousness: window.__BJS_CONSC__ · next P5: 一眼瞬間 closeup");
+  console.info("  LM402-parallel P1-P5 online · __BJS_CLOSEUP__() 切一眼瞬間特寫 · next: Q-series 月台");
 }
 
 main();
