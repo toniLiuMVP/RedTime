@@ -102,7 +102,7 @@ function disposeHead(h) {
 const JR_SKIN = "#fce4d4", JR_HAIR = "#7a5842", JR_IRIS = "#7a5a42";   // 學妹 Co 參數
 // beautify 參數（__PREVIEW__.setBeauty(k,v) 即時調 + 截圖迭代到最美）
 const BEAUTY = {
-  eyeScale: 0.9, eyeDepth: -0.01, eyeY: -0.006,      // 眼:微縮 / 入眼窩 / 略下移(降額頭感)
+  eyeScaleX: 0.82, eyeScaleY: 0.58, eyeScaleZ: 0.8, eyeDepth: -0.008, eyeY: -0.004,   // 眼:自然杏眼(壓扁 Y 成杏形,非大圓動漫眼;對齊 2005 定稿)
   hideLipLine: true, lipScaleX: 0.55, lipScaleY: 0.5, lipScaleZ: 0.8, lipY: 0.012,   // 唇(已改自建小嘴,此組保留相容)
   browScale: 1.0, browY: 0,                          // 眉
   faceSquashY: 0.9,                                  // 臉 Y 壓縮(整組一起 → 維持對齊 → 更圓更可愛,降低長臉感)
@@ -126,36 +126,36 @@ function buildCleanMouth() {
   g.add(lower, upper, seam);
   return g;
 }
-// 頭髮:平滑頭頂髮量(藏臉後)+ 額頭瀏海(加密重疊柔軟髮束)
+// 頭髮(對齊 2005 定稿:深棕 · 俐落後梳平滑頂 · 中分薄側掃瀏海 · 後腦馬尾 · 細側髮絲)
 function buildFringe() {
   const g = new THREE.Group();
-  const hairMat = new THREE.MeshPhysicalMaterial({ color: "#5e3f2c", roughness: 0.46, metalness: 0.06, clearcoat: 0.35, clearcoatRoughness: 0.4, sheen: 0.5, sheenColor: new THREE.Color("#9a7048") });
-  // 頭頂髮量:平滑 cap,蓋頭頂/後/側,front 藏在額頭瀏海後(z<0.06)
+  const hairMat = new THREE.MeshPhysicalMaterial({ color: "#3a2718", roughness: 0.4, metalness: 0.08, clearcoat: 0.45, clearcoatRoughness: 0.32, sheen: 0.55, sheenColor: new THREE.Color("#7a5232") });
+  // 頭頂平滑髮量(v10 乾淨位置,不蓋臉)
   const cap = new THREE.Mesh(new THREE.SphereGeometry(0.11, 36, 28), hairMat);
-  cap.scale.set(1.14, 1.06, 1.1); cap.position.set(0, 0.014, -0.07);   // v8 位置(不前移過頭蓋臉)
+  cap.scale.set(1.14, 1.08, 1.1); cap.position.set(0, 0.016, -0.07);
   g.add(cap);
-  // 瀏海:加密(N=23)+ 重疊,中分向外撇,尖端到眉
+  // 直瀏海覆額(v10 乾淨式:密、朝下、僅微撇,不大幅側掃以免尖刺)
   const N = 23;
   for (let i = 0; i < N; i++) {
     const t = (i / (N - 1)) - 0.5;
     const ax = Math.abs(t);
     const lock = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.082, 7), hairMat);
-    lock.scale.set(0.62, 1, 0.2);            // 扁寬薄髮束(重疊蓋縫)
+    lock.scale.set(0.62, 1, 0.2);
     lock.position.set(t * 0.15, 0.05 - ax * 0.012, 0.078 - ax * 0.055);
-    lock.rotation.x = Math.PI + 0.28;        // 尖端朝下覆額頭
-    lock.rotation.z = -t * 0.5;
+    lock.rotation.x = Math.PI + 0.28;                     // 朝下覆額
+    lock.rotation.z = -t * 0.42;                          // 僅微撇(避免放射尖刺)
     g.add(lock);
   }
-  // 側髮:左右髮簾(各 2 束,扁長下垂到下顎)框臉
+  // 後腦馬尾(小、收在後上方,前視只露頂部一點,不下垂過頭)
+  const tail = new THREE.Mesh(new THREE.SphereGeometry(0.06, 20, 16), hairMat);
+  tail.scale.set(0.9, 1.7, 0.9); tail.position.set(0, -0.015, -0.11);
+  g.add(tail);
+  // 細側髮絲框臉(薄、貼臉垂到下顎)
   for (const side of [-1, 1]) {
-    for (let k = 0; k < 2; k++) {
-      const s = new THREE.Mesh(new THREE.ConeGeometry(0.024, 0.15, 6), hairMat);
-      s.scale.set(0.5, 1, 0.2);
-      s.position.set(side * (0.08 + k * 0.006), 0.012, 0.04 - k * 0.04);
-      s.rotation.x = Math.PI - 0.04;          // 垂直略後(貼頭側下垂)
-      s.rotation.z = side * 0.04;             // 幾乎貼臉,不外撇
-      g.add(s);
-    }
+    const s = new THREE.Mesh(new THREE.ConeGeometry(0.014, 0.16, 6), hairMat);
+    s.scale.set(0.5, 1, 0.28); s.position.set(side * 0.08, 0.006, 0.035);
+    s.rotation.x = Math.PI; s.rotation.z = side * 0.05;
+    g.add(s);
   }
   return g;
 }
@@ -177,7 +177,7 @@ function buildHybrid() {
   // beautify pass(refs 命名五官微調 — 截圖迭代到最美)
   const rf = p.refs, B = BEAUTY;
   [rf.heroEyeWhiteL, rf.heroEyeWhiteR].forEach((m) => {
-    if (m && m.parent) { m.parent.scale.multiplyScalar(B.eyeScale); m.parent.position.z += B.eyeDepth; m.parent.position.y += B.eyeY; }
+    if (m && m.parent) { m.parent.scale.set(B.eyeScaleX, B.eyeScaleY, B.eyeScaleZ); m.parent.position.z += B.eyeDepth; m.parent.position.y += B.eyeY; }
   });
   [rf.heroBrowL, rf.heroBrowR].forEach((m) => { if (m) { m.scale.multiplyScalar(B.browScale); m.position.y += B.browY; } });
   // 嘴:隱藏 primitive 嘴部區(唇/人中/唇峰 = y<-0.062 直屬 mesh)→ 換乾淨小嘴
