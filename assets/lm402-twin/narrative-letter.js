@@ -258,6 +258,7 @@ export function createNarrativeLetter() {
   }
 
   function show(page, opts = {}) {
+    if (!page) return;
     currentPages = null;
     currentIdx = 0;
     navWrap.style.display = "none";
