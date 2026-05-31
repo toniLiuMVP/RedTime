@@ -31,6 +31,11 @@
   <h1>學妹 · 連續雕刻頭預覽</h1>
   <div>平行世界A 學妹 3D 建模實驗。拖曳旋轉、滾輪縮放。</div>
   <div class="row">
+    <button data-mode="continuous">連續雕刻</button>
+    <button data-mode="primitive">primitive 拼裝</button>
+    <button data-mode="hybrid">hybrid 混合</button>
+  </div>
+  <div class="row">
     <button data-act="rotate">自轉 開／關</button>
     <button data-act="face">正面特寫</button>
   </div>
@@ -57,6 +62,7 @@
 <script type="module">
 import * as THREE from "./assets/lm402-parallel/vendor-three.module.js";
 import { buildContinuousHead, setFeatureAmp, setSculptStrength } from "./assets/lm402-parallel/junior-head-hd.js";
+import { buildReferenceJuniorHeroHead } from "./assets/lm402-parallel/renderer.js";
 
 const canvas = document.getElementById("c");
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -69,7 +75,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color("#0a0a0f");
 
 const camera = new THREE.PerspectiveCamera(28, innerWidth / innerHeight, 0.01, 100);
-const HEAD_Y = -0.01;   // 連續頭中心約在此(buildContinuousHead offset)
+const HEAD_Y = -0.045;   // 臉中心(眉~+0.02 到下巴~-0.11 的中點)→ 相機框完整的臉
 camera.position.set(0.02, HEAD_Y + 0.02, 0.52);
 camera.lookAt(0, HEAD_Y, 0);
 
@@ -87,10 +93,39 @@ scene.add(rim);
 scene.add(new THREE.AmbientLight("#5a6078", 0.55));
 
 // ── 連續雕刻頭 ──
-let head = null, detail = 7, strength = 1.0, rotate = false;   // 預設正面靜止（看臉），按「自轉」才轉
+let head = null, detail = 7, strength = 1.0, rotate = false, mode = "hybrid";   // 預設 hybrid（最佳）正面靜止，按「自轉」才轉
+function disposeHead(h) {
+  if (!h) return;
+  scene.remove(h);
+  if (h.traverse) h.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material?.dispose) o.material.dispose(); });
+}
+const JR_SKIN = "#fce4d4", JR_HAIR = "#7a5842", JR_IRIS = "#7a5a42";   // 學妹 Co 參數
+function buildPrimitive() {
+  const p = buildReferenceJuniorHeroHead({ skinColor: JR_SKIN, hairColor: JR_HAIR, irisColor: JR_IRIS });
+  p.root.position.set(0, 0, 0); p.root.scale.set(1, 1, 1); p.root.visible = true;   // 對齊連續頭座標系
+  return p;
+}
+// hybrid(c):連續平滑基底 + primitive 五官(隱藏膚色不透明基底 blob,連續頭取代)
+function buildHybrid() {
+  const group = new THREE.Group();
+  group.add(buildContinuousHead({ detail }));
+  const p = buildPrimitive();
+  const skin = new THREE.Color(JR_SKIN);
+  p.root.traverse((o) => {
+    if (o.isMesh && o.material && o.material.color && o.material.transparent !== true) {
+      const c = o.material.color;
+      const d = Math.abs(c.r - skin.r) + Math.abs(c.g - skin.g) + Math.abs(c.b - skin.b);
+      if (d < 0.15) o.visible = false;   // 膚色不透明 = 基底 blob → 隱藏(連續頭當基底)
+    }
+  });
+  group.add(p.root);
+  return group;
+}
 function rebuild() {
-  if (head) { scene.remove(head); head.geometry.dispose(); if (head.material?.dispose) head.material.dispose(); }
-  head = buildContinuousHead({ detail });   // 用模組當前 _features / _strength + 此處 detail
+  disposeHead(head);
+  if (mode === "primitive") head = buildPrimitive().root;
+  else if (mode === "hybrid") head = buildHybrid();
+  else head = buildContinuousHead({ detail });   // 連續雕刻(模組當前 _features / _strength + detail)
   scene.add(head);
 }
 rebuild();
@@ -124,7 +159,8 @@ tick();
 // ── 控制按鈕 ──
 document.getElementById("panel").addEventListener("click", (e) => {
   const b = e.target.closest("button"); if (!b) return;
-  if (b.dataset.act === "rotate") rotate = !rotate;
+  if (b.dataset.mode) { mode = b.dataset.mode; rebuild(); }
+  else if (b.dataset.act === "rotate") rotate = !rotate;
   else if (b.dataset.act === "face") { yaw = 0; pitch = 0; dist = 0.42; rotate = false; }
   else if (b.dataset.detail) { detail = +b.dataset.detail; rebuild(); applyStrength(); }
   else if (b.dataset.strength) { strength = +b.dataset.strength; applyStrength(); }

@@ -132,7 +132,7 @@ function buildJuniorHairRibbon(t, o, a, n = {}) {
   i.userData.cloth = true;
   return ((i.renderOrder = n.renderOrder ?? 18), i);
 }
-function buildReferenceJuniorHeroHead(t = {}) {
+export function buildReferenceJuniorHeroHead(t = {}) {
   const o = new e.Group();
   (o.position.set(0.01, 1.55, 0.008), o.scale.set(0.62, 0.64, 0.62));
   o.visible = !1;

@@ -76,12 +76,30 @@ function dirVec(dir, vertex) {
   return new THREE.Vector3(0, 0, 1);
 }
 
+// 焊接重複頂點:IcosahedronGeometry 是 non-indexed(每三角獨立頂點)→ computeVertexNormals 只得面法線=平面著色。
+// 量化位置去重 → indexed(共享頂點)→ 算出的是平滑頂點法線 → 消 faceting。
+function weldGeometry(geo) {
+  const pos = geo.attributes.position, map = new Map(), out = [], idx = [], P = 1e4;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+    const key = Math.round(x * P) + "_" + Math.round(y * P) + "_" + Math.round(z * P);
+    let j = map.get(key);
+    if (j === undefined) { j = out.length / 3; map.set(key, j); out.push(x, y, z); }
+    idx.push(j);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(out, 3));
+  g.setIndex(idx);
+  return g;
+}
+
 // 建連續雕刻頭(geometry 已在 group-space,可直接 add 進 hero head group)
 export function buildContinuousHead(opts = {}) {
   const skinColor = opts.skinColor || "#f9e7da";
-  const geo = new THREE.IcosahedronGeometry(HEAD.radius, opts.detail ?? HEAD.detail);
+  let geo = new THREE.IcosahedronGeometry(HEAD.radius, opts.detail ?? HEAD.detail);
   geo.scale(HEAD.scale[0], HEAD.scale[1], HEAD.scale[2]);          // 橢球
   geo.translate(HEAD.offset[0], HEAD.offset[1], HEAD.offset[2]);    // 移到 group-space 頭位置
+  geo = weldGeometry(geo);   // 焊接 → indexed → 下面 computeVertexNormals 得平滑著色(消 faceting)
 
   const pos = geo.attributes.position;
   const v = new THREE.Vector3();
