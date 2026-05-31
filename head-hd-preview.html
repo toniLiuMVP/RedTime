@@ -69,28 +69,46 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.0;
+renderer.toneMappingExposure = 1.15;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color("#0a0a0f");
+scene.background = new THREE.Color("#ece6dd");   // 柔和淺背景(對齊定稿白棚拍)
 
 const camera = new THREE.PerspectiveCamera(28, innerWidth / innerHeight, 0.01, 100);
-const HEAD_Y = -0.045;   // 臉中心(眉~+0.02 到下巴~-0.11 的中點)→ 相機框完整的臉
+const HEAD_Y = -0.045;   // 臉中心 → 相機框完整的臉
 camera.position.set(0.02, HEAD_Y + 0.02, 0.52);
 camera.lookAt(0, HEAD_Y, 0);
 
-// ── 一眼瞬間暖光（11:00 那道斜射光）+ 冷補 + 邊緣光 ──
-const key = new THREE.SpotLight("#ffd2a0", 6, 0, Math.PI / 4.5, 0.55, 1.2);
-key.position.set(0.45, 0.5, 0.55);
-key.target.position.set(0, HEAD_Y, 0);
-scene.add(key, key.target);
-const fill = new THREE.DirectionalLight("#9fb8e0", 0.5);
-fill.position.set(-0.6, 0.1, 0.3);
+// ── studio IBL 環境貼圖(關鍵:沒有 envMap 的 PBR 皮膚一定扁平 matte)── 程序漸層 → PMREM ──
+function makeStudioEnv() {
+  const c = document.createElement("canvas"); c.width = 16; c.height = 64;
+  const ctx = c.getContext("2d");
+  const g = ctx.createLinearGradient(0, 0, 0, 64);
+  g.addColorStop(0.0, "#fff7ee"); g.addColorStop(0.45, "#efe6da"); g.addColorStop(1.0, "#b6ac9e");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 16, 64);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;   // Codex F6:漸層是 sRGB 色票,PMREM 前先宣告色彩空間
+  tex.mapping = THREE.EquirectangularReflectionMapping;
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const env = pmrem.fromEquirectangular(tex).texture;
+  tex.dispose(); pmrem.dispose();
+  return env;
+}
+scene.environment = makeStudioEnv();
+scene.environmentIntensity = 0.85;   // 軟環境光當皮膚主 ambient → 消 matte
+
+// ── studio 三點軟光(柔和暖 key + 冷補 + 邊緣分離;IBL 已提供 ambient,直接光降柔)──
+const key = new THREE.DirectionalLight("#fff2e2", 2.0);
+key.position.set(0.4, 0.5, 0.7);
+scene.add(key);
+const fill = new THREE.DirectionalLight("#dde8f5", 0.6);
+fill.position.set(-0.6, 0.05, 0.4);
 scene.add(fill);
-const rim = new THREE.DirectionalLight("#ffe0c0", 0.9);
-rim.position.set(-0.3, 0.4, -0.6);
+const rim = new THREE.DirectionalLight("#ffe8d0", 0.7);
+rim.position.set(-0.2, 0.5, -0.7);
 scene.add(rim);
-scene.add(new THREE.AmbientLight("#5a6078", 0.55));
+scene.add(new THREE.AmbientLight("#f0ece4", 0.12));
 
 // ── 連續雕刻頭 ──
 let head = null, detail = 7, strength = 1.0, rotate = false, mode = "hybrid";   // 預設 hybrid（最佳）正面靜止，按「自轉」才轉
