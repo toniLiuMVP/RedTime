@@ -8,6 +8,7 @@
 
 import { buildJunior } from "./babylon-junior.js";
 import { setupPipeline } from "./babylon-pipeline.js";
+import { setupConsciousness } from "./babylon-particles.js";
 
 const BABYLON_VENDOR = "./assets/lm402-parallel/vendor/babylon.9.10.1.js";
 
@@ -110,7 +111,13 @@ async function main() {
 
   const canvas = ensureCanvas();
   const engine = new BABYLON.WebGPUEngine(canvas, { antialias: true, stencil: true });
-  await engine.initAsync();
+  // P4: glslang/twgsl transpiler 指向本機 vendor(GPUParticleSystem 等 GLSL shader 需要)
+  // → 不從 cdn.babylonjs.com 抓(CSP connect-src 'self' 會擋),改用同源本機檔。
+  const V = "./assets/lm402-parallel/vendor";
+  await engine.initAsync(
+    { jsPath: V + "/glslang/glslang.js", wasmPath: V + "/glslang/glslang.wasm" },
+    { jsPath: V + "/twgsl/twgsl.js", wasmPath: V + "/twgsl/twgsl.wasm" }
+  );
   window.__BABYLON_ENGINE__ = engine;
 
   // P1 minimal scene: PBR sphere + ground + lights (prove WebGPU PBR pipeline)
@@ -145,6 +152,8 @@ async function main() {
 
   // P3: 後製 + 光影管線(bloom / ACES tonemap / SSAO2 / grain / CA + cinematic 補光)
   setupPipeline(BABYLON, scene, camera, junior.headCenter);
+  // P4: 意識菜市場 compute 粒子(GPUParticleSystem,環繞頭部記憶碎片風暴)
+  setupConsciousness(BABYLON, scene, junior.headCenter);
 
   engine.runRenderLoop(() => scene.render());
   window.addEventListener("resize", () => engine.resize());
@@ -154,7 +163,7 @@ async function main() {
   const ver = (BABYLON.Engine && BABYLON.Engine.Version) || "9.x";
   console.info("%c[parallel-babylon] P2 junior online — Babylon " + ver + " WebGPU", "color:#a8c5ff;font-weight:bold");
   console.info("  GPU adapter:", (det.adapter && det.adapter.info) || "(info n/a)");
-  console.info("  junior: window.__JUNIOR__ · pipeline: window.__BJS_PIPELINE__ · next P4: compute particles");
+  console.info("  junior: window.__JUNIOR__ · consciousness: window.__BJS_CONSC__ · next P5: 一眼瞬間 closeup");
 }
 
 main();
