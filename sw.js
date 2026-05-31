@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v15-20260606';  // unchanged: GLB / vendor 無變動
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v76-20260601';  // bumped: lean install precache to core routes, secondary assets via runtime cache
+const RUNTIME_VERSION = 'runtime-v77-20260601';  // bumped: dedupe platform-run three.module to single shared copy
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
@@ -38,11 +38,9 @@ const STATIC_PRECACHE_URLS = [
   '/RedTime/assets/lm402-parallel/characters/junior/exports/junior_2005_hero_closeup.glb',
   '/RedTime/assets/lm402-parallel/characters/junior/exports/junior_2005_runtime.glb',
   '/RedTime/assets/lm402-parallel/characters/junior/exports/junior_2005_runtime_mobile.glb',
-  // 月台奔跑雙時空(完整 offline:three vendor + 主題曲 mp3 + GLB 若有)
-  '/RedTime/demos/platform-run-twin/three.module.js',
+  // 月台奔跑三線共用 three.module(去重後單一副本)+ 各線主題曲 mp3
+  '/RedTime/demos/_vendor/three.module.js',
   '/RedTime/demos/platform-run-twin/把拔我會想你的.mp3',
-  // 月台奔跑平行世界(r46 新增,共享 lm402-parallel WebGPU vendor)
-  '/RedTime/demos/platform-run-parallel/three.module.js',
   '/RedTime/demos/platform-run-parallel/把拔我會想你的.mp3',
   // WebGPU vendor(three.webgpu / three.tsl)on-demand 才抓,不 install 預載
   // 共用 assets
@@ -98,6 +96,7 @@ const RUNTIME_PRECACHE_URLS = [
 function isStaticAsset(url) {
   return /\.(glb|woff2?|ttf|otf|png|jpg|jpeg|svg|ico)$/i.test(url) ||
          url.includes('/vendor-three') ||
+         url.includes('/_vendor/') ||
          url.includes('/GLTFLoader') ||
          url.includes('/three.core') ||
          url.includes('/babylon');   // Babylon UMD 8MB → STATIC cache（on-demand,僅 ?webgpu=1 抓）

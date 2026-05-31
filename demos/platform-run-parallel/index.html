@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <meta name="color-scheme" content="dark" />
 <!-- Defense-in-depth CSP（最佳做法仍是 HTTP header，但 GitHub Pages 無法設 header，故以 meta 作為最低防線） -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'self' https:; connect-src 'self'; frame-ancestors 'self';" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'self' https:; connect-src 'self';" />
 <!-- google-site-verification 只需在 index.html 設定 -->
 <meta name="description" content="一眼只有一秒，卻用了二十年才讀懂。《時間裡的兩個妳》 連載中。" />
 <meta property="og:type" content="website" />
@@ -509,7 +509,7 @@ body:has(#title-screen.hide) .pt-tutorial-trigger { display: none !important; }
 <div id="breath-hint"></div>
 
 <script type="importmap">
-{"imports":{"three":"./three.module.js"}}
+{"imports":{"three":"../_vendor/three.module.js"}}
 </script>
 <script type="module">
 import * as THREE from "three";
@@ -4933,6 +4933,7 @@ function updateIntro(dt) {
     } else {
       showNarrative("\u7B2C " + state.currentLevel + " \u95DC\u958B\u59CB\uFF01", 2);
     }
+    if (window.__LEVEL_MECHANICS__) window.__LEVEL_MECHANICS__.activate(state.currentLevel);  // \u76F4\u547C,\u6DB5\u84CB\u6240\u6709\u95DC + \u4E0D\u4F9D\u8CF4 observer
     if (audioCtx) playDoorChime();
     startAmbientSounds();
   }
