@@ -132,7 +132,7 @@ function buildFringe() {
   const hairMat = new THREE.MeshPhysicalMaterial({ color: "#5e3f2c", roughness: 0.46, metalness: 0.06, clearcoat: 0.35, clearcoatRoughness: 0.4, sheen: 0.5, sheenColor: new THREE.Color("#9a7048") });
   // 頭頂髮量:平滑 cap,蓋頭頂/後/側,front 藏在額頭瀏海後(z<0.06)
   const cap = new THREE.Mesh(new THREE.SphereGeometry(0.11, 36, 28), hairMat);
-  cap.scale.set(1.14, 1.06, 1.1); cap.position.set(0, 0.014, -0.07);
+  cap.scale.set(1.14, 1.06, 1.1); cap.position.set(0, 0.014, -0.07);   // v8 位置(不前移過頭蓋臉)
   g.add(cap);
   // 瀏海:加密(N=23)+ 重疊,中分向外撇,尖端到眉
   const N = 23;
@@ -145,6 +145,17 @@ function buildFringe() {
     lock.rotation.x = Math.PI + 0.28;        // 尖端朝下覆額頭
     lock.rotation.z = -t * 0.5;
     g.add(lock);
+  }
+  // 側髮:左右髮簾(各 2 束,扁長下垂到下顎)框臉
+  for (const side of [-1, 1]) {
+    for (let k = 0; k < 2; k++) {
+      const s = new THREE.Mesh(new THREE.ConeGeometry(0.024, 0.15, 6), hairMat);
+      s.scale.set(0.5, 1, 0.2);
+      s.position.set(side * (0.08 + k * 0.006), 0.012, 0.04 - k * 0.04);
+      s.rotation.x = Math.PI - 0.04;          // 垂直略後(貼頭側下垂)
+      s.rotation.z = side * 0.04;             // 幾乎貼臉,不外撇
+      g.add(s);
+    }
   }
   return g;
 }
