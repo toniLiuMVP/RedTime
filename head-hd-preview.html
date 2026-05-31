@@ -102,7 +102,7 @@ function disposeHead(h) {
 const JR_SKIN = "#fce4d4", JR_HAIR = "#7a5842", JR_IRIS = "#7a5a42";   // 學妹 Co 參數
 // beautify 參數（__PREVIEW__.setBeauty(k,v) 即時調 + 截圖迭代到最美）
 const BEAUTY = {
-  eyeScaleX: 0.82, eyeScaleY: 0.58, eyeScaleZ: 0.8, eyeDepth: -0.008, eyeY: -0.004,   // 眼:自然杏眼(壓扁 Y 成杏形,非大圓動漫眼;對齊 2005 定稿)
+  eyeScaleX: 0.74, eyeScaleY: 0.56, eyeScaleZ: 0.74, eyeDepth: -0.008, eyeY: -0.004,   // 眼:自然杏眼(再收小一點,對齊 2005 定稿的溫柔自然眼)
   hideLipLine: true, lipScaleX: 0.55, lipScaleY: 0.5, lipScaleZ: 0.8, lipY: 0.012,   // 唇(已改自建小嘴,此組保留相容)
   browScale: 1.0, browY: 0,                          // 眉
   faceSquashY: 0.9,                                  // 臉 Y 壓縮(整組一起 → 維持對齊 → 更圓更可愛,降低長臉感)
@@ -137,10 +137,10 @@ function buildFringe() {
   // 平滑瀏海(兩片扁殼中分覆額,不用 cone → 無放射尖刺)
   for (const side of [-1, 1]) {
     const bang = new THREE.Mesh(new THREE.SphereGeometry(0.078, 30, 20), hairMat);
-    bang.scale.set(1.0, 0.72, 0.33);                      // 寬、適中厚、薄 → 統一覆額髮片
-    bang.position.set(side * 0.022, 0.056, 0.052);        // 中縫收窄(x小)、不壓眼
+    bang.scale.set(1.0, 0.5, 0.32);                       // 更薄(對齊定稿薄瀏海)
+    bang.position.set(side * 0.02, 0.066, 0.05);          // 上移 → 露更多高額頭
     bang.rotation.z = side * -0.08;                       // 微中分
-    bang.rotation.x = 0.14;                               // 微前傾覆額
+    bang.rotation.x = 0.16;                               // 微前傾覆額
     g.add(bang);
   }
   // 後腦馬尾(小、收在後上方,前視只露頂部一點,不下垂過頭)
@@ -159,7 +159,7 @@ function buildFringe() {
 // hybrid(c):連續平滑基底 + primitive 五官(隱藏膚色不透明基底 blob,連續頭取代)
 function buildHybrid() {
   const group = new THREE.Group();
-  group.add(buildContinuousHead({ detail }));
+  group.add(buildContinuousHead({ detail, skinColor: "#f2d3ba" }));   // 暖膚(對齊定稿暖膚色,非偏白)
   const p = buildPrimitive();
   const skin = new THREE.Color(JR_SKIN), hair = new THREE.Color(JR_HAIR);
   p.root.traverse((o) => {
