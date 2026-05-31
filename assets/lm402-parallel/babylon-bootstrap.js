@@ -6,6 +6,8 @@
 // 後續 P2 起才在此基礎重建學妹 / 場景 / postfx / path tracer。
 // headless 無 GPU 驗不了畫面 — 此檔的綠燈 = 載入無 JS error + gate 邏輯對;畫面由 toni 真機驗。
 
+import { buildJunior } from "./babylon-junior.js";
+
 const BABYLON_VENDOR = "./assets/lm402-parallel/vendor/babylon.9.10.1.js";
 
 // Babylon UMD(掛 window.BABYLON,非 ESM)→ 動態注入 script 後用 global。
@@ -127,13 +129,11 @@ async function main() {
   key.intensity = 1.5;
   key.position = new BABYLON.Vector3(5, 8, 4);
 
-  const sphere = BABYLON.MeshBuilder.CreateSphere("s", { diameter: 2, segments: 64 }, scene);
-  sphere.position.y = 1;
-  const pbr = new BABYLON.PBRMetallicRoughnessMaterial("pbr", scene);
-  pbr.baseColor = new BABYLON.Color3(0.85, 0.36, 0.3);
-  pbr.metallic = 0.1;
-  pbr.roughness = 0.35;
-  sphere.material = pbr;
+  // P2: 程序學妹(取代 P1 placeholder 球)
+  const junior = buildJunior(BABYLON, scene);
+  window.__JUNIOR__ = junior.root;
+  camera.setTarget(new BABYLON.Vector3(0, 0.92, 0));
+  camera.radius = 4.2;
 
   const ground = BABYLON.MeshBuilder.CreateGround("g", { width: 14, height: 14 }, scene);
   const gm = new BABYLON.PBRMetallicRoughnessMaterial("gm", scene);
@@ -148,9 +148,9 @@ async function main() {
   window.__lm402Ready = true;
   window.__lm402GateEntered = true;
   const ver = (BABYLON.Engine && BABYLON.Engine.Version) || "9.x";
-  console.info("%c[parallel-babylon] P1 scaffold online — Babylon " + ver + " WebGPU", "color:#a8c5ff;font-weight:bold");
+  console.info("%c[parallel-babylon] P2 junior online — Babylon " + ver + " WebGPU", "color:#a8c5ff;font-weight:bold");
   console.info("  GPU adapter:", (det.adapter && det.adapter.info) || "(info n/a)");
-  console.info("  next P2: rebuild junior/scene on this base (needs toni real-device P1 sign-off first)");
+  console.info("  junior root: window.__JUNIOR__ · next P3: IBL + postfx pipeline (bloom/SSAO/SSR/tonemap)");
 }
 
 main();
