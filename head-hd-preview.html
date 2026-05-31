@@ -100,10 +100,31 @@ function disposeHead(h) {
   if (h.traverse) h.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material?.dispose) o.material.dispose(); });
 }
 const JR_SKIN = "#fce4d4", JR_HAIR = "#7a5842", JR_IRIS = "#7a5a42";   // 學妹 Co 參數
+// beautify 參數（__PREVIEW__.setBeauty(k,v) 即時調 + 截圖迭代到最美）
+const BEAUTY = {
+  eyeScale: 0.9, eyeDepth: -0.01, eyeY: -0.006,      // 眼:微縮 / 入眼窩 / 略下移(降額頭感)
+  hideLipLine: true, lipScaleX: 0.55, lipScaleY: 0.5, lipScaleZ: 0.8, lipY: 0.012,   // 唇(已改自建小嘴,此組保留相容)
+  browScale: 1.0, browY: 0,                          // 眉
+  faceSquashY: 0.9,                                  // 臉 Y 壓縮(整組一起 → 維持對齊 → 更圓更可愛,降低長臉感)
+};
 function buildPrimitive() {
   const p = buildReferenceJuniorHeroHead({ skinColor: JR_SKIN, hairColor: JR_HAIR, irisColor: JR_IRIS });
   p.root.position.set(0, 0, 0); p.root.scale.set(1, 1, 1); p.root.visible = true;   // 對齊連續頭座標系
   return p;
+}
+// 乾淨小嘴(取代 primitive 嘴部零件):上下唇扁橢球 + 細唇縫,pink lip 材質
+function buildCleanMouth() {
+  const g = new THREE.Group();
+  const lip = new THREE.MeshPhysicalMaterial({ color: "#d98a8a", roughness: 0.42, metalness: 0, clearcoat: 0.5, clearcoatRoughness: 0.28, sheen: 0.4, sheenColor: new THREE.Color("#ffb4a4") });
+  const lower = new THREE.Mesh(new THREE.SphereGeometry(0.0115, 20, 16), lip);
+  lower.scale.set(1.0, 0.42, 0.5); lower.position.set(0, -0.075, 0.094);
+  const upper = new THREE.Mesh(new THREE.SphereGeometry(0.0105, 20, 16), lip);
+  upper.scale.set(1.0, 0.3, 0.46); upper.position.set(0, -0.0685, 0.0935);
+  const seam = new THREE.Mesh(new THREE.CapsuleGeometry(0.0007, 0.015, 3, 6),
+    new THREE.MeshBasicMaterial({ color: "#8a4a48", transparent: true, opacity: 0.55 }));
+  seam.rotation.z = Math.PI / 2; seam.position.set(0, -0.0715, 0.098); seam.renderOrder = 18;
+  g.add(lower, upper, seam);
+  return g;
 }
 // hybrid(c):連續平滑基底 + primitive 五官(隱藏膚色不透明基底 blob,連續頭取代)
 function buildHybrid() {
@@ -118,7 +139,17 @@ function buildHybrid() {
       if (d < 0.15) o.visible = false;   // 膚色不透明 = 基底 blob → 隱藏(連續頭當基底)
     }
   });
+  // beautify pass(refs 命名五官微調 — 截圖迭代到最美)
+  const rf = p.refs, B = BEAUTY;
+  [rf.heroEyeWhiteL, rf.heroEyeWhiteR].forEach((m) => {
+    if (m && m.parent) { m.parent.scale.multiplyScalar(B.eyeScale); m.parent.position.z += B.eyeDepth; m.parent.position.y += B.eyeY; }
+  });
+  [rf.heroBrowL, rf.heroBrowR].forEach((m) => { if (m) { m.scale.multiplyScalar(B.browScale); m.position.y += B.browY; } });
+  // 嘴:隱藏 primitive 嘴部區(唇/人中/唇峰 = y<-0.062 直屬 mesh)→ 換乾淨小嘴
+  p.root.children.forEach((c) => { if (c.isMesh && c.position.y < -0.062) c.visible = false; });
   group.add(p.root);
+  group.add(buildCleanMouth());
+  group.scale.y = B.faceSquashY;   // 整組 Y 壓縮 → 更圓臉(五官隨之等比,對齊不破)
   return group;
 }
 function rebuild() {
@@ -173,6 +204,8 @@ window.__PREVIEW__ = {
   setDetail(d) { detail = d; rebuild(); },
   setStrength(s) { strength = s; setSculptStrength(s); rebuild(); },
   tune(k, amp) { if (!setFeatureAmp(k, amp)) console.warn("[head-hd-preview] 無此特徵：", k); rebuild(); },
+  setBeauty(k, v) { if (k in BEAUTY) { BEAUTY[k] = v; rebuild(); } else console.warn("[head-hd-preview] 無此 beauty key：", k); },
+  get beauty() { return BEAUTY; },
   rotate(on) { rotate = on !== false; },
 };
 console.info("[head-hd-preview] ready — 拖曳旋轉 / 滾輪縮放 / __PREVIEW__.tune(k,amp) 微雕");

@@ -39,10 +39,10 @@ function defaultFeatures() {
     { k: "browR", pos: [0.036, 0.020, 0.078], sigma: 0.020, amp: 0.013, dir: "z" },
     { k: "glabella", pos: [0, 0.010, 0.082], sigma: 0.016, amp: 0.008, dir: "z" },
     // 鼻樑 → 鼻尖(連續隆起,大幅加強讓鼻子立體)
-    { k: "noseBridge", pos: [0, -0.014, 0.090], sigma: 0.013, amp: 0.022, dir: "z" },
-    { k: "noseTip", pos: [0, -0.046, 0.098], sigma: 0.012, amp: 0.032, dir: "z" },
-    { k: "noseWingL", pos: [-0.014, -0.050, 0.088], sigma: 0.010, amp: 0.012, dir: "z" },
-    { k: "noseWingR", pos: [0.014, -0.050, 0.088], sigma: 0.010, amp: 0.012, dir: "z" },
+    { k: "noseBridge", pos: [0, -0.014, 0.090], sigma: 0.014, amp: 0.030, dir: "z" },
+    { k: "noseTip", pos: [0, -0.048, 0.100], sigma: 0.012, amp: 0.048, dir: "z" },
+    { k: "noseWingL", pos: [-0.014, -0.052, 0.090], sigma: 0.010, amp: 0.016, dir: "z" },
+    { k: "noseWingR", pos: [0.014, -0.052, 0.090], sigma: 0.010, amp: 0.016, dir: "z" },
     // 顴骨外擴(側光立體感)
     { k: "cheekL", pos: [-0.050, -0.020, 0.062], sigma: 0.028, amp: 0.013, dir: "normal" },
     { k: "cheekR", pos: [0.050, -0.020, 0.062], sigma: 0.028, amp: 0.013, dir: "normal" },
