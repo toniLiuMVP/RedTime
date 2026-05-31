@@ -7,7 +7,6 @@ import { createPostFX } from "./postfx.js";
 import * as JM from "./junior-materials-hr.js";
 import { createJuniorExpressionRig } from "./expression-rig.js";
 import { createClothRig } from "./cloth-rig.js";
-import "./junior-head-hd.js";   // A 軸:連續雕刻 mesh 頭實驗(自我安裝 __JUNIOR_HEAD_HD__,預設關,opt-in)
 let __juniorRig = null;
 let __clothRig = null;
 const __sunFar = new e.Vector3();   // Tier 7：太陽世界座標暫存（每幀 reuse）
