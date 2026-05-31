@@ -7,6 +7,7 @@
 // headless 無 GPU 驗不了畫面 — 此檔的綠燈 = 載入無 JS error + gate 邏輯對;畫面由 toni 真機驗。
 
 import { buildJunior } from "./babylon-junior.js";
+import { setupPipeline } from "./babylon-pipeline.js";
 
 const BABYLON_VENDOR = "./assets/lm402-parallel/vendor/babylon.9.10.1.js";
 
@@ -142,6 +143,9 @@ async function main() {
   gm.roughness = 0.85;
   ground.material = gm;
 
+  // P3: 後製 + 光影管線(bloom / ACES tonemap / SSAO2 / grain / CA + cinematic 補光)
+  setupPipeline(BABYLON, scene, camera, junior.headCenter);
+
   engine.runRenderLoop(() => scene.render());
   window.addEventListener("resize", () => engine.resize());
 
@@ -150,7 +154,7 @@ async function main() {
   const ver = (BABYLON.Engine && BABYLON.Engine.Version) || "9.x";
   console.info("%c[parallel-babylon] P2 junior online — Babylon " + ver + " WebGPU", "color:#a8c5ff;font-weight:bold");
   console.info("  GPU adapter:", (det.adapter && det.adapter.info) || "(info n/a)");
-  console.info("  junior root: window.__JUNIOR__ · next P3: IBL + postfx pipeline (bloom/SSAO/SSR/tonemap)");
+  console.info("  junior: window.__JUNIOR__ · pipeline: window.__BJS_PIPELINE__ · next P4: compute particles");
 }
 
 main();
