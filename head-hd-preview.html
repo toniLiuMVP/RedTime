@@ -126,17 +126,41 @@ function buildCleanMouth() {
   g.add(lower, upper, seam);
   return g;
 }
+// 頭髮:平滑頭頂髮量(藏臉後)+ 額頭瀏海(加密重疊柔軟髮束)
+function buildFringe() {
+  const g = new THREE.Group();
+  const hairMat = new THREE.MeshPhysicalMaterial({ color: "#5e3f2c", roughness: 0.46, metalness: 0.06, clearcoat: 0.35, clearcoatRoughness: 0.4, sheen: 0.5, sheenColor: new THREE.Color("#9a7048") });
+  // 頭頂髮量:平滑 cap,蓋頭頂/後/側,front 藏在額頭瀏海後(z<0.06)
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(0.11, 36, 28), hairMat);
+  cap.scale.set(1.14, 1.06, 1.1); cap.position.set(0, 0.014, -0.07);
+  g.add(cap);
+  // 瀏海:加密(N=23)+ 重疊,中分向外撇,尖端到眉
+  const N = 23;
+  for (let i = 0; i < N; i++) {
+    const t = (i / (N - 1)) - 0.5;
+    const ax = Math.abs(t);
+    const lock = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.082, 7), hairMat);
+    lock.scale.set(0.62, 1, 0.2);            // 扁寬薄髮束(重疊蓋縫)
+    lock.position.set(t * 0.15, 0.05 - ax * 0.012, 0.078 - ax * 0.055);
+    lock.rotation.x = Math.PI + 0.28;        // 尖端朝下覆額頭
+    lock.rotation.z = -t * 0.5;
+    g.add(lock);
+  }
+  return g;
+}
 // hybrid(c):連續平滑基底 + primitive 五官(隱藏膚色不透明基底 blob,連續頭取代)
 function buildHybrid() {
   const group = new THREE.Group();
   group.add(buildContinuousHead({ detail }));
   const p = buildPrimitive();
-  const skin = new THREE.Color(JR_SKIN);
+  const skin = new THREE.Color(JR_SKIN), hair = new THREE.Color(JR_HAIR);
   p.root.traverse((o) => {
-    if (o.isMesh && o.material && o.material.color && o.material.transparent !== true) {
+    if (o.isMesh && o.material && o.material.color) {
       const c = o.material.color;
-      const d = Math.abs(c.r - skin.r) + Math.abs(c.g - skin.g) + Math.abs(c.b - skin.b);
-      if (d < 0.15) o.visible = false;   // 膚色不透明 = 基底 blob → 隱藏(連續頭當基底)
+      const ds = Math.abs(c.r - skin.r) + Math.abs(c.g - skin.g) + Math.abs(c.b - skin.b);
+      const dh = Math.abs(c.r - hair.r) + Math.abs(c.g - hair.g) + Math.abs(c.b - hair.b);
+      if (o.material.transparent !== true && ds < 0.15) o.visible = false;   // 膚色不透明基底 blob → 連續頭取代
+      if (dh < 0.22) o.visible = false;                                       // primitive 舊髮(含雜亂髮絲)→ 換乾淨自建髮
     }
   });
   // beautify pass(refs 命名五官微調 — 截圖迭代到最美)
@@ -149,6 +173,7 @@ function buildHybrid() {
   p.root.children.forEach((c) => { if (c.isMesh && c.position.y < -0.062) c.visible = false; });
   group.add(p.root);
   group.add(buildCleanMouth());
+  group.add(buildFringe());        // 瀏海框臉
   group.scale.y = B.faceSquashY;   // 整組 Y 壓縮 → 更圓臉(五官隨之等比,對齊不破)
   return group;
 }
