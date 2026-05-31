@@ -63,6 +63,7 @@
 import * as THREE from "./assets/lm402-parallel/vendor-three.module.js";
 import { buildContinuousHead, setFeatureAmp, setSculptStrength } from "./assets/lm402-parallel/junior-head-hd.js";
 import { buildReferenceJuniorHeroHead } from "./assets/lm402-parallel/renderer.js";
+import { GLTFLoader } from "./assets/lm402-parallel/GLTFLoader.js";
 
 const canvas = document.getElementById("c");
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -259,7 +260,30 @@ window.__PREVIEW__ = {
   get beauty() { return BEAUTY; },
   rotate(on) { rotate = on !== false; },
 };
-console.info("[head-hd-preview] ready — 拖曳旋轉 / 滾輪縮放 / __PREVIEW__.tune(k,amp) 微雕");
+// ── 拖入 .glb 即時預覽(photo-to-3D 模型 → 看 studio 燈光下效果,toni 自助迭代)──
+const _gltfLoader = new GLTFLoader();
+let _glbModel = null;
+addEventListener("dragover", (e) => e.preventDefault());
+addEventListener("drop", (e) => {
+  e.preventDefault();
+  const f = e.dataTransfer && e.dataTransfer.files[0];
+  if (!f || !/\.(glb|gltf)$/i.test(f.name)) return;
+  const r = new FileReader();
+  r.onload = () => _gltfLoader.parse(r.result, "", (gltf) => {
+    if (_glbModel) disposeHead(_glbModel);
+    if (head) head.visible = false;                    // 隱藏 hybrid,改看 GLB
+    _glbModel = gltf.scene;
+    const box = new THREE.Box3().setFromObject(_glbModel);
+    const size = box.getSize(new THREE.Vector3()), ctr = box.getCenter(new THREE.Vector3());
+    const s = 0.24 / (size.y || 1);                    // 縮到頭高 ~0.24 對齊相機框
+    _glbModel.scale.setScalar(s);
+    _glbModel.position.set(-ctr.x * s, -ctr.y * s + HEAD_Y, -ctr.z * s);
+    scene.add(_glbModel);
+    console.info("[head-hd-preview] GLB 載入：" + f.name);
+  }, (err) => console.error("[GLB] parse 失敗（DRACO 壓縮需另設 DRACOLoader）：", err));
+  r.readAsArrayBuffer(f);
+});
+console.info("[head-hd-preview] ready — 拖曳旋轉 / 滾輪縮放 / __PREVIEW__.tune(k,amp) / 拖入 .glb 預覽 photo-to-3D 模型");
 </script>
 </body>
 </html>
