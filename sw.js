@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v15-20260606';  // unchanged: GLB / vendor 無變動
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v73-20260531';  // bumped: lm402-parallel Babylon.js WebGPU P1 scaffold (?webgpu=1 opt-in, default Three.js untouched)
+const RUNTIME_VERSION = 'runtime-v74-20260531';  // bumped: lm402-parallel continuous-mesh head experiment module (opt-in console API, default off)
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
@@ -93,6 +93,7 @@ const RUNTIME_PRECACHE_URLS = [
   '/RedTime/assets/lm402-parallel/webgpu-bootstrap.js',
   '/RedTime/assets/lm402-parallel/parallel-init.js',
   '/RedTime/assets/lm402-parallel/babylon-bootstrap.js',
+  '/RedTime/assets/lm402-parallel/junior-head-hd.js',
   // 月台奔跑入口頁 + 三線 SPA(r46 加平行世界)
   '/RedTime/demos/platform-run-time.html',
   '/RedTime/demos/platform-run/index.html',

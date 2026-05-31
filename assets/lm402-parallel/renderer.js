@@ -7,6 +7,7 @@ import { createPostFX } from "./postfx.js";
 import * as JM from "./junior-materials-hr.js";
 import { createJuniorExpressionRig } from "./expression-rig.js";
 import { createClothRig } from "./cloth-rig.js";
+import "./junior-head-hd.js";   // A 軸:連續雕刻 mesh 頭實驗(自我安裝 __JUNIOR_HEAD_HD__,預設關,opt-in)
 let __juniorRig = null;
 let __clothRig = null;
 const __sunFar = new e.Vector3();   // Tier 7：太陽世界座標暫存（每幀 reuse）
@@ -548,6 +549,7 @@ function buildReferenceJuniorHeroHead(t = {}) {
     }),
   );
   (D.position.set(0, 0.03, 0.088), (D.renderOrder = 16), o.add(D));
+  if (typeof window !== "undefined") window.__JUNIOR_HERO_HEAD__ = o;   // A 軸:連續雕刻頭實驗 toggle 用(學妹 hero head ref)
   return (
     o.traverse((t) => {
       t.isMesh && ((t.castShadow = !1), (t.receiveShadow = !1));

@@ -3456,3 +3456,24 @@ window.__lm402Ready = true;
     setTimeout(() => loaderEl.remove(), 1200);
   }, 600);
 })();
+
+/* ── A-demo：?headhd=1 → 自動進「一眼瞬間 closeup」+ show 連續雕刻頭，給 toni 一鍵看 A ── */
+/*    startOneGazeEnding 是 manual 可觸發（任務面板「飛到一眼瞬間那一秒」按鈕）；此處 ?headhd=1 自動跑，best-effort + try/catch，失敗 toni 仍可 console 手動 ── */
+window.__JUMP_ONE_GAZE__ = startOneGazeEnding;
+if (new URLSearchParams(location.search).has("headhd")) {
+  let _hdTries = 40;
+  const _hdDemo = () => {
+    if (_hdTries-- <= 0) return;
+    if (window.__JUNIOR_HEAD_HD__ && window.__JUNIOR_HERO_HEAD__) {
+      try { startOneGazeEnding(); } catch (e) { console.warn("[A-demo] jump one_gaze failed", e); }
+      // 給 closeup 相機移動時間，再 show()（show 內部會強制 hero head group 可見，不需等 pose）
+      setTimeout(() => {
+        try { window.__JUNIOR_HEAD_HD__.show(); console.info("[A-demo] continuous head ON via ?headhd=1 -- __JUNIOR_HEAD_HD__.hide() to compare primitive"); }
+        catch (e) { console.warn("[A-demo] show failed", e); }
+      }, 2800);
+    } else {
+      setTimeout(_hdDemo, 400);
+    }
+  };
+  setTimeout(_hdDemo, 1800);
+}

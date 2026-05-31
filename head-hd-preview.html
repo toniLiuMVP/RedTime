@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self';" />
+<title>學妹連續雕刻頭 · 預覽（平行世界A）</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0a0a0f; overflow: hidden; font-family: -apple-system, "Noto Sans TC", sans-serif; }
+  #c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  #panel {
+    position: fixed; left: 14px; top: 14px; z-index: 10; color: #e8dccb;
+    background: rgba(12, 12, 20, 0.72); border: 1px solid rgba(232, 154, 120, 0.3);
+    border-radius: 10px; padding: 12px 14px; max-width: 290px; backdrop-filter: blur(6px);
+    font-size: 13px; line-height: 1.7;
+  }
+  #panel h1 { font-size: 14px; margin: 0 0 6px; color: #f0c4a8; font-weight: 600; letter-spacing: .04em; }
+  #panel .row { margin: 6px 0; display: flex; gap: 6px; flex-wrap: wrap; }
+  #panel button {
+    background: rgba(232, 154, 120, 0.14); color: #f0d8c4; border: 1px solid rgba(232, 154, 120, 0.4);
+    border-radius: 6px; padding: 4px 9px; font-size: 12px; cursor: pointer;
+  }
+  #panel button:hover { background: rgba(232, 154, 120, 0.28); }
+  #panel .hint { opacity: .62; font-size: 11px; margin-top: 8px; }
+  #panel code { color: #ffd0a8; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="panel">
+  <h1>學妹 · 連續雕刻頭預覽</h1>
+  <div>平行世界A 學妹 3D 建模實驗。拖曳旋轉、滾輪縮放。</div>
+  <div class="row">
+    <button data-act="rotate">自轉 開／關</button>
+    <button data-act="face">正面特寫</button>
+  </div>
+  <div class="row">
+    <span style="opacity:.7">細分：</span>
+    <button data-detail="5">5</button>
+    <button data-detail="7">7</button>
+    <button data-detail="9">9</button>
+    <button data-detail="11">11</button>
+  </div>
+  <div class="row">
+    <span style="opacity:.7">位移強度：</span>
+    <button data-strength="0.5">0.5</button>
+    <button data-strength="1">1.0</button>
+    <button data-strength="1.5">1.5</button>
+  </div>
+  <div class="hint">
+    console 微雕：<br />
+    <code>__PREVIEW__.tune('noseTip', 0.02)</code><br />
+    特徵：eyeSocketL/R · noseBridge · noseTip · cheekL/R · upperLip · lowerLip · chin · jawL/R · templeL/R · glabella · philtrum
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from "./assets/lm402-parallel/vendor-three.module.js";
+import { buildContinuousHead, setFeatureAmp, setSculptStrength } from "./assets/lm402-parallel/junior-head-hd.js";
+
+const canvas = document.getElementById("c");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color("#0a0a0f");
+
+const camera = new THREE.PerspectiveCamera(28, innerWidth / innerHeight, 0.01, 100);
+const HEAD_Y = -0.01;   // 連續頭中心約在此(buildContinuousHead offset)
+camera.position.set(0.02, HEAD_Y + 0.02, 0.52);
+camera.lookAt(0, HEAD_Y, 0);
+
+// ── 一眼瞬間暖光（11:00 那道斜射光）+ 冷補 + 邊緣光 ──
+const key = new THREE.SpotLight("#ffd2a0", 6, 0, Math.PI / 4.5, 0.55, 1.2);
+key.position.set(0.45, 0.5, 0.55);
+key.target.position.set(0, HEAD_Y, 0);
+scene.add(key, key.target);
+const fill = new THREE.DirectionalLight("#9fb8e0", 0.5);
+fill.position.set(-0.6, 0.1, 0.3);
+scene.add(fill);
+const rim = new THREE.DirectionalLight("#ffe0c0", 0.9);
+rim.position.set(-0.3, 0.4, -0.6);
+scene.add(rim);
+scene.add(new THREE.AmbientLight("#5a6078", 0.55));
+
+// ── 連續雕刻頭 ──
+let head = null, detail = 7, strength = 1.0, rotate = false;   // 預設正面靜止（看臉），按「自轉」才轉
+function rebuild() {
+  if (head) { scene.remove(head); head.geometry.dispose(); if (head.material?.dispose) head.material.dispose(); }
+  head = buildContinuousHead({ detail });   // 用模組當前 _features / _strength + 此處 detail
+  scene.add(head);
+}
+rebuild();
+
+// ── 簡易拖曳旋轉 + 滾輪縮放（不依賴 OrbitControls）──
+let dragging = false, px = 0, py = 0, yaw = 0, pitch = 0, dist = 0.52;
+canvas.addEventListener("pointerdown", (e) => { dragging = true; px = e.clientX; py = e.clientY; rotate = false; });
+addEventListener("pointerup", () => (dragging = false));
+addEventListener("pointermove", (e) => {
+  if (!dragging) return;
+  yaw += (e.clientX - px) * 0.01; pitch += (e.clientY - py) * 0.01;
+  pitch = Math.max(-1.2, Math.min(1.2, pitch)); px = e.clientX; py = e.clientY;
+});
+canvas.addEventListener("wheel", (e) => { e.preventDefault(); dist = Math.max(0.2, Math.min(1.4, dist + e.deltaY * 0.0006)); }, { passive: false });
+
+addEventListener("resize", () => {
+  renderer.setSize(innerWidth, innerHeight);
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+});
+
+function tick() {
+  requestAnimationFrame(tick);
+  if (rotate) yaw += 0.004;
+  const cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch);
+  camera.position.set(sy * cp * dist, HEAD_Y + Math.sin(pitch) * dist + 0.02, cy * cp * dist);
+  camera.lookAt(0, HEAD_Y, 0);
+  renderer.render(scene, camera);
+}
+tick();
+
+// ── 控制按鈕 ──
+document.getElementById("panel").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.act === "rotate") rotate = !rotate;
+  else if (b.dataset.act === "face") { yaw = 0; pitch = 0; dist = 0.42; rotate = false; }
+  else if (b.dataset.detail) { detail = +b.dataset.detail; rebuild(); applyStrength(); }
+  else if (b.dataset.strength) { strength = +b.dataset.strength; applyStrength(); }
+});
+function applyStrength() { setSculptStrength(strength); rebuild(); }
+
+// ── console 微雕 API（預覽專用，直接作用在此頁的 head）──
+window.__PREVIEW__ = {
+  get head() { return head; },
+  setDetail(d) { detail = d; rebuild(); },
+  setStrength(s) { strength = s; setSculptStrength(s); rebuild(); },
+  tune(k, amp) { if (!setFeatureAmp(k, amp)) console.warn("[head-hd-preview] 無此特徵：", k); rebuild(); },
+  rotate(on) { rotate = on !== false; },
+};
+console.info("[head-hd-preview] ready — 拖曳旋轉 / 滾輪縮放 / __PREVIEW__.tune(k,amp) 微雕");
+</script>
+</body>
+</html>
