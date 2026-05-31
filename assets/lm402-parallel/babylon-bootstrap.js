@@ -159,6 +159,22 @@ async function main() {
   // P5: 一眼瞬間 max-raster closeup(暖窗光 + 程序 IBL + SSR + DoF closeup toggle)
   setupCloseup(BABYLON, scene, camera, junior);
 
+  // ⚠️ 隱藏 #lm402-loader 載入畫面 — Three.js app.js 有做(line 3444+),Babylon 路徑必須複製,
+  //    否則 loader 永遠蓋住場景 → 真機卡在載入畫面(toni 2026-05-31 回報)。
+  //    用 executeWhenReady 等場景 mesh/material 真備妥才淡出,避免黑閃。
+  scene.executeWhenReady(() => {
+    const loaderEl = document.getElementById("lm402-loader");
+    if (!loaderEl) return;
+    if (window.__lm402LoaderTipTimer) {
+      clearInterval(window.__lm402LoaderTipTimer);
+      window.__lm402LoaderTipTimer = null;
+    }
+    loaderEl.style.transition = "opacity 0.9s ease";
+    loaderEl.style.opacity = "0";
+    loaderEl.style.pointerEvents = "none";
+    setTimeout(() => { if (loaderEl.parentNode) loaderEl.remove(); }, 1000);
+  });
+
   engine.runRenderLoop(() => scene.render());
   window.addEventListener("resize", () => engine.resize());
 
