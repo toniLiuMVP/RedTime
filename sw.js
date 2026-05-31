@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v15-20260606';  // unchanged: GLB / vendor 無變動
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v75-20260601';  // bumped: decouple dev-only head preview module from production precache
+const RUNTIME_VERSION = 'runtime-v76-20260601';  // bumped: lean install precache to core routes, secondary assets via runtime cache
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
@@ -44,8 +44,7 @@ const STATIC_PRECACHE_URLS = [
   // 月台奔跑平行世界(r46 新增,共享 lm402-parallel WebGPU vendor)
   '/RedTime/demos/platform-run-parallel/three.module.js',
   '/RedTime/demos/platform-run-parallel/把拔我會想你的.mp3',
-  '/RedTime/assets/lm402-parallel/vendor/three.webgpu.min.js',
-  '/RedTime/assets/lm402-parallel/vendor/three.tsl.min.js',
+  // WebGPU vendor(three.webgpu / three.tsl)on-demand 才抓,不 install 預載
   // 共用 assets
   '/RedTime/fonts/fonts.css',
   '/RedTime/assets/og-image.jpg',
@@ -64,14 +63,7 @@ const RUNTIME_PRECACHE_URLS = [
   '/RedTime/lm402-time.html',
   '/RedTime/lm402-twin.html',
   '/RedTime/lm402-parallel.html',
-  /* AI 3D 競賽 — 三選手作品(c1=Claude / c2=Codex / c3=Gemini) */
-  '/RedTime/competition-1.html',
-  '/RedTime/competition-2.html',
-  '/RedTime/competition-3.html',
-  '/RedTime/competition-4.html',
-  '/RedTime/competition-5.html',
-  '/RedTime/competition-6.html',
-  '/RedTime/competition-7.html',
+  // 次要展示頁(competition-1~7)改 on-demand runtime cache,不 install 預載
   // 正本 lm402 主 module
   '/RedTime/assets/lm402/lm402.css',
   '/RedTime/assets/lm402/app.js',
