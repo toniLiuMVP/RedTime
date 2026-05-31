@@ -134,17 +134,14 @@ function buildFringe() {
   const cap = new THREE.Mesh(new THREE.SphereGeometry(0.11, 36, 28), hairMat);
   cap.scale.set(1.14, 1.08, 1.1); cap.position.set(0, 0.016, -0.07);
   g.add(cap);
-  // 直瀏海覆額(v10 乾淨式:密、朝下、僅微撇,不大幅側掃以免尖刺)
-  const N = 23;
-  for (let i = 0; i < N; i++) {
-    const t = (i / (N - 1)) - 0.5;
-    const ax = Math.abs(t);
-    const lock = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.082, 7), hairMat);
-    lock.scale.set(0.62, 1, 0.2);
-    lock.position.set(t * 0.15, 0.05 - ax * 0.012, 0.078 - ax * 0.055);
-    lock.rotation.x = Math.PI + 0.28;                     // 朝下覆額
-    lock.rotation.z = -t * 0.42;                          // 僅微撇(避免放射尖刺)
-    g.add(lock);
+  // 平滑瀏海(兩片扁殼中分覆額,不用 cone → 無放射尖刺)
+  for (const side of [-1, 1]) {
+    const bang = new THREE.Mesh(new THREE.SphereGeometry(0.078, 30, 20), hairMat);
+    bang.scale.set(1.0, 0.72, 0.33);                      // 寬、適中厚、薄 → 統一覆額髮片
+    bang.position.set(side * 0.022, 0.056, 0.052);        // 中縫收窄(x小)、不壓眼
+    bang.rotation.z = side * -0.08;                       // 微中分
+    bang.rotation.x = 0.14;                               // 微前傾覆額
+    g.add(bang);
   }
   // 後腦馬尾(小、收在後上方,前視只露頂部一點,不下垂過頭)
   const tail = new THREE.Mesh(new THREE.SphereGeometry(0.06, 20, 16), hairMat);
