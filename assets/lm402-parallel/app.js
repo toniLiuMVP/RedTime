@@ -1564,7 +1564,7 @@ function applyEffect(effect) {
     state.characters.fatherEcho.alpha = 0.6;
     state.characters.auntEcho.alpha = 0.6;
     setSubtitle("女兒", "我現在可以去找把拔跟阿姨說話。", 5.0);
-    setAmbience("世界安靜了一秒。然後妳發現，自己的眼睛變了——看出去的光，比剛才多了二十年的溫度。");
+    setAmbience("世界安靜了一秒。然後妳發現，自己的眼睛變了，看出去的光，比剛才多了二十年的溫度。");
     return;
   }
 

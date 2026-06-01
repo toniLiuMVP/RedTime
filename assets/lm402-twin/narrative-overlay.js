@@ -170,7 +170,7 @@ export function createNarrativeOverlay(options = {}) {
     age_39: { speaker: "39 歲的聲音", text: "先活著。後來的事後來再說。" },
     age_49: { speaker: "49 歲的聲音", text: "不要怕。留一點空白給命運，也留一點空白給妳自己。" },
     bell: { speaker: null, text: "鐘響了。" },
-    look: { speaker: null, text: "他看見她了——不是餘光，不是恍惚，是整個人被釘在原地那種看見。" },
+    look: { speaker: null, text: "他看見她了，不是餘光，不是恍惚，是整個人被釘在原地那種看見。" },
   };
 
   function preset(key, opts) {
