@@ -1425,8 +1425,18 @@ function applyEffect(effect) {
   }
   if (effect === "collect_aunt_market") {
     collectMemory("aunt_market");
-    setSubtitle("女兒", "我把阿姨在『意識菜市場』裡的溫度，悄悄收進了只有我看得見的時空口袋裡。", 4.5);
     closeDialogue();
+    if (window.__COUNCIL__ && state.mode === "play") {
+      try { if (window.__TWIN_BALANCE__) window.__TWIN_BALANCE__("mid"); } catch (e) {}
+      window.__COUNCIL__.start(function (res) {
+        try { if (window.__TWIN_BALANCE__) window.__TWIN_BALANCE__("off"); } catch (e) {}
+        setSubtitle("女兒", (res && res.ok)
+          ? "我把阿姨『練穩』那一刻的溫度，悄悄收進只有我看得見的時空口袋裡。"
+          : "阿姨的聲音還有點亂，但她還是把那句話交了出去。我把這份顫抖也收好了。", 4.5);
+      });
+    } else {
+      setSubtitle("女兒", "我把阿姨在『意識菜市場』裡的溫度，悄悄收進了只有我看得見的時空口袋裡。", 4.5);
+    }
     return;
   }
   if (effect === "anchor_backdoor") {
