@@ -466,6 +466,8 @@ body:has(#title-screen.hide) .pt-tutorial-trigger { display: none !important; }
 <!-- 呼吸提示 -->
 <div id="breath-hint"></div>
 
+<!-- 月台雙時空B 父女記憶 vignettes（設 window.__PACTS__ + 注入回憶 launcher）-->
+<script src="./platform-twin-b-acts.js"></script>
 <script type="importmap">
 {"imports":{"three":"../_vendor/three.module.js"}}
 </script>
@@ -5518,8 +5520,12 @@ function updateHiddenEnding(dt) {
       state.hiddenEndingTimer = 0;
       dom.hiddenEndingText.style.opacity = "0";
       dom.hiddenEnding.classList.remove("show");
-      /* Show result screen */
-      showFinalResult();
+      /* B: 注音之後，播「多年後回望」vignette，再開結算 */
+      if (window.__PACTS__ && window.__PACTS__.yearsLater) {
+        window.__PACTS__.yearsLater(function () { showFinalResult(); });
+      } else {
+        showFinalResult();
+      }
     }
   }
 }
