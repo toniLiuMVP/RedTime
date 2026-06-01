@@ -23,8 +23,8 @@
       "font-family:inherit;color:#f4ece2;opacity:0;transition:opacity .9s ease;text-align:center;padding:24px}",
       ".act-ov.show{opacity:1}",
       ".act-ov .act-kicker{font-size:12px;letter-spacing:.24em;color:#ffd9a8;margin-bottom:.6em;opacity:.85}",
-      ".act-ov .act-line{font-size:clamp(15px,2.2vw,21px);line-height:2;max-width:660px;text-shadow:0 0 14px rgba(255,200,150,.25);min-height:2em}",
-      ".act-ov .act-sub{font-size:13px;opacity:.66;margin-top:1em;letter-spacing:.08em}",
+      ".act-ov .act-line{font-size:clamp(15px,2.2vw,21px);line-height:2;max-width:660px;text-shadow:0 0 14px rgba(255,200,150,.25);min-height:2em;white-space:pre-line}",
+      ".act-ov .act-sub{font-size:13px;opacity:.66;margin-top:1em;letter-spacing:.08em;white-space:pre-line;line-height:1.9}",
       ".act-ov .act-choices{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:1.6em}",
       ".act-ov .act-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,200,150,.3);border-radius:999px;",
       "color:#f4ece2;font-family:inherit;font-size:14px;padding:11px 22px;cursor:pointer;transition:all .3s ease;letter-spacing:.06em}",
@@ -88,10 +88,10 @@
       zone.removeEventListener("pointerdown", down);
       window.removeEventListener("pointerup", up);
       line.textContent = ok
-        ? "兩條視線對上的瞬間，時間真的像往旁邊退了一步。他整個人被釘在原地，那不是餘光，是看見。"
+        ? "他抬起頭。\n你們誰都還來不及開口。\n那一秒，像被命運按了存檔鍵。"
         : "妳鬆開得太早了，那一眼只成了餘光……";
-      sub.textContent = ok ? "也太像徐若瑄了吧。" : "再按住一次，撐久一點。";
-      if (ok) { closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 2600); }
+      sub.textContent = ok ? "" : "再按住一次，撐久一點。";
+      if (ok) { setTimeout(() => { sub.textContent = "也太像徐若瑄了吧。"; }, 1100); closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 3000); }
       else { setTimeout(() => { done = false; hold = 0; last = 0; sub.textContent = "他走過背光的走廊……按住下面這束光，撐住這一眼。"; raf = requestAnimationFrame(loop); }, 1600); }
     }
     zone.addEventListener("pointerdown", down);
@@ -139,7 +139,7 @@
       line.textContent = "可是這樣還不夠。她又走了回來，蹲下，第二次拿起同一張紙條。";
       clear();
       choices.appendChild(btn("這次，笑著放下", () => {
-        sub.textContent = "她擦乾眼淚，笑著又放了一次。只有這樣狠、這樣完整的告別，才能把他的心一針一針縫得夠緊，縫成日後撐住十五年的鋼鐵人。";
+        sub.textContent = "她擦乾眼淚。\n這一次，她笑著，把同一張紙條，又放了一次。\n第一次是不捨。第二次，是成全。";
         clear();
         closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 4200);
       }));

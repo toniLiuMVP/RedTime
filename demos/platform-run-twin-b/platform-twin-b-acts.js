@@ -16,8 +16,8 @@
       "font-family:inherit;color:#eef2f6;opacity:0;transition:opacity .9s ease;text-align:center;padding:24px}",
       ".pact-ov.show{opacity:1}",
       ".pact-ov .pa-kicker{font-size:12px;letter-spacing:.24em;color:#9fd0ff;margin-bottom:.6em;opacity:.88}",
-      ".pact-ov .pa-line{font-size:clamp(15px,2.2vw,21px);line-height:2;max-width:660px;text-shadow:0 0 14px rgba(150,200,255,.22);min-height:2em}",
-      ".pact-ov .pa-sub{font-size:13px;opacity:.66;margin-top:1em;letter-spacing:.08em;min-height:1.4em}",
+      ".pact-ov .pa-line{font-size:clamp(15px,2.2vw,21px);line-height:2;max-width:660px;text-shadow:0 0 14px rgba(150,200,255,.22);min-height:2em;white-space:pre-line}",
+      ".pact-ov .pa-sub{font-size:13px;opacity:.66;margin-top:1em;letter-spacing:.08em;min-height:1.4em;white-space:pre-line;line-height:1.9}",
       ".pact-ov .pa-choices{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:1.6em}",
       ".pact-ov .pa-btn{background:rgba(255,255,255,.06);border:1px solid rgba(159,208,255,.32);border-radius:999px;color:#eef2f6;",
       "font-family:inherit;font-size:14px;padding:11px 22px;cursor:pointer;transition:all .3s ease;letter-spacing:.06em}",
@@ -47,7 +47,8 @@
       sub.textContent = "耳機裡，水聲退去。妳聽見他壓得很低、很抖的聲音。";
       line.textContent = "「……我也會想妳的。」";
       clearC(ch);
-      close(ov, function () { if (onDone) onDone({ ok: true }); }, 3600);
+      setTimeout(() => { sub.textContent = "他沒有回頭。水，又開得更大聲了一點。"; }, 2000);
+      close(ov, function () { if (onDone) onDone({ ok: true }); }, 5200);
     }); return b; })());
   }
 
@@ -152,10 +153,11 @@
     const ch = el("div", "pa-choices"); ov.appendChild(ch);
     const b = el("button", "pa-btn warm", "許多年後……");
     b.addEventListener("click", () => {
-      line.textContent = "許多年後，妳已經國一了。手機跳出一則訊息：「把拔，我也會想妳的。」";
-      sub.textContent = "他回：「我也想妳。」只要他還願意在月台上那樣用力奔跑，我們之間，就還有一條拉得再長也不會斷的線。";
       clearC(ch);
-      close(ov, function () { if (onDone) onDone({ ok: true }); }, 5200);
+      line.textContent = "許多年後，妳已經國一了。\n妳在訊息框打了一半：「把拔，我也會想你的。」";
+      setTimeout(() => { line.textContent = "字還沒打完。"; sub.textContent = "他傳來的那句，先到了：「我也想妳。」"; }, 2800);
+      setTimeout(() => { line.textContent = "從四維空間的角度，\n那句話，是從所有時間線一起飛來的。"; sub.textContent = ""; }, 5600);
+      close(ov, function () { if (onDone) onDone({ ok: true }); }, 9000);
     });
     ch.appendChild(b);
   }

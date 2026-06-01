@@ -14,8 +14,8 @@
     { lean: +2, color: "#ffcf9e", label: "18 歲（1994 凍齡）", line: "我好怕說錯、做錯……可是我好想衝過去跟他說話！" },
     { lean: -1, color: "#ffe6cf", label: "29 歲（當下身體）", line: "穩住。社會化偽裝起來，別讓他看出妳在發抖。" },
     { lean: -1, color: "#dfe6f5", label: "33 歲", line: "先活下來再說。別把自己一次燒光。" },
-    { lean: -2, color: "#cfe0f0", label: "39 歲", line: "留白吧。有些話不說，反而留得更久。" },
-    { lean: +1, color: "#f5dce6", label: "49 歲（看透的妳）", line: "他值得妳把這一句練穩。慢慢來，妳會的。" },
+    { lean: -2, color: "#cfe0f0", label: "39 歲", line: "煞車踩住。先活下來，比先說出口更重要。" },
+    { lean: +1, color: "#f5dce6", label: "49 歲（看透的妳）", line: "去愛這一次吧。後面好多年的我們，都會謝謝妳今天沒有逃跑。" },
   ];
 
   const CLOCK_MAX = 40;
@@ -49,7 +49,7 @@
       "#council-overlay .cc-voice:hover,#council-overlay .cc-voice:focus{transform:translateY(-3px) scale(1.02);filter:none;opacity:1;box-shadow:0 8px 28px rgba(255,190,130,.18);outline:none}",
       "#council-overlay .cc-age{font-size:12px;letter-spacing:.1em;margin-bottom:.4em}",
       "#council-overlay .cc-line{font-size:14px;line-height:1.7}",
-      "#council-overlay .cc-said{margin-top:.8em;min-height:1.6em;font-size:15px;color:#fff;text-shadow:0 0 12px rgba(255,210,160,.4);text-align:center;max-width:680px}",
+      "#council-overlay .cc-said{margin-top:.8em;min-height:1.6em;font-size:15px;color:#fff;text-shadow:0 0 12px rgba(255,210,160,.4);text-align:center;max-width:680px;white-space:pre-line;line-height:1.9}",
       "#council-overlay .cc-meters{display:flex;gap:26px;align-items:center;margin-top:1.2em;font-size:12px;letter-spacing:.08em}",
       "#council-overlay .cc-skewbar{display:inline-block;width:200px;height:6px;border-radius:3px;background:linear-gradient(90deg,#9fd0ff,#fff2dd,#ff9a76);position:relative;margin:0 8px;vertical-align:middle}",
       "#council-overlay .cc-knob{position:absolute;top:-4px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 10px rgba(255,255,255,.7);transform:translateX(-7px);left:50%;transition:left .35s ease}",
@@ -145,15 +145,21 @@
     active = false;
     cancelAnimationFrame(raf);
     const ok = steady >= 60 && Math.abs(skew) <= 2;
+    // P1：把高潮留給留白。五個聲音同時淡出，只剩時鐘與一句意象（不解釋「她練穩了」）。
+    const vbox = host && host.querySelector(".cc-voices");
+    if (vbox) { vbox.style.transition = "opacity 1.1s ease"; vbox.style.opacity = "0"; }
+    if (watchEl) watchEl.textContent = "11:00";
     lineEl.textContent = ok
-      ? "她深吸一口氣，把那句話練穩了：「你走到後門。」"
-      : "聲音還是太吵……但鐘響了。她半穩半亂地開口：「你……走到後門。」";
+      ? "菜市場安靜了。所有年紀的妳，都退到巷口。\n只剩最小的那個十八歲，站在正中央。"
+      : "聲音還是好吵、好吵。\n但鐘已經響了，她只能抓住最要緊的那一句：\n「你……走到後門。」";
     daughterEl.textContent = ok ? "✦ 女兒的身影　清晰而穩定" : "✦ 女兒的身影　還在，只是微微發抖";
+    // 成功：留白 1.2 秒後，才浮出進入一眼瞬間的引線
+    if (ok) setTimeout(() => { if (lineEl) lineEl.textContent = "鐘響了。\n你走到後門。"; }, 2600);
     setTimeout(() => {
       if (host) host.classList.remove("show");
       setTimeout(() => { if (host && host.parentNode) host.parentNode.removeChild(host); host = null; }, 800);
       if (typeof onDone === "function") onDone({ steady: steady, skew: skew, ok: ok });
-    }, ok ? 2200 : 2600);
+    }, ok ? 4600 : 2800);
   }
 
   function start(onComplete) {
