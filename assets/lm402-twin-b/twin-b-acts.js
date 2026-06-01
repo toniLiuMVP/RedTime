@@ -41,6 +41,10 @@
       ".act-ov .hug-zone:active{cursor:grabbing}",
       ".act-ov .hug-daughter{position:absolute;top:12%;left:50%;transform:translateX(-50%);font-size:13px;letter-spacing:.34em;color:#ffd9e6;text-shadow:0 0 14px rgba(255,150,190,.6);transition:opacity .12s;pointer-events:none}",
       ".act-ov .hug-him{width:42px;height:42px;border-radius:50%;margin-bottom:20px;background:radial-gradient(circle,#fff,#ffd9a8 58%,rgba(255,200,150,0));box-shadow:0 0 28px rgba(255,210,150,.85);transition:filter .1s;pointer-events:none}",
+      ".act-ov .pc-inputwrap{position:relative;margin-top:1.2em;display:flex;flex-direction:column;align-items:center}",
+      ".act-ov .pc-input{background:rgba(255,255,255,.06);border:1px solid rgba(255,200,150,.3);border-radius:10px;color:#f4ece2;font-family:inherit;font-size:15px;padding:10px 16px;width:min(70vw,300px);text-align:center;outline:none}",
+      ".act-ov .pc-ghost{position:absolute;top:-2px;color:#ffd9a8;font-size:18px;pointer-events:none;animation:pcGhost .72s ease-out forwards}",
+      "@keyframes pcGhost{from{opacity:.9;transform:translateY(0)}to{opacity:0;transform:translateY(-22px)}}",
     ].join("");
     document.head.appendChild(s);
   }
@@ -283,17 +287,50 @@
     ov.appendChild(sub);
     const choices = el("div", "act-choices");
     ov.appendChild(choices);
-    const seq = ["聽筒裡，她的聲音很平靜：「我們分手吧。」", "妳想說什麼，可是一個字都發不出來。", "夕陽把轉角染成橘色。一個同學走過，沒注意到妳通紅的眼睛。", "妳只能站著，讓這一切，發生。"];
+    // Phase 1：她的聲音
+    const seq1 = ["聽筒裡，她的聲音很平靜：「我們，分手吧。」", "妳張開嘴，想說一句「不要走」。"];
     let i = 0;
-    function step() {
-      if (i < seq.length) { sub.textContent = seq[i++]; setTimeout(step, 2600); }
+    function phase1() { if (i < seq1.length) { sub.textContent = seq1[i++]; setTimeout(phase1, 2600); } else tryToSpeak(); }
+    // Phase 2：打字失效（機制即隱喻：一個字都發不出來，被奪走能動性）
+    function tryToSpeak() {
+      sub.textContent = "（試著打字告訴她……）";
+      const wrap = el("div", "pc-inputwrap");
+      const input = el("input", "pc-input");
+      input.type = "text"; input.setAttribute("placeholder", "你想說的話…"); input.setAttribute("autocomplete", "off"); input.setAttribute("autocorrect", "off");
+      wrap.appendChild(input); choices.appendChild(wrap);
+      try { input.focus(); } catch (e) {}
+      let attempts = 0, doneT = false;
+      function ghost(c) {
+        const g = el("span", "pc-ghost", c); wrap.appendChild(g);
+        setTimeout(() => { if (g.parentNode) g.parentNode.removeChild(g); }, 720);
+        if (++attempts >= 4) finishTyping();
+      }
+      function onKey(e) { if (e.key && e.key.length === 1) { e.preventDefault(); ghost(e.key); } }       // 桌機
+      function onInput() { const v = input.value; if (v) { input.value = ""; ghost(v.slice(-1)); } }       // iOS 軟鍵盤後備
+      input.addEventListener("keydown", onKey);
+      input.addEventListener("input", onInput);
+      const fb = setTimeout(finishTyping, 7000);
+      function finishTyping() {
+        if (doneT) return; doneT = true; clearTimeout(fb);
+        input.removeEventListener("keydown", onKey); input.removeEventListener("input", onInput);
+        try { input.blur(); } catch (e) {}
+        if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
+        sub.textContent = "話到了喉嚨，又被吞了回去。這一次，妳，沒有說話的權利。";
+        setTimeout(phase3, 2800);
+      }
+    }
+    // Phase 3：只能承受
+    const seq3 = ["夕陽把轉角染成橘色。一個同學走過，沒注意到妳通紅的眼睛。", "妳只能站著，讓這一切，發生。"];
+    let j = 0;
+    function phase3() {
+      if (j < seq3.length) { sub.textContent = seq3[j++]; setTimeout(phase3, 2600); }
       else {
         const b = el("button", "act-btn", "……（深呼吸，繼續）");
         b.addEventListener("click", () => { while (choices.firstChild) choices.removeChild(choices.firstChild); closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 1400); });
         choices.appendChild(b);
       }
     }
-    step();
+    phase1();
   }
 
   // ── Act 8 七年的 7-11 夜晚(EP19/26/29:重複即悲傷)──
