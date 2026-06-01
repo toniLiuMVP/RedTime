@@ -1447,6 +1447,15 @@ function applyEffect(effect) {
     audioSystem.playCue("ending");
     setSubtitle("女兒", "我停在後門旁，剛好能看到走廊的一小段。", 4.2);
     setAmbience("光從窗邊切進來，把地板照得有點過分地亮。所有版本的呼吸都慢慢安靜下來。");
+    if (window.__ACTS__ && state.mode === "play") {
+      safeTimeout(() => {
+        if (state.mode === "play" && window.__ACTS__) window.__ACTS__.gaze(function (res) {
+          setSubtitle("女兒", (res && res.ok)
+            ? "我親眼看著那一眼，整個人被釘在原地——這就是我存在的起點。"
+            : "就算只是餘光，他們也已經開始了。", 5.0);
+        });
+      }, 4200);
+    }
     closeDialogue();
   }
   if (effect === "make_phone_call") {
