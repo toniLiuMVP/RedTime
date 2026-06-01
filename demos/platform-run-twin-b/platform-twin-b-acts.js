@@ -169,6 +169,7 @@
   }
 
   function runChain(ids, onAll) {
+    if (document.querySelector(".pact-ov")) return; // W3：已有 vignette 開著就忽略，避免疊字穿透
     const map = { echo: echo, tracing: tracing, cantTravel: cantTravel, runaway13: runaway13, subwaySky: subwaySky, yearsLater: yearsLater };
     let i = 0;
     _pause(1); /* 整條回憶鏈期間（含幕間空檔）都凍結遊戲，結束才解凍，避免時間偷跑 */

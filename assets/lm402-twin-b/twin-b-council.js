@@ -133,7 +133,7 @@
   function tick(t) {
     if (!active) return;
     if (!lastTick) lastTick = t;
-    clock += (t - lastTick) / 1000;
+    clock += Math.min((t - lastTick) / 1000, 0.05); // W2：切分頁回來不會時間暴衝、提早結算
     lastTick = t;
     const mm = Math.min(60, Math.floor((clock / CLOCK_MAX) * 20) + 40);
     watchEl.textContent = mm >= 60 ? "11:00" : "10:" + mm;

@@ -32,11 +32,15 @@
       // gaze
       ".act-ov .gaze-zone{width:min(60vw,340px);height:min(60vw,340px);border-radius:50%;margin-top:1.4em;cursor:pointer;",
       "background:radial-gradient(circle,rgba(255,228,200,.10),transparent 70%);border:1px solid rgba(255,210,160,.25);",
-      "display:flex;align-items:center;justify-content:center;position:relative;transition:box-shadow .2s,background .2s;user-select:none;-webkit-user-select:none;touch-action:none}",
+      "display:flex;align-items:center;justify-content:center;position:relative;transition:box-shadow .2s,background .2s;user-select:none;-webkit-user-select:none;touch-action:none;-webkit-touch-callout:none}",
       ".act-ov .gaze-core{width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 0 24px rgba(255,225,190,.9)}",
       ".act-ov .gaze-meter{width:240px;height:6px;border-radius:3px;background:rgba(255,255,255,.12);margin-top:1.2em;overflow:hidden}",
       ".act-ov .gaze-meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd9a8,#fff2dd);transition:width .12s linear}",
       ".act-ov.gaze-bloom{background:radial-gradient(120% 90% at 50% 45%,rgba(255,236,210,.34),rgba(20,16,18,.9))}",
+      ".act-ov .hug-zone{position:relative;width:min(74vw,360px);height:min(46vh,300px);margin-top:1.2em;border-radius:18px;cursor:grab;touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;border:1px solid rgba(255,210,160,.14)}",
+      ".act-ov .hug-zone:active{cursor:grabbing}",
+      ".act-ov .hug-daughter{position:absolute;top:12%;left:50%;transform:translateX(-50%);font-size:13px;letter-spacing:.34em;color:#ffd9e6;text-shadow:0 0 14px rgba(255,150,190,.6);transition:opacity .12s;pointer-events:none}",
+      ".act-ov .hug-him{width:42px;height:42px;border-radius:50%;margin-bottom:20px;background:radial-gradient(circle,#fff,#ffd9a8 58%,rgba(255,200,150,0));box-shadow:0 0 28px rgba(255,210,150,.85);transition:filter .1s;pointer-events:none}",
     ].join("");
     document.head.appendChild(s);
   }
@@ -87,15 +91,17 @@
       done = true; cancelAnimationFrame(raf);
       zone.removeEventListener("pointerdown", down);
       window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", up);
       line.textContent = ok
         ? "他抬起頭。\n你們誰都還來不及開口。\n那一秒，像被命運按了存檔鍵。"
         : "妳鬆開得太早了，那一眼只成了餘光……";
       sub.textContent = ok ? "" : "再按住一次，撐久一點。";
       if (ok) { setTimeout(() => { sub.textContent = "也太像徐若瑄了吧。"; }, 1100); closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 3000); }
-      else { setTimeout(() => { done = false; hold = 0; last = 0; sub.textContent = "他走過背光的走廊……按住下面這束光，撐住這一眼。"; raf = requestAnimationFrame(loop); }, 1600); }
+      else { setTimeout(() => { done = false; hold = 0; last = 0; sub.textContent = "他走過背光的走廊……按住下面這束光，撐住這一眼。"; zone.addEventListener("pointerdown", down); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up); raf = requestAnimationFrame(loop); }, 1600); }
     }
     zone.addEventListener("pointerdown", down);
     window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
     raf = requestAnimationFrame(loop);
   }
 
@@ -151,32 +157,57 @@
   function hug(onDone) {
     const ov = makeOverlay();
     ov.appendChild(el("div", "act-kicker", "2005 · 一眼瞬間之後"));
-    const line = el("div", "act-line", "他就站在那裡，近得妳能聽見他的呼吸。妳好想衝上去，抱住他。");
+    const line = el("div", "act-line", "他就站在那裡，近得妳能聽見他的呼吸。妳的手，好想抱上去。");
     ov.appendChild(line);
-    const sub = el("div", "act-sub", "");
+    const sub = el("div", "act-sub", "按住下面那束光，把他往妳這裡拉近。但小心，背景裡有女兒。");
     ov.appendChild(sub);
-    const choices = el("div", "act-choices");
-    const hugBtn = el("button", "act-btn", "衝上去，抱住他");
-    const holdBtn = el("button", "act-btn", "忍住，把手收回來");
-    choices.appendChild(hugBtn); choices.appendChild(holdBtn);
-    ov.appendChild(choices);
-    function clearC() { while (choices.firstChild) choices.removeChild(choices.firstChild); }
-    hugBtn.addEventListener("click", () => {
-      try { ov.animate([{ transform: "translateX(-4px)" }, { transform: "translateX(4px)" }], { duration: 110, iterations: 9, direction: "alternate" }); } catch (e) {}
-      sub.textContent = "妳撲了上去，時間線發出撕裂的雜訊。背景裡，女兒的身影開始崩解……不行，這個擁抱會抹掉她。";
-      clearC();
-      setTimeout(() => {
-        sub.textContent = "妳含著淚，把伸出去的手，一寸一寸收了回來。";
-        line.textContent = "愛，有時候不是抱緊，而是收手。";
-        closeOverlay(ov, function () { if (onDone) onDone({ ok: true, resisted: false }); }, 3200);
-      }, 2400);
-    });
-    holdBtn.addEventListener("click", () => {
-      sub.textContent = "妳把伸出去的手，輕輕收了回來。指尖還記得他襯衫的溫度。";
-      line.textContent = "愛，有時候不是抱緊，而是收手。這樣，女兒才會存在。";
-      clearC();
+    const zone = el("div", "hug-zone");
+    const daughter = el("div", "hug-daughter", "女 兒");
+    const him = el("div", "hug-him");
+    zone.appendChild(daughter); zone.appendChild(him);
+    ov.appendChild(zone);
+
+    let dragging = false, pull = 0, raf = 0, done = false; // pull 0..1（拉近程度）
+    function paint() {
+      him.style.transform = "translateY(" + (-pull * 150) + "px) scale(" + (1 + pull * 0.6) + ")";
+      him.style.filter = "blur(" + (1 - pull).toFixed(2) + "px)";
+      daughter.style.opacity = Math.max(0.04, 1 - pull * 1.08).toFixed(2);
+      if (pull > 0.66) sub.textContent = "女兒的身影快要消失了……時間線在撕裂。在她不見之前，放手。";
+      else if (pull > 0.12) sub.textContent = "再近一點……可是女兒，正在淡掉。";
+    }
+    function loop() {
+      if (done) return;
+      pull = dragging ? Math.min(1, pull + 0.011) : Math.max(0, pull - 0.05);
+      paint();
+      if (pull >= 1) return tornApart();
+      raf = requestAnimationFrame(loop);
+    }
+    function down(e) { e.preventDefault(); dragging = true; }
+    function up() {
+      if (done) return;
+      dragging = false;
+      if (pull > 0.25) { done = true; cancelAnimationFrame(raf); cleanup(); ease(finish); }
+    }
+    function tornApart() { // 硬抱到底：女兒消失 → 教學重來
+      cancelAnimationFrame(raf); dragging = false;
+      sub.textContent = "如果抱下去，女兒就再也不存在了。妳猛地收手。";
+      ease(function () { sub.textContent = "再試一次。這一次，在她消失之前，主動放手。"; raf = requestAnimationFrame(loop); });
+    }
+    function ease(after) { // 把 pull 平滑收回 0
+      var step = function () { pull = Math.max(0, pull - 0.06); paint(); if (pull > 0) requestAnimationFrame(step); else after(); };
+      step();
+    }
+    function cleanup() { zone.removeEventListener("pointerdown", down); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up); }
+    function finish() {
+      daughter.style.opacity = "1";
+      line.textContent = "妳含著淚，把伸出去的手，一寸一寸收了回來。";
+      sub.textContent = "「就抱著回憶吧。就好。」這樣，女兒才會存在。";
       closeOverlay(ov, function () { if (onDone) onDone({ ok: true, resisted: true }); }, 3400);
-    });
+    }
+    zone.addEventListener("pointerdown", down);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
+    raf = requestAnimationFrame(loop);
   }
 
   // ── Act 5 紅線導航(EP22:跟著暖色找到心的另一端)──
@@ -417,6 +448,7 @@
 
   // ── 鏈執行器:串起多個 act 成情感弧 ──
   function runChain(ids, onAll) {
+    if (document.querySelector(".act-ov")) return; // W3：已有 overlay 開著就忽略，避免疊字穿透
     const map = { gaze: gaze, note: note, hug: hug, redthread: redthread, msn: msn, phoneCall: phoneCall, sevenEleven: sevenEleven, infinite: infinite, believe: believe, train1163: train1163, carnation: carnation };
     let i = 0;
     function next() {
