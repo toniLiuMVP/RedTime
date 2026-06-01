@@ -1,6 +1,6 @@
 // platform-twin-b-acts.js · 月台雙時空B 父女記憶 vignettes
 // 純 DOM(iOS-safe)、零 innerHTML、韓劇暗調。對外:window.__PACTS__
-// EP36(廚房門/地鐵天空/月台狂奔)、EP37(透明片/不能穿越)、EP30(13 歲離家)。
+// EP36(廚房門/捷運天空/月台狂奔)、EP37(透明片/不能穿越)、EP30(13 歲離家)。
 
 (function () {
   "use strict";
@@ -61,18 +61,24 @@
     const sub = el("div", "pa-sub", "描好了。接著，比出只有你們才懂的暗號。");
     ov.appendChild(sub);
     const ch = el("div", "pa-choices"); ov.appendChild(ch);
-    const steps = ["敲敲胸口兩下", "指向對方", "比一個 7", "比個讚"];
+    const steps = [
+      { act: "用拳頭，敲敲自己的胸口兩下", meaning: "" },
+      { act: "用食指，指著對方", meaning: "" },
+      { act: "用斜斜的 7，比在自己的下巴", meaning: "（代表自己最帥、最美）" },
+      { act: "最後，跟對方比一個讚", meaning: "（代表你最棒）" },
+    ];
     let i = 0;
     function render() {
       clearC(ch);
-      if (i < steps.length) {
-        const b = el("button", "pa-btn", steps[i]);
-        b.addEventListener("click", () => { i++; sub.textContent = i < steps.length ? "再來：" + steps[i] : "暗號完成了。"; render(); });
-        ch.appendChild(b);
-      } else {
+      if (i >= steps.length) {
         line.textContent = "「把拔，我會想你的。」這句話，從此有了只屬於你們的手語。";
+        sub.textContent = "";
         close(ov, function () { if (onDone) onDone({ ok: true }); }, 3800);
+        return;
       }
+      const b = el("button", "pa-btn", steps[i].act);
+      b.addEventListener("click", () => { const m = steps[i].meaning; sub.textContent = m; i++; clearC(ch); setTimeout(render, m ? 1600 : 800); });
+      ch.appendChild(b);
     }
     render();
   }
@@ -93,7 +99,7 @@
     ch.appendChild(rw); ch.appendChild(pf); ch.appendChild(go);
   }
 
-  // #5 13 歲離家的夜(EP30:翻外套藏名字 → 廟桌下 → 大姨婆「肚子會餓嗎?」)
+  // #5 13 歲離家的夜(EP30:翻外套藏名字 → 廟桌下 → 大阿姨「肚子會餓嗎?」)
   function runaway13(onDone) {
     const ov = open();
     ov.appendChild(el("div", "pa-kicker", "把拔 13 歲 · 離家的那一夜"));
@@ -115,7 +121,7 @@
         b.addEventListener("click", () => { sub.textContent = seq[i].s; i++; setTimeout(render, 1700); });
         ch.appendChild(b);
       } else {
-        line.textContent = "天亮了。一個阿婆蹲下來，沒有罵他，只問了一句。";
+        line.textContent = "天亮了。是把拔的大阿姨。她沒有罵他，只問了一句。";
         sub.textContent = "「肚子，會餓嗎？」";
         close(ov, function () { if (onDone) onDone({ ok: true }); }, 4000);
       }
@@ -123,11 +129,11 @@
     render();
   }
 
-  // #6 地鐵的「天空」(EP36 2013:年輕把拔幫 1 歲女兒換尿布,用身體搭一個安全的天空)
+  // #6 捷運的「天空」(EP36 2013:年輕把拔幫 1 歲女兒換尿布,用身體搭一個安全的天空)
   function subwaySky(onDone) {
     const ov = open();
-    ov.appendChild(el("div", "pa-kicker", "2013 · 地鐵上 · 笨拙地練習當爸爸"));
-    const line = el("div", "pa-line", "一歲的妳哭了，需要換尿布。可是地鐵上，什麼設施都沒有。");
+    ov.appendChild(el("div", "pa-kicker", "2013 · 捷運上 · 笨拙地練習當爸爸"));
+    const line = el("div", "pa-line", "一歲的妳哭了，需要換尿布。可是捷運上，什麼設施都沒有。");
     ov.appendChild(line);
     const sub = el("div", "pa-sub", "");
     ov.appendChild(sub);
