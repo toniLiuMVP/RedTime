@@ -1,4 +1,4 @@
-// twin-b-acts.js — 雙時空B Acts 2-10(後一眼瞬間的戀愛弧 overlay vignettes)
+// twin-b-acts.js · 雙時空B Acts 2-10(後一眼瞬間的戀愛弧 overlay vignettes)
 // 純 DOM(iOS-safe)、零 innerHTML(createElement + textContent)、韓劇暗調。
 // 對外:window.__ACTS__ = { gaze, note, msn, phoneCall, sevenEleven, infinite, believe, runChain }
 // 每個 act(onDone) → 完成後呼叫 onDone(result);runChain([...],onAll) 串成情感鏈。
@@ -88,7 +88,7 @@
       zone.removeEventListener("pointerdown", down);
       window.removeEventListener("pointerup", up);
       line.textContent = ok
-        ? "兩條視線對上的瞬間，時間真的像往旁邊退了一步。他整個人被釘在原地——那不是餘光，是看見。"
+        ? "兩條視線對上的瞬間，時間真的像往旁邊退了一步。他整個人被釘在原地，那不是餘光，是看見。"
         : "妳鬆開得太早了，那一眼只成了餘光……";
       sub.textContent = ok ? "也太像徐若瑄了吧。" : "再按住一次，撐久一點。";
       if (ok) { closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 2600); }
@@ -130,7 +130,7 @@
         choices.appendChild(btn("留下，不走", () => {
           sub.textContent = "如果她留下……背景裡，女兒的身影開始淡掉。命運阿嬤說過：她的溫柔，會把女兒抹消。";
           line.style.opacity = "0.4";
-          setTimeout(() => { line.style.opacity = "1"; sub.textContent = "她紅著眼，把手收回來——這一次，她還是不能留。"; renderStage(); }, 2600);
+          setTimeout(() => { line.style.opacity = "1"; sub.textContent = "她紅著眼，把手收回來。這一次，她還是不能留。"; renderStage(); }, 2600);
           clear();
         }));
       }
@@ -139,7 +139,7 @@
       line.textContent = "可是這樣還不夠。她又走了回來，蹲下，第二次拿起同一張紙條。";
       clear();
       choices.appendChild(btn("這次，笑著放下", () => {
-        sub.textContent = "她擦乾眼淚，笑著又放了一次。只有這樣狠、這樣完整的告別，才能把他的心一針一針縫得夠緊——縫成日後撐住十五年的鋼鐵人。";
+        sub.textContent = "她擦乾眼淚，笑著又放了一次。只有這樣狠、這樣完整的告別，才能把他的心一針一針縫得夠緊，縫成日後撐住十五年的鋼鐵人。";
         clear();
         closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 4200);
       }));

@@ -5862,6 +5862,8 @@ const _padQ = { samples: [], cooldown: 0, enabled: true };
 function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(gameClock.getDelta(), 0.033);
+  /* B：看「把拔的回憶」時凍結模擬（計時、火車、移動全停），只續 render，避免時間到沒接到女兒的出戲 */
+  if (window.__RUN_PAUSED__) { renderer.render(scene, camera); return; }
   state.clock += dt;
 
   /* adaptive 品質:90 幀 window avg FPS < 40 → applyQuality 降一級,cooldown 300 幀防 flapping */

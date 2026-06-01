@@ -1,4 +1,4 @@
-// platform-twin-b-acts.js — 月台雙時空B 父女記憶 vignettes
+// platform-twin-b-acts.js · 月台雙時空B 父女記憶 vignettes
 // 純 DOM(iOS-safe)、零 innerHTML、韓劇暗調。對外:window.__PACTS__
 // EP36(廚房門/地鐵天空/月台狂奔)、EP37(透明片/不能穿越)、EP30(13 歲離家)。
 
@@ -27,8 +27,11 @@
     ].join("");
     document.head.appendChild(s);
   }
-  function open() { injectStyle(); const ov = el("div", "pact-ov"); document.body.appendChild(ov); requestAnimationFrame(() => ov.classList.add("show")); return ov; }
-  function close(ov, cb, d) { setTimeout(() => { ov.classList.remove("show"); setTimeout(() => { if (ov.parentNode) ov.parentNode.removeChild(ov); if (cb) cb(); }, 900); }, d || 0); }
+  // 暫停引用計數：vignette 開啟期間凍結月台 runner（window.__RUN_PAUSED__），看回憶時時間不流逝
+  let _pauseN = 0;
+  function _pause(d) { _pauseN = Math.max(0, _pauseN + d); if (typeof window !== "undefined") window.__RUN_PAUSED__ = _pauseN > 0; }
+  function open() { injectStyle(); _pause(1); const ov = el("div", "pact-ov"); document.body.appendChild(ov); requestAnimationFrame(() => ov.classList.add("show")); return ov; }
+  function close(ov, cb, d) { setTimeout(() => { ov.classList.remove("show"); setTimeout(() => { if (ov.parentNode) ov.parentNode.removeChild(ov); _pause(-1); if (cb) cb(); }, 900); }, d || 0); }
   function clearC(c) { while (c.firstChild) c.removeChild(c.firstChild); }
 
   // #2 回聲(EP36 廚房門:把拔我會想你的 / 戴時空耳機聽見他沒說出口的回答)
@@ -41,7 +44,7 @@
     ov.appendChild(sub);
     const ch = el("div", "pa-choices"); ov.appendChild(ch);
     ch.appendChild((function () { const b = el("button", "pa-btn warm", "戴上時空耳機，聽聽看"); b.addEventListener("click", () => {
-      sub.textContent = "耳機裡，水聲退去。妳聽見他壓得很低、很抖的聲音——";
+      sub.textContent = "耳機裡，水聲退去。妳聽見他壓得很低、很抖的聲音。";
       line.textContent = "「……我也會想妳的。」";
       clearC(ch);
       close(ov, function () { if (onDone) onDone({ ok: true }); }, 3600);
@@ -66,7 +69,7 @@
         b.addEventListener("click", () => { i++; sub.textContent = i < steps.length ? "再來：" + steps[i] : "暗號完成了。"; render(); });
         ch.appendChild(b);
       } else {
-        line.textContent = "「把拔，我會想你的。」——這句話，從此有了只屬於你們的手語。";
+        line.textContent = "「把拔，我會想你的。」這句話，從此有了只屬於你們的手語。";
         close(ov, function () { if (onDone) onDone({ ok: true }); }, 3800);
       }
     }
@@ -82,7 +85,7 @@
     const sub = el("div", "pa-sub", "妳（女兒）可以倒帶。把拔不行。");
     ov.appendChild(sub);
     const ch = el("div", "pa-choices"); ov.appendChild(ch);
-    const rw = el("button", "pa-btn", "倒帶（女兒）"); rw.addEventListener("click", () => { sub.textContent = "畫面倒退、重來——這是妳的能力。"; });
+    const rw = el("button", "pa-btn", "倒帶（女兒）"); rw.addEventListener("click", () => { sub.textContent = "畫面倒退、重來，這是妳的能力。"; });
     const pf = el("button", "pa-btn disabled", "倒帶（把拔）"); pf.addEventListener("click", () => { sub.textContent = "把拔沒有這個按鈕。他只能往前跑。他唯一能做的，是『相信』。"; });
     const go = el("button", "pa-btn warm", "那就，往前跑");
     go.addEventListener("click", () => { line.textContent = "他照著看不見前方的劇本，一次又一次，用力地往前跑。"; clearC(ch); close(ov, function () { if (onDone) onDone({ ok: true }); }, 3400); });
@@ -111,7 +114,7 @@
         b.addEventListener("click", () => { sub.textContent = seq[i].s; i++; setTimeout(render, 1700); });
         ch.appendChild(b);
       } else {
-        line.textContent = "天亮了。一個阿婆蹲下來，沒有罵他，只問了一句——";
+        line.textContent = "天亮了。一個阿婆蹲下來，沒有罵他，只問了一句。";
         sub.textContent = "「肚子，會餓嗎？」";
         close(ov, function () { if (onDone) onDone({ ok: true }); }, 4000);
       }
@@ -150,7 +153,7 @@
     const b = el("button", "pa-btn warm", "許多年後……");
     b.addEventListener("click", () => {
       line.textContent = "許多年後，妳已經國一了。手機跳出一則訊息：「把拔，我也會想妳的。」";
-      sub.textContent = "他回：「我也想妳。」——只要他還願意在月台上那樣用力奔跑，我們之間，就還有一條拉得再長也不會斷的線。";
+      sub.textContent = "他回：「我也想妳。」只要他還願意在月台上那樣用力奔跑，我們之間，就還有一條拉得再長也不會斷的線。";
       clearC(ch);
       close(ov, function () { if (onDone) onDone({ ok: true }); }, 5200);
     });
@@ -160,7 +163,8 @@
   function runChain(ids, onAll) {
     const map = { echo: echo, tracing: tracing, cantTravel: cantTravel, runaway13: runaway13, subwaySky: subwaySky, yearsLater: yearsLater };
     let i = 0;
-    function next() { if (i >= ids.length) { if (onAll) onAll(); return; } const fn = map[ids[i++]]; if (typeof fn === "function") fn(next); else next(); }
+    _pause(1); /* 整條回憶鏈期間（含幕間空檔）都凍結遊戲，結束才解凍，避免時間偷跑 */
+    function next() { if (i >= ids.length) { _pause(-1); if (onAll) onAll(); return; } const fn = map[ids[i++]]; if (typeof fn === "function") fn(next); else next(); }
     next();
   }
 
