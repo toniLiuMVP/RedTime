@@ -89,13 +89,35 @@
     ov.appendChild(el("div", "pa-kicker", "命運阿嬤 · 一個不公平的規則"));
     const line = el("div", "pa-line", "命運阿嬤說：有人可以穿越，是為了修補；有人不能穿越，是為了讓『心』變成真的。");
     ov.appendChild(line);
-    const sub = el("div", "pa-sub", "妳（女兒）可以倒帶。把拔不行。");
+    const sub = el("div", "pa-sub", "妳（女兒）可以倒帶。試試看，把拔可以嗎？");
     ov.appendChild(sub);
     const ch = el("div", "pa-choices"); ov.appendChild(ch);
-    const rw = el("button", "pa-btn", "倒帶（女兒）"); rw.addEventListener("click", () => { sub.textContent = "畫面倒退、重來，這是妳的能力。"; });
-    const pf = el("button", "pa-btn disabled", "倒帶（把拔）"); pf.addEventListener("click", () => { sub.textContent = "把拔沒有這個按鈕。他只能往前跑。他唯一能做的，是『相信』。"; });
+    // 女兒倒帶：真的能按
+    const rw = el("button", "pa-btn", "⟲ 倒帶（女兒）");
+    rw.addEventListener("click", () => { sub.textContent = "畫面倒退、重來。在妳的時間裡，錯了可以再來一次。"; });
+    // 把拔倒帶：按鈕一直閃躲、點不到（機制即隱喻：他沒有這個能力）
+    const pf = el("button", "pa-btn", "⟲ 倒帶（把拔）");
+    let dodges = 0, gaveUp = false;
+    function dodge(e) {
+      if (gaveUp) return;
+      if (e) e.preventDefault();
+      dodges++;
+      const dx = (dodges % 2 ? 1 : -1) * (44 + dodges * 12);
+      const dy = ((dodges % 3) - 1) * 24;
+      pf.style.transform = "translate(" + dx + "px," + dy + "px)";
+      pf.style.opacity = Math.max(0.22, 1 - dodges * 0.13).toFixed(2);
+      sub.textContent = "（他想倒帶……可是那個按鈕，一直從他指間滑開。）";
+      if (dodges >= 5) {
+        gaveUp = true;
+        pf.style.pointerEvents = "none"; pf.style.transform = "translate(0,0)"; pf.style.opacity = "0.28";
+        pf.classList.add("disabled");
+        sub.textContent = "把拔，沒有這個按鈕。他不能倒帶，只能往前跑。他唯一能做的，是『相信』。";
+      }
+    }
+    pf.addEventListener("pointerenter", dodge); // 桌機 hover 就閃開
+    pf.addEventListener("pointerdown", dodge);  // 觸控/點擊：按下去前先滑開
     const go = el("button", "pa-btn warm", "那就，往前跑");
-    go.addEventListener("click", () => { line.textContent = "他照著看不見前方的劇本，一次又一次，用力地往前跑。"; clearC(ch); close(ov, function () { if (onDone) onDone({ ok: true }); }, 3400); });
+    go.addEventListener("click", () => { line.textContent = "他照著看不見前方的劇本，一次又一次，用力地往前跑。"; sub.textContent = ""; clearC(ch); close(ov, function () { if (onDone) onDone({ ok: true }); }, 3400); });
     ch.appendChild(rw); ch.appendChild(pf); ch.appendChild(go);
   }
 
