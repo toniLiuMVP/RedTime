@@ -147,9 +147,211 @@
     renderStage();
   }
 
+  // ── Act 3 禁忌擁抱(EP12:衝上去抱他會撕裂時間線→女兒消失;忍住=收手)──
+  function hug(onDone) {
+    const ov = makeOverlay();
+    ov.appendChild(el("div", "act-kicker", "2005 · 一眼瞬間之後"));
+    const line = el("div", "act-line", "他就站在那裡，近得妳能聽見他的呼吸。妳好想衝上去，抱住他。");
+    ov.appendChild(line);
+    const sub = el("div", "act-sub", "");
+    ov.appendChild(sub);
+    const choices = el("div", "act-choices");
+    const hugBtn = el("button", "act-btn", "衝上去，抱住他");
+    const holdBtn = el("button", "act-btn", "忍住，把手收回來");
+    choices.appendChild(hugBtn); choices.appendChild(holdBtn);
+    ov.appendChild(choices);
+    function clearC() { while (choices.firstChild) choices.removeChild(choices.firstChild); }
+    hugBtn.addEventListener("click", () => {
+      try { ov.animate([{ transform: "translateX(-4px)" }, { transform: "translateX(4px)" }], { duration: 110, iterations: 9, direction: "alternate" }); } catch (e) {}
+      sub.textContent = "妳撲了上去，時間線發出撕裂的雜訊。背景裡，女兒的身影開始崩解……不行，這個擁抱會抹掉她。";
+      clearC();
+      setTimeout(() => {
+        sub.textContent = "妳含著淚，把伸出去的手，一寸一寸收了回來。";
+        line.textContent = "愛，有時候不是抱緊，而是收手。";
+        closeOverlay(ov, function () { if (onDone) onDone({ ok: true, resisted: false }); }, 3200);
+      }, 2400);
+    });
+    holdBtn.addEventListener("click", () => {
+      sub.textContent = "妳把伸出去的手，輕輕收了回來。指尖還記得他襯衫的溫度。";
+      line.textContent = "愛，有時候不是抱緊，而是收手。這樣，女兒才會存在。";
+      clearC();
+      closeOverlay(ov, function () { if (onDone) onDone({ ok: true, resisted: true }); }, 3400);
+    });
+  }
+
+  // ── Act 5 紅線導航(EP22:跟著暖色找到心的另一端)──
+  function redthread(onDone) {
+    const ov = makeOverlay();
+    ov.appendChild(el("div", "act-kicker", "女兒 · 沿著紅線飛"));
+    const line = el("div", "act-line", "我沿著那條紅線飛進他們之間。線的顏色一直在變：紅、粉、黃。命運阿嬤說，跟著「暖」的方向走，就能找到他們的心。");
+    ov.appendChild(line);
+    const sub = el("div", "act-sub", "");
+    ov.appendChild(sub);
+    const choices = el("div", "act-choices");
+    ov.appendChild(choices);
+    const opts = [{ n: "偏冷的灰藍", w: false }, { n: "溫暖的橘粉", w: true }, { n: "刺眼的慘白", w: false }];
+    let step = 0;
+    function render() {
+      while (choices.firstChild) choices.removeChild(choices.firstChild);
+      opts.forEach((c) => {
+        const b = el("button", "act-btn", "往" + c.n + "的那端");
+        b.addEventListener("click", () => {
+          if (c.w) {
+            step++;
+            if (step >= 2) {
+              sub.textContent = "紅線在我面前亮成一片溫柔的粉。線的另一端，是把拔。";
+              while (choices.firstChild) choices.removeChild(choices.firstChild);
+              closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 3200);
+            } else { sub.textContent = "暖起來了。再往暖的方向。"; render(); }
+          } else { sub.textContent = "這端越走越冷……我退回來，重新讀線的顏色。"; }
+        });
+        choices.appendChild(b);
+      });
+    }
+    render();
+  }
+
+  // ── Act 6 MSN 隱身等待(EP6/7:等待也算在約會的時間裡)──
+  function msn(onDone) {
+    const ov = makeOverlay();
+    ov.appendChild(el("div", "act-kicker", "2005 · MSN"));
+    const line = el("div", "act-line", "他還沒上線。妳可以「隱身上線」，假裝不在，卻偷偷等他出現。");
+    ov.appendChild(line);
+    const sub = el("div", "act-sub", "等待的時候，也算在約會的時間裡。");
+    ov.appendChild(sub);
+    const choices = el("div", "act-choices");
+    ov.appendChild(choices);
+    const waitLines = ["螢幕安安靜靜的。", "風扇的聲音很大，我盯著他的頭像。", "他的狀態還是「離線」。可是我不想關掉視窗。"];
+    let waited = 0;
+    const wait = el("button", "act-btn", "隱身，再等一下");
+    const leave = el("button", "act-btn", "算了，先關掉");
+    wait.addEventListener("click", () => {
+      waited++;
+      if (waited >= 3) {
+        sub.textContent = "「登登登」他上線了。視窗跳出一句：「妳今天，過得好嗎？」";
+        line.textContent = "原來他也一直在等。我們都隱身著，等對方先出現。";
+        while (choices.firstChild) choices.removeChild(choices.firstChild);
+        closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 3600);
+      } else { sub.textContent = waitLines[waited - 1] || "再等一下下。"; }
+    });
+    leave.addEventListener("click", () => {
+      sub.textContent = "我關掉視窗。可是心裡那扇，一直沒關。";
+      while (choices.firstChild) choices.removeChild(choices.firstChild);
+      closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 3000);
+    });
+    choices.appendChild(wait); choices.appendChild(leave);
+  }
+
+  // ── Act 7 分手電話(EP13:只能承受,奪走能動性)──
+  function phoneCall(onDone) {
+    const ov = makeOverlay();
+    ov.appendChild(el("div", "act-kicker", "2005 · 12 · 22"));
+    const line = el("div", "act-line", "電話響了。妳站在伯達樓轉角，按下接聽。");
+    ov.appendChild(line);
+    const sub = el("div", "act-sub", "");
+    ov.appendChild(sub);
+    const choices = el("div", "act-choices");
+    ov.appendChild(choices);
+    const seq = ["聽筒裡，她的聲音很平靜：「我們分手吧。」", "妳想說什麼，可是一個字都發不出來。", "夕陽把轉角染成橘色。一個同學走過，沒注意到妳通紅的眼睛。", "妳只能站著，讓這一切，發生。"];
+    let i = 0;
+    function step() {
+      if (i < seq.length) { sub.textContent = seq[i++]; setTimeout(step, 2600); }
+      else {
+        const b = el("button", "act-btn", "……（深呼吸，繼續）");
+        b.addEventListener("click", () => { while (choices.firstChild) choices.removeChild(choices.firstChild); closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 1400); });
+        choices.appendChild(b);
+      }
+    }
+    step();
+  }
+
+  // ── Act 8 七年的 7-11 夜晚(EP19/26/29:重複即悲傷)──
+  function sevenEleven(onDone) {
+    const ov = makeOverlay();
+    ov.appendChild(el("div", "act-kicker", "斷聯的那些年 · 她家附近的 7-11"));
+    const line = el("div", "act-line", "我又來了。只是想呼吸一下，她走過的這條街的空氣。");
+    ov.appendChild(line);
+    const sub = el("div", "act-sub", "第 1 個夜晚");
+    ov.appendChild(sub);
+    const choices = el("div", "act-choices");
+    ov.appendChild(choices);
+    const nightLines = ["關東煮的熱氣。自動門開了又關，不是她。", "我買了一罐她以前喝的飲料，沒打開。", "店員開始記得我。我假裝在看雜誌。"];
+    let night = 1;
+    const b = el("button", "act-btn", "再來一晚");
+    b.addEventListener("click", () => {
+      night++;
+      if (night >= 5) {
+        sub.textContent = "她不會來。我知道。可是我還是，一晚一晚地來。";
+        line.textContent = "時間就這樣，一針一針，把心縫了起來。";
+        while (choices.firstChild) choices.removeChild(choices.firstChild);
+        closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 3600);
+      } else { sub.textContent = "第 " + night + " 個夜晚"; line.textContent = nightLines[night - 2] || "我又來了。"; }
+    });
+    choices.appendChild(b);
+  }
+
+  // ── Act 9 無限時間線的選擇(EP28:我依然選擇你)──
+  function infinite(onDone) {
+    const ov = makeOverlay();
+    ov.appendChild(el("div", "act-kicker", "無限的時間線"));
+    const line = el("div", "act-line", "命運阿嬤把所有平行世界攤在我面前。每一條，都問同一句話。");
+    ov.appendChild(line);
+    const sub = el("div", "act-sub", "");
+    ov.appendChild(sub);
+    const choices = el("div", "act-choices");
+    ov.appendChild(choices);
+    const worlds = ["在他沒當蛙人的那條線", "在妳沒生病的那條線", "在你們早十年相遇的那條線", "在這條，最痛的原始線"];
+    let i = 0;
+    function render() {
+      while (choices.firstChild) choices.removeChild(choices.firstChild);
+      line.textContent = worlds[i] + "：妳，還會選擇跟他在一起嗎？";
+      const yes = el("button", "act-btn", "我依然選擇跟你在一起");
+      yes.addEventListener("click", () => {
+        i++;
+        if (i >= worlds.length) {
+          line.textContent = "在無限的時間線裡，我依然會選擇跟你在一起。";
+          sub.textContent = "是我們先伸的手，是「選擇」，讓紅線成形。";
+          while (choices.firstChild) choices.removeChild(choices.firstChild);
+          closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 3800);
+        } else { sub.textContent = "紅線又亮了一條。"; render(); }
+      });
+      choices.appendChild(yes);
+    }
+    render();
+  }
+
+  // ── Act 10 相信的力量(EP40:不能穿越,只能相信)──
+  function believe(onDone) {
+    const ov = makeOverlay();
+    ov.appendChild(el("div", "act-kicker", "2007 · 大兵日記 · 相信的力量"));
+    const line = el("div", "act-line", "她走了。我不能穿越，也不能回頭。我只能往前，靠「相信」撐下去。");
+    ov.appendChild(line);
+    const sub = el("div", "act-sub", "");
+    ov.appendChild(sub);
+    const choices = el("div", "act-choices");
+    ov.appendChild(choices);
+    const pages = ["3000 公尺，跑到吐。", "半夜兩點站哨，星空冷得清楚。", "三分鐘的冷水澡。", "「顧一頭牛」那種荒謬的命令。"];
+    let i = 0;
+    function render() {
+      while (choices.firstChild) choices.removeChild(choices.firstChild);
+      if (i < pages.length) {
+        line.textContent = pages[i];
+        sub.textContent = "打不倒的自信，敲不碎的心。";
+        const b = el("button", "act-btn", "選擇相信，翻過這一頁");
+        b.addEventListener("click", () => { i++; render(); });
+        choices.appendChild(b);
+      } else {
+        line.textContent = "我是靠「相信」，撐過了整整十五年。";
+        sub.textContent = "相信「相信的力量」。我一直都站在妳永遠找得到我的地方。";
+        closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 4200);
+      }
+    }
+    render();
+  }
+
   // ── 鏈執行器:串起多個 act 成情感弧 ──
   function runChain(ids, onAll) {
-    const map = { gaze: gaze, note: note };
+    const map = { gaze: gaze, note: note, hug: hug, redthread: redthread, msn: msn, phoneCall: phoneCall, sevenEleven: sevenEleven, infinite: infinite, believe: believe };
     let i = 0;
     function next() {
       if (i >= ids.length) { if (onAll) onAll(); return; }
@@ -160,6 +362,10 @@
   }
 
   if (typeof window !== "undefined") {
-    window.__ACTS__ = { gaze: gaze, note: note, runChain: runChain };
+    window.__ACTS__ = {
+      gaze: gaze, note: note, hug: hug, redthread: redthread, msn: msn,
+      phoneCall: phoneCall, sevenEleven: sevenEleven, infinite: infinite, believe: believe,
+      runChain: runChain,
+    };
   }
 })();

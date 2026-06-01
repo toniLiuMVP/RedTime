@@ -1451,8 +1451,15 @@ function applyEffect(effect) {
       safeTimeout(() => {
         if (state.mode === "play" && window.__ACTS__) window.__ACTS__.gaze(function (res) {
           setSubtitle("女兒", (res && res.ok)
-            ? "我親眼看著那一眼，整個人被釘在原地——這就是我存在的起點。"
+            ? "我親眼看著那一眼，整個人被釘在原地。這就是我存在的起點。"
             : "就算只是餘光，他們也已經開始了。", 5.0);
+          safeTimeout(() => {
+            if (state.mode === "play" && window.__ACTS__) {
+              window.__ACTS__.runChain(["hug", "msn", "redthread", "phoneCall", "sevenEleven", "infinite", "believe"], function () {
+                setSubtitle("女兒", "我把他們的一輩子，都收進了時空口袋裡。原來相信，就是這樣撐過來的。", 6.0);
+              });
+            }
+          }, 5400);
         });
       }, 4200);
     }
