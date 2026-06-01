@@ -45,6 +45,8 @@
       ".act-ov .pc-input{background:rgba(255,255,255,.06);border:1px solid rgba(255,200,150,.3);border-radius:10px;color:#f4ece2;font-family:inherit;font-size:15px;padding:10px 16px;width:min(70vw,300px);text-align:center;outline:none}",
       ".act-ov .pc-ghost{position:absolute;top:-2px;color:#ffd9a8;font-size:18px;pointer-events:none;animation:pcGhost .72s ease-out forwards}",
       "@keyframes pcGhost{from{opacity:.9;transform:translateY(0)}to{opacity:0;transform:translateY(-22px)}}",
+      ".act-ov .note-wipe{margin-top:1.2em;padding:18px 22px;border-radius:12px;border:1px dashed rgba(255,200,150,.3);cursor:ew-resize;touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;max-width:min(82vw,440px)}",
+      ".act-ov .note-blur{font-size:16px;line-height:1.9;color:#ffe9d6;transition:filter .08s,opacity .08s;pointer-events:none}",
     ].join("");
     document.head.appendChild(s);
   }
@@ -146,13 +148,39 @@
       }
     }
     function secondPrompt() {
-      line.textContent = "可是這樣還不夠。她又走了回來，蹲下，第二次拿起同一張紙條。";
+      line.textContent = "可是這樣還不夠。她又走了回來，第二次拿起同一張紙條。";
+      sub.textContent = "用手指，橫向擦過那行被淚水模糊的字，把眼淚擦乾。";
       clear();
-      choices.appendChild(btn("這次，笑著放下", () => {
-        sub.textContent = "她擦乾眼淚。\n這一次，她笑著，把同一張紙條，又放了一次。\n第一次是不捨。第二次，是成全。";
+      const wipe = el("div", "note-wipe");
+      const blurLine = el("div", "note-blur", "「我走了，你要好好照顧自己。」");
+      wipe.appendChild(blurLine);
+      choices.appendChild(wipe);
+      let dragging = false, lastX = 0, progress = 0, doneW = false;
+      function paint() { blurLine.style.filter = "blur(" + ((1 - progress) * 3).toFixed(2) + "px)"; blurLine.style.opacity = (0.45 + progress * 0.55).toFixed(2); }
+      paint();
+      function down(e) { e.preventDefault(); dragging = true; lastX = e.clientX; }
+      function move(e) {
+        if (!dragging || doneW) return;
+        progress = Math.min(1, progress + Math.abs(e.clientX - lastX) / 420);
+        lastX = e.clientX; paint();
+        if (progress >= 1) finishWipe();
+      }
+      function up() { dragging = false; }
+      function finishWipe() {
+        if (doneW) return; doneW = true;
+        wipe.removeEventListener("pointerdown", down);
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", up);
+        window.removeEventListener("pointercancel", up);
+        blurLine.style.filter = "blur(0)"; blurLine.style.opacity = "1";
         clear();
+        sub.textContent = "她擦乾眼淚，笑著，把同一張紙條，又放了一次。\n第一次是不捨。第二次，是成全。";
         closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 4200);
-      }));
+      }
+      wipe.addEventListener("pointerdown", down);
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", up);
+      window.addEventListener("pointercancel", up);
     }
     renderStage();
   }
