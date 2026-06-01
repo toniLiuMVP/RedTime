@@ -308,15 +308,15 @@
   // ── Act 7 分手電話(EP13:只能承受,奪走能動性)──
   function phoneCall(onDone) {
     const ov = makeOverlay();
-    ov.appendChild(el("div", "act-kicker", "2005 · 12 · 22"));
-    const line = el("div", "act-line", "電話響了。妳站在伯達樓轉角，按下接聽。");
+    ov.appendChild(el("div", "act-kicker", "2005 · 12 · 22 · 傍晚 · 伯達樓轉角"));
+    const line = el("div", "act-line", "電話響了。是學妹打來的。");
     ov.appendChild(line);
     const sub = el("div", "act-sub", "");
     ov.appendChild(sub);
     const choices = el("div", "act-choices");
     ov.appendChild(choices);
     // Phase 1：她的聲音
-    const seq1 = ["聽筒裡，她的聲音很平靜：「我們，分手吧。」", "妳張開嘴，想說一句「不要走」。"];
+    const seq1 = ["聽筒裡，學妹的聲音：「我們分手吧！你不要再來找我了！」", "傍晚，你（學長）站在伯達樓的轉角。天色昏暗，你的眼睛，早已泛紅。", "你張開嘴，想說一句「不要走」。"];
     let i = 0;
     function phase1() { if (i < seq1.length) { sub.textContent = seq1[i++]; setTimeout(phase1, 2600); } else tryToSpeak(); }
     // Phase 2：打字失效（機制即隱喻：一個字都發不出來，被奪走能動性）
@@ -343,12 +343,12 @@
         input.removeEventListener("keydown", onKey); input.removeEventListener("input", onInput);
         try { input.blur(); } catch (e) {}
         if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
-        sub.textContent = "話到了喉嚨，又被吞了回去。這一次，妳，沒有說話的權利。";
+        sub.textContent = "話到了喉嚨，又被吞了回去。這一次，你，沒有挽留的權利。";
         setTimeout(phase3, 2800);
       }
     }
     // Phase 3：只能承受
-    const seq3 = ["夕陽把轉角染成橘色。一個同學走過，沒注意到妳通紅的眼睛。", "妳只能站著，讓這一切，發生。"];
+    const seq3 = ["一個同學從轉角走過，卻沒有注意到你泛紅的眼睛。", "你只能站著，讓這一切，發生。"];
     let j = 0;
     function phase3() {
       if (j < seq3.length) { sub.textContent = seq3[j++]; setTimeout(phase3, 2600); }
