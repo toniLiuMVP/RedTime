@@ -134,7 +134,7 @@
       clear();
       if (stage === 0) {
         choices.appendChild(btn("哭著放下", () => {
-          sub.textContent = "她哭著把紙條壓在椅墊下。眼淚一滴，落在他的安全帽上。";
+          sub.textContent = "她哭著，把紙條貼在他機車的儀表板前。一滴眼淚，落在冰涼的坐墊上。";
           stage = 1;
           setTimeout(secondPrompt, 1900);
           clear();
@@ -480,7 +480,7 @@
     }
     // Phase 1：把拔視角，把它當成班次查
     choices.appendChild(btn("查火車時刻表", () => {
-      sub.textContent = "1163 次，莒光號。十一點四十二分，到站。你點點頭，把手機放下。";
+      sub.textContent = "把拔馬上去查火車時刻表。1163，是一個班次的號碼。他點點頭，把它當成一個號碼，讀完了。";
       clear();
       setTimeout(() => {
         sub.textContent = "可是，戴上時空耳機的妳，聽見的不是班次。";

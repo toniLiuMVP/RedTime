@@ -151,19 +151,19 @@
     render();
   }
 
-  // #6 捷運的「天空」(EP36 2013:年輕把拔幫 1 歲女兒換尿布,用身體搭一個安全的天空)
+  // #6 櫃子上的天空(EP36 2013:把拔抱 1 歲女兒進捷運站男廁，在木櫃上用身體撐成橋換尿布)
   function subwaySky(onDone) {
     const ov = open();
-    ov.appendChild(el("div", "pa-kicker", "2013 · 捷運上 · 笨拙地練習當爸爸"));
-    const line = el("div", "pa-line", "一歲的妳哭了，需要換尿布。可是捷運上，什麼設施都沒有。");
+    ov.appendChild(el("div", "pa-kicker", "2013 · 台北某個捷運站的男廁 · 櫃子上的天空"));
+    const line = el("div", "pa-line", "一歲的妳哭了，需要換尿布。可是捷運站沒有親子廁所，男廁裡，也沒有尿布台。");
     ov.appendChild(line);
     const sub = el("div", "pa-sub", "");
     ov.appendChild(sub);
     const ch = el("div", "pa-choices"); ov.appendChild(ch);
-    const wm = el("button", "pa-btn warm", "用自己的身體，幫她圍一個天空");
+    const wm = el("button", "pa-btn warm", "在角落的木櫃上，為她撐出一塊乾淨的地方");
     wm.addEventListener("click", () => {
-      sub.textContent = "他把外套撐開，背對著人群，慢慢地、小心地，幫妳換好。";
-      line.textContent = "在那個小小的、只屬於妳的天空底下，妳停止了哭泣。";
+      sub.textContent = "他把妳抱進男廁，在那排鎖著的木頭櫃子上，把兩隻手臂撐成一座橋，一邊解尿布，一邊用身體擋住來往的視線。";
+      line.textContent = "在那個小小的、櫃子上的天空底下，妳停止了哭泣。";
       clearC(ch);
       close(ov, function () { if (onDone) onDone({ ok: true }); }, 3800);
     });
