@@ -349,9 +349,75 @@
     render();
   }
 
+  // ── Act 11 一串數字 1163(EP41:阿姨哭了七天，只傳把拔四個數字；女兒戴時空耳機同時聽見兩邊）──
+  function train1163(onDone) {
+    const ov = makeOverlay();
+    ov.appendChild(el("div", "act-kicker", "EP41 · 一串數字 · 1163"));
+    const line = el("div", "act-line", "把拔的手機，跳出四個數字：1163。");
+    ov.appendChild(line);
+    const sub = el("div", "act-sub", "你以為，她只是要告訴你一個班次。");
+    ov.appendChild(sub);
+    const choices = el("div", "act-choices");
+    ov.appendChild(choices);
+    function clear() { while (choices.firstChild) choices.removeChild(choices.firstChild); }
+    function btn(label, fn) { const b = el("button", "act-btn", label); b.addEventListener("click", fn); return b; }
+    const days = [
+      "第一天。她哭了，卻說不出自己在哭什麼。",
+      "第二天。哭到睡著，又哭著醒來。",
+      "第六天。她忽然懂了，為什麼你以前下班，都不急著回家。",
+      "第七天。她忍住沒有去找你。她只能告訴你：我，在這班車上。",
+    ];
+    let d = 0;
+    function step() {
+      sub.textContent = days[d];
+      d++;
+      clear();
+      const last = (d >= days.length);
+      choices.appendChild(btn(last ? "聽完了" : "聽下一個數字", () => { clear(); last ? finish() : step(); }));
+    }
+    function phase2() { line.textContent = "1163"; sub.textContent = ""; clear(); step(); }
+    function finish() {
+      line.textContent = "同一串數字。";
+      sub.textContent = "她用整顆心寫，你用呆腦袋讀。";
+      setTimeout(() => { line.textContent = "1163。\n不是一個班次，是七個哭過的夜晚。"; sub.textContent = ""; }, 2600);
+      closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 5600);
+    }
+    // Phase 1：把拔視角，把它當成班次查
+    choices.appendChild(btn("查火車時刻表", () => {
+      sub.textContent = "1163 次，莒光號。十一點四十二分，到站。你點點頭，把手機放下。";
+      clear();
+      setTimeout(() => {
+        sub.textContent = "可是，戴上時空耳機的妳，聽見的不是班次。";
+        clear();
+        choices.appendChild(btn("戴上時空耳機，一個數字一個數字地聽", phase2));
+      }, 2200);
+    }));
+  }
+
+  // ── Act 12 母親節康乃馨(EP41:把拔半夜在黑暗客廳放一朵花，謝謝媽媽沒放棄他；情感鏈最後一站）──
+  function carnation(onDone) {
+    const ov = makeOverlay();
+    ov.appendChild(el("div", "act-kicker", "EP41 · 母親節 · 半夜十二點"));
+    const line = el("div", "act-line", "客廳沒有開燈。只有一張隱約的餐桌。");
+    ov.appendChild(line);
+    const sub = el("div", "act-sub", "你手上，有一朵康乃馨。把它，輕輕放在桌上。");
+    ov.appendChild(sub);
+    const choices = el("div", "act-choices");
+    ov.appendChild(choices);
+    const b = el("button", "act-btn", "🌸　輕輕放下");
+    b.addEventListener("click", () => {
+      while (choices.firstChild) choices.removeChild(choices.firstChild);
+      line.textContent = "「謝謝妳，從來都沒有放棄過我。」";
+      sub.textContent = "";
+      setTimeout(() => { sub.textContent = "他能撐過十五年，是因為他自己，也曾被一句溫柔，接住過。"; }, 2800);
+      closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 6200);
+    });
+    choices.appendChild(b);
+  }
+
   // ── 鏈執行器:串起多個 act 成情感弧 ──
   function runChain(ids, onAll) {
-    const map = { gaze: gaze, note: note, hug: hug, redthread: redthread, msn: msn, phoneCall: phoneCall, sevenEleven: sevenEleven, infinite: infinite, believe: believe };
+    const map = { gaze: gaze, note: note, hug: hug, redthread: redthread, msn: msn, phoneCall: phoneCall, sevenEleven: sevenEleven, infinite: infinite, believe: believe, train1163: train1163, carnation: carnation };
     let i = 0;
     function next() {
       if (i >= ids.length) { if (onAll) onAll(); return; }
@@ -365,6 +431,7 @@
     window.__ACTS__ = {
       gaze: gaze, note: note, hug: hug, redthread: redthread, msn: msn,
       phoneCall: phoneCall, sevenEleven: sevenEleven, infinite: infinite, believe: believe,
+      train1163: train1163, carnation: carnation,
       runChain: runChain,
     };
   }

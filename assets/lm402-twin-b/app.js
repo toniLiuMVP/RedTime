@@ -1455,7 +1455,7 @@ function applyEffect(effect) {
             : "就算只是餘光，他們也已經開始了。", 5.0);
           safeTimeout(() => {
             if (state.mode === "play" && window.__ACTS__) {
-              window.__ACTS__.runChain(["hug", "msn", "redthread", "phoneCall", "sevenEleven", "infinite", "believe"], function () {
+              window.__ACTS__.runChain(["hug", "msn", "redthread", "phoneCall", "sevenEleven", "infinite", "believe", "train1163", "carnation"], function () {
                 setSubtitle("女兒", "我把他們的一輩子，都收進了時空口袋裡。原來相信，就是這樣撐過來的。", 6.0);
               });
             }
