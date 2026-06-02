@@ -124,8 +124,6 @@
       ".pact-ov .pt-bridge-arms{position:absolute;left:6%;right:6%;top:50%;height:3px;border-radius:2px;background:linear-gradient(90deg,transparent,#ffd9c0,transparent);transform:scaleX(.5);transition:transform .14s ease,opacity .25s}",
       ".pact-ov .pt-meter{width:240px;height:6px;border-radius:3px;background:rgba(255,255,255,.12);margin-top:1.1em;overflow:hidden}",
       ".pact-ov .pt-meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#9fd0ff,#ffd9e6);transition:width .12s linear}",
-      ".pact-ov .pt-glow{animation:ptGlow 1.6s ease-in-out infinite}",
-      "@keyframes ptGlow{0%,100%{box-shadow:0 0 8px rgba(255,180,150,.4)}50%{box-shadow:0 0 22px rgba(255,180,150,.85)}}",
     ].join("");
     document.head.appendChild(s);
   }
@@ -325,47 +323,6 @@
   }
 
   // #1 polish：趕上那一刻的電影定格（抱起女兒；暖白 bloom + letterbox + 大字，pointer-events:none 不擋遊戲、自動消失、不碰 runner 邏輯）
-  // #11 那七天(EP41:1163 之前，阿姨一個人的房間。月台母題是「奔跑/趕上」，這裡反過來＝「忍住不上車」)
-  function sevenDays(onDone) {
-    const ov = open();
-    ov.appendChild(el("div", "pa-kicker", "1163 之前 · 那七天 · 阿姨一個人的房間"));
-    const line = el("div", "pa-line", "戴上時空耳機，妳聽見阿姨那七天。像一本，有聲音的日記。");
-    ov.appendChild(line);
-    const sub = el("div", "pa-sub", "每一天，那班開往桃園的車都在門外。妳好想替她跳上去，衝去找他。");
-    ov.appendChild(sub);
-    const ch = el("div", "pa-choices"); ov.appendChild(ch);
-    const days = [
-      "第一天。她哭了。她自己也說不出來，在哭什麼。",
-      "第二天。她哭到睡著，又哭著醒過來。",
-      "第三天。她還在哭。她知道哭沒辦法解決問題，可是她還是哭。",
-      "第四天。她沒有辦法去上班了。她請了假。",
-      "第五天。她不舒服。",
-      "第六天。她想起，為什麼把拔下班都不趕快回家。",
-    ];
-    let d = 0;
-    function render() {
-      clearC(ch);
-      if (d < days.length) {
-        sub.textContent = days[d];
-        const jump = el("button", "pa-btn warm pt-glow", "跳上車，衝去找他");
-        jump.addEventListener("click", function () {
-          PSFX.sweepUp(); // 倒帶：手伸出去又縮回來
-          line.textContent = "妳的手，按上了門把……又縮了回來。";
-          clearC(ch);
-          d++;
-          setTimeout(render, 1500);
-        });
-        ch.appendChild(jump);
-      } else {
-        line.textContent = "第七天。她忍住了，沒有來找把拔。";
-        sub.textContent = "她只送出，四個數字。";
-        setTimeout(function () { line.textContent = "1163"; sub.textContent = "阿姨那七天，跟妳每一個想把拔的晚上，住在同一種房間裡。"; }, 2400);
-        close(ov, function () { if (onDone) onDone({ ok: true }); }, 6400);
-      }
-    }
-    render();
-  }
-
   function catchMoment() {
     if (document.getElementById("catch-moment")) return;
     const ov = el("div"); ov.id = "catch-moment";
@@ -385,7 +342,7 @@
 
   function runChain(ids, onAll) {
     if (document.querySelector(".pact-ov")) return; // W3：已有 vignette 開著就忽略，避免疊字穿透
-    const map = { echo: echo, tracing: tracing, cantTravel: cantTravel, runaway13: runaway13, subwaySky: subwaySky, sevenDays: sevenDays, yearsLater: yearsLater };
+    const map = { echo: echo, tracing: tracing, cantTravel: cantTravel, runaway13: runaway13, subwaySky: subwaySky, yearsLater: yearsLater };
     let i = 0;
     _pause(1); /* 整條回憶鏈期間（含幕間空檔）都凍結遊戲，結束才解凍，避免時間偷跑 */
     function next() { if (i >= ids.length) { _pause(-1); if (onAll) onAll(); return; } const fn = map[ids[i++]]; if (typeof fn === "function") fn(next); else next(); }
@@ -399,7 +356,7 @@
     b.id = "pacts-launcher";
     b.style.cssText = "position:fixed;top:14px;left:14px;z-index:70;background:rgba(10,14,20,.6);color:#cfe0f0;border:1px solid rgba(159,208,255,.4);border-radius:999px;font-family:inherit;font-size:12px;letter-spacing:.08em;padding:7px 14px;cursor:pointer;backdrop-filter:blur(4px);opacity:.8;transition:opacity .3s";
     b.addEventListener("mouseenter", () => { b.style.opacity = "1"; });
-    b.addEventListener("click", () => { runChain(["echo", "tracing", "cantTravel", "runaway13", "subwaySky", "sevenDays"], function () {}); });
+    b.addEventListener("click", () => { runChain(["echo", "tracing", "cantTravel", "runaway13", "subwaySky"], function () {}); });
     document.body.appendChild(b);
   }
   if (typeof document !== "undefined") {
@@ -408,6 +365,6 @@
   }
 
   if (typeof window !== "undefined") {
-    window.__PACTS__ = { echo: echo, tracing: tracing, cantTravel: cantTravel, runaway13: runaway13, subwaySky: subwaySky, sevenDays: sevenDays, yearsLater: yearsLater, catchMoment: catchMoment, runChain: runChain };
+    window.__PACTS__ = { echo: echo, tracing: tracing, cantTravel: cantTravel, runaway13: runaway13, subwaySky: subwaySky, yearsLater: yearsLater, catchMoment: catchMoment, runChain: runChain };
   }
 })();
