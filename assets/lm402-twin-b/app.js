@@ -1426,7 +1426,8 @@ function applyEffect(effect) {
   if (effect === "collect_aunt_market") {
     collectMemory("aunt_market");
     closeDialogue();
-    if (window.__COUNCIL__ && state.mode === "play") {
+    if (window.__COUNCIL__ && state.mode === "play" && !state.flags.councilSeen) {
+      state.flags.councilSeen = true;
       try { if (window.__TWIN_BALANCE__) window.__TWIN_BALANCE__("mid"); } catch (e) {}
       window.__COUNCIL__.start(function (res) {
         try { if (window.__TWIN_BALANCE__) window.__TWIN_BALANCE__("off"); } catch (e) {}
@@ -1447,7 +1448,8 @@ function applyEffect(effect) {
     audioSystem.playCue("ending");
     setSubtitle("女兒", "我停在後門旁，剛好能看到走廊的一小段。", 4.2);
     setAmbience("光從窗邊切進來，把地板照得有點過分地亮。所有版本的呼吸都慢慢安靜下來。");
-    if (window.__ACTS__ && state.mode === "play") {
+    if (window.__ACTS__ && state.mode === "play" && !state.flags.loveArcSeen) {
+      state.flags.loveArcSeen = true;
       safeTimeout(() => {
         if (state.mode === "play" && window.__ACTS__) window.__ACTS__.gaze(function (res) {
           setSubtitle("女兒", (res && res.ok)
@@ -1495,41 +1497,73 @@ function applyEffect(effect) {
     return;
   }
   if (effect === "trigger_ending_sequence") {
-    setPhase("rear_wait");
-    /* ── 玩家接管學妹：第一人稱（學妹的眼睛）── */
-    state.controlMode = "junior";
-    state.player.x = scale(1896);
-    state.player.z = scale(2058);
-    state.player.yaw = 0; // 朝向後門方向（-Z = 後門側）
-    state.player.pitch = 0;
-    state.player.velocity = { x: 0, z: 0 };
-    state.player.isGhostObserver = false;
-    /* 保存回溯快照（Choice B 用） */
-    state.juniorControlSnapshot = {
-      playerX: state.player.x,
-      playerZ: state.player.z,
-      playerYaw: state.player.yaw,
-      phase: state.phase,
-      phaseClock: state.phaseClock,
-      characters: JSON.parse(JSON.stringify(state.characters)),
-      flags: { ...state.flags },
-      memories: new Set(state.memories),
-    };
-    audioSystem.playCue("phone");
-    setSubtitle("學妹", "剛剛我叫學長到後門。", 4.0);
-    safeTimeout(() => {
-      if (state.mode === "play" && state.controlMode === "junior") {
-        setSubtitle("", "走到後門找學長", 4.0);
-      }
-    }, 5000);
-    setAmbience("話筒裡的聲音很輕，但已經足夠讓整條走廊開始轉向。他正在把腳步折向後門。");
     closeDialogue();
+    /* 主線「你走到後門」後的接管流程（包成函式，讓議會先上演再走） */
+    const proceedToRear = function () {
+      setPhase("rear_wait");
+      /* ── 玩家接管學妹：第一人稱（學妹的眼睛）── */
+      state.controlMode = "junior";
+      state.player.x = scale(1896);
+      state.player.z = scale(2058);
+      state.player.yaw = 0; // 朝向後門方向（-Z = 後門側）
+      state.player.pitch = 0;
+      state.player.velocity = { x: 0, z: 0 };
+      state.player.isGhostObserver = false;
+      /* 保存回溯快照（Choice B 用） */
+      state.juniorControlSnapshot = {
+        playerX: state.player.x,
+        playerZ: state.player.z,
+        playerYaw: state.player.yaw,
+        phase: state.phase,
+        phaseClock: state.phaseClock,
+        characters: JSON.parse(JSON.stringify(state.characters)),
+        flags: { ...state.flags },
+        memories: new Set(state.memories),
+      };
+      audioSystem.playCue("phone");
+      setSubtitle("學妹", "剛剛我叫學長到後門。", 4.0);
+      safeTimeout(() => {
+        if (state.mode === "play" && state.controlMode === "junior") {
+          setSubtitle("", "走到後門找學長", 4.0);
+        }
+      }, 5000);
+      setAmbience("話筒裡的聲音很輕，但已經足夠讓整條走廊開始轉向。他正在把腳步折向後門。");
+    };
+    /* ── B 主線玩法：先上演「意識菜市場議會」（她練穩「你走到後門」的內心眾聲，EP38），再走到後門 ── */
+    if (window.__COUNCIL__ && state.mode === "play" && !state.flags.councilSeen) {
+      state.flags.councilSeen = true;
+      try { if (window.__TWIN_BALANCE__) window.__TWIN_BALANCE__("mid"); } catch (e) {}
+      setSubtitle("女兒", "在她說出口之前，我先飛進她腦海裡那座『意識菜市場』。", 3.6);
+      safeTimeout(function () {
+        if (state.mode !== "play") { proceedToRear(); return; }
+        window.__COUNCIL__.start(function (res) {
+          try { if (window.__TWIN_BALANCE__) window.__TWIN_BALANCE__("off"); } catch (e) {}
+          proceedToRear();
+        });
+      }, 1500);
+    } else {
+      proceedToRear();
+    }
     return;
   }
   /* ── 三個新結局分支 ── */
   if (effect === "ending_perfect_eye") {
     closeDialogue();
-    startEnding("perfect_eye", { manual: false });
+    /* ── B 主線玩法：一眼瞬間凝視 → 戀愛弧 9 幕 → 才進完美結局 ── */
+    if (window.__ACTS__ && state.mode === "play" && !state.flags.loveArcSeen) {
+      state.flags.loveArcSeen = true;
+      window.__ACTS__.gaze(function () {
+        if (window.__ACTS__ && state.mode === "play") {
+          window.__ACTS__.runChain(["hug", "msn", "redthread", "phoneCall", "sevenEleven", "infinite", "believe", "train1163", "carnation"], function () {
+            startEnding("perfect_eye", { manual: false });
+          });
+        } else {
+          startEnding("perfect_eye", { manual: false });
+        }
+      });
+    } else {
+      startEnding("perfect_eye", { manual: false });
+    }
     return;
   }
   if (effect === "ending_restrain") {
