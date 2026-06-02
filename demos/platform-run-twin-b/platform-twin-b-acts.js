@@ -24,6 +24,10 @@
       ".pact-ov .pa-btn:hover,.pact-ov .pa-btn:focus{background:rgba(159,208,255,.16);transform:translateY(-2px);outline:none;box-shadow:0 6px 20px rgba(150,200,255,.18)}",
       ".pact-ov .pa-btn.warm{border-color:rgba(255,180,150,.5);color:#ffe6d6}",
       ".pact-ov .pa-btn.disabled{opacity:.3;cursor:not-allowed;text-decoration:line-through}",
+      ".pact-ov::before,.pact-ov::after{content:'';position:fixed;left:0;right:0;height:0;background:#05070a;z-index:5;transition:height 1s cubic-bezier(.7,0,.3,1);pointer-events:none}",
+      ".pact-ov::before{top:0}",
+      ".pact-ov::after{bottom:0}",
+      ".pact-ov.show::before,.pact-ov.show::after{height:6.5vh}",
     ].join("");
     document.head.appendChild(s);
   }

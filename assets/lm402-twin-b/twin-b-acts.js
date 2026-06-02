@@ -47,6 +47,10 @@
       "@keyframes pcGhost{from{opacity:.9;transform:translateY(0)}to{opacity:0;transform:translateY(-22px)}}",
       ".act-ov .note-wipe{margin-top:1.2em;padding:18px 22px;border-radius:12px;border:1px dashed rgba(255,200,150,.3);cursor:ew-resize;touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;max-width:min(82vw,440px)}",
       ".act-ov .note-blur{font-size:16px;line-height:1.9;color:#ffe9d6;transition:filter .08s,opacity .08s;pointer-events:none}",
+      ".act-ov::before,.act-ov::after{content:'';position:fixed;left:0;right:0;height:0;background:#06050a;z-index:5;transition:height 1s cubic-bezier(.7,0,.3,1);pointer-events:none}",
+      ".act-ov::before{top:0}",
+      ".act-ov::after{bottom:0}",
+      ".act-ov.show::before,.act-ov.show::after{height:6.5vh}",
     ].join("");
     document.head.appendChild(s);
   }
