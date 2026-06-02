@@ -128,6 +128,15 @@
       ".act-ov .believe-thread.rise{opacity:.92;transform:translateY(0) scaleX(1)}",
       ".act-ov .th-draggable{cursor:grab;touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;animation:none}",
       ".act-ov .th-draggable:active{cursor:grabbing}",
+      // standStill（EP38 站好）：放手往前衝的晃動
+      ".act-ov.ss-lurch{animation:ssLurch .42s ease}",
+      "@keyframes ssLurch{0%,100%{transform:translateX(0)}28%{transform:translateX(9px) rotate(.5deg)}60%{transform:translateX(-7px) rotate(-.3deg)}}",
+      // riverbank（EP7 河堤）：慢慢走到底的暖光軌
+      ".act-ov .rb-track{position:relative;width:min(80vw,460px);height:8px;margin-top:1.8em;border-radius:4px;background:rgba(255,210,160,.12);cursor:ew-resize;touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}",
+      ".act-ov .rb-glow{position:absolute;inset:0;border-radius:4px;background:linear-gradient(90deg,#ffd9a8,#ffb877);opacity:.3;transition:opacity .4s}",
+      ".act-ov .rb-dot{position:absolute;top:50%;left:0;width:16px;height:16px;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,#fff,#ffd9a8);box-shadow:0 0 16px rgba(255,200,150,.9)}",
+      // knowingVsBelieving（EP41 知道vs相信）：冷白「知道」光球
+      ".act-ov .kb-orb{width:64px;height:64px;border-radius:50%;margin-top:1.5em;display:flex;align-items:center;justify-content:center;font-size:14px;letter-spacing:.1em;color:#1a2436;background:radial-gradient(circle,#fff,#cfe0ff 72%);box-shadow:0 0 30px rgba(200,222,255,.82);cursor:pointer;touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}",
     ].join("");
     document.head.appendChild(s);
   }
@@ -723,10 +732,129 @@
     window.addEventListener("pointercancel", up);
   }
 
+  // ── Act 14 站好(EP38:愛最難的不是衝，是站好不動。反向 hold：按住=釘住，放手=往前衝失控）──
+  function standStill(onDone) {
+    const ov = makeOverlay();
+    ov.appendChild(el("div", "act-kicker", "2005 · 10:40 · 走廊"));
+    const line = el("div", "act-line", "「然後，站好等他。」\n可是等一下他真的往這裡走的時候，妳全身，都會想往前衝。");
+    ov.appendChild(line);
+    const sub = el("div", "act-sub", "按住下面這束光，把自己釘在後門。撐住，別往前衝。");
+    ov.appendChild(sub);
+    const zone = el("div", "gaze-zone");
+    zone.appendChild(el("div", "gaze-core"));
+    ov.appendChild(zone);
+    const meterWrap = el("div", "gaze-meter"); const fill = el("i"); meterWrap.appendChild(fill); ov.appendChild(meterWrap);
+    let holding = false, hold = 0, raf = 0, last = 0, done = false, nextBeat = 0.25;
+    const NEED = 3.4;
+    function loop(t) {
+      if (done) return;
+      if (!last) last = t;
+      const dt = (t - last) / 1000; last = t;
+      if (holding) { hold = Math.min(NEED, hold + dt); if (hold >= nextBeat) { SFX.beat(); nextBeat = hold + Math.max(0.3, 0.8 - (hold / NEED) * 0.46); } }
+      else { hold = Math.max(0, hold - dt * 0.9); nextBeat = Math.min(nextBeat, hold + 0.25); }
+      fill.style.width = (hold / NEED * 100) + "%";
+      if (hold >= NEED) return finish();
+      raf = requestAnimationFrame(loop);
+    }
+    function lurch() { ov.classList.add("ss-lurch"); sub.textContent = "妳往前衝了半步……時間線晃了一下。穩住，再站好。"; setTimeout(function () { ov.classList.remove("ss-lurch"); }, 460); }
+    function down(e) { e.preventDefault(); holding = true; SFX.ensure(); }
+    function up() { if (done || !holding) return; holding = false; if (hold > 0.15) lurch(); }
+    function finish() {
+      done = true; cancelAnimationFrame(raf); ov.classList.remove("ss-lurch");
+      zone.removeEventListener("pointerdown", down); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
+      line.textContent = "妳站住了。\n他自己，走完了那段背光的走廊。";
+      sub.textContent = "";
+      setTimeout(function () { sub.textContent = "以後某個很難熬的夜晚，妳會謝謝這個，沒有往前多跨一步的自己。"; }, 1600);
+      closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 5400);
+    }
+    zone.addEventListener("pointerdown", down); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
+    raf = requestAnimationFrame(loop);
+  }
+
+  // ── Act 15 河堤的風(EP7:可以就這樣白頭偕老的那個黃昏。慢滑＝捨不得走完，越慢黃昏留越久）──
+  function riverbank(onDone) {
+    const ov = makeOverlay();
+    ov.appendChild(el("div", "act-kicker", "2018 · 重新堤外道 · 黃昏"));
+    const line = el("div", "act-line", "沒有紅綠燈，也沒有車。只有妳、我、黃昏、河堤、風聲。");
+    ov.appendChild(line);
+    const sub = el("div", "act-sub", "用手指，慢慢地、捨不得地，把這段回家的路滑到底。越慢，黃昏留得越久。");
+    ov.appendChild(sub);
+    const track = el("div", "rb-track"); const glow = el("div", "rb-glow"); const dot = el("div", "rb-dot");
+    track.appendChild(glow); track.appendChild(dot); ov.appendChild(track);
+    let dragging = false, prog = 0, lastX = 0, done = false, fast = 0;
+    function paint() {
+      dot.style.left = (prog * 100) + "%";
+      glow.style.opacity = (0.3 + prog * 0.6).toFixed(2);
+      ov.style.background = "radial-gradient(120% 90% at 50% 55%,rgba(" + (40 + prog * 38).toFixed(0) + "," + (28 + prog * 16).toFixed(0) + ",22,.5),rgba(12,9,10,.92))";
+    }
+    paint();
+    function down(e) { e.preventDefault(); dragging = true; lastX = e.clientX || 0; }
+    function move(e) {
+      if (!dragging || done) return;
+      const x = e.clientX || 0, dx = Math.abs(x - lastX); lastX = x;
+      if (dx > 16) { fast++; if (fast > 2) sub.textContent = "別騎那麼快。讓黃昏，再久一點。"; prog = Math.min(1, prog + dx / 1000); }
+      else { prog = Math.min(1, prog + dx / 540); } // 慢滑推進較多：獎勵捨不得
+      paint();
+      if (prog >= 1) finish();
+    }
+    function up() { dragging = false; }
+    function finish() {
+      done = true;
+      track.removeEventListener("pointerdown", down); window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
+      line.textContent = "那時，真的覺得，\n可以就這樣，白頭偕老。";
+      sub.textContent = "";
+      closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 4400);
+    }
+    track.addEventListener("pointerdown", down); window.addEventListener("pointermove", move); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
+  }
+
+  // ── Act 16 知道，與相信(EP41 capstone 女兒視角：握著「知道」救不了他 → 主動放下，改成相信）──
+  function knowingVsBelieving(onDone) {
+    const ov = makeOverlay();
+    ov.appendChild(el("div", "act-kicker", "EP41 · 知道，與相信"));
+    const line = el("div", "act-line", "我手上明明握著「知道」。\n可是「知道」，救不了現在的他。");
+    ov.appendChild(line);
+    const sub = el("div", "act-sub", "按住那顆「知道」，聽我說完。");
+    ov.appendChild(sub);
+    const orb = el("div", "kb-orb", "知道"); ov.appendChild(orb);
+    const beats = ["童話故事裡，痛的人翻過一頁，就會有人來敲門。", "可是我這裡，沒辦法敲門。我住在台中，你住在桃園。", "我看著趴在桌上的你。我什麼都知道，卻一句都不能說。"];
+    let holding = false, done = false, step = 0, dim = 0, raf = 0, last = 0, ready = false, beatTimer = 0;
+    function paint() { orb.style.opacity = (1 - dim * 0.72).toFixed(2); orb.style.transform = "scale(" + (1 - dim * 0.25).toFixed(2) + ")"; orb.style.boxShadow = "0 0 " + (30 - dim * 24).toFixed(0) + "px rgba(200,222,255," + (0.82 - dim * 0.64).toFixed(2) + ")"; }
+    paint();
+    function loop(t) {
+      if (done) return;
+      if (!last) last = t;
+      const dt = (t - last) / 1000; last = t;
+      if (holding && step < beats.length) {
+        beatTimer += dt;
+        dim = Math.min((step + beatTimer / 2.2) / (beats.length + 0.2), 0.95);
+        if (beatTimer >= 2.2) { sub.textContent = beats[step]; step++; beatTimer = 0; SFX.tone(170, 0.12, 0.024); }
+      } else if (holding && step >= beats.length && !ready) { ready = true; dim = 0.95; sub.textContent = "「知道」沒有用。放下它。鬆手吧。"; }
+      paint();
+      raf = requestAnimationFrame(loop);
+    }
+    function down(e) { e.preventDefault(); holding = true; SFX.ensure(); }
+    function up() { holding = false; if (ready && !done) release(); }
+    function release() {
+      done = true; cancelAnimationFrame(raf);
+      orb.removeEventListener("pointerdown", down); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
+      orb.style.transition = "opacity 1.2s ease,transform 1.2s ease"; orb.style.opacity = "0"; orb.style.transform = "scale(.4)";
+      const thread = el("div", "believe-thread"); ov.appendChild(thread);
+      requestAnimationFrame(function () { requestAnimationFrame(function () { thread.classList.add("rise"); }); });
+      line.textContent = "所以我把「知道」放下。\n我決定，跟把拔做同一件事。";
+      sub.textContent = "";
+      setTimeout(function () { line.textContent = "我不是因為看過了才相信。\n我是因為，我願意相信。"; }, 2600);
+      setTimeout(function () { sub.textContent = "就跟把拔一樣。"; }, 5000);
+      closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 7400);
+    }
+    orb.addEventListener("pointerdown", down); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
+    raf = requestAnimationFrame(loop);
+  }
+
   // ── 鏈執行器:串起多個 act 成情感弧 ──
   function runChain(ids, onAll) {
     if (document.querySelector(".act-ov")) return; // W3：已有 overlay 開著就忽略，避免疊字穿透
-    const map = { gaze: gaze, note: note, hug: hug, redthread: redthread, msn: msn, phoneCall: phoneCall, sevenEleven: sevenEleven, infinite: infinite, believe: believe, train1163: train1163, carnation: carnation, threehearts: threehearts };
+    const map = { gaze: gaze, standStill: standStill, note: note, hug: hug, redthread: redthread, msn: msn, phoneCall: phoneCall, sevenEleven: sevenEleven, riverbank: riverbank, infinite: infinite, believe: believe, train1163: train1163, knowingVsBelieving: knowingVsBelieving, carnation: carnation, threehearts: threehearts };
     let i = 0;
     function next() {
       if (i >= ids.length) { if (onAll) onAll(); return; }
@@ -738,9 +866,9 @@
 
   if (typeof window !== "undefined") {
     window.__ACTS__ = {
-      gaze: gaze, note: note, hug: hug, redthread: redthread, msn: msn,
-      phoneCall: phoneCall, sevenEleven: sevenEleven, infinite: infinite, believe: believe,
-      train1163: train1163, carnation: carnation, threehearts: threehearts,
+      gaze: gaze, standStill: standStill, note: note, hug: hug, redthread: redthread, msn: msn,
+      phoneCall: phoneCall, sevenEleven: sevenEleven, riverbank: riverbank, infinite: infinite, believe: believe,
+      train1163: train1163, knowingVsBelieving: knowingVsBelieving, carnation: carnation, threehearts: threehearts,
       runChain: runChain,
     };
   }
