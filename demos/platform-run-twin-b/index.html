@@ -4989,6 +4989,7 @@ function updateGame(dt) {
   if (!state.gotDaughter && Math.abs(father.position.z - DAUGHTER_Z) < 2.5) {
     state.gotDaughter = true;
     state.phase = "grabbed";
+    try { if (window.__PACTS__ && window.__PACTS__.catchMoment) window.__PACTS__.catchMoment(); } catch (e) {}
     showNarrative("\u628A\u62D4\u628A\u6211\u6574\u500B\u62B1\u8D77\u4F86", 2);
     playDaughterGrab();
     scene.remove(daughter);

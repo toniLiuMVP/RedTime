@@ -194,6 +194,24 @@
     ch.appendChild(b);
   }
 
+  // #1 polish：趕上那一刻的電影定格（抱起女兒；暖白 bloom + letterbox + 大字，pointer-events:none 不擋遊戲、自動消失、不碰 runner 邏輯）
+  function catchMoment() {
+    if (document.getElementById("catch-moment")) return;
+    const ov = el("div"); ov.id = "catch-moment";
+    ov.style.cssText = "position:fixed;inset:0;z-index:8500;pointer-events:none;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .5s ease";
+    const bloom = el("div"); bloom.style.cssText = "position:absolute;inset:0;background:radial-gradient(circle at 50% 55%,rgba(255,240,210,.5),rgba(255,200,150,.1) 45%,transparent 72%)";
+    const top = el("div"); top.style.cssText = "position:absolute;top:0;left:0;right:0;height:12vh;background:#06050a;transform:scaleY(0);transform-origin:top;transition:transform .6s cubic-bezier(.7,0,.3,1)";
+    const bot = el("div"); bot.style.cssText = "position:absolute;bottom:0;left:0;right:0;height:12vh;background:#06050a;transform:scaleY(0);transform-origin:bottom;transition:transform .6s cubic-bezier(.7,0,.3,1)";
+    const line = el("div", null, "我，趕上了。"); line.style.cssText = "position:relative;color:#fff6e8;font-size:clamp(20px,4vw,34px);letter-spacing:.14em;text-shadow:0 0 26px rgba(255,200,150,.85);transform:scale(1.1);transition:transform 1.4s ease";
+    ov.appendChild(bloom); ov.appendChild(top); ov.appendChild(bot); ov.appendChild(line);
+    document.body.appendChild(ov);
+    requestAnimationFrame(function () { ov.style.opacity = "1"; top.style.transform = "scaleY(1)"; bot.style.transform = "scaleY(1)"; line.style.transform = "scale(1)"; });
+    setTimeout(function () {
+      ov.style.opacity = "0"; top.style.transform = "scaleY(0)"; bot.style.transform = "scaleY(0)";
+      setTimeout(function () { if (ov.parentNode) ov.parentNode.removeChild(ov); }, 600);
+    }, 1600);
+  }
+
   function runChain(ids, onAll) {
     if (document.querySelector(".pact-ov")) return; // W3：已有 vignette 開著就忽略，避免疊字穿透
     const map = { echo: echo, tracing: tracing, cantTravel: cantTravel, runaway13: runaway13, subwaySky: subwaySky, yearsLater: yearsLater };
@@ -219,6 +237,6 @@
   }
 
   if (typeof window !== "undefined") {
-    window.__PACTS__ = { echo: echo, tracing: tracing, cantTravel: cantTravel, runaway13: runaway13, subwaySky: subwaySky, yearsLater: yearsLater, runChain: runChain };
+    window.__PACTS__ = { echo: echo, tracing: tracing, cantTravel: cantTravel, runaway13: runaway13, subwaySky: subwaySky, yearsLater: yearsLater, catchMoment: catchMoment, runChain: runChain };
   }
 })();
