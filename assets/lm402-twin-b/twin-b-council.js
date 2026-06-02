@@ -21,7 +21,7 @@
   const CLOCK_MAX = 40;
   let host = null, active = false, onDone = null, raf = 0;
   let skew = 0, steady = 0, clock = 0, lastTick = 0;
-  let watchEl = null, steadyFill = null, skewKnob = null, lineEl = null, daughterEl = null;
+  let watchEl = null, steadyFill = null, skewKnob = null, lineEl = null, daughterEl = null, dBodyEl = null, dStateEl = null;
 
   function el(tag, cls, txt) {
     const e = document.createElement(tag);
@@ -56,6 +56,7 @@
       "#council-overlay .cc-steadybar{display:inline-block;width:200px;height:8px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden;margin:0 8px;vertical-align:middle}",
       "#council-overlay .cc-steadybar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd9a8,#ff8fb0);transition:width .4s ease}",
       "#council-overlay .cc-daughter{margin-top:1em;font-size:12px;letter-spacing:.1em;color:#ffd9e6;transition:opacity .5s}",
+      "#council-overlay .cc-dchar{transition:opacity .55s ease}",
     ].join("");
     document.head.appendChild(s);
   }
@@ -69,10 +70,21 @@
     host.appendChild(watchEl);
 
     const vbox = el("div", "cc-voices");
+    // P2-9 五年紀卡片質感差異化：18 暖亮（青春衝動）、29 最實（真正的軀體）、33/39 漸冷褪色、49 粉潤發光（看透）
+    const LOOKS = [
+      { bg: "linear-gradient(160deg,rgba(255,207,158,.16),rgba(255,176,120,.04))", glow: "0 0 22px rgba(255,200,150,.20)" },
+      { bg: "linear-gradient(160deg,rgba(255,230,207,.22),rgba(255,216,186,.07))", glow: "0 4px 24px rgba(255,210,170,.26)" },
+      { bg: "linear-gradient(160deg,rgba(223,230,245,.13),rgba(176,194,222,.04))", glow: "0 0 16px rgba(170,190,222,.15)" },
+      { bg: "linear-gradient(160deg,rgba(207,224,240,.10),rgba(150,172,204,.03))", glow: "0 0 12px rgba(150,176,212,.11)" },
+      { bg: "linear-gradient(160deg,rgba(245,220,230,.18),rgba(255,196,210,.05))", glow: "0 0 26px rgba(255,178,200,.22)" },
+    ];
     VOICES.forEach((v, i) => {
       const card = el("div", "cc-voice");
       card.tabIndex = 0;
       card.style.borderColor = v.color;
+      const lk = LOOKS[i] || LOOKS[0];
+      card.style.background = lk.bg;
+      card.style.boxShadow = lk.glow;
       const age = el("div", "cc-age", v.label);
       age.style.color = v.color;
       card.appendChild(age);
@@ -102,7 +114,14 @@
     meters.appendChild(steadyWrap);
     host.appendChild(meters);
 
-    daughterEl = el("div", "cc-daughter", "✦ 背景裡，女兒的身影　穩定");
+    // P2-9 女兒「逐字消失」：把「女兒的身影」拆成字元 span，太衝時從尾端一個個淡掉
+    daughterEl = el("div", "cc-daughter");
+    daughterEl.appendChild(el("span", null, "✦ 背景裡，"));
+    dBodyEl = el("span", "cc-dbody");
+    "女兒的身影".split("").forEach(function (ch) { dBodyEl.appendChild(el("span", "cc-dchar", ch)); });
+    daughterEl.appendChild(dBodyEl);
+    dStateEl = el("span", "cc-dstate", "　穩定");
+    daughterEl.appendChild(dStateEl);
     host.appendChild(daughterEl);
 
     document.body.appendChild(host);
@@ -123,11 +142,13 @@
     const pct = Math.max(-100, Math.min(100, skew * 18));
     skewKnob.style.left = (50 + pct / 2) + "%";
     steadyFill.style.width = steady + "%";
-    const tear = Math.max(0, skew) / 6;
-    daughterEl.style.opacity = String(Math.max(0.18, 1 - tear));
-    daughterEl.textContent = skew > 3
-      ? "✦ 背景裡，女兒的身影　正在淡化……（太衝了）"
-      : (skew < -3 ? "✦ 太冷了，這一眼會錯過……" : "✦ 背景裡，女兒的身影　穩定");
+    daughterEl.style.opacity = String(Math.max(0.2, 1 - Math.max(0, skew) / 6));
+    if (dBodyEl) {
+      const chars = dBodyEl.children, n = chars.length;
+      const vanish = skew > 3 ? Math.min(n, Math.ceil(((skew - 3) / 3) * n)) : 0; // 只有太衝才撕：從尾端一個字一個字消失
+      for (let k = 0; k < n; k++) chars[k].style.opacity = (skew > 3 && k >= n - vanish) ? "0" : (skew < -3 ? "0.4" : "1");
+    }
+    if (dStateEl) dStateEl.textContent = skew > 3 ? "　正在淡化……（太衝了）" : (skew < -3 ? "　太冷了，這一眼會錯過……" : "　穩定");
   }
 
   function tick(t) {

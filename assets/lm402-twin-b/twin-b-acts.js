@@ -13,6 +13,62 @@
     return e;
   }
 
+  // P0-2 觸覺心跳 + Web Audio 低頻情緒音。
+  // iOS-safe:lazy AudioContext（在 user gesture 內 resume）、navigator.vibrate 在 iOS 是 no-op（已 guard）、
+  // 尊重使用者靜音（讀 app 橋接 window.__TWIN_B_AUDIO_OK__，無橋接時預設可發聲）。
+  // 設計語彙:心跳在「靠近 / 撐住」時加快，最關鍵的那句刻意靜音留白（不呼叫 SFX）。
+  var SFX = (function () {
+    var ctx = null, master = null;
+    function audioOK() {
+      try { if (typeof window.__TWIN_B_AUDIO_OK__ === "function") return !!window.__TWIN_B_AUDIO_OK__(); } catch (e) {}
+      return true;
+    }
+    function ensure() {
+      if (!audioOK()) return null;
+      try {
+        if (!ctx) {
+          var AC = window.AudioContext || window.webkitAudioContext;
+          if (!AC) return null;
+          ctx = new AC();
+          master = ctx.createGain();
+          master.gain.value = 1;
+          master.connect(ctx.destination);
+        }
+        if (ctx.state === "suspended" && ctx.resume) ctx.resume();
+      } catch (e) { return null; }
+      return ctx;
+    }
+    function tone(freq, dur, vol) {
+      var c = ensure(); if (!c || !master) return;
+      try {
+        var now = c.currentTime, d = dur || 0.6;
+        var o = c.createOscillator(), g = c.createGain();
+        o.type = "sine"; o.frequency.value = freq;
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol || 0.05), now + 0.04);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + d);
+        o.connect(g); g.connect(master);
+        o.start(now); o.stop(now + d + 0.06);
+      } catch (e) {}
+    }
+    // 一記心跳 = 低頻雙 thud（lub-dub）+ 震動
+    function beat() {
+      try { if (navigator.vibrate) navigator.vibrate([26, 90, 38]); } catch (e) {}
+      tone(58, 0.16, 0.075);
+      setTimeout(function () { tone(44, 0.22, 0.055); }, 150);
+    }
+    // 連續心跳 n 下、間隔 gap（ms，越小越急）
+    function heartbeat(n, gap) {
+      var c = n || 1, step = gap || 720;
+      for (var i = 0; i < c; i++) setTimeout(beat, i * step);
+    }
+    // 光點點亮的細柔泛音
+    function shimmer() { tone(880, 0.5, 0.024); setTimeout(function () { tone(1320, 0.42, 0.016); }, 80); }
+    // 失敗 / 撥不出去的悶鈍音
+    function dud() { tone(150, 0.18, 0.05); setTimeout(function () { tone(110, 0.2, 0.04); }, 90); }
+    return { tone: tone, beat: beat, heartbeat: heartbeat, shimmer: shimmer, dud: dud };
+  })();
+
   function injectStyle() {
     if (document.getElementById("acts-style")) return;
     const s = document.createElement("style");
@@ -49,8 +105,11 @@
       ".act-ov .pc-input{background:rgba(255,255,255,.06);border:1px solid rgba(255,200,150,.3);border-radius:10px;color:#f4ece2;font-family:inherit;font-size:15px;padding:10px 16px;width:min(70vw,300px);text-align:center;outline:none}",
       ".act-ov .pc-ghost{position:absolute;top:-2px;color:#ffd9a8;font-size:18px;pointer-events:none;animation:pcGhost .72s ease-out forwards}",
       "@keyframes pcGhost{from{opacity:.9;transform:translateY(0)}to{opacity:0;transform:translateY(-22px)}}",
+      ".act-ov .pc-dodge{transition:transform .18s cubic-bezier(.3,0,.2,1)}",
+      ".act-ov .pc-dodge:disabled{opacity:.6;cursor:not-allowed;border-color:rgba(255,120,120,.4);color:#ffb3b3}",
       ".act-ov .note-wipe{margin-top:1.2em;padding:18px 22px;border-radius:12px;border:1px dashed rgba(255,200,150,.3);cursor:ew-resize;touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;max-width:min(82vw,440px)}",
       ".act-ov .note-blur{font-size:16px;line-height:1.9;color:#ffe9d6;transition:filter .08s,opacity .08s;pointer-events:none}",
+      ".act-ov .note-trail{margin-top:.9em;font-size:12px;letter-spacing:.18em;color:#caa6b4;transition:opacity .5s;pointer-events:none}",
       ".act-ov::before,.act-ov::after{content:'';position:fixed;left:0;right:0;height:0;background:#06050a;z-index:5;transition:height 1s cubic-bezier(.7,0,.3,1);pointer-events:none}",
       ".act-ov::before{top:0}",
       ".act-ov::after{bottom:0}",
@@ -62,6 +121,13 @@
       ".act-ov .th-me{left:50%;transform:translate(-50%,-50%);top:12%;width:42px;height:42px}",
       ".act-ov .th-thread{position:absolute;top:55%;left:6%;right:6%;height:2px;background:linear-gradient(90deg,#ff6b9d,#ffd9a8,#ff6b9d);box-shadow:0 0 8px rgba(255,120,160,.8)}",
       "@keyframes thGlow{0%,100%{box-shadow:0 0 18px rgba(255,150,190,.6)}50%{box-shadow:0 0 30px rgba(255,180,210,.95)}}",
+      ".act-ov .inf-dwrap{display:flex;flex-direction:column;align-items:center;margin-bottom:.6em;min-height:56px;justify-content:flex-end}",
+      ".act-ov .inf-daughter{width:38px;height:38px;border-radius:50%;background:radial-gradient(circle,#fff,#ffd9e6);opacity:.12;transform:scale(.7);box-shadow:0 0 8px rgba(255,185,212,.4);transition:opacity 1s ease,transform 1s ease,box-shadow 1s ease}",
+      ".act-ov .inf-dcap{font-size:11px;letter-spacing:.24em;color:#ffd9e6;margin-top:.4em;opacity:.2;transition:opacity 1s ease}",
+      ".act-ov .believe-thread{position:fixed;left:10%;right:10%;bottom:17%;height:2px;background:linear-gradient(90deg,transparent,#ff6b9d,#ffd9a8,#ff6b9d,transparent);box-shadow:0 0 10px rgba(255,120,160,.7);opacity:0;transform:translateY(40px) scaleX(.3);transition:opacity 3s ease,transform 3.6s cubic-bezier(.5,0,.3,1);pointer-events:none}",
+      ".act-ov .believe-thread.rise{opacity:.92;transform:translateY(0) scaleX(1)}",
+      ".act-ov .th-draggable{cursor:grab;touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;animation:none}",
+      ".act-ov .th-draggable:active{cursor:grabbing}",
     ].join("");
     document.head.appendChild(s);
   }
@@ -96,25 +162,29 @@
     const meterWrap = el("div", "gaze-meter");
     const fill = el("i"); meterWrap.appendChild(fill); ov.appendChild(meterWrap);
 
-    let holding = false, hold = 0, raf = 0, last = 0, done = false;
+    let holding = false, hold = 0, raf = 0, last = 0, done = false, nextBeat = 0.25;
     const NEED = 3.2;
     function loop(t) {
       if (done) return;
       if (!last) last = t;
       const dt = (t - last) / 1000; last = t;
-      if (holding) hold = Math.min(NEED, hold + dt); else hold = Math.max(0, hold - dt * 1.6);
+      if (holding) {
+        hold = Math.min(NEED, hold + dt);
+        if (hold >= nextBeat) { SFX.beat(); nextBeat = hold + Math.max(0.34, 0.85 - (hold / NEED) * 0.5); } // 越撐越近，心跳越急
+      } else { hold = Math.max(0, hold - dt * 1.6); nextBeat = Math.min(nextBeat, hold + 0.25); }
       fill.style.width = (hold / NEED * 100) + "%";
       ov.classList.toggle("gaze-bloom", hold > NEED * 0.55);
       if (hold >= NEED) { return finish(true); }
       raf = requestAnimationFrame(loop);
     }
-    function down(e) { e.preventDefault(); holding = true; }
+    function down(e) { e.preventDefault(); holding = true; SFX.ensure(); }
     function up() { holding = false; }
     function finish(ok) {
       done = true; cancelAnimationFrame(raf);
       zone.removeEventListener("pointerdown", down);
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", up);
+      if (ok) { try { if (navigator.vibrate) navigator.vibrate(0); } catch (e) {} } // 命運按下存檔鍵的那一秒 — 刻意靜音留白
       line.textContent = ok
         ? "他抬起頭。\n你們誰都還來不及開口。\n那一秒，像被命運按了存檔鍵。"
         : "妳鬆開得太早了，那一眼只成了餘光……";
@@ -170,10 +240,14 @@
       clear();
       const wipe = el("div", "note-wipe");
       const blurLine = el("div", "note-blur", "「我走了，你要好好照顧自己。」");
-      wipe.appendChild(blurLine);
+      const trail = el("div", "note-trail", "往後好多年，她不敢再經過的「民安西路」");
+      wipe.appendChild(blurLine); wipe.appendChild(trail);
       choices.appendChild(wipe);
       let dragging = false, lastX = 0, progress = 0, doneW = false;
-      function paint() { blurLine.style.filter = "blur(" + ((1 - progress) * 3).toFixed(2) + "px)"; blurLine.style.opacity = (0.45 + progress * 0.55).toFixed(2); }
+      function paint() {
+        blurLine.style.filter = "blur(" + ((1 - progress) * 3).toFixed(2) + "px)"; blurLine.style.opacity = (0.45 + progress * 0.55).toFixed(2);
+        trail.style.opacity = (0.1 + (1 - progress) * 0.22).toFixed(2); // 越擦越淡，那條不敢經過的路慢慢被擦掉
+      }
       paint();
       function down(e) { e.preventDefault(); dragging = true; lastX = e.clientX; }
       function move(e) {
@@ -190,9 +264,13 @@
         window.removeEventListener("pointerup", up);
         window.removeEventListener("pointercancel", up);
         blurLine.style.filter = "blur(0)"; blurLine.style.opacity = "1";
-        clear();
-        sub.textContent = "她擦乾眼淚，笑著，把同一張紙條，又放了一次。\n第一次是不捨。第二次，是成全。";
-        closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 4200);
+        trail.style.opacity = "0.85"; // 擦乾的瞬間，那條路亮一下，再放下
+        setTimeout(function () {
+          clear();
+          sub.textContent = "她擦乾眼淚，笑著，把同一張紙條，又放了一次。\n第一次是不捨。第二次，是成全。";
+          setTimeout(function () { sub.textContent = "「真的痛在心裡殘忍的告別，把拔的心才能被徹底粉碎後，用時間一針一針，紮實地縫起來。」"; }, 3400);
+          closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 7600);
+        }, 1400);
       }
       wipe.addEventListener("pointerdown", down);
       window.addEventListener("pointermove", move);
@@ -216,7 +294,7 @@
     zone.appendChild(daughter); zone.appendChild(him);
     ov.appendChild(zone);
 
-    let dragging = false, pull = 0, raf = 0, done = false; // pull 0..1（拉近程度）
+    let dragging = false, pull = 0, raf = 0, done = false, nextBeat = 0; // pull 0..1（拉近程度）
     function paint() {
       him.style.transform = "translateY(" + (-pull * 150) + "px) scale(" + (1 + pull * 0.6) + ")";
       him.style.filter = "blur(" + (1 - pull).toFixed(2) + "px)";
@@ -227,18 +305,21 @@
     function loop() {
       if (done) return;
       pull = dragging ? Math.min(1, pull + 0.011) : Math.max(0, pull - 0.05);
+      if (dragging && pull >= nextBeat) { SFX.beat(); nextBeat = pull + Math.max(0.12, 0.34 - pull * 0.24); } // 越想抱越近，心越急
+      if (!dragging) nextBeat = Math.min(nextBeat, pull);
       paint();
       if (pull >= 1) return tornApart();
       raf = requestAnimationFrame(loop);
     }
-    function down(e) { e.preventDefault(); dragging = true; }
+    function down(e) { e.preventDefault(); dragging = true; SFX.ensure(); }
     function up() {
       if (done) return;
       dragging = false;
-      if (pull > 0.25) { done = true; cancelAnimationFrame(raf); cleanup(); ease(finish); }
+      if (pull > 0.25) { done = true; cancelAnimationFrame(raf); cleanup(); ease(finish); } // 主動放手 → 收回的這段刻意靜音
     }
     function tornApart() { // 硬抱到底：女兒消失 → 教學重來
       cancelAnimationFrame(raf); dragging = false;
+      try { if (navigator.vibrate) navigator.vibrate([60, 40, 60, 40, 130]); } catch (e) {} SFX.dud(); // 時間線撕裂
       sub.textContent = "如果抱下去，女兒就再也不存在了。妳猛地收手。";
       ease(function () { sub.textContent = "再試一次。這一次，在她消失之前，主動放手。"; raf = requestAnimationFrame(loop); });
     }
@@ -347,6 +428,7 @@
       let attempts = 0, doneT = false;
       function ghost(c) {
         const g = el("span", "pc-ghost", c); wrap.appendChild(g);
+        SFX.tone(168, 0.1, 0.03); // 每個字都發不出聲，悶悶地散掉
         setTimeout(() => { if (g.parentNode) g.parentNode.removeChild(g); }, 720);
         if (++attempts >= 4) finishTyping();
       }
@@ -361,8 +443,38 @@
         try { input.blur(); } catch (e) {}
         if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
         sub.textContent = "話到了喉嚨，又被吞了回去。這一次，你，沒有挽留的權利。";
+        setTimeout(phase2_5, 2800);
+      }
+    }
+    // Phase 2.5：撥回去 — 黑名單是她按下的，你連那顆鍵都點不到（reuse dodge，EP13 奪走能動性）
+    function phase2_5() {
+      sub.textContent = "你想撥回去。手指，伸向那顆「撥回去」。";
+      const dodge = el("button", "act-btn pc-dodge", "📞 撥回去");
+      let dodges = 0, settled = false;
+      function flee(e) {
+        if (settled) return;
+        if (e && e.preventDefault) e.preventDefault();
+        dodges++;
+        const dx = (Math.random() * 2 - 1) * Math.min(window.innerWidth * 0.3, 210);
+        const dy = (Math.random() * 2 - 1) * Math.min(window.innerHeight * 0.2, 140);
+        dodge.style.transform = "translate(" + dx.toFixed(0) + "px," + dy.toFixed(0) + "px)";
+        SFX.dud(); try { if (navigator.vibrate) navigator.vibrate(16); } catch (er) {}
+        if (dodges === 2) sub.textContent = "撥回去……怎麼按不到？";
+        else if (dodges >= 4) settle();
+      }
+      function settle() {
+        settled = true;
+        dodge.removeEventListener("pointerenter", flee);
+        dodge.removeEventListener("pointerdown", flee);
+        dodge.style.transform = "translate(0,0)";
+        dodge.disabled = true;
+        dodge.textContent = "🚫 對方已將你列入黑名單";
+        sub.textContent = "黑名單，是她按下的。撥不出去的，是你。";
         setTimeout(phase3, 2800);
       }
+      dodge.addEventListener("pointerenter", flee); // 桌機：游標一靠近就閃
+      dodge.addEventListener("pointerdown", flee);  // 觸控：手指還沒點到就閃開
+      choices.appendChild(dodge);
     }
     // Phase 3：只能承受
     const seq3 = ["一個同學從轉角走過，卻沒有注意到你泛紅的眼睛。", "你只能站著，讓這一切，發生。"];
@@ -388,16 +500,29 @@
     ov.appendChild(sub);
     const choices = el("div", "act-choices");
     ov.appendChild(choices);
-    const nightLines = ["關東煮的熱氣。自動門開了又關，不是她。", "我買了一罐她以前喝的飲料，沒打開。", "店員開始記得我。我假裝在看雜誌。"];
+    // P1-5 逐晚色溫變冷變暗（暖橙 → 冷藍，越夜越深；保留 opacity 淡入淡出）
+    function setTemp(n) {
+      const t = Math.min(1, (n - 1) / 4);
+      const cr = (40 + (16 - 40) * t).toFixed(0), cg = (28 + (22 - 28) * t).toFixed(0), cb = (22 + (34 - 22) * t).toFixed(0);
+      const er = (12 + (6 - 12) * t).toFixed(0), eg = (10 + (8 - 10) * t).toFixed(0), eb = (12 + (14 - 12) * t).toFixed(0);
+      const ca = (0.5 + 0.06 * t).toFixed(2), ea = (0.92 + 0.05 * t).toFixed(2);
+      ov.style.transition = "opacity .9s ease, background 1.4s ease";
+      ov.style.background = "radial-gradient(120% 90% at 50% 40%,rgba(" + cr + "," + cg + "," + cb + "," + ca + "),rgba(" + er + "," + eg + "," + eb + "," + ea + "))";
+    }
+    setTemp(1);
+    const nightLines = ["關東煮的熱氣。自動門開了又關，不是她。", "我買了一罐飲料，握在手心，沒打開。", "店員開始記得我。我假裝在看雜誌。"];
     let night = 1;
     const b = el("button", "act-btn", "再來一晚");
     b.addEventListener("click", () => {
       night++;
+      setTemp(night);
       if (night >= 5) {
         sub.textContent = "她不會來。我知道。可是我還是，一晚一晚地來。";
         line.textContent = "時間就這樣，一針一針，把心縫了起來。";
         while (choices.firstChild) choices.removeChild(choices.firstChild);
-        closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 3600);
+        // EP28 飲料黑卡前瞻伏筆（斷聯夜晚 → 多年後 2023 冬的熱普洱黑卡）
+        setTimeout(() => { line.textContent = "（總有一天，我會學會：心煩，就為她買一杯熱普洱無糖加厚，讓它，替我先抱住她。）"; sub.textContent = ""; }, 2600);
+        closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 6400);
       } else { sub.textContent = "第 " + night + " 個夜晚"; line.textContent = nightLines[night - 2] || "我又來了。"; }
     });
     choices.appendChild(b);
@@ -413,7 +538,21 @@
     ov.appendChild(sub);
     const choices = el("div", "act-choices");
     ov.appendChild(choices);
+    // P1-6 女兒光點：每選一次「我依然選你」，那個叫女兒的光點就更亮（女兒＝這個選擇生出的未來）
+    const dWrap = el("div", "inf-dwrap");
+    const dDot = el("div", "inf-daughter");
+    const dCap = el("div", "inf-dcap", "女兒");
+    dWrap.appendChild(dDot); dWrap.appendChild(dCap);
+    ov.insertBefore(dWrap, line);
     const worlds = ["在他沒當蛙人的那條線", "在妳沒生病的那條線", "在你們早十年相遇的那條線", "在這條，最痛的原始線"];
+    function glowDaughter(k) {
+      const f = Math.min(1, k / worlds.length);
+      dDot.style.opacity = (0.12 + f * 0.88).toFixed(2);
+      dDot.style.transform = "scale(" + (0.7 + f * 0.55).toFixed(2) + ")";
+      dDot.style.boxShadow = "0 0 " + (8 + f * 36).toFixed(0) + "px rgba(255,185,212," + (0.4 + f * 0.6).toFixed(2) + ")";
+      dCap.style.opacity = (0.2 + f * 0.8).toFixed(2);
+    }
+    glowDaughter(0);
     let i = 0;
     function render() {
       while (choices.firstChild) choices.removeChild(choices.firstChild);
@@ -421,12 +560,14 @@
       const yes = el("button", "act-btn", "我依然選擇跟你在一起");
       yes.addEventListener("click", () => {
         i++;
+        glowDaughter(i); SFX.shimmer(); // 光點更亮一階 + 細柔泛音
         if (i >= worlds.length) {
           line.textContent = "在無限的時間線裡，我依然會選擇跟你在一起。";
           sub.textContent = "是我們先伸的手，是「選擇」，讓紅線成形。";
           while (choices.firstChild) choices.removeChild(choices.firstChild);
-          closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 3800);
-        } else { sub.textContent = "紅線又亮了一條。"; render(); }
+          setTimeout(() => { line.textContent = "命運阿嬤笑了：「命運不是命定！但紅線，是命中注定。」"; sub.textContent = "每一次妳說「我依然選你」，那個叫女兒的光點，就更亮一點。"; }, 2800);
+          closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 6800);
+        } else { sub.textContent = "紅線又亮了一條。女兒，又清晰了一點。"; render(); }
       });
       choices.appendChild(yes);
     }
@@ -456,7 +597,9 @@
       } else {
         line.textContent = "我是靠「相信」，撐過了整整十五年。";
         sub.textContent = "相信「相信的力量」。我一直都站在妳永遠找得到我的地方。";
-        closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 4200);
+        const thread = el("div", "believe-thread"); ov.appendChild(thread);
+        requestAnimationFrame(function () { requestAnimationFrame(function () { thread.classList.add("rise"); }); }); // 紅線緩緩升起
+        closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 5600);
       }
     }
     render();
@@ -482,13 +625,14 @@
     ];
     let d = 0;
     function step() {
+      SFX.beat(); // 每一個哭過的夜晚，一記心跳
       sub.textContent = days[d];
       d++;
       clear();
       const last = (d >= days.length);
       choices.appendChild(btn(last ? "聽完了" : "聽下一個數字", () => { clear(); last ? finish() : step(); }));
     }
-    function phase2() { line.textContent = "1163"; sub.textContent = ""; clear(); step(); }
+    function phase2() { SFX.ensure(); line.textContent = "1163"; sub.textContent = ""; clear(); step(); }
     function finish() {
       line.textContent = "同一串數字。";
       sub.textContent = "她用整顆心寫，你用呆腦袋讀。";
@@ -538,14 +682,45 @@
     const thread = el("div", "th-thread");
     const dad = el("div", "th-heart th-dad", "把拔");
     const aunt = el("div", "th-heart th-aunt", "阿姨");
-    const me = el("div", "th-heart th-me", "我");
+    const me = el("div", "th-heart th-me th-draggable", "我");
     stage.appendChild(thread); stage.appendChild(dad); stage.appendChild(aunt); stage.appendChild(me);
     ov.appendChild(stage);
-    const sub = el("div", "act-sub", "");
+    const sub = el("div", "act-sub", "用手指，把「我」這顆心，往下拖到紅線中央。");
     ov.appendChild(sub);
-    setTimeout(function () { sub.textContent = "三顆心，同一條拉得再長也不會斷的紅線。"; }, 2600);
-    setTimeout(function () { line.textContent = "原來，我從來都不是一個人。"; sub.textContent = ""; }, 5200);
-    closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 8000);
+    // P2-8 玩家親手把「我」放進那條紅線（reuse drag）；放進去的那一刻＝你從來都不是一個人
+    let dragging = false, prog = 0, done = false, startY = 0, startProg = 0; // prog 0(上方) → 1(紅線中央)
+    function paint() {
+      me.style.top = (12 + prog * 43).toFixed(1) + "%";
+      me.style.opacity = (0.55 + prog * 0.45).toFixed(2);
+      me.style.boxShadow = "0 0 " + (12 + prog * 26).toFixed(0) + "px rgba(255,150,190," + (0.5 + prog * 0.5).toFixed(2) + ")";
+      thread.style.opacity = (0.5 + prog * 0.5).toFixed(2);
+      thread.style.boxShadow = "0 0 " + (8 + prog * 18).toFixed(0) + "px rgba(255,120,160," + (0.6 + prog * 0.4).toFixed(2) + ")";
+    }
+    paint();
+    function down(e) { if (done) return; e.preventDefault(); dragging = true; startY = (e.clientY || 0); startProg = prog; }
+    function move(e) {
+      if (!dragging || done) return;
+      prog = Math.max(0, Math.min(1, startProg + ((e.clientY || 0) - startY) / 220)); // 往下拖 → prog 增
+      paint();
+      if (prog >= 0.92) settle();
+    }
+    function up() { if (done || !dragging) return; dragging = false; if (prog < 0.92) sub.textContent = "再往下一點，把「我」放進那條紅線裡。"; }
+    function settle() {
+      done = true; dragging = false;
+      me.removeEventListener("pointerdown", down);
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", up);
+      prog = 1; paint();
+      me.classList.remove("th-draggable"); // 放進紅線後，三顆心一起脈動（th-heart glow 接管；capstone 刻意靜音留白）
+      sub.textContent = "三顆心，同一條拉得再長也不會斷的紅線。";
+      setTimeout(function () { line.textContent = "原來，我從來都不是一個人。"; sub.textContent = ""; }, 2800);
+      closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 6200);
+    }
+    me.addEventListener("pointerdown", down);
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
   }
 
   // ── 鏈執行器:串起多個 act 成情感弧 ──

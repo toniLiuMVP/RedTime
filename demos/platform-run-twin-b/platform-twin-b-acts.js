@@ -6,6 +6,96 @@
   "use strict";
   function el(t, c, x) { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
 
+  // P1-7 月台 vignette 專用 SFX：水聲白噪 + lowpass（壓掉人聲，打開才聽見）、倒帶升頻 whoosh。
+  // iOS-safe：lazy AudioContext（gesture 內 resume）、尊重靜音鈕（window.__PT_AUDIO_OK__）。
+  var PSFX = (function () {
+    var ctx = null;
+    function audioOK() { try { if (typeof window.__PT_AUDIO_OK__ === "function") return !!window.__PT_AUDIO_OK__(); } catch (e) {} return true; }
+    function ensure() {
+      if (!audioOK()) return null;
+      try {
+        if (!ctx) { var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; ctx = new AC(); }
+        if (ctx.state === "suspended" && ctx.resume) ctx.resume();
+      } catch (e) { return null; }
+      return ctx;
+    }
+    // 水聲白噪 + lowpass：回傳 { open, stop }。open()＝lowpass 打開、水聲退去、人聲浮現。
+    function waterVeil() {
+      var c = ensure();
+      var noop = { open: function () {}, stop: function () {} };
+      if (!c) return noop;
+      try {
+        var len = Math.floor(c.sampleRate * 2), buf = c.createBuffer(1, len, c.sampleRate), data = buf.getChannelData(0);
+        for (var i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * 0.5;
+        var src = c.createBufferSource(); src.buffer = buf; src.loop = true;
+        var lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 480; // 水聲悶住人聲
+        var g = c.createGain(); g.gain.value = 0.05;
+        src.connect(lp); lp.connect(g); g.connect(c.destination); src.start();
+        return {
+          open: function () {
+            try {
+              var now = c.currentTime;
+              lp.frequency.cancelScheduledValues(now); lp.frequency.setValueAtTime(lp.frequency.value, now);
+              lp.frequency.exponentialRampToValueAtTime(7000, now + 1.4);
+              g.gain.setValueAtTime(g.gain.value, now); g.gain.exponentialRampToValueAtTime(0.013, now + 1.6);
+            } catch (e) {}
+          },
+          stop: function () { try { var now = c.currentTime; g.gain.exponentialRampToValueAtTime(0.0001, now + 0.5); src.stop(now + 0.65); } catch (e) {} }
+        };
+      } catch (e) { return noop; }
+    }
+    // 倒帶升頻 whoosh（女兒能倒帶＝時間回去）
+    function sweepUp() {
+      var c = ensure(); if (!c) return;
+      try {
+        var now = c.currentTime, o = c.createOscillator(), g = c.createGain();
+        o.type = "sawtooth";
+        o.frequency.setValueAtTime(220, now); o.frequency.exponentialRampToValueAtTime(1400, now + 0.5);
+        g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.045, now + 0.06); g.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+        o.connect(g); g.connect(c.destination); o.start(now); o.stop(now + 0.62);
+      } catch (e) {}
+    }
+    return { ensure: ensure, waterVeil: waterVeil, sweepUp: sweepUp };
+  })();
+
+  // #7 紅線色溫：把拔與女兒之間那條「拉得再長也不會斷」的線（EP36）。
+  // 讀 runner 寫的 window.__PT_BOND__（0 遠 → 1 近）：越近越暖越亮。純頂端細線（z-index 60），不擋遊戲畫面；暫停/未跑時隱藏。
+  (function redlineBond() {
+    if (typeof window === "undefined" || typeof document === "undefined" || !window.requestAnimationFrame) return;
+    var wrap = null, line = null, knotL = null, knotR = null;
+    function ensure() {
+      if (wrap) return;
+      var st = document.createElement("style");
+      st.id = "pt-bond-style";
+      st.textContent = "#pt-bond{position:fixed;top:6px;left:20%;right:20%;height:14px;z-index:60;pointer-events:none;opacity:0;transition:opacity .6s ease}"
+        + "#pt-bond .pb-line{position:absolute;top:6px;left:0;right:0;height:2px;border-radius:2px;background:#e4463c;transition:background .3s,box-shadow .3s,height .3s}"
+        + "#pt-bond .pb-knot{position:absolute;top:2px;width:8px;height:8px;border-radius:50%;background:#fff;transition:box-shadow .3s}"
+        + "#pt-bond .pb-l{left:-4px}#pt-bond .pb-r{right:-4px}";
+      document.head.appendChild(st);
+      wrap = document.createElement("div"); wrap.id = "pt-bond"; wrap.setAttribute("aria-hidden", "true");
+      line = document.createElement("div"); line.className = "pb-line";
+      knotL = document.createElement("div"); knotL.className = "pb-knot pb-l";
+      knotR = document.createElement("div"); knotR.className = "pb-knot pb-r";
+      wrap.appendChild(line); wrap.appendChild(knotL); wrap.appendChild(knotR);
+      (document.body || document.documentElement).appendChild(wrap);
+    }
+    function tick() {
+      window.requestAnimationFrame(tick);
+      var b = window.__PT_BOND__;
+      if (typeof b !== "number" || window.__RUN_PAUSED__) { if (wrap) wrap.style.opacity = "0"; return; }
+      ensure();
+      b = Math.max(0, Math.min(1, b));
+      wrap.style.opacity = (0.32 + b * 0.6).toFixed(2);
+      var hue = ((354 + b * 20) % 360).toFixed(0);   // 354 深紅(遠) → 14 暖金(近)
+      var col = "hsl(" + hue + ",85%," + (46 + b * 18).toFixed(0) + "%)";
+      line.style.background = col;
+      line.style.height = (2 + b * 2).toFixed(1) + "px";
+      line.style.boxShadow = "0 0 " + (6 + b * 16).toFixed(0) + "px " + col;
+      knotL.style.boxShadow = knotR.style.boxShadow = "0 0 " + (6 + b * 14).toFixed(0) + "px " + col;
+    }
+    window.requestAnimationFrame(tick);
+  })();
+
   function injectStyle() {
     if (document.getElementById("pacts-style")) return;
     const s = document.createElement("style");
@@ -28,6 +118,12 @@
       ".pact-ov::before{top:0}",
       ".pact-ov::after{bottom:0}",
       ".pact-ov.show::before,.pact-ov.show::after{height:6.5vh}",
+      ".pact-ov .pt-bridge{width:min(72vw,360px);height:96px;margin-top:1.2em;border-radius:14px;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;touch-action:none;-webkit-touch-callout:none;border:1px solid rgba(159,208,255,.22);background:linear-gradient(180deg,rgba(159,208,255,.05),rgba(255,255,255,.02));transition:box-shadow .25s,background .25s}",
+      ".pact-ov .pt-bridge.steady{box-shadow:0 0 30px rgba(255,170,200,.42);background:linear-gradient(180deg,rgba(255,180,205,.11),rgba(159,208,255,.03))}",
+      ".pact-ov .pt-bridge-baby{font-size:13px;letter-spacing:.34em;color:#ffd9e6;text-shadow:0 0 14px rgba(255,150,190,.5);z-index:2}",
+      ".pact-ov .pt-bridge-arms{position:absolute;left:6%;right:6%;top:50%;height:3px;border-radius:2px;background:linear-gradient(90deg,transparent,#ffd9c0,transparent);transform:scaleX(.5);transition:transform .14s ease,opacity .25s}",
+      ".pact-ov .pt-meter{width:240px;height:6px;border-radius:3px;background:rgba(255,255,255,.12);margin-top:1.1em;overflow:hidden}",
+      ".pact-ov .pt-meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#9fd0ff,#ffd9e6);transition:width .12s linear}",
     ].join("");
     document.head.appendChild(s);
   }
@@ -48,10 +144,13 @@
     ov.appendChild(sub);
     const ch = el("div", "pa-choices"); ov.appendChild(ch);
     ch.appendChild((function () { const b = el("button", "pa-btn warm", "戴上時空耳機，聽聽看"); b.addEventListener("click", () => {
+      const veil = PSFX.waterVeil();             // 水聲白噪先湧上，lowpass 悶住人聲
       sub.textContent = "耳機裡，水聲退去。妳聽見他壓得很低、很抖的聲音。";
+      setTimeout(() => { veil.open(); }, 350);    // lowpass 打開：水退、人聲才浮現
       line.textContent = "「……我也會想妳的。」";
       clearC(ch);
       setTimeout(() => { sub.textContent = "他沒有回頭。水，又開得更大聲了一點。"; }, 2000);
+      setTimeout(() => { veil.stop(); }, 4600);   // 收尾前收掉水聲
       close(ov, function () { if (onDone) onDone({ ok: true }); }, 5200);
     }); return b; })());
   }
@@ -98,7 +197,7 @@
     const ch = el("div", "pa-choices"); ov.appendChild(ch);
     // 女兒倒帶：真的能按
     const rw = el("button", "pa-btn", "⟲ 倒帶（女兒）");
-    rw.addEventListener("click", () => { sub.textContent = "畫面倒退、重來。在妳的時間裡，錯了可以再來一次。"; });
+    rw.addEventListener("click", () => { PSFX.sweepUp(); sub.textContent = "畫面倒退、重來。在妳的時間裡，錯了可以再來一次。"; }); // 升頻 whoosh＝倒帶；把拔鈕全程死寂
     // 把拔倒帶：按鈕一直閃躲、點不到（機制即隱喻：他沒有這個能力）
     const pf = el("button", "pa-btn", "⟲ 倒帶（把拔）");
     let dodges = 0, gaveUp = false;
@@ -161,17 +260,46 @@
     ov.appendChild(el("div", "pa-kicker", "2013 · 台北某個捷運站的男廁 · 櫃子上的天空"));
     const line = el("div", "pa-line", "一歲的妳哭了，需要換尿布。可是捷運站沒有親子廁所，男廁裡，也沒有尿布台。");
     ov.appendChild(line);
-    const sub = el("div", "pa-sub", "");
+    const sub = el("div", "pa-sub", "按住下面那塊地方，把兩隻手臂撐成一座橋。撐住，別讓往來的視線碰到她。");
     ov.appendChild(sub);
-    const ch = el("div", "pa-choices"); ov.appendChild(ch);
-    const wm = el("button", "pa-btn warm", "在角落的木櫃上，為她撐出一塊乾淨的地方");
-    wm.addEventListener("click", () => {
-      sub.textContent = "他把妳抱進男廁，在那排鎖著的木頭櫃子上，把兩隻手臂撐成一座橋，一邊解尿布，一邊用身體擋住來往的視線。";
+    // P2-10 按住維持平衡撐橋（reuse gaze hold）：撐住手臂成橋，放手太早她又扭動
+    const bridge = el("div", "pt-bridge");
+    const arms = el("div", "pt-bridge-arms");
+    const baby = el("div", "pt-bridge-baby", "妳");
+    bridge.appendChild(arms); bridge.appendChild(baby);
+    ov.appendChild(bridge);
+    const meterWrap = el("div", "pt-meter"); const fill = el("i"); meterWrap.appendChild(fill); ov.appendChild(meterWrap);
+    let holding = false, hold = 0, raf = 0, last = 0, done = false;
+    const NEED = 3.0;
+    function loop(t) {
+      if (done) return;
+      if (!last) last = t;
+      const dt = (t - last) / 1000; last = t;
+      if (holding) hold = Math.min(NEED, hold + dt); else hold = Math.max(0, hold - dt * 1.4);
+      fill.style.width = (hold / NEED * 100) + "%";
+      const steady = hold > 0.2;
+      bridge.classList.toggle("steady", steady);
+      arms.style.transform = "scaleX(" + (0.5 + (hold / NEED) * 0.5).toFixed(2) + ")"; // 撐越久，橋越穩越長
+      if (!holding && hold > 0.05 && hold < NEED) sub.textContent = "她又開始扭動了……再撐住一點。";
+      if (hold >= NEED) return finish();
+      raf = requestAnimationFrame(loop);
+    }
+    function down(e) { e.preventDefault(); holding = true; }
+    function up() { holding = false; }
+    function finish() {
+      done = true; cancelAnimationFrame(raf);
+      bridge.removeEventListener("pointerdown", down);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", up);
+      bridge.classList.add("steady"); arms.style.transform = "scaleX(1)";
       line.textContent = "在那個小小的、櫃子上的天空底下，妳停止了哭泣。";
-      clearC(ch);
-      close(ov, function () { if (onDone) onDone({ ok: true }); }, 3800);
-    });
-    ch.appendChild(wm);
+      sub.textContent = "他把兩隻手臂撐成一座橋，一邊解尿布，一邊用身體擋住來往的視線。";
+      close(ov, function () { if (onDone) onDone({ ok: true }); }, 4400);
+    }
+    bridge.addEventListener("pointerdown", down);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
+    raf = requestAnimationFrame(loop);
   }
 
   // #10 我趕上了 → 多年後回望(EP36→41:趕上那刻 → 女兒國一 LINE)

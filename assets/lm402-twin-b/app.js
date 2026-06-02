@@ -3502,6 +3502,8 @@ canvas.addEventListener("webglcontextrestored", () => {
 requestAnimationFrame(tick);
 
 /* ── Loader dismiss ── */
+// P0-2 橋接:讓 acts/council 的觸覺心跳 + 低頻情緒音尊重使用者靜音設定
+window.__TWIN_B_AUDIO_OK__ = function () { try { return !!state.audioEnabled; } catch (e) { return false; } };
 window.__lm402Ready = true;
 (function dismissLoader() {
   const loaderEl = document.getElementById("lm402-loader");
