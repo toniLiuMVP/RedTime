@@ -51,6 +51,13 @@
       ".act-ov::before{top:0}",
       ".act-ov::after{bottom:0}",
       ".act-ov.show::before,.act-ov.show::after{height:6.5vh}",
+      ".act-ov .th-stage{position:relative;width:min(82vw,440px);height:130px;margin-top:1.4em}",
+      ".act-ov .th-heart{position:absolute;top:55%;transform:translateY(-50%);width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;color:#2a1820;background:radial-gradient(circle,#fff,#ffd9e6);box-shadow:0 0 22px rgba(255,150,190,.7);animation:thGlow 3s ease-in-out infinite}",
+      ".act-ov .th-dad{left:1%}",
+      ".act-ov .th-aunt{right:1%}",
+      ".act-ov .th-me{left:50%;transform:translate(-50%,-50%);top:12%;width:42px;height:42px}",
+      ".act-ov .th-thread{position:absolute;top:55%;left:6%;right:6%;height:2px;background:linear-gradient(90deg,#ff6b9d,#ffd9a8,#ff6b9d);box-shadow:0 0 8px rgba(255,120,160,.8)}",
+      "@keyframes thGlow{0%,100%{box-shadow:0 0 18px rgba(255,150,190,.6)}50%{box-shadow:0 0 30px rgba(255,180,210,.95)}}",
     ].join("");
     document.head.appendChild(s);
   }
@@ -515,10 +522,30 @@
     choices.appendChild(b);
   }
 
+  // ── Act 13 三顆心同框(EP41 capstone:你從來都不是一個人 — 把拔/阿姨/女兒同一條紅線）──
+  function threehearts(onDone) {
+    const ov = makeOverlay();
+    ov.appendChild(el("div", "act-kicker", "EP41 · 你從來都不是一個人"));
+    const line = el("div", "act-line", "我在把拔的心裡聽到的，是阿姨的聲音。\n我在阿姨的心裡看到的，是滿滿的把拔。");
+    ov.appendChild(line);
+    const stage = el("div", "th-stage");
+    const thread = el("div", "th-thread");
+    const dad = el("div", "th-heart th-dad", "把拔");
+    const aunt = el("div", "th-heart th-aunt", "阿姨");
+    const me = el("div", "th-heart th-me", "我");
+    stage.appendChild(thread); stage.appendChild(dad); stage.appendChild(aunt); stage.appendChild(me);
+    ov.appendChild(stage);
+    const sub = el("div", "act-sub", "");
+    ov.appendChild(sub);
+    setTimeout(function () { sub.textContent = "三顆心，同一條拉得再長也不會斷的紅線。"; }, 2600);
+    setTimeout(function () { line.textContent = "原來，我從來都不是一個人。"; sub.textContent = ""; }, 5200);
+    closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 8000);
+  }
+
   // ── 鏈執行器:串起多個 act 成情感弧 ──
   function runChain(ids, onAll) {
     if (document.querySelector(".act-ov")) return; // W3：已有 overlay 開著就忽略，避免疊字穿透
-    const map = { gaze: gaze, note: note, hug: hug, redthread: redthread, msn: msn, phoneCall: phoneCall, sevenEleven: sevenEleven, infinite: infinite, believe: believe, train1163: train1163, carnation: carnation };
+    const map = { gaze: gaze, note: note, hug: hug, redthread: redthread, msn: msn, phoneCall: phoneCall, sevenEleven: sevenEleven, infinite: infinite, believe: believe, train1163: train1163, carnation: carnation, threehearts: threehearts };
     let i = 0;
     function next() {
       if (i >= ids.length) { if (onAll) onAll(); return; }
@@ -532,7 +559,7 @@
     window.__ACTS__ = {
       gaze: gaze, note: note, hug: hug, redthread: redthread, msn: msn,
       phoneCall: phoneCall, sevenEleven: sevenEleven, infinite: infinite, believe: believe,
-      train1163: train1163, carnation: carnation,
+      train1163: train1163, carnation: carnation, threehearts: threehearts,
       runChain: runChain,
     };
   }
