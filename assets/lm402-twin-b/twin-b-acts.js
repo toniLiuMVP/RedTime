@@ -37,6 +37,10 @@
       ".act-ov .gaze-meter{width:240px;height:6px;border-radius:3px;background:rgba(255,255,255,.12);margin-top:1.2em;overflow:hidden}",
       ".act-ov .gaze-meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd9a8,#fff2dd);transition:width .12s linear}",
       ".act-ov.gaze-bloom{background:radial-gradient(120% 90% at 50% 45%,rgba(255,236,210,.34),rgba(20,16,18,.9))}",
+      ".act-ov .gaze-twin{position:absolute;top:50%;left:50%;width:13px;height:13px;border-radius:50%;background:radial-gradient(circle,#fff,#ffdca8);box-shadow:0 0 14px rgba(255,220,180,.85);opacity:.8;transition:transform 1.3s cubic-bezier(.6,0,.35,1),opacity .9s,box-shadow .9s;pointer-events:none}",
+      ".act-ov .gaze-twin-l{transform:translate(-46px,-50%)}",
+      ".act-ov .gaze-twin-r{transform:translate(34px,-50%)}",
+      ".act-ov.gaze-bloom .gaze-twin-l,.act-ov.gaze-bloom .gaze-twin-r{transform:translate(-6px,-50%);opacity:1;box-shadow:0 0 28px rgba(255,238,210,1)}",
       ".act-ov .hug-zone{position:relative;width:min(74vw,360px);height:min(46vh,300px);margin-top:1.2em;border-radius:18px;cursor:grab;touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;border:1px solid rgba(255,210,160,.14)}",
       ".act-ov .hug-zone:active{cursor:grabbing}",
       ".act-ov .hug-daughter{position:absolute;top:12%;left:50%;transform:translateX(-50%);font-size:13px;letter-spacing:.34em;color:#ffd9e6;text-shadow:0 0 14px rgba(255,150,190,.6);transition:opacity .12s;pointer-events:none}",
@@ -86,6 +90,8 @@
     ov.appendChild(sub);
     const zone = el("div", "gaze-zone");
     zone.appendChild(el("div", "gaze-core"));
+    zone.appendChild(el("div", "gaze-twin gaze-twin-l")); // 1994 凍齡的妳
+    zone.appendChild(el("div", "gaze-twin gaze-twin-r")); // 2005 此刻的妳 — 撐住凝視時兩個妳在同一瞳孔交疊
     ov.appendChild(zone);
     const meterWrap = el("div", "gaze-meter");
     const fill = el("i"); meterWrap.appendChild(fill); ov.appendChild(meterWrap);
