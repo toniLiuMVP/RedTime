@@ -50,8 +50,9 @@ const VOICE_PHRASES = [
 ];
 
 const SPRITE_COUNT = 12; // 同時運作的 sprite 數
-const PHRASE_TEX_W = 768;
-const PHRASE_TEX_H = 96;
+// 2026-06-03 toni:意識菜市場圍繞文字放大兩倍。texture 解析度 + 字級同步 ×2 保持清晰，sprite.scale 也 ×2（見下）。
+const PHRASE_TEX_W = 1536;
+const PHRASE_TEX_H = 192;
 
 // ─── 預建每個 phrase 的 CanvasTexture ───
 let _phraseTextures = null;
@@ -65,13 +66,13 @@ function buildAllPhraseTextures() {
     // 透明背景
     ctx.clearRect(0, 0, PHRASE_TEX_W, PHRASE_TEX_H);
     // 文字
-    ctx.font = '34px "Noto Serif TC", "PingFang TC", serif';
+    ctx.font = '68px "Noto Serif TC", "PingFang TC", serif';
     ctx.fillStyle = phrase.color;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     // 微微暈光（同色雙層）
     ctx.shadowColor = phrase.color;
-    ctx.shadowBlur = 16;
+    ctx.shadowBlur = 32;
     ctx.fillText(phrase.text, PHRASE_TEX_W / 2, PHRASE_TEX_H / 2);
     // 主體再畫一遍（避免 shadow 過糊）
     ctx.shadowBlur = 0;
@@ -107,7 +108,7 @@ export function createConsciousnessText(options = {}) {
       blending: THREE.NormalBlending,
     });
     const sprite = new THREE.Sprite(mat);
-    sprite.scale.set(0.6, 0.075, 1); // 8:1 比例配合 canvas 768x96
+    sprite.scale.set(1.2, 0.15, 1); // 2026-06-03 toni 放大兩倍（原 0.6 / 0.075）；8:1 比例配合 canvas 1536x192
     sprite.renderOrder = 20; // 在粒子之後（粒子 19）
     sprite.userData = {
       life: Math.random(),       // 初始隨機 life（避免一齊出現）
