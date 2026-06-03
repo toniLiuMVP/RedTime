@@ -9,19 +9,27 @@
 
   var SEEN_KEY = "pt_coldopen_seen_v1";
   try {
-    var sp = new URL(location.href).searchParams;
-    if (sp.get("cold") === "0") return;
-    if (sp.get("cold") !== "1" && localStorage.getItem(SEEN_KEY)) return;
+    // 每次進站都預設播放（toni 紀律）；只有 ?cold=0 可強制不播。播放中隨時可「快速飛過」。
+    if (new URL(location.href).searchParams.get("cold") === "0") return;
   } catch (e) {}
 
   var reduced = false;
   try { reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
 
-  // auto：ms 後自動推進；0＝等輕觸。fx：'thread'｜'beat'。big：放大的關鍵字。
+  // auto：ms 後自動推進；0＝等輕觸。fx：'soft'（一拳一拳的輕心跳）｜'thread'｜'beat'。big：放大的關鍵字。
   var CARDS = [
-    { lines: ["現在的我，已經長大了。", "", "久到我不再叫他「把拔」，現在，只叫他一聲「爸」。"], auto: 0, big: "爸" },
-    { lines: ["可是今天晚上，我好想回去看看小時候的他。", "", "「命運阿嬤，我可以去找小時候的自己嗎？」"], auto: 0 },
-    { lines: ["我閉上眼睛，往回飛。", "", "飛過好多好多次，他在月台上的樣子。"], auto: 0, fx: "thread" },
+    // EP16「一拳一拳」女兒對把拔的獨白（toni 原文，一句一拳，輕輕打進心裡）
+    { kicker: "一拳一拳", lines: ["「把拔，", "今天我可以在你的房間睡覺嗎？」"], auto: 0, fx: "soft" },
+    { lines: ["「把拔，", "其實我幼稚園的時候，", "我就知道你跟我的媽媽分開了。」"], auto: 0, fx: "soft" },
+    { lines: ["「把拔，我知道你對我很好。", "我們去吃火鍋超市，一顆蛤蜊 50 元，", "我想吃三顆，你也會買給我，", "然後三顆都被我現場吃掉。」"], auto: 0, fx: "soft" },
+    { lines: ["「把拔，我一直記得你跟我說，", "你永遠都不會打我的。", "但如果我是男生，你就會叫我跪下。", "還好我是女生 😚」"], auto: 0, fx: "soft" },
+    { lines: ["「把拔，我知道你很搞笑，", "也知道你是想讓我開心才不顧形象。", "但自從上次看到你跟那個阿姨，", "我知道你不用再特地為我講好笑的話了。」"], auto: 0, fx: "soft" },
+    { lines: ["「把拔，我知道小時候我常常去敲你的房門。", "雖然你很胖，", "但在你旁邊，我每次都可以睡到打呼。」"], auto: 0, fx: "soft" },
+    { lines: ["「把拔，我只是想跟你說，不用擔心我。", "我很兇，不會被欺負的。」"], auto: 0, fx: "soft" },
+    { lines: ["「把拔，也謝謝你在我小時候有陪我。", "我都記得。」"], auto: 0, fx: "soft" },
+    { lines: ["「把拔，其實現在的我，", "已經不叫你「把拔」了。", "我現在，都直接叫你一聲「爸」。」"], auto: 0, big: "爸", fx: "soft" },
+    // 從長大的我，飛回去看小時候的他（EP36 倒敘）
+    { lines: ["可是今天晚上，我好想回去看看小時候的他。", "", "「命運阿嬤，我可以去找小時候的自己嗎？」"], auto: 0, fx: "thread" },
     { kicker: "2018 · 大班 · 台中火車站", lines: ["我大班，背著粉紅色的小背包，站在月台上。", "", "南下的列車停了。有一個人，從一號車廂衝了出來。"], auto: 0, fx: "thread" },
     { lines: ["那是把拔。又胖又喘，背著一個好大的包，用力地跑。", "", "北上的自強號也進站了。他必須在門關上之前，把我抱上車。"], auto: 0, fx: "thread" },
     { lines: ["在門快要關上的前兩秒，他趕上了。", "", "「我趕上了。」他一邊喘，一邊笑。"], auto: reduced ? 2400 : 3400, big: "我趕上了", fx: "beat" },
@@ -68,13 +76,13 @@
     var kicker = mk("div"); kicker.id = "ptco-kicker";
     var text = mk("div"); text.id = "ptco-text"; text.setAttribute("aria-live", "polite");
     var cont = mk("button"); cont.id = "ptco-cont"; cont.type = "button"; cont.textContent = "替他跑";
-    var skip = mk("button"); skip.id = "ptco-skip"; skip.type = "button"; skip.textContent = "跳過";
+    var skip = mk("button"); skip.id = "ptco-skip"; skip.type = "button"; skip.textContent = "快速飛過";
     var hint = mk("div", "", "輕觸繼續"); hint.id = "ptco-hint"; hint.setAttribute("aria-hidden", "true");
     ov.appendChild(thread); ov.appendChild(kicker); ov.appendChild(text); ov.appendChild(cont); ov.appendChild(skip); ov.appendChild(hint);
     document.body.appendChild(ov);
     requestAnimationFrame(function () { ov.classList.add("show"); });
 
-    var i = -1, done = false, autoTimer = 0, hintTimer = 0, actx = null;
+    var i = -1, done = false, autoTimer = 0, hintTimer = 0, actx = null, gestured = false;
     function tryTone(freq, dur, vol) {
       try {
         if (!actx) { var AC = window.AudioContext || window.webkitAudioContext; if (AC) actx = new AC(); }
@@ -87,7 +95,7 @@
       } catch (e) {}
     }
     function heartbeat() {
-      try { if (navigator.vibrate) navigator.vibrate([24, 90, 36]); } catch (e) {}
+      try { if (gestured && navigator.vibrate) navigator.vibrate([24, 90, 36]); } catch (e) {}
       tryTone(58, 0.16, 0.06); setTimeout(function () { tryTone(44, 0.2, 0.045); }, 150);
     }
     function clearHint() { hint.classList.remove("show"); if (hintTimer) { clearTimeout(hintTimer); hintTimer = 0; } }
@@ -105,6 +113,7 @@
           el.textContent = ln;
           text.appendChild(el);
         });
+        if (card.fx === "soft" && gestured) { try { if (navigator.vibrate) navigator.vibrate(18); } catch (e) {} tryTone(56, 0.14, 0.045); } // 一拳一拳：每句一記輕輕的心跳（首句靜默，從第二句起才響）
         if (card.fx === "thread") ov.classList.add("thread-on");
         if (card.fx === "beat") { ov.classList.add("thread-on", "beat"); heartbeat(); setTimeout(heartbeat, 760); setTimeout(heartbeat, 1320); }
         kicker.style.opacity = "1"; text.style.opacity = "1";
@@ -136,6 +145,7 @@
 
     function onTap(e) {
       if (done) return;
+      gestured = true;
       if (e.target === skip || e.target === cont) return;
       var card = CARDS[i];
       if (card && card.auto > 0) return;

@@ -9,9 +9,8 @@
 
   var SEEN_KEY = "lm402_coldopen_seen_v1";
   try {
-    var sp = new URL(location.href).searchParams;
-    if (sp.get("cold") === "0") return;                                   // ?cold=0 強制不播
-    if (sp.get("cold") !== "1" && localStorage.getItem(SEEN_KEY)) return; // 看過就跳（?cold=1 可強制重看）
+    // 每次進站都預設播放（toni 紀律）；只有 ?cold=0 可強制不播。播放中隨時可「快速飛過」。
+    if (new URL(location.href).searchParams.get("cold") === "0") return;
   } catch (e) {}
 
   var reduced = false;
@@ -81,7 +80,7 @@
     var kicker = mk("div", "", ""); kicker.id = "co-kicker";
     var text = mk("div", "", ""); text.id = "co-text"; text.setAttribute("aria-live", "polite");
     var cont = document.createElement("button"); cont.id = "co-cont"; cont.type = "button"; cont.textContent = "繼續";
-    var skip = document.createElement("button"); skip.id = "co-skip"; skip.type = "button"; skip.textContent = "跳過";
+    var skip = document.createElement("button"); skip.id = "co-skip"; skip.type = "button"; skip.textContent = "快速飛過";
     var hint = mk("div", "", "輕觸繼續"); hint.id = "co-hint"; hint.setAttribute("aria-hidden", "true");
     ov.appendChild(thread); ov.appendChild(pulse); ov.appendChild(kicker); ov.appendChild(text); ov.appendChild(cont); ov.appendChild(skip); ov.appendChild(hint);
     document.body.appendChild(ov);
