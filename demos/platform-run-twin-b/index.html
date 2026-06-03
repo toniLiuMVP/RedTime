@@ -65,6 +65,7 @@ canvas{display:block;width:100%;height:100%}
 #level-transition .lt-divider{position:relative;z-index:3;width:0;height:1px;margin:clamp(20px,2.6vh,32px) 0;background:linear-gradient(90deg,transparent,rgba(217,179,106,0.55),transparent);animation:ltDraw 0.9s 1.5s cubic-bezier(0.4,0,0.2,1) forwards}
 #level-transition .lt-divider::before{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;background:#d9b36a;transform:translate(-50%,-50%) rotate(45deg);box-shadow:0 0 10px rgba(217,179,106,0.6);opacity:0;animation:fadeUp 0.5s 2.1s forwards}
 .level-next-text{position:relative;z-index:3;color:#8a7560;font-size:clamp(11px,1.6vw,15px);margin-top:0;font-weight:400;letter-spacing:0.32em;text-indent:0.32em;text-transform:uppercase;font-family:"Cormorant Garamond",Georgia,serif;opacity:0;animation:fadeUp 1s 2s forwards}
+.level-hook-text{position:relative;z-index:3;color:#e8d6b0;font-size:clamp(14px,2.1vw,19px);line-height:1.85;max-width:min(86vw,560px);margin:0.5em auto 1em;font-weight:300;letter-spacing:0.04em;font-family:"Noto Serif TC","Noto Serif CJK TC",serif;text-shadow:0 0 16px rgba(217,179,106,0.22);opacity:0;animation:fadeUp 1.1s 1.4s forwards}
 @keyframes ltTitle{from{opacity:0;transform:translateY(24px) scale(0.95);filter:drop-shadow(0 0 42px rgba(217,179,106,0.55)) blur(5px)}to{opacity:1;transform:translateY(0) scale(1);filter:drop-shadow(0 0 20px rgba(217,179,106,0.32)) blur(0)}}
 @keyframes ltDraw{to{width:clamp(240px,40vw,420px)}}
 
@@ -398,7 +399,7 @@ body:has(#title-screen.hide) .pt-tutorial-trigger { display: none !important; }
     <input type="text" id="name-input" maxlength="10" placeholder="你的名字" autocomplete="off">
     <button id="save-score-btn">記錄成績</button>
   </div>
-  <div class="result-retry" id="result-retry">再來一次</div>
+  <div class="result-retry" id="result-retry">再陪他跑一次</div>
   <div id="leaderboard-btn">🏆 排行榜</div>
   <div class="result-links">
     <a class="result-link" href="../../index.html">回到首頁</a>
@@ -420,6 +421,7 @@ body:has(#title-screen.hide) .pt-tutorial-trigger { display: none !important; }
   <div class="lt-eyebrow" aria-hidden="true"></div>
   <div class="level-clear-text" id="level-clear-text"></div>
   <div class="lt-divider" aria-hidden="true"></div>
+  <div class="level-hook-text" id="level-hook-text"></div>
   <div class="level-next-text" id="level-next-text"></div>
 </div>
 
@@ -468,6 +470,8 @@ body:has(#title-screen.hide) .pt-tutorial-trigger { display: none !important; }
 
 <!-- 月台雙時空B 父女記憶 vignettes（設 window.__PACTS__ + 注入回憶 launcher）-->
 <script src="./platform-twin-b-acts.js"></script>
+<!-- 冷開場：女兒倒敘飛回去看把拔月台狂奔（EP36），在標題畫面之前播；首次進站 only -->
+<script src="./cold-open.js"></script>
 <script type="importmap">
 {"imports":{"three":"../_vendor/three.module.js"}}
 </script>
@@ -587,6 +591,7 @@ const dom = {
   levelTransition: document.getElementById("level-transition"),
   levelClearText: document.getElementById("level-clear-text"),
   levelNextText:  document.getElementById("level-next-text"),
+  levelHookText:  document.getElementById("level-hook-text"),
   finalLevelWarning: document.getElementById("final-level-warning"),
   hiddenEnding:   document.getElementById("hidden-ending"),
   hiddenEndingText: document.getElementById("hidden-ending-text"),
@@ -5264,6 +5269,28 @@ function updateVictoryAnimation(dt) {
 /* ════════════════════════════════════════════════
    關卡過渡：顯示過關畫面，自動進入下一關
    ════════════════════════════════════════════════ */
+/* 過關鉤子：每關過關時的一句倒敘情感台詞（女兒回看把拔月台奔跑，EP36 + EP16，逐關往下勾） */
+var LEVEL_HOOKS = [
+  "趕上了。他喘著氣笑了一下，又把那個好大的包甩回肩上。下一班，還要再趕。",
+  "他從來沒讓我等太久。「再忍耐一下，把拔快到了喔。」",
+  "台北捷運站的男廁沒有換尿布的地方，他就把外套鋪在櫃子上，把手臂搭成一座橋。「以後把拔會越來越厲害的。」",
+  "他真的越來越厲害了。為了我，他把每一件沒準備好的事，都練成趕得上的事。",
+  "2017 年我要搬去台中那天，他在水槽前把水開得好大聲。「我也會想妳的。」",
+  "搬多遠都沒關係。他用力地跑，就是想告訴我：這條線，拉得再長也不會斷。",
+  "又是一個月台，又是一次門快要關上。他還是從一號車廂衝了出來。每一次都趕上。",
+  "我長大了，久到不再叫他「把拔」，現在只叫他一聲「爸」。可是他跑的樣子，我一格都沒忘。",
+];
+
+/* 沒過關鉤子：失敗不是 game over，是把拔永遠不會放棄（EP36）。5 句輪播，避免重複。 */
+var FAIL_HOOKS = [
+  "這一班沒趕上沒關係。他從來不會因為一次沒趕上就不跑了，下一班車，他還會在月台上等。",
+  "他停下來喘了兩口氣，把包重新背好。把拔的字典裡，沒有「放棄」這兩個字。",
+  "門關上了，可是那條線一點都沒鬆。他轉身往回走，準備下一次再用力地跑。",
+  "列車開走了，月台還在。只要他還願意這樣跑，我們之間就還有一條拉得再長也不會斷的線。",
+  "沒趕上的他，比趕上的他更讓人心疼。再陪他一次，他一定會「每一次都趕上」。",
+];
+var _failIdx = 0;
+
 function showLevelTransition() {
   /* 第 9→10 關專屬電影化最終警告（韓劇導演級過場） */
   if (state.currentLevel === 9) {
@@ -5279,6 +5306,13 @@ function showLevelTransition() {
   var nextClone = dom.levelNextText.cloneNode(true);
   dom.levelNextText.parentNode.replaceChild(nextClone, dom.levelNextText);
   dom.levelNextText = nextClone;
+  /* 過關鉤子：倒敘情感台詞（依關數 1-indexed）+ clone 重播淡入動畫 */
+  if (dom.levelHookText) {
+    dom.levelHookText.textContent = LEVEL_HOOKS[(state.currentLevel - 1) % LEVEL_HOOKS.length] || "";
+    var hookClone = dom.levelHookText.cloneNode(true);
+    dom.levelHookText.parentNode.replaceChild(hookClone, dom.levelHookText);
+    dom.levelHookText = hookClone;
+  }
 
   dom.levelTransition.classList.add("show");
   document.body.classList.remove("letterbox-on");
@@ -5286,7 +5320,7 @@ function showLevelTransition() {
   safeSetTimeout(function() {
     dom.levelTransition.classList.remove("show");
     advanceToNextLevel();
-  }, 3000);
+  }, 3600);
 }
 
 /* ════════════════════════════════════════════════
@@ -5633,14 +5667,9 @@ function failure() {
       "\u7B2C " + state.currentLevel + " \u95DC\u5931\u6557",
       state.levelTimes.length > 0 ? "\u5DF2\u904E " + state.levelTimes.length + " \u95DC" : "",
       "",
-      "\u300C\u53EA\u8981\u4ED6\u9084\u9858\u610F\u5728\u6708\u53F0\u4E0A\u90A3\u6A23\u7528\u529B\u5954\u8DD1\uFF0C",
-      "",
-      "\u6211\u5011\u4E4B\u9593\uFF0C",
-      "",
-      "\u5C31\u9084\u6709\u4E00\u689D\u62C9\u5F97\u518D\u9577\u4E5F\u4E0D\u6703\u65B7\u7684\u7DDA\u3002\u300D",
-      "",
-      "\u2500\u2500 EP36"
+      FAIL_HOOKS[_failIdx % FAIL_HOOKS.length]
     ];
+    _failIdx++;
     failLines.forEach(function(line) {
       var el = document.createElement("div");
       el.textContent = line || "\u00A0";
