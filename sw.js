@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v15-20260606';  // unchanged: GLB / vendor 無變動
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v86-20260604';  // bumped: narrative hook copy refinements across intro prologue, platform finale card, and level/fail hooks (canon-aligned)
+const RUNTIME_VERSION = 'runtime-v87-20260604';  // bumped: regroup hero entry actions with a red-line bridge caption; trim onboarding step-2 density into closing checklist
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
