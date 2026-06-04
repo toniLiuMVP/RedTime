@@ -41,7 +41,8 @@
       "background:#04030a;color:#f2e6d0;font-family:'Noto Serif TC','PingFang TC',serif;text-align:center;padding:28px;opacity:0;transition:opacity 1s ease;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}",
       "#cold-open.show{opacity:1}",
       "#cold-open.cool{color:#e7eef4;background:#05070d}",
-      "#cold-open::before,#cold-open::after{content:'';position:fixed;left:0;right:0;height:8.5vh;background:#000;z-index:3;pointer-events:none}",
+      "#cold-open::before,#cold-open::after{content:'';position:fixed;left:0;right:0;height:8.5vh;background:#000;z-index:3;pointer-events:none;transition:height 1s cubic-bezier(.4,0,.2,1)}",
+      "#cold-open.squeeze::before,#cold-open.squeeze::after{height:12.5vh}",
       "#cold-open::before{top:0}#cold-open::after{bottom:0}",
       "#co-kicker{font-size:12px;letter-spacing:.28em;color:#ffd9a8;opacity:.8;margin-bottom:1.1em;min-height:1.2em;transition:opacity .8s ease}",
       "#cold-open.cool #co-kicker{color:#9fd0ff}",
@@ -124,6 +125,7 @@
         if (card.fx === "pulse") { ov.classList.add("thread-on", "pulse-on"); }
         if (card.fx === "beat") { ov.classList.add("beat"); heartbeat(); setTimeout(heartbeat, 760); setTimeout(heartbeat, 1320); }
         if (card.fx === "rebound") { ov.classList.add("rebound"); }
+        if (card.big === "。") ov.classList.add("squeeze"); else ov.classList.remove("squeeze");
         kicker.style.opacity = "1"; text.style.opacity = "1";
       }, 380);
     }

@@ -56,6 +56,8 @@
       "#ptco.thread-on #ptco-thread{opacity:.85;transform:scaleX(1);background:linear-gradient(90deg,transparent,#ff6b9d,#ffd9e6,#ff6b9d,transparent);box-shadow:0 0 16px rgba(255,107,157,.75)}",
       "#ptco.beat #ptco-text .ptco-big{animation:ptcoBeat .5s ease}",
       "@keyframes ptcoBeat{0%{transform:scale(1)}30%{transform:scale(1.12);text-shadow:0 0 40px rgba(255,140,170,.85)}100%{transform:scale(1)}}",
+      "#ptco.beat::before,#ptco.beat::after{animation:ptcoBite .62s ease}",
+      "@keyframes ptcoBite{0%,100%{height:8.5vh}45%{height:calc(8.5vh + 7px)}}",
       "#ptco-skip{position:fixed;top:calc(8.5vh + 14px);right:18px;z-index:5;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.2);color:#cbb;border-radius:999px;font:300 12px/1 'Noto Sans TC',sans-serif;letter-spacing:.1em;padding:8px 16px;cursor:pointer;transition:all .3s ease}",
       "#ptco-skip:hover{background:rgba(255,255,255,.14);color:#fff}",
       "#ptco-cont{margin-top:1.8em;background:rgba(255,255,255,.06);border:1px solid rgba(255,180,200,.4);color:#f4ece2;border-radius:999px;font:300 15px/1 'Noto Serif TC',serif;letter-spacing:.08em;padding:13px 28px;cursor:pointer;opacity:0;transition:opacity .9s ease,background .3s,transform .3s}",
