@@ -4260,10 +4260,11 @@
               if (answered) { i++; step(); return; }
               answered = true;
               var v = norm(input.value), ok = false;
+              var vnum = (v.match(/^\d+/) || [""])[0]; // 使用者輸入開頭的數字串：容忍「30秒」「5個」這類帶單位
               for (var j = 0; j < item.ans.length; j++) {
                 var a = norm(item.ans[j]); if (!a) continue;
-                var numeric = /^\d+$/.test(a) && a.length <= 2; // 短純數字(11/5/25)用精確比對，避免「1130」含「11」誤判
-                if (numeric ? (v === a) : (v === a || v.indexOf(a) >= 0)) { ok = true; break; }
+                if (/^\d+$/.test(a) && a.length <= 2) { if (vnum === a) { ok = true; break; } } // 短純數字：比開頭數字（30秒→30 對；1130→1130≠11 拒）
+                else if (v === a || v.indexOf(a) >= 0) { ok = true; break; }
               }
               if (ok) { correct++; fb.className = "ob-fb ok"; fb.textContent = "答對了。" + item.hook; }
               else {
