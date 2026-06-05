@@ -2214,6 +2214,10 @@ body.landscape-prompt .debug-panel {
     right: calc(max(8px, env(safe-area-inset-right)) + 210px);
     z-index: 20;
   }
+  /* 窄手機：時空手錶下移一排，騰出頂排給音樂選單，兩者不再重疊 */
+  .time-watch {
+    top: max(58px, calc(env(safe-area-inset-top) + 52px));
+  }
 }
 @media (max-width: 1080px) and (orientation: landscape) {
   .ending-hook,

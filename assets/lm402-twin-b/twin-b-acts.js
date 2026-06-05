@@ -198,7 +198,7 @@
         ? "他抬起頭。\n你們誰都還來不及開口。\n那一秒，像被命運按了存檔鍵。"
         : "妳鬆開得太早了，那一眼只成了餘光……";
       sub.textContent = ok ? "" : "再按住一次，撐久一點。";
-      if (ok) { setTimeout(() => { sub.textContent = "也太像徐若瑄了吧。"; }, 1100); closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 3000); }
+      if (ok) { setTimeout(() => { sub.textContent = "他心裡冒出一句很不正經的：「也太像徐若瑄了吧。」"; }, 1100); closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 3000); }
       else { setTimeout(() => { done = false; hold = 0; last = 0; sub.textContent = "他走過背光的走廊……按住下面這束光，撐住這一眼。"; zone.addEventListener("pointerdown", down); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up); raf = requestAnimationFrame(loop); }, 1600); }
     }
     zone.addEventListener("pointerdown", down);
