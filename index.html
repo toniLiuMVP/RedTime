@@ -1839,11 +1839,22 @@
         margin-top: 12px;
       }
       .tour-sample {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
         margin-bottom: 16px;
         padding: 12px 14px;
         border-left: 2px solid rgba(200, 144, 16, 0.4);
         background: rgba(200, 144, 16, 0.04);
         border-radius: 0 4px 4px 0;
+        transition: background 0.2s ease, border-left-color 0.2s ease, transform 0.2s ease;
+      }
+      a.tour-sample:hover, a.tour-sample:focus-visible {
+        background: rgba(200, 144, 16, 0.12);
+        border-left-color: var(--amber);
+        transform: translateX(2px);
+        outline: none;
       }
       .tour-sample-tag {
         font-family: "DM Mono", monospace;
@@ -3088,18 +3099,18 @@
           <div class="tour-step-body">
             <p class="tour-intro">42 集太重，先讀這三集。<br>它們是這座橋的三塊承重結構。</p>
             <div class="tour-samples">
-              <div class="tour-sample">
-                <div class="tour-sample-tag">⌬ EP3 · 一眼瞬間 · 學長視角</div>
+              <a class="tour-sample" href="reader.html#ep-3">
+                <div class="tour-sample-tag">⌬ EP3 · 一眼瞬間 · 學長視角　↗ 直接讀</div>
                 <div class="tour-sample-desc">2005 年的大學走廊。這是整本書的起點。讀完你會知道，為什麼這一眼，需要很多年才能讀懂。</div>
-              </div>
-              <div class="tour-sample">
-                <div class="tour-sample-tag">⌬ EP38 · 意識菜市場 · 學妹視角</div>
+              </a>
+              <a class="tour-sample" href="reader.html#ep-38">
+                <div class="tour-sample-tag">⌬ EP38 · 意識菜市場 · 學妹視角　↗ 直接讀</div>
                 <div class="tour-sample-desc">2005 年同一秒的另一面。讓你看見學妹的內在，不同年紀的她，在同一秒鐘吵架。</div>
-              </div>
-              <div class="tour-sample">
-                <div class="tour-sample-tag">⌬ EP41 · 這不是童話故事 · 女兒視角</div>
+              </a>
+              <a class="tour-sample" href="reader.html#ep-41">
+                <div class="tour-sample-tag">⌬ EP41 · 這不是童話故事 · 女兒視角　↗ 直接讀</div>
                 <div class="tour-sample-desc">2026 年。故事的拱心石。她看過所有結局，卻發現「知道」救不了眼前的人。她最後只傳給他四個數字，然後選擇，跟他一起相信。</div>
-              </div>
+              </a>
             </div>
           </div>
         </div>
@@ -4097,6 +4108,221 @@
             });
           }
         });
+      })();
+    </script>
+    <!-- r73：進站分流（第一次 / 老朋友）+ 鐵粉 10 題 + 五視角導覽。全 DOM 建構，零 innerHTML，零外部來源 -->
+    <style>
+      .ob-backdrop{position:fixed;inset:0;z-index:9600;display:flex;align-items:center;justify-content:center;
+        background:radial-gradient(120% 90% at 50% 35%,rgba(20,16,24,.86),rgba(8,7,12,.96));
+        backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;transition:opacity .45s ease;padding:20px}
+      .ob-backdrop.show{opacity:1}
+      .ob-card{position:relative;width:min(540px,calc(100vw - 32px));max-height:calc(100vh - 40px);overflow-y:auto;
+        background:linear-gradient(180deg,rgba(26,22,30,.96),rgba(16,13,20,.98));
+        border:1px solid rgba(200,144,16,.28);border-radius:14px;padding:30px 28px 26px;
+        box-shadow:0 24px 80px rgba(0,0,0,.6);transform:translateY(14px);transition:transform .45s cubic-bezier(.22,1,.36,1);
+        font-family:"Noto Serif TC",Georgia,serif;color:#efe7da;text-align:center}
+      .ob-backdrop.show .ob-card{transform:translateY(0)}
+      .ob-kicker{font-size:14px;line-height:1.9;color:#d8c8b0;letter-spacing:.02em;margin-bottom:.2em}
+      .ob-kicker b{color:#ffd9a8;font-weight:600}
+      .ob-title{font-size:clamp(20px,3vw,26px);font-weight:700;margin:.7em 0 .2em;color:#fff3df;letter-spacing:.03em}
+      .ob-sub{font-size:13px;color:rgba(220,210,196,.7);line-height:1.8;margin-bottom:1.2em}
+      .ob-options{display:flex;flex-direction:column;gap:12px;margin-top:1.1em}
+      .ob-opt{display:block;width:100%;text-align:left;cursor:pointer;border:1px solid rgba(200,144,16,.3);
+        background:rgba(200,144,16,.05);border-radius:10px;padding:14px 16px;color:#efe7da;font-family:inherit;
+        transition:background .2s,border-color .2s,transform .2s;text-decoration:none}
+      .ob-opt:hover,.ob-opt:focus-visible{background:rgba(200,144,16,.13);border-color:rgba(200,144,16,.6);transform:translateX(3px);outline:none}
+      .ob-opt-t{display:block;font-size:16px;font-weight:600;color:#ffe9cf;margin-bottom:3px}
+      .ob-opt-s{display:block;font-size:12.5px;color:rgba(220,210,196,.66);line-height:1.6}
+      .ob-mini{display:inline-block;margin-top:1.4em;font-size:12.5px;color:rgba(168,220,220,.78);text-decoration:none;letter-spacing:.04em}
+      .ob-mini:hover{color:rgba(168,220,220,1);text-decoration:underline}
+      .ob-close{position:absolute;top:12px;right:14px;width:30px;height:30px;border:none;background:transparent;
+        color:rgba(239,231,218,.55);font-size:20px;cursor:pointer;line-height:1;border-radius:50%}
+      .ob-close:hover{color:#fff;background:rgba(255,255,255,.08)}
+      .ob-back{display:inline-block;margin-top:1.2em;font-size:12.5px;color:rgba(220,210,196,.6);background:none;border:none;cursor:pointer;font-family:inherit}
+      .ob-back:hover{color:#efe7da}
+      .ob-progress{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.18em;color:rgba(200,144,16,.8);margin-bottom:.8em}
+      .ob-q{font-size:17px;line-height:1.7;color:#fff3df;margin:.4em 0 1em;min-height:2.4em}
+      .ob-input{width:100%;box-sizing:border-box;padding:12px 14px;border-radius:9px;border:1px solid rgba(200,144,16,.34);
+        background:rgba(0,0,0,.28);color:#fff;font-family:inherit;font-size:16px;text-align:center;outline:none}
+      .ob-input:focus{border-color:rgba(200,144,16,.7)}
+      .ob-submit{margin-top:14px;width:100%;padding:12px;border-radius:9px;border:1px solid rgba(200,144,16,.5);
+        background:rgba(200,144,16,.14);color:#ffe9cf;font-family:inherit;font-size:15px;cursor:pointer;letter-spacing:.05em;transition:background .2s}
+      .ob-submit:hover{background:rgba(200,144,16,.24)}
+      .ob-fb{margin-top:1em;font-size:13.5px;line-height:1.8;min-height:1.6em}
+      .ob-fb.ok{color:#8fd4b0}
+      .ob-fb.no{color:#ffb3b3}
+      .ob-fb a{color:#ffd9a8;text-decoration:underline}
+      @media (prefers-reduced-motion:reduce){.ob-backdrop,.ob-card{transition:none}}
+    </style>
+    <script>
+      (function () {
+        "use strict";
+        if (typeof document === "undefined") return;
+        var ROUTE_KEY = "redtime_entry_route_v1";
+        var READER = "reader.html";
+
+        var QUIZ = [
+          { q: "EP3：學長第一眼看到學妹，心裡冒出的那句話？（填關鍵詞）", ans: ["徐若瑄"], ep: 3, hook: "連這句都答得出來，代表你真的在第一秒就被釘住了。" },
+          { q: "EP3：學妹在 LM402 教室，叫學長走到哪一道門？", ans: ["後門"], ep: 3, hook: "前門來電、後門等待，差一道門就不是這個故事了。" },
+          { q: "反覆出現的「一眼瞬間」鐘響時間？（HH:MM）", ans: ["11:00", "11點", "11"], ep: 3, hook: "整部作品所有後製、表情都為這一秒服務。" },
+          { q: "EP36：把拔在台中火車站「我趕上了」，趕上女兒幾秒的擁抱？", ans: ["30", "三十"], ep: 36, hook: "「拉得再長也不會斷」的那一抱，差一秒都不算趕上。" },
+          { q: "EP37：女兒用注音寫給把拔的那句話是？", ans: ["把拔我會想你的", "我會想你"], ep: 37, hook: "一個不能穿越、只能相信的爸爸，收到的第一份父親節禮物。" },
+          { q: "EP13：學妹打電話跟學長提分手，是哪一年月日？（YYYY-MM-DD）", ans: ["2005-12-22", "2005/12/22"], ep: 13, hook: "用離開去愛的人，連分手都選在最痛的日子。" },
+          { q: "EP23：命運阿嬤送女兒的 7 歲生日禮物是？", ans: ["時空手錶", "手錶"], ep: 23, hook: "飛遍所有時間線卻不能干預的女兒，靠這件道具起步。" },
+          { q: "EP38：意識菜市場有幾個年紀的「我」？", ans: ["5", "五"], ep: 38, hook: "不是兩個年代的切換，是同一個人意識裡七嘴八舌的自己。" },
+          { q: "EP27：來來水餃他們點了幾顆韭菜水餃？", ans: ["25", "二十五"], ep: 27, hook: "2025 南機場夜市那一桌，連幾顆水餃都是他們的暗號。" },
+          { q: "最終題：完整寫出 EP3 學長心裡那句話（不論標點）", ans: ["也太像徐若瑄了吧", "也太像徐若瑄"], ep: 3, hook: "從第一秒回到第一秒，一字不差才算真鐵粉。" }
+        ];
+
+        var VIEWPOINTS = {
+          father: { name: "把拔", sub: "父親視角", ep: 0, text: "他是那種會說「我海軍陸戰隊欸」來掩飾捨不得的爸爸。從 EP0 進，你會先笑出來，然後在某一句之後，突然鼻酸。", recs: "推薦入手：EP0（最短、最低門檻）→ EP36（月台狂奔「我趕上了」）" },
+          male: { name: "學長", sub: "男主視角", ep: 3, text: "2005 年，他站錯了門。電話那頭一句「你走到後門」，他繞過去，抬頭那一眼：「也太像徐若瑄了吧。」二十年的故事從這一秒開始。", recs: "推薦入手：EP3（一眼瞬間，全站第一集）→ EP39（相信的力量）" },
+          female: { name: "學妹（阿姨）", sub: "女主視角", ep: 38, text: "29 歲的身體裡，住著 18 歲的意識。她第二次闖進同一間教室，只為了看清楚一個人。教室裡不同年紀的自己正在七嘴八舌。", recs: "推薦入手：EP38（意識菜市場）→ EP13（她用離開去愛）" },
+          daughter: { name: "女兒", sub: "夢境視角", ep: 41, text: "她飛遍所有時間線，卻被禁止干預。她什麼都知道，直到發現「知道」救不了現在的他。而她最後選擇相信，不是因為看過了，是因為願意。", recs: "推薦入手：EP41（拱心石「這不是童話故事」）→ EP16（女兒對爸爸最柔軟的告白）" },
+          mixed: { name: "複合視角", sub: "多線交織", ep: 24, text: "兩條、三條時間線在同一集裡交會。不同的人在不同的位置，看見的光卻照進同一個瞬間。", recs: "推薦入手：EP24（小年夜急症室七盞白光，與 LM402 一眼瞬間互文）。建議讀過幾集再來。" }
+        };
+
+        function ce(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+        function optEl(tag, title, sub) { var e = ce(tag, "ob-opt"); e.appendChild(ce("span", "ob-opt-t", title)); if (sub) e.appendChild(ce("span", "ob-opt-s", sub)); return e; }
+        function norm(s) { return (s || "").toString().toLowerCase().replace(/[\s　，,。.、:：;；!！?？「」『』（）()]/g, ""); }
+        function go(url) { try { window.location.href = url; } catch (e) {} }
+
+        var _bd = null;
+        function closeModal() { if (!_bd) return; var bd = _bd; _bd = null; bd.classList.remove("show"); try { document.body.style.overflow = ""; } catch (e) {} setTimeout(function () { if (bd.parentNode) bd.parentNode.removeChild(bd); }, 460); document.removeEventListener("keydown", onKey); }
+        function onKey(e) { if (e.key === "Escape") closeModal(); }
+        function openModal() {
+          var stale = document.querySelectorAll(".ob-backdrop");
+          for (var s = 0; s < stale.length; s++) { if (stale[s].parentNode) stale[s].parentNode.removeChild(stale[s]); }
+          _bd = null; document.removeEventListener("keydown", onKey);
+          var bd = ce("div", "ob-backdrop"); bd.setAttribute("role", "dialog"); bd.setAttribute("aria-modal", "true");
+          var card = ce("div", "ob-card");
+          var x = ce("button", "ob-close", "×"); x.setAttribute("aria-label", "關閉"); x.addEventListener("click", closeModal);
+          card.appendChild(x); bd.appendChild(card); document.body.appendChild(bd);
+          bd.addEventListener("click", function (e) { if (e.target === bd) closeModal(); });
+          document.addEventListener("keydown", onKey);
+          requestAnimationFrame(function () { bd.classList.add("show"); });
+          try { document.body.style.overflow = "hidden"; } catch (e) {}
+          _bd = bd; return card;
+        }
+        function clearCard(card) { while (card.children.length > 1) card.removeChild(card.lastChild); }
+
+        function remember(v) { try { localStorage.setItem(ROUTE_KEY, v); } catch (e) {} }
+
+        function renderChoose(card) {
+          clearCard(card);
+          var k = ce("div", "ob-kicker");
+          k.appendChild(document.createTextNode("2005 年，他在走廊盡頭看了她一眼。"));
+          k.appendChild(ce("br"));
+          k.appendChild(document.createTextNode("那一眼只有一秒，他卻用了"));
+          k.appendChild(ce("b", null, "二十年"));
+          k.appendChild(document.createTextNode("才讀懂。"));
+          card.appendChild(k);
+          card.appendChild(ce("div", "ob-title", "你是第一次來，還是老朋友？"));
+          card.appendChild(ce("div", "ob-sub", "這不是童話故事，但你從來都不是一個人。"));
+          var opts = ce("div", "ob-options");
+          var a = optEl("button", "☆ 我是第一次來", "那就從那一眼開始。只要五分鐘，你就會想一路讀下去。");
+          a.addEventListener("click", function () { remember("firstTime"); renderNewReader(card); });
+          var b = optEl("button", "★ 我是老朋友", "讓我看看你記得多少。十題，賭你會在某一題鼻酸。");
+          b.addEventListener("click", function () { remember("fan"); renderQuiz(card); });
+          opts.appendChild(a); opts.appendChild(b); card.appendChild(opts);
+          var mini = ce("a", "ob-mini", "還沒想好？先翻第一頁，故事會自己告訴你該往哪走 →"); mini.href = READER;
+          mini.addEventListener("click", function () { remember("read"); });
+          card.appendChild(mini);
+        }
+
+        function renderNewReader(card) {
+          clearCard(card);
+          card.appendChild(ce("div", "ob-title", "你想「讀」這個故事，還是「走進去」親眼看那一眼？"));
+          card.appendChild(ce("div", "ob-sub", "兩條路都通往同一個 2005 年的下午。"));
+          var opts = ce("div", "ob-options");
+          function opt(t, s, url) { var e = optEl("button", t, s); e.addEventListener("click", function () { go(url); }); return e; }
+          opts.appendChild(opt("📖 讀 EP3 試讀", "一個 21 歲男生狼狽又認真的初戀，從那一眼開始。", READER + "#ep-3"));
+          opts.appendChild(opt("↗ 走進 LM402", "站到他站過的位置，看那一眼會不會發生，這次換你親眼看。", "lm402-twin-b.html"));
+          opts.appendChild(opt("🏃 走進月台上的狂奔", "陪把拔跑那一段，你就懂他為什麼永遠趕得上。", "demos/platform-run-twin-b/index.html"));
+          card.appendChild(opts);
+          var back = ce("button", "ob-back", "← 回上一步"); back.addEventListener("click", function () { renderChoose(card); }); card.appendChild(back);
+        }
+
+        function renderQuiz(card) {
+          var i = 0, correct = 0;
+          function step() {
+            clearCard(card);
+            if (i >= QUIZ.length) { return summary(); }
+            var item = QUIZ[i];
+            card.appendChild(ce("div", "ob-progress", "第 " + (i + 1) + " 題 / 共 " + QUIZ.length + " 題"));
+            card.appendChild(ce("div", "ob-q", item.q));
+            var input = ce("input", "ob-input"); input.type = "text"; input.setAttribute("autocomplete", "off"); input.setAttribute("aria-label", "你的答案");
+            card.appendChild(input);
+            var btn = ce("button", "ob-submit", "送出答案");
+            var fb = ce("div", "ob-fb");
+            var answered = false;
+            function submit() {
+              if (answered) { i++; step(); return; }
+              answered = true;
+              var v = norm(input.value), ok = false;
+              for (var j = 0; j < item.ans.length; j++) {
+                var a = norm(item.ans[j]); if (!a) continue;
+                var numeric = /^\d+$/.test(a) && a.length <= 2; // 短純數字(11/5/25)用精確比對，避免「1130」含「11」誤判
+                if (numeric ? (v === a) : (v === a || v.indexOf(a) >= 0)) { ok = true; break; }
+              }
+              if (ok) { correct++; fb.className = "ob-fb ok"; fb.textContent = "答對了。" + item.hook; }
+              else {
+                fb.className = "ob-fb no";
+                fb.appendChild(document.createTextNode("正解：" + item.ans[0] + "。" + item.hook));
+                fb.appendChild(ce("br"));
+                var lk = ce("a", null, "去讀 EP" + item.ep + " →"); lk.href = READER + "#ep-" + item.ep; fb.appendChild(lk);
+              }
+              btn.textContent = (i + 1 >= QUIZ.length) ? "看結果 →" : "下一題 →";
+            }
+            btn.addEventListener("click", submit);
+            input.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
+            card.appendChild(btn); card.appendChild(fb);
+            setTimeout(function () { try { input.focus(); } catch (e) {} }, 60);
+          }
+          function summary() {
+            clearCard(card);
+            card.appendChild(ce("div", "ob-progress", "鐵粉挑戰結果"));
+            card.appendChild(ce("div", "ob-title", "你答對了 " + correct + " / " + QUIZ.length + " 題"));
+            var msg = correct >= 8 ? "真鐵粉。這個故事的每一個細節，你都記在心裡。" : (correct >= 4 ? "你記得的，都是最戳心的那幾段。" : "沒關係，答錯的每一集，都還在那裡等你回去重讀。");
+            card.appendChild(ce("div", "ob-sub", msg));
+            var opts = ce("div", "ob-options");
+            var a = optEl("a", "📖 回去重讀全集", "EP0 到 EP41，從頭再走一次那條紅線。"); a.href = READER; opts.appendChild(a);
+            var b = optEl("button", "🏃 再陪把拔跑一次月台", "EP36 的那 30 秒，這次換你跑。"); b.addEventListener("click", function () { go("demos/platform-run-twin-b/index.html"); }); opts.appendChild(b);
+            card.appendChild(opts);
+          }
+          step();
+        }
+
+        function openViewpoint(key) {
+          var v = VIEWPOINTS[key]; if (!v) return;
+          var card = openModal();
+          card.appendChild(ce("div", "ob-progress", v.sub));
+          card.appendChild(ce("div", "ob-title", v.name));
+          card.appendChild(ce("div", "ob-sub", v.text));
+          card.appendChild(ce("div", "ob-kicker", v.recs));
+          var opts = ce("div", "ob-options");
+          var a = optEl("a", "📖 從這裡入手 → EP" + v.ep, v.name + "視角最推薦的第一集，直接開讀。"); a.href = READER + "#ep-" + v.ep;
+          opts.appendChild(a); card.appendChild(opts);
+        }
+
+        var CARD_MAP = { "arc-father": "father", "arc-male": "male", "arc-female": "female", "arc-daughter": "daughter", "arc-mixed": "mixed" };
+        Object.keys(CARD_MAP).forEach(function (cls) {
+          var el = document.querySelector(".arc-card." + cls);
+          if (!el) return;
+          el.style.cursor = "pointer";
+          el.setAttribute("role", "button");
+          el.setAttribute("tabindex", "0");
+          el.setAttribute("aria-label", VIEWPOINTS[CARD_MAP[cls]].name + " 視角導覽");
+          el.addEventListener("click", function () { openViewpoint(CARD_MAP[cls]); });
+          el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openViewpoint(CARD_MAP[cls]); } });
+        });
+
+        function openRouter() { var card = openModal(); renderChoose(card); }
+        window.__ENTRY_ROUTER__ = { open: openRouter, viewpoint: openViewpoint, reset: function () { try { localStorage.removeItem(ROUTE_KEY); } catch (e) {} } };
+
+        var seen = null; try { seen = localStorage.getItem(ROUTE_KEY); } catch (e) {}
+        var tourDeep = false; try { tourDeep = new URLSearchParams(location.search).get("tour") === "1"; } catch (e) {}
+        if (!seen && !tourDeep) { setTimeout(openRouter, 900); } // ?tour=1 深連時讓既有新讀者導覽接手,不雙開
       })();
     </script>
   </body>

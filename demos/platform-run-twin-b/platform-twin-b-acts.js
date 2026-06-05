@@ -362,6 +362,16 @@
     b.addEventListener("mouseenter", () => { b.style.opacity = "1"; });
     b.addEventListener("click", () => { runChain(["echo", "tracing", "cantTravel", "runaway13", "subwaySky"], function () {}); });
     document.body.appendChild(b);
+    // 遊戲內「讀這段故事」捷徑（跳到月台那一集 EP36；在 💭 下方，title 畫面 z-index 蓋住 → 只遊戲中可見）
+    if (!document.getElementById("pt-read-story")) {
+      const r = el("button", null, "📖 讀這段故事");
+      r.id = "pt-read-story";
+      r.style.cssText = "position:fixed;top:50px;left:14px;z-index:70;background:rgba(20,14,10,.6);color:#f0d0a8;border:1px solid rgba(232,160,90,.45);border-radius:999px;font-family:inherit;font-size:12px;letter-spacing:.08em;padding:7px 14px;cursor:pointer;backdrop-filter:blur(4px);opacity:.8;transition:opacity .3s";
+      r.setAttribute("aria-label", "讀這段故事 EP36");
+      r.addEventListener("mouseenter", function () { r.style.opacity = "1"; });
+      r.addEventListener("click", function () { window.location.href = "../../reader.html#ep-36"; });
+      document.body.appendChild(r);
+    }
   }
   if (typeof document !== "undefined") {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", injectLauncher, { once: true });
