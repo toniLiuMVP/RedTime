@@ -33,12 +33,12 @@ const PLAYER_RADIUS = scale(22);
 const PLAYER_EYE_HEIGHT = 1.62;
 const DESKTOP_LOOK_SPEED = 1.9;
 const MOBILE_LOOK_SPEED = 1.68;
-const DRAG_LOOK_SPEED_X = 0.0034;
-const DRAG_LOOK_SPEED_Y = 0.0026;
+const DRAG_LOOK_SPEED_X = 0.004;
+const DRAG_LOOK_SPEED_Y = 0.0034;
 const LOCK_LOOK_SPEED_X = 0.00165;
 const LOCK_LOOK_SPEED_Y = 0.00152;
 const MIN_PITCH = -0.96;
-const MAX_PITCH = 0.72;
+const MAX_PITCH = 0.86;
 const OBJECTIVE_AUTO_COMPACT_MS = 2000;
 const LOOK_PRESETS = {
   slow: 0.78,
@@ -997,6 +997,22 @@ function setAmbience(text) {
   dom.ambienceChipCopy.textContent = state.mobileDockExpanded ? "點一下收起" : condensedCopy(text);
 }
 
+/* ── 逐字浮現（typewriter：只用在電影置中字幕，穩健可逆；長句或偏好減動時直接顯示） ── */
+let _revealTimer = 0;
+function revealCenteredText(el, text) {
+  if (_revealTimer) { clearInterval(_revealTimer); _revealTimer = 0; }
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce || !text || text.length > 60) { el.textContent = text || ""; return; }
+  el.textContent = "";
+  let i = 0;
+  const step = Math.max(40, Math.min(95, Math.round(1500 / text.length)));
+  _revealTimer = setInterval(function () {
+    i += 1;
+    el.textContent = text.slice(0, i);
+    if (i >= text.length) { clearInterval(_revealTimer); _revealTimer = 0; }
+  }, step);
+}
+
 /* ── 置中字幕（結局用） ── */
 function showCenteredSubtitle(source, text, duration, position = "centered") {
   const layer = document.getElementById("cinematic-subtitle-layer");
@@ -1004,7 +1020,7 @@ function showCenteredSubtitle(source, text, duration, position = "centered") {
   const txtEl = document.getElementById("cinematic-subtitle-text");
   if (!layer || !txtEl) return;
   if (srcEl) srcEl.textContent = source || "";
-  txtEl.textContent = text;
+  revealCenteredText(txtEl, text);
   layer.classList.remove("centered", "center-low");
   layer.classList.add(position);
   layer.hidden = false;
@@ -1018,6 +1034,7 @@ function showCenteredSubtitle(source, text, duration, position = "centered") {
 }
 
 function hideCenteredSubtitle() {
+  if (_revealTimer) { clearInterval(_revealTimer); _revealTimer = 0; }
   const layer = document.getElementById("cinematic-subtitle-layer");
   if (layer) {
     layer.hidden = true;
@@ -2562,9 +2579,9 @@ function updatePhaseLogic(dt) {
 
     const target = WORLD_POINTS.eyeLook;
     const aligned =
-      angleDifference(state.player.yaw, yawToTarget(state.player, target)) < 0.3 &&
-      Math.abs(state.player.pitch - pitchToTarget(state.player, target)) < 0.26 &&
-      Math.hypot(state.player.x - WORLD_POINTS.focusMark.x, state.player.z - WORLD_POINTS.focusMark.z) < scale(122);
+      angleDifference(state.player.yaw, yawToTarget(state.player, target)) < 0.42 &&
+      Math.abs(state.player.pitch - pitchToTarget(state.player, target)) < 0.36 &&
+      Math.hypot(state.player.x - WORLD_POINTS.focusMark.x, state.player.z - WORLD_POINTS.focusMark.z) < scale(170);
 
     state.cinematicGlow = smoothstep(CINEMATIC_TIMELINE.successWindow[0], CINEMATIC_TIMELINE.successWindow[1], state.phaseClock);
     if (state.phaseClock >= CINEMATIC_TIMELINE.lockWindow && !state.endingSequence) {

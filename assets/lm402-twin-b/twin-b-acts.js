@@ -97,6 +97,10 @@
       ".act-ov .gaze-twin-l{transform:translate(-46px,-50%)}",
       ".act-ov .gaze-twin-r{transform:translate(34px,-50%)}",
       ".act-ov.gaze-bloom .gaze-twin-l,.act-ov.gaze-bloom .gaze-twin-r{transform:translate(-6px,-50%);opacity:1;box-shadow:0 0 28px rgba(255,238,210,1)}",
+      // 一眼瞬間命中的定格暖金 flash（被命運按下存檔鍵的那一秒）
+      ".act-ov .gaze-flash{position:fixed;inset:0;z-index:6;pointer-events:none;background:radial-gradient(circle at 50% 48%,rgba(255,238,210,.55),rgba(255,220,180,.12) 42%,transparent 70%);opacity:0}",
+      ".act-ov .gaze-flash.on{animation:gazeFlash 1.3s ease-out forwards}",
+      "@keyframes gazeFlash{0%{opacity:0}26%{opacity:1}100%{opacity:0}}",
       ".act-ov .hug-zone{position:relative;width:min(74vw,360px);height:min(46vh,300px);margin-top:1.2em;border-radius:18px;cursor:grab;touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;border:1px solid rgba(255,210,160,.14)}",
       ".act-ov .hug-zone:active{cursor:grabbing}",
       ".act-ov .hug-daughter{position:absolute;top:12%;left:50%;transform:translateX(-50%);font-size:13px;letter-spacing:.34em;color:#ffd9e6;text-shadow:0 0 14px rgba(255,150,190,.6);transition:opacity .12s;pointer-events:none}",
@@ -194,12 +198,21 @@
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", up);
       if (ok) { try { if (navigator.vibrate) navigator.vibrate(0); } catch (e) {} } // 命運按下存檔鍵的那一秒 — 刻意靜音留白
-      line.textContent = ok
-        ? "他抬起頭。\n你們誰都還來不及開口。\n那一秒，像被命運按了存檔鍵。"
-        : "妳鬆開得太早了，那一眼只成了餘光……";
-      sub.textContent = ok ? "" : "再按住一次，撐久一點。";
-      if (ok) { setTimeout(() => { sub.textContent = "他心裡冒出一句很不正經的：「也太像徐若瑄了吧。」"; }, 1100); closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 3000); }
-      else { setTimeout(() => { done = false; hold = 0; last = 0; sub.textContent = "他走過背光的走廊……按住下面這束光，撐住這一眼。"; zone.addEventListener("pointerdown", down); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up); raf = requestAnimationFrame(loop); }, 1600); }
+      if (ok) {
+        // 一眼瞬間定格：先 0.9s 純留白 + 全畫面暖金 flash，文字才浮現，俏皮話延後到 ~2.2s（所有後製都為這一秒服務）
+        if (meterWrap) meterWrap.style.display = "none";
+        ov.classList.add("gaze-bloom");
+        const flash = el("div", "gaze-flash"); ov.appendChild(flash);
+        requestAnimationFrame(function () { flash.classList.add("on"); });
+        line.textContent = ""; sub.textContent = "";
+        setTimeout(function () { line.textContent = "他抬起頭。\n你們誰都還來不及開口。\n那一秒，像被命運按了存檔鍵。"; }, 900);
+        setTimeout(function () { sub.textContent = "他心裡冒出一句很不正經的：「也太像徐若瑄了吧。」"; }, 2200);
+        closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 4200);
+      } else {
+        line.textContent = "妳鬆開得太早了，那一眼只成了餘光……";
+        sub.textContent = "再按住一次，撐久一點。";
+        setTimeout(() => { done = false; hold = 0; last = 0; sub.textContent = "他走過背光的走廊……按住下面這束光，撐住這一眼。"; zone.addEventListener("pointerdown", down); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up); raf = requestAnimationFrame(loop); }, 1600);
+      }
     }
     zone.addEventListener("pointerdown", down);
     window.addEventListener("pointerup", up);
@@ -605,7 +618,7 @@
         choices.appendChild(b);
       } else {
         line.textContent = "我是靠「相信」，撐過了整整十五年。";
-        sub.textContent = "相信「相信的力量」。我一直都站在妳永遠找得到我的地方。";
+        sub.textContent = "我沒有在賭。我只是相信「相信的力量」。我一直站在妳永遠找得到我的地方。";
         const thread = el("div", "believe-thread"); ov.appendChild(thread);
         requestAnimationFrame(function () { requestAnimationFrame(function () { thread.classList.add("rise"); }); }); // 紅線緩緩升起
         closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 5600);
@@ -852,6 +865,27 @@
   }
 
   // ── 鏈執行器:串起多個 act 成情感弧 ──
+  // ── Capstone：三顆心同框定格（EP41 頂點；runChain 全鏈跑完後 onAll 觸發的收尾留白） ──
+  function capstone(onDone) {
+    const ov = makeOverlay();
+    ov.appendChild(el("div", "act-kicker", "EP41 · 這不是童話故事"));
+    const line = el("div", "act-line", "三條時間線，\n終於收進同一格畫面裡。");
+    ov.appendChild(line);
+    const stage = el("div", "th-stage");
+    const thread = el("div", "th-thread");
+    const dad = el("div", "th-heart th-dad", "把拔");
+    const aunt = el("div", "th-heart th-aunt", "阿姨");
+    const me = el("div", "th-heart th-me", "我");
+    me.style.top = "55%"; me.style.transform = "translate(-50%,-50%)"; // 「我」已在紅線中央：三顆心同框定格
+    stage.appendChild(thread); stage.appendChild(dad); stage.appendChild(aunt); stage.appendChild(me);
+    ov.appendChild(stage);
+    const sub = el("div", "act-sub", "");
+    ov.appendChild(sub);
+    try { SFX.heartbeat(3, 600); } catch (e) {}
+    setTimeout(function () { sub.textContent = "不是童話。是我們，真的這樣相信過來的。"; }, 2800);
+    closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 6000);
+  }
+
   function runChain(ids, onAll) {
     if (document.querySelector(".act-ov")) return; // W3：已有 overlay 開著就忽略，避免疊字穿透
     const map = { gaze: gaze, standStill: standStill, note: note, hug: hug, redthread: redthread, msn: msn, phoneCall: phoneCall, sevenEleven: sevenEleven, riverbank: riverbank, infinite: infinite, believe: believe, train1163: train1163, knowingVsBelieving: knowingVsBelieving, carnation: carnation, threehearts: threehearts };
@@ -869,7 +903,7 @@
       gaze: gaze, standStill: standStill, note: note, hug: hug, redthread: redthread, msn: msn,
       phoneCall: phoneCall, sevenEleven: sevenEleven, riverbank: riverbank, infinite: infinite, believe: believe,
       train1163: train1163, knowingVsBelieving: knowingVsBelieving, carnation: carnation, threehearts: threehearts,
-      runChain: runChain,
+      capstone: capstone, runChain: runChain,
     };
   }
 })();

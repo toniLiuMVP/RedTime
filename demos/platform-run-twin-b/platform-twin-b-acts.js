@@ -62,21 +62,23 @@
   // 讀 runner 寫的 window.__PT_BOND__（0 遠 → 1 近）：越近越暖越亮。純頂端細線（z-index 60），不擋遊戲畫面；暫停/未跑時隱藏。
   (function redlineBond() {
     if (typeof window === "undefined" || typeof document === "undefined" || !window.requestAnimationFrame) return;
-    var wrap = null, line = null, knotL = null, knotR = null;
+    var wrap = null, line = null, knotL = null, knotR = null, label = null, _labelShown = false;
     function ensure() {
       if (wrap) return;
       var st = document.createElement("style");
       st.id = "pt-bond-style";
-      st.textContent = "#pt-bond{position:fixed;top:6px;left:20%;right:20%;height:14px;z-index:60;pointer-events:none;opacity:0;transition:opacity .6s ease}"
-        + "#pt-bond .pb-line{position:absolute;top:6px;left:0;right:0;height:2px;border-radius:2px;background:#e4463c;transition:background .3s,box-shadow .3s,height .3s}"
-        + "#pt-bond .pb-knot{position:absolute;top:2px;width:8px;height:8px;border-radius:50%;background:#fff;transition:box-shadow .3s}"
-        + "#pt-bond .pb-l{left:-4px}#pt-bond .pb-r{right:-4px}";
+      st.textContent = "#pt-bond{position:fixed;top:6px;left:20%;right:20%;height:16px;z-index:60;pointer-events:none;opacity:0;transition:opacity .6s ease}"
+        + "#pt-bond .pb-line{position:absolute;top:6px;left:0;right:0;height:3px;border-radius:2px;background:#e4463c;transition:background .3s,box-shadow .3s,height .3s}"
+        + "#pt-bond .pb-knot{position:absolute;top:1px;width:11px;height:11px;border-radius:50%;background:#fff;transition:box-shadow .3s}"
+        + "#pt-bond .pb-l{left:-5px}#pt-bond .pb-r{right:-5px}"
+        + "#pt-bond .pb-label{position:absolute;top:18px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:11px;letter-spacing:.12em;color:#ffd9b0;text-shadow:0 1px 3px rgba(0,0,0,.7);opacity:0;transition:opacity 1s ease}";
       document.head.appendChild(st);
       wrap = document.createElement("div"); wrap.id = "pt-bond"; wrap.setAttribute("aria-hidden", "true");
       line = document.createElement("div"); line.className = "pb-line";
       knotL = document.createElement("div"); knotL.className = "pb-knot pb-l";
       knotR = document.createElement("div"); knotR.className = "pb-knot pb-r";
-      wrap.appendChild(line); wrap.appendChild(knotL); wrap.appendChild(knotR);
+      label = document.createElement("div"); label.className = "pb-label"; label.textContent = "這條紅線，拉多遠都不會斷";
+      wrap.appendChild(line); wrap.appendChild(knotL); wrap.appendChild(knotR); wrap.appendChild(label);
       (document.body || document.documentElement).appendChild(wrap);
     }
     function tick() {
@@ -85,13 +87,15 @@
       if (typeof b !== "number" || window.__RUN_PAUSED__) { if (wrap) wrap.style.opacity = "0"; return; }
       ensure();
       b = Math.max(0, Math.min(1, b));
-      wrap.style.opacity = (0.32 + b * 0.6).toFixed(2);
+      wrap.style.opacity = (0.30 + Math.pow(b, 1.3) * 0.62).toFixed(2);
+      if (!_labelShown && b > 0.02 && label) { _labelShown = true; label.style.opacity = "1"; setTimeout(function () { if (label) label.style.opacity = "0"; }, 3200); }
       var hue = ((354 + b * 20) % 360).toFixed(0);   // 354 深紅(遠) → 14 暖金(近)
       var col = "hsl(" + hue + ",85%," + (46 + b * 18).toFixed(0) + "%)";
       line.style.background = col;
-      line.style.height = (2 + b * 2).toFixed(1) + "px";
-      line.style.boxShadow = "0 0 " + (6 + b * 16).toFixed(0) + "px " + col;
-      knotL.style.boxShadow = knotR.style.boxShadow = "0 0 " + (6 + b * 14).toFixed(0) + "px " + col;
+      line.style.height = (3 + b * 3).toFixed(1) + "px";
+      var pulse = b > 0.9 ? (b - 0.9) * 200 : 0; // 接近抱到女兒：線收緊發燙（拉到最緊也沒斷）
+      line.style.boxShadow = "0 0 " + (8 + b * 22 + pulse).toFixed(0) + "px " + col;
+      knotL.style.boxShadow = knotR.style.boxShadow = "0 0 " + (8 + b * 16 + pulse * 0.5).toFixed(0) + "px " + col;
     }
     window.requestAnimationFrame(tick);
   })();
@@ -316,7 +320,7 @@
       clearC(ch);
       line.textContent = "許多年後，妳已經國一了。\n妳在訊息框打了一半：「把拔，我也會想你的。」";
       setTimeout(() => { line.textContent = "字還沒打完。"; sub.textContent = "他傳來的那句，先到了：「我也想妳。」"; }, 2800);
-      setTimeout(() => { line.textContent = "從四維空間的角度，\n那句話，是從所有時間線一起飛來的。"; sub.textContent = ""; }, 5600);
+      setTimeout(() => { line.textContent = "那句『我也想妳』，\n好像不是這一刻才說的，\n是他在每一條時間線裡，都對妳說過一次。"; sub.textContent = ""; }, 5600);
       close(ov, function () { if (onDone) onDone({ ok: true }); }, 9000);
     });
     ch.appendChild(b);
@@ -328,8 +332,8 @@
     const ov = el("div"); ov.id = "catch-moment";
     ov.style.cssText = "position:fixed;inset:0;z-index:8500;pointer-events:none;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .5s ease";
     const bloom = el("div"); bloom.style.cssText = "position:absolute;inset:0;background:radial-gradient(circle at 50% 55%,rgba(255,240,210,.5),rgba(255,200,150,.1) 45%,transparent 72%)";
-    const top = el("div"); top.style.cssText = "position:absolute;top:0;left:0;right:0;height:12vh;background:#06050a;transform:scaleY(0);transform-origin:top;transition:transform .6s cubic-bezier(.7,0,.3,1)";
-    const bot = el("div"); bot.style.cssText = "position:absolute;bottom:0;left:0;right:0;height:12vh;background:#06050a;transform:scaleY(0);transform-origin:bottom;transition:transform .6s cubic-bezier(.7,0,.3,1)";
+    const top = el("div"); top.style.cssText = "position:absolute;top:0;left:0;right:0;height:clamp(28px,5vh,52px);background:#06050a;transform:scaleY(0);transform-origin:top;transition:transform .6s cubic-bezier(.7,0,.3,1)";
+    const bot = el("div"); bot.style.cssText = "position:absolute;bottom:0;left:0;right:0;height:clamp(28px,5vh,52px);background:#06050a;transform:scaleY(0);transform-origin:bottom;transition:transform .6s cubic-bezier(.7,0,.3,1)";
     const line = el("div", null, "我，趕上了。"); line.style.cssText = "position:relative;color:#fff6e8;font-size:clamp(20px,4vw,34px);letter-spacing:.14em;text-shadow:0 0 26px rgba(255,200,150,.85);transform:scale(1.1);transition:transform 1.4s ease";
     ov.appendChild(bloom); ov.appendChild(top); ov.appendChild(bot); ov.appendChild(line);
     document.body.appendChild(ov);

@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v16-20260605';  // bumped: dropped removed-page GLB / vendor from precache
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v89-20260605';  // bumped: site trimmed to the twin-b pages; precache pruned
+const RUNTIME_VERSION = 'runtime-v90-20260606';  // bumped: hook copy + cinematic/HUD polish across the scene pages
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;

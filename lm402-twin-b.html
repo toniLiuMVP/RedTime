@@ -361,9 +361,9 @@
 
         <div id="objective-prompt" class="objective-prompt" aria-live="polite">
           <div class="objective-kicker" id="objective-kicker">目前任務</div>
-          <div class="objective-title" id="objective-title">前門來電</div>
+          <div class="objective-title" id="objective-title">意識菜市場</div>
           <div class="objective-copy" id="objective-copy">
-            走近 LM402 前門外的走廊，讓那通電話的聲音真正落進耳朵。
+            10:40，一束光打在阿姨身上。教室裡不同年紀的自己正在七嘴八舌，先感受這場內心風暴；時空手錶會慢慢走到 11:00。
           </div>
         </div>
 
@@ -526,7 +526,7 @@
           <div class="panel-title">三幕任務</div>
           <div id="phase-strip" class="phase-strip"></div>
           <div id="panel-objective" class="panel-objective">
-            走近前門走廊，讓第一句電話落進耳朵。
+            先在教室裡，聽不同年紀的自己七嘴八舌。
           </div>
           <div class="panel-actions">
             <button
@@ -1863,14 +1863,29 @@ body.lm402-page #cinematic-gate .cinematic-gate-kicker {
             pointer-events: none;
           }
           @media (max-width: 767px) {
-            #consc-badge { top: 14px; right: 14px; font-size: 11px; padding: 6px 10px; }
+            /* 手機：往下移一排，避開右上角音樂選單(audio-widget top:8 right:8)，
+               對齊 r71「時空手錶下移」做法。直向時 music-prompt 在左側，不衝突。 */
+            #consc-badge {
+              top: max(58px, calc(env(safe-area-inset-top) + 52px));
+              right: max(8px, env(safe-area-inset-right));
+              font-size: 11px; padding: 6px 10px;
+            }
+          }
+          @media (max-width: 1080px) and (orientation: landscape) {
+            /* 橫向手機：桌機 right:88 會跟橫向的音樂選單重疊(截圖案例)。
+               再多下移一些避開橫向時也在右側的 music-prompt 提示膠囊。 */
+            #consc-badge {
+              top: max(92px, calc(env(safe-area-inset-top) + 84px));
+              right: max(8px, env(safe-area-inset-right));
+              font-size: 11px; padding: 6px 10px;
+            }
           }
           #consc-badge.visible { display: inline-flex; }
           #consc-badge .cb-icon { color: rgba(168, 220, 220, 0.95); font-size: 14px; }
           #consc-badge .cb-num { color: rgba(255, 220, 200, 0.88); font-family: "DM Mono", monospace; font-size: 11px; letter-spacing: 0.06em; }
           .consc-hotspot {
             position: fixed; z-index: 1235;
-            width: 18px; height: 18px; border-radius: 50%;
+            width: 26px; height: 26px; border-radius: 50%;
             background: rgba(168, 220, 220, 0.32);
             border: 1px solid rgba(168, 220, 220, 0.62);
             cursor: pointer; pointer-events: auto;
@@ -2004,7 +2019,7 @@ body.lm402-page #cinematic-gate .cinematic-gate-kicker {
           pop.classList.remove('visible');
           setTimeout(function () { if (pop.parentNode) pop.remove(); }, 500);
           _popupTimer = 0;
-        }, 2400);
+        }, 3600);
 
         if (wasNew && collected.length === 5) {
           /* 收滿 → 解鎖 __CONSC_TEXT__ 自動開
