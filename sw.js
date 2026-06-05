@@ -7,9 +7,9 @@
 
 // — Cache version 分離 —
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
-const STATIC_VERSION = 'static-v15-20260606';  // unchanged: GLB / vendor 無變動
+const STATIC_VERSION = 'static-v16-20260605';  // bumped: dropped removed-page GLB / vendor from precache
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v88-20260604';  // bumped: tagline + character blurbs to riddle form; cold-open letterbox squeeze/bite beats; instant failure retry
+const RUNTIME_VERSION = 'runtime-v89-20260605';  // bumped: site trimmed to the twin-b pages; precache pruned
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
@@ -17,32 +17,8 @@ const ALL_CURRENT_CACHES = new Set([STATIC_CACHE, RUNTIME_CACHE]);
 
 // — 大型不變 asset:STATIC_CACHE —
 const STATIC_PRECACHE_URLS = [
-  // 正本 lm402(穩定)
-  '/RedTime/assets/lm402/vendor-three.module.js',
-  '/RedTime/assets/lm402/GLTFLoader.js',
-  '/RedTime/assets/lm402/DRACOLoader.js',
-  '/RedTime/assets/lm402/draco/draco_decoder.wasm',
-  '/RedTime/assets/lm402/draco/draco_wasm_wrapper.js',
-  '/RedTime/assets/lm402/characters/junior/exports/junior_2005_hero_closeup.glb',
-  '/RedTime/assets/lm402/characters/junior/exports/junior_2005_runtime.glb',
-  '/RedTime/assets/lm402/characters/junior/exports/junior_2005_runtime_mobile.glb',
-  // 雙時空 lm402-twin(進化版,獨立 GLB 副本)
-  '/RedTime/assets/lm402-twin/GLTFLoader.js',
-  '/RedTime/assets/lm402-twin/DRACOLoader.js',
-  '/RedTime/assets/lm402-twin/characters/junior/exports/junior_2005_hero_closeup.glb',
-  '/RedTime/assets/lm402-twin/characters/junior/exports/junior_2005_runtime.glb',
-  '/RedTime/assets/lm402-twin/characters/junior/exports/junior_2005_runtime_mobile.glb',
-  // 平行世界 lm402-parallel(WebGPU 探索,獨立 GLB + WebGPU vendor)
-  '/RedTime/assets/lm402-parallel/GLTFLoader.js',
-  '/RedTime/assets/lm402-parallel/DRACOLoader.js',
-  '/RedTime/assets/lm402-parallel/characters/junior/exports/junior_2005_hero_closeup.glb',
-  '/RedTime/assets/lm402-parallel/characters/junior/exports/junior_2005_runtime.glb',
-  '/RedTime/assets/lm402-parallel/characters/junior/exports/junior_2005_runtime_mobile.glb',
-  // 月台奔跑三線共用 three.module(去重後單一副本)+ 各線主題曲 mp3
+  // 月台奔跑共用 three.module(單一副本,platform-run-twin-b 使用)
   '/RedTime/demos/_vendor/three.module.js',
-  '/RedTime/demos/platform-run-twin/把拔我會想你的.mp3',
-  '/RedTime/demos/platform-run-parallel/把拔我會想你的.mp3',
-  // WebGPU vendor(three.webgpu / three.tsl)on-demand 才抓,不 install 預載
   // 共用 assets
   '/RedTime/fonts/fonts.css',
   '/RedTime/assets/og-image.jpg',
@@ -56,38 +32,9 @@ const RUNTIME_PRECACHE_URLS = [
   '/RedTime/',
   '/RedTime/index.html',
   '/RedTime/reader.html',
-  // 三線 LM402 入口 + 共用 landing
-  '/RedTime/lm402.html',
-  '/RedTime/lm402-time.html',
-  '/RedTime/lm402-twin.html',
-  '/RedTime/lm402-parallel.html',
-  // 次要展示頁(competition-1~7)改 on-demand runtime cache,不 install 預載
-  // 正本 lm402 主 module
-  '/RedTime/assets/lm402/lm402.css',
-  '/RedTime/assets/lm402/app.js',
-  '/RedTime/assets/lm402/renderer.js',
-  '/RedTime/assets/lm402/data.js',
-  '/RedTime/assets/lm402/ui-panels.js',
-  // 雙時空主 module
-  '/RedTime/assets/lm402-twin/lm402.css',
-  '/RedTime/assets/lm402-twin/app.js',
-  '/RedTime/assets/lm402-twin/renderer.js',
-  '/RedTime/assets/lm402-twin/data.js',
-  '/RedTime/assets/lm402-twin/junior-materials-hr.js',
-  '/RedTime/assets/lm402-twin/envmap-sunset.js',
-  // 平行世界主 module
-  '/RedTime/assets/lm402-parallel/lm402.css',
-  '/RedTime/assets/lm402-parallel/app.js',
-  '/RedTime/assets/lm402-parallel/renderer.js',
-  '/RedTime/assets/lm402-parallel/data.js',
-  '/RedTime/assets/lm402-parallel/webgpu-bootstrap.js',
-  '/RedTime/assets/lm402-parallel/parallel-init.js',
-  '/RedTime/assets/lm402-parallel/babylon-bootstrap.js',
-  // 月台奔跑入口頁 + 三線 SPA(r46 加平行世界)
-  '/RedTime/demos/platform-run-time.html',
-  '/RedTime/demos/platform-run/index.html',
-  '/RedTime/demos/platform-run-twin/index.html',
-  '/RedTime/demos/platform-run-parallel/index.html',
+  // 對外只服務雙時空B 兩個遊戲入口
+  '/RedTime/lm402-twin-b.html',
+  '/RedTime/demos/platform-run-twin-b/index.html',
 ];
 
 // — 路徑分流規則 —

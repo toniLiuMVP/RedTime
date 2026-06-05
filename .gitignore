@@ -86,3 +86,26 @@ assets/sw-register.js
 
 # Draft / reference documents
 *.pdf
+
+# Pages and assets kept local only (not served publicly)
+/lm402.html
+/lm402-twin.html
+/lm402-parallel.html
+/lm402-time.html
+/campus-tour.html
+/tech-demo.html
+/head-hd-preview.html
+/rpg.html
+/story-3d.html
+/competition-*.html
+/assets/lm402/
+/assets/lm402-twin/
+/assets/lm402-parallel/
+/demos/695/
+/demos/platform-run/
+/demos/platform-run-twin/
+/demos/platform-run-parallel/
+/demos/platform-run-time.html
+
+# Local iteration screenshots
+/*.jpeg
