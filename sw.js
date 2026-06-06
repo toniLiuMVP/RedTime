@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v16-20260605';  // bumped: dropped removed-page GLB / vendor from precache
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v95-20260606';  // bumped: overlay escape/skip system + deep-link scroll convergence + a11y 44px tap targets + haptics + result framing
+const RUNTIME_VERSION = 'runtime-v96-20260606';  // bumped: viewpoint cross-links + quiz tier flavor + memory completion copy + onboarding single-screen + dual-CTA + cross-page quiz best
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;

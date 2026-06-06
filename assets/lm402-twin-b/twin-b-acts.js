@@ -238,12 +238,12 @@
         requestAnimationFrame(function () { flash.classList.add("on"); });
         line.textContent = ""; sub.textContent = "";
         setTimeout(function () { line.textContent = "他抬起頭。\n你們誰都還來不及開口。\n那一秒，像被命運按了存檔鍵。"; }, 900);
-        setTimeout(function () { sub.textContent = "他心裡冒出一句很不正經的：「也太像徐若瑄了吧。」"; }, 2200);
-        closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 4200);
+        setTimeout(function () { sub.textContent = "他心裡冒出一句很不正經的：「也太像徐若瑄了吧。」"; }, 2600);
+        closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 4800);
       } else {
         line.textContent = "妳鬆開得太早了，那一眼只成了餘光……";
-        sub.textContent = "再按住一次，撐久一點。";
-        setTimeout(() => { done = false; hold = 0; last = 0; sub.textContent = "他走過背光的走廊……按住下面這束光，撐住這一眼。"; zone.addEventListener("pointerdown", down); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up); raf = requestAnimationFrame(loop); }, 1600);
+        sub.textContent = "此刻的他還在努力追趕妳的未來，還沒練成一眼就鎖住妳的本事。再撐久一點，這一次，依然要再次遇見妳。";
+        setTimeout(() => { done = false; hold = 0; last = 0; sub.textContent = "他走過背光的走廊……按住下面這束光，撐住這一眼。"; zone.addEventListener("pointerdown", down); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up); raf = requestAnimationFrame(loop); }, 2400);
       }
     }
     zone.addEventListener("pointerdown", down);

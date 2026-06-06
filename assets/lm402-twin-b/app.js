@@ -1280,25 +1280,46 @@ function updateObjective(expand = false) {
 }
 
 function updateMemoryList() {
-  dom.memoryList.innerHTML = "";
-  if (!state.memories.size) {
+  // 全 DOM 重建（避免 innerHTML，對齊專案 XSS 紀律）
+  while (dom.memoryList.firstChild) dom.memoryList.removeChild(dom.memoryList.firstChild);
+  const TOTAL = Object.keys(MEMORY_FRAGMENTS).length || 5;
+  const got = state.memories.size;
+  const mk = (cls, txt) => { const e = document.createElement("div"); e.className = cls; if (txt != null) e.textContent = txt; return e; };
+
+  if (!got) {
     const empty = document.createElement("div");
     empty.className = "memory-item";
-    empty.innerHTML =
-      `<div class="memory-kicker">還沒收進來</div>` +
-      `<div class="memory-title">先去看門牌、黑板、靠窗座位、講義邊角或後門，把 LM402 這一層空氣收進來。</div>`;
+    empty.appendChild(mk("memory-kicker", "這一層的空氣，還沒收進來"));
+    empty.appendChild(mk("memory-title", "先去看門牌、黑板、靠窗座位、講義邊角，最後走到後門。把 LM402 這一秒，一格一格收進來。"));
     dom.memoryList.appendChild(empty);
     return;
   }
+
+  // 頂端情緒：收滿浮「一眼瞬間」收束句；未滿浮進度句
+  if (got >= TOTAL) {
+    const done = document.createElement("div");
+    done.className = "memory-item memory-complete";
+    done.style.borderLeft = "2px solid rgba(248,168,152,.5)";
+    done.appendChild(mk("memory-kicker", "LM402 · 一眼瞬間"));
+    done.appendChild(mk("memory-title", "五格都收齊了。光、站位、視線，全都對上了。"));
+    done.appendChild(mk("memory-copy", "他看見她了，不是餘光，不是恍惚，是整個人被釘在原地那種看見。「這一次，依然再次遇見妳。」"));
+    dom.memoryList.appendChild(done);
+  } else {
+    const prog = document.createElement("div");
+    prog.className = "memory-item memory-progress";
+    prog.appendChild(mk("memory-kicker", "收集中"));
+    prog.appendChild(mk("memory-title", "已經收進來 " + got + "／" + TOTAL + " 格。剩下的那幾秒，還在這層樓的光裡等妳。"));
+    dom.memoryList.appendChild(prog);
+  }
+
   [...state.memories].forEach((id) => {
     const memory = MEMORY_FRAGMENTS[id];
     if (!memory) return; // 防 data.js 與 state 不同步時整列 render crash
     const item = document.createElement("div");
     item.className = "memory-item";
-    item.innerHTML =
-      `<div class="memory-kicker">${escapeHtml(memory.kicker)}</div>` +
-      `<div class="memory-title">${escapeHtml(memory.title)}</div>` +
-      `<div class="memory-copy">${escapeHtml(memory.copy[0])}</div>`;
+    item.appendChild(mk("memory-kicker", memory.kicker));
+    item.appendChild(mk("memory-title", memory.title));
+    item.appendChild(mk("memory-copy", memory.copy[0]));
     dom.memoryList.appendChild(item);
   });
 }

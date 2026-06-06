@@ -4130,6 +4130,8 @@
       .ob-backdrop.show .ob-card{transform:translateY(0)}
       .ob-kicker{font-size:14px;line-height:1.9;color:#d8c8b0;letter-spacing:.02em;margin-bottom:.2em}
       .ob-kicker b{color:#ffd9a8;font-weight:600}
+      .ob-echo{margin-top:1em;padding:.85em 1em;border-left:2px solid rgba(168,220,220,.5);background:rgba(168,220,220,.06);border-radius:0 8px 8px 0;font-size:12.5px;line-height:1.85;color:rgba(220,228,228,.86)}
+      .ob-echo-tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.14em;color:rgba(168,220,220,.95);margin-right:.2em}
       .ob-title{font-size:clamp(20px,3vw,26px);font-weight:700;margin:.7em 0 .2em;color:#fff3df;letter-spacing:.03em}
       .ob-sub{font-size:13px;color:rgba(220,210,196,.7);line-height:1.8;margin-bottom:1.2em}
       .ob-options{display:flex;flex-direction:column;gap:12px;margin-top:1.1em}
@@ -4170,22 +4172,22 @@
         var QUIZ = [
           { q: "EP3：學長第一眼看到學妹，心裡冒出的那句話？（填關鍵詞）", ans: ["徐若瑄"], ep: 3, hook: "連這句都答得出來，代表你真的在第一秒就被釘住了。" },
           { q: "EP3：學妹在 LM402 教室，叫學長走到哪一道門？", ans: ["後門"], ep: 3, hook: "前門來電、後門等待，差一道門就不是這個故事了。" },
-          { q: "反覆出現的「一眼瞬間」鐘響時間？（HH:MM）", ans: ["11:00", "11點", "11"], ep: 3, hook: "整部作品所有後製、表情都為這一秒服務。" },
+          { q: "反覆出現的「一眼瞬間」鐘響時間？（HH:MM）", ans: ["11:00", "11點", "11", "十一"], ep: 3, hook: "整部作品所有後製、表情都為這一秒服務。" },
           { q: "EP36：把拔在台中火車站「我趕上了」，趕上女兒幾秒的擁抱？", ans: ["30", "三十"], ep: 36, hook: "「拉得再長也不會斷」的那一抱，差一秒都不算趕上。" },
           { q: "EP37：女兒用注音寫給把拔的那句話是？", ans: ["把拔我會想你的", "我會想你"], ep: 37, hook: "一個不能穿越、只能相信的爸爸，收到的第一份父親節禮物。" },
           { q: "EP13：學妹打電話跟學長提分手，是哪一年月日？（YYYY-MM-DD）", ans: ["2005-12-22", "2005/12/22"], ep: 13, hook: "用離開去愛的人，連分手都選在最痛的日子。" },
           { q: "EP23：命運阿嬤送女兒的 7 歲生日禮物是？", ans: ["時空手錶", "手錶"], ep: 23, hook: "飛遍所有時間線卻不能干預的女兒，靠這件道具起步。" },
           { q: "EP38：意識菜市場有幾個年紀的「我」？", ans: ["5", "五"], ep: 38, hook: "不是兩個年代的切換，是同一個人意識裡七嘴八舌的自己。" },
-          { q: "EP27：來來水餃他們點了幾顆韭菜水餃？", ans: ["25", "二十五"], ep: 27, hook: "2025 南機場夜市那一桌，連幾顆水餃都是他們的暗號。" },
+          { q: "EP27：來來水餃他們點了幾顆韭菜水餃？", ans: ["25", "二十五", "25 顆"], ep: 27, hook: "2025 南機場夜市那一桌，連幾顆水餃都是他們的暗號。" },
           { q: "最終題：完整寫出 EP3 學長心裡那句話（不論標點）", ans: ["也太像徐若瑄了吧", "也太像徐若瑄"], ep: 3, hook: "從第一秒回到第一秒，一字不差才算真鐵粉。" }
         ];
 
         var VIEWPOINTS = {
-          father: { name: "把拔", sub: "父親視角", ep: 0, text: "他是那種會說「我海軍陸戰隊欸」來掩飾捨不得的爸爸。從 EP0 進，你會先笑出來，然後在某一句之後，突然鼻酸。", recs: "推薦入手：EP0（最短、最低門檻）→ EP36（月台狂奔「我趕上了」）" },
-          male: { name: "學長", sub: "男主視角", ep: 3, text: "2005 年，他站錯了門。電話那頭一句「你走到後門」，他繞過去，抬頭那一眼：「也太像徐若瑄了吧。」二十年的故事從這一秒開始。", recs: "推薦入手：EP3（一眼瞬間，全站第一集）→ EP39（相信的力量）" },
-          female: { name: "學妹（阿姨）", sub: "女主視角", ep: 38, text: "29 歲的身體裡，住著 18 歲的意識。她第二次闖進同一間教室，只為了看清楚一個人。教室裡不同年紀的自己正在七嘴八舌。", recs: "推薦入手：EP38（意識菜市場）→ EP13（她用離開去愛）" },
-          daughter: { name: "女兒", sub: "夢境視角", ep: 41, text: "她飛遍所有時間線，卻被禁止干預。她什麼都知道，直到發現「知道」救不了現在的他。而她最後選擇相信，不是因為看過了，是因為願意。", recs: "推薦入手：EP41（拱心石「這不是童話故事」）→ EP16（女兒對爸爸最柔軟的告白）" },
-          mixed: { name: "複合視角", sub: "多線交織", ep: 24, text: "兩條、三條時間線在同一集裡交會。不同的人在不同的位置，看見的光卻照進同一個瞬間。", recs: "推薦入手：EP24（小年夜急症室七盞白光，與 LM402 一眼瞬間互文）。建議讀過幾集再來。" }
+          father: { name: "把拔", sub: "父親視角", ep: 0, text: "他是那種會說「我海軍陸戰隊欸」來掩飾捨不得的爸爸。從 EP0 進，你會先笑出來，然後在某一句之後，突然鼻酸。", recs: "推薦入手：EP0（最短、最低門檻）→ EP36（月台狂奔「我趕上了」）", echo: "想知道那個被他抱起來的小女孩，長大後怎麼喊他嗎？去女兒視角：她說「現在的我已經不叫你『把拔』了，我現在都直接叫你一聲『爸』」。" },
+          male: { name: "學長", sub: "男主視角", ep: 3, text: "2005 年，他站錯了門。電話那頭一句「你走到後門」，他繞過去，抬頭那一眼：「也太像徐若瑄了吧。」二十年的故事從這一秒開始。", recs: "推薦入手：EP3（一眼瞬間，全站第一集）→ EP39（相信的力量）", echo: "你站在前門撲空的這一眼，她在後門也記了一輩子。去學妹視角，看同一場「一眼瞬間」她那一邊的聲音。" },
+          female: { name: "學妹（阿姨）", sub: "女主視角", ep: 38, text: "29 歲的身體裡，住著 18 歲的意識。她第二次闖進同一間教室，只為了看清楚一個人。教室裡不同年紀的自己正在七嘴八舌。", recs: "推薦入手：EP38（意識菜市場）→ EP13（她用離開去愛）", echo: "她用一通電話逼他下定決心，自己也痛，「傷你有多深，我就有多痛」。去學長視角，看那一刀落下後，他在伯達樓轉角站了多久。" },
+          daughter: { name: "女兒", sub: "夢境視角", ep: 41, text: "她飛遍所有時間線，卻被禁止干預。她什麼都知道，直到發現「知道」救不了現在的他。而她最後選擇相信，不是因為看過了，是因為願意。", recs: "推薦入手：EP41（拱心石「這不是童話故事」）→ EP16（女兒對爸爸最柔軟的告白）", echo: "她最後選擇跟把拔一樣去「相信」。去把拔視角，看那個不能穿越、只能相信的人，怎麼在所有平行世界裡都選擇把她生下來。" },
+          mixed: { name: "複合視角", sub: "多線交織", ep: 24, text: "兩條、三條時間線在同一集裡交會。不同的人在不同的位置，看見的光卻照進同一個瞬間。", recs: "推薦入手：EP24（小年夜急症室七盞白光，與 LM402 一眼瞬間互文）。建議讀過幾集再來。", echo: "這裡的七盞白光，要學長與學妹兩邊的視角都讀過，才看得懂它在照誰。先讀過男女主，這裡的光會更亮。" }
         };
 
         function ce(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
@@ -4224,31 +4226,20 @@
           k.appendChild(ce("b", null, "二十年"));
           k.appendChild(document.createTextNode("才讀懂。"));
           card.appendChild(k);
-          card.appendChild(ce("div", "ob-title", "你是第一次來，還是老朋友？"));
-          card.appendChild(ce("div", "ob-sub", "這不是童話故事，但你從來都不是一個人。"));
+          card.appendChild(ce("div", "ob-title", "想從哪裡走進來？"));
+          card.appendChild(ce("div", "ob-sub", "四條路，都通向同一個 2005 年的下午。"));
           var opts = ce("div", "ob-options");
-          var a = optEl("button", "☆ 我是第一次來", "那就從那一眼開始。只要五分鐘，你就會想一路讀下去。");
-          a.addEventListener("click", function () { remember("firstTime"); renderNewReader(card); });
-          var b = optEl("button", "★ 我是老朋友", "讓我看看你記得多少。十題，賭你會在某一題鼻酸。");
-          b.addEventListener("click", function () { remember("fan"); renderQuiz(card); });
-          opts.appendChild(a); opts.appendChild(b); card.appendChild(opts);
+          function opt(t, s, fn) { var e = optEl("button", t, s); e.addEventListener("click", fn); return e; }
+          opts.appendChild(opt("📖 讀 EP3 試讀", "一個 21 歲男生狼狽又認真的初戀，從那一眼開始。", function () { remember("read"); go(READER + "#ep-3"); }));
+          opts.appendChild(opt("↗ 走進 LM402", "站到他站過的位置，看那一眼會不會發生，這次換你親眼看。", function () { remember("lm402"); go("lm402-twin-b.html"); }));
+          opts.appendChild(opt("🏃 走進月台上的狂奔", "陪把拔跑那一段，你就懂他為什麼永遠趕得上。", function () { remember("platform"); go("demos/platform-run-twin-b/index.html"); }));
+          opts.appendChild(opt("★ 我是老朋友 · 鐵粉測驗", "讓我看看你記得多少。十題，賭你會在某一題鼻酸。", function () { remember("fan"); renderQuiz(card); }));
+          card.appendChild(opts);
           var mini = ce("a", "ob-mini", "還沒想好？先翻第一頁，故事會自己告訴你該往哪走 →"); mini.href = READER;
           mini.addEventListener("click", function () { remember("read"); });
           card.appendChild(mini);
         }
 
-        function renderNewReader(card) {
-          clearCard(card);
-          card.appendChild(ce("div", "ob-title", "你想「讀」這個故事，還是「走進去」親眼看那一眼？"));
-          card.appendChild(ce("div", "ob-sub", "兩條路都通往同一個 2005 年的下午。"));
-          var opts = ce("div", "ob-options");
-          function opt(t, s, url) { var e = optEl("button", t, s); e.addEventListener("click", function () { go(url); }); return e; }
-          opts.appendChild(opt("📖 讀 EP3 試讀", "一個 21 歲男生狼狽又認真的初戀，從那一眼開始。", READER + "#ep-3"));
-          opts.appendChild(opt("↗ 走進 LM402", "站到他站過的位置，看那一眼會不會發生，這次換你親眼看。", "lm402-twin-b.html"));
-          opts.appendChild(opt("🏃 走進月台上的狂奔", "陪把拔跑那一段，你就懂他為什麼永遠趕得上。", "demos/platform-run-twin-b/index.html"));
-          card.appendChild(opts);
-          var back = ce("button", "ob-back", "← 回上一步"); back.addEventListener("click", function () { renderChoose(card); }); card.appendChild(back);
-        }
 
         function renderQuiz(card) {
           var i = 0, correct = 0;
@@ -4290,11 +4281,19 @@
           }
           function summary() {
             clearCard(card);
-            card.appendChild(ce("div", "ob-progress", "鐵粉挑戰結果"));
-            card.appendChild(ce("div", "ob-title", "你答對了 " + correct + " / " + QUIZ.length + " 題"));
-            var msg = correct >= 8 ? "真鐵粉。這個故事的每一個細節，你都記在心裡。" : (correct >= 4 ? "你記得的，都是最戳心的那幾段。" : "沒關係，答錯的每一集，都還在那裡等你回去重讀。");
-            card.appendChild(ce("div", "ob-sub", msg));
+            // B1：進站成績寫入同源 key，reader 鐵粉挑戰大廳唯讀顯示（0~10 只增不減，不碰 reader 既有 key）
+            try { var prev = parseInt(localStorage.getItem("redtime_entry_quiz_best_v1") || "0", 10) || 0; if (correct > prev) localStorage.setItem("redtime_entry_quiz_best_v1", String(correct)); } catch (e) {}
+            // B4：分級鐵粉密語（稱號 + 真實台詞，逐字核實自故事正文）
+            var tier = correct >= 8
+              ? { t: "☆ 男主角 ☆", m: "你是不是 toni 本人？連「也太像徐若瑄了吧」都答得出來，那一眼你也被釘了二十年。" }
+              : (correct >= 4
+                ? { t: "☆ 紅線時空者 ☆", m: "謝謝你也喜歡。你記得的「等待的時候，也算在約會的時間裡」，都是最戳心的那幾段。" }
+                : { t: "☆ 紅線新手 ☆", m: "紅線從這裡開始牽。「我說我走了，但我從沒離開過」，答錯的每一集，都還在那裡等你回去重讀。" });
+            card.appendChild(ce("div", "ob-progress", "你答對了 " + correct + " / " + QUIZ.length + " 題"));
+            card.appendChild(ce("div", "ob-title", tier.t));
+            card.appendChild(ce("div", "ob-sub", tier.m));
             var opts = ce("div", "ob-options");
+            var c = optEl("a", "看完整 100 題鐵粉題庫 →", "五十座月台、五百多題，賭你會在某一站鼻酸。"); c.href = READER + "#fanquiz"; opts.appendChild(c);
             var a = optEl("a", "📖 回去重讀全集", "EP0 到 EP41，從頭再走一次那條紅線。"); a.href = READER; opts.appendChild(a);
             var b = optEl("button", "🏃 再陪把拔跑一次月台", "EP36 的那 30 秒，這次換你跑。"); b.addEventListener("click", function () { go("demos/platform-run-twin-b/index.html"); }); opts.appendChild(b);
             card.appendChild(opts);
@@ -4309,6 +4308,7 @@
           card.appendChild(ce("div", "ob-title", v.name));
           card.appendChild(ce("div", "ob-sub", v.text));
           card.appendChild(ce("div", "ob-kicker", v.recs));
+          if (v.echo) { var eh = ce("div", "ob-echo"); eh.appendChild(ce("span", "ob-echo-tag", "互文鈎")); eh.appendChild(document.createTextNode(" " + v.echo)); card.appendChild(eh); }
           var opts = ce("div", "ob-options");
           var a = optEl("a", "📖 從這裡入手 → EP" + v.ep, v.name + "視角最推薦的第一集，直接開讀。"); a.href = READER + "#ep-" + v.ep;
           opts.appendChild(a); card.appendChild(opts);
