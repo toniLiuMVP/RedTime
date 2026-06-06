@@ -147,6 +147,14 @@
           <span class="cinematic-gate-tutorial-icon" aria-hidden="true">☆</span>
           <span class="cinematic-gate-tutorial-text">第一次玩？5 秒看怎麼玩</span>
         </button>
+        <button
+          type="button"
+          class="cinematic-gate-read"
+          onclick="window.__GATE_GUIDE__ && window.__GATE_GUIDE__.open()"
+          aria-label="先閱讀故事 · 一眼瞬間導覽">
+          <span class="cinematic-gate-read-icon" aria-hidden="true">📖</span>
+          <span class="cinematic-gate-read-text">先閱讀故事 · 一眼瞬間導覽</span>
+        </button>
       </div>
     </div>
 
@@ -1062,6 +1070,18 @@
         color: rgba(224, 72, 96, 0.95);
         letter-spacing: 0;
       }
+      .cinematic-gate-read {
+        display: inline-flex; align-items: center; gap: 10px; margin-top: 12px; padding: 12px 26px;
+        background: linear-gradient(135deg, rgba(120, 190, 210, 0.14), rgba(168, 220, 220, 0.08));
+        border: 1px solid rgba(168, 220, 220, 0.42); color: #bfe6e6;
+        font-family: "DM Mono", monospace; font-size: 10.5px; letter-spacing: 0.27em;
+        border-radius: 4px; cursor: pointer; transition: all 0.3s ease;
+      }
+      .cinematic-gate-read:hover {
+        background: linear-gradient(135deg, rgba(120, 190, 210, 0.26), rgba(168, 220, 220, 0.15));
+        box-shadow: 0 0 24px rgba(120, 190, 210, 0.18); transform: translateY(-1px);
+      }
+      .cinematic-gate-read-icon { font-size: 13px; letter-spacing: 0; }
       .lm402-tutorial-overlay {
         position: fixed;
         inset: 0;
@@ -2236,5 +2256,90 @@ body.lm402-page #cinematic-gate .cinematic-gate-kicker {
 
   <!-- URL param ?mode=consciousness 移除 — default 已經是「字 · 淡」狀態 -->
 
+    <!-- r74：進場 gate「先閱讀故事」→ 一眼瞬間導覽（學長/學妹/女兒三角度）。全 DOM，零 innerHTML，零外部來源 -->
+    <style>
+      .gg-backdrop{position:fixed;inset:0;z-index:100001;display:flex;align-items:center;justify-content:center;background:radial-gradient(120% 90% at 50% 30%,rgba(10,14,18,.9),rgba(4,6,10,.97));backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);opacity:0;transition:opacity .4s ease;padding:18px}
+      .gg-backdrop.show{opacity:1}
+      .gg-card{position:relative;width:min(560px,calc(100vw - 28px));max-height:calc(100vh - 36px);overflow-y:auto;background:linear-gradient(180deg,rgba(16,22,26,.97),rgba(10,14,18,.98));border:1px solid rgba(168,220,220,.3);border-radius:14px;padding:30px 26px 24px;box-shadow:0 24px 80px rgba(0,0,0,.6);transform:translateY(14px);transition:transform .4s cubic-bezier(.22,1,.36,1);font-family:"Noto Serif TC",Georgia,serif;color:#e8efee}
+      .gg-backdrop.show .gg-card{transform:translateY(0)}
+      .gg-close{position:absolute;top:12px;right:14px;width:30px;height:30px;border:none;background:transparent;color:rgba(220,232,230,.55);font-size:20px;cursor:pointer;line-height:1;border-radius:50%}
+      .gg-close:hover{color:#fff;background:rgba(255,255,255,.08)}
+      .gg-kicker{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.22em;color:rgba(168,220,220,.85);text-align:center;margin-bottom:.6em}
+      .gg-title{font-size:clamp(20px,3vw,26px);font-weight:700;text-align:center;color:#f3faf8;letter-spacing:.04em}
+      .gg-intro{font-size:13px;color:rgba(210,224,222,.72);line-height:1.8;text-align:center;margin:.4em 0 1.4em}
+      .gg-section{margin-bottom:18px}
+      .gg-section-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:8px;border-bottom:1px solid rgba(168,220,220,.16);margin-bottom:10px}
+      .gg-angle{font-size:16px;font-weight:700;color:#bfe6e6;letter-spacing:.06em}
+      .gg-sub{font-size:12px;color:rgba(210,224,222,.6)}
+      .gg-ep{display:block;text-decoration:none;color:inherit;cursor:pointer;padding:10px 12px;border-radius:8px;border:1px solid transparent;transition:background .2s,border-color .2s,transform .2s;margin-bottom:6px}
+      .gg-ep:hover,.gg-ep:focus-visible{background:rgba(168,220,220,.08);border-color:rgba(168,220,220,.3);transform:translateX(3px);outline:none}
+      .gg-ep-num{display:block;font-family:"DM Mono",monospace;font-size:12px;letter-spacing:.1em;color:#ffd9a8;margin-bottom:3px}
+      .gg-ep-hook{display:block;font-size:13px;line-height:1.7;color:rgba(224,236,234,.82)}
+      .gg-readall{display:block;text-align:center;margin-top:10px;padding:13px;border-radius:9px;border:1px solid rgba(168,220,220,.4);background:rgba(168,220,220,.08);color:#cdeded;text-decoration:none;font-size:14px;letter-spacing:.04em;transition:background .2s}
+      .gg-readall:hover{background:rgba(168,220,220,.16)}
+      @media (prefers-reduced-motion:reduce){.gg-backdrop,.gg-card{transition:none}}
+    </style>
+    <script>
+      (function () {
+        "use strict";
+        if (typeof document === "undefined") return;
+        var READER = "reader.html";
+        var GUIDE = [
+          { angle: "學長角度", sub: "他怎麼被那一眼點燃", first: 3, eps: [
+            { ep: 3, t: "他趕到前門撲了個空，一通「你走到後門」把他推向命運的轉角，抬眼第一秒就脫口而出「也太像徐若瑄了吧」。這是整個故事被點燃的原點。" },
+            { ep: 5, t: "閉上眼，浮現的永遠是那天她走出教室的一眼。一鍋咖哩雞的笨拙約會，原來早就被這一眼釘住。" },
+            { ep: 28, t: "二十年後在車裡重提這一眼，他才懂當年聽不懂的「我要走了」，其實是「別離開我」。" },
+            { ep: 18, t: "出意外前人生跑馬燈閃過十秒，全是她。原來那一眼之後，眼睛睜開看到的全部都是妳。" }
+          ]},
+          { angle: "學妹角度", sub: "那一秒裡她的內在全景", first: 38, eps: [
+            { ep: 38, t: "一眼前的二十分鐘，她二十九歲的身體裡住著十八歲的意識。不同年紀的自己全擠進來七嘴八舌幫她站好、別逃。" },
+            { ep: 12, t: "站在後門的是她。整整六十秒「你即將把我記在心裡」，原來這一眼是她跨越時間精心校準、卻又忍住不能抱的告別。" },
+            { ep: 11, t: "為了不錯過那通電話、不錯過這一眼，她一次次重來時間循環，倒背如流的台詞還是會緊張到脫稿。" },
+            { ep: 32, t: "她與他互為彼此的一眼瞬間。1994 年穿堂的初動心，與 2005 年後門的對視，在同一條紅線上閉合。" }
+          ]},
+          { angle: "女兒角度", sub: "她飛進這一秒去看", first: 21, eps: [
+            { ep: 21, t: "她睡著就能飛進爸媽的每一條時間線，看見那個被打上五顆星的最大光點。原來那一眼是被命運標星珍藏的一天。" },
+            { ep: 23, t: "她飛進那一秒兩個人的心裡：外面是「妳好像徐若瑄」，裡面是「這一次，依然再次遇見妳」。" },
+            { ep: 22, t: "她追著爸媽手上那條會發光的紅線，發現不管穿越到哪條時間線，兩條線永遠會找到彼此。" },
+            { ep: 41, t: "故事的收束。她終於明白，手握「知道」也救不了當下的人，於是選擇跟把拔一樣願意相信，讓這一眼在二十年後仍有回聲。" }
+          ]}
+        ];
+        function ce(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+        var _bd = null;
+        function onKey(e) { if (e.key === "Escape") close(); }
+        function close() { if (!_bd) return; var bd = _bd; _bd = null; bd.classList.remove("show"); try { document.body.style.overflow = ""; } catch (e) {} setTimeout(function () { if (bd.parentNode) bd.parentNode.removeChild(bd); }, 400); document.removeEventListener("keydown", onKey); }
+        function open() {
+          var olds = document.querySelectorAll(".gg-backdrop"); for (var i = 0; i < olds.length; i++) { if (olds[i].parentNode) olds[i].parentNode.removeChild(olds[i]); }
+          var bd = ce("div", "gg-backdrop"); bd.setAttribute("role", "dialog"); bd.setAttribute("aria-modal", "true"); bd.setAttribute("aria-label", "一眼瞬間導覽");
+          var card = ce("div", "gg-card");
+          var x = ce("button", "gg-close", "×"); x.setAttribute("aria-label", "關閉"); x.addEventListener("click", close); card.appendChild(x);
+          card.appendChild(ce("div", "gg-kicker", "LM402 · 一眼瞬間導覽"));
+          card.appendChild(ce("div", "gg-title", "那一眼只有一秒。"));
+          card.appendChild(ce("div", "gg-intro", "從三個角度，讀懂它為什麼亮著。每一段都可以直接點進去讀。"));
+          GUIDE.forEach(function (g) {
+            var sec = ce("div", "gg-section");
+            var head = ce("div", "gg-section-head");
+            head.appendChild(ce("span", "gg-angle", g.angle));
+            head.appendChild(ce("span", "gg-sub", g.sub));
+            sec.appendChild(head);
+            g.eps.forEach(function (e) {
+              var row = ce("a", "gg-ep"); row.href = READER + "#ep-" + e.ep;
+              row.appendChild(ce("span", "gg-ep-num", "EP" + e.ep + (e.ep === g.first ? " · 先讀這集" : "")));
+              row.appendChild(ce("span", "gg-ep-hook", e.t));
+              sec.appendChild(row);
+            });
+            card.appendChild(sec);
+          });
+          var foot = ce("a", "gg-readall", "📖 直接閱讀全集 · EP0 到 EP41 →"); foot.href = READER; card.appendChild(foot);
+          bd.appendChild(card); document.body.appendChild(bd);
+          bd.addEventListener("click", function (e) { if (e.target === bd) close(); });
+          document.addEventListener("keydown", onKey);
+          requestAnimationFrame(function () { bd.classList.add("show"); });
+          try { document.body.style.overflow = "hidden"; } catch (e) {}
+          _bd = bd;
+        }
+        window.__GATE_GUIDE__ = { open: open };
+      })();
+    </script>
   </body>
 </html>
