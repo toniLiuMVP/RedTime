@@ -25,7 +25,7 @@
     { lines: ["訓導處外的長椅，她安靜坐著。", "她把指尖貼在脈搏上，像在搜尋命運的密碼：", "", "如果命中注定會遇見那個人，他現在在哪裡？", "", "紅線，在她體內亮了一下。", "畢業歌聲，被拉成一條銀線。"], auto: 0, fx: "pulse" },
     { kicker: "2005 · LM402 教室後門", lines: ["走廊的冷白燈，在地上鋪了一層溫柔的灰。", "後門被推開，一個人影逆光走來。", "", "她是二十九歲的身體，裝著十八歲的意識。", "", "她抬眼，看見，只是看見。"], auto: 0, fx: "cool" },
     { lines: ["。"], auto: reduced ? 1200 : 1900, big: "。", fx: "cool" },
-    { lines: ["無台詞，無走位，世界退到安靜的一格。", "", "我以為過了一分鐘，其實，只過了一秒。"], auto: reduced ? 2600 : 4200, fx: "cool" },
+    { lines: ["無台詞，無走位，世界退到安靜的一格。", "", "她以為過了一分鐘，其實，只過了一秒。"], auto: reduced ? 2600 : 4200, fx: "cool" },
     { lines: ["她聽見自己心裡：", "是他。", "原來是你。"], auto: reduced ? 2000 : 2800, fx: "cool" },
     { lines: ["咚、咚、咚、", "咚、咚、", "咚。"], auto: reduced ? 2200 : 3200, big: "咚", fx: "beat" },
     { lines: ["還沒來得及開口，", "紅線先一步回彈，把她拉了回去。"], auto: reduced ? 2400 : 3400, fx: "rebound" },
@@ -54,6 +54,8 @@
       "#co-thread{position:fixed;top:50%;left:18%;right:18%;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,#e4d2b0,transparent);opacity:.22;transform:scaleX(.55);transform-origin:left center;box-shadow:0 0 8px rgba(220,200,160,.4);z-index:2;transition:opacity 1s ease,transform 1.2s cubic-bezier(.5,0,.3,1),background .8s ease,box-shadow .4s ease;pointer-events:none}",
       "#cold-open.thread-on #co-thread{opacity:.85;transform:scaleX(1);background:linear-gradient(90deg,transparent,#c0392b,#ff6b5a,#c0392b,transparent);box-shadow:0 0 14px rgba(220,70,60,.7)}",
       "#cold-open.rebound #co-thread{transform:scaleX(0);transform-origin:right center;opacity:.3;transition:opacity .9s ease,transform .9s cubic-bezier(.6,0,.4,1)}",
+      "#cold-open.rebound #co-text{animation:coRebound .72s cubic-bezier(.5,0,.3,1)}",
+      "@keyframes coRebound{0%{transform:scale(1) translateX(0)}18%{transform:scale(1.03) translateX(9px)}48%{transform:scale(.99) translateX(-12px)}100%{transform:scale(1) translateX(0)}}",
       "#co-pulse{position:fixed;top:50%;left:50%;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle,#fff,#ffb6a0);box-shadow:0 0 18px rgba(255,140,120,.85);transform:translate(-50%,-50%) scale(0);opacity:0;z-index:2;transition:opacity .8s ease;pointer-events:none}",
       "#cold-open.pulse-on #co-pulse{opacity:1;animation:coPulse .9s ease-in-out infinite}",
       "@keyframes coPulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.18)}}",
@@ -124,7 +126,7 @@
         if (card.fx === "cool" || card.fx === "beat" || card.fx === "rebound") ov.classList.add("cool");
         if (card.fx === "pulse") { ov.classList.add("thread-on", "pulse-on"); }
         if (card.fx === "beat") { ov.classList.add("beat"); heartbeat(); setTimeout(heartbeat, 760); setTimeout(heartbeat, 1320); }
-        if (card.fx === "rebound") { ov.classList.add("rebound"); }
+        if (card.fx === "rebound") { ov.classList.add("rebound"); try { if (navigator.vibrate) navigator.vibrate([40, 50, 40]); } catch (e) {} } // 紅線回彈：手機震動 + 桌機畫面回彈(coRebound)
         if (card.big === "。") ov.classList.add("squeeze"); else ov.classList.remove("squeeze");
         kicker.style.opacity = "1"; text.style.opacity = "1";
       }, 380);

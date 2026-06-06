@@ -66,7 +66,7 @@
     function shimmer() { tone(880, 0.5, 0.024); setTimeout(function () { tone(1320, 0.42, 0.016); }, 80); }
     // 失敗 / 撥不出去的悶鈍音
     function dud() { tone(150, 0.18, 0.05); setTimeout(function () { tone(110, 0.2, 0.04); }, 90); }
-    return { tone: tone, beat: beat, heartbeat: heartbeat, shimmer: shimmer, dud: dud };
+    return { ensure: ensure, tone: tone, beat: beat, heartbeat: heartbeat, shimmer: shimmer, dud: dud };
   })();
 
   function injectStyle() {
@@ -394,31 +394,31 @@
     render();
   }
 
-  // ── Act 6 MSN 隱身等待(EP6/7:等待也算在約會的時間裡)──
+  // ── Act 6 MSN 等待(EP6/7:學長隱身、數七秒才現身;學妹只是上線等待。等待也算在約會的時間裡)──
   function msn(onDone) {
     const ov = makeOverlay();
     ov.appendChild(el("div", "act-kicker", "2005 · MSN"));
-    const line = el("div", "act-line", "他還沒上線。妳可以「隱身上線」，假裝不在，卻偷偷等他出現。");
+    const line = el("div", "act-line", "妳上線了，他的頭像卻還是灰的。\n妳決定不關視窗，再等他一下。");
     ov.appendChild(line);
     const sub = el("div", "act-sub", "等待的時候，也算在約會的時間裡。");
     ov.appendChild(sub);
     const choices = el("div", "act-choices");
     ov.appendChild(choices);
-    const waitLines = ["螢幕安安靜靜的。", "風扇的聲音很大，我盯著他的頭像。", "他的狀態還是「離線」。可是我不想關掉視窗。"];
+    const waitLines = ["螢幕安安靜靜的。", "風扇的聲音很大，妳盯著他那顆灰掉的頭像。", "他的狀態還是「離線」。可是妳不想關掉視窗。"];
     let waited = 0;
-    const wait = el("button", "act-btn", "隱身，再等一下");
+    const wait = el("button", "act-btn", "再等他一下");
     const leave = el("button", "act-btn", "算了，先關掉");
     wait.addEventListener("click", () => {
       waited++;
       if (waited >= 3) {
         sub.textContent = "「登登登」他上線了。視窗跳出一句：「妳今天，過得好嗎？」";
-        line.textContent = "原來他也一直在等。我們都隱身著，等對方先出現。";
+        line.textContent = "後來妳才知道，他一直隱身著。\n看著妳先上線，他數完七秒，才捨得現身。";
         while (choices.firstChild) choices.removeChild(choices.firstChild);
-        closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 3600);
+        closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 4400);
       } else { sub.textContent = waitLines[waited - 1] || "再等一下下。"; }
     });
     leave.addEventListener("click", () => {
-      sub.textContent = "我關掉視窗。可是心裡那扇，一直沒關。";
+      sub.textContent = "妳關掉視窗。可是心裡那扇，一直沒關。";
       while (choices.firstChild) choices.removeChild(choices.firstChild);
       closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 3000);
     });
