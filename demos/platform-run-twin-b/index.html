@@ -363,7 +363,7 @@ body:has(#title-screen.hide) .pt-tutorial-trigger { display: none !important; }
   <div class="title-year">2018 年 台中火車站</div>
   <div class="title-main">月台上的狂奔</div>
   <div class="title-sub">每一次，都要趕上</div>
-  <div class="title-start">點擊開始</div>
+  <div class="title-start">點擊或按 Enter 開始</div>
   <a class="title-read" href="../../reader.html#ep-36" onclick="event.stopPropagation()">📖 先讀這段故事 · EP36</a>
 </div>
 
@@ -3554,11 +3554,14 @@ function checkLuggageCollisions() {
       if (state.jumpY > LUGGAGE_CLEAR_HEIGHT) continue;
       state.luggageSlowTimer = 0.5;
       state.cameraShake = 4;
-      playCollisionBump();
+      playCollisionBump(); ptVibe(40);
       showPickupNotify("\u884C\u674E\u7D46\u5012\uFF01\u6E1B\u901F\u4E2D...");
     }
   }
 }
+
+/* 手機觸覺共用 helper（iOS no-op；reduced-motion 自動略過） */
+function ptVibe(p) { try { if (navigator.vibrate && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) navigator.vibrate(p); } catch (e) {} }
 
 function checkBarrierCollisions() {
   for (const bw of barrierWalls) {
@@ -3576,7 +3579,7 @@ function checkBarrierCollisions() {
           if (state.luggageSlowTimer <= 0) {
             state.luggageSlowTimer = 0.3;
             state.cameraShake = 5;
-            playBarrierHit();
+            playBarrierHit(); ptVibe([60, 30, 60]);
             showPickupNotify("\u88AB\u884C\u674E\u64CB\u4F4F\u4E86\uFF01\u8DF3\u904E\u53BB\uFF01");
           }
         }
@@ -4557,7 +4560,7 @@ function detectMobile() {
     dom.ultimateCount.style.display = "block";
     dom.breathHint.textContent = "\u5DE6\u624B\u6416\u687F\u79FB\u52D5 \u00B7 \u53F3\u624B\u885D\u523A \u00B7 \u8DF3\u8E8D \u00B7 \u5FC5\u6BBA\u6280[E]";
   } else {
-    dom.breathHint.textContent = "WAD \u79FB\u52D5 \u00B7 Shift \u885D\u523A \u00B7 Space \u8DF3\u8E8D \u00B7 E \u5FC5\u6BBA\u6280";
+    dom.breathHint.textContent = "A\uFF0FD \u5DE6\u53F3\u9583 \u00B7 W \u524D\u9032 \u00B7 Shift \u885D\u523A \u00B7 Space \u8DF3 \u00B7 E \u5FC5\u6BBA\u6280";
   }
 }
 
@@ -5017,7 +5020,7 @@ function updateGame(dt) {
   if (!state.gotDaughter && Math.abs(father.position.z - DAUGHTER_Z) < 2.5) {
     state.gotDaughter = true;
     state.phase = "grabbed";
-    state.grabSlow = 0.6; state.cameraShake = 2; // 子彈時間 + 落地一震：把「我趕上了」釘住一秒
+    state.grabSlow = 0.6; state.cameraShake = 2; ptVibe([18, 40, 70, 60, 140]); // 子彈時間 + 落地一震 + 手機漸強落地震：把「我趕上了」釘住一秒
     try { if (window.__PACTS__ && window.__PACTS__.catchMoment) window.__PACTS__.catchMoment(); } catch (e) {}
     showNarrative("\u628A\u62D4\u628A\u6211\u6574\u500B\u62B1\u8D77\u4F86", 2);
     playDaughterGrab();
@@ -5027,6 +5030,7 @@ function updateGame(dt) {
     safeSetTimeout(function() {
       state.phase = "sprint2";
       showNarrative("\u5FEB\uFF01\u5317\u4E0A\u81EA\u5F37\u865F\u7684\u9580\u8981\u95DC\u4E86\uFF01", 2.5);
+      ptVibe([20, 80, 20, 80, 20]); // \u95DC\u9580\u8B66\u793A\u9234\u65B7\u7E8C\u50AC\u4FC3,\u628A\u7DCA\u8FEB\u5F9E\u807D\u89BA\u5EF6\u4F38\u5230\u8EAB\u9AD4
       if (audioCtx) playDoorChime();
     }, 1500);
     return;
@@ -5362,6 +5366,7 @@ function showFinalLevelWarning() {
   for (var bi = 0; bi < beatTimings.length; bi++) {
     (function(ms, idx) {
       beatTimers.push(safeSetTimeout(function() {
+        ptVibe(idx < 3 ? 30 : 55); // 心跳震動,越後面越重(對齊 amp 漸強)
         if (!audioCtx) return;
         var now = audioCtx.currentTime;
         var osc = audioCtx.createOscillator();
@@ -5383,6 +5388,7 @@ function showFinalLevelWarning() {
 
   /* Vignette red flash on climax */
   var vignetteTimer = safeSetTimeout(function() {
+    ptVibe([60, 40, 160]); // 「狂奔吧！」爆發點:聲光震同時砸下
     if (dom.vignette) {
       dom.vignette.style.transition = "opacity 0.15s";
       dom.vignette.style.opacity = "0.9";
@@ -5595,6 +5601,19 @@ function showFinalResult() {
   dom.result.classList.add("show");
   dom.resultTitle.textContent = "\u5168\u90E8\u904E\u95DC\uFF01";
   dom.resultBody.textContent = "";
+  /* \u7A4D\u6975 emotion\uFF1A\u7D50\u7B97\u5148\u7D66\u4E00\u53E5\u60C5\u7DD2\uFF0C\u518D\u5217\u6578\u5B57 \u2014 \u8B93\u901A\u95DC\u50CF\u6545\u4E8B\u7684\u4E00\u523B\uFF0C\u4E0D\u53EA\u662F\u5206\u6578 */
+  try {
+    var emo = document.createElement("div");
+    emo.style.cssText = 'margin:2px 0 16px;padding:14px 16px;border-left:2px solid rgba(228,70,80,0.45);background:rgba(228,70,80,0.06);border-radius:2px;font-family:"Noto Serif TC",serif;line-height:1.8;text-align:left;';
+    var emoMain = document.createElement("div");
+    emoMain.textContent = "\u4F60\u8FFD\u7684\u4E0D\u662F\u706B\u8ECA\u3002";
+    emoMain.style.cssText = 'color:rgba(248,224,216,0.95);font-size:15px;letter-spacing:0.06em;';
+    var emoSub = document.createElement("div");
+    emoSub.textContent = "\u662F\u6BCF\u4E00\u6B21\uFF0C\u90FD\u60F3\u8D95\u4E0A\u7684\u90A3\u500B\u4EBA\u3002";
+    emoSub.style.cssText = 'color:rgba(218,184,168,0.80);font-size:13px;letter-spacing:0.06em;margin-top:6px;';
+    emo.appendChild(emoMain); emo.appendChild(emoSub);
+    dom.resultBody.appendChild(emo);
+  } catch (e_emo) {}
   var totalAvg = state.levelTimes.length > 0 ? (state.totalTimeBank / state.levelTimes.length) : 0;
   var fastest = state.levelTimes.length > 0 ? Math.min.apply(null, state.levelTimes) : 0;
   var scoreC = Math.round((state.totalTimeBank + state.totalItemsBank) * 10) / 10;
@@ -5661,6 +5680,7 @@ function failure() {
     dom.ultimateCount.style.display = "none";
   }
   showNarrative("\u8ECA\u9580\u95DC\u4E0A\u4E86\u2026\u2026", 4);
+  ptVibe([130, 90, 40]); // \u4E00\u8A18\u91CD\u60B6\u95DC\u9580\u649E\u64CA + \u9918\u9707:\u628A\u300C\u9580\u5728\u4F60\u9762\u524D\u95DC\u4E0A\u300D\u91D8\u9032\u624B\u5FC3
   stopAmbientSounds();
 
   /* BGM continues — do NOT pause */
@@ -6213,7 +6233,8 @@ function resetGame(keepCarryState) {
   introScreechPlayed = false;
 }
 
-dom.title.addEventListener("click", function() {
+function startGameFromTitle() {
+  if (dom.title.classList.contains("hide")) return; // 防重複觸發
   initAudio();
   /* Start BGM on first user gesture if not already started */
   if (!bgmStarted) {
@@ -6228,7 +6249,12 @@ dom.title.addEventListener("click", function() {
     dom.title.style.display = "none";
     startIntro();
   }, 1200);
-});
+}
+dom.title.addEventListener("click", startGameFromTitle);
+dom.title.addEventListener("keydown", function(e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); startGameFromTitle(); } });
+dom.title.setAttribute("role", "button");
+dom.title.setAttribute("tabindex", "0");
+dom.title.setAttribute("aria-label", "點擊或按 Enter 開始月台上的狂奔");
 
 dom.resultRetry.addEventListener("click", function() {
   /* After level 10 clear: restart with carry state */
@@ -6322,7 +6348,7 @@ if ('serviceWorker' in navigator) {
       <h2 class="pt-step-title">怎麼跑</h2>
       <div class="pt-step-body">
         <p><strong>電腦：</strong><br>
-          WASD 走 · Shift 衝刺 · Space 跳</p>
+          A／D 左右閃 · W 前進 · Shift 衝刺 · Space 跳</p>
         <p><strong>手機：</strong><br>
           左下搖桿走 · 右下「衝刺」「跳躍」按鈕</p>
       </div>

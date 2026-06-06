@@ -204,6 +204,7 @@ const dom = {
   endingTitle: document.getElementById("ending-title"),
   endingCopy: document.getElementById("ending-copy"),
   endingRetry: document.getElementById("ending-retry"),
+  endingClose: document.getElementById("ending-close"),
   debugPanel: document.getElementById("debug-panel"),
   debugText: document.getElementById("debug-text"),
   introSkipBtn: document.getElementById("intro-skip-btn"),
@@ -1291,6 +1292,7 @@ function updateMemoryList() {
   }
   [...state.memories].forEach((id) => {
     const memory = MEMORY_FRAGMENTS[id];
+    if (!memory) return; // 防 data.js 與 state 不同步時整列 render crash
     const item = document.createElement("div");
     item.className = "memory-item";
     item.innerHTML =
@@ -2097,6 +2099,13 @@ function finishEndingSequence() {
     const actions = document.querySelector(".ending-actions");
     if (actions) actions.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, 1600);
+}
+
+// 關閉結局卡片但保留最終場景，讓玩家回頭轉視角、再看一眼那一秒（不 reset）
+function dismissEnding() {
+  if (!dom.endingOverlay) return;
+  dom.endingOverlay.hidden = true;
+  dom.body.classList.remove("ending-open");
 }
 
 function resetScene() {
@@ -3003,6 +3012,11 @@ function bindKeyboard() {
       button?.click();
       return;
     }
+    if (event.code === "Escape" && dom.endingOverlay && !dom.endingOverlay.hidden) {
+      event.preventDefault();
+      dismissEnding();
+      return;
+    }
     if (event.code === "Escape" && state.dialogue) {
       event.preventDefault();
       closeDialogue();
@@ -3351,6 +3365,10 @@ function bindUI() {
   dom.dialogueClose.addEventListener("click", closeDialogue);
   dom.dialogueScrim.addEventListener("click", closeDialogue);
   dom.endingRetry.addEventListener("click", resetScene);
+  if (dom.endingClose) {
+    dom.endingClose.addEventListener("click", dismissEnding);
+    dom.endingClose.addEventListener("pointerdown", (e) => e.stopPropagation()); // 別讓點 × 觸發卡片拖曳
+  }
   if (dom.fontToggle) {
     dom.fontToggle.addEventListener("click", cycleFontScale);
   }

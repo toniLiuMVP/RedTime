@@ -1732,12 +1732,15 @@
         background: transparent;
         border: 1px solid rgba(232, 90, 58, 0.3);
         color: var(--rose);
-        width: 32px;
-        height: 32px;
+        width: 44px;
+        height: 44px;
         border-radius: 50%;
-        font-size: 14px;
+        font-size: 16px;
         cursor: pointer;
         transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
       .tour-close:hover {
         background: rgba(232, 90, 58, 0.1);
@@ -3800,6 +3803,7 @@
         const buttons = Array.from(
           document.querySelectorAll("[data-font-scale]"),
         );
+        var _supportsZoom = (function () { try { var d = document.createElement("div"); d.style.zoom = "2"; return d.style.zoom !== "" && d.style.zoom !== "normal"; } catch (e) { return false; } })();
         const applyScale = (level) => {
           const scale = LEVELS[level] || LEVELS.medium;
           document.body.dataset.fontScale = level;
@@ -3807,7 +3811,8 @@
             "--page-font-scale",
             String(scale),
           );
-          document.body.style.zoom = String(scale);
+          if (_supportsZoom) { document.body.style.zoom = String(scale); }
+          else { document.documentElement.style.fontSize = (scale * 100) + "%"; } // 舊 Firefox 無 zoom → 改 root font-size,rem 內容跟著縮放
           buttons.forEach((button) => {
             button.classList.toggle(
               "active",
@@ -4023,6 +4028,7 @@
         window.openNewcomerTour = function () {
           const overlay = document.getElementById("newcomer-tour");
           if (!overlay) return;
+          try { if (typeof closeModal === "function") closeModal(); } catch (e) {} // 互斥：開新手教學前先關導覽 modal
           overlay.hidden = false;
           overlay.setAttribute("aria-hidden", "false");
           currentStep = 1;
@@ -4135,8 +4141,8 @@
       .ob-opt-s{display:block;font-size:12.5px;color:rgba(220,210,196,.66);line-height:1.6}
       .ob-mini{display:inline-block;margin-top:1.4em;font-size:12.5px;color:rgba(168,220,220,.78);text-decoration:none;letter-spacing:.04em}
       .ob-mini:hover{color:rgba(168,220,220,1);text-decoration:underline}
-      .ob-close{position:absolute;top:12px;right:14px;width:30px;height:30px;border:none;background:transparent;
-        color:rgba(239,231,218,.55);font-size:20px;cursor:pointer;line-height:1;border-radius:50%}
+      .ob-close{position:absolute;top:8px;right:10px;width:44px;height:44px;border:none;background:transparent;
+        color:rgba(239,231,218,.55);font-size:20px;cursor:pointer;line-height:1;border-radius:50%;display:flex;align-items:center;justify-content:center}
       .ob-close:hover{color:#fff;background:rgba(255,255,255,.08)}
       .ob-back{display:inline-block;margin-top:1.2em;font-size:12.5px;color:rgba(220,210,196,.6);background:none;border:none;cursor:pointer;font-family:inherit}
       .ob-back:hover{color:#efe7da}
@@ -4191,6 +4197,7 @@
         function closeModal() { if (!_bd) return; var bd = _bd; _bd = null; bd.classList.remove("show"); try { document.body.style.overflow = ""; } catch (e) {} setTimeout(function () { if (bd.parentNode) bd.parentNode.removeChild(bd); }, 460); document.removeEventListener("keydown", onKey); }
         function onKey(e) { if (e.key === "Escape") closeModal(); }
         function openModal() {
+          try { var _nt = document.getElementById("newcomer-tour"); if (_nt && !_nt.hidden) { _nt.hidden = true; _nt.setAttribute("aria-hidden", "true"); } } catch (e) {} // 互斥：開導覽 modal 前先關新手教學，避免雙層捲動鎖
           var stale = document.querySelectorAll(".ob-backdrop");
           for (var s = 0; s < stale.length; s++) { if (stale[s].parentNode) stale[s].parentNode.removeChild(stale[s]); }
           _bd = null; document.removeEventListener("keydown", onKey);
@@ -4264,6 +4271,7 @@
               for (var j = 0; j < item.ans.length; j++) {
                 var a = norm(item.ans[j]); if (!a) continue;
                 if (/^\d+$/.test(a) && a.length <= 2) { if (vnum === a) { ok = true; break; } } // 短純數字：比開頭數字（30秒→30 對；1130→1130≠11 拒）
+                else if (a.replace(/\D/g, "").length >= 4) { if (v.replace(/\D/g, "") === a.replace(/\D/g, "")) { ok = true; break; } } // 日期/長數字：比純數字串（2005年12月22日→20051222 對）
                 else if (v === a || v.indexOf(a) >= 0) { ok = true; break; }
               }
               if (ok) { correct++; fb.className = "ob-fb ok"; fb.textContent = "答對了。" + item.hook; }

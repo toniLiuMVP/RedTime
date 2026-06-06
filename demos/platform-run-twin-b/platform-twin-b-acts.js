@@ -134,7 +134,35 @@
   // 暫停引用計數：vignette 開啟期間凍結月台 runner（window.__RUN_PAUSED__），看回憶時時間不流逝
   let _pauseN = 0;
   function _pause(d) { _pauseN = Math.max(0, _pauseN + d); if (typeof window !== "undefined") window.__RUN_PAUSED__ = _pauseN > 0; }
-  function open() { injectStyle(); _pause(1); const ov = el("div", "pact-ov"); document.body.appendChild(ov); requestAnimationFrame(() => ov.classList.add("show")); return ov; }
+  // 逃生系統:每幕 onDone 經 armP() 包成只回一次 + 登記 _armedP;open() 注入跳過鈕/Escape/30s watchdog,
+  // 保證任一幕互動失效也能往前 → 解凍,不會把整支月台凍死(對齊 EP36「不能倒帶,只能往前跑」)。
+  let _armedP = null;
+  function armP(onDone) {
+    var a = { done: false, onCleanup: null };
+    a.guard = function (r) { if (a.done) return; a.done = true; if (a.onCleanup) { try { a.onCleanup(); } catch (e) {} } if (_armedP === a) _armedP = null; if (typeof onDone === "function") onDone(r); };
+    _armedP = a;
+    return a.guard;
+  }
+  function open() {
+    injectStyle(); _pause(1);
+    const ov = el("div", "pact-ov"); document.body.appendChild(ov);
+    const armed = _armedP;
+    let wd = 0;
+    function cleanup() { document.removeEventListener("keydown", onEsc); if (wd) { clearTimeout(wd); wd = 0; } }
+    function doSkip() { cleanup(); close(ov, function () { if (armed) armed.guard({ ok: false, skipped: true }); }, 0); }
+    function onEsc(e) { if (e.key === "Escape") doSkip(); }
+    const skip = el("button", null, "跳過這段 ›");
+    skip.style.cssText = "position:fixed;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));z-index:9000;background:rgba(10,14,20,.62);border:1px solid rgba(159,208,255,.34);color:rgba(207,224,240,.72);font-family:inherit;font-size:11px;letter-spacing:.18em;padding:7px 14px;border-radius:999px;cursor:pointer;opacity:.55;transition:opacity .3s";
+    skip.setAttribute("aria-label", "跳過這段");
+    skip.addEventListener("click", doSkip);
+    skip.addEventListener("mouseenter", function () { skip.style.opacity = "1"; });
+    ov.appendChild(skip);
+    document.addEventListener("keydown", onEsc);
+    if (armed) armed.onCleanup = cleanup; // 正常結束也清 watchdog/esc（guard 內部呼叫，不受 act 持有原始參考影響）
+    wd = setTimeout(function () { if (armed && !armed.done) doSkip(); }, 30000);
+    requestAnimationFrame(() => ov.classList.add("show"));
+    return ov;
+  }
   function close(ov, cb, d) { setTimeout(() => { ov.classList.remove("show"); setTimeout(() => { if (ov.parentNode) ov.parentNode.removeChild(ov); _pause(-1); if (cb) cb(); }, 900); }, d || 0); }
   function clearC(c) { while (c.firstChild) c.removeChild(c.firstChild); }
 
@@ -349,7 +377,7 @@
     const map = { echo: echo, tracing: tracing, cantTravel: cantTravel, runaway13: runaway13, subwaySky: subwaySky, yearsLater: yearsLater };
     let i = 0;
     _pause(1); /* 整條回憶鏈期間（含幕間空檔）都凍結遊戲，結束才解凍，避免時間偷跑 */
-    function next() { if (i >= ids.length) { _pause(-1); if (onAll) onAll(); return; } const fn = map[ids[i++]]; if (typeof fn === "function") fn(next); else next(); }
+    function next() { if (i >= ids.length) { _pause(-1); if (onAll) onAll(); return; } const fn = map[ids[i++]]; if (typeof fn === "function") fn(armP(next)); else next(); }
     next();
   }
 
@@ -379,6 +407,9 @@
   }
 
   if (typeof window !== "undefined") {
-    window.__PACTS__ = { echo: echo, tracing: tracing, cantTravel: cantTravel, runaway13: runaway13, subwaySky: subwaySky, yearsLater: yearsLater, catchMoment: catchMoment, runChain: runChain };
+    var _wrapP = function (fn) { return function (cb) { return fn(armP(cb)); }; };
+    window.__PACTS__ = { echo: _wrapP(echo), tracing: _wrapP(tracing), cantTravel: _wrapP(cantTravel), runaway13: _wrapP(runaway13), subwaySky: _wrapP(subwaySky), yearsLater: _wrapP(yearsLater), catchMoment: catchMoment, runChain: runChain };
+    // console 逃生口:萬一還是卡住,__FORCE_RESUME__() 強制解凍 + 清掉殘留 vignette
+    window.__FORCE_RESUME__ = function () { _pauseN = 0; if (typeof window !== "undefined") window.__RUN_PAUSED__ = false; document.querySelectorAll(".pact-ov").forEach(function (o) { if (o.parentNode) o.parentNode.removeChild(o); }); };
   }
 })();

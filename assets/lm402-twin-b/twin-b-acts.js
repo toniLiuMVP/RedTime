@@ -85,6 +85,12 @@
       ".act-ov .act-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,200,150,.3);border-radius:999px;",
       "color:#f4ece2;font-family:inherit;font-size:14px;padding:11px 22px;cursor:pointer;transition:all .3s ease;letter-spacing:.06em}",
       ".act-ov .act-btn:hover,.act-ov .act-btn:focus{background:rgba(255,200,150,.16);transform:translateY(-2px);outline:none;box-shadow:0 6px 20px rgba(255,190,130,.18)}",
+      // 逃生/節奏:跳過鈕 + 進度點
+      ".act-ov .act-skip{position:fixed;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));z-index:20;background:rgba(20,16,22,.6);border:1px solid rgba(255,210,160,.3);color:rgba(244,236,226,.7);font-family:inherit;font-size:11px;letter-spacing:.18em;padding:7px 14px;border-radius:999px;cursor:pointer;opacity:.5;transition:opacity .3s,background .3s}",
+      ".act-ov .act-skip:hover,.act-ov .act-skip:focus-visible{opacity:1;background:rgba(255,210,160,.16);outline:none}",
+      ".act-ov .act-progress{position:fixed;top:max(16px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:20;display:flex;gap:6px}",
+      ".act-ov .act-prog-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,210,160,.22)}",
+      ".act-ov .act-prog-dot.on{background:rgba(255,210,160,.9);box-shadow:0 0 8px rgba(255,200,150,.6)}",
       // gaze
       ".act-ov .gaze-zone{width:min(60vw,340px);height:min(60vw,340px);border-radius:50%;margin-top:1.4em;cursor:pointer;",
       "background:radial-gradient(circle,rgba(255,228,200,.10),transparent 70%);border:1px solid rgba(255,210,160,.25);",
@@ -145,9 +151,35 @@
     document.head.appendChild(s);
   }
 
+  // ── 逃生系統:每幕的 onDone 經 arm() 包成「只回一次」的 guard,並登記為 _armed;
+  //    makeOverlay 注入跳過鈕 + Escape + 30s watchdog,保證任何狀態都能呼到 onDone,不會卡死全鏈。──
+  var _armed = null, _chainProgress = null;
+  function arm(onDone) {
+    var a = { done: false, onCleanup: null };
+    a.guard = function (r) { if (a.done) return; a.done = true; if (a.onCleanup) { try { a.onCleanup(); } catch (e) {} } if (_armed === a) _armed = null; if (typeof onDone === "function") onDone(r); };
+    _armed = a;
+    return a.guard;
+  }
+
   function makeOverlay() {
     injectStyle();
     const ov = el("div", "act-ov");
+    const armed = _armed; // 本幕 guard(arm() 在進幕前已設）
+    if (_chainProgress && _chainProgress.total > 1) {
+      const pr = el("div", "act-progress");
+      for (let pi = 0; pi < _chainProgress.total; pi++) pr.appendChild(el("span", "act-prog-dot" + (pi === _chainProgress.i ? " on" : "")));
+      ov.appendChild(pr);
+    }
+    let wd = 0;
+    function cleanup() { document.removeEventListener("keydown", onEsc); if (wd) { clearTimeout(wd); wd = 0; } }
+    function doSkip() { cleanup(); closeOverlay(ov, function () { if (armed) armed.guard({ ok: false, skipped: true }); }, 0); }
+    function onEsc(e) { if (e.key === "Escape") doSkip(); }
+    const skip = el("button", "act-skip", "跳過這段 ›"); skip.type = "button"; skip.setAttribute("aria-label", "跳過這段");
+    skip.addEventListener("click", doSkip);
+    ov.appendChild(skip);
+    document.addEventListener("keydown", onEsc);
+    if (armed) armed.onCleanup = cleanup; // 正常結束也清 watchdog/esc（guard 內部呼叫，不受 act 持有原始參考影響）
+    wd = setTimeout(function () { if (armed && !armed.done) doSkip(); }, 30000); // 防卡死最後保險
     document.body.appendChild(ov);
     requestAnimationFrame(() => ov.classList.add("show"));
     return ov;
@@ -620,7 +652,7 @@
         line.textContent = "我是靠「相信」，撐過了整整十五年。";
         sub.textContent = "我沒有在賭。我只是相信「相信的力量」。我一直站在妳永遠找得到我的地方。";
         const thread = el("div", "believe-thread"); ov.appendChild(thread);
-        requestAnimationFrame(function () { requestAnimationFrame(function () { thread.classList.add("rise"); }); }); // 紅線緩緩升起
+        requestAnimationFrame(function () { requestAnimationFrame(function () { thread.classList.add("rise"); try { if (navigator.vibrate) navigator.vibrate([30, 120, 30, 120, 200]); } catch (e) {} }); }); // 紅線緩緩升起 + 三短一長震,像一聲「我相信」
         closeOverlay(ov, function () { if (onDone) onDone({ ok: true }); }, 5600);
       }
     }
@@ -656,6 +688,7 @@
     }
     function phase2() { SFX.ensure(); line.textContent = "1163"; sub.textContent = ""; clear(); step(); }
     function finish() {
+      try { if (navigator.vibrate) navigator.vibrate([40, 60, 40, 60, 40, 60, 260]); } catch (e) {} // 六短一長:七個哭過的夜晚,最後一記最重
       line.textContent = "同一串數字。";
       sub.textContent = "她用整顆心寫，你用呆腦袋讀。";
       setTimeout(() => { line.textContent = "1163。\n不是一個班次，是七個哭過的夜晚。"; sub.textContent = ""; }, 2600);
@@ -685,6 +718,7 @@
     ov.appendChild(choices);
     const b = el("button", "act-btn", "🌸　輕輕放下");
     b.addEventListener("click", () => {
+      try { if (navigator.vibrate) navigator.vibrate(14); } catch (e) {} // 極短微震:花瓣輕觸桌面的一瞬
       while (choices.firstChild) choices.removeChild(choices.firstChild);
       line.textContent = "「謝謝妳，從來都沒有放棄過我。」";
       sub.textContent = "";
@@ -734,6 +768,7 @@
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", up);
       prog = 1; paint();
+      try { if (navigator.vibrate) navigator.vibrate([24, 60, 90]); } catch (e) {} // 三顆心扣進紅線:漸強三段「你從來不是一個人」
       me.classList.remove("th-draggable"); // 放進紅線後，三顆心一起脈動（th-heart glow 接管；capstone 刻意靜音留白）
       sub.textContent = "三顆心，同一條拉得再長也不會斷的紅線。";
       setTimeout(function () { line.textContent = "原來，我從來都不是一個人。"; sub.textContent = ""; }, 2800);
@@ -891,19 +926,21 @@
     const map = { gaze: gaze, standStill: standStill, note: note, hug: hug, redthread: redthread, msn: msn, phoneCall: phoneCall, sevenEleven: sevenEleven, riverbank: riverbank, infinite: infinite, believe: believe, train1163: train1163, knowingVsBelieving: knowingVsBelieving, carnation: carnation, threehearts: threehearts };
     let i = 0;
     function next() {
-      if (i >= ids.length) { if (onAll) onAll(); return; }
+      if (i >= ids.length) { _chainProgress = null; if (onAll) onAll(); return; }
+      _chainProgress = { i: i, total: ids.length };
       const fn = map[ids[i++]];
-      if (typeof fn === "function") fn(next); else next();
+      if (typeof fn === "function") fn(arm(next)); else next();
     }
     next();
   }
 
   if (typeof window !== "undefined") {
+    var _wrap = function (fn) { return function (cb) { return fn(arm(cb)); }; };
     window.__ACTS__ = {
-      gaze: gaze, standStill: standStill, note: note, hug: hug, redthread: redthread, msn: msn,
-      phoneCall: phoneCall, sevenEleven: sevenEleven, riverbank: riverbank, infinite: infinite, believe: believe,
-      train1163: train1163, knowingVsBelieving: knowingVsBelieving, carnation: carnation, threehearts: threehearts,
-      capstone: capstone, runChain: runChain,
+      gaze: _wrap(gaze), standStill: _wrap(standStill), note: _wrap(note), hug: _wrap(hug), redthread: _wrap(redthread), msn: _wrap(msn),
+      phoneCall: _wrap(phoneCall), sevenEleven: _wrap(sevenEleven), riverbank: _wrap(riverbank), infinite: _wrap(infinite), believe: _wrap(believe),
+      train1163: _wrap(train1163), knowingVsBelieving: _wrap(knowingVsBelieving), carnation: _wrap(carnation), threehearts: _wrap(threehearts),
+      capstone: _wrap(capstone), runChain: runChain,
     };
   }
 })();

@@ -7289,6 +7289,10 @@
               }
             });
 
+            // 強制 above-target episodes 立即 layout(content-visibility:visible 需 reflow 才有真實高度，
+            // 否則 contain-intrinsic-size 占位 800px 會讓 targetTop 嚴重低估 → 遠 EP under-scroll）
+            void document.body.offsetHeight;
+
             // 2. Dismiss hero on window scroll(讓 main-col 進 viewport)
             const heroEl = document.getElementById('hero');
             if (heroEl) {
@@ -7338,22 +7342,45 @@
                   document.documentElement.style.scrollBehavior = originalSB;
                 }
 
-                // 4. Verify after paint — retry if not landed
-                requestAnimationFrame(() => {
-                  const r = target.getBoundingClientRect();
-                  const inView = r.top >= -200 && r.top < window.innerHeight * 0.8;
-                  if (!inView && attempts < MAX_ATTEMPTS) {
-                    console.info('[reader hash jump v5] attempt ' + attempts + ' not landed (top=' + Math.round(r.top) + ') — retrying');
-                    setTimeout(jumpToTarget, 250);
-                  } else {
-                    if (typeof currentEpNum !== 'undefined') currentEpNum = targetN;
-                    console.info('[reader hash jump v5] landed on ep-' + targetN + ' (attempt ' + attempts + ', top=' + Math.round(r.top) + ')');
-                    // 收尾:1.5 秒讓 layout 完全 settle 後移除 hash-jumping flag,
-                    // 恢復後續閱讀的 content-visibility lazy render 優化
-                    setTimeout(() => {
-                      document.body.classList.remove('hash-jumping');
-                    }, 1500);
+                // 4. 逐幀 delta 自我修正迴圈:每幀重新量測 target 相對 viewport 的位置,
+                //    用 delta 直接補正 scrollTop,連續 2 幀對齊(|delta|<=3px)才收工。
+                //    比「跳一次→驗證→整段重跑」穩,能吸收 above-target episodes 跨多幀逐步 layout 的位移。
+                var _host = isMainColScrollable ? mainCol : null;
+                function runCorrection(onDone) {
+                  var corr = 0, stable = 0;
+                  function _step() {
+                    corr++;
+                    var rr = target.getBoundingClientRect();
+                    var base = _host ? _host.getBoundingClientRect().top : 0;
+                    var desired = base + topOffset + 8;
+                    var delta = rr.top - desired;
+                    if (Math.abs(delta) <= 3) {
+                      stable++;
+                    } else {
+                      stable = 0;
+                      if (_host) {
+                        var sb = _host.style.scrollBehavior; _host.style.scrollBehavior = 'auto';
+                        _host.scrollTop += delta; void _host.offsetHeight; _host.style.scrollBehavior = sb;
+                      } else {
+                        var sbw = document.documentElement.style.scrollBehavior; document.documentElement.style.scrollBehavior = 'auto';
+                        window.scrollBy({ top: delta, behavior: 'auto' }); document.documentElement.style.scrollBehavior = sbw;
+                      }
+                    }
+                    if (stable < 2 && corr < 40) requestAnimationFrame(_step);
+                    else onDone(corr);
                   }
+                  requestAnimationFrame(_step);
+                }
+                // Pass 1：在 hash-jumping 展開 layout 下對齊；再移除 flag（above 集數 content-visibility
+                // 重新塌陷會位移 target），於最終 layout 跑 Pass 2 重新對齊，避免遠/近集都殘留偏移。
+                runCorrection(function () {
+                  document.body.classList.remove('hash-jumping');
+                  requestAnimationFrame(function () { requestAnimationFrame(function () {
+                    runCorrection(function (c2) {
+                      if (typeof currentEpNum !== 'undefined') currentEpNum = targetN;
+                      console.info('[reader hash jump v7] landed on ep-' + targetN + ' (pass2=' + c2 + ', top=' + Math.round(target.getBoundingClientRect().top) + ')');
+                    });
+                  }); });
                 });
               });
             });
