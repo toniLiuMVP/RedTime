@@ -3,11 +3,11 @@
 //   STATIC_CACHE  — 大型不變 asset(GLB / vendor JS / fonts / pwa icon)。
 //                   只在 STATIC_VERSION 升版時 invalidate(GLB 不會每次 sw 改就重下)。
 //   RUNTIME_CACHE — html / 動態 JS / data.js。每次 sw 改 RUNTIME_VERSION 就 invalidate。
-// 策略:network-first(有網路永遠拿最新,離線才用快取)。
+// 策略:STATIC 大型資產 cache-first / RUNTIME(html 等)network-first。
 
 // — Cache version 分離 —
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
-const STATIC_VERSION = 'static-v16-20260605';  // bumped: dropped removed-page GLB / vendor from precache
+const STATIC_VERSION = 'static-v17-20260608';  // bumped: STATIC assets now cache-first
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
 const RUNTIME_VERSION = 'runtime-v98-20260608';
 
@@ -103,18 +103,37 @@ self.addEventListener('fetch', event => {
   // 安全紀律 4:path allowlist(只 cache 已知 file type / html,避免異常 path 入 cache)
   if (!isCacheable(url.pathname)) return;
 
-  // 全部 network-first(有網路拿最新,離線回退快取)
+  // STATIC 大型不變資產(GLB / vendor / fonts / images):cache-first
+  // 回訪瞬命中、省頻寬;靠 STATIC_VERSION bump + activate 清舊版做 invalidation。
+  // (前提:sw.js 本身不可被強快取,GitHub Pages 預設 max-age 短 + 瀏覽器 24h 強制檢查兜底)
+  if (isStaticAsset(url.pathname)) {
+    event.respondWith(
+      caches.match(request).then(cached => {
+        if (cached) return cached;
+        return fetch(request).then(response => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(STATIC_CACHE)
+              .then(cache => cache.put(request, clone))
+              .then(() => trimCache(STATIC_CACHE, MAX_STATIC_ITEMS))
+              .catch(err => { console.warn('[sw] static cache.put failed:', url.pathname, err && err.message); });
+          }
+          return response;
+        });
+      })
+    );
+    return;
+  }
+
+  // 其餘(html / 動態 JS / data.js / css):network-first(有網路拿最新,離線回退快取)
   event.respondWith(
     fetch(request)
       .then(response => {
         if (response.ok) {
           const clone = response.clone();
-          // 分流寫進對應 cache
-          const targetCache = isStaticAsset(url.pathname) ? STATIC_CACHE : RUNTIME_CACHE;
-          const targetMax = isStaticAsset(url.pathname) ? MAX_STATIC_ITEMS : MAX_RUNTIME_ITEMS;
-          caches.open(targetCache)
+          caches.open(RUNTIME_CACHE)
             .then(cache => cache.put(request, clone))
-            .then(() => trimCache(targetCache, targetMax))
+            .then(() => trimCache(RUNTIME_CACHE, MAX_RUNTIME_ITEMS))
             .catch(err => {
               // cache.put 失敗(quota exceeded / Range response 等)— 不影響 main response delivery
               console.warn('[sw] cache.put failed:', url.pathname, err && err.message);
