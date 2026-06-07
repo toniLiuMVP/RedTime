@@ -3206,7 +3206,7 @@
             命運不是命定，<br />但紅線是命中注定
           </h2>
           <!-- ✅ 已校對：EP40 標題原文一致 -->
-          <blockquote class="about-quote">「我相信『相信的力量』。」</blockquote>
+          <blockquote class="about-quote">「相信『相信的力量』。」</blockquote>
           <div class="about-quote-src">— 時間裡的兩個妳</div>
         </div>
         <div class="about-right reveal">
@@ -3654,7 +3654,7 @@
           </div>
         </div>
 
-        <!-- B9:相信 echo end card(對位 about-quote「我相信『相信的力量』」EP39/40 學長/把拔) -->
+        <!-- B9:相信 echo end card(對位 about-quote「相信『相信的力量』」EP39/40 學長/把拔) -->
         <div class="reveal end-echo" style="margin-top: 64px">
           <div class="end-echo-main">「我也相信。」</div>
           <div class="end-echo-src">女兒 · EP41 · 對位 EP39 / EP40</div>
@@ -4425,9 +4425,10 @@
         function openRouter() { var card = openModal(); renderChoose(card); }
         window.__ENTRY_ROUTER__ = { open: openRouter, viewpoint: openViewpoint, reset: function () { try { localStorage.removeItem(ROUTE_KEY); } catch (e) {} } };
 
-        var seen = null; try { seen = localStorage.getItem(ROUTE_KEY); } catch (e) {}
         var tourDeep = false; try { tourDeep = new URLSearchParams(location.search).get("tour") === "1"; } catch (e) {}
-        if (!seen && !tourDeep) { setTimeout(openRouter, 900); } // ?tour=1 深連時讓既有新讀者導覽接手,不雙開
+        // 進站分流永遠顯示（每次進站都跳，鐵粉題庫多、每次有驚喜）；可手動跳過（× / Escape / 點背景）。
+        // ?tour=1 深連時讓既有新讀者導覽接手，不雙開。
+        if (!tourDeep) { setTimeout(openRouter, 900); }
       })();
     </script>
   </body>
