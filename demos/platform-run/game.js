@@ -1,4 +1,4 @@
-import * as THREE from "three";
+import * as THREE from "../_vendor/three.module.js";
 /* ════════════════════════════════════════════════
    fix-7 (r33 Codex finding):timer registry
    ════════════════════════════════════════════════
