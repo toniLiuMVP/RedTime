@@ -1,4 +1,4 @@
-// twin-b-acts.js · 雙時空B Acts 2-10(後一眼瞬間的戀愛弧 overlay vignettes)
+// acts.js · Acts 2-10(後一眼瞬間的戀愛弧 overlay vignettes)
 // 純 DOM(iOS-safe)、零 innerHTML(createElement + textContent)、韓劇暗調。
 // 對外:window.__ACTS__ = { gaze, note, msn, phoneCall, sevenEleven, infinite, believe, runChain }
 // 每個 act(onDone) → 完成後呼叫 onDone(result);runChain([...],onAll) 串成情感鏈。

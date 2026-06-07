@@ -88,24 +88,43 @@ assets/sw-register.js
 *.pdf
 
 # Pages and assets kept local only (not served publicly)
-/lm402.html
-/lm402-twin.html
-/lm402-parallel.html
-/lm402-time.html
+# OLD = superseded versions; canonical public pages are lm402.html + demos/platform-run/
+/dev-bg-compare.html
+/lm402-OLD.html
+/lm402-twin-OLD.html
+/lm402-parallel-OLD.html
+/lm402-time-OLD.html
 /campus-tour.html
 /tech-demo.html
 /head-hd-preview.html
 /rpg.html
 /story-3d.html
 /competition-*.html
-/assets/lm402/
-/assets/lm402-twin/
-/assets/lm402-parallel/
+/assets/lm402-OLD/
+/assets/lm402-twin-OLD/
+/assets/lm402-parallel-OLD/
 /demos/695/
-/demos/platform-run/
+/demos/platform-run-OLD/
+/demos/platform-run-twin-OLD/
+/demos/platform-run-parallel-OLD/
+/demos/platform-run-time-OLD.html
+
+# Belt-and-suspenders: pre-rename non-canonical paths the local Master sync may restore.
+# Canonical public versions are lm402.html + demos/platform-run/ + assets/lm402/ — never publish the old slots.
+/lm402-twin.html
+/lm402-twin-b.html
+/lm402-parallel.html
+/lm402-time.html
+/assets/lm402-twin/
+/assets/lm402-twin-b/
+/assets/lm402-parallel/
+/assets/lm402/twin-b-acts.js
+/assets/lm402/twin-b-council.js
 /demos/platform-run-twin/
+/demos/platform-run-twin-b/
 /demos/platform-run-parallel/
 /demos/platform-run-time.html
+/demos/platform-run/three.module.js
 
 # Local iteration screenshots
 /*.jpeg

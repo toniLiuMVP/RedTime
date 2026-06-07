@@ -11,14 +11,14 @@
 <meta property="og:type" content="website" />
 <meta property="og:title" content="月台上的狂奔 · 每一次，都要趕上" />
 <meta property="og:description" content="一眼只有一秒，卻用了二十年才讀懂。《時間裡的兩個妳》 連載中。" />
-<meta property="og:url" content="https://toniliumvp.github.io/RedTime/demos/platform-run-twin-b/index.html" />
+<meta property="og:url" content="https://toniliumvp.github.io/RedTime/demos/platform-run/index.html" />
 <meta property="og:image" content="https://toniliumvp.github.io/RedTime/assets/og-image.jpg" />
 <meta name="theme-color" content="#050508" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:image" content="https://toniliumvp.github.io/RedTime/assets/og-image.jpg" />
 <meta name="twitter:title" content="月台上的狂奔 · 每一次，都要趕上" />
 <meta name="twitter:description" content="一眼只有一秒，卻用了二十年才讀懂。《時間裡的兩個妳》 連載中。" />
-<link rel="canonical" href="https://toniliumvp.github.io/RedTime/demos/platform-run-twin-b/index.html" />
+<link rel="canonical" href="https://toniliumvp.github.io/RedTime/demos/platform-run/index.html" />
 <link rel="manifest" href="../../manifest.json" />
 <link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
 <title>月台上的狂奔 · 每一次，都要趕上</title>
@@ -473,7 +473,7 @@ body:has(#title-screen.hide) .pt-tutorial-trigger { display: none !important; }
 <div id="breath-hint"></div>
 
 <!-- 月台雙時空B 父女記憶 vignettes（設 window.__PACTS__ + 注入回憶 launcher）-->
-<script src="./platform-twin-b-acts.js"></script>
+<script src="./platform-acts.js"></script>
 <!-- 冷開場：女兒倒敘飛回去看把拔月台狂奔（EP36），在標題畫面之前播；首次進站 only -->
 <script src="./cold-open.js"></script>
 <script type="importmap">
@@ -5645,7 +5645,7 @@ function showFinalResult() {
     if (!document.getElementById('pt-bridge-lm402')) {
       var bridge = document.createElement('a');
       bridge.id = 'pt-bridge-lm402';
-      bridge.href = '../../lm402-twin.html?from=platform';
+      bridge.href = '../../lm402.html?from=platform';
       bridge.textContent = '→ 進入 LM402 一眼瞬間';
       bridge.style.cssText = 'display:inline-block;margin-top:24px;padding:11px 30px;background:linear-gradient(135deg,rgba(228,70,80,0.18),rgba(170,31,45,0.10));border:1px solid rgba(228,70,80,0.55);border-radius:2px;color:rgba(248,168,152,0.96);font-family:"Cormorant Garamond","Noto Serif TC",serif;font-size:14px;letter-spacing:0.22em;text-indent:0.22em;text-decoration:none;cursor:pointer;transition:background 0.3s ease;';
       bridge.addEventListener('mouseover', function () { bridge.style.background = 'linear-gradient(135deg,rgba(228,70,80,0.32),rgba(170,31,45,0.20))'; });

@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v16-20260605';  // bumped: dropped removed-page GLB / vendor from precache
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v96-20260606';  // bumped: viewpoint cross-links + quiz tier flavor + memory completion copy + onboarding single-screen + dual-CTA + cross-page quiz best
+const RUNTIME_VERSION = 'runtime-v97-20260607';  // bumped: canonicalize the single public game version (lm402.html + demos/platform-run/)
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
@@ -17,7 +17,7 @@ const ALL_CURRENT_CACHES = new Set([STATIC_CACHE, RUNTIME_CACHE]);
 
 // — 大型不變 asset:STATIC_CACHE —
 const STATIC_PRECACHE_URLS = [
-  // 月台奔跑共用 three.module(單一副本,platform-run-twin-b 使用)
+  // 月台奔跑共用 three.module(單一副本,platform-run 使用)
   '/RedTime/demos/_vendor/three.module.js',
   // 共用 assets
   '/RedTime/fonts/fonts.css',
@@ -33,8 +33,8 @@ const RUNTIME_PRECACHE_URLS = [
   '/RedTime/index.html',
   '/RedTime/reader.html',
   // 對外只服務雙時空B 兩個遊戲入口
-  '/RedTime/lm402-twin-b.html',
-  '/RedTime/demos/platform-run-twin-b/index.html',
+  '/RedTime/lm402.html',
+  '/RedTime/demos/platform-run/index.html',
 ];
 
 // — 路徑分流規則 —

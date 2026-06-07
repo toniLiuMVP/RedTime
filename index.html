@@ -2951,8 +2951,8 @@
         <a class="nav-link hide-m" href="#film">影像</a>
         <a class="nav-link hide-m" href="#arcs">角色</a>
         <a class="nav-link hide-m" href="#community">社群</a>
-        <a class="nav-link hide-m" href="lm402-twin-b.html">LM402</a>
-        <a class="nav-link hide-m" href="demos/platform-run-twin-b/index.html">🏃 月台上的狂奔</a>
+        <a class="nav-link hide-m" href="lm402.html">LM402</a>
+        <a class="nav-link hide-m" href="demos/platform-run/index.html">🏃 月台上的狂奔</a>
         <a class="nav-cta" href="reader.html">翻開故事</a>
       </div>
     </nav>
@@ -3017,10 +3017,10 @@
               >
               <a class="btn-ghost" href="#about">這個故事的起點</a>
               <div class="hero-scene-bridge">同一個把拔，一條紅線牽著他愛的人，一條牽著他的女兒。<br>不是要她一直陪在身邊，而是當你不在她身邊的時候，她會想起你。<br>走進其中一條，自己看看那一眼、那場奔跑：</div>
-              <a class="btn-ghost" href="lm402-twin-b.html"
+              <a class="btn-ghost" href="lm402.html"
                 >↗ &nbsp; 走進 LM402</a
               >
-              <a class="btn-ghost" href="demos/platform-run-twin-b/index.html"
+              <a class="btn-ghost" href="demos/platform-run/index.html"
                 >🏃 &nbsp; 月台上的狂奔</a
               >
               <!-- 校園巡禮 PoC 待改進為真實輔大 + 故事文本對位,隱藏入口 -->
@@ -4245,8 +4245,8 @@
           var opts = ce("div", "ob-options");
           function opt(t, s, fn) { var e = optEl("button", t, s); e.addEventListener("click", fn); return e; }
           opts.appendChild(opt("📖 讀 EP3 試讀", "一個 21 歲男生狼狽又認真的初戀，從那一眼開始。", function () { remember("read"); go(READER + "#ep-3"); }));
-          opts.appendChild(opt("↗ 走進 LM402", "站到他站過的位置，看那一眼會不會發生，這次換你親眼看。", function () { remember("lm402"); go("lm402-twin-b.html"); }));
-          opts.appendChild(opt("🏃 走進月台上的狂奔", "陪把拔跑那一段，你就懂他為什麼永遠趕得上。", function () { remember("platform"); go("demos/platform-run-twin-b/index.html"); }));
+          opts.appendChild(opt("↗ 走進 LM402", "站到他站過的位置，看那一眼會不會發生，這次換你親眼看。", function () { remember("lm402"); go("lm402.html"); }));
+          opts.appendChild(opt("🏃 走進月台上的狂奔", "陪把拔跑那一段，你就懂他為什麼永遠趕得上。", function () { remember("platform"); go("demos/platform-run/index.html"); }));
           opts.appendChild(opt("★ 我是老朋友 · 鐵粉測驗", "讓我看看你記得多少。十題，賭你會在某一題鼻酸。", function () { remember("fan"); renderQuiz(card); }));
           card.appendChild(opts);
           var mini = ce("a", "ob-mini", "還沒想好？先翻第一頁，故事會自己告訴你該往哪走 →"); mini.href = READER;
@@ -4309,7 +4309,7 @@
             var opts = ce("div", "ob-options");
             var c = optEl("a", "看完整 100 題鐵粉題庫 →", "五十座月台、五百多題，賭你會在某一站鼻酸。"); c.href = READER + "#fanquiz"; opts.appendChild(c);
             var a = optEl("a", "📖 回去重讀全集", "EP0 到 EP41，從頭再走一次那條紅線。"); a.href = READER; opts.appendChild(a);
-            var b = optEl("button", "🏃 再陪把拔跑一次月台", "EP36 的那 30 秒，這次換你跑。"); b.addEventListener("click", function () { go("demos/platform-run-twin-b/index.html"); }); opts.appendChild(b);
+            var b = optEl("button", "🏃 再陪把拔跑一次月台", "EP36 的那 30 秒，這次換你跑。"); b.addEventListener("click", function () { go("demos/platform-run/index.html"); }); opts.appendChild(b);
             card.appendChild(opts);
           }
           step();

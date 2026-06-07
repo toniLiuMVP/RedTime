@@ -1,4 +1,4 @@
-// platform-twin-b-acts.js · 月台雙時空B 父女記憶 vignettes
+// platform-acts.js · 月台父女記憶 vignettes
 // 純 DOM(iOS-safe)、零 innerHTML、韓劇暗調。對外:window.__PACTS__
 // EP36(廚房門/捷運天空/月台狂奔)、EP37(透明片/不能穿越)、EP30(13 歲離家)。
 

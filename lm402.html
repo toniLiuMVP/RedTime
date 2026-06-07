@@ -6,10 +6,10 @@
       name="viewport"
       content="width=device-width,initial-scale=1,viewport-fit=cover"
     />
-    <meta name="theme-color" content="#050608" />
+    <meta name="theme-color" content="#050508" />
     <meta name="color-scheme" content="dark" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
-    <link rel="canonical" href="https://toniliumvp.github.io/RedTime/lm402-twin-b.html" />
+    <link rel="canonical" href="https://toniliumvp.github.io/RedTime/lm402.html" />
     <link rel="manifest" href="manifest.json" />
     <!-- Defense-in-depth CSP（最佳做法仍是 HTTP header，但 GitHub Pages 無法設 header，故以 meta 作為最低防線） -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.youtube.com https://youtube.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' https: data:; worker-src 'self' blob:; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none';" />
@@ -47,7 +47,7 @@
       "name": "LM402 一眼瞬間",
       "description": "2005 與 2025，同一秒鐘，LM402 雙時空。五個年紀的學妹，在意識裡七嘴八舌。toni 連載長篇《時間裡的兩個妳》EP0–EP41。",
       "author": { "@type": "Person", "name": "toni" },
-      "url": "https://toniliumvp.github.io/RedTime/lm402-twin.html",
+      "url": "https://toniliumvp.github.io/RedTime/lm402.html",
       "inLanguage": "zh-TW",
       "gamePlatform": "Web Browser",
       "genre": "Interactive Fiction",
@@ -64,12 +64,12 @@
     <link rel="preload" href="fonts/co3bmX5slCNuHLi8bLeY9MK7whWMhyjYqXtKky2F7g.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="fonts/-nF7OG829Oofr2wohFbTp9iFOisNA_cTyNromxqQuEMQ2wHYwbnmy1R1jDujLebozBXCo2qYhRo.119.woff2" as="font" type="font/woff2" crossorigin />
     <!-- modulepreload：渲染核心預先 fetch+parse，省一個 RTT 進入畫面 -->
-    <link rel="modulepreload" href="assets/lm402-twin-b/vendor-three.module.js" />
-    <link rel="modulepreload" href="assets/lm402-twin-b/renderer.js" />
+    <link rel="modulepreload" href="assets/lm402/vendor-three.module.js" />
+    <link rel="modulepreload" href="assets/lm402/renderer.js" />
     <!-- prefetch GLB：等 renderer.js 解析完才會發 fetch；先 prefetch 讓瀏覽器並行下載 -->
-    <link rel="prefetch" href="assets/lm402-twin-b/characters/junior/exports/junior_2005_runtime.glb" as="fetch" crossorigin />
+    <link rel="prefetch" href="assets/lm402/characters/junior/exports/junior_2005_runtime.glb" as="fetch" crossorigin />
     <link rel="stylesheet" href="fonts/fonts.css" />
-    <link rel="stylesheet" href="assets/lm402-twin-b/lm402.css" />
+    <link rel="stylesheet" href="assets/lm402/lm402.css" />
     <!-- Audio auto-stop hook：頁面隱藏 / 關閉時自動停所有音樂（toni 要求；對所有玩家生效） -->
     <script>
     (function () {
@@ -195,9 +195,9 @@
             color: rgba(255, 255, 255, 0.6);
           "
         >
-          若您由社群軟體 (Threads, FB) 開啟，請點擊右上角「•••」並選擇<b
+          在 iPhone / iPad 上，移動與視角都用螢幕上的兩根搖桿操作（不需要滑鼠）。若您是從社群軟體（Threads、FB、IG、LINE）的內建瀏覽器開啟，請點右上角「•••」選擇<b
             >在 Safari / 原生瀏覽器中開啟</b
-          >，以獲得完美橫向體驗。
+          >，3D 場景才會完整、橫向體驗才完美。
         </p>
       </div>
     </div>
@@ -807,11 +807,11 @@
       }, 6000);
     </script>
     <!-- 雙時空B Act1 意識菜市場議會模組（設 window.__COUNCIL__，供 app.js 觸發）-->
-    <script src="./assets/lm402-twin-b/twin-b-council.js"></script>
+    <script src="./assets/lm402/council.js"></script>
     <!-- 雙時空B Acts 2-10 戀愛弧 overlay 模組（設 window.__ACTS__）-->
-    <script src="./assets/lm402-twin-b/twin-b-acts.js"></script>
+    <script src="./assets/lm402/acts.js"></script>
     <!-- 冷開場：1994 第一次穿越鈎子（EP32），在玄關 gate 之前播；首次進站 only -->
-    <script src="./assets/lm402-twin-b/cold-open.js"></script>
+    <script src="./assets/lm402/cold-open.js"></script>
     <!-- C9: Deferred Three.js module import — 點擊玄關後才動態載入 app.js -->
     <script type="module">
       (function () {
@@ -819,7 +819,7 @@
         const gateBtn = document.getElementById("cinematic-gate-enter");
         if (!gate || !gateBtn) {
           // 玄關不存在時退回原有行為，直接載入場景（安全網）
-          import("./assets/lm402-twin-b/app.js")
+          import("./assets/lm402/app.js")
             .then(() => { window.__lm402Ready = true; window.__lm402GateEntered = true; })
             .catch((err) => console.error("[lm402] scene load failed", err));
           return;
@@ -871,7 +871,7 @@
           setTimeout(() => { if (gate.parentNode) gate.parentNode.removeChild(gate); }, 1200);
 
           // 4. 動態 import app.js（觸發 Three.js 初始化）
-          import("./assets/lm402-twin-b/app.js")
+          import("./assets/lm402/app.js")
             .then(() => { window.__lm402Ready = true; })
             .catch((err) => {
               console.error("[lm402] failed to load scene module", err);
@@ -1354,7 +1354,7 @@ body.lm402-page #cinematic-gate .cinematic-gate-kicker {
           flash.classList.add("flash");
           setTimeout(() => flash.classList.remove("flash"), 120);
           try {
-            const mod = await import("./assets/lm402-twin-b/polaroid.js");
+            const mod = await import("./assets/lm402/polaroid.js");
             const cam = mod.createPolaroidCapture({
               getCanvas: () => document.querySelector("canvas"),
               getYear: () => (window.__LM402_YEAR__ ?? "2005"),
@@ -1378,31 +1378,31 @@ body.lm402-page #cinematic-gate .cinematic-gate-kicker {
           : setTimeout(cb, 2000);
       // H1+H3 文學旁白系統 — 啟動後暴露 window.__NARRATIVE__
       idle(() => {
-        import("./assets/lm402-twin-b/narrative-overlay.js")
+        import("./assets/lm402/narrative-overlay.js")
           .then((mod) => { window.__NARRATIVE__ = mod.createNarrativeOverlay(); })
           .catch((e) => console.warn("[narrative] init failed:", e));
       });
       // H2+H4 章節 fade + 記憶閃回 — 啟動後暴露 window.__TRANSITIONS__
       idle(() => {
-        import("./assets/lm402-twin-b/narrative-transitions.js")
+        import("./assets/lm402/narrative-transitions.js")
           .then((mod) => { window.__TRANSITIONS__ = mod.createTransitions(); })
           .catch((e) => console.warn("[transitions] init failed:", e));
       });
       // H6 書信日記模式 — 啟動後暴露 window.__LETTER__
       idle(() => {
-        import("./assets/lm402-twin-b/narrative-letter.js")
+        import("./assets/lm402/narrative-letter.js")
           .then((mod) => { window.__LETTER__ = mod.createNarrativeLetter(); })
           .catch((e) => console.warn("[letter] init failed:", e));
       });
       // H7+H8 環境音層次 + 動態 BGM — 啟動後暴露 window.__AUDIO_LAYER__
       idle(() => {
-        import("./assets/lm402-twin-b/narrative-audio.js")
+        import("./assets/lm402/narrative-audio.js")
           .then((mod) => { window.__AUDIO_LAYER__ = mod.createNarrativeAudio(); })
           .catch((e) => console.warn("[audio-layer] init failed:", e));
       });
       // C8 學妹發起互動 — 暴露 window.__INITIATED__（手動 start 才開始）
       idle(() => {
-        import("./assets/lm402-twin-b/initiated-interactions.js")
+        import("./assets/lm402/initiated-interactions.js")
           .then((mod) => { window.__INITIATED__ = mod.createInitiatedInteractions(); })
           .catch((e) => console.warn("[initiated] init failed:", e));
       });
