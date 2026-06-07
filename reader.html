@@ -11,6 +11,10 @@
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <link rel="canonical" href="https://toniliumvp.github.io/RedTime/reader.html" />
     <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="assets/pwa-icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="時間裡的兩個妳" />
     <!-- Defense-in-depth CSP（最佳做法仍是 HTTP header，但 GitHub Pages 無法設 header，故以 meta 作為最低防線） -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.youtube.com https://youtube.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'self' https:; connect-src 'self'; frame-src https://www.youtube.com https://youtube.com; base-uri 'self'; form-action 'self'; object-src 'none';" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
@@ -1942,6 +1946,15 @@
          避免永久 disable content-visibility lazy render 帶來的 layout/paint 成本 */
       body.hash-jumping .episode.visible {
         content-visibility: visible;
+      }
+      /* 列印時強制全 42 章 render，避免 content-visibility:auto 讓畫面外章節漏印或分頁排版錯位 */
+      @media print {
+        .episode {
+          content-visibility: visible !important;
+          contain-intrinsic-size: auto !important;
+          opacity: 1 !important;
+          transform: none !important;
+        }
       }
       .episode::before {
         content: "";
