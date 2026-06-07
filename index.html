@@ -3102,15 +3102,15 @@
           <div class="tour-step-body">
             <p class="tour-intro">42 集太重，先讀這三集。<br>它們是這座橋的三塊承重結構。</p>
             <div class="tour-samples">
-              <a class="tour-sample" href="reader.html#ep-3">
+              <a class="tour-sample" data-entry="male" href="reader.html">
                 <div class="tour-sample-tag">⌬ EP3 · 一眼瞬間 · 學長視角　↗ 直接讀</div>
                 <div class="tour-sample-desc">2005 年的大學走廊。這是整本書的起點。讀完你會知道，為什麼這一眼，需要很多年才能讀懂。</div>
               </a>
-              <a class="tour-sample" href="reader.html#ep-38">
+              <a class="tour-sample" data-entry="female" href="reader.html">
                 <div class="tour-sample-tag">⌬ EP38 · 意識菜市場 · 學妹視角　↗ 直接讀</div>
                 <div class="tour-sample-desc">2005 年同一秒的另一面。讓你看見學妹的內在，不同年紀的她，在同一秒鐘吵架。</div>
               </a>
-              <a class="tour-sample" href="reader.html#ep-41">
+              <a class="tour-sample" data-entry="daughter" href="reader.html">
                 <div class="tour-sample-tag">⌬ EP41 · 這不是童話故事 · 女兒視角　↗ 直接讀</div>
                 <div class="tour-sample-desc">2026 年。故事的拱心石。她看過所有結局，卻發現「知道」救不了眼前的人。她最後只傳給他四個數字，然後選擇，跟他一起相信。</div>
               </a>
@@ -4169,6 +4169,20 @@
         var ROUTE_KEY = "redtime_entry_route_v1";
         var READER = "reader.html";
 
+        // ── 入手集數單一來源（技術債清理）──
+        // VIEWPOINTS.ep 與新讀者導覽 step4 的三個 sample 連結都引用這張表，避免 EP 編號異動時多處不同步。
+        // 注意：QUIZ[].ep 是「每題對應的集數」（綁該題題目文字 EPx），語意不同，刻意不併進此表。
+        // VIEWPOINTS 的 text/recs 與 tour 的 tag/desc 內含的「EPx」字樣是 toni 親寫文案，維持不動；本表只統一「連結目標」結構。
+        var RECOMMENDED_ENTRIES = { father: 0, male: 3, female: 38, daughter: 41, mixed: 24 };
+        // 把入手集數寫進 step4 sample 連結（只設 href 結構，不動可見文字）
+        try {
+          var _samples = document.querySelectorAll(".tour-sample[data-entry]");
+          for (var _si = 0; _si < _samples.length; _si++) {
+            var _ek = _samples[_si].getAttribute("data-entry");
+            if (RECOMMENDED_ENTRIES[_ek] != null) _samples[_si].setAttribute("href", READER + "#ep-" + RECOMMENDED_ENTRIES[_ek]);
+          }
+        } catch (e) {}
+
         var QUIZ = [
           { q: "EP3：學長第一眼看到學妹，心裡冒出的那句話？（填關鍵詞）", ans: ["徐若瑄"], ep: 3, hook: "連這句都答得出來，代表你真的在第一秒就被釘住了。" },
           { q: "EP3：學妹在 LM402 教室，叫學長走到哪一道門？", ans: ["後門"], ep: 3, hook: "前門來電、後門等待，差一道門就不是這個故事了。" },
@@ -4183,11 +4197,11 @@
         ];
 
         var VIEWPOINTS = {
-          father: { name: "把拔", sub: "父親視角", ep: 0, text: "他是那種會說「我海軍陸戰隊欸」來掩飾捨不得的爸爸。從 EP0 進，你會先笑出來，然後在某一句之後，突然鼻酸。", recs: "推薦入手：EP0（最短、最低門檻）→ EP36（月台狂奔「我趕上了」）", echo: "想知道那個被他抱起來的小女孩，長大後怎麼喊他嗎？去女兒視角：她說「現在的我已經不叫你『把拔』了，我現在都直接叫你一聲『爸』」。" },
-          male: { name: "學長", sub: "男主視角", ep: 3, text: "2005 年，他站錯了門。電話那頭一句「你走到後門」，他繞過去，抬頭那一眼：「也太像徐若瑄了吧。」二十年的故事從這一秒開始。", recs: "推薦入手：EP3（一眼瞬間，全站第一集）→ EP39（相信的力量）", echo: "你站在前門撲空的這一眼，她在後門也記了一輩子。去學妹視角，看同一場「一眼瞬間」她那一邊的聲音。" },
-          female: { name: "學妹（阿姨）", sub: "女主視角", ep: 38, text: "29 歲的身體裡，住著 18 歲的意識。她第二次闖進同一間教室，只為了看清楚一個人。教室裡不同年紀的自己正在七嘴八舌。", recs: "推薦入手：EP38（意識菜市場）→ EP13（她用離開去愛）", echo: "她用一通電話逼他下定決心，自己也痛，「傷你有多深，我就有多痛」。去學長視角，看那一刀落下後，他在伯達樓轉角站了多久。" },
-          daughter: { name: "女兒", sub: "夢境視角", ep: 41, text: "她飛遍所有時間線，卻被禁止干預。她什麼都知道，直到發現「知道」救不了現在的他。而她最後選擇相信，不是因為看過了，是因為願意。", recs: "推薦入手：EP41（拱心石「這不是童話故事」）→ EP16（女兒對爸爸最柔軟的告白）", echo: "她最後選擇跟把拔一樣去「相信」。去把拔視角，看那個不能穿越、只能相信的人，怎麼在所有平行世界裡都選擇把她生下來。" },
-          mixed: { name: "複合視角", sub: "多線交織", ep: 24, text: "兩條、三條時間線在同一集裡交會。不同的人在不同的位置，看見的光卻照進同一個瞬間。", recs: "推薦入手：EP24（小年夜急症室七盞白光，與 LM402 一眼瞬間互文）。建議讀過幾集再來。", echo: "這裡的七盞白光，要學長與學妹兩邊的視角都讀過，才看得懂它在照誰。先讀過男女主，這裡的光會更亮。" }
+          father: { name: "把拔", sub: "父親視角", ep: RECOMMENDED_ENTRIES.father, text: "他是那種會說「我海軍陸戰隊欸」來掩飾捨不得的爸爸。從 EP0 進，你會先笑出來，然後在某一句之後，突然鼻酸。", recs: "推薦入手：EP0（最短、最低門檻）→ EP36（月台狂奔「我趕上了」）", echo: "想知道那個被他抱起來的小女孩，長大後怎麼喊他嗎？去女兒視角：她說「現在的我已經不叫你『把拔』了，我現在都直接叫你一聲『爸』」。" },
+          male: { name: "學長", sub: "男主視角", ep: RECOMMENDED_ENTRIES.male, text: "2005 年，他站錯了門。電話那頭一句「你走到後門」，他繞過去，抬頭那一眼：「也太像徐若瑄了吧。」二十年的故事從這一秒開始。", recs: "推薦入手：EP3（一眼瞬間，全站第一集）→ EP39（相信的力量）", echo: "你站在前門撲空的這一眼，她在後門也記了一輩子。去學妹視角，看同一場「一眼瞬間」她那一邊的聲音。" },
+          female: { name: "學妹（阿姨）", sub: "女主視角", ep: RECOMMENDED_ENTRIES.female, text: "29 歲的身體裡，住著 18 歲的意識。她第二次闖進同一間教室，只為了看清楚一個人。教室裡不同年紀的自己正在七嘴八舌。", recs: "推薦入手：EP38（意識菜市場）→ EP13（她用離開去愛）", echo: "她用一通電話逼他下定決心，自己也痛，「傷你有多深，我就有多痛」。去學長視角，看那一刀落下後，他在伯達樓轉角站了多久。" },
+          daughter: { name: "女兒", sub: "夢境視角", ep: RECOMMENDED_ENTRIES.daughter, text: "她飛遍所有時間線，卻被禁止干預。她什麼都知道，直到發現「知道」救不了現在的他。而她最後選擇相信，不是因為看過了，是因為願意。", recs: "推薦入手：EP41（拱心石「這不是童話故事」）→ EP16（女兒對爸爸最柔軟的告白）", echo: "她最後選擇跟把拔一樣去「相信」。去把拔視角，看那個不能穿越、只能相信的人，怎麼在所有平行世界裡都選擇把她生下來。" },
+          mixed: { name: "複合視角", sub: "多線交織", ep: RECOMMENDED_ENTRIES.mixed, text: "兩條、三條時間線在同一集裡交會。不同的人在不同的位置，看見的光卻照進同一個瞬間。", recs: "推薦入手：EP24（小年夜急症室七盞白光，與 LM402 一眼瞬間互文）。建議讀過幾集再來。", echo: "這裡的七盞白光，要學長與學妹兩邊的視角都讀過，才看得懂它在照誰。先讀過男女主，這裡的光會更亮。" }
         };
 
         function ce(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
