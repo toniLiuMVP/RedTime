@@ -17,7 +17,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <meta name="apple-mobile-web-app-title" content="時間裡的兩個妳" />
     <!-- Defense-in-depth CSP（最佳做法仍是 HTTP header，但 GitHub Pages 無法設 header，故以 meta 作為最低防線） -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.youtube.com https://youtube.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' https: data:; worker-src 'self' blob:; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none';" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.youtube.com https://youtube.com; style-src 'self'; img-src 'self' data: blob: https:; media-src 'self' https: data:; worker-src 'self' blob:; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none';" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <meta
       name="description"
@@ -83,6 +83,7 @@
     <link rel="stylesheet" href="fonts/fonts.css" />
     <link rel="stylesheet" href="assets/lm402/lm402.css" />
     <!-- Audio auto-stop hook：頁面隱藏 / 關閉時自動停所有音樂（toni 要求；對所有玩家生效） -->
+<script src="assets/adopt-style-shim.js"></script>
 <script src="assets/lm402/page-c1.js"></script>
   </head>
   <body class="lm402-page">
@@ -142,10 +143,10 @@
         <div class="lm402-loader-tip" id="loader-tip" role="status" aria-live="polite"></div>
       </div>
       <noscript>
-        <div style="position:fixed;inset:0;z-index:1000;background:#06080d;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;gap:16px">
-          <div style="font:300 22px/1.4 'Cormorant Garamond',serif;color:rgba(238,232,222,.8);letter-spacing:.06em">LM402 · 一眼瞬間</div>
-          <div style="font:300 14px/1.8 'Noto Serif TC',serif;color:rgba(238,232,222,.5);max-width:340px">這個互動場景需要 JavaScript 才能運作。<br>請確認瀏覽器已開啟 JavaScript，並使用 HTTP 伺服器開啟（不支援 file:// 直接開啟）。</div>
-          <a href="index.html" style="margin-top:12px;padding:10px 24px;border:1px solid rgba(217,179,106,.4);border-radius:4px;color:#d9b36a;text-decoration:none;font:400 12px 'DM Mono',monospace;letter-spacing:.15em">返回首頁</a>
+        <div class="ls-1">
+          <div class="ls-2">LM402 · 一眼瞬間</div>
+          <div class="ls-3">這個互動場景需要 JavaScript 才能運作。<br>請確認瀏覽器已開啟 JavaScript，並使用 HTTP 伺服器開啟（不支援 file:// 直接開啟）。</div>
+          <a class="ls-4" href="index.html">返回首頁</a>
         </div>
       </noscript>
     </div>
@@ -162,12 +163,8 @@
         <p>
           這個場景是用手遊邏輯設計的。橫屏後，左下搖桿負責移動，右下搖桿負責視角，字幕與控制元件都會留在不遮畫面的安全位置。
         </p>
-        <p
-          style="
-            margin-top: 16px;
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.6);
-          "
+        <p class="ls-5"
+         
         >
           在 iPhone / iPad 上，移動與視角都用螢幕上的兩根搖桿操作（不需要滑鼠）。若您是從社群軟體（Threads、FB、IG、LINE）的內建瀏覽器開啟，請點右上角「•••」選擇<b
             >在 Safari / 原生瀏覽器中開啟</b
@@ -493,7 +490,7 @@
       </section>
 
       <aside id="side-panel" class="side-panel ui-float" aria-label="關卡進度面板">
-        <section class="panel-card" style="position: relative;">
+        <section class="panel-card ls-6">
           <div class="ui-drag-handle-hint" aria-hidden="true"></div>
           <button
             type="button"
@@ -605,99 +602,53 @@
         <div class="ending-title" id="ending-title">後門那一眼</div>
         <div class="ending-copy" id="ending-copy"></div>
         <div
-          class="ending-hook"
-          style="
-            margin: 20px 0 8px;
-            padding: 16px 20px;
-            border-left: 2px solid rgba(217, 179, 106, 0.4);
-            font-size: 13px;
-            line-height: 1.8;
-            color: rgba(238, 232, 222, 0.7);
-            font-family: &quot;Noto Serif TC&quot;, serif;
-          "
+          class="ending-hook ls-7"
+         
         >
-          <div
-            style="
-              color: #d9b36a;
-              font-size: 11px;
-              letter-spacing: 0.12em;
-              margin-bottom: 8px;
-            "
+          <div class="ls-8"
+           
           >
             你剛才走過的，是故事裡最亮的那一秒
           </div>
           那一眼之前，他們各自走了很遠的路，才剛好走到這裡。<br />
           她為什麼出現在後門？他為什麼撥出那通電話？<br />
           而女兒呢？她是怎麼飛進這一秒的？<br />
-          <div
-            style="
-              margin-top: 10px;
-              color: rgba(238, 232, 222, 0.5);
-              font-size: 12px;
-            "
+          <div class="ls-9"
+           
           >
             EP38 意識菜市場 · EP11 她第一次出現 · EP0 一切的開始
           </div>
         </div>
         <div
           id="ending-tracker"
-          class="ending-tracker"
-          style="
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-            margin: 14px 0 6px;
-          "
+          class="ending-tracker ls-10"
+         
         ></div>
-        <div
+        <div class="ls-11"
           id="ending-tracker-summary"
-          style="
-            text-align: center;
-            font-size: 11px;
-            letter-spacing: 0.1em;
-            color: rgba(238, 232, 222, 0.45);
-            margin-bottom: 10px;
-          "
+         
         ></div>
         <div class="ending-actions">
           <button id="ending-retry" class="ending-button primary" type="button">
             再走一次這段路
           </button>
           <a
-            class="ending-button"
+            class="ending-button ls-12"
             href="index.html"
-            style="
-              background: rgba(180, 180, 200, 0.10);
-              border-color: rgba(180, 180, 200, 0.3);
-              color: #c8c8d4;
-              text-align: center;
-              text-decoration: none;
-            "
+           
             >回首頁</a
           >
           <a
-            class="ending-button"
+            class="ending-button ls-13"
             href="reader.html"
-            style="
-              background: rgba(22, 168, 100, 0.12);
-              border-color: rgba(22, 168, 100, 0.4);
-              color: #73d0a5;
-              text-align: center;
-              text-decoration: none;
-            "
+           
             >從 EP0 走進這個故事</a
           >
           <a
-            class="ending-button"
+            class="ending-button ls-14"
             href="reader.html#ep-3"
-            style="
-              background: rgba(228, 70, 80, 0.12);
-              border-color: rgba(228, 70, 80, 0.4);
-              color: #f8a898;
-              text-align: center;
-              text-decoration: none;
-            "
-            >直接看那一眼瞬間 · EP3<span style="display:block;font-size:11px;opacity:.7;margin-top:3px;font-weight:400;">走到後門，這一次依然再次遇見妳</span></a
+           
+            >直接看那一眼瞬間 · EP3<span class="ls-15">走到後門，這一次依然再次遇見妳</span></a
           >
         </div>
       </div>
@@ -734,335 +685,7 @@
 <script src="assets/lm402/page-c6.js"></script>
     <!-- E10 Polaroid 拍照按鈕（固定右下角） -->
     <button id="lm402-polaroid-btn" type="button" aria-label="拍立得留念" title="拍立得留念">📷</button>
-    <style>
-      #lm402-polaroid-btn,
-      #lm402-polaroid-flash { display: none !important; } /* toni: 隱藏遊戲拍照按鈕 (console API 保留) */
-      #lm402-polaroid-btn {
-        position: fixed;
-        right: 18px;
-        bottom: 18px;
-        width: 52px;
-        height: 52px;
-        border-radius: 50%;
-        background: rgba(20, 16, 12, 0.72);
-        color: #f4eee0;
-        border: 1px solid rgba(255, 230, 200, 0.32);
-        font-size: 24px;
-        cursor: pointer;
-        z-index: 9990;
-        backdrop-filter: blur(6px);
-        -webkit-backdrop-filter: blur(6px);
-        transition: transform 0.18s ease, background 0.18s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-      }
-      #lm402-polaroid-btn:hover {
-        transform: scale(1.08);
-        background: rgba(40, 30, 20, 0.85);
-      }
-      #lm402-polaroid-btn:active {
-        transform: scale(0.94);
-      }
-      #lm402-polaroid-flash {
-        position: fixed;
-        inset: 0;
-        background: white;
-        opacity: 0;
-        pointer-events: none;
-        z-index: 9991;
-        transition: opacity 0.06s ease-out;
-      }
-      #lm402-polaroid-flash.flash {
-        opacity: 0.85;
-      }
-
-      /* C10:LM402 新手引路 tutorial(對位 modal 紀律) */
-      .cinematic-gate-tutorial {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        margin-top: 18px;
-        padding: 12px 26px;
-        background: linear-gradient(135deg, rgba(232, 90, 58, 0.16), rgba(217, 179, 106, 0.10));
-        border: 1px solid rgba(232, 90, 58, 0.45);
-        color: #f0b070;
-        font-family: "DM Mono", monospace;
-        font-size: 10.5px;
-        letter-spacing: 0.27em;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-      }
-      .cinematic-gate-tutorial:hover {
-        background: linear-gradient(135deg, rgba(232, 90, 58, 0.28), rgba(217, 179, 106, 0.16));
-        box-shadow: 0 0 24px rgba(232, 90, 58, 0.18);
-        transform: translateY(-1px);
-      }
-      .cinematic-gate-tutorial-icon {
-        font-size: 13px;
-        color: rgba(224, 72, 96, 0.95);
-        letter-spacing: 0;
-      }
-      .cinematic-gate-read {
-        display: inline-flex; align-items: center; gap: 10px; margin-top: 12px; padding: 12px 26px;
-        background: linear-gradient(135deg, rgba(120, 190, 210, 0.14), rgba(168, 220, 220, 0.08));
-        border: 1px solid rgba(168, 220, 220, 0.42); color: #bfe6e6;
-        font-family: "DM Mono", monospace; font-size: 10.5px; letter-spacing: 0.27em;
-        border-radius: 4px; cursor: pointer; transition: all 0.3s ease;
-      }
-      .cinematic-gate-read:hover {
-        background: linear-gradient(135deg, rgba(120, 190, 210, 0.26), rgba(168, 220, 220, 0.15));
-        box-shadow: 0 0 24px rgba(120, 190, 210, 0.18); transform: translateY(-1px);
-      }
-      .cinematic-gate-read-icon { font-size: 13px; letter-spacing: 0; }
-      .lm402-tutorial-overlay {
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        background: rgba(18, 18, 18, 0.96);
-        backdrop-filter: blur(20px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.3s ease;
-      }
-      .lm402-tutorial-overlay:not([hidden]) {
-        opacity: 1;
-        pointer-events: auto;
-      }
-      .lm402-tutorial-card {
-        position: relative;
-        max-width: 640px;
-        width: 100%;
-        max-height: 90vh;
-        overflow-y: auto;
-        background: linear-gradient(180deg, rgba(15, 15, 22, 0.94), rgba(8, 10, 16, 0.88));
-        border: 1px solid rgba(232, 90, 58, 0.18);
-        border-radius: 12px;
-        padding: 32px 40px;
-        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.04);
-      }
-      .lm402-tutorial-topbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 24px;
-      }
-      .lm402-tutorial-tag {
-        font-family: "DM Mono", monospace;
-        font-size: 10px;
-        letter-spacing: 0.3em;
-        color: rgba(217, 179, 106, 0.85);
-      }
-      .lm402-tutorial-close {
-        background: transparent;
-        border: 1px solid rgba(232, 90, 58, 0.3);
-        color: rgba(224, 72, 96, 0.95);
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        font-size: 14px;
-        cursor: pointer;
-      }
-      .lm402-tutorial-stepper {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 32px;
-      }
-      .lt-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        border: 1px solid rgba(232, 90, 58, 0.5);
-        background: transparent;
-        transition: all 0.3s;
-      }
-      .lt-dot.active {
-        background: rgba(224, 72, 96, 0.95);
-        border-color: rgba(224, 72, 96, 0.95);
-        box-shadow: 0 0 12px rgba(232, 90, 58, 0.5);
-      }
-      .lt-dot.done {
-        background: rgba(232, 90, 58, 0.5);
-      }
-      .lt-line {
-        flex: 1;
-        height: 1px;
-        background: rgba(232, 90, 58, 0.2);
-      }
-      .lm402-tutorial-step {
-        display: none;
-      }
-      .lm402-tutorial-step.active {
-        display: block;
-        animation: ltStepFadeIn 0.4s ease;
-      }
-      @keyframes ltStepFadeIn {
-        from { opacity: 0; transform: translateY(8px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      .lt-step-title {
-        font-family: "Cormorant Garamond", "Noto Serif TC", serif;
-        font-weight: 400;
-        font-size: clamp(22px, 3.6vw, 28px);
-        color: rgba(234, 230, 222, 0.96);
-        margin-bottom: 20px;
-        letter-spacing: 0.02em;
-      }
-      .lt-step-body {
-        font-family: "Noto Serif TC", serif;
-        font-size: 15px;
-        line-height: 2;
-        color: rgba(180, 176, 168, 0.92);
-      }
-      .lt-step-body p {
-        margin-bottom: 16px;
-      }
-      .lt-step-body strong {
-        color: rgba(217, 179, 106, 0.95);
-        font-weight: 500;
-      }
-      .lm402-tutorial-bottom {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 32px;
-        padding-top: 20px;
-        border-top: 1px solid rgba(37, 37, 48, 0.7);
-      }
-      .lt-btn-prev,
-      .lt-btn-next {
-        background: transparent;
-        border: 1px solid rgba(60, 60, 75, 0.7);
-        color: rgba(180, 176, 168, 0.92);
-        padding: 10px 18px;
-        font-family: "DM Mono", monospace;
-        font-size: 11px;
-        letter-spacing: 0.15em;
-        cursor: pointer;
-        border-radius: 4px;
-        transition: all 0.3s;
-      }
-      .lt-btn-next {
-        border-color: rgba(232, 90, 58, 0.5);
-        color: rgba(224, 72, 96, 0.95);
-      }
-      .lt-btn-prev:hover,
-      .lt-btn-next:hover {
-        background: rgba(255, 255, 255, 0.04);
-      }
-      .lt-step-indicator {
-        font-family: "DM Mono", monospace;
-        font-size: 10px;
-        letter-spacing: 0.2em;
-        color: rgba(140, 138, 136, 0.85);
-      }
-      .lt-skip {
-        display: block;
-        margin: 16px auto 0;
-        background: transparent;
-        border: none;
-        color: rgba(140, 138, 136, 0.85);
-        font-family: "DM Mono", monospace;
-        font-size: 10px;
-        letter-spacing: 0.2em;
-        cursor: pointer;
-        text-decoration: underline;
-      }
-
-/* C4:雙時空 cinematic-gate split-screen breathing(2005 金/2025 青/中央光縫) */
-body.lm402-page #cinematic-gate {
-  background: #000;
-  position: fixed;
-  inset: 0;
-  z-index: 9000;
-  overflow: hidden;
-}
-body.lm402-page #cinematic-gate::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  left: 0;
-  right: 50%;
-  background: radial-gradient(
-    ellipse at 50% 50%,
-    rgba(217, 179, 106, 0.30) 0%,
-    rgba(184, 144, 80, 0.18) 30%,
-    rgba(40, 28, 12, 0.4) 65%,
-    rgba(0, 0, 0, 0.95) 100%
-  );
-  animation: c4LeftBreath 6s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 1;
-}
-body.lm402-page #cinematic-gate::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  left: 50%;
-  right: 0;
-  background: radial-gradient(
-    ellipse at 50% 50%,
-    rgba(74, 168, 165, 0.28) 0%,
-    rgba(40, 110, 110, 0.16) 30%,
-    rgba(8, 26, 32, 0.4) 65%,
-    rgba(0, 0, 0, 0.95) 100%
-  );
-  animation: c4RightBreath 6s ease-in-out infinite;
-  animation-delay: 3s;
-  pointer-events: none;
-  z-index: 1;
-}
-body.lm402-page #cinematic-gate .cinematic-gate-inner {
-  position: relative;
-  z-index: 3;
-}
-body.lm402-page #cinematic-gate .cinematic-gate-inner::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: -50vh;
-  bottom: -50vh;
-  width: 1px;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(232, 90, 58, 0.5) 30%,
-    rgba(232, 90, 58, 0.8) 50%,
-    rgba(232, 90, 58, 0.5) 70%,
-    transparent 100%
-  );
-  z-index: 2;
-  pointer-events: none;
-}
-@keyframes c4LeftBreath {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
-}
-@keyframes c4RightBreath {
-  0%, 100% { opacity: 0.45; }
-  50% { opacity: 1; }
-}
-/* hint 改對位雙時空 */
-body.lm402-page #cinematic-gate .cinematic-gate-kicker {
-  color: rgba(217, 179, 106, 0.85);
-}
-/* a11y review: respect prefers-reduced-motion (vestibular sensitivity) */
-@media (prefers-reduced-motion: reduce) {
-  body.lm402-page #cinematic-gate::before,
-  body.lm402-page #cinematic-gate::after {
-    animation: none !important;
-    opacity: 0.7 !important;
-  }
-}
-
-    </style>
+    <link rel="stylesheet" href="lm402-page.css" />
     <div id="lm402-polaroid-flash" aria-hidden="true"></div>
 <script src="assets/lm402/page-c7.js"></script>
     <!-- 五個 narrative module 改成 idle 載入：學妹靜止場景渲染先穩，main thread 閒下來才載
@@ -1157,28 +780,7 @@ body.lm402-page #cinematic-gate .cinematic-gate-kicker {
   <!-- URL param ?mode=consciousness 移除 — default 已經是「字 · 淡」狀態 -->
 
     <!-- r74：進場 gate「先閱讀故事」→ 一眼瞬間導覽（學長/學妹/女兒三角度）。全 DOM，零 innerHTML，零外部來源 -->
-    <style>
-      .gg-backdrop{position:fixed;inset:0;z-index:100001;display:flex;align-items:center;justify-content:center;background:radial-gradient(120% 90% at 50% 30%,rgba(10,14,18,.9),rgba(4,6,10,.97));backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);opacity:0;transition:opacity .4s ease;padding:18px}
-      .gg-backdrop.show{opacity:1}
-      .gg-card{position:relative;width:min(560px,calc(100vw - 28px));max-height:calc(100vh - 36px);overflow-y:auto;background:linear-gradient(180deg,rgba(16,22,26,.97),rgba(10,14,18,.98));border:1px solid rgba(168,220,220,.3);border-radius:14px;padding:30px 26px 24px;box-shadow:0 24px 80px rgba(0,0,0,.6);transform:translateY(14px);transition:transform .4s cubic-bezier(.22,1,.36,1);font-family:"Noto Serif TC",Georgia,serif;color:#e8efee}
-      .gg-backdrop.show .gg-card{transform:translateY(0)}
-      .gg-close{position:absolute;top:8px;right:10px;width:44px;height:44px;border:none;background:transparent;color:rgba(220,232,230,.55);font-size:20px;cursor:pointer;line-height:1;border-radius:50%;display:flex;align-items:center;justify-content:center}
-      .gg-close:hover{color:#fff;background:rgba(255,255,255,.08)}
-      .gg-kicker{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.22em;color:rgba(168,220,220,.85);text-align:center;margin-bottom:.6em}
-      .gg-title{font-size:clamp(20px,3vw,26px);font-weight:700;text-align:center;color:#f3faf8;letter-spacing:.04em}
-      .gg-intro{font-size:13px;color:rgba(210,224,222,.72);line-height:1.8;text-align:center;margin:.4em 0 1.4em}
-      .gg-section{margin-bottom:18px}
-      .gg-section-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:8px;border-bottom:1px solid rgba(168,220,220,.16);margin-bottom:10px}
-      .gg-angle{font-size:16px;font-weight:700;color:#bfe6e6;letter-spacing:.06em}
-      .gg-sub{font-size:12px;color:rgba(210,224,222,.6)}
-      .gg-ep{display:block;text-decoration:none;color:inherit;cursor:pointer;padding:10px 12px;border-radius:8px;border:1px solid transparent;transition:background .2s,border-color .2s,transform .2s;margin-bottom:6px}
-      .gg-ep:hover,.gg-ep:focus-visible{background:rgba(168,220,220,.08);border-color:rgba(168,220,220,.3);transform:translateX(3px);outline:none}
-      .gg-ep-num{display:block;font-family:"DM Mono",monospace;font-size:12px;letter-spacing:.1em;color:#ffd9a8;margin-bottom:3px}
-      .gg-ep-hook{display:block;font-size:13px;line-height:1.7;color:rgba(224,236,234,.82)}
-      .gg-readall{display:block;text-align:center;margin-top:10px;padding:13px;border-radius:9px;border:1px solid rgba(168,220,220,.4);background:rgba(168,220,220,.08);color:#cdeded;text-decoration:none;font-size:14px;letter-spacing:.04em;transition:background .2s}
-      .gg-readall:hover{background:rgba(168,220,220,.16)}
-      @media (prefers-reduced-motion:reduce){.gg-backdrop,.gg-card{transition:none}}
-    </style>
+
 <script src="assets/lm402/page-c12.js"></script>
   </body>
 </html>

@@ -1,0 +1,406 @@
+      #lm402-polaroid-btn,
+      #lm402-polaroid-flash { display: none !important; } /* toni: 隱藏遊戲拍照按鈕 (console API 保留) */
+      #lm402-polaroid-btn {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: rgba(20, 16, 12, 0.72);
+        color: #f4eee0;
+        border: 1px solid rgba(255, 230, 200, 0.32);
+        font-size: 24px;
+        cursor: pointer;
+        z-index: 9990;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        transition: transform 0.18s ease, background 0.18s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+      }
+      #lm402-polaroid-btn:hover {
+        transform: scale(1.08);
+        background: rgba(40, 30, 20, 0.85);
+      }
+      #lm402-polaroid-btn:active {
+        transform: scale(0.94);
+      }
+      #lm402-polaroid-flash {
+        position: fixed;
+        inset: 0;
+        background: white;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 9991;
+        transition: opacity 0.06s ease-out;
+      }
+      #lm402-polaroid-flash.flash {
+        opacity: 0.85;
+      }
+
+      /* C10:LM402 新手引路 tutorial(對位 modal 紀律) */
+      .cinematic-gate-tutorial {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 18px;
+        padding: 12px 26px;
+        background: linear-gradient(135deg, rgba(232, 90, 58, 0.16), rgba(217, 179, 106, 0.10));
+        border: 1px solid rgba(232, 90, 58, 0.45);
+        color: #f0b070;
+        font-family: "DM Mono", monospace;
+        font-size: 10.5px;
+        letter-spacing: 0.27em;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      .cinematic-gate-tutorial:hover {
+        background: linear-gradient(135deg, rgba(232, 90, 58, 0.28), rgba(217, 179, 106, 0.16));
+        box-shadow: 0 0 24px rgba(232, 90, 58, 0.18);
+        transform: translateY(-1px);
+      }
+      .cinematic-gate-tutorial-icon {
+        font-size: 13px;
+        color: rgba(224, 72, 96, 0.95);
+        letter-spacing: 0;
+      }
+      .cinematic-gate-read {
+        display: inline-flex; align-items: center; gap: 10px; margin-top: 12px; padding: 12px 26px;
+        background: linear-gradient(135deg, rgba(120, 190, 210, 0.14), rgba(168, 220, 220, 0.08));
+        border: 1px solid rgba(168, 220, 220, 0.42); color: #bfe6e6;
+        font-family: "DM Mono", monospace; font-size: 10.5px; letter-spacing: 0.27em;
+        border-radius: 4px; cursor: pointer; transition: all 0.3s ease;
+      }
+      .cinematic-gate-read:hover {
+        background: linear-gradient(135deg, rgba(120, 190, 210, 0.26), rgba(168, 220, 220, 0.15));
+        box-shadow: 0 0 24px rgba(120, 190, 210, 0.18); transform: translateY(-1px);
+      }
+      .cinematic-gate-read-icon { font-size: 13px; letter-spacing: 0; }
+      .lm402-tutorial-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: rgba(18, 18, 18, 0.96);
+        backdrop-filter: blur(20px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+      .lm402-tutorial-overlay:not([hidden]) {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .lm402-tutorial-card {
+        position: relative;
+        max-width: 640px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        background: linear-gradient(180deg, rgba(15, 15, 22, 0.94), rgba(8, 10, 16, 0.88));
+        border: 1px solid rgba(232, 90, 58, 0.18);
+        border-radius: 12px;
+        padding: 32px 40px;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      }
+      .lm402-tutorial-topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+      }
+      .lm402-tutorial-tag {
+        font-family: "DM Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.3em;
+        color: rgba(217, 179, 106, 0.85);
+      }
+      .lm402-tutorial-close {
+        background: transparent;
+        border: 1px solid rgba(232, 90, 58, 0.3);
+        color: rgba(224, 72, 96, 0.95);
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .lm402-tutorial-stepper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 32px;
+      }
+      .lt-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: 1px solid rgba(232, 90, 58, 0.5);
+        background: transparent;
+        transition: all 0.3s;
+      }
+      .lt-dot.active {
+        background: rgba(224, 72, 96, 0.95);
+        border-color: rgba(224, 72, 96, 0.95);
+        box-shadow: 0 0 12px rgba(232, 90, 58, 0.5);
+      }
+      .lt-dot.done {
+        background: rgba(232, 90, 58, 0.5);
+      }
+      .lt-line {
+        flex: 1;
+        height: 1px;
+        background: rgba(232, 90, 58, 0.2);
+      }
+      .lm402-tutorial-step {
+        display: none;
+      }
+      .lm402-tutorial-step.active {
+        display: block;
+        animation: ltStepFadeIn 0.4s ease;
+      }
+      @keyframes ltStepFadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .lt-step-title {
+        font-family: "Cormorant Garamond", "Noto Serif TC", serif;
+        font-weight: 400;
+        font-size: clamp(22px, 3.6vw, 28px);
+        color: rgba(234, 230, 222, 0.96);
+        margin-bottom: 20px;
+        letter-spacing: 0.02em;
+      }
+      .lt-step-body {
+        font-family: "Noto Serif TC", serif;
+        font-size: 15px;
+        line-height: 2;
+        color: rgba(180, 176, 168, 0.92);
+      }
+      .lt-step-body p {
+        margin-bottom: 16px;
+      }
+      .lt-step-body strong {
+        color: rgba(217, 179, 106, 0.95);
+        font-weight: 500;
+      }
+      .lm402-tutorial-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 32px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(37, 37, 48, 0.7);
+      }
+      .lt-btn-prev,
+      .lt-btn-next {
+        background: transparent;
+        border: 1px solid rgba(60, 60, 75, 0.7);
+        color: rgba(180, 176, 168, 0.92);
+        padding: 10px 18px;
+        font-family: "DM Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 0.15em;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.3s;
+      }
+      .lt-btn-next {
+        border-color: rgba(232, 90, 58, 0.5);
+        color: rgba(224, 72, 96, 0.95);
+      }
+      .lt-btn-prev:hover,
+      .lt-btn-next:hover {
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .lt-step-indicator {
+        font-family: "DM Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.2em;
+        color: rgba(140, 138, 136, 0.85);
+      }
+      .lt-skip {
+        display: block;
+        margin: 16px auto 0;
+        background: transparent;
+        border: none;
+        color: rgba(140, 138, 136, 0.85);
+        font-family: "DM Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.2em;
+        cursor: pointer;
+        text-decoration: underline;
+      }
+
+/* C4:雙時空 cinematic-gate split-screen breathing(2005 金/2025 青/中央光縫) */
+body.lm402-page #cinematic-gate {
+  background: #000;
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  overflow: hidden;
+}
+body.lm402-page #cinematic-gate::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  left: 0;
+  right: 50%;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(217, 179, 106, 0.30) 0%,
+    rgba(184, 144, 80, 0.18) 30%,
+    rgba(40, 28, 12, 0.4) 65%,
+    rgba(0, 0, 0, 0.95) 100%
+  );
+  animation: c4LeftBreath 6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+body.lm402-page #cinematic-gate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  left: 50%;
+  right: 0;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(74, 168, 165, 0.28) 0%,
+    rgba(40, 110, 110, 0.16) 30%,
+    rgba(8, 26, 32, 0.4) 65%,
+    rgba(0, 0, 0, 0.95) 100%
+  );
+  animation: c4RightBreath 6s ease-in-out infinite;
+  animation-delay: 3s;
+  pointer-events: none;
+  z-index: 1;
+}
+body.lm402-page #cinematic-gate .cinematic-gate-inner {
+  position: relative;
+  z-index: 3;
+}
+body.lm402-page #cinematic-gate .cinematic-gate-inner::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -50vh;
+  bottom: -50vh;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(232, 90, 58, 0.5) 30%,
+    rgba(232, 90, 58, 0.8) 50%,
+    rgba(232, 90, 58, 0.5) 70%,
+    transparent 100%
+  );
+  z-index: 2;
+  pointer-events: none;
+}
+@keyframes c4LeftBreath {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+@keyframes c4RightBreath {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+/* hint 改對位雙時空 */
+body.lm402-page #cinematic-gate .cinematic-gate-kicker {
+  color: rgba(217, 179, 106, 0.85);
+}
+/* a11y review: respect prefers-reduced-motion (vestibular sensitivity) */
+@media (prefers-reduced-motion: reduce) {
+  body.lm402-page #cinematic-gate::before,
+  body.lm402-page #cinematic-gate::after {
+    animation: none !important;
+    opacity: 0.7 !important;
+  }
+}
+
+
+      .gg-backdrop{position:fixed;inset:0;z-index:100001;display:flex;align-items:center;justify-content:center;background:radial-gradient(120% 90% at 50% 30%,rgba(10,14,18,.9),rgba(4,6,10,.97));backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);opacity:0;transition:opacity .4s ease;padding:18px}
+      .gg-backdrop.show{opacity:1}
+      .gg-card{position:relative;width:min(560px,calc(100vw - 28px));max-height:calc(100vh - 36px);overflow-y:auto;background:linear-gradient(180deg,rgba(16,22,26,.97),rgba(10,14,18,.98));border:1px solid rgba(168,220,220,.3);border-radius:14px;padding:30px 26px 24px;box-shadow:0 24px 80px rgba(0,0,0,.6);transform:translateY(14px);transition:transform .4s cubic-bezier(.22,1,.36,1);font-family:"Noto Serif TC",Georgia,serif;color:#e8efee}
+      .gg-backdrop.show .gg-card{transform:translateY(0)}
+      .gg-close{position:absolute;top:8px;right:10px;width:44px;height:44px;border:none;background:transparent;color:rgba(220,232,230,.55);font-size:20px;cursor:pointer;line-height:1;border-radius:50%;display:flex;align-items:center;justify-content:center}
+      .gg-close:hover{color:#fff;background:rgba(255,255,255,.08)}
+      .gg-kicker{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.22em;color:rgba(168,220,220,.85);text-align:center;margin-bottom:.6em}
+      .gg-title{font-size:clamp(20px,3vw,26px);font-weight:700;text-align:center;color:#f3faf8;letter-spacing:.04em}
+      .gg-intro{font-size:13px;color:rgba(210,224,222,.72);line-height:1.8;text-align:center;margin:.4em 0 1.4em}
+      .gg-section{margin-bottom:18px}
+      .gg-section-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:8px;border-bottom:1px solid rgba(168,220,220,.16);margin-bottom:10px}
+      .gg-angle{font-size:16px;font-weight:700;color:#bfe6e6;letter-spacing:.06em}
+      .gg-sub{font-size:12px;color:rgba(210,224,222,.6)}
+      .gg-ep{display:block;text-decoration:none;color:inherit;cursor:pointer;padding:10px 12px;border-radius:8px;border:1px solid transparent;transition:background .2s,border-color .2s,transform .2s;margin-bottom:6px}
+      .gg-ep:hover,.gg-ep:focus-visible{background:rgba(168,220,220,.08);border-color:rgba(168,220,220,.3);transform:translateX(3px);outline:none}
+      .gg-ep-num{display:block;font-family:"DM Mono",monospace;font-size:12px;letter-spacing:.1em;color:#ffd9a8;margin-bottom:3px}
+      .gg-ep-hook{display:block;font-size:13px;line-height:1.7;color:rgba(224,236,234,.82)}
+      .gg-readall{display:block;text-align:center;margin-top:10px;padding:13px;border-radius:9px;border:1px solid rgba(168,220,220,.4);background:rgba(168,220,220,.08);color:#cdeded;text-decoration:none;font-size:14px;letter-spacing:.04em;transition:background .2s}
+      .gg-readall:hover{background:rgba(168,220,220,.16)}
+      @media (prefers-reduced-motion:reduce){.gg-backdrop,.gg-card{transition:none}}
+
+/* === inline style= 轉出 class（CSP style-src 收斂）=== */
+.ls-1 { position:fixed;inset:0;z-index:1000;background:#06080d;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;gap:16px }
+.ls-2 { font:300 22px/1.4 'Cormorant Garamond',serif;color:rgba(238,232,222,.8);letter-spacing:.06em }
+.ls-3 { font:300 14px/1.8 'Noto Serif TC',serif;color:rgba(238,232,222,.5);max-width:340px }
+.ls-4 { margin-top:12px;padding:10px 24px;border:1px solid rgba(217,179,106,.4);border-radius:4px;color:#d9b36a;text-decoration:none;font:400 12px 'DM Mono',monospace;letter-spacing:.15em }
+.ls-5 { 
+            margin-top: 16px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6) }
+.ls-6 { position: relative }
+.ls-7 { 
+            margin: 20px 0 8px;
+            padding: 16px 20px;
+            border-left: 2px solid rgba(217, 179, 106, 0.4);
+            font-size: 13px;
+            line-height: 1.8;
+            color: rgba(238, 232, 222, 0.7);
+            font-family: &quot;Noto Serif TC&quot;, serif }
+.ls-8 { 
+              color: #d9b36a;
+              font-size: 11px;
+              letter-spacing: 0.12em;
+              margin-bottom: 8px }
+.ls-9 { 
+              margin-top: 10px;
+              color: rgba(238, 232, 222, 0.5);
+              font-size: 12px }
+.ls-10 { 
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin: 14px 0 6px }
+.ls-11 { 
+            text-align: center;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            color: rgba(238, 232, 222, 0.45);
+            margin-bottom: 10px }
+.ls-12 { 
+              background: rgba(180, 180, 200, 0.10);
+              border-color: rgba(180, 180, 200, 0.3);
+              color: #c8c8d4;
+              text-align: center;
+              text-decoration: none }
+.ls-13 { 
+              background: rgba(22, 168, 100, 0.12);
+              border-color: rgba(22, 168, 100, 0.4);
+              color: #73d0a5;
+              text-align: center;
+              text-decoration: none }
+.ls-14 { 
+              background: rgba(228, 70, 80, 0.12);
+              border-color: rgba(228, 70, 80, 0.4);
+              color: #f8a898;
+              text-align: center;
+              text-decoration: none }
+.ls-15 { display:block;font-size:11px;opacity:.7;margin-top:3px;font-weight:400 }
