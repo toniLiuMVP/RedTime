@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width,initial-scale=1,viewport-fit=cover"
     />
-    <meta name="theme-color" content="#050508" />
+    <meta name="theme-color" content="#121212" />
     <meta name="color-scheme" content="dark" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <link rel="canonical" href="https://toniliumvp.github.io/RedTime/reader.html" />
@@ -29,6 +29,12 @@
       property="og:image"
       content="https://toniliumvp.github.io/RedTime/assets/og-image.jpg"
     />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="時間裡的兩個妳 · 全集閱讀 — EP0 到 EP41" />
+    <meta property="og:url" content="https://toniliumvp.github.io/RedTime/reader.html" />
+    <meta property="og:site_name" content="時間裡的兩個妳" />
+    <meta property="og:locale" content="zh_TW" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="時間裡的兩個妳 · 全集閱讀" />
     <meta
@@ -61,12 +67,12 @@
     <style>
       /* ── Variables ─── */
       :root {
-        --bg: #06060a;
-        --bg2: #0d0d14;
-        --bg3: #141420;
-        --line: #252530;
-        --line2: #1c1c28;
-        --t1: #eae6de;
+        --bg: #121212;
+        --bg2: #1e1e1e;
+        --bg3: #262626;
+        --line: #3a3a44;
+        --line2: #2c2c34;
+        --t1: #e0e0e0;
         --t2: #b4b0a8;
         --t3: #8c8a88;
         --jade: #16a864;
@@ -807,7 +813,7 @@
           position: sticky;
           top: 0;
           z-index: 300;
-          background: rgba(6, 6, 10, 0.92);
+          background: rgba(18, 18, 18, 0.92);
           backdrop-filter: blur(14px);
           -webkit-backdrop-filter: blur(14px);
           border-bottom: 1px solid var(--line2);
@@ -1227,7 +1233,7 @@
         right: 0;
         height: calc(50px + env(safe-area-inset-top, 0px));
         padding-top: env(safe-area-inset-top, 0px);
-        background: rgba(6, 6, 10, 0.93);
+        background: rgba(18, 18, 18, 0.93);
         backdrop-filter: blur(14px);
         -webkit-backdrop-filter: blur(14px);
         border-bottom: 1px solid var(--line2);
@@ -2507,7 +2513,7 @@
         left: 0;
         right: 0;
         padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
-        background: rgba(6, 6, 10, 0.94);
+        background: rgba(18, 18, 18, 0.94);
         backdrop-filter: blur(14px);
         -webkit-backdrop-filter: blur(14px);
         border-top: 1px solid var(--line2);
@@ -4021,7 +4027,7 @@
         height: 36px;
         border-radius: 8px;
         border: 1px solid var(--line);
-        background: rgba(6, 6, 10, 0.82);
+        background: rgba(18, 18, 18, 0.82);
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
         color: var(--t2);
@@ -4082,7 +4088,7 @@
           transform: translateY(-50%);
           z-index: 400;
           padding: 12px 5px;
-          background: rgba(6, 6, 10, 0.72);
+          background: rgba(18, 18, 18, 0.72);
           backdrop-filter: blur(10px);
           -webkit-backdrop-filter: blur(10px);
           border: 1px solid var(--line2);
@@ -4953,7 +4959,7 @@
 
     <!-- HERO -->
     <section id="hero">
-      <canvas id="hero-canvas"></canvas>
+      <canvas id="hero-canvas" aria-hidden="true"></canvas>
       <div class="hero-inner">
         <div class="hero-poster">
           <div class="hero-copy-col">
@@ -8394,7 +8400,6 @@
           if (closeBtn) closeBtn.click();
         });
 
-        if (window.console) console.log('[reader.html] a11y patch applied: div→button role + tabs ARIA + Esc-close');
       })();
     </script>
 

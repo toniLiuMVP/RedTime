@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v16-20260605';  // bumped: dropped removed-page GLB / vendor from precache
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v97-20260607';  // bumped: canonicalize the single public game version (lm402.html + demos/platform-run/)
+const RUNTIME_VERSION = 'runtime-v98-20260608';
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
@@ -83,7 +83,7 @@ async function trimCache(cacheName, maxItems) {
 // 安全紀律:cache allowlist — 只 cache 已知 file type 或 html(避免 cache 異常 path)
 function isCacheable(pathname) {
   if (pathname === '/' || pathname.endsWith('/') || pathname.endsWith('.html')) return true;
-  return /\.(js|mjs|css|glb|woff2?|ttf|otf|png|jpg|jpeg|svg|ico|wasm|json)$/i.test(pathname);
+  return /\.(js|mjs|css|glb|woff2?|ttf|otf|png|jpg|jpeg|svg|ico|wasm|json|mp3|m4a|ogg|wav)$/i.test(pathname);
 }
 
 self.addEventListener('fetch', event => {

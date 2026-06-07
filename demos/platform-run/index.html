@@ -13,13 +13,37 @@
 <meta property="og:description" content="一眼只有一秒，卻用了二十年才讀懂。《時間裡的兩個妳》 連載中。" />
 <meta property="og:url" content="https://toniliumvp.github.io/RedTime/demos/platform-run/index.html" />
 <meta property="og:image" content="https://toniliumvp.github.io/RedTime/assets/og-image.jpg" />
-<meta name="theme-color" content="#050508" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="月台上的狂奔 — 30 秒衝到月台盡頭抱起女兒" />
+<meta property="og:site_name" content="時間裡的兩個妳" />
+<meta property="og:locale" content="zh_TW" />
+<meta name="theme-color" content="#121212" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:image" content="https://toniliumvp.github.io/RedTime/assets/og-image.jpg" />
 <meta name="twitter:title" content="月台上的狂奔 · 每一次，都要趕上" />
 <meta name="twitter:description" content="一眼只有一秒，卻用了二十年才讀懂。《時間裡的兩個妳》 連載中。" />
 <link rel="canonical" href="https://toniliumvp.github.io/RedTime/demos/platform-run/index.html" />
 <link rel="manifest" href="../../manifest.json" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "VideoGame",
+  "name": "月台上的狂奔",
+  "description": "2018 年台中火車站，把拔在 30 秒內衝到月台盡頭抱起女兒。十關橫向跑酷，對位《時間裡的兩個妳》EP36。",
+  "author": { "@type": "Person", "name": "toni" },
+  "url": "https://toniliumvp.github.io/RedTime/demos/platform-run/index.html",
+  "inLanguage": "zh-TW",
+  "gamePlatform": "Web Browser",
+  "genre": "Interactive Fiction",
+  "isAccessibleForFree": true,
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "時間裡的兩個妳",
+    "url": "https://toniliumvp.github.io/RedTime/"
+  }
+}
+</script>
 <link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
 <title>月台上的狂奔 · 每一次，都要趕上</title>
 <style>
@@ -252,7 +276,7 @@ canvas{display:block;width:100%;height:100%}
 body:has(#title-screen.hide) .pt-tutorial-trigger { display: none !important; }
 .pt-tutorial-overlay {
   position: fixed; inset: 0; z-index: 9999;
-  background: rgba(5, 5, 8, 0.96); backdrop-filter: blur(20px);
+  background: rgba(18, 18, 18, 0.96); backdrop-filter: blur(20px);
   display: flex; align-items: center; justify-content: center;
   padding: 24px; opacity: 0; pointer-events: none;
   transition: opacity 0.3s ease;
@@ -688,7 +712,7 @@ const state = {
 /* ════════════════════════════════════════════════
    背景音樂 — NEVER INTERRUPT
    ════════════════════════════════════════════════ */
-const bgm = new Audio("\u628A\u62D4\u6211\u6703\u60F3\u4F60\u7684.mp3");
+const bgm = new Audio("\u628A\u62D4\u6211\u6703\u60F3\u4F60\u7684.mp3"); bgm.preload = "none";
 bgm.loop = true;
 bgm.volume = 0.3;
 let bgmMuted = false;
