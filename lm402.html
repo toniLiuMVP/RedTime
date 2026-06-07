@@ -149,7 +149,6 @@
       <button
           type="button"
           class="cinematic-gate-tutorial"
-          onclick="openLM402Tutorial()"
           aria-label="新手引路 · 5 秒看怎麼玩">
           <span class="cinematic-gate-tutorial-icon" aria-hidden="true">☆</span>
           <span class="cinematic-gate-tutorial-text">第一次玩？5 秒看怎麼玩</span>
@@ -157,7 +156,6 @@
         <button
           type="button"
           class="cinematic-gate-read"
-          onclick="window.__GATE_GUIDE__ && window.__GATE_GUIDE__.open()"
           aria-label="先閱讀故事 · 一眼瞬間導覽">
           <span class="cinematic-gate-read-icon" aria-hidden="true">📖</span>
           <span class="cinematic-gate-read-text">先閱讀故事 · 一眼瞬間導覽</span>
@@ -783,9 +781,9 @@
       // C9: only kick in AFTER the cinematic gate has been entered; before that, nothing is loading yet.
       window.__lm402Ready = false;
       window.__lm402GateEntered = false;
-      setTimeout(function () {
+      // 「場景卡住」提示：改由 enterScene 進場後才排程（避免在玄關久留時 6s timer 先空轉掉）
+      window.__lm402ShowStuckHint = function () {
         if (window.__lm402Ready) return;
-        if (!window.__lm402GateEntered) return;
         var loader = document.getElementById("lm402-loader");
         if (!loader) return;
         var inner = loader.querySelector(".loader-inner");
@@ -811,7 +809,7 @@
         hint.appendChild(link);
 
         inner.appendChild(hint);
-      }, 6000);
+      };
     </script>
     <!-- 雙時空B Act1 意識菜市場議會模組（設 window.__COUNCIL__，供 app.js 觸發）-->
     <script src="./assets/lm402/council.js"></script>
@@ -832,6 +830,12 @@
           return;
         }
 
+        // a11y/CSP：玄關附屬按鈕改用 addEventListener（取代 inline onclick，關掉 inline event handler 注入路徑）
+        var _gt = document.querySelector(".cinematic-gate-tutorial");
+        if (_gt) _gt.addEventListener("click", function () { if (typeof openLM402Tutorial === "function") openLM402Tutorial(); });
+        var _gr = document.querySelector(".cinematic-gate-read");
+        if (_gr) _gr.addEventListener("click", function () { if (window.__GATE_GUIDE__) window.__GATE_GUIDE__.open(); });
+
         let entered = false;
         function enterScene() {
           if (entered) return;
@@ -841,6 +845,8 @@
           gateBtn.disabled = true;
           gateBtn.setAttribute("aria-disabled", "true");
           window.__lm402GateEntered = true;
+          // 進場後才排「場景卡住」提示（給 6 秒讓場景載入；玄關久留不再先空轉掉）
+          setTimeout(function () { if (!window.__lm402Ready && typeof window.__lm402ShowStuckHint === "function") window.__lm402ShowStuckHint(); }, 6000);
 
           // 1. 在使用者 gesture 內解鎖音訊
           //    (a) AudioContext 預熱
@@ -1014,7 +1020,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         // 相對路徑同時支援 GitHub Pages (/RedTime/) 與本機伺服器 (/)
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
+        navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(() => {});
       }
     </script>
     <!-- E10 Polaroid 拍照按鈕（固定右下角） -->

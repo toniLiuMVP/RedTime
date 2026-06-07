@@ -4020,7 +4020,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         // 相對路徑同時支援 GitHub Pages (/RedTime/) 與本機伺服器 (/)
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
+        navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(() => {});
       }
     </script>
 
