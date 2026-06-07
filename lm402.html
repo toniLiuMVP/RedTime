@@ -836,6 +836,22 @@
         var _gr = document.querySelector(".cinematic-gate-read");
         if (_gr) _gr.addEventListener("click", function () { if (window.__GATE_GUIDE__) window.__GATE_GUIDE__.open(); });
 
+        // a11y：玄關 dialog focus trap — Tab/Shift+Tab 鎖在玄關內，初始 focus 給進場鈕
+        function _gateFocusables() {
+          return Array.prototype.slice.call(gate.querySelectorAll('button:not([disabled]),a[href],[tabindex]:not([tabindex="-1"])'))
+            .filter(function (el) { return el.offsetParent !== null; });
+        }
+        function _gateTrap(e) {
+          if (e.key !== "Tab") return;
+          var f = _gateFocusables();
+          if (!f.length) return;
+          var first = f[0], last = f[f.length - 1];
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+        gate.addEventListener("keydown", _gateTrap);
+        setTimeout(function () { try { gateBtn.focus(); } catch (e) {} }, 120);
+
         let entered = false;
         function enterScene() {
           if (entered) return;
@@ -845,6 +861,7 @@
           gateBtn.disabled = true;
           gateBtn.setAttribute("aria-disabled", "true");
           window.__lm402GateEntered = true;
+          gate.removeEventListener("keydown", _gateTrap); // 進場後解除 focus trap
           // 進場後才排「場景卡住」提示（給 6 秒讓場景載入；玄關久留不再先空轉掉）
           setTimeout(function () { if (!window.__lm402Ready && typeof window.__lm402ShowStuckHint === "function") window.__lm402ShowStuckHint(); }, 6000);
 

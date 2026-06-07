@@ -747,7 +747,7 @@
       .hero-stage-step strong {
         display: block;
         font-family: "DM Mono", monospace;
-        font-size: 8px;
+        font-size: 10px;
         letter-spacing: 0.16em;
         text-transform: uppercase;
         color: rgba(255, 233, 185, 0.78);
@@ -863,7 +863,7 @@
       .hero-side-stat span {
         display: block;
         font-family: "DM Mono", monospace;
-        font-size: 8px;
+        font-size: 10px;
         letter-spacing: 0.14em;
         text-transform: uppercase;
         color: var(--mist);
@@ -1031,6 +1031,54 @@
       .reveal.in {
         opacity: 1;
         transform: none;
+      }
+
+      /* YouTube facade：縮圖 + 播放鈕佔位，點擊前不連 Google */
+      .yt-facade {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .yt-facade::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.18);
+        transition: background 0.2s ease;
+      }
+      .yt-facade:hover::after,
+      .yt-facade:focus-visible::after {
+        background: rgba(0, 0, 0, 0.05);
+      }
+      .yt-facade-play {
+        position: relative;
+        z-index: 1;
+        width: 68px;
+        height: 48px;
+        border-radius: 12px;
+        background: rgba(18, 18, 18, 0.82);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          background 0.2s ease,
+          transform 0.2s ease;
+      }
+      .yt-facade-play::before {
+        content: "";
+        border-style: solid;
+        border-width: 10px 0 10px 17px;
+        border-color: transparent transparent transparent #fff;
+        margin-left: 3px;
+      }
+      .yt-facade:hover .yt-facade-play,
+      .yt-facade:focus-visible .yt-facade-play {
+        background: #ff4858;
+        transform: scale(1.06);
+      }
+      .yt-facade:focus-visible {
+        outline: 2px solid #ff8fa0;
+        outline-offset: 3px;
       }
 
       /* ─── ABOUT ─── */
@@ -3235,24 +3283,26 @@
                 border: 1px solid var(--seam);
               "
             >
-              <iframe
-                style="position: absolute; inset: 0; width: 100%; height: 100%"
-                src="https://www.youtube-nocookie.com/embed/eACPFC4K89o"
-                title="時間裡的兩個妳：一眼瞬間 微電影"
-                frameborder="0"
-                sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-presentation"
-                referrerpolicy="strict-origin-when-cross-origin"
-                allow="
-                  accelerometer;
-                  autoplay;
-                  clipboard-write;
-                  encrypted-media;
-                  gyroscope;
-                  picture-in-picture;
+              <button
+                type="button"
+                class="yt-facade"
+                data-yt-id="eACPFC4K89o"
+                data-yt-title="時間裡的兩個妳：一眼瞬間 微電影"
+                aria-label="播放影片：時間裡的兩個妳：一眼瞬間 微電影"
+                style="
+                  position: absolute;
+                  inset: 0;
+                  width: 100%;
+                  height: 100%;
+                  padding: 0;
+                  border: 0;
+                  cursor: pointer;
+                  background: #000 center / cover no-repeat
+                    url('assets/video-thumbs/eACPFC4K89o.jpg');
                 "
-                allowfullscreen
-                loading="lazy"
-              ></iframe>
+              >
+                <span class="yt-facade-play" aria-hidden="true"></span>
+              </button>
             </div>
             <div
               style="
@@ -3289,24 +3339,26 @@
                 border: 1px solid var(--seam);
               "
             >
-              <iframe
-                style="position: absolute; inset: 0; width: 100%; height: 100%"
-                src="https://www.youtube-nocookie.com/embed/Ne3mv-6Ufl8"
-                title="時間裡的兩個妳：一眼瞬間 原聲帶"
-                frameborder="0"
-                sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-presentation"
-                referrerpolicy="strict-origin-when-cross-origin"
-                allow="
-                  accelerometer;
-                  autoplay;
-                  clipboard-write;
-                  encrypted-media;
-                  gyroscope;
-                  picture-in-picture;
+              <button
+                type="button"
+                class="yt-facade"
+                data-yt-id="Ne3mv-6Ufl8"
+                data-yt-title="時間裡的兩個妳：一眼瞬間 原聲帶"
+                aria-label="播放影片：時間裡的兩個妳：一眼瞬間 原聲帶"
+                style="
+                  position: absolute;
+                  inset: 0;
+                  width: 100%;
+                  height: 100%;
+                  padding: 0;
+                  border: 0;
+                  cursor: pointer;
+                  background: #000 center / cover no-repeat
+                    url('assets/video-thumbs/Ne3mv-6Ufl8.jpg');
                 "
-                allowfullscreen
-                loading="lazy"
-              ></iframe>
+              >
+                <span class="yt-facade-play" aria-hidden="true"></span>
+              </button>
             </div>
             <div
               style="
@@ -3793,6 +3845,30 @@
         { threshold: 0.12, rootMargin: "0px 0px -60px 0px" },
       );
       document.querySelectorAll(".reveal").forEach((el) => ro.observe(el));
+
+      // YouTube facade：點擊前完全不連 Google（隱私）；點擊才注入 nocookie iframe（效能）
+      document.querySelectorAll(".yt-facade").forEach((btn) => {
+        btn.addEventListener("click", function () {
+          var id = btn.getAttribute("data-yt-id") || "";
+          // 白名單：只接受合法 11 碼 YouTube ID（防注入，呼應 §安全不變式）
+          if (!/^[A-Za-z0-9_-]{11}$/.test(id)) return;
+          var ifr = document.createElement("iframe");
+          ifr.style.cssText =
+            "position:absolute;inset:0;width:100%;height:100%;border:0";
+          ifr.src =
+            "https://www.youtube-nocookie.com/embed/" + id + "?autoplay=1";
+          ifr.title = btn.getAttribute("data-yt-title") || "";
+          ifr.setAttribute("frameborder", "0");
+          ifr.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
+          ifr.setAttribute(
+            "allow",
+            "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
+          );
+          ifr.setAttribute("allowfullscreen", "");
+          if (btn.parentNode) btn.parentNode.replaceChild(ifr, btn);
+          try { ifr.focus(); } catch (e) {}
+        });
+      });
 
       // Homepage font scale — :6 階(加超特大)+ site-wide localStorage 同步 + 放大鏡 elderly mode
       (() => {
