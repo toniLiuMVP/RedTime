@@ -1,10 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
   <url>
     <loc>https://toniliumvp.github.io/RedTime/</loc>
     <lastmod>2026-06-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+  
+    <image:image>
+      <image:loc>https://toniliumvp.github.io/RedTime/assets/og-image.jpg</image:loc>
+      <image:title>時間裡的兩個妳</image:title>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://toniliumvp.github.io/RedTime/assets/video-thumbs/eACPFC4K89o.jpg</video:thumbnail_loc>
+      <video:title>時間裡的兩個妳：一眼瞬間 微電影</video:title>
+      <video:description>《時間裡的兩個妳：一眼瞬間》微電影。一眼只有一秒，讀懂用了二十年。</video:description>
+      <video:player_loc>https://www.youtube-nocookie.com/embed/eACPFC4K89o</video:player_loc>
+    </video:video>
+    <video:video>
+      <video:thumbnail_loc>https://toniliumvp.github.io/RedTime/assets/video-thumbs/Ne3mv-6Ufl8.jpg</video:thumbnail_loc>
+      <video:title>時間裡的兩個妳：一眼瞬間 原聲帶</video:title>
+      <video:description>《時間裡的兩個妳：一眼瞬間》原聲帶。</video:description>
+      <video:player_loc>https://www.youtube-nocookie.com/embed/Ne3mv-6Ufl8</video:player_loc>
+    </video:video>
   </url>
   <url>
     <loc>https://toniliumvp.github.io/RedTime/reader.html</loc>
