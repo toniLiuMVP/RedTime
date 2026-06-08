@@ -1032,6 +1032,21 @@
         .sb-ep-item.read:not(.current) .sb-ep-name { opacity: 0.45; }
         .sb-ep-item.read .sb-ep-num::after { content: "✓"; margin-left: 4px; color: #7aa87a; font-size: 0.78em; }
         .jp-btn.read:not(.current) { opacity: 0.5; }
+        /* 全文搜尋 overlay */
+        .search-overlay { position: fixed; inset: 0; z-index: 9700; background: rgba(8,7,12,.92); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); display: none; padding: max(44px, 9vh) 16px 16px; }
+        .search-overlay.open { display: block; }
+        .search-box { max-width: 680px; margin: 0 auto; background: #161620; border: 1px solid var(--line, #3a3a44); border-radius: 14px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+        .search-head { display: flex; gap: 8px; padding: 14px; border-bottom: 1px solid var(--line2, #2c2c34); }
+        #search-input { flex: 1; background: rgba(255,255,255,.04); border: 1px solid var(--line2, #2c2c34); border-radius: 8px; color: #e0e0e0; font-size: 16px; padding: 10px 14px; font-family: inherit; }
+        #search-input:focus { outline: 2px solid #ff4858; outline-offset: 1px; }
+        .search-close { background: transparent; border: 0; color: #9a9a9a; font-size: 22px; cursor: pointer; padding: 0 10px; }
+        .search-results { max-height: 72vh; overflow-y: auto; padding: 4px; }
+        .search-hint, .search-empty { color: #8a8a94; font-size: 14px; padding: 20px; text-align: center; line-height: 1.8; }
+        .search-res { display: block; width: 100%; text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--line2, #2c2c34); color: #c4c4c4; padding: 12px 14px; cursor: pointer; font-family: inherit; }
+        .search-res:hover, .search-res:focus-visible { background: rgba(255,255,255,.05); outline: none; }
+        .search-res-ep { font-family: "DM Mono", monospace; font-size: 12px; color: #f0d4a8; letter-spacing: .08em; margin-bottom: 4px; }
+        .search-res-snip { font-size: 14px; line-height: 1.75; }
+        .search-res-snip mark { background: rgba(255,72,88,.32); color: #fff; padding: 0 2px; border-radius: 2px; }
         .sb-ep-dot {
           width: 6px;
           height: 6px;
@@ -5380,6 +5395,10 @@
           <span class="fab-icon">🔍</span
           ><span class="fab-label">放大鏡</span>
         </button>
+        <button class="fab-item" type="button" onclick="openSearch()" aria-label="全文搜尋 · 找場景、台詞、伏筆">
+          <span class="fab-icon">⌕</span
+          ><span class="fab-label">搜尋</span>
+        </button>
         <button class="fab-item" type="button" onclick="toggleDay()" aria-label="切換深色 / 淺色閱讀模式">
           <span class="fab-icon" data-ui-icon="sun"></span
           ><span class="fab-label">燈光</span>
@@ -7731,6 +7750,80 @@
       function closeJump() {
         document.getElementById("jump-overlay").classList.remove("open");
         document.getElementById("jump-panel").classList.remove("open");
+      }
+
+      // ── 全文搜尋（掃全 42 集正文，顯示上下文片段 + 直達；純 DOM 建構，零 innerHTML）──
+      function openSearch() {
+        var ov = document.getElementById("search-overlay");
+        if (!ov) {
+          ov = document.createElement("div");
+          ov.id = "search-overlay";
+          ov.className = "search-overlay";
+          var box = document.createElement("div"); box.className = "search-box";
+          var head = document.createElement("div"); head.className = "search-head";
+          var input = document.createElement("input");
+          input.id = "search-input"; input.type = "search"; input.autocomplete = "off";
+          input.setAttribute("aria-label", "全文搜尋輸入");
+          input.placeholder = "搜全 42 集正文…（例：1163、後門、海軍陸戰隊）";
+          var close = document.createElement("button");
+          close.className = "search-close"; close.type = "button";
+          close.setAttribute("aria-label", "關閉搜尋"); close.textContent = "✕";
+          head.append(input, close);
+          var results = document.createElement("div");
+          results.id = "search-results"; results.className = "search-results";
+          var hint = document.createElement("div"); hint.className = "search-hint";
+          hint.textContent = "輸入關鍵字，搜全 42 集正文。按 Esc 關閉。";
+          results.appendChild(hint);
+          box.append(head, results); ov.appendChild(box); document.body.appendChild(ov);
+          var t;
+          input.addEventListener("input", function () { clearTimeout(t); t = setTimeout(function () { runSearch(input.value); }, 200); });
+          input.addEventListener("keydown", function (e) { if (e.key === "Escape") closeSearch(); });
+          close.addEventListener("click", closeSearch);
+          ov.addEventListener("click", function (e) { if (e.target === ov) closeSearch(); });
+        }
+        ov.classList.add("open");
+        setTimeout(function () { try { document.getElementById("search-input").focus(); } catch (e) {} }, 50);
+      }
+      function closeSearch() { var ov = document.getElementById("search-overlay"); if (ov) ov.classList.remove("open"); }
+      window.openSearch = openSearch; window.closeSearch = closeSearch;
+      function _searchHint(box, txt, cls) { box.textContent = ""; var h = document.createElement("div"); h.className = cls; h.textContent = txt; box.appendChild(h); }
+      function runSearch(q) {
+        var box = document.getElementById("search-results");
+        if (!box) return;
+        q = (q || "").trim();
+        if (q.length < 1) { _searchHint(box, "輸入關鍵字，搜全 42 集正文。", "search-hint"); return; }
+        var ql = q.toLowerCase();
+        var hits = [];
+        for (var i = 0; i < EPISODES.length && hits.length < 60; i++) {
+          var ep = EPISODES[i];
+          var text = stripHtml(ep.html || "");
+          var lc = text.toLowerCase();
+          var from = 0, idx, count = 0;
+          while ((idx = lc.indexOf(ql, from)) >= 0 && count < 3) {
+            var s = Math.max(0, idx - 28), e = Math.min(text.length, idx + q.length + 42);
+            hits.push({
+              ep: ep.ep,
+              before: (s > 0 ? "…" : "") + text.slice(s, idx),
+              match: text.slice(idx, idx + q.length),
+              after: text.slice(idx + q.length, e) + (e < text.length ? "…" : "")
+            });
+            count++; from = idx + q.length;
+          }
+        }
+        if (!hits.length) { _searchHint(box, "找不到「" + q + "」。試試別的關鍵字。", "search-empty"); return; }
+        box.textContent = "";
+        hits.forEach(function (h) {
+          var b = document.createElement("button"); b.className = "search-res"; b.type = "button";
+          var epd = document.createElement("div"); epd.className = "search-res-ep"; epd.textContent = fmtEp(h.ep);
+          var sn = document.createElement("div"); sn.className = "search-res-snip";
+          // 純 DOM 節點建 highlight：textNode + <mark>，零 innerHTML，內容源自 data.js 編譯期
+          sn.appendChild(document.createTextNode(h.before));
+          var mk = document.createElement("mark"); mk.textContent = h.match; sn.appendChild(mk);
+          sn.appendChild(document.createTextNode(h.after));
+          b.append(epd, sn);
+          b.addEventListener("click", function () { closeSearch(); goToEp(h.ep); });
+          box.appendChild(b);
+        });
       }
 
       // ── Eggs ──
