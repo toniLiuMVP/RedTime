@@ -16,7 +16,7 @@
         --f3: #e8cc10;
         --f4: #30c850;
         --f5: #3880ff;
-        --f6: #9040f0;
+        --f6: #a666f3;
         /* art batch — 4-tier 紅線 + amber-glow tokens */
         --thread-1: rgba(214, 50, 64, 0.18);
         --thread-2: rgba(214, 50, 64, 0.42);
@@ -1205,12 +1205,12 @@
         background: linear-gradient(
           180deg,
           transparent,
-          rgba(184, 72, 32, 0.7),
+          rgba(220, 96, 52, 0.7),
           transparent
         );
       }
       .arc-mixed:hover {
-        border-color: rgba(184, 72, 32, 0.3);
+        border-color: rgba(220, 96, 52, 0.3);
       }
       .arc-card-icon {
         width: 54px;
@@ -1275,10 +1275,10 @@
         color: rgba(238, 188, 164, 0.92);
         background: linear-gradient(
           180deg,
-          rgba(184, 72, 32, 0.14),
-          rgba(184, 72, 32, 0.04)
+          rgba(220, 96, 52, 0.14),
+          rgba(220, 96, 52, 0.04)
         );
-        border-color: rgba(184, 72, 32, 0.18);
+        border-color: rgba(220, 96, 52, 0.18);
       }
       .arc-card-name {
         font-family: "Cormorant Garamond", serif;
@@ -1303,7 +1303,7 @@
         color: var(--amber);
       }
       .arc-mixed .arc-card-name {
-        color: rgba(184, 72, 32, 0.9);
+        color: #dc6034;
       }
       .arc-card-sub {
         font-family: "DM Mono", monospace;
