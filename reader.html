@@ -755,6 +755,44 @@
       }
 
       /* ═══════ DESKTOP LAYOUT ══════════════════ */
+      /* ↓↓↓ 全域（非 desktop-only）：已讀灰階 / 回訪書籤 / 全文搜尋 overlay — 手機也要用 ↓↓↓ */
+        /* 已讀章節灰階 + 勾（current 仍正常顯示，避免「正在讀的那章被灰掉」） */
+        .sb-ep-item.read:not(.current) .sb-ep-num,
+        .sb-ep-item.read:not(.current) .sb-ep-name { opacity: 0.45; }
+        .sb-ep-item.read .sb-ep-num::after { content: "✓"; margin-left: 4px; color: #7aa87a; font-size: 0.78em; }
+        .jp-ep-btn.read:not(.current) { opacity: 0.5; }
+        /* 回訪書籤 marker（側欄 / 跳章格 🔖）+ 每章收藏鈕 + 跳章面板「我的書籤」快速列 */
+        .sb-ep-item.bookmarked .sb-ep-name::after { content: " 🔖"; font-size: 0.82em; }
+        .jp-ep-btn.bookmarked::after { content: "🔖"; position: absolute; top: 3px; left: 4px; font-size: 8px; opacity: .92; }
+        .ep-bookmark-btn { flex: 0 0 auto; padding: 11px 16px; background: rgba(200,144,16,.07); border: 1px solid rgba(200,144,16,.3); color: rgba(234,230,222,.78); font-family: "DM Mono", monospace; font-size: 10.5px; letter-spacing: .07em; cursor: pointer; border-radius: 4px; -webkit-tap-highlight-color: transparent; transition: border-color .12s, color .12s, background .12s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .ep-bookmark-btn:hover, .ep-bookmark-btn:active { border-color: rgba(200,144,16,.55); background: rgba(200,144,16,.14); color: var(--t1); }
+        .ep-bookmark-btn.active { border-color: rgba(200,144,16,.65); background: rgba(200,144,16,.18); color: var(--amber); }
+        .ep-bookmark-btn .bm-ic { font-size: 12px; line-height: 1; }
+        #jp-bookmarks { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 2px 10px; border-bottom: 1px solid rgba(255,255,255,.07); margin-bottom: 8px; }
+        .jp-bm-lbl { font-family: "DM Mono", monospace; font-size: 10px; letter-spacing: .06em; color: rgba(234,230,222,.62); margin-right: 2px; }
+        .jp-bm-chip { padding: 5px 11px; background: rgba(200,144,16,.12); border: 1px solid rgba(200,144,16,.34); color: var(--amber); font-family: "DM Mono", monospace; font-size: 10px; letter-spacing: .05em; border-radius: 999px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .jp-bm-chip:hover, .jp-bm-chip:active { background: rgba(200,144,16,.22); }
+        body.day-mode .ep-bookmark-btn { background: rgba(122,80,0,.08); border-color: rgba(122,80,0,.32); color: #5a4a2a; }
+        body.day-mode .ep-bookmark-btn.active { color: var(--amber); background: rgba(122,80,0,.16); }
+        body.day-mode .jp-bm-chip { color: var(--amber); border-color: rgba(122,80,0,.4); background: rgba(122,80,0,.1); }
+        /* 全文搜尋 overlay */
+        .search-overlay { position: fixed; inset: 0; z-index: 9700; background: rgba(8,7,12,.92); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); display: none; padding: max(44px, 9vh) 16px 16px; }
+        .search-overlay.open { display: block; }
+        .search-box { max-width: 680px; margin: 0 auto; background: #161620; border: 1px solid var(--line, #3a3a44); border-radius: 14px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+        .search-head { display: flex; gap: 8px; padding: 14px; border-bottom: 1px solid var(--line2, #2c2c34); }
+        #search-input { flex: 1; background: rgba(255,255,255,.04); border: 1px solid var(--line2, #2c2c34); border-radius: 8px; color: #e0e0e0; font-size: 16px; padding: 10px 14px; font-family: inherit; }
+        #search-input:focus { outline: 2px solid #ff4858; outline-offset: 1px; }
+        .search-close { background: transparent; border: 0; color: #9a9a9a; font-size: 22px; cursor: pointer; padding: 0 10px; }
+        .search-results { max-height: 72vh; overflow-y: auto; padding: 4px; }
+        .search-hint, .search-empty { color: #8a8a94; font-size: 14px; padding: 20px; text-align: center; line-height: 1.8; }
+        .search-res { display: block; width: 100%; text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--line2, #2c2c34); color: #c4c4c4; padding: 12px 14px; cursor: pointer; font-family: inherit; }
+        .search-res:hover, .search-res:focus-visible { background: rgba(255,255,255,.05); outline: none; }
+        .search-res-ep { font-family: "DM Mono", monospace; font-size: 12px; color: #f0d4a8; letter-spacing: .08em; margin-bottom: 4px; }
+        .search-res-snip { font-size: 14px; line-height: 1.75; }
+        .search-res-snip mark { background: rgba(255,72,88,.32); color: #fff; padding: 0 2px; border-radius: 2px; }
+      /* ↑↑↑ 全域區塊結束 ↑↑↑ */
+      /* 隱藏手機工具列的「放大鏡」（桌機 #btn-magnify 不受影響）— 字體鈕已可調整大小 */
+      .fab-main-row .fab-item[onclick="magnifyFont()"] { display: none; }
       @media (min-width: 768px) {
         body {
           overflow-x: hidden;
@@ -1027,40 +1065,6 @@
           background: rgba(255, 255, 255, 0.05);
           border-color: var(--line);
         }
-        /* 已讀章節灰階 + 勾（current 仍正常顯示，避免「正在讀的那章被灰掉」） */
-        .sb-ep-item.read:not(.current) .sb-ep-num,
-        .sb-ep-item.read:not(.current) .sb-ep-name { opacity: 0.45; }
-        .sb-ep-item.read .sb-ep-num::after { content: "✓"; margin-left: 4px; color: #7aa87a; font-size: 0.78em; }
-        .jp-ep-btn.read:not(.current) { opacity: 0.5; }
-        /* 回訪書籤 marker（側欄 / 跳章格 🔖）+ 每章收藏鈕 + 跳章面板「我的書籤」快速列 */
-        .sb-ep-item.bookmarked .sb-ep-name::after { content: " 🔖"; font-size: 0.82em; }
-        .jp-ep-btn.bookmarked::after { content: "🔖"; position: absolute; top: 3px; left: 4px; font-size: 8px; opacity: .92; }
-        .ep-bookmark-btn { flex: 0 0 auto; padding: 11px 16px; background: rgba(200,144,16,.07); border: 1px solid rgba(200,144,16,.3); color: rgba(234,230,222,.78); font-family: "DM Mono", monospace; font-size: 10.5px; letter-spacing: .07em; cursor: pointer; border-radius: 4px; -webkit-tap-highlight-color: transparent; transition: border-color .12s, color .12s, background .12s; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .ep-bookmark-btn:hover, .ep-bookmark-btn:active { border-color: rgba(200,144,16,.55); background: rgba(200,144,16,.14); color: var(--t1); }
-        .ep-bookmark-btn.active { border-color: rgba(200,144,16,.65); background: rgba(200,144,16,.18); color: var(--amber); }
-        .ep-bookmark-btn .bm-ic { font-size: 12px; line-height: 1; }
-        #jp-bookmarks { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 2px 10px; border-bottom: 1px solid rgba(255,255,255,.07); margin-bottom: 8px; }
-        .jp-bm-lbl { font-family: "DM Mono", monospace; font-size: 10px; letter-spacing: .06em; color: rgba(234,230,222,.62); margin-right: 2px; }
-        .jp-bm-chip { padding: 5px 11px; background: rgba(200,144,16,.12); border: 1px solid rgba(200,144,16,.34); color: var(--amber); font-family: "DM Mono", monospace; font-size: 10px; letter-spacing: .05em; border-radius: 999px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-        .jp-bm-chip:hover, .jp-bm-chip:active { background: rgba(200,144,16,.22); }
-        body.day-mode .ep-bookmark-btn { background: rgba(122,80,0,.08); border-color: rgba(122,80,0,.32); color: #5a4a2a; }
-        body.day-mode .ep-bookmark-btn.active { color: var(--amber); background: rgba(122,80,0,.16); }
-        body.day-mode .jp-bm-chip { color: var(--amber); border-color: rgba(122,80,0,.4); background: rgba(122,80,0,.1); }
-        /* 全文搜尋 overlay */
-        .search-overlay { position: fixed; inset: 0; z-index: 9700; background: rgba(8,7,12,.92); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); display: none; padding: max(44px, 9vh) 16px 16px; }
-        .search-overlay.open { display: block; }
-        .search-box { max-width: 680px; margin: 0 auto; background: #161620; border: 1px solid var(--line, #3a3a44); border-radius: 14px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
-        .search-head { display: flex; gap: 8px; padding: 14px; border-bottom: 1px solid var(--line2, #2c2c34); }
-        #search-input { flex: 1; background: rgba(255,255,255,.04); border: 1px solid var(--line2, #2c2c34); border-radius: 8px; color: #e0e0e0; font-size: 16px; padding: 10px 14px; font-family: inherit; }
-        #search-input:focus { outline: 2px solid #ff4858; outline-offset: 1px; }
-        .search-close { background: transparent; border: 0; color: #9a9a9a; font-size: 22px; cursor: pointer; padding: 0 10px; }
-        .search-results { max-height: 72vh; overflow-y: auto; padding: 4px; }
-        .search-hint, .search-empty { color: #8a8a94; font-size: 14px; padding: 20px; text-align: center; line-height: 1.8; }
-        .search-res { display: block; width: 100%; text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--line2, #2c2c34); color: #c4c4c4; padding: 12px 14px; cursor: pointer; font-family: inherit; }
-        .search-res:hover, .search-res:focus-visible { background: rgba(255,255,255,.05); outline: none; }
-        .search-res-ep { font-family: "DM Mono", monospace; font-size: 12px; color: #f0d4a8; letter-spacing: .08em; margin-bottom: 4px; }
-        .search-res-snip { font-size: 14px; line-height: 1.75; }
-        .search-res-snip mark { background: rgba(255,72,88,.32); color: #fff; padding: 0 2px; border-radius: 2px; }
         .sb-ep-dot {
           width: 6px;
           height: 6px;
@@ -8256,6 +8260,18 @@
             h.classList.remove("open");
             body.classList.remove("open");
           }
+        });
+        // Science sections (科普 — 用 aria-expanded，鏡像 toggleScience)
+        document.querySelectorAll(".ep-science-toggle").forEach((h) => {
+          const body = h.nextElementSibling;
+          if (allExpanded) {
+            h.classList.add("open");
+            if (body) body.classList.add("open");
+          } else {
+            h.classList.remove("open");
+            if (body) body.classList.remove("open");
+          }
+          h.setAttribute("aria-expanded", allExpanded ? "true" : "false");
         });
         // Update FAB button
         const icon = document.getElementById("fab-ta-icon");
