@@ -1031,7 +1031,21 @@
         .sb-ep-item.read:not(.current) .sb-ep-num,
         .sb-ep-item.read:not(.current) .sb-ep-name { opacity: 0.45; }
         .sb-ep-item.read .sb-ep-num::after { content: "✓"; margin-left: 4px; color: #7aa87a; font-size: 0.78em; }
-        .jp-btn.read:not(.current) { opacity: 0.5; }
+        .jp-ep-btn.read:not(.current) { opacity: 0.5; }
+        /* 回訪書籤 marker（側欄 / 跳章格 🔖）+ 每章收藏鈕 + 跳章面板「我的書籤」快速列 */
+        .sb-ep-item.bookmarked .sb-ep-name::after { content: " 🔖"; font-size: 0.82em; }
+        .jp-ep-btn.bookmarked::after { content: "🔖"; position: absolute; top: 3px; left: 4px; font-size: 8px; opacity: .92; }
+        .ep-bookmark-btn { flex: 0 0 auto; padding: 11px 16px; background: rgba(200,144,16,.07); border: 1px solid rgba(200,144,16,.3); color: rgba(234,230,222,.78); font-family: "DM Mono", monospace; font-size: 10.5px; letter-spacing: .07em; cursor: pointer; border-radius: 4px; -webkit-tap-highlight-color: transparent; transition: border-color .12s, color .12s, background .12s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .ep-bookmark-btn:hover, .ep-bookmark-btn:active { border-color: rgba(200,144,16,.55); background: rgba(200,144,16,.14); color: var(--t1); }
+        .ep-bookmark-btn.active { border-color: rgba(200,144,16,.65); background: rgba(200,144,16,.18); color: var(--amber); }
+        .ep-bookmark-btn .bm-ic { font-size: 12px; line-height: 1; }
+        #jp-bookmarks { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 2px 10px; border-bottom: 1px solid rgba(255,255,255,.07); margin-bottom: 8px; }
+        .jp-bm-lbl { font-family: "DM Mono", monospace; font-size: 10px; letter-spacing: .06em; color: rgba(234,230,222,.62); margin-right: 2px; }
+        .jp-bm-chip { padding: 5px 11px; background: rgba(200,144,16,.12); border: 1px solid rgba(200,144,16,.34); color: var(--amber); font-family: "DM Mono", monospace; font-size: 10px; letter-spacing: .05em; border-radius: 999px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .jp-bm-chip:hover, .jp-bm-chip:active { background: rgba(200,144,16,.22); }
+        body.day-mode .ep-bookmark-btn { background: rgba(122,80,0,.08); border-color: rgba(122,80,0,.32); color: #5a4a2a; }
+        body.day-mode .ep-bookmark-btn.active { color: var(--amber); background: rgba(122,80,0,.16); }
+        body.day-mode .jp-bm-chip { color: var(--amber); border-color: rgba(122,80,0,.4); background: rgba(122,80,0,.1); }
         /* 全文搜尋 overlay */
         .search-overlay { position: fixed; inset: 0; z-index: 9700; background: rgba(8,7,12,.92); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); display: none; padding: max(44px, 9vh) 16px 16px; }
         .search-overlay.open { display: block; }
@@ -5237,6 +5251,7 @@
           複合
         </button>
       </div>
+      <div id="jp-bookmarks" style="display: none"></div>
       <div id="jp-list"></div>
     </div>
 
@@ -7111,6 +7126,7 @@
           list.appendChild(item);
         });
         if (typeof applyReadMarks === "function") applyReadMarks(); // 已讀灰階：重建側欄後套回已讀標記
+        if (typeof applyBookmarkMarks === "function") applyBookmarkMarks(); // 回訪書籤：重建側欄後套回書籤標記
       }
       buildSidebar("all");
       function filterSidebar(arc, el) {
@@ -7161,6 +7177,7 @@
           jpList.appendChild(btn);
         });
         if (typeof applyReadMarks === "function") applyReadMarks(); // 已讀灰階：跳章格重建後套回已讀標記
+        if (typeof applyBookmarkMarks === "function") applyBookmarkMarks(); // 回訪書籤：跳章格重建後套回書籤標記
       }
       buildJumpGrid("all");
       function filterJump(arc, el) {
@@ -7304,6 +7321,22 @@
         bd.innerHTML = ep.html;
         sec.querySelector(".ep-body-wrap").appendChild(bd);
         cont.appendChild(sec);
+        // 回訪書籤：每章 ep-nav 中央插入「收藏本集」切換鈕（DOM 建構，零 innerHTML）
+        var _navEl = sec.querySelector(".ep-nav");
+        if (_navEl) {
+          var _bm = document.createElement("button");
+          _bm.type = "button";
+          _bm.className = "ep-bookmark-btn";
+          _bm.setAttribute("data-ep", ep.ep);
+          _bm.setAttribute("aria-pressed", "false");
+          _bm.setAttribute("aria-label", "收藏本集，方便日後回訪");
+          var _bmi = document.createElement("span"); _bmi.className = "bm-ic"; _bmi.textContent = "🏷";
+          var _bml = document.createElement("span"); _bml.className = "bm-lb"; _bml.textContent = "收藏本集";
+          _bm.append(_bmi, _bml);
+          var _epn = ep.ep;
+          _bm.addEventListener("click", function () { toggleBookmark(_epn); });
+          _navEl.insertBefore(_bm, _navEl.children.length > 1 ? _navEl.children[1] : null);
+        }
       });
 
       // ──  (Task 1 v5 — 跨瀏覽器一致直達): v4 只在 Mac Safari 成功(Safari 對 nested overflow
@@ -7565,8 +7598,84 @@
         var j = document.getElementById("jp-btn-" + n); if (j) j.classList.add("read");
       }
       function applyReadMarks() { if (!_readEps) return; _readEps.forEach(function (n) { markEpRead(n); }); }
-      window.__READ_PROGRESS__ = { mark: markEpRead, count: function () { return _readEps.size; }, reset: function () { _readEps.clear(); try { localStorage.removeItem("redtime_read_eps_v1"); } catch (e) {} document.querySelectorAll(".sb-ep-item.read,.jp-btn.read").forEach(function (el) { el.classList.remove("read"); }); } };
+      window.__READ_PROGRESS__ = { mark: markEpRead, count: function () { return _readEps.size; }, reset: function () { _readEps.clear(); try { localStorage.removeItem("redtime_read_eps_v1"); } catch (e) {} document.querySelectorAll(".sb-ep-item.read,.jp-ep-btn.read").forEach(function (el) { el.classList.remove("read"); }); } };
       applyReadMarks(); // 初次套用已讀標記（側欄已於 buildSidebar 建好）
+
+      // ── 回訪書籤：手動收藏章節，側欄/跳章選單以 🔖 標示 + 跳章面板頂部「我的書籤」快速列（localStorage，不上傳）──
+      var _bookmarks = (function () {
+        try { return new Set(JSON.parse(localStorage.getItem("redtime_bookmarks_v1") || "[]")); }
+        catch (e) { return new Set(); }
+      })();
+      function isBookmarked(n) { return !!_bookmarks && _bookmarks.has(n); }
+      function applyBookmarkMarks() {
+        if (!_bookmarks) return; // 與已讀同理：buildSidebar 早於 var 賦值時略過
+        _bookmarks.forEach(function (n) {
+          var s = document.getElementById("sb-item-" + n); if (s) s.classList.add("bookmarked");
+          var j = document.getElementById("jp-btn-" + n); if (j) j.classList.add("bookmarked");
+        });
+      }
+      function updateBookmarkBtn(n) {
+        var on = isBookmarked(n);
+        document.querySelectorAll('.ep-bookmark-btn[data-ep="' + n + '"]').forEach(function (b) {
+          b.classList.toggle("active", on);
+          b.setAttribute("aria-pressed", on ? "true" : "false");
+          var ic = b.querySelector(".bm-ic"); if (ic) ic.textContent = on ? "🔖" : "🏷";
+          var lb = b.querySelector(".bm-lb"); if (lb) lb.textContent = on ? "已收藏" : "收藏本集";
+        });
+      }
+      function refreshBookmarkBtns() {
+        document.querySelectorAll(".ep-bookmark-btn").forEach(function (b) {
+          updateBookmarkBtn(Number(b.getAttribute("data-ep")));
+        });
+      }
+      function toggleBookmark(n) {
+        if (n === undefined || n === null || !_bookmarks) return;
+        if (_bookmarks.has(n)) _bookmarks.delete(n); else _bookmarks.add(n);
+        try { localStorage.setItem("redtime_bookmarks_v1", JSON.stringify(Array.from(_bookmarks))); } catch (e) {}
+        var s = document.getElementById("sb-item-" + n); if (s) s.classList.toggle("bookmarked", _bookmarks.has(n));
+        var j = document.getElementById("jp-btn-" + n); if (j) j.classList.toggle("bookmarked", _bookmarks.has(n));
+        updateBookmarkBtn(n);
+        renderBookmarkBar();
+      }
+      function renderBookmarkBar() {
+        var bar = document.getElementById("jp-bookmarks");
+        if (!bar || !_bookmarks) return;
+        bar.replaceChildren();
+        var ids = Array.from(_bookmarks).sort(function (a, b) { return a - b; });
+        if (!ids.length) { bar.style.display = "none"; return; }
+        bar.style.display = "";
+        var lbl = document.createElement("span");
+        lbl.className = "jp-bm-lbl";
+        lbl.textContent = "🔖 我的書籤";
+        bar.appendChild(lbl);
+        ids.forEach(function (n) {
+          var ep = EPISODES.find(function (e) { return e.ep === n; });
+          if (!ep) return;
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "jp-bm-chip";
+          b.textContent = fmtEp(n);
+          b.setAttribute("aria-label", fmtEp(n) + "，跳至此集");
+          b.addEventListener("click", function () { closeJump(); goToEp(n); });
+          bar.appendChild(b);
+        });
+      }
+      window.__BOOKMARKS__ = {
+        list: function () { return Array.from(_bookmarks).sort(function (a, b) { return a - b; }); },
+        has: isBookmarked,
+        toggle: toggleBookmark,
+        count: function () { return _bookmarks ? _bookmarks.size : 0; },
+        clear: function () {
+          if (!_bookmarks) return;
+          _bookmarks.clear();
+          try { localStorage.removeItem("redtime_bookmarks_v1"); } catch (e) {}
+          document.querySelectorAll(".bookmarked").forEach(function (el) { el.classList.remove("bookmarked"); });
+          refreshBookmarkBtns(); renderBookmarkBar();
+        }
+      };
+      applyBookmarkMarks();
+      refreshBookmarkBtns();
+      renderBookmarkBar();
       function markSidebarCurrent() {
         if (_prevSidebarItem) _prevSidebarItem.classList.remove("current");
         const c = document.getElementById("sb-item-" + currentEpNum);
@@ -7746,6 +7855,7 @@
         document.getElementById("jump-overlay").classList.add("open");
         document.getElementById("jump-panel").classList.add("open");
         markJumpCurrent();
+        if (typeof renderBookmarkBar === "function") renderBookmarkBar();
       }
       function closeJump() {
         document.getElementById("jump-overlay").classList.remove("open");
