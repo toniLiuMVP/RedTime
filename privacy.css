@@ -1,4 +1,6 @@
 /* privacy.html 樣式 — 外部化（CSP style-src 'self'）*/
+/* 最新技術:View Transitions — 同源導覽溶接過場;reduced-motion 不啟用,不支援則忽略 */
+@media (prefers-reduced-motion: no-preference){@view-transition{navigation:auto}}
 :root { color-scheme: dark; }
 * { box-sizing: border-box; }
 body {

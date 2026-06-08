@@ -39,6 +39,11 @@
         /* 超特大字級用 body zoom 放大，溢出會逃到 html 層；clip 收掉橫向溢出（#nav 為 fixed，不受影響） */
         overflow-x: clip;
       }
+      /* 最新技術:View Transitions — 同源頁面導覽用溶接過場（同一秒不同視角＝溶接，貼合主題）。
+         只在使用者未要求減少動態時啟用;不支援的瀏覽器忽略此規則，退回即時切換（漸進增強）。 */
+      @media (prefers-reduced-motion: no-preference) {
+        @view-transition { navigation: auto; }
+      }
       body {
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;

@@ -1,3 +1,7 @@
+/* 最新技術:View Transitions — 同源導覽溶接過場;reduced-motion 不啟用,不支援則忽略 */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+}
 :root {
   --bg: #06080d;
   --bg2: #0f141d;

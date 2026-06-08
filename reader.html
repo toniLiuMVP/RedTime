@@ -120,6 +120,10 @@
         -webkit-text-size-adjust: 100%;
         scroll-padding-top: var(--top-offset);
       }
+      /* 最新技術:View Transitions — 同源導覽溶接過場;reduced-motion 時不啟用,不支援則忽略（漸進增強） */
+      @media (prefers-reduced-motion: no-preference) {
+        @view-transition { navigation: auto; }
+      }
       body {
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
@@ -3550,6 +3554,22 @@
         letter-spacing: 0.16em;
         text-transform: uppercase;
         margin-bottom: 6px;
+      }
+      /* 科普「隱喻 vs 事實」說明：博士視角是真科學，借來說故事的是文學（不用破折號） */
+      .es-frame {
+        font-family: "Noto Serif TC", serif;
+        font-style: italic;
+        font-size: 11.5px;
+        line-height: 1.7;
+        color: rgba(190, 226, 226, 0.85);
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(168, 220, 220, 0.16);
+      }
+      /* 日間模式淺底：改深 teal 才讀得清楚（過 AA） */
+      body.day-mode .es-frame {
+        color: #245a5a;
+        border-bottom-color: rgba(36, 90, 90, 0.22);
       }
       .es-title {
         font-family: "Cormorant Garamond", "Noto Serif TC", serif;
@@ -8171,7 +8191,7 @@
           return '<span class="es-expert" title="' + escapeHtml(e.zh) + ' · ' + escapeHtml(e.en) + '">' + e.icon + ' ' + escapeHtml(e.zh) + '<span class="es-expert-en">' + escapeHtml(e.en) + '</span></span>';
         }).join('');
         const avatarIcon = (experts[0] && experts[0].icon) || '⚛';
-        return `<div class="ep-science"><div class="ep-science-toggle" onclick="toggleScience(this)" role="button" tabindex="0" aria-expanded="false" aria-controls="science-body-${s.ep}"><div class="es-avatar"><span aria-hidden="true">${avatarIcon}</span></div><span class="es-label">科普 · <span style="font-size:10px;opacity:.7;letter-spacing:.08em">${escapeHtml(s.topic.split('—')[0].split('/')[0].trim())}</span></span><span class="es-arrow">▾</span></div><div class="ep-science-body" id="science-body-${s.ep}"><div class="es-kicker">EP${s.ep} · 科普小單元</div>${expertsHTML ? '<div class="es-experts">' + expertsHTML + '</div>' : ''}<div class="es-title">${escapeHtml(s.topic)}</div><div class="es-text">${escapeHtml(s.body)}</div></div></div>`;
+        return `<div class="ep-science"><div class="ep-science-toggle" onclick="toggleScience(this)" role="button" tabindex="0" aria-expanded="false" aria-controls="science-body-${s.ep}"><div class="es-avatar"><span aria-hidden="true">${avatarIcon}</span></div><span class="es-label">科普 · <span style="font-size:10px;opacity:.7;letter-spacing:.08em">${escapeHtml(s.topic.split('—')[0].split('/')[0].trim())}</span></span><span class="es-arrow">▾</span></div><div class="ep-science-body" id="science-body-${s.ep}"><div class="es-kicker">EP${s.ep} · 科普小單元</div><div class="es-frame">以下是博士視角的延伸對照，物理是真的，借來說故事的部分是文學。</div>${expertsHTML ? '<div class="es-experts">' + expertsHTML + '</div>' : ''}<div class="es-title">${escapeHtml(s.topic)}</div><div class="es-text">${escapeHtml(s.body)}</div></div></div>`;
       }
       function toggleScience(h) {
         h.classList.toggle("open");

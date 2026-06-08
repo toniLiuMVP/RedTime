@@ -1,4 +1,6 @@
 /* platform-run 頁面 CSS — 外部化（CSP 撤 style-src unsafe-inline）*/
+/* 最新技術:View Transitions — 同源導覽溶接過場;reduced-motion 不啟用,不支援則忽略 */
+@media (prefers-reduced-motion: no-preference){@view-transition{navigation:auto}}
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;overflow:hidden;background:#3a6ea0;font-family:"Noto Serif TC","PingFang TC","Microsoft JhengHei",serif}
 canvas{display:block;width:100%;height:100%}

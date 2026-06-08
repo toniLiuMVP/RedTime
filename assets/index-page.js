@@ -578,7 +578,8 @@ el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key ===
   var tourDeep = false; try { tourDeep = new URLSearchParams(location.search).get("tour") === "1"; } catch (e) {}
   // 進站分流永遠顯示（每次進站都跳，鐵粉題庫多、每次有驚喜）；可手動跳過（× / Escape / 點背景）。
   // ?tour=1 深連時讓既有新讀者導覽接手，不雙開。
-  if (!tourDeep) { setTimeout(openRouter, 900); }
+  // 延到 3.5 秒：先讓 hero「一眼只有一秒，讀懂它用了二十年」這句落地，再彈分流窗。
+  if (!tourDeep) { setTimeout(openRouter, 3500); }
 })();
 
 // ── block 5 ──
