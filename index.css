@@ -258,7 +258,7 @@
         font-weight: 200;
         font-size: clamp(14px, 2.5vw, 20px);
         letter-spacing: 0.22em;
-        color: rgba(234, 230, 222, 0.38);
+        color: rgba(234, 230, 222, 0.55);
         margin-bottom: 20px;
         opacity: 0;
         animation: fadeUp 0.9s 0.35s forwards;
