@@ -439,8 +439,8 @@ mixed: { name: "複合視角", sub: "多線交織", ep: RECOMMENDED_ENTRIES.mixe
   function norm(s) { return (s || "").toString().toLowerCase().replace(/[\s　，,。.、:：;；!！?？「」『』（）()]/g, ""); }
   function go(url) { try { window.location.href = url; } catch (e) {} }
 
-  var _bd = null;
-  function closeModal() { if (!_bd) return; var bd = _bd; _bd = null; bd.classList.remove("show"); try { document.body.style.overflow = ""; } catch (e) {} setTimeout(function () { if (bd.parentNode) bd.parentNode.removeChild(bd); }, 460); document.removeEventListener("keydown", onKey); }
+  var _bd = null, _autoCloseT = null;
+  function closeModal() { if (_autoCloseT) { clearTimeout(_autoCloseT); _autoCloseT = null; } if (!_bd) return; var bd = _bd; _bd = null; bd.classList.remove("show"); try { document.body.style.overflow = ""; } catch (e) {} setTimeout(function () { if (bd.parentNode) bd.parentNode.removeChild(bd); }, 460); document.removeEventListener("keydown", onKey); }
   function onKey(e) { if (e.key === "Escape") closeModal(); }
   function openModal() {
 try { var _nt = document.getElementById("newcomer-tour"); if (_nt && !_nt.hidden) { _nt.hidden = true; _nt.setAttribute("aria-hidden", "true"); } } catch (e) {} // 互斥：開導覽 modal 前先關新手教學，避免雙層捲動鎖
@@ -570,7 +570,9 @@ el.addEventListener("click", function () { openViewpoint(CARD_MAP[cls]); });
 el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openViewpoint(CARD_MAP[cls]); } });
   });
 
-  function openRouter() { var card = openModal(); renderChoose(card); }
+  // 進站分流窗：開啟後 20 秒無互動自動關閉（與 ×／Esc／點背景同一套 closeModal）。
+  // 只在進站分流窗 arm（不影響使用者主動點開的視角卡／鐵粉測驗）；任何關閉都會 clearTimeout。
+  function openRouter() { if (_autoCloseT) { clearTimeout(_autoCloseT); _autoCloseT = null; } var card = openModal(); renderChoose(card); _autoCloseT = setTimeout(closeModal, 20000); }
   window.__ENTRY_ROUTER__ = { open: openRouter, viewpoint: openViewpoint, reset: function () { try { localStorage.removeItem(ROUTE_KEY); } catch (e) {} } };
 
   var tourDeep = false; try { tourDeep = new URLSearchParams(location.search).get("tour") === "1"; } catch (e) {}
