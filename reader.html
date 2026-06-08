@@ -1027,6 +1027,11 @@
           background: rgba(255, 255, 255, 0.05);
           border-color: var(--line);
         }
+        /* 已讀章節灰階 + 勾（current 仍正常顯示，避免「正在讀的那章被灰掉」） */
+        .sb-ep-item.read:not(.current) .sb-ep-num,
+        .sb-ep-item.read:not(.current) .sb-ep-name { opacity: 0.45; }
+        .sb-ep-item.read .sb-ep-num::after { content: "✓"; margin-left: 4px; color: #7aa87a; font-size: 0.78em; }
+        .jp-btn.read:not(.current) { opacity: 0.5; }
         .sb-ep-dot {
           width: 6px;
           height: 6px;
@@ -7086,6 +7091,7 @@
           item.onclick = () => goToEp(ep.ep);
           list.appendChild(item);
         });
+        if (typeof applyReadMarks === "function") applyReadMarks(); // 已讀灰階：重建側欄後套回已讀標記
       }
       buildSidebar("all");
       function filterSidebar(arc, el) {
@@ -7135,6 +7141,7 @@
           };
           jpList.appendChild(btn);
         });
+        if (typeof applyReadMarks === "function") applyReadMarks(); // 已讀灰階：跳章格重建後套回已讀標記
       }
       buildJumpGrid("all");
       function filterJump(arc, el) {
@@ -7524,6 +7531,23 @@
         if (c) c.classList.add("current");
         _prevJumpBtn = c;
       }
+      // 已讀章節灰階：讀過的章節在側欄/跳章選單以灰階 + 勾標示（localStorage，不上傳）
+      var _readEps = (function () {
+        try { return new Set(JSON.parse(localStorage.getItem("redtime_read_eps_v1") || "[]")); }
+        catch (e) { return new Set(); }
+      })();
+      function markEpRead(n) {
+        if (n === undefined || n === null || !_readEps) return; // _readEps 尚未初始化（buildSidebar 早於 var 賦值）時略過
+        if (!_readEps.has(n)) {
+          _readEps.add(n);
+          try { localStorage.setItem("redtime_read_eps_v1", JSON.stringify(Array.from(_readEps))); } catch (e) {}
+        }
+        var s = document.getElementById("sb-item-" + n); if (s) s.classList.add("read");
+        var j = document.getElementById("jp-btn-" + n); if (j) j.classList.add("read");
+      }
+      function applyReadMarks() { if (!_readEps) return; _readEps.forEach(function (n) { markEpRead(n); }); }
+      window.__READ_PROGRESS__ = { mark: markEpRead, count: function () { return _readEps.size; }, reset: function () { _readEps.clear(); try { localStorage.removeItem("redtime_read_eps_v1"); } catch (e) {} document.querySelectorAll(".sb-ep-item.read,.jp-btn.read").forEach(function (el) { el.classList.remove("read"); }); } };
+      applyReadMarks(); // 初次套用已讀標記（側欄已於 buildSidebar 建好）
       function markSidebarCurrent() {
         if (_prevSidebarItem) _prevSidebarItem.classList.remove("current");
         const c = document.getElementById("sb-item-" + currentEpNum);
@@ -7532,6 +7556,7 @@
           c.scrollIntoView({ block: "nearest", behavior: "smooth" });
         }
         _prevSidebarItem = c;
+        markEpRead(currentEpNum); // 已讀灰階：當前章標記已讀
       }
       function refreshEggMarks() {
         unlockedEggs.forEach((id) => {
