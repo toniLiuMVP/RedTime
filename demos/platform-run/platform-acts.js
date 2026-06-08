@@ -256,7 +256,8 @@
     ch.appendChild(rw); ch.appendChild(pf); ch.appendChild(go);
   }
 
-  // #5 13 歲離家的夜(EP30:翻外套藏名字 → 廟桌下 → 大姨婆「肚子會餓嗎?」)
+  // #5 13 歲離家的夜(EP30:翻外套藏名字 → 廟桌下 → 大阿姨「肚子會餓嗎?」)
+  //   註:此人=把拔的大阿姨。女兒視角(reader EP30)叫她「大姨婆」,但月台是把拔視角 → 用「大阿姨」
   function runaway13(onDone) {
     const ov = open();
     ov.appendChild(el("div", "pa-kicker", "把拔 13 歲 · 離家的那一夜"));
@@ -278,7 +279,7 @@
         b.addEventListener("click", () => { sub.textContent = seq[i].s; i++; setTimeout(render, 1700); });
         ch.appendChild(b);
       } else {
-        line.textContent = "天亮了。是把拔的大姨婆。她沒有罵他，只問了一句。";
+        line.textContent = "天亮了。是把拔的大阿姨。她沒有罵他，只問了一句。";
         sub.textContent = "「肚子，會餓嗎？」";
         close(ov, function () { if (onDone) onDone({ ok: true }); }, 4000);
       }

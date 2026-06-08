@@ -140,6 +140,7 @@ function updateUltimateUI() {
 const state = {
   phase: "title",
   clock: 0,
+  transitionFreeze: false, // 關卡過場顯示 LEVEL_HOOK（把拔的回憶）時凍結整個模擬，時間不流逝
   timeLeft: GAME_TIME,
   sprint: SPRINT_MAX,
   playerZ: PLATFORM_LEN / 2 - 10,
@@ -4188,6 +4189,7 @@ let introScreechPlayed = false;
 
 function startIntro() {
   state.phase = "intro";
+  state.transitionFreeze = false; // 防卡：新一關 intro 開始一定解凍
   state.introTimer = 0;
   introScreechPlayed = false;
   document.body.classList.add("letterbox-on");
@@ -4819,6 +4821,8 @@ var FAIL_HOOKS = [
 var _failIdx = 0;
 
 function showLevelTransition() {
+  /* 把拔的回憶（LEVEL_HOOK）顯示期間凍結模擬：時間永遠暫停，過場結束（advanceToNextLevel）才解凍 */
+  state.transitionFreeze = true;
   /* 第 9→10 關專屬電影化最終警告（韓劇導演級過場） */
   if (state.currentLevel === 9) {
     showFinalLevelWarning();
@@ -4925,6 +4929,7 @@ function showFinalLevelWarning() {
 }
 
 function advanceToNextLevel() {
+  state.transitionFreeze = false; // 過場（把拔的回憶）結束，解凍，下一關開始才讓時間重新流動
   state.currentLevel++;
   /* Grant +1 ultimate charge per level */
   state.ultimateCharges++;
@@ -5456,8 +5461,9 @@ function animate() {
   requestAnimationFrame(animate);
   let dt = Math.min(gameClock.getDelta(), 0.033);
   if (state.grabSlow > 0) { state.grabSlow = Math.max(0, state.grabSlow - dt); dt *= 0.34; } // 抱到女兒的子彈時間：真實 dt 遞減，歸 0 後自動恢復全速
-  /* B：看「把拔的回憶」時凍結模擬（計時、火車、移動全停），只續 render，避免時間到沒接到女兒的出戲 */
-  if (window.__RUN_PAUSED__) { renderer.render(scene, camera); return; }
+  /* B：看「把拔的回憶」時凍結模擬（計時、火車、移動全停），只續 render，避免時間到沒接到女兒的出戲。
+     兩個來源：window.__RUN_PAUSED__（💭 把拔的回憶 launcher 回憶鏈）、state.transitionFreeze（關卡過場 LEVEL_HOOK 把拔每關回憶）。*/
+  if (window.__RUN_PAUSED__ || state.transitionFreeze) { renderer.render(scene, camera); return; }
   state.clock += dt;
 
   /* adaptive 品質:90 幀 window avg FPS < 40 → applyQuality 降一級,cooldown 300 幀防 flapping */
@@ -5538,6 +5544,7 @@ function init() {
 }
 
 function resetGame(keepCarryState) {
+  state.transitionFreeze = false; // 防卡：重置遊戲一定解凍
   /* Level system reset */
   if (!keepCarryState) {
     state.currentLevel = 1;
