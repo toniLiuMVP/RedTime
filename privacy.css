@@ -1,0 +1,48 @@
+/* privacy.html 樣式 — 外部化（CSP style-src 'self'）*/
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: #121212;
+  color: #e0e0e0;
+  font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  font-weight: 300;
+  line-height: 1.95;
+  letter-spacing: 0.02em;
+  padding: 48px 20px 80px;
+}
+.wrap { max-width: 720px; margin: 0 auto; }
+.kicker {
+  font-family: "DM Mono", monospace;
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #9a9a9a;
+  margin-bottom: 14px;
+}
+h1 { font-size: clamp(26px, 5vw, 38px); font-weight: 600; margin: 0 0 6px; color: #f2f2f2; }
+.updated { font-size: 13px; color: #8a8a94; margin-bottom: 36px; }
+h2 {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 34px 0 10px;
+  color: #f0d4a8;
+  border-left: 2px solid #ff4858;
+  padding-left: 12px;
+}
+p { margin: 0 0 14px; color: #c4c4c4; }
+ul { margin: 0 0 14px; padding-left: 22px; color: #c4c4c4; }
+li { margin-bottom: 6px; }
+a { color: #ff8fa0; text-decoration: none; border-bottom: 1px solid rgba(255, 143, 160, 0.35); }
+a:hover { color: #fff; border-bottom-color: #ff8fa0; }
+.back {
+  display: inline-block;
+  margin-top: 40px;
+  font-size: 14px;
+  padding: 10px 24px;
+  border: 1px solid rgba(255, 217, 168, 0.4);
+  border-radius: 999px;
+  color: #f0d4a8;
+}
+.back:hover { background: rgba(255, 217, 168, 0.1); border-bottom: 1px solid rgba(255, 217, 168, 0.4); }
+.muted { color: #8a8a94; font-size: 13px; }
