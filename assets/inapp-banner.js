@@ -13,7 +13,7 @@
   } catch (e) {}
 
   var ua = navigator.userAgent || "";
-  var isMeta = /FBAN|FBAV|FB_IAB|Instagram|Threads/i.test(ua);
+  var isMeta = /FBAN|FBAV|FB_IAB|Instagram|Threads|Barcelona/i.test(ua); // Barcelona = Threads iOS 代號
   var isLine = /Line\//i.test(ua);
   if (!isMeta && !isLine) return; // 一般瀏覽器：不顯示
 
