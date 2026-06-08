@@ -1408,6 +1408,40 @@
           transparent
         );
       }
+      /* 動態紅線：沿時間軸隨捲動畫下（紅線 = 命中注定母題）；DOM 順序在 axis 後、events 前 → 疊在底線上、節點下 */
+      .tl-thread {
+        position: absolute;
+        left: 18px;
+        top: 12px;
+        bottom: 12px;
+        width: 4px;
+        transform: translateX(-1px);
+        overflow: visible;
+        pointer-events: none;
+      }
+      .tl-thread-path {
+        fill: none;
+        stroke: var(--thread-4);
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-dasharray: 1000;
+        stroke-dashoffset: 1000;
+        filter: drop-shadow(0 0 3px var(--thread-2));
+        transition: stroke-dashoffset 0.18s linear;
+      }
+      .tl-event .tl-dot {
+        transition: border-color 0.45s ease, box-shadow 0.45s ease;
+      }
+      .tl-event.lit .tl-dot {
+        border-color: var(--thread-4);
+        box-shadow:
+          0 12px 28px rgba(0, 0, 0, 0.22),
+          0 0 16px var(--thread-2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      }
+      .tl-event.lit .tl-event-year {
+        color: var(--rose);
+      }
       .tl-event {
         position: relative;
         display: flex;

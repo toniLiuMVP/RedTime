@@ -578,3 +578,48 @@ el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key ===
   // ?tour=1 深連時讓既有新讀者導覽接手，不雙開。
   if (!tourDeep) { setTimeout(openRouter, 900); }
 })();
+
+// ── block 5 ──
+// 動態紅線時間軸：SVG 紅線隨捲動沿時間軸畫下，逐一點亮年份節點（紅線 = 命中注定母題）
+(function initTimelineThread() {
+  var track = document.querySelector("#timeline-sec .tl-track");
+  if (!track) return;
+  var path = track.querySelector(".tl-thread-path");
+  var events = Array.prototype.slice.call(track.querySelectorAll(".tl-event"));
+  if (!path && !events.length) return;
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+  function setFull() {
+    if (path) path.style.strokeDashoffset = "0";
+    events.forEach(function (e) { e.classList.add("lit"); });
+  }
+  var ticking = false;
+  function update() {
+    ticking = false;
+    var r = track.getBoundingClientRect();
+    var vh = window.innerHeight || document.documentElement.clientHeight || 1;
+    var ref = vh * 0.62; // 紅線「畫到」這條視窗參考線
+    var p = (ref - r.top) / Math.max(1, r.height);
+    p = Math.max(0, Math.min(1, p));
+    if (path) path.style.strokeDashoffset = String(1000 * (1 - p));
+    var headY = r.top + p * r.height;
+    events.forEach(function (e) {
+      var er = e.getBoundingClientRect();
+      var dotY = er.top + Math.min(28, er.height * 0.3); // 紅線到達節點上緣附近即點亮
+      if (dotY <= headY) e.classList.add("lit"); else e.classList.remove("lit");
+    });
+  }
+  function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
+  function attach() {
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    update();
+  }
+  function detach() {
+    window.removeEventListener("scroll", onScroll);
+    window.removeEventListener("resize", onScroll);
+  }
+  if (reduce.matches) setFull(); else attach();
+  var onPref = function () { if (reduce.matches) { detach(); setFull(); } else { attach(); } };
+  if (reduce.addEventListener) reduce.addEventListener("change", onPref);
+  else if (reduce.addListener) reduce.addListener(onPref);
+})();
