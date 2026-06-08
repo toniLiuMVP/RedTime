@@ -36,6 +36,8 @@
         scroll-behavior: smooth;
         -webkit-text-size-adjust: 100%;
         scroll-padding-top: 82px;
+        /* 超特大字級用 body zoom 放大，溢出會逃到 html 層；clip 收掉橫向溢出（#nav 為 fixed，不受影響） */
+        overflow-x: clip;
       }
       body {
         -webkit-font-smoothing: antialiased;
@@ -2385,6 +2387,7 @@
         display: flex;
         gap: 20px;
         align-items: center;
+        flex-wrap: wrap;
       }
       .foot-link {
         font-family: "DM Mono", monospace;
