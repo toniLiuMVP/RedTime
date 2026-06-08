@@ -625,3 +625,15 @@ el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key ===
   if (reduce.addEventListener) reduce.addEventListener("change", onPref);
   else if (reduce.addListener) reduce.addListener(onPref);
 })();
+
+// ── block 6 ──
+// 防爬 email：原始碼不含連續 email 字串，載入時由 data 屬性組裝 mailto（無 JS 則退化為純文字提示）
+(function () {
+  var els = document.querySelectorAll("a[data-em-user][data-em-domain]");
+  els.forEach(function (a) {
+    var u = a.getAttribute("data-em-user"), d = a.getAttribute("data-em-domain");
+    if (!u || !d) return;
+    a.setAttribute("href", "mailto:" + u + "@" + d);
+    if (!a.getAttribute("aria-label")) a.setAttribute("aria-label", "寫信給作者（電子郵件）");
+  });
+})();

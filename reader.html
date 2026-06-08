@@ -5365,7 +5365,7 @@
           rel="noopener noreferrer"
           >← 回到首頁</a
         >
-        <a class="ft-action-btn ft-email" href="mailto:toniLiuMVP@gmail.com"
+        <a class="ft-action-btn ft-email" data-em-user="toniLiuMVP" data-em-domain="gmail.com"
           >✉ 寫信給作者</a
         >
       </div>
@@ -7083,6 +7083,11 @@
         } else updateDesktopRailContext(EPISODES[0]?.ep ?? 0);
       }
       applyStoredPrefs();
+      // 防爬 email：原始碼不含連續 email 字串，載入時由 data 屬性組裝 mailto
+      document.querySelectorAll("a[data-em-user][data-em-domain]").forEach(function (a) {
+        var u = a.getAttribute("data-em-user"), d = a.getAttribute("data-em-domain");
+        if (u && d) { a.setAttribute("href", "mailto:" + u + "@" + d); if (!a.getAttribute("aria-label")) a.setAttribute("aria-label", "寫信給作者（電子郵件）"); }
+      });
       EGGS.forEach((egg) => {
         if (egg.sub) egg.sub = normalizeEpText(egg.sub);
         (egg.quotes || []).forEach((q) => {
