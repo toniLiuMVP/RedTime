@@ -41,8 +41,16 @@
       <a class="home" href="../index.html">回到首頁，看整個故事 →</a>
     </main>
     <script>
-      // 真人訪客：看到本章 landing 後自動帶進全集閱讀器的對應章節（爬蟲仍取得上面真實內容）
-      setTimeout(function () { try { location.replace("../reader.html#ep-0"); } catch (e) { location.href = "../reader.html#ep-0"; } }, 1500);
+      // 真人訪客：看到本章 landing 後自動帶進全集閱讀器的對應章節（爬蟲仍取得上面真實內容）。
+      // 軟化：使用者只要有互動（捲動／按鍵／點觸）= 正在讀 teaser，就取消自動跳轉，改由「開始閱讀本章 →」手動進入。
+      (function () {
+        var u = "../reader.html#ep-0";
+        var go = function () { try { location.replace(u); } catch (e) { location.href = u; } };
+        var t = setTimeout(go, 2500);
+        var evs = ["scroll", "keydown", "pointerdown", "touchstart", "wheel"];
+        var cancel = function () { clearTimeout(t); evs.forEach(function (ev) { window.removeEventListener(ev, cancel); }); };
+        evs.forEach(function (ev) { window.addEventListener(ev, cancel, { passive: true }); });
+      })();
     </script>
   </body>
 </html>
