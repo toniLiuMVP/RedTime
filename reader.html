@@ -7799,14 +7799,8 @@
         const hid = b.classList.toggle("ep-tline-hidden");
         h.textContent = (hid ? "▸" : "▾") + " 時間軸說明";
       }
-      // a11y：章節展開鈕(role=button)鍵盤可達 — Enter/Space 觸發點擊
-      document.addEventListener("keydown", function (e) {
-        if ((e.key === "Enter" || e.key === " ") && e.target && e.target.matches &&
-            e.target.matches(".ep-info-head, .ep-tline-toggle, .ep-note-toggle")) {
-          e.preventDefault();
-          e.target.click();
-        }
-      });
+      // a11y：章節展開鈕(role=button)的 Enter/Space 鍵盤激活已由下方 div[onclick] 統一 patch 提供
+      // （見「A11y patch」段），此處不再另設委派，避免同一鍵兩個 listener 雙觸發互相抵消。
       function toggleDay() {
         document.body.classList.toggle("day-mode");
         savePref(
