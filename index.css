@@ -2402,6 +2402,11 @@
         .foot-inner {
           grid-template-columns: 1fr;
         }
+        /* 手機版固定字級 bar(.site-font-widget) 浮在底部會蓋住 footer 最後一行，
+           給 footer 留出能讓「隱私說明」捲高於固定 bar 的底部空間，避免永遠點不到 */
+        footer {
+          padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 120px);
+        }
       }
       .foot-logo {
         font-family: "Cormorant Garamond", serif;
