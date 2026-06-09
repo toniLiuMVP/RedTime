@@ -4625,6 +4625,15 @@ function renderLeaderboard(highlightIndex) {
     dom.lbBody.appendChild(empty);
     return;
   }
+  /* 個人最佳：回訪玩家一眼看到要破的紀錄（entries 已依分數排序，[0] 即最佳）*/
+  var best = entries[0];
+  if (best) {
+    var pb = document.createElement("div");
+    pb.className = "lb-personal-best";
+    pb.style.cssText = "margin:0 0 12px;padding:9px 14px;border:1px solid rgba(255,150,90,.4);border-radius:6px;background:rgba(255,150,90,.08);color:#ffd2a8;font-size:clamp(11px,1.6vw,13px);letter-spacing:.04em;text-align:center";
+    pb.textContent = "★ 你的個人最佳 · 第" + best.level + "關 · 最快 " + best.fastest + "s · 分數 " + best.score;
+    dom.lbBody.appendChild(pb);
+  }
   var table = document.createElement("table");
   table.className = "lb-table";
   var thead = document.createElement("thead");

@@ -461,7 +461,59 @@ _bd = bd; return card;
 
   function remember(v) { try { localStorage.setItem(ROUTE_KEY, v); } catch (e) {} }
 
+  // 回訪狀態：同源讀 reader 寫的進度／已讀集／鐵粉成績（全部唯讀，不回寫）
+  function getReturnState() {
+    var st = { hasProgress: false, lastEp: null, readCount: 0, quizBest: 0, cleared: 0 };
+    try { var p = parseInt(localStorage.getItem("redtime-progress"), 10); if (isFinite(p) && p >= 0) { st.hasProgress = true; st.lastEp = p; } } catch (e) {}
+    try { var r = JSON.parse(localStorage.getItem("redtime_read_eps_v1") || "[]"); if (Array.isArray(r)) st.readCount = r.length; } catch (e) {}
+    try { st.quizBest = parseInt(localStorage.getItem("redtime_entry_quiz_best_v1") || "0", 10) || 0; } catch (e) {}
+    try { var cb = JSON.parse(localStorage.getItem("redtime_fan_cleared_blocks") || "[]"); if (Array.isArray(cb)) st.cleared = cb.length; } catch (e) {}
+    if (st.readCount > 0) st.hasProgress = true;
+    return st;
+  }
+  // 首頁繼續閱讀條：有進度才現身
+  (function setupContinueBar() {
+    try {
+      var el = document.getElementById("hero-continue");
+      if (!el) return;
+      var st = getReturnState();
+      if (!st.hasProgress || st.lastEp == null) return;
+      el.href = READER + "#ep-" + st.lastEp;
+      el.setAttribute("aria-label", "繼續閱讀，回到上次讀到的 EP" + st.lastEp);
+      while (el.firstChild) el.removeChild(el.firstChild);
+      el.appendChild(ce("span", "btn-continue-lbl", st.readCount > 0 ? ("紅線記得你 · 已讀 " + st.readCount + " 集") : "紅線記得你停在哪"));
+      el.appendChild(ce("span", "btn-continue-main", "繼續閱讀 EP" + st.lastEp + " →"));
+      el.hidden = false;
+    } catch (e) {}
+  })();
+
   function renderChoose(card) {
+    var st = getReturnState();
+    if (st.hasProgress && st.lastEp != null) return renderWelcomeBack(card, st);
+    return renderChooseFresh(card);
+  }
+
+  // 老粉回訪分支：先接住「你回來了」，再給繼續／換新題／重選視角
+  function renderWelcomeBack(card, st) {
+    clearCard(card);
+    card.appendChild(ce("div", "ob-kicker", "你回來了。紅線一直記得你停在哪。"));
+    card.appendChild(ce("div", "ob-title", "上次讀到 EP" + st.lastEp));
+    var sub = "已讀 " + st.readCount + " 集";
+    if (st.cleared > 0) sub += " · 鐵粉通過 " + st.cleared + " 座月台";
+    else if (st.quizBest > 0) sub += " · 進站試煉最佳 " + st.quizBest + " / 10";
+    card.appendChild(ce("div", "ob-sub", sub));
+    var opts = ce("div", "ob-options");
+    function opt(t, s, fn) { var e = optEl("button", t, s); e.addEventListener("click", fn); return e; }
+    opts.appendChild(opt("📖 繼續讀 EP" + st.lastEp, "回到你上次停下來的那一頁。", function () { remember("read"); go(READER + "#ep-" + st.lastEp); }));
+    opts.appendChild(opt("★ 鐵粉測驗 · 再來十題", "五十座月台、由淺入深，每次抽到的都不一樣。", function () { remember("fan"); renderQuiz(card); }));
+    opts.appendChild(opt("🔀 換一條視角重看", "再選一次入口，從別人的眼睛把同一秒重看一遍。", function () { renderChooseFresh(card); }));
+    card.appendChild(opts);
+    var mini = ce("a", "ob-mini", "或從第一頁，重新走一次那條紅線 →"); mini.href = READER;
+    mini.addEventListener("click", function () { remember("read"); });
+    card.appendChild(mini);
+  }
+
+  function renderChooseFresh(card) {
 clearCard(card);
 var k = ce("div", "ob-kicker");
 k.appendChild(document.createTextNode("2005 年，他在走廊盡頭看了她一眼。"));

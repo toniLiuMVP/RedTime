@@ -2100,6 +2100,8 @@ function finishEndingSequence() {
   }
   // one_gaze 與 perfect_eye 共用同一張結局卡；fallback 確保任何未知 type 不崩潰
   const endingKey = state.ending === "one_gaze" ? "perfect_eye" : (state.ending ?? "canon");
+  // 結局收集（回訪記憶）：把這次抵達的結局記下來
+  try { if (window.__LM402_ENDINGS__) window.__LM402_ENDINGS__.record(endingKey); } catch (e) {}
   const ending = ENDINGS[endingKey] ?? ENDINGS["canon"];
   dom.endingKicker.textContent = ending.kicker;
   dom.endingTitle.textContent = ending.title;
@@ -3576,4 +3578,38 @@ window.__lm402Ready = true;
     loaderEl.style.pointerEvents = "none";
     setTimeout(() => loaderEl.remove(), 1200);
   }, 600);
+})();
+
+/* ── 結局收集 X / N（回訪記憶；data.js 早已預留 endingsCompleted key，這裡正式接上）── */
+(function setupEndingCollection() {
+  const ALL_ENDINGS = Object.keys(ENDINGS); // 全部可收集結局
+  function load() {
+    try {
+      const arr = JSON.parse(localStorage.getItem(STORAGE_KEYS.endingsCompleted) || "[]");
+      return new Set(Array.isArray(arr) ? arr.filter((k) => ALL_ENDINGS.indexOf(k) !== -1) : []);
+    } catch (e) { return new Set(); }
+  }
+  let done = load();
+  function syncPill() {
+    try {
+      const pill = document.getElementById("hud-collected-pill");
+      if (pill) pill.textContent = "結局收集 " + done.size + " / " + ALL_ENDINGS.length;
+    } catch (e) {}
+  }
+  function record(key) {
+    try {
+      if (!key || ALL_ENDINGS.indexOf(key) === -1 || done.has(key)) return;
+      done.add(key);
+      try { localStorage.setItem(STORAGE_KEYS.endingsCompleted, JSON.stringify(Array.from(done))); } catch (e) {}
+      syncPill();
+    } catch (e) {}
+  }
+  window.__LM402_ENDINGS__ = {
+    record: record,
+    count: () => done.size,
+    total: ALL_ENDINGS.length,
+    list: () => Array.from(done),
+    reset: () => { done = new Set(); try { localStorage.removeItem(STORAGE_KEYS.endingsCompleted); } catch (e) {} syncPill(); },
+  };
+  syncPill();
 })();

@@ -868,7 +868,45 @@
         border-color: rgba(22, 168, 100, 0.86);
         box-shadow: 0 0 28px rgba(22, 168, 100, 0.14);
       }
-      
+
+      /* 回訪繼續閱讀條 — 紅線色，僅在有閱讀進度時由 JS 顯示 */
+      .btn-continue {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 3px;
+        padding: 12px 30px;
+        background: rgba(255, 72, 88, 0.12);
+        border: 1px solid rgba(255, 72, 88, 0.5);
+        border-radius: 3px;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background 0.22s, border-color 0.22s, box-shadow 0.22s;
+      }
+      .btn-continue:hover,
+      .btn-continue:focus-visible {
+        background: rgba(255, 72, 88, 0.2);
+        border-color: rgba(255, 72, 88, 0.8);
+        box-shadow: 0 0 26px rgba(255, 72, 88, 0.16);
+        outline: none;
+      }
+      .btn-continue[hidden] {
+        display: none;
+      }
+      .btn-continue-lbl {
+        font-family: "DM Mono", monospace;
+        font-size: 9px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: rgba(255, 150, 160, 0.88);
+      }
+      .btn-continue-main {
+        font-family: "DM Mono", monospace;
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        color: #ffd0d6;
+      }
+
       /* r49 最新連載 CTA — primary 變奏(amber edge 強調新)*/
       .btn-latest {
         position: relative;

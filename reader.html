@@ -792,6 +792,8 @@
         .search-res { display: block; width: 100%; text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--line2, #2c2c34); color: #c4c4c4; padding: 12px 14px; cursor: pointer; font-family: inherit; }
         .search-res:hover, .search-res:focus-visible { background: rgba(255,255,255,.05); outline: none; }
         .search-res-ep { font-family: "DM Mono", monospace; font-size: 12px; color: #f0d4a8; letter-spacing: .08em; margin-bottom: 4px; }
+        .search-res-sci .search-res-ep { color: #7fd4d6; }
+        .search-res-sci { border-left: 2px solid rgba(120,196,198,.5); }
         .search-res-snip { font-size: 14px; line-height: 1.75; }
         .search-res-snip mark { background: rgba(255,72,88,.32); color: #fff; padding: 0 2px; border-radius: 2px; }
       /* ↑↑↑ 全域區塊結束 ↑↑↑ */
@@ -2378,6 +2380,56 @@
       .ep-note-body.hidden {
         display: none;
       }
+      /* 重讀線索：再讀一次才懂的伏筆，紅線色調與導讀注解區隔 */
+      .ep-clues {
+        border-left-color: rgba(255, 72, 88, 0.42);
+      }
+      .ep-clue {
+        position: relative;
+        padding-left: 14px;
+        margin-bottom: 9px;
+      }
+      .ep-clue:last-child {
+        margin-bottom: 0;
+      }
+      .ep-clue::before {
+        content: "✦";
+        position: absolute;
+        left: 0;
+        top: 0.1em;
+        color: rgba(255, 72, 88, 0.7);
+        font-size: 11px;
+      }
+      .ann-ep-link {
+        font: inherit;
+        color: var(--amber, #d4a017);
+        background: rgba(200, 144, 16, 0.08);
+        border: 1px solid rgba(200, 144, 16, 0.32);
+        border-radius: 4px;
+        padding: 0 5px;
+        margin: 0 1px;
+        cursor: pointer;
+        letter-spacing: 0.02em;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.16s ease, border-color 0.16s ease;
+      }
+      .ann-ep-link:hover,
+      .ann-ep-link:focus-visible {
+        background: rgba(200, 144, 16, 0.18);
+        border-color: rgba(200, 144, 16, 0.6);
+        outline: none;
+      }
+      body.day-mode .ep-clues {
+        border-left-color: rgba(214, 51, 65, 0.5);
+      }
+      body.day-mode .ep-clue::before {
+        color: rgba(214, 51, 65, 0.78);
+      }
+      body.day-mode .ann-ep-link {
+        color: #9a6a00;
+        background: rgba(154, 106, 0, 0.1);
+        border-color: rgba(154, 106, 0, 0.4);
+      }
       /* Story text */
       .ep-body {
         max-width: var(--measure);
@@ -3588,6 +3640,43 @@
         font-weight: 400;
         white-space: pre-wrap;
       }
+      /* 科普物理線索引 */
+      .es-thread {
+        margin-top: 12px;
+        padding-top: 10px;
+        border-top: 1px dashed rgba(255, 255, 255, 0.12);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        font-family: "DM Mono", monospace;
+        font-size: 12px;
+      }
+      .es-thread + .es-thread {
+        margin-top: 6px;
+        padding-top: 6px;
+        border-top: none;
+      }
+      .es-thread-name {
+        color: var(--t3);
+        margin-right: 4px;
+        letter-spacing: 0.03em;
+      }
+      .es-thread-arrow {
+        color: var(--t3);
+        opacity: 0.55;
+      }
+      .es-thread-cur {
+        color: var(--amber, #d4a017);
+        font-weight: 600;
+        padding: 0 5px;
+      }
+      body.day-mode .es-thread {
+        border-top-color: rgba(0, 0, 0, 0.14);
+      }
+      body.day-mode .es-thread-cur {
+        color: #9a6a00;
+      }
       body.day-mode .ep-science {
         background: rgba(120, 196, 198, 0.06);
         border-color: rgba(120, 196, 198, 0.32);
@@ -3801,6 +3890,23 @@
         color: var(--t3);
         letter-spacing: 0.15em;
       }
+      .ft-clear-data {
+        font-family: inherit;
+        font-size: inherit;
+        letter-spacing: inherit;
+        color: #8a8a94;
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+      .ft-clear-data:hover,
+      .ft-clear-data:focus-visible {
+        color: rgba(255, 72, 88, 0.9);
+        outline: none;
+      }
       @media (min-width: 768px) {
         .ft-links {
           flex-direction: row;
@@ -3949,6 +4055,13 @@
         text-transform: uppercase;
         color: var(--t2);
         margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .ap-title .ui-glyph {
+        width: 13px;
+        height: 13px;
       }
       .ap-speed-row {
         display: flex;
@@ -5046,7 +5159,7 @@
             <div class="hero-divider"></div>
             <a class="hero-newcomer" href="index.html?tour=1" aria-label="新讀者引路 · 第一次來的指引">
               <span class="hero-newcomer-icon" aria-hidden="true">☆</span>
-              <span>你是第一次來嗎?</span>
+              <span>你是第一次來嗎？</span>
             </a>
             <button class="hero-cta" onclick="goToEp(0)">
               ↓ &nbsp; 翻開第一頁
@@ -5067,7 +5180,7 @@
               <span class="resume-eyebrow">繼續閱讀</span>
               <span class="resume-title" id="resume-title">繼續上次閱讀</span>
               <span class="resume-sub" id="resume-sub"
-                >帶你回到上次停下來的那一刻。</span
+                >別怕迷路，這裡會把你接回原本的那一頁。</span
               >
             </button>
             <a class="hero-scene-link" href="lm402.html"
@@ -5281,7 +5394,7 @@
 
     <!-- AUTO SCROLL PANEL -->
     <div id="auto-panel">
-      <div class="ap-title">⏩ 自動模式</div>
+      <div class="ap-title"><span class="ui-glyph" data-ui-icon="play" aria-hidden="true"></span> 自動模式</div>
       <div class="ap-speed-steps" id="ap-steps"></div>
       <div class="ap-speed-row">
         <span class="ap-speed-label">速度</span>
@@ -5314,7 +5427,7 @@
     <div id="site-footer">
       <div class="ft-label">Official · 官方頻道</div>
       <div class="ft-logo">時間裡的兩個妳</div>
-      <div class="ft-sub">toni · 跟著故事，不會迷路</div>
+      <div class="ft-sub">toni · 沿著紅線走，不會走散</div>
       <div class="ft-links">
         <a
           class="ft-link"
@@ -5389,7 +5502,7 @@
           >✉ 寫信給作者</a
         >
       </div>
-      <div class="ft-copy">© toni · 時間裡的兩個妳 · <a href="privacy.html" style="color:#8a8a94">隱私說明</a></div>
+      <div class="ft-copy">© toni · 時間裡的兩個妳 · <a href="privacy.html" style="color:#8a8a94">隱私說明</a> · <button type="button" class="ft-clear-data" onclick="clearAllMyData()">清除我的本機資料</button></div>
     </div>
 
     <div id="fab-bar">
@@ -6730,7 +6843,7 @@
         {"ep": 18, "topic": "神經科學。將死記憶高速回放", "body": "EP18 學長半夜遇到警匪追逐撞車， 「人生跑馬燈跑了 10 秒鐘」。 神經科學研究（如 Greyson 1983, van Lommel 2001 ）發現， 瀕死或極端壓力下大腦會出現「life review」現象： 海馬迴與顳葉皮層在短時間內以異常高速度重播長期記憶。 主觀上時間被拉長， 是因為大腦在單位時間內處理了異常密集的資訊。 學長 10 秒回憶了「跟學妹的一生」， 是這個神經機制的文學描寫。"},
         {"ep": 19, "topic": "婚姻承諾的進化心理學。「21 歲就下定決心要守護妳的餘生」", "body": "EP19 學長 2024 求婚， 21 歲就下定決心。 進化心理學 (Buss 1989 cross-cultural mate preferences) 顯示 commitment 是男性 mate value 的 top-3 signal。 神經學上， monogamous bond formation 涉及 vasopressin V1aR receptor + oxytocin OXTR receptor 的協同。 prairie vole (草原田鼠) 的單偶性研究 (Young et al. 1999) 顯示 V1aR 變異就能改變終身單偶性。 學長那「17 年的等待」是 oxytocin / vasopressin pair-bonding neural circuit 持續活化的極端例。"},
         {"ep": 20, "topic": "彩虹的折射物理。「彩虹會散」「我就是妳那道彩虹」", "body": "EP20 學妹「彩虹會散」「你說『我就是妳那道彩虹』」。 彩虹是陽光經雨滴折射 + 反射形成的視覺現象 (Descartes 1637 first explained)。 主彩虹 (primary rainbow) 出現在反日點 42° 仰角， 副彩虹在 51° 仰角。 物理上彩虹「會散」是因為太陽角度變化或雨滴蒸發。平均壽命 1-30 分鐘。 學妹的精算「彩虹會消失」是物理事實， 學長的反駁「我就是那道」 是把無常承諾成「持續供應雨滴」。用熱力學第二定律對抗自然散逸。"},
-        {"ep": 21, "topic": "自由意志 vs 決定論。命運阿嬤的悖論", "body": "EP21 命運阿嬤說「不能干預任何事件， 也不能和任何人有互動」。 這對應到哲學上的「自由意志 vs 決定論」千年辯論： 如果未來已存在（block universe）， 那「選擇」是否還有意義？ 命運阿嬤的規則是相容論（compatibilism）的一種敘事化版本： 觀察者可以看見全部時間線， 但不能改變因果鏈， 因為改變會撕裂讓觀察者得以存在的那條線（grandfather paradox）。 女兒「在劇本上做記號」， 但不能「改劇本」， 就是這個悖論的縫合方式。"},
+        {"ep": 21, "topic": "自由意志 vs 決定論。命運阿嬤的悖論", "body": "EP21 命運阿嬤說「不能干預任何事件， 也不能和任何人有互動」。 這對應到哲學上的「自由意志 vs 決定論」千年辯論： 如果未來已存在（block universe）， 那「選擇」是否還有意義？ 命運阿嬤的規則是相容論（compatibilism）的一種敘事化版本： 觀察者可以看見全部時間線， 但不能改變因果鏈， 因為改變會撕裂讓觀察者得以存在的那條線（grandfather paradox）。 這條規則在物理學裡有個名字： 諾維科夫自洽原則（Novikov self-consistency principle， Igor Novikov 在 1980 年代提出）—— 時間旅行不會製造悖論， 因為唯一能真正存在的時間線， 本來就是自洽的那一條； 任何會撕裂自己的事件， 發生機率為零。 女兒「在劇本上做記號」， 但不能「改劇本」， 就是這個悖論的縫合方式。"},
         {"ep": 22, "topic": "量子糾纏 (Quantum Entanglement)。紅線的物理對位", "body": "EP22 命運阿嬤說「紅線代表命中注定」。在物理學中最接近這個概念的是「量子糾纏」：兩個粒子在一起製備之後，會共享同一個量子態，即使後來相距百萬光年，只要測量其中一個，另一個的測量結果就會與它嚴格相關。愛因斯坦不安地稱它「鬼魅般的超距作用」，但 Bell 不等式（1964）加上 Aspect 等人的實驗，到 2022 年諾貝爾物理獎（Clauser、Aspect、Zeilinger），已證實這份相依是物理真實。只是糾纏不能用來傳遞訊息（不可傳信定理）。所以紅線只能記得，不能傳話。學妹說不出口，把拔也接不到，兩個人卻在被命運看著的那一刻，狀態總是合奏。她要親自穿越十七年，不是為了傳訊息，是為了讓那條只會記得的線，終於被看見一次。"},
         {"ep": 23, "topic": "量子糾纏 explicit。EPR 與心的版本", "body": "EP23 女兒說「把拔和阿姨就是一種量子糾纏」。 1935 年 EPR 論文（Einstein-Podolsky-Rosen）提出這個假想實驗試圖反駁量子力學完備性， 結果反而開啟了量子訊息理論。 EP23 把這個延伸成「只要把拔一個心碎， 阿姨就會在遠方加倍難過」。在物理上， 糾纏粒子的測量結果是相關的（correlated）， 不是因果的（causal）。 你不能「讓」對方難過， 但兩人狀態在被觀察時總是合奏。 女兒「就是兩顆悲傷的心裡， 唯一會發亮的光點」， 是把糾纏關係的觀察者效應放進親情。"},
         {"ep": 24, "topic": "時空黑洞 vs 心理時間黑洞。急診室的七盞白光", "body": "EP24 學妹 2006 小年夜在急診室看到「天花板的七盞白光」， 17 年後 2022 同一夜「秒針一直在顫抖」。 物理學上， 黑洞奇異點時間方向終結， 任何進入 event horizon 的物體都無法返回。 心理學上的「時間黑洞」是 dissociative episode (DSM-5 308.3)， 在極度創傷下意識會出現 time perception distortion： 主觀時間被拉長或凍結。 學妹 17 年內主觀只「等了一晚」。這是真實的 chronopathology。"},
@@ -6750,7 +6863,13 @@
         {"ep": 38, "topic": "多重自我 / 意識菜市場。心理學的對位", "body": "EP38 學妹 29 歲身體裡承載 18 歲意識， 同時「菜市場」裡擠進 29/33/39/49 歲的「我」。 心理學上對應「多重自我」（multiple selves theory, Pronin & Ross 2006）： 同一個人對不同時間點的自己， 會像對待陌生人。 在決策心理學上， 「未來自我折扣」（future self discounting）解釋為什麼我們對 1 個月後的自己比 10 年後的自己更友善。因為意識上他比較像「我」。 EP38 把這四個未來自我同時拉進當下， 對 18 歲說「不要逃， 也不要做奇怪的事情」， 是把多重自我問題具象化成「會議室」。而且 18 歲還是有最終決定權。"},
         {"ep": 39, "topic": "「潮水退了， 就會知道誰醒誰睡」。倖存者偏差與認知謙遜", "body": "EP39 2025 秋 7-11 門口， 學長對學妹說「會不會我一直都沒有睡？ 潮水退了， 就會知道到底誰是醒誰是睡」。 這句直接致敬 Warren Buffett 1992 致股東信「Only when the tide goes out do you discover who's been swimming naked」。投資界用來描述「順風時人人看似精明， 逆風時才暴露真功夫」。 行為經濟學上， 對應到「倖存者偏差」(survivorship bias, Wald 1943 飛機彈孔分析) 跟「認知謙遜」(epistemic humility)。 學長 17 年痛苦熬過的「相信」， 不是樂觀偏誤 (optimism bias, Sharot 2011 演化適應)， 而是已經「裸泳過」的人才講得出來的話。退潮見底， 自己當年是裸泳但沒被沖走， 才有資格說「我沒有在賭， 我只是相信『相信的力量』」。 學妹「會不會你只是還沒醒」是 epistemological challenge， 學長「我又不是死會計系」是用一句玩笑收下挑戰但不正面交鋒。因為他知道， 認知謙遜的人不需要證明自己醒著。"},
         {"ep": 40, "topic": "「相信『相信的力量』」。Self-fulfilling Prophecy 與 Hardiness Theory", "body": "EP40 學長 2007 提早入伍進海軍陸戰隊， 三千公尺 / 凌晨夜哨 / 三分鐘冷水戰鬥澡， 「我相信三年， 相信五年。 雖然最後等到的， 是 2022 年。 整整十五年」。 這對應到 Robert Merton 1948 「self-fulfilling prophecy」 (自我實現預言)： 一個對未來的 belief 可以實質改變 outcome， 不是純粹 placebo， 是 motivation × persistence × cognitive bias 三因素的合成。 心理學上同時對應「hardiness theory」(Kobasa 1979) 的 3C: commitment / control / challenge。在 controlled stress 下重建 sense of agency。 軍事訓練的 cortisol-adaptation 機制 (Sapolsky 1994 Why Zebras Don't Get Ulcers) 顯示反覆 stress + recovery cycle 可提升 stress tolerance baseline。 大兵日記寫「如果是你， 承受得了周芷若那一劍嗎？」 是 expressive writing therapy (Pennebaker 1986)： 寫出創傷可降低 cortisol 26% (4 個月 follow-up)。 「相信『相信的力量』」是 meta-belief: 信念本身會強化信念， 神經迴路上對應 default mode network 的 self-narrative loop 加固。 學長那 15 年熬過來的不是 stoicism， 是 active self-narrative construction。"},
-        {"ep": 41, "topic": "「網路風暴」與「知道沒有用。我也相信」。資訊串級、 童話敘事與 Will to Believe", "body": "EP41 keystone。 阿姨七天哭泣壓縮成 LINE「1163」 (車次號) 給把拔， 把拔讀作「號碼」但阿姨寫進整顆心。這是 lossy compression of grief (Pennebaker 1993 narrative therapy)。 阿姨同一句「你什麼時候要聯絡我」一直重複問， 把拔腦中觸發 information cascade (Bikhchandani et al. 1992) → 「網路風暴」。同訊息重複會塞滿同一條神經迴路， 大腦進入 freeze response 答不出來。 阿姨那句「你對我又沒什麼幫助， 我一直都覺得是一個人」打中把拔， 同時觸發小時候「你對家裡已經沒什麼貢獻了」的早期 trauma。這是 emotional reactivation through linguistic priming (Crowder 1976)， 同一語素重新點燃舊神經迴路。 女兒戴時空耳機飛過七天看完， 然後「我把『知道』放下， 跟把拔做同一件事。 我也相信」。這對應 William James 1896 「The Will to Believe」: 在沒有證據的情況下， 選擇相信本身是 act of will， 不是 epistemic failure。 EP41 標題「這不是童話故事」 是 narratological turn: 童話故事在風暴頁翻過時會有人敲門 (Propp Morphology of the Folktale 1928 第 16 號功能「the hero is recognized」)， 但女兒「我不能敲門， 因為我不能干預， 因為我住在台中你住在桃園」。中斷童話敘事學的 deus ex machina， 用「願意相信」取代「被解救」。 EP21 命運阿嬤「命運不是命定， 但紅線是命中注定」 的最終答案在這裡。自由意志藏在「願意相信」這個 act of will 裡。 EP40 學長的「相信」與 EP41 女兒的「相信」 在 EP41 末尾的康乃馨場景收束。把拔半夜放康乃馨在媽媽家「謝謝妳從來都沒有放棄過我」。跨三代的「相信彼此不會被放棄」 是這個 autofiction 的真正 keystone。"},
+        {"ep": 41, "topic": "「網路風暴」與「知道沒有用。我也相信」。資訊串級、 童話敘事與 Will to Believe", "body": "EP41 keystone。 阿姨七天哭泣壓縮成 LINE「1163」 (車次號) 給把拔， 把拔讀作「號碼」但阿姨寫進整顆心。這是 lossy compression of grief (Pennebaker 1993 narrative therapy)。 阿姨同一句「你什麼時候要聯絡我」一直重複問， 把拔腦中觸發 information cascade (Bikhchandani et al. 1992) → 「網路風暴」。同訊息重複會塞滿同一條神經迴路， 大腦進入 freeze response 答不出來。 阿姨那句「你對我又沒什麼幫助， 我一直都覺得是一個人」打中把拔， 同時觸發小時候「你對家裡已經沒什麼貢獻了」的早期 trauma。這是 emotional reactivation through linguistic priming (Crowder 1976)， 同一語素重新點燃舊神經迴路。 女兒戴時空耳機飛過七天看完， 然後「我把『知道』放下， 跟把拔做同一件事。 我也相信」。這對應 William James 1896 「The Will to Believe」: 在沒有證據的情況下， 選擇相信本身是 act of will， 不是 epistemic failure。 EP41 標題「這不是童話故事」 是 narratological turn: 童話故事在風暴頁翻過時會有人敲門 (Propp Morphology of the Folktale 1928 第 16 號功能「the hero is recognized」)， 但女兒「我不能敲門， 因為我不能干預， 因為我住在台中你住在桃園」。中斷童話敘事學的 deus ex machina， 用「願意相信」取代「被解救」。 EP21 命運阿嬤那條「做記號但不能改劇本」的規則， 在這裡終於有了名字： 諾維科夫自洽原則（Novikov self-consistency principle）—— 能存在的時間線只有自洽的那一條。 所以女兒不能敲門， 所以「願意相信」不是徒勞， 而是這條自洽迴圈裡， 本來就該由她落下的那一筆。 EP21 命運阿嬤「命運不是命定， 但紅線是命中注定」 的最終答案在這裡。自由意志藏在「願意相信」這個 act of will 裡。 EP40 學長的「相信」與 EP41 女兒的「相信」 在 EP41 末尾的康乃馨場景收束。把拔半夜放康乃馨在媽媽家「謝謝妳從來都沒有放棄過我」。跨三代的「相信彼此不會被放棄」 是這個 autofiction 的真正 keystone。"},
+      ];
+
+      // 科普物理線索引常數（須早於 EPISODES build loop，避免 scienceThreadFooter 讀到 TDZ）
+      const SCIENCE_THREADS = [
+        { name: "量子糾纏線", eps: [22, 23, 28, 36] },
+        { name: "方塊宇宙線", eps: [15, 21, 41] },
       ];
 
       const ARC_LBL = {
@@ -6945,6 +7064,44 @@
           return null;
         }
       }
+      /* 清除我的本機資料（最高規最嚴謹）：
+         - 只動本站擁有的 key（前綴白名單），絕不 localStorage.clear()（以免動到同源其他資料）
+         - 動手前完整列舉數量＋類別，要求明確確認
+         - 全程不連網、不上傳，資料本就只存在這台裝置 */
+      function _collectMyDataKeys() {
+        var PREFIXES = ["redtime", "lm402", "platformrun"];
+        var keys = [];
+        try {
+          for (var i = 0; i < localStorage.length; i++) {
+            var k = localStorage.key(i);
+            if (!k) continue;
+            var lk = k.toLowerCase();
+            for (var p = 0; p < PREFIXES.length; p++) {
+              if (lk.indexOf(PREFIXES[p]) === 0) { keys.push(k); break; }
+            }
+          }
+        } catch (e) {}
+        return keys;
+      }
+      function clearAllMyData() {
+        var keys = _collectMyDataKeys();
+        if (!keys.length) { alert("沒有找到任何本機紀錄，這裡很乾淨。"); return; }
+        var msg = "即將永久清除這台裝置上《時間裡的兩個妳》的所有本機紀錄，共 " + keys.length + " 項：\n\n"
+          + "· 閱讀進度與已讀章節\n"
+          + "· 書籤與已解鎖彩蛋\n"
+          + "· 鐵粉測驗成績與稱號\n"
+          + "· LM402／月台遊戲紀錄與設定\n"
+          + "· 字級與日夜模式偏好\n\n"
+          + "這些資料只存在你這台裝置、從未上傳，清除後無法復原。確定要清除嗎？";
+        if (!window.confirm(msg)) return;
+        var removed = 0;
+        for (var j = 0; j < keys.length; j++) {
+          try { localStorage.removeItem(keys[j]); removed++; } catch (e) {}
+        }
+        alert("已清除 " + removed + " 項本機紀錄。頁面將重新整理，回到乾淨的起點。");
+        try { location.reload(); } catch (e) {}
+      }
+      window.clearAllMyData = clearAllMyData;
       function compactReaderText(text, maxLen = 88) {
         const cleaned = String(text || "")
           .replace(/\s+/g, " ")
@@ -6975,7 +7132,7 @@
           }
           title.textContent =
             "從 " + fmtEp(ep.ep) + " · " + shortEpisodeTitle(ep) + " 繼續";
-          sub.textContent = "上次看到這一集，點一下就回到閱讀進度。";
+          sub.textContent = "上次你停在這裡，回來接著走。";
           card.classList.add("show");
         });
       }
@@ -6996,7 +7153,7 @@
         railTitle.textContent = fmtEp(ep.ep) + " · " + shortEpisodeTitle(ep);
         railCopy.textContent =
           summary ||
-          "正文會保持原樣，右側只幫你收束目前章節的方向與對位。";
+          "先往下讀，這欄只是替你記著方向。";
         railArc.textContent =
           (ARC_LBL[ep.arc] || ep.arc) +
           " · " +
@@ -7307,6 +7464,11 @@
         const ann = ANNOTATIONS[String(ep.ep)] || ["", ""];
         const note = ann[0] || "",
           tline = ann[1] || "";
+        // ann[2]+ = 重讀線索（再讀一次才看得懂的伏筆／回指），EPxx 可點跳轉
+        const clues = ann.slice(2).filter(Boolean);
+        const cluesH = clues.length
+          ? `<div class="ep-note ep-clues"><div class="ep-note-toggle" role="button" tabindex="0" data-n="${clues.length}" onclick="toggleClues(this)">▸ 重讀線索（${clues.length}）</div><div class="ep-note-body hidden">${clues.map((c) => `<div class="ep-clue">${linkifyEpRefs(c)}</div>`).join("")}</div></div>`
+          : "";
         const vis = TL.filter((e) => e.from <= ep.ep);
         const evtsH =
           vis
@@ -7344,7 +7506,7 @@
         const grannyH = granny ? buildGranny(granny) : "";
         const science = SCIENCE.find((s) => s.ep === ep.ep) || null;
         const scienceH = science ? buildScience(science) : "";
-        sec.innerHTML = `<div class="ep-bg-num">${fmtEp(ep.ep).replace("EP", "")}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${escapeHtml(ARC_LBL[arc] || arc)}</span></div><div class="ep-title">${escapeHtml(cT)}</div><div class="ep-meta-row"><span>${readMins(ep.html)} 分鐘</span><span class="ep-meta-dot"></span><span>${escapeHtml(ep.chars || "")} 字</span></div></div><div class="ep-info-strip"><div class="ep-info-head" role="button" tabindex="0" onclick="toggleEpInfo(this)"><span class="eih-icon">${renderIcon("guide")}</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>${tline ? `<div class="ep-tline-wrap"><div class="ep-tline-toggle" role="button" tabindex="0" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${escapeHtml(tline)}</span></div></div>` : ""}${note ? `<div class="ep-note"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${escapeHtml(note)}</div></div>` : ""}${grannyH}${scienceH}<div class="ep-body-wrap"></div>${tH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
+        sec.innerHTML = `<div class="ep-bg-num">${fmtEp(ep.ep).replace("EP", "")}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${escapeHtml(ARC_LBL[arc] || arc)}</span></div><div class="ep-title">${escapeHtml(cT)}</div><div class="ep-meta-row"><span>${readMins(ep.html)} 分鐘</span><span class="ep-meta-dot"></span><span>${escapeHtml(ep.chars || "")} 字</span></div></div><div class="ep-info-strip"><div class="ep-info-head" role="button" tabindex="0" onclick="toggleEpInfo(this)"><span class="eih-icon">${renderIcon("guide")}</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>${tline ? `<div class="ep-tline-wrap"><div class="ep-tline-toggle" role="button" tabindex="0" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${escapeHtml(tline)}</span></div></div>` : ""}${note ? `<div class="ep-note"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${linkifyEpRefs(note)}</div></div>` : ""}${cluesH}${grannyH}${scienceH}<div class="ep-body-wrap"></div>${tH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
         const bd = document.createElement("div");
         bd.className = "ep-body";
         bd.innerHTML = ep.html;
@@ -7542,6 +7704,7 @@
                   egg.triggerEp <= n
                 ) {
                   unlockedEggs.add(egg.id);
+                  saveEggs();
                   setTimeout(() => showToast(egg), 1200);
                   addToEggShelf(egg);
                   refreshEggMarks();
@@ -7828,6 +7991,18 @@
         const hid = b.classList.toggle("ep-tline-hidden");
         h.textContent = (hid ? "▸" : "▾") + " 時間軸說明";
       }
+      function toggleClues(h) {
+        const b = h.nextElementSibling;
+        const hid = b.classList.toggle("hidden");
+        h.textContent = (hid ? "▸" : "▾") + " 重讀線索（" + (h.dataset.n || "") + "）";
+      }
+      // 注解內 EPxx → 可點跳轉。先整段 escapeHtml，再把已安全的 EPxx 文字換成按鈕
+      // （n 為整數，無注入風險；來源 ANNOTATIONS 為編譯期文本，符合安全不變式）
+      function linkifyEpRefs(text) {
+        return escapeHtml(String(text || "")).replace(/EP\s?(\d{1,2})/g, function (full, num) {
+          return '<button type="button" class="ann-ep-link" onclick="goToEp(' + parseInt(num, 10) + ')">' + full + '</button>';
+        });
+      }
       // a11y：章節展開鈕(role=button)的 Enter/Space 鍵盤激活已由下方 div[onclick] 統一 patch 提供
       // （見「A11y patch」段），此處不再另設委派，避免同一鍵兩個 listener 雙觸發互相抵消。
       function toggleDay() {
@@ -7905,7 +8080,7 @@
           var results = document.createElement("div");
           results.id = "search-results"; results.className = "search-results";
           var hint = document.createElement("div"); hint.className = "search-hint";
-          hint.textContent = "輸入關鍵字，搜全 42 集正文。按 Esc 關閉。";
+          hint.textContent = "想找哪一句、哪一個場景？輸進來，我幫你翻遍 42 集正文＋科普。按 Esc 關閉。";
           results.appendChild(hint);
           box.append(head, results); ov.appendChild(box); document.body.appendChild(ov);
           var t;
@@ -7924,18 +8099,17 @@
         var box = document.getElementById("search-results");
         if (!box) return;
         q = (q || "").trim();
-        if (q.length < 1) { _searchHint(box, "輸入關鍵字，搜全 42 集正文。", "search-hint"); return; }
+        if (q.length < 1) { _searchHint(box, "想找哪一句、哪一個場景？輸進來，我幫你翻遍 42 集正文＋科普。", "search-hint"); return; }
         var ql = q.toLowerCase();
         var hits = [];
-        for (var i = 0; i < EPISODES.length && hits.length < 60; i++) {
-          var ep = EPISODES[i];
-          var text = stripHtml(ep.html || "");
+        // 工具：在一段文字裡找關鍵字並擷取前後文片段
+        function collectHits(text, ep, sci, maxPer) {
           var lc = text.toLowerCase();
           var from = 0, idx, count = 0;
-          while ((idx = lc.indexOf(ql, from)) >= 0 && count < 3) {
+          while ((idx = lc.indexOf(ql, from)) >= 0 && count < maxPer) {
             var s = Math.max(0, idx - 28), e = Math.min(text.length, idx + q.length + 42);
             hits.push({
-              ep: ep.ep,
+              ep: ep, sci: sci,
               before: (s > 0 ? "…" : "") + text.slice(s, idx),
               match: text.slice(idx, idx + q.length),
               after: text.slice(idx + q.length, e) + (e < text.length ? "…" : "")
@@ -7943,27 +8117,55 @@
             count++; from = idx + q.length;
           }
         }
+        // 1) 故事正文
+        for (var i = 0; i < EPISODES.length && hits.length < 50; i++) {
+          collectHits(stripHtml(EPISODES[i].html || ""), EPISODES[i].ep, false, 3);
+        }
+        // 2) 科普小單元（topic + body）
+        for (var j = 0; j < SCIENCE.length && hits.length < 65; j++) {
+          collectHits((SCIENCE[j].topic || "") + "：" + (SCIENCE[j].body || ""), SCIENCE[j].ep, true, 2);
+        }
         if (!hits.length) { _searchHint(box, "找不到「" + q + "」。試試別的關鍵字。", "search-empty"); return; }
         box.textContent = "";
         hits.forEach(function (h) {
-          var b = document.createElement("button"); b.className = "search-res"; b.type = "button";
-          var epd = document.createElement("div"); epd.className = "search-res-ep"; epd.textContent = fmtEp(h.ep);
+          var b = document.createElement("button"); b.className = "search-res" + (h.sci ? " search-res-sci" : ""); b.type = "button";
+          var epd = document.createElement("div"); epd.className = "search-res-ep"; epd.textContent = fmtEp(h.ep) + (h.sci ? " · 科普" : "");
           var sn = document.createElement("div"); sn.className = "search-res-snip";
-          // 純 DOM 節點建 highlight：textNode + <mark>，零 innerHTML，內容源自 data.js 編譯期
+          // 純 DOM 節點建 highlight：textNode + <mark>，零 innerHTML，內容源自編譯期 EPISODES/SCIENCE
           sn.appendChild(document.createTextNode(h.before));
           var mk = document.createElement("mark"); mk.textContent = h.match; sn.appendChild(mk);
           sn.appendChild(document.createTextNode(h.after));
           b.append(epd, sn);
-          b.addEventListener("click", function () { closeSearch(); goToEp(h.ep); });
+          b.addEventListener("click", h.sci
+            ? function () { closeSearch(); goToScience(h.ep); }
+            : function () { closeSearch(); goToEp(h.ep); });
           box.appendChild(b);
         });
       }
 
       // ── Eggs ──
-      const unlockedEggs = new Set();
+      // 回訪持久化：已解鎖彩蛋寫進 localStorage，重載不歸零
+      const EGGS_KEY = "redtime_eggs_v1";
+      function _loadUnlockedEggs() {
+        try {
+          const arr = JSON.parse(localStorage.getItem(EGGS_KEY) || "[]");
+          return new Set(Array.isArray(arr) ? arr.filter((n) => Number.isInteger(n)) : []);
+        } catch (e) { return new Set(); }
+      }
+      function saveEggs() {
+        try { localStorage.setItem(EGGS_KEY, JSON.stringify(Array.from(unlockedEggs))); } catch (e) {}
+      }
+      const unlockedEggs = _loadUnlockedEggs();
       let pendingEgg = null,
         toastTimer = null,
         eggShelfList = [];
+      // 重載後把已解鎖彩蛋無聲地放回收藏架（不重播 toast），並補回 EP 標記
+      function restoreEggs() {
+        if (!unlockedEggs.size) return;
+        EGGS.forEach((egg) => { if (unlockedEggs.has(egg.id)) addToEggShelf(egg); });
+        if (typeof refreshEggMarks === "function") refreshEggMarks();
+      }
+      setTimeout(restoreEggs, 0);
       function showToast(egg) {
         pendingEgg = egg;
         document.getElementById("toast-glyph").innerHTML = eggGlyphMarkup(
@@ -7998,7 +8200,7 @@
           showToast({
             glyph: "🔒",
             title: "彩蛋尚未解鎖",
-            sub: "繼續閱讀，隱藏彩蛋將在關鍵章節出現",
+            sub: "往下走，紅線經過的地方，會留東西給你。",
             id: 0,
             triggerEp: 999,
           });
@@ -8183,6 +8385,31 @@
       }
       /* buildScience — per-EP 科普小單元 (mimics buildGranny);
           — review caught: aria-expanded sync for a11y */
+      // 科普物理線索引：把橫跨多集的同一物理母題串成一條可點的線
+      // （SCIENCE_THREADS 常數已提前在 SCIENCE 陣列後宣告，避免 build loop 早於此處執行造成 TDZ）
+      function scienceThreadFooter(ep) {
+        const parts = [];
+        SCIENCE_THREADS.forEach(function (t) {
+          if (t.eps.indexOf(ep) === -1) return;
+          const chain = t.eps.map(function (e) {
+            return e === ep
+              ? '<span class="es-thread-cur">EP' + e + '</span>'
+              : '<button type="button" class="ann-ep-link" onclick="goToScience(' + e + ')">EP' + e + '</button>';
+          }).join('<span class="es-thread-arrow">→</span>');
+          parts.push('<div class="es-thread"><span class="es-thread-name">🧵 ' + escapeHtml(t.name) + '</span>' + chain + '</div>');
+        });
+        return parts.join('');
+      }
+      function goToScience(ep) {
+        goToEp(ep);
+        setTimeout(function () {
+          const body = document.getElementById("science-body-" + ep);
+          if (body && body.previousElementSibling && !body.previousElementSibling.classList.contains("open")) {
+            toggleScience(body.previousElementSibling);
+          }
+          if (body) body.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 420);
+      }
       function buildScience(s) {
         /* render 1-2 博士 badges (中英對照 via title tooltip) */
         const expertKeys = EP_EXPERTS[s.ep] || [];
@@ -8191,7 +8418,7 @@
           return '<span class="es-expert" title="' + escapeHtml(e.zh) + ' · ' + escapeHtml(e.en) + '">' + e.icon + ' ' + escapeHtml(e.zh) + '<span class="es-expert-en">' + escapeHtml(e.en) + '</span></span>';
         }).join('');
         const avatarIcon = (experts[0] && experts[0].icon) || '⚛';
-        return `<div class="ep-science"><div class="ep-science-toggle" onclick="toggleScience(this)" role="button" tabindex="0" aria-expanded="false" aria-controls="science-body-${s.ep}"><div class="es-avatar"><span aria-hidden="true">${avatarIcon}</span></div><span class="es-label">科普 · <span style="font-size:10px;opacity:.7;letter-spacing:.08em">${escapeHtml(s.topic.split('—')[0].split('/')[0].trim())}</span></span><span class="es-arrow">▾</span></div><div class="ep-science-body" id="science-body-${s.ep}"><div class="es-kicker">EP${s.ep} · 科普小單元</div><div class="es-frame">以下是博士視角的延伸對照，物理是真的，借來說故事的部分是文學。</div>${expertsHTML ? '<div class="es-experts">' + expertsHTML + '</div>' : ''}<div class="es-title">${escapeHtml(s.topic)}</div><div class="es-text">${escapeHtml(s.body)}</div></div></div>`;
+        return `<div class="ep-science"><div class="ep-science-toggle" onclick="toggleScience(this)" role="button" tabindex="0" aria-expanded="false" aria-controls="science-body-${s.ep}"><div class="es-avatar"><span aria-hidden="true">${avatarIcon}</span></div><span class="es-label">科普 · <span style="font-size:10px;opacity:.7;letter-spacing:.08em">${escapeHtml(s.topic.split('—')[0].split('/')[0].trim())}</span></span><span class="es-arrow">▾</span></div><div class="ep-science-body" id="science-body-${s.ep}"><div class="es-kicker">EP${s.ep} · 科普小單元</div><div class="es-frame">以下是博士視角的延伸對照，物理是真的，借來說故事的部分是文學。</div>${expertsHTML ? '<div class="es-experts">' + expertsHTML + '</div>' : ''}<div class="es-title">${escapeHtml(s.topic)}</div><div class="es-text">${escapeHtml(s.body)}</div>${scienceThreadFooter(s.ep)}</div></div>`;
       }
       function toggleScience(h) {
         h.classList.toggle("open");
@@ -8745,6 +8972,7 @@
 #fanQuizCard .fq-input { width: 100%; padding: 10px 14px; box-sizing: border-box; background: rgba(20, 12, 16, 0.55); border: 1px solid rgba(218, 184, 168, 0.32); border-radius: 2px; color: rgba(248, 232, 220, 0.96); font-size: 15px; font-family: inherit; letter-spacing: 0.05em; }
 #fanQuizCard .fq-input:focus { outline: 1px solid rgba(228, 70, 80, 0.55); }
 #fanQuizCard .fq-hint { font-size: 11px; color: rgba(184, 156, 144, 0.65); margin: 6px 0 14px; letter-spacing: 0.08em; }
+#fanQuizCard .fq-hint-rule { font-size: 10px; color: rgba(184, 156, 144, 0.42); margin-top: -10px; }
 #fanQuizCard .fq-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
 #fanQuizCard .fq-btn { padding: 9px 22px; border-radius: 2px; cursor: pointer; font-size: 13px; letter-spacing: 0.22em; font-family: inherit; background: rgba(228, 70, 80, 0.18); border: 1px solid rgba(228, 70, 80, 0.5); color: rgba(248, 168, 152, 0.95); }
 #fanQuizCard .fq-btn:hover { background: rgba(228, 70, 80, 0.32); }
@@ -8816,7 +9044,7 @@
 <script>
 /* 鋼鐵粉絲 100 題 quiz orchestrator */
 (function () {
-  const QUESTIONS = [{"q": "EP3：學長第一眼看到學妹， 在心裡說的那句話是？（填關鍵詞）", "a": ["徐若瑄", "也太像徐若瑄了吧"]}, {"q": "EP3：學妹在 LM402 教室， 叫學長走到哪一道門？", "a": ["後門"]}, {"q": "EP7：MSN 隱身上線後， 學長等幾秒才「現身」？", "a": ["7", "七", "7 秒", "七秒"]}, {"q": "EP4：奇異博士看過 14000605 種未來， 女兒是第幾種？", "a": ["14000606"]}, {"q": "EP9：學妹身高是幾公分？", "a": ["155"]}, {"q": "EP24：醫院急診室天花板有幾盞白光？", "a": ["7", "七", "7 盞", "七盞"]}, {"q": "EP12：學妹 2005 年用的手機是什麼牌？", "a": ["Nokia", "nokia"]}, {"q": "EP14：學妹發出第一封「生日快樂」訊息給學長， 是哪一年？", "a": ["2022"]}, {"q": "EP6：學妹要求「不加蛋、 不加番茄醬、 半糖、 溫的」， 是什麼飲料？", "a": ["奶", "牛奶", "豆奶"]}, {"q": "EP9：學長與學妹去敦化南路免費吃到飽， 是什麼料理？", "a": ["泰式", "泰國", "泰式料理"]}, {"q": "EP13：學妹打電話跟學長提分手， 是哪一年月日？（YYYY-MM-DD）", "a": ["2005-12-22", "2005/12/22"]}, {"q": "EP13：學長與學妹原本約好參加聖誕晚會在哪一棟？", "a": ["中美堂"]}, {"q": "EP17：學妹失憶後醒來看到日曆， 是哪一天？", "a": ["2006-02-07", "2006/2/7", "2006/02/07"]}, {"q": "EP24：學妹 2006 年小年夜暈倒在哪裡前面？", "a": ["建國中學"]}, {"q": "EP12：2005-10-16 學妹在 MSN 約學長隔天哪裡？", "a": ["LM402"]}, {"q": "EP21：女兒幾歲生日學會控制穿越能力？", "a": ["18", "十八", "18 歲", "十八歲"]}, {"q": "EP21：女兒穿越時陪在身邊的時空老師叫什麼？", "a": ["命運阿嬤"]}, {"q": "EP23：命運阿嬤送女兒的 7 歲生日禮物是？", "a": ["時空手錶", "手錶"]}, {"q": "EP22：女兒用什麼工具描出紅線路徑？", "a": ["時空螢光筆"]}, {"q": "EP23：命運阿嬤送女兒的另一樣道具， 用來貼時間線、 變色提醒？", "a": ["時空便利貼"]}, {"q": "EP34：女兒戴上什麼道具才聽到把拔與阿姨心裡穿梭的聲音？", "a": ["時空耳機"]}, {"q": "EP21：在 2006 年初阿姨在把拔機車前面貼了同一張紙條幾次？", "a": ["2", "兩", "兩次", "2 次"]}, {"q": "EP21：阿姨第一次貼紙條時的表情是？（哭 / 笑）", "a": ["哭"]}, {"q": "EP15：把拔提到「同時存在」的時空維度是？", "a": ["四維", "四維空間"]}, {"q": "EP11：愛因斯坦提到的世界， 離中心越近時間會怎樣？", "a": ["越慢", "慢", "過得越慢"]}, {"q": "EP18：學長 2023 年 6 月遇到什麼意外？", "a": ["車禍", "倒車", "警匪", "撞", "倒著開車"]}, {"q": "EP4：把拔遊戲高手， 但身材怎樣？（女兒原話形容）", "a": ["胖", "胖了點"]}, {"q": "EP10：女兒問阿姨「妳怎麼會喜歡他」， 把拔搶答的理由？", "a": ["暈船"]}, {"q": "EP9：學長 21 歲時學妹幾歲？（暗示）", "a": ["20", "二十", "大二"]}, {"q": "EP3：學妹從教室站起來走出來時， 身邊有什麼？", "a": ["一群人", "群人"]}, {"q": "EP3 + EP12 + EP23 + EP38 反覆出現的「一眼瞬間」鐘響時間？（HH:MM）", "a": ["11:00", "11", "十一"]}, {"q": "EP25：把拔 NAS 容量是多少 TB？", "a": ["44", "44TB", "44 TB"]}, {"q": "EP25：把拔 iCloud 容量是多少 TB？", "a": ["2.2", "2.2TB", "2.2 TB"]}, {"q": "EP23/28 反覆出現的物理學名詞？（描述兩心相依）", "a": ["量子糾纏", "糾纏"]}, {"q": "EP9：學長把學妹比喻為哪一位武俠角色？（給過張無忌一劍）", "a": ["周芷若"]}, {"q": "EP12：學長提早入伍進入哪一部隊？", "a": ["海軍陸戰隊", "陸戰隊"]}, {"q": "EP17：學長退伍後與學妹見面在哪一家餐廳？", "a": ["陶板屋"]}, {"q": "EP27：2025 年夏天， 學長與學妹去南機場夜市哪一家水餃店？", "a": ["來來"]}, {"q": "EP27：來來水餃他們點了幾顆韭菜水餃？", "a": ["25", "二十五", "25 顆"]}, {"q": "EP30：把拔少年離家後， 大姨婆問他哪一句話？", "a": ["肚子會餓嗎", "肚子餓", "肚子"]}, {"q": "EP30：大姨婆帶把拔吃哪一家早餐？", "a": ["永和豆漿", "永和"]}, {"q": "EP31：學長大二時養的迷你兔叫什麼名字？", "a": ["阿Q", "AQ", "Q"]}, {"q": "EP31：學長在哪個論壇徵求兔子的認養人？", "a": ["PTT"]}, {"q": "EP15：每一個決定就會產生什麼？", "a": ["平行時空", "平行世界", "時空"]}, {"q": "EP35：阿姨高一裙邊縫到膝上幾指寬？", "a": ["兩指", "2", "2 指"]}, {"q": "EP35：阿姨高一參加什麼校隊？", "a": ["羽球", "羽球隊"]}, {"q": "EP35：阿姨高二在朝會擔任什麼？", "a": ["司儀"]}, {"q": "EP33：把拔國一深夜離家， 把外套怎麼穿？", "a": ["反穿", "翻", "藏起來"]}, {"q": "EP10：把拔小時候蒐集什麼亮卡？", "a": ["七龍珠", "龍珠"]}, {"q": "EP10：把拔最愛的 BLACKPINK 成員是？", "a": ["Lisa", "lisa"]}, {"q": "EP28：苦盡柑來遇見你 影集中扮演媽媽和長大後女兒的是哪位韓國演員？", "a": ["IU"]}, {"q": "EP29：2022 年秋天， 學長與學妹重逢的「老地方」緊挨著什麼？", "a": ["警局"]}, {"q": "EP29：學長媽媽塞給學妹的咖啡品牌？", "a": ["G7"]}, {"q": "EP19：2024 年那年發生什麼大事件？", "a": ["求婚", "結婚", "託付"]}, {"q": "EP12：學妹希望學長能像「以前」一樣， 用手替她做什麼？", "a": ["擦眼淚", "擦淚"]}, {"q": "EP9：學妹蹲坐在哪一座橋下放空？", "a": ["華江", "華江橋"]}, {"q": "EP11：學妹說「我想在 2005 年就跟他長相思守」， 但是不可以， 因為過程需要經歷幾年？", "a": ["17", "十七"]}, {"q": "EP21：女兒在哪一年初看到阿姨貼紙條兩次的場景？", "a": ["2006"]}, {"q": "EP36：把拔 2018 年在台中火車站「我趕上了」， 是趕上女兒幾秒的擁抱？", "a": ["30", "三十", "30 秒", "三十秒"]}, {"q": "EP36：把拔與女兒之間的紅線顏色是？", "a": ["粉紅", "粉紅色"]}, {"q": "EP36：EP36 把拔對女兒的承諾的核心畫面是？（5 字短語）", "a": ["月台狂奔", "拉得再長也不會斷", "趕上了"]}, {"q": "EP37：女兒第一次寫給把拔的父親節禮物是用什麼字？", "a": ["注音", "ㄅㄆㄇ"]}, {"q": "EP37：女兒透明片上寫的那句話是？（注音對應的中文）", "a": ["把拔我會想你的", "我會想你"]}, {"q": "EP37：命運阿嬤說把拔是「不能穿越的人」， 因為他要怎樣？", "a": ["相信", "讓心變成真的", "珍惜"]}, {"q": "EP37：女兒與把拔的秘密手勢有幾個動作？", "a": ["4", "四", "4 個", "四個"]}, {"q": "EP37：秘密手勢的最後一個動作是？", "a": ["讚", "大拇指"]}, {"q": "EP12：學妹 2005 年寫了什麼留給學長？（地點在學長機車上）", "a": ["紙條", "我走了"]}, {"q": "EP12：紙條原文是？（包含關鍵動詞）", "a": ["我走了你要好好照顧自己", "我走了", "好好照顧自己"]}, {"q": "EP26：學妹的決定句「我不是不想等而是？」", "a": ["等太久了", "等太久"]}, {"q": "EP28：學長與學妹之間的相依關係用什麼物理術語？", "a": ["量子糾纏"]}, {"q": "EP38：意識菜市場有幾個年紀的「我」？", "a": ["5", "五"]}, {"q": "EP38：意識菜市場 5 個年紀中最年長的是幾歲？", "a": ["49", "四十九"]}, {"q": "EP38：意識菜市場最年輕的意識是幾歲？", "a": ["18", "十八"]}, {"q": "EP38：29 歲身體內承載的意識是幾歲？", "a": ["18", "十八"]}, {"q": "EP38：學妹 2005 一眼瞬間時穿什麼衣服？", "a": ["白色長袖襯衫", "白襯衫", "白色襯衫"]}, {"q": "EP38：學妹 2005 一眼瞬間時下半身穿什麼？", "a": ["牛仔短褲", "短褲"]}, {"q": "EP38：學妹 33 歲說「喜歡不是？」的下一句是？", "a": ["佔有", "靠近要經過同意"]}, {"q": "EP38：49 歲學妹回憶她笑學長像？", "a": ["員外"]}, {"q": "EP38：49 歲學妹自喻為？", "a": ["丫鬟"]}, {"q": "EP32：阿姨第一次意識穿越是 1994 年哪一個典禮？", "a": ["畢業", "畢業典禮"]}, {"q": "EP32：阿姨第一次意識穿越在哪個地點外面？", "a": ["訓導處"]}, {"q": "EP35：阿姨在哪邊發現自己被選入「乾乾淨淨的舞台光」？", "a": ["體育館", "羽球", "操場"]}, {"q": "EP35：阿姨高二「白手套在晨光裡起霧」場景是？", "a": ["朝會", "司儀", "升旗"]}, {"q": "EP35：把拔七歲時在大姨婆家被縫紉機什麼？", "a": ["針", "扎到", "戳到", "刺到"]}, {"q": "EP32：阿姨在 1994 訓導處外把指尖貼在哪裡像在搜尋命運密碼？", "a": ["脈搏"]}, {"q": "EP38：鐘響時間是？（HH:MM）", "a": ["11:00", "11"]}, {"q": "EP38：學長第一次見到學妹， 因為什麼還沒學會看穿人類？", "a": ["3秒", "三秒", "三秒看穿"]}, {"q": "EP32：紅線在阿姨第一次穿越時的觸發物是？（畢業歌的歌詞起首）", "a": ["畢業歌", "傷離別"]}, {"q": "EP10：女兒在公園問阿姨「妳跑得快不快」， 阿姨回什麼？", "a": ["羽球", "羽球隊", "我以前羽球隊的"]}, {"q": "EP38：學妹 39 歲說「先留在座位上， 把這一排桌子當成妳的什麼」？", "a": ["界線"]}, {"q": "EP12：學長提早入伍進的兩棲是什麼部隊？", "a": ["蛙人", "兩棲蛙人"]}, {"q": "（學長角色設定）學長的服裝特徵：白 T、 藍牛仔褲、 加什麼？", "a": ["眼鏡", "粗框眼鏡"]}, {"q": "（學長角色設定）學長 2005 的髮型是？", "a": ["飛機頭"]}, {"q": "EP4：女兒幼稚園時形容把拔是什麼超人？", "a": ["3C", "3C 超人"]}, {"q": "EP1：把拔笑說「我海軍陸戰隊」的目的是？", "a": ["抱妳一輩子", "永遠抱"]}, {"q": "EP16：女兒從幾年級開始知道把拔與媽媽分開？", "a": ["幼稚園"]}, {"q": "EP10：女兒大五歲的大哥的金句「你不是一直要她一直陪在你身邊」， 後半句的關鍵詞？", "a": ["想起", "她會想起你"]}, {"q": "EP30：把拔少年離家那晚在哪裡睡覺？", "a": ["廟", "大廟", "神桌下"]}, {"q": "EP25：學長與學妹「最初的時間點」（紙條未貼前）所對應的午夜是？", "a": ["小年夜"]}, {"q": "全集累積最終題：請完整寫出 EP3 學長心裡那句話（不論大小寫、 標點符號）。", "a": ["也太像徐若瑄了吧"]}];
+  const QUESTIONS = [{"q": "EP3：學長第一眼看到學妹， 在心裡說的那句話是？（填關鍵詞）", "a": ["徐若瑄", "也太像徐若瑄了吧"]}, {"q": "EP3：學妹在 LM402 教室， 叫學長走到哪一道門？", "a": ["後門"]}, {"q": "EP7：MSN 隱身上線後， 學長等幾秒才「現身」？", "a": ["7", "七", "7 秒", "七秒"]}, {"q": "EP4：奇異博士看過 14000605 種未來， 女兒是第幾種？", "a": ["14000606"]}, {"q": "EP9：學妹身高是幾公分？", "a": ["155"]}, {"q": "EP24：醫院急診室天花板有幾盞白光？", "a": ["7", "七", "7 盞", "七盞"]}, {"q": "EP12：學妹 2005 年用的手機是什麼牌？", "a": ["Nokia", "nokia"]}, {"q": "EP14：學妹發出第一封「生日快樂」訊息給學長， 是哪一年？", "a": ["2022"]}, {"q": "EP6：學妹要求「不加蛋、 不加番茄醬、 半糖、 溫的」， 是什麼飲料？", "a": ["奶", "牛奶", "豆奶"]}, {"q": "EP9：學長與學妹去敦化南路免費吃到飽， 是什麼料理？", "a": ["泰式", "泰國", "泰式料理"]}, {"q": "EP13：學妹打電話跟學長提分手， 是哪一年月日？（YYYY-MM-DD）", "a": ["2005-12-22", "2005/12/22"]}, {"q": "EP13：學長與學妹原本約好參加聖誕晚會在哪一棟？", "a": ["中美堂"]}, {"q": "EP17：學妹失憶後醒來看到日曆， 是哪一天？", "a": ["2006-02-07", "2006/2/7", "2006/02/07"]}, {"q": "EP24：學妹 2006 年小年夜暈倒在哪裡前面？", "a": ["建國中學"]}, {"q": "EP12：2005-10-16 學妹在 MSN 約學長隔天哪裡？", "a": ["LM402"]}, {"q": "EP21：女兒幾歲生日學會控制穿越能力？", "a": ["18", "十八", "18 歲", "十八歲"]}, {"q": "EP21：女兒穿越時陪在身邊的時空老師叫什麼？", "a": ["命運阿嬤"]}, {"q": "EP23：命運阿嬤送女兒的 7 歲生日禮物是？", "a": ["時空手錶", "手錶"]}, {"q": "EP22：女兒用什麼工具描出紅線路徑？", "a": ["時空螢光筆"]}, {"q": "EP23：命運阿嬤送女兒的另一樣道具， 用來貼時間線、 變色提醒？", "a": ["時空便利貼"]}, {"q": "EP34：女兒戴上什麼道具才聽到把拔與阿姨心裡穿梭的聲音？", "a": ["時空耳機"]}, {"q": "EP21：在 2006 年初阿姨在把拔機車前面貼了同一張紙條幾次？", "a": ["2", "兩", "兩次", "2 次"]}, {"q": "EP21：阿姨第一次貼紙條時的表情是？（哭 / 笑）", "a": ["哭"]}, {"q": "EP15：把拔提到「同時存在」的時空維度是？", "a": ["四維", "四維空間"]}, {"q": "EP11：愛因斯坦提到的世界， 離中心越近時間會怎樣？", "a": ["越慢", "慢", "過得越慢"]}, {"q": "EP18：學長 2023 年 6 月遇到什麼意外？", "a": ["車禍", "倒車", "警匪", "撞", "倒著開車"]}, {"q": "EP4：把拔遊戲高手， 但身材怎樣？（女兒原話形容）", "a": ["胖", "胖了點"]}, {"q": "EP10：女兒問阿姨「妳怎麼會喜歡他」， 把拔搶答的理由？", "a": ["暈船"]}, {"q": "EP9：學長 21 歲時學妹幾歲？（暗示）", "a": ["20", "二十", "大二"]}, {"q": "EP3：學妹從教室站起來走出來時， 身邊有什麼？", "a": ["一群人", "群人"]}, {"q": "EP3 + EP12 + EP23 + EP38 反覆出現的「一眼瞬間」鐘響時間？（HH:MM）", "a": ["11:00", "11", "十一"]}, {"q": "EP25：把拔 NAS 容量是多少 TB？", "a": ["44", "44TB", "44 TB"]}, {"q": "EP25：把拔 iCloud 容量是多少 TB？", "a": ["2.2", "2.2TB", "2.2 TB"]}, {"q": "EP23/28 反覆出現的物理學名詞？（描述兩心相依）", "a": ["量子糾纏", "糾纏"]}, {"q": "EP9：學長把學妹比喻為哪一位武俠角色？（給過張無忌一劍）", "a": ["周芷若"]}, {"q": "EP12：學長提早入伍進入哪一部隊？", "a": ["海軍陸戰隊", "陸戰隊"]}, {"q": "EP17：學長退伍後與學妹見面在哪一家餐廳？", "a": ["陶板屋"]}, {"q": "EP27：2025 年夏天， 學長與學妹去南機場夜市哪一家水餃店？", "a": ["來來"]}, {"q": "EP27：來來水餃他們點了幾顆韭菜水餃？", "a": ["25", "二十五", "25 顆"]}, {"q": "EP30：把拔少年離家後， 大姨婆問他哪一句話？", "a": ["肚子會餓嗎", "肚子餓", "肚子"]}, {"q": "EP30：大姨婆帶把拔吃哪一家早餐？", "a": ["永和豆漿", "永和"]}, {"q": "EP31：學長大二時養的迷你兔叫什麼名字？", "a": ["阿Q", "AQ", "Q"]}, {"q": "EP31：學長在哪個論壇徵求兔子的認養人？", "a": ["PTT"]}, {"q": "EP15：每一個決定就會產生什麼？", "a": ["平行時空", "平行世界", "時空"]}, {"q": "EP35：阿姨高一裙邊縫到膝上幾指寬？", "a": ["兩指", "2", "2 指"]}, {"q": "EP35：阿姨高一參加什麼校隊？", "a": ["羽球", "羽球隊"]}, {"q": "EP35：阿姨高二在朝會擔任什麼？", "a": ["司儀"]}, {"q": "EP33：把拔國一深夜離家， 把外套怎麼穿？", "a": ["反穿", "翻", "藏起來"]}, {"q": "EP10：把拔小時候蒐集什麼亮卡？", "a": ["七龍珠", "龍珠"]}, {"q": "EP10：把拔最愛的 BLACKPINK 成員是？", "a": ["Lisa", "lisa"]}, {"q": "EP28：苦盡柑來遇見你 影集中扮演媽媽和長大後女兒的是哪位韓國演員？", "a": ["IU"]}, {"q": "EP29：2022 年秋天， 學長與學妹重逢的「老地方」緊挨著什麼？", "a": ["警局"]}, {"q": "EP29：學長媽媽塞給學妹的咖啡品牌？", "a": ["G7"]}, {"q": "EP19：2024 年那年發生什麼大事件？", "a": ["求婚", "結婚", "託付"]}, {"q": "EP12：學妹希望學長能像「以前」一樣， 用手替她做什麼？", "a": ["擦眼淚", "擦淚"]}, {"q": "EP9：學妹蹲坐在哪一座橋下放空？", "a": ["華江", "華江橋"]}, {"q": "EP11：學妹說「我想在 2005 年就跟他長相思守」， 但是不可以， 因為過程需要經歷幾年？", "a": ["17", "十七"]}, {"q": "EP21：女兒在哪一年初看到阿姨貼紙條兩次的場景？", "a": ["2006"]}, {"q": "EP36：把拔 2018 年在台中火車站「我趕上了」， 是趕上女兒幾秒的擁抱？", "a": ["30", "三十", "30 秒", "三十秒"]}, {"q": "EP36：把拔與女兒之間的紅線顏色是？", "a": ["粉紅", "粉紅色"]}, {"q": "EP36：EP36 把拔對女兒的承諾的核心畫面是？（5 字短語）", "a": ["月台狂奔", "拉得再長也不會斷", "趕上了"]}, {"q": "EP37：女兒第一次寫給把拔的父親節禮物是用什麼字？", "a": ["注音", "ㄅㄆㄇ"]}, {"q": "EP37：女兒透明片上寫的那句話是？（注音對應的中文）", "a": ["把拔我會想你的", "我會想你"]}, {"q": "EP37：命運阿嬤說把拔是「不能穿越的人」， 因為他要怎樣？", "a": ["相信", "讓心變成真的", "珍惜"]}, {"q": "EP37：女兒與把拔的秘密手勢有幾個動作？", "a": ["4", "四", "4 個", "四個"]}, {"q": "EP37：秘密手勢的最後一個動作是？", "a": ["讚", "大拇指"]}, {"q": "EP12：學妹 2005 年寫了什麼留給學長？（地點在學長機車上）", "a": ["紙條", "我走了"]}, {"q": "EP12：紙條原文是？（包含關鍵動詞）", "a": ["我走了你要好好照顧自己", "我走了", "好好照顧自己"]}, {"q": "EP26：學妹的決定句「我不是不想等而是？」", "a": ["等太久了", "等太久"]}, {"q": "EP28：學長與學妹之間的相依關係用什麼物理術語？", "a": ["量子糾纏"]}, {"q": "EP38：意識菜市場有幾個年紀的「我」？", "a": ["5", "五"]}, {"q": "EP38：意識菜市場 5 個年紀中最年長的是幾歲？", "a": ["49", "四十九"]}, {"q": "EP38：意識菜市場最年輕的意識是幾歲？", "a": ["18", "十八"]}, {"q": "EP38：29 歲身體內承載的意識是幾歲？", "a": ["18", "十八"]}, {"q": "EP38：學妹 2005 一眼瞬間時穿什麼衣服？", "a": ["白色長袖襯衫", "白襯衫", "白色襯衫"]}, {"q": "EP38：學妹 2005 一眼瞬間時下半身穿什麼？", "a": ["牛仔短褲", "短褲"]}, {"q": "EP38：學妹 33 歲說「喜歡不是？」的下一句是？", "a": ["佔有", "靠近要經過同意"]}, {"q": "EP38：49 歲學妹回憶她笑學長像？", "a": ["員外"]}, {"q": "EP38：49 歲學妹自喻為？", "a": ["丫鬟"]}, {"q": "EP32：阿姨第一次意識穿越是 1994 年哪一個典禮？", "a": ["畢業", "畢業典禮"]}, {"q": "EP32：阿姨第一次意識穿越在哪個地點外面？", "a": ["訓導處"]}, {"q": "EP35：阿姨高一那條俐落的短裙， 被 2025 的說法比喻成把 BLACKPINK 的什麼丟進九〇年代校園？", "a": ["C位", "C 位", "c位"]}, {"q": "EP35：阿姨高二「白手套在晨光裡起霧」場景是？", "a": ["朝會", "司儀", "升旗"]}, {"q": "EP35：把拔七歲時在大姨婆家被縫紉機什麼？", "a": ["針", "扎到", "戳到", "刺到"]}, {"q": "EP32：阿姨在 1994 訓導處外把指尖貼在哪裡像在搜尋命運密碼？", "a": ["脈搏"]}, {"q": "EP38：鐘響時間是？（HH:MM）", "a": ["11:00", "11"]}, {"q": "EP38：學長第一次見到學妹， 因為什麼還沒學會看穿人類？", "a": ["3秒", "三秒", "三秒看穿"]}, {"q": "EP32：紅線在阿姨第一次穿越時的觸發物是？（畢業歌的歌詞起首）", "a": ["畢業歌", "傷離別"]}, {"q": "EP10：女兒在公園問阿姨「妳跑得快不快」， 阿姨回什麼？", "a": ["羽球", "羽球隊", "我以前羽球隊的"]}, {"q": "EP38：學妹 39 歲說「先留在座位上， 把這一排桌子當成妳的什麼」？", "a": ["界線"]}, {"q": "EP12：學長提早入伍進的兩棲是什麼部隊？", "a": ["蛙人", "兩棲蛙人"]}, {"q": "（學長角色設定）學長的服裝特徵：白 T、 藍牛仔褲、 加什麼？", "a": ["眼鏡", "粗框眼鏡"]}, {"q": "（學長角色設定）學長 2005 的髮型是？", "a": ["飛機頭"]}, {"q": "EP4：女兒幼稚園時形容把拔是什麼超人？", "a": ["3C", "3C 超人"]}, {"q": "EP1：把拔笑說「我海軍陸戰隊」的目的是？", "a": ["抱妳一輩子", "永遠抱"]}, {"q": "EP16：女兒從幾年級開始知道把拔與媽媽分開？", "a": ["幼稚園"]}, {"q": "EP10：女兒大五歲的大哥的金句「你不是一直要她一直陪在你身邊」， 後半句的關鍵詞？", "a": ["想起", "她會想起你"]}, {"q": "EP30：把拔少年離家那晚在哪裡睡覺？", "a": ["廟", "大廟", "神桌下"]}, {"q": "EP25：學長與學妹「最初的時間點」（紙條未貼前）所對應的午夜是？", "a": ["小年夜"]}, {"q": "全集累積最終題：請完整寫出 EP3 學長心裡那句話（不論大小寫、 標點符號）。", "a": ["也太像徐若瑄了吧"]}];
   /* trivia reviewer 258 題 (grounded in reader.html EPISODES, grep-verified spot checks)
      對應 「文學博士+鋼鐵粉絲重出題」trivia 半部 */
   QUESTIONS.push(
@@ -8954,7 +9182,7 @@
     {"q":"EP 5:阿姨買的肉是?","a":["雞肉","雞"]},
     {"q":"EP 5:阿姨用宿舍裡哪種電器?(壞掉的)","a":["電鍋","壞掉的電鍋"]},
     {"q":"EP 5:阿姨說一生只有幾個男人吃過她煮的飯?","a":["3","三","3 個","三個"]},
-    {"q":"EP 5:三個男人不含哪兩位?(挑一個答案)","a":["爸","姪子","你"]},
+    {"q":"EP 5:阿姨說這一生只有三個男人吃過她煮的飯，我爸、我姪子，還有誰?","a":["你","學長"]},
     {"q":"EP 8:大學校園裡學長提到從哪邊走到校門口?","a":["後門","學校後門"]},
     {"q":"EP 8:學妹提到捷運工程蓋完位置在?","a":["校門前","捷運工程"]},
     {"q":"EP 8:學妹週六的計畫是?(學長覺得荒謬的)","a":["拔粉刺","東區拔粉刺","拔粉刺 50 元","拔粉刺50元"]},
@@ -9442,7 +9670,7 @@
     {"q": "EP 18:學長 2023 年車禍時眼前的黑轎車為什麼引發碰撞?", "a": ["倒著開車", "倒車", "倒開"]},
     {"q": "EP 26:阿姨形容學長帶她去吃 Lacuz 是想告訴她什麼?", "a": ["這才是好吃的食物", "好吃的食物", "這才是好吃的"]},
     {"q": "EP 38:39 歲意識用了哪個交通動作的比喻提醒 18 歲別衝?", "a": ["煞車踩住", "煞車", "踩住"]},
-    {"q": "EP 38:48 歲學妹回憶員外的玩笑話，學長真的回了她什麼?", "a": ["對啊！我是", "對啊", "我是"]},
+    {"q": "EP 38:49 歲學妹回憶員外的玩笑話，學長真的回了她什麼?", "a": ["對啊！我是", "對啊", "我是"]},
     {"q": "EP 27:EP27 學長形容學妹眼眶在做什麼?", "a": ["融化", "也在融化"]},
     {"q": "EP 32:阿姨第一次意識穿越是 1994 年訓導處外面，在 LM402 卡在哪一秒前?", "a": ["一眼瞬間前一秒", "一秒", "前一秒"]},
     {"q": "EP 22:女兒形容紅線顯示時的兩種狀態「閃閃發亮」與?", "a": ["微微顫抖", "顫抖"]},
@@ -9461,6 +9689,60 @@
     {"q": "EP 30:EP30 把拔少年離家那夜在 7-11 邊走邊吃，海苔的擬聲詞是?", "a": ["卡滋卡滋", "卡滋"]},
     {"q": "EP 22:女兒結尾命運阿嬤的指示「命運不是命定，但紅線代表」?", "a": ["命中注定"]}
   );
+
+  /* ── 答案智慧引擎（提示／標準答案／難度由淺入深，全自動推導，零逐題人工）── */
+  const _PUNCT_RE = /[\s，,．.。、；;：:！!？?「」『』（）()【】〔〕《》〈〉…⋯~～\-－—–·•・]/;
+  function _toHalf(s) {
+    return (s || '').toString().replace(/[！-～]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); }).replace(/　/g, ' ');
+  }
+  function _chars(s) { return Array.from((s || '').toString()); }
+  function _isNumberAns(s) { var h = _toHalf(s).trim(); return /^\d{1,4}(\s*\D{1,3})?$/.test(h) && !/[-/:]/.test(h.replace(/\s/g, '')); }
+  function _isDateAns(s) { return /^\d{4}\s*[-/]\s*\d{1,2}\s*[-/]\s*\d{1,2}$/.test(_toHalf(s).trim()); }
+  function _isTimeAns(s) { return /^\d{1,2}\s*:\s*\d{2}$/.test(_toHalf(s).trim()); }
+  function _hasPunct(s) { return _PUNCT_RE.test((s || '').toString()); }
+  /* 標準答案：在 accepts 中挑「最完整」一個來顯示（含單位/標點/最長）→ 答案直接附標點符號+計量單位 */
+  function _canonical(accepts) {
+    if (!Array.isArray(accepts) || !accepts.length) return '';
+    var best = accepts[0], bestScore = -1;
+    for (var i = 0; i < accepts.length; i++) {
+      var a = (accepts[i] || '').toString();
+      var sc = _chars(a).length + (_hasPunct(a) ? 12 : 0) + (/[秒歲分盞顆指次個種人年公分公尺tTB]/.test(a) ? 3 : 0);
+      if (sc > bestScore) { bestScore = sc; best = a; }
+    }
+    return best;
+  }
+  /* 提示：數字→答數字即可；日期/時間→例式；短詞→共 N 字；長句→＿＿，＿＿（含標點共 N 字喔） */
+  function _hintFor(q) {
+    if (q && typeof q.h === 'string' && q.h) return q.h; /* 旗艦題可手寫覆蓋 */
+    var ans = _canonical(q.a);
+    if (_isDateAns(ans)) return '提示：答日期即可，例如 ' + _toHalf(ans).replace(/\s/g, '');
+    if (_isTimeAns(ans)) return '提示：答時間即可，例如 ' + _toHalf(ans).replace(/\s/g, '') + '（24 小時制）';
+    if (_isNumberAns(ans)) return '提示：答數字即可（單位可加可不加）';
+    var cs = _chars(ans), n = cs.length;
+    if (!_hasPunct(ans) && n <= 5) return '提示：答案共 ' + n + ' 個字';
+    var mask = cs.map(function (c) { return _PUNCT_RE.test(c) ? c : '＿'; }).join('');
+    return '提示：' + mask + '（含標點共 ' + n + ' 字喔）';
+  }
+  /* 難度分數：數字/短詞最淺，長句引文最深 → 全庫排序讓 月台 1→50 由淺入深 */
+  function _difficulty(q) {
+    var ans = _canonical(q.a);
+    var n = _chars(ans).length;
+    var variants = Array.isArray(q.a) ? q.a.length : 1;
+    var score = n;
+    var dt = _isDateAns(ans) || _isTimeAns(ans);
+    if (_isNumberAns(ans)) score -= 6;
+    if (dt) score -= 3;
+    if (_hasPunct(ans) && !dt) score += 5; /* 長句引文才加深，日期/時間的分隔符不算 */
+    score -= (variants - 1) * 0.8; /* 可接受變體越多越好猜 */
+    return score;
+  }
+  /* 一次性穩定排序：由淺入深（同分維持原序） */
+  (function () {
+    var idx = QUESTIONS.map(function (q, i) { return { q: q, d: _difficulty(q), i: i }; });
+    idx.sort(function (a, b) { return (a.d - b.d) || (a.i - b.i); });
+    QUESTIONS.length = 0;
+    for (var k = 0; k < idx.length; k++) QUESTIONS.push(idx[k].q);
+  })();
 
   /* 50 月台稱號表 (tier by cleared blocks count) */
   const TIERS = [
@@ -9575,8 +9857,13 @@
   }
 
   function normalize(s) {
-    return (s || '').toString().trim().toLowerCase()
-      .replace(/[\s，,．.。、；;：:！!？?]/g, '');
+    return (s || '').toString()
+      // 全形英數字／符號 → 半形（２００５→2005、ＡＱ→AQ），讓全形/半形差異被忽略
+      .replace(/[！-～]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); })
+      .replace(/　/g, '')              // 全形空格
+      .trim().toLowerCase()
+      // 標點全砍（半形+全形：逗號/句號/頓號/分號/冒號/驚嘆/問號/各式括號/破折號/波浪/引號）→ 審核寬鬆
+      .replace(/[\s，,．.。、；;：:！!？?「」『』（）()【】〔〕《》〈〉~～\-－—–·•・]/g, '');
   }
   function judge(ans, accepts) {
     /* review caught: strict for short/digit, lenient for prose */
@@ -9789,7 +10076,8 @@
     input.autocomplete = 'off';
     input.spellcheck = false;
     body.appendChild(input);
-    body.appendChild(makeDiv('fq-hint', '提示： 不分大小寫、 空白、 標點。 含關鍵詞即可。'));
+    body.appendChild(makeDiv('fq-hint', _hintFor(q)));
+    body.appendChild(makeDiv('fq-hint fq-hint-rule', '不挑標點、不挑大小寫，意思對了就算你過。'));
 
     const actions = makeDiv('fq-actions');
     actions.appendChild(makeBtn('fq-btn fq-btn-ghost', '回月台', function () { mode = 'lobby'; renderBody(); }));
@@ -9850,7 +10138,7 @@
     const res = makeDiv('fq-result');
     res.appendChild(makeDiv('fq-final-title', '這一站，還沒過'));
     res.appendChild(makeDiv('fq-final-msg', '你的答案： 「' + lastWrong.ans + '」'));
-    res.appendChild(makeDiv('fq-feedback', '參考答案： 「' + lastWrong.accepts[0] + '」'));
+    res.appendChild(makeDiv('fq-feedback', '參考答案： 「' + _canonical(lastWrong.accepts) + '」'));
     res.appendChild(makeDiv('fq-final-score', '本站連對：' + streakInBlock + ' 題'));
     res.appendChild(makeDiv('fq-feedback', '「傷你有多深，我就有多痛。」答錯的那一集，等你回去重讀。'));
 
@@ -9904,6 +10192,12 @@
         QUESTIONS.push({ q: q.q, a: q.a });
         added += 1;
       }
+    }
+    if (added) { /* 重新由淺入深排序，讓動態新增題也落在正確難度位置 */
+      var _ix = QUESTIONS.map(function (qq, i) { return { q: qq, d: _difficulty(qq), i: i }; });
+      _ix.sort(function (a, b) { return (a.d - b.d) || (a.i - b.i); });
+      QUESTIONS.length = 0;
+      for (var k = 0; k < _ix.length; k++) QUESTIONS.push(_ix[k].q);
     }
     renderBadge();
     return { added: added, total: QUESTIONS.length, blocks: blockCount() };
