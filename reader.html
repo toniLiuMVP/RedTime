@@ -3881,6 +3881,73 @@
         font-weight: 400;
         white-space: pre-wrap;
       }
+      /* 科普筆記排版（工具書感：分段、重點、配色） */
+      .es-notebook {
+        white-space: normal;
+      }
+      .es-para {
+        margin: 0 0 11px;
+      }
+      .es-para:last-child {
+        margin-bottom: 0;
+      }
+      .es-para-lead {
+        font-size: 13.2px;
+        color: rgba(240, 236, 228, 0.96);
+        padding-left: 10px;
+        border-left: 2px solid rgba(120, 196, 198, 0.55);
+      }
+      .es-q {
+        color: rgba(255, 170, 178, 0.95);
+      }
+      .es-term {
+        font-family: "DM Mono", monospace;
+        font-size: 0.92em;
+        color: #e8c87a;
+        background: rgba(200, 144, 16, 0.09);
+        border-radius: 3px;
+        padding: 0 4px;
+      }
+      .es-num {
+        font-family: "DM Mono", monospace;
+        font-size: 0.95em;
+        color: #8fd8da;
+      }
+      .es-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 2px 0 12px;
+      }
+      .es-chip {
+        font-family: "DM Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.04em;
+        color: rgba(143, 216, 218, 0.92);
+        border: 1px solid rgba(120, 196, 198, 0.35);
+        border-radius: 999px;
+        padding: 3px 10px;
+        background: rgba(120, 196, 198, 0.06);
+      }
+      body.day-mode .es-para-lead {
+        color: #23201a;
+        border-left-color: rgba(36, 90, 90, 0.6);
+      }
+      body.day-mode .es-q {
+        color: #b02a37;
+      }
+      body.day-mode .es-term {
+        color: #7a5500;
+        background: rgba(154, 106, 0, 0.1);
+      }
+      body.day-mode .es-num {
+        color: #1d6b6d;
+      }
+      body.day-mode .es-chip {
+        color: #1d6b6d;
+        border-color: rgba(36, 90, 90, 0.4);
+        background: rgba(36, 90, 90, 0.06);
+      }
       /* 科普物理線索引 */
       .es-thread {
         margin-top: 12px;
@@ -8767,6 +8834,71 @@
           if (body) body.scrollIntoView({ behavior: "smooth", block: "center" });
         }, 420);
       }
+      /* ── 科普筆記排版：像筆記工具書，有重點、配色、好閱讀 ──
+         不改 body 文字本身（toni 親審內容），純 render 期格式化：
+         分段（每 2 句一段）＋「」引文／英文術語／數字年份 上色＋首段 lead＋術語 chips。
+         逐段 escape-as-emit（先比對原文再逐塊 escapeHtml），無注入面。 */
+      /* token regex 用函式取得（call 時建構）：build loop 早於此段頂層執行，
+         若用 var 常數會拿到 undefined（§3.16.49 TDZ 家族，且 replace(undefined) 靜默不匹配） */
+      function _sciTokenRe() {
+        return /(「[^」]*」)|([A-Za-z][A-Za-z0-9&'’.\- ]*[A-Za-z0-9])|(\d+(?:[.,:]\d+)*)/g;
+      }
+      function _sciInline(s) {
+        s = String(s || "");
+        var out = "", last = 0;
+        s.replace(_sciTokenRe(), function (full, q, term, num, idx) {
+          out += escapeHtml(s.slice(last, idx));
+          if (q) out += '<span class="es-q">' + escapeHtml(q) + "</span>";
+          else if (term) out += '<span class="es-term">' + escapeHtml(term) + "</span>";
+          else out += '<span class="es-num">' + escapeHtml(num) + "</span>";
+          last = idx + full.length;
+          return full;
+        });
+        out += escapeHtml(s.slice(last));
+        return out;
+      }
+      function _sciSentences(t) {
+        var out = [], cur = "";
+        for (var i = 0; i < t.length; i++) {
+          cur += t[i];
+          if (t[i] === "。") { out.push(cur); cur = ""; }
+        }
+        if (cur.trim()) out.push(cur);
+        return out;
+      }
+      function formatScienceBody(raw) {
+        var sents = _sciSentences(String(raw || "").trim());
+        if (!sents.length) return "";
+        var paras = [];
+        for (var i = 0; i < sents.length; i += 2) {
+          paras.push((sents[i] || "") + (sents[i + 1] || ""));
+        }
+        return paras.map(function (p, j) {
+          return '<p class="es-para' + (j === 0 ? " es-para-lead" : "") + '">' + _sciInline(p.trim()) + "</p>";
+        }).join("");
+      }
+      function scienceTermChips(raw) {
+        var seen = {}, cands = [];
+        String(raw || "").replace(_sciTokenRe(), function (full, q, term) {
+          if (term) {
+            var t = term.trim();
+            var letters = t.replace(/[^A-Za-z]/g, "");
+            var key = t.toLowerCase();
+            if (letters.length >= 6 && !seen[key]) { seen[key] = 1; cands.push(t); }
+          }
+          return full;
+        });
+        if (!cands.length) return "";
+        // 優先多字詞／專有名詞（含空白、連字號或大寫開頭的理論名），泛用單字殿後
+        cands.sort(function (a, b) {
+          var sa = (/[ \-]/.test(a) ? 2 : 0) + (/^[A-Z]/.test(a) ? 1 : 0);
+          var sb = (/[ \-]/.test(b) ? 2 : 0) + (/^[A-Z]/.test(b) ? 1 : 0);
+          return sb - sa;
+        });
+        return '<div class="es-chips">' + cands.slice(0, 4).map(function (c) {
+          return '<span class="es-chip">' + escapeHtml(c) + "</span>";
+        }).join("") + "</div>";
+      }
       function buildScience(s) {
         /* render 1-2 博士 badges (中英對照 via title tooltip) */
         const expertKeys = EP_EXPERTS[s.ep] || [];
@@ -8775,7 +8907,7 @@
           return '<span class="es-expert" title="' + escapeHtml(e.zh) + ' · ' + escapeHtml(e.en) + '">' + e.icon + ' ' + escapeHtml(e.zh) + '<span class="es-expert-en">' + escapeHtml(e.en) + '</span></span>';
         }).join('');
         const avatarIcon = (experts[0] && experts[0].icon) || '⚛';
-        return `<div class="ep-science"><div class="ep-science-toggle" onclick="toggleScience(this)" role="button" tabindex="0" aria-expanded="false" aria-controls="science-body-${s.ep}"><div class="es-avatar"><span aria-hidden="true">${avatarIcon}</span></div><span class="es-label">科普 · <span style="font-size:10px;opacity:.7;letter-spacing:.08em">${escapeHtml(s.topic.split('—')[0].split('/')[0].trim())}</span></span><span class="es-arrow">▾</span></div><div class="ep-science-body" id="science-body-${s.ep}"><div class="es-kicker">EP${s.ep} · 科普小單元</div><div class="es-frame">讓懂物理的人補一句：定律是真的，拿來比喻紅線的部分，是文學。</div>${expertsHTML ? '<div class="es-experts">' + expertsHTML + '</div>' : ''}<div class="es-title">${escapeHtml(s.topic)}</div><div class="es-text">${escapeHtml(s.body)}</div>${scienceThreadFooter(s.ep)}</div></div>`;
+        return `<div class="ep-science"><div class="ep-science-toggle" onclick="toggleScience(this)" role="button" tabindex="0" aria-expanded="false" aria-controls="science-body-${s.ep}"><div class="es-avatar"><span aria-hidden="true">${avatarIcon}</span></div><span class="es-label">科普 · <span style="font-size:10px;opacity:.7;letter-spacing:.08em">${escapeHtml(s.topic.split('—')[0].split('/')[0].trim())}</span></span><span class="es-arrow">▾</span></div><div class="ep-science-body" id="science-body-${s.ep}"><div class="es-kicker">EP${s.ep} · 科普小單元</div><div class="es-frame">讓懂物理的人補一句：定律是真的，拿來比喻紅線的部分，是文學。</div>${expertsHTML ? '<div class="es-experts">' + expertsHTML + '</div>' : ''}<div class="es-title">${escapeHtml(s.topic)}</div>${scienceTermChips(s.body)}<div class="es-text es-notebook">${formatScienceBody(s.body)}</div>${scienceThreadFooter(s.ep)}</div></div>`;
       }
       function toggleScience(h) {
         h.classList.toggle("open");
