@@ -2616,6 +2616,7 @@ function updatePhaseLogic(dt) {
       Math.hypot(state.player.x - WORLD_POINTS.focusMark.x, state.player.z - WORLD_POINTS.focusMark.z) < scale(170);
 
     state.cinematicGlow = smoothstep(CINEMATIC_TIMELINE.successWindow[0], CINEMATIC_TIMELINE.successWindow[1], state.phaseClock);
+    updateOneGlanceCinema(state.cinematicGlow);
     if (state.phaseClock >= CINEMATIC_TIMELINE.lockWindow && !state.endingSequence) {
       if (aligned) {
         startEnding(state.memories.size >= 4 ? "memory" : "canon");
@@ -2625,7 +2626,37 @@ function updatePhaseLogic(dt) {
     }
   } else {
     state.cinematicGlow = 0;
+    updateOneGlanceCinema(0);
   }
+}
+
+/* ── 一眼瞬間專屬鏡頭語言（A）：letterbox 2.35:1 + DOF 焦平面收緊 ──
+   驅動源 = 既有 cinematicGlow（successWindow 0→1 ramp，離開 phase 自動歸 0）。
+   只走支援路徑：__LETTERBOX__ 是 DOM、DOF 走 __POSTFX__.tuning（render 每幀重讀），
+   不寫相機（避免與 _o() 每幀相機路徑互踩）。 */
+const _ogCinema = { letterboxOn: false };
+/* DOF 正典預設（與 postfx.js DEFAULT_TUNING dof 同步維護）— 無狀態絕對值寫法：
+   glow=0 每幀寫回預設，自癒、不依賴快照物件身分（reset 重建 tuning 也不殘留） */
+const OG_DOF_BASE_FOCAL = 0.4;
+const OG_DOF_BASE_BLUR = 3.5;
+function updateOneGlanceCinema(glow) {
+  /* 結局卡開啟時讓 letterbox 退場（卡片之上不壓黑邊）；結局演出中亦同 */
+  const wantLetterbox =
+    state.phase === "eye_contact" &&
+    !state.endingSequence &&
+    !document.body.classList.contains("ending-open");
+  if (wantLetterbox && !_ogCinema.letterboxOn && typeof window.__LETTERBOX__ === "function") {
+    window.__LETTERBOX__(2.35, 1400);
+    _ogCinema.letterboxOn = true;
+  } else if (!wantLetterbox && _ogCinema.letterboxOn && typeof window.__LETTERBOX_OFF__ === "function") {
+    window.__LETTERBOX_OFF__(900);
+    _ogCinema.letterboxOn = false;
+  }
+  const dof = window.__POSTFX__?.tuning?.dof;
+  if (!dof || !dof.enabled) return;
+  /* 焦平面隨 glow 收緊：背景溶解、世界只剩她 */
+  dof.focalRange = OG_DOF_BASE_FOCAL - 0.18 * glow;
+  dof.maxBlur = OG_DOF_BASE_BLUR + 0.7 * glow;
 }
 
 function updateEndingSequence(dt) {
