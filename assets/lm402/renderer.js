@@ -7094,17 +7094,25 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     exposure: 1.28,
   };
   const _tmpColor = new e.Color();
+  // 10:40 → 11:00 漸暖：phase 驅動目標暖度，render() 內緩動後織進既有每幀寫入公式。
+  // （直接一次性寫 light/fog 會被 render() 的絕對值寫入蓋掉，所以改成「進度因子」參與公式）
+  const ATMOS_PHASE_WARMTH = {
+    consciousness_market: 0.18,
+    front_call: 0.55,
+    rear_wait: 0.78,
+    eye_contact: 1,
+  };
+  const _atmosBgDay = new e.Color("#dde8f2");
+  const _atmosFogDay = new e.Color("#d6e1eb");
+  let _atmosManual = null;
+  let _atmosP = 0;
+  let _atmosLastT = 0;
   function updateAtmosphere(progress) {
-    const p = e.MathUtils.clamp(progress, 0, 1);
-    W.fog.color.copy(_atmosBase.fogColor).lerp(_atmosWarm.fogColor, p);
-    W.background.copy(_atmosBase.bgColor).lerp(_atmosWarm.bgColor, p);
-    Te.color.copy(_atmosBase.dirColor).lerp(_atmosWarm.dirColor, p);
-    Te.intensity = e.MathUtils.lerp(_atmosBase.dirIntensity, _atmosWarm.dirIntensity, p);
-    Be.color.copy(_atmosBase.hemiSky).lerp(_atmosWarm.hemiSky, p);
-    Be.groundColor.copy(_atmosBase.hemiGround).lerp(_atmosWarm.hemiGround, p);
-    ke.color.copy(_atmosBase.ambColor).lerp(_atmosWarm.ambColor, p);
-    ke.intensity = e.MathUtils.lerp(_atmosBase.ambIntensity, _atmosWarm.ambIntensity, p);
-    U.toneMappingExposure = e.MathUtils.lerp(_atmosBase.exposure, _atmosWarm.exposure, p);
+    // 手動覆寫入口（console / debug）：傳 null 還給故事 phase 驅動。
+    // 非有限數一律視為 null（NaN 進 _atmosP 會永久污染光照公式）
+    _atmosManual = Number.isFinite(progress)
+      ? e.MathUtils.clamp(progress, 0, 1)
+      : null;
   }
   return {
     getStairY: getStairY,
@@ -7576,16 +7584,39 @@ export function createLm402Scene(D, runtimeOptions = {}) {
           _o(s.player, sceneTime, !0));
       }
       const b = x ? e.MathUtils.lerp(0.34, 1, s.intro.progress) : 1;
+      {
+        // 漸暖緩動（時間常數約 3.3 秒）：intro 期間歸零，手動覆寫優先於 phase
+        const atmosTarget = x
+          ? 0
+          : (_atmosManual ??
+            ("perfect" === (s.endingSequence?.type ?? s.ending)
+              ? 1
+              : (ATMOS_PHASE_WARMTH[s.phase] ?? 0)));
+        const adt = Math.min(0.05, Math.max(0, sceneTime - _atmosLastT));
+        _atmosLastT = sceneTime;
+        _atmosP += (atmosTarget - _atmosP) * Math.min(1, adt * 0.3);
+        if (_atmosP > 0.002) {
+          // 色溫類只在暖化啟動後才寫。注意：play 中 market 起即 >0.002，
+          // __ENV__ preset 的燈色在遊玩期間會被此處接管（preset 是 console opt-in 工具，可接受）
+          Te.color.copy(_atmosBase.dirColor).lerp(_atmosWarm.dirColor, _atmosP);
+          Be.color.copy(_atmosBase.hemiSky).lerp(_atmosWarm.hemiSky, _atmosP);
+          Be.groundColor
+            .copy(_atmosBase.hemiGround)
+            .lerp(_atmosWarm.hemiGround, _atmosP);
+          ke.color.copy(_atmosBase.ambColor).lerp(_atmosWarm.ambColor, _atmosP);
+        }
+      }
       if (
         ((Te.intensity =
-          1.96 * b +
+          (1.96 * b +
           ("eye_contact" === s.phase ||
           "perfect" === (s.endingSequence?.type ?? s.ending)
             ? 0.68
             : "front_call" === s.phase
               ? 0.26
-              : 0.12)),
-        (ke.intensity = 0.28 + 0.2 * b),
+              : 0.12)) *
+          (1 + 0.24 * _atmosP)),
+        (ke.intensity = 0.28 + 0.2 * b + 0.1 * _atmosP),
         (Ie.intensity = x ? 0.66 : 0.98),
         (Re.intensity =
           "perfect" === s.ending
@@ -7629,8 +7660,14 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             : "eye_contact" === s.phase
               ? 0.4
               : 0.2),
-        W.background.setStyle(x ? "#090d16" : "#dde8f2"),
-        W.fog.color.setStyle(x ? "#121722" : "#d6e1eb"),
+        (x
+          ? (W.background.setStyle("#090d16"), W.fog.color.setStyle("#121722"))
+          : (W.background
+              .copy(_atmosBgDay)
+              .lerp(_atmosWarm.bgColor, 0.6 * _atmosP),
+            W.fog.color
+              .copy(_atmosFogDay)
+              .lerp(_atmosWarm.fogColor, 0.6 * _atmosP))),
         (W.fog.near = x ? 3 : 16),
         (W.fog.far = x ? 20 : 68),
         (bo.visible = "perfect" !== s.endingSequence?.type),
