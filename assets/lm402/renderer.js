@@ -609,6 +609,7 @@ function S(t) {
   o.userData.baseY = 0;
   const a = Boolean(t.referenceJunior),
     n = t.female && a,
+    segK = t.detail === 2 ? 2 : 1,
     s = new e.MeshPhysicalMaterial({
       color: t.torso,
       roughness: t.female ? 0.42 : 0.5,
@@ -679,8 +680,8 @@ function S(t) {
       new e.CapsuleGeometry(
         t.female ? (n ? 0.118 : 0.126) : 0.132,
         0.18,
-        5,
-      10,
+        5 * segK,
+        10 * segK,
       ),
       s,
     );
@@ -711,6 +712,21 @@ function S(t) {
     p.clearcoat = 0.16;
     m.roughness = 0.3;
     m.clearcoat = 0.2;
+    // HR 材質延伸全身（全程式生成貼圖，零外部資源）：
+    // 皮膚毛孔 normal／馬尾 Marschner 各向異性／棉布平織／丹寧斜紋。
+    // 只動表面微觀質感，顏色與輪廓不變。
+    c.normalMap = JM.getSkinNormalTexture();
+    c.normalScale = new e.Vector2(0.3, 0.3);
+    d.anisotropy = 0.9;
+    d.anisotropyRotation = Math.PI / 2;
+    d.iridescence = 0.15;
+    d.iridescenceIOR = 1.42;
+    s.normalMap = JM.getCottonWeaveTexture();
+    s.normalScale = new e.Vector2(0.45, 0.45);
+    r.normalMap = JM.getCottonWeaveTexture();
+    r.normalScale = new e.Vector2(0.45, 0.45);
+    i.normalMap = JM.getDenimTwillTexture();
+    i.normalScale = new e.Vector2(0.65, 0.65);
   }
   (w.position.set(0, 0.84, 0),
     w.scale.set(t.female ? (n ? 0.88 : 1.04) : 1.14, n ? 1.04 : 1.02, n ? 0.76 : 0.86),
@@ -719,8 +735,8 @@ function S(t) {
     new e.CapsuleGeometry(
       t.female ? (n ? 0.148 : 0.172) : 0.166,
       t.female ? (n ? 0.54 : 0.62) : 0.6,
-      8,
-      18,
+      8 * segK,
+      18 * segK,
     ),
     s,
   );
@@ -728,7 +744,7 @@ function S(t) {
     M.scale.set(t.female ? (n ? 0.86 : 0.98) : 1.1, 1.04, t.female ? (n ? 0.74 : 0.82) : 0.9),
     o.add(M));
   const f = new e.Mesh(
-    new e.SphereGeometry(t.female ? (n ? 0.148 : 0.172) : 0.158, 22, 22),
+    new e.SphereGeometry(t.female ? (n ? 0.148 : 0.172) : 0.158, 22 * segK, 22 * segK),
     r,
   );
   let u;
@@ -738,7 +754,7 @@ function S(t) {
     o.add(f),
     n)
   ) {
-    u = new e.CylinderGeometry(0.166, 0.19, 0.16, 24, 1, !1);
+    u = new e.CylinderGeometry(0.166, 0.19, 0.16, 24 * segK, 1, !1);
     const t = u.getAttribute("position");
     for (let e = 0; e < t.count; e++) {
       const o = t.getY(e);
@@ -775,8 +791,8 @@ function S(t) {
   const g = new e.CapsuleGeometry(
       t.female ? (n ? 0.05 : 0.064) : 0.072,
       t.female ? (n ? 0.68 : 0.74) : 0.68,
-      6,
-      12,
+      6 * segK,
+      12 * segK,
     ),
     S = new e.Mesh(g, c);
   (S.position.set(t.female ? (n ? -0.072 : -0.085) : -0.092, t.female ? 0.36 : 0.34, 0.01),
@@ -809,7 +825,7 @@ function S(t) {
     t.female && (function(){
       var legMat = n ? c : i;
       var legGeo = n
-        ? new e.CapsuleGeometry(0.065, 0.36, 6, 12)
+        ? new e.CapsuleGeometry(0.065, 0.36, 6 * segK, 12 * segK)
         : new e.CapsuleGeometry(0.072, 0.40, 6, 12);
       var legL = new e.Mesh(legGeo, legMat);
       legL.position.set(-0.085, n ? 0.46 : 0.44, 0.008); o.add(legL);
@@ -860,8 +876,8 @@ function S(t) {
   const T = new e.CapsuleGeometry(
       t.female ? (n ? 0.042 : 0.048) : 0.056,
       t.female ? 0.42 : 0.46,
-      5,
-      10,
+      5 * segK,
+      10 * segK,
     ),
     I = new e.Mesh(T, c);
   (I.position.set(t.female ? -0.228 : -0.266, 1, 0.02),
@@ -6445,6 +6461,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       ponytailCurve: 0.14,
       skinGlow: 0.22,
       hairSheen: 0.35,
+      // 幾何細分綁畫質檔（只分幾何段數；材質升級兩檔皆套用）：desktop 2x
+      detail: V ? 1 : 2,
     }),
     Bo = S({
       torso: "#f2c49e",

@@ -183,6 +183,115 @@ export function getSkinNormalTexture() {
 }
 
 /**
+ * 棉布平織紋 normal map（白上衣用）
+ * 經緯交錯細格：每格依「經上/緯上」交替給橫向或縱向的 normal 起伏，
+ * 近看是布料的織線格，遠看只是柔和的漫反射粗糙感。
+ */
+function buildCottonWeaveCanvas() {
+  const size = 256;
+  const c = document.createElement("canvas");
+  c.width = c.height = size;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "rgb(128,128,255)";
+  ctx.fillRect(0, 0, size, size);
+  const cell = 8;
+  for (let y = 0; y < size; y += cell) {
+    for (let x = 0; x < size; x += cell) {
+      const over = ((x / cell + y / cell) & 1) === 0; // 平織：經緯交替在上
+      const grad = over
+        ? ctx.createLinearGradient(x, y, x + cell, y)
+        : ctx.createLinearGradient(x, y, x, y + cell);
+      // 織線剖面：兩側斜(R/G 偏移)、中央平(回 128)
+      if (over) {
+        grad.addColorStop(0, "rgba(112,128,250,0.5)");
+        grad.addColorStop(0.5, "rgba(132,128,255,0.45)");
+        grad.addColorStop(1, "rgba(144,128,250,0.5)");
+      } else {
+        grad.addColorStop(0, "rgba(128,112,250,0.5)");
+        grad.addColorStop(0.5, "rgba(128,132,255,0.45)");
+        grad.addColorStop(1, "rgba(128,144,250,0.5)");
+      }
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y, cell, cell);
+    }
+  }
+  // 細 noise 打散規律格紋（真棉布纖維不整齊）
+  const img = ctx.getImageData(0, 0, size, size);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const nx = (Math.random() - 0.5) * 9;
+    const ny = (Math.random() - 0.5) * 9;
+    img.data[i] = Math.max(0, Math.min(255, img.data[i] + nx));
+    img.data[i + 1] = Math.max(0, Math.min(255, img.data[i + 1] + ny));
+  }
+  ctx.putImageData(img, 0, 0);
+  return c;
+}
+
+export function getCottonWeaveTexture() {
+  if (_textureCache.has("cotton_weave")) return _textureCache.get("cotton_weave");
+  const tex = new THREE.CanvasTexture(buildCottonWeaveCanvas());
+  tex.colorSpace = THREE.LinearSRGBColorSpace;
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(5, 5);
+  tex.anisotropy = 4;
+  _textureCache.set("cotton_weave", tex);
+  return tex;
+}
+
+/**
+ * 丹寧斜紋（twill）normal map（牛仔短褲用）
+ * 經典 3x1 右斜紋：~63° 平行斜稜 + 縫線級 noise，
+ * normal 起伏沿斜稜法向（垂直斜線方向）擺動。
+ */
+function buildDenimTwillCanvas() {
+  const size = 256;
+  const c = document.createElement("canvas");
+  c.width = c.height = size;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "rgb(128,128,255)";
+  ctx.fillRect(0, 0, size, size);
+  // 斜稜：沿 (1, -2) 方向（約 63°），間距 6px，稜寬 3px
+  // 稜的亮側/暗側 = normal 在垂直斜線方向 (2, 1)/√5 的 ±偏移
+  const spacing = 6;
+  ctx.lineWidth = 3;
+  for (let d = -size * 2; d < size * 2; d += spacing) {
+    // 亮側（斜稜受光面）
+    ctx.strokeStyle = "rgba(150,139,250,0.55)";
+    ctx.beginPath();
+    ctx.moveTo(d, 0);
+    ctx.lineTo(d + size / 2, size);
+    ctx.stroke();
+    // 暗側（溝槽）偏移 3px
+    ctx.strokeStyle = "rgba(106,117,250,0.55)";
+    ctx.beginPath();
+    ctx.moveTo(d + 3, 0);
+    ctx.lineTo(d + 3 + size / 2, size);
+    ctx.stroke();
+  }
+  // 纖維 noise
+  const img = ctx.getImageData(0, 0, size, size);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const nx = (Math.random() - 0.5) * 12;
+    const ny = (Math.random() - 0.5) * 12;
+    img.data[i] = Math.max(0, Math.min(255, img.data[i] + nx));
+    img.data[i + 1] = Math.max(0, Math.min(255, img.data[i + 1] + ny));
+  }
+  ctx.putImageData(img, 0, 0);
+  return c;
+}
+
+export function getDenimTwillTexture() {
+  if (_textureCache.has("denim_twill")) return _textureCache.get("denim_twill");
+  const tex = new THREE.CanvasTexture(buildDenimTwillCanvas());
+  tex.colorSpace = THREE.LinearSRGBColorSpace;
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(4, 4);
+  tex.anisotropy = 4;
+  _textureCache.set("denim_twill", tex);
+  return tex;
+}
+
+/**
  * A3 Iris parallax — 圓形凸面 normal map
  * 每像素 normal = (uvFromCenter, sqrt(1-uvLen²)) 規範化
  * → iris plane 視角轉動時有「球面凸出」深度感（不再看起來扁平）
