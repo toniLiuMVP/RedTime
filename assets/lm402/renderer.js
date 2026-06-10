@@ -21,6 +21,7 @@ import { createInitiatedInteractions } from "./initiated-interactions.js";
 import { createPolaroidCapture } from "./polaroid.js";
 let __juniorRig = null;
 let __clothRig = null;
+let __ponytailRig = null;
 let __conscLights = null;
 let __conscParticles = null;
 let __conscText = null;
@@ -1235,6 +1236,7 @@ function S(t) {
     ue.scale.set(0.78, t.female ? 1.08 : 0.42, t.female ? 0.52 : 0.52);
     ue.position.set(0, t.female ? 1.472 : 1.61, t.female ? -0.116 : -0.1);
   }
+  let ponytailGroup = null;
   if (t.ponytail && t.female) {
     const ptLen = t.ponytailLength ?? 0.36;
     const ptCurve = t.ponytailCurve ?? 0.1;
@@ -1254,20 +1256,28 @@ function S(t) {
     ptBand.rotation.x = Math.PI * 0.38;
     ptBand.name = "scrunchie";
     o.add(ptBand);
+    // 馬尾群組：錨點在髮圈，曲線改 local 座標（rest 形狀與原世界座標完全相同）。
+    // 動畫用 group rotation 做鐘擺（綁 hairBack 耦合），cloth-rig 位置彈簧疊微風 —
+    // rotation 與 position 兩個通道互不打架；髮圈本體留在角色上不動（錨）。
+    ponytailGroup = new e.Group();
+    ponytailGroup.position.set(0, 1.52, -0.12);
+    o.add(ponytailGroup);
     const ptCurveObj = new e.CatmullRomCurve3([
-      new e.Vector3(0, 1.52, -0.12),
-      new e.Vector3(0, 1.48 - ptCurve * 0.3, -0.14 - ptLen * 0.3),
-      new e.Vector3(0, 1.42 - ptCurve, -0.16 - ptLen * 0.6),
-      new e.Vector3(0, 1.36 - ptCurve * 1.4, -0.15 - ptLen * 0.8),
+      new e.Vector3(0, 0, 0),
+      new e.Vector3(0, -0.04 - ptCurve * 0.3, -0.02 - ptLen * 0.3),
+      new e.Vector3(0, -0.1 - ptCurve, -0.04 - ptLen * 0.6),
+      new e.Vector3(0, -0.16 - ptCurve * 1.4, -0.03 - ptLen * 0.8),
     ]);
     const ptGeo = new e.TubeGeometry(ptCurveObj, 24, 0.024, 10, !1);
     const ptMesh = new e.Mesh(ptGeo, ptMat);
     ptMesh.name = "ponytail-main";
-    o.add(ptMesh);
+    ptMesh.userData.cloth = true;
+    ptMesh.userData.clothMass = 1.8;
+    ponytailGroup.add(ptMesh);
     const ptTipCurve = new e.CatmullRomCurve3([
-      new e.Vector3(0, 1.36 - ptCurve * 1.4, -0.15 - ptLen * 0.8),
-      new e.Vector3(0.01, 1.3 - ptCurve * 1.6, -0.13 - ptLen * 0.9),
-      new e.Vector3(0.005, 1.24 - ptCurve * 1.8, -0.1 - ptLen),
+      new e.Vector3(0, -0.16 - ptCurve * 1.4, -0.03 - ptLen * 0.8),
+      new e.Vector3(0.01, -0.22 - ptCurve * 1.6, -0.01 - ptLen * 0.9),
+      new e.Vector3(0.005, -0.28 - ptCurve * 1.8, 0.02 - ptLen),
     ]);
     const ptTip = new e.Mesh(
       new e.TubeGeometry(ptTipCurve, 16, 0.016, 8, !1),
@@ -1275,18 +1285,30 @@ function S(t) {
     );
     ptTip.material.opacity = 0.85; ptTip.material.transparent = !0;
     ptTip.name = "ponytail-tip";
-    o.add(ptTip);
+    ptTip.userData.cloth = true;
+    ptTip.userData.clothMass = 0.8;
+    ponytailGroup.add(ptTip);
     for (let si = 0; si < 3; si++) {
       const xOff = (si - 1) * 0.012;
       const sCurve = new e.CatmullRomCurve3([
-        new e.Vector3(xOff, 1.52, -0.12),
-        new e.Vector3(xOff + 0.004, 1.46 - ptCurve * 0.5, -0.15 - ptLen * 0.4),
-        new e.Vector3(xOff - 0.002, 1.38 - ptCurve * 1.2, -0.14 - ptLen * 0.7),
+        new e.Vector3(xOff, 0, 0),
+        new e.Vector3(xOff + 0.004, -0.06 - ptCurve * 0.5, -0.03 - ptLen * 0.4),
+        new e.Vector3(xOff - 0.002, -0.14 - ptCurve * 1.2, -0.02 - ptLen * 0.7),
       ]);
       const sMat = ptMat.clone();
       sMat.opacity = 0.6 + si * 0.1; sMat.transparent = !0;
       const sMesh = new e.Mesh(new e.TubeGeometry(sCurve, 18, 0.004, 6, !1), sMat);
-      o.add(sMesh);
+      sMesh.userData.cloth = true;
+      sMesh.userData.clothMass = 0.55;
+      ponytailGroup.add(sMesh);
+    }
+    if (n) {
+      // 身體馬尾自己的 rig（重於 hero head 髮絲：較硬、較重、風幅較小）。
+      // module-level 單例：若未來有第二個 ponytail 角色會覆蓋前者（同 __clothRig 模式）
+      __ponytailRig = createClothRig(ponytailGroup, {
+        stiffness: 9, damping: 0.86, windAmp: 0.0012, windFreq: 0.5,
+      });
+      typeof window !== "undefined" && (window.__PONYTAIL_RIG__ = __ponytailRig);
     }
   }
   const ye = new e.Mesh(
@@ -2323,6 +2345,7 @@ function S(t) {
       rightHand: E,
       head: L,
       jaw: X,
+      ponytailGroup,
       faceSideL: $,
       faceSideR: H,
       eyeWhiteL: re,
@@ -2459,7 +2482,11 @@ function P(e, t, o = 1) {
         (a.heroHeadRoot.rotation.copy(a.head.rotation),
         a.heroPonytail &&
           ((a.heroPonytail.rotation.y = 0.4 * a.hairBack.rotation.y),
-          (a.heroPonytail.rotation.z = 0.7 * a.hairBack.rotation.z)))));
+          (a.heroPonytail.rotation.z = 0.7 * a.hairBack.rotation.z))),
+      a.ponytailGroup &&
+        ((a.ponytailGroup.rotation.y = 0.35 * a.hairBack.rotation.y),
+        (a.ponytailGroup.rotation.x = 0.45 * a.hairBack.rotation.x),
+        (a.ponytailGroup.rotation.z = 0.55 * a.hairBack.rotation.z))));
   const p = 0.026 * Math.abs(Math.cos(r)) + 0.016 * s,
     m = 0.014 * n * o;
   ((e.position.y = p), (e.position.x += m));
@@ -2493,7 +2520,11 @@ function v(e, t, o = 1) {
         (a.heroHeadRoot.rotation.copy(a.head.rotation),
         a.heroPonytail &&
           ((a.heroPonytail.rotation.y = 0.42 * a.hairBack.rotation.y),
-          (a.heroPonytail.rotation.z = 0.72 * a.hairBack.rotation.z)))),
+          (a.heroPonytail.rotation.z = 0.72 * a.hairBack.rotation.z))),
+      a.ponytailGroup &&
+        ((a.ponytailGroup.rotation.y = 0.4 * a.hairBack.rotation.y),
+        (a.ponytailGroup.rotation.x = 0.5 * a.hairBack.rotation.x),
+        (a.ponytailGroup.rotation.z = 0.62 * a.hairBack.rotation.z))),
     (a.shoulderL.rotation.z = 0.01 * Math.sin(1.4 * t + 0.5) * o),
     (a.shoulderR.rotation.z = 0.01 * -Math.sin(1.4 * t + 0.5) * o),
     (a.leftArm.rotation.x = 0.01 * Math.sin(0.6 * t) * o),
@@ -7725,6 +7756,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         updateWormhole(0.016),
         __juniorRig?.update?.(performance.now() / 1000),
         __clothRig?.update?.(performance.now() / 1000),
+        __ponytailRig?.update?.(performance.now() / 1000),
         __conscLights?.update?.(performance.now() / 1000),
         __conscParticles?.update?.(performance.now() / 1000),
         __conscText?.update?.(performance.now() / 1000),
