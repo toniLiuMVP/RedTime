@@ -81,6 +81,8 @@
     <!-- GLB prefetch 已移除：GLB 載入管線目前未啟用（manifest 未接），prefetch 是 134KB 死流量 -->
     <link rel="stylesheet" href="fonts/fonts.css" />
     <link rel="stylesheet" href="assets/lm402/lm402.css" />
+    <!-- 開機自癒哨兵：黑畫面（壞快取/舊 SW/模組失敗）→ 自動清快取重載一次，再失敗顯示可讀面板 -->
+    <script src="assets/lm402/boot-sentry.js"></script>
     <!-- Audio auto-stop hook：頁面隱藏 / 關閉時自動停所有音樂（toni 要求；對所有玩家生效） -->
 <script src="assets/adopt-style-shim.js"></script>
 <!-- in-app browser（FB/IG/Threads/LINE WebView）偵測 + 引導橫幅（3D 在 in-app 易黑屏）-->
