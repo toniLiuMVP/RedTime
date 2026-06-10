@@ -1212,8 +1212,10 @@ function S(t) {
     ue.scale.set(0.88, t.female ? 1.42 : 0.42, t.female ? 0.7 : 0.52),
     !t.pompadour && o.add(ue));
   if (a) {
-    fe.scale.set(0.88, 0.86, 0.84);
-    fe.position.set(0, 1.604, 0.024);
+    // 髮帽上移＋後收＋前緣上揚：原本下緣垂到 y≈1.50 蓋過眼睛(1.56)且前傾到臉前(toni 截圖的氣球蓋臉)
+    fe.scale.set(0.86, 0.74, 0.8);
+    fe.position.set(0, 1.642, 0.004);
+    fe.rotation.x = -0.3;
     ue.scale.set(0.78, t.female ? 1.08 : 0.42, t.female ? 0.52 : 0.52);
     ue.position.set(0, t.female ? 1.472 : 1.61, t.female ? -0.116 : -0.1);
   }
@@ -1436,7 +1438,7 @@ function S(t) {
       n.scale.set(0.84, 0.56, 0.74),
       o.add(n),
       (o.userData.referenceHairCap = n),
-      fe.scale.set(0.92, 0.88, 0.86),
+      fe.scale.set(0.92, 0.84, 0.86), /* y 0.88→0.84：側緣不垂過眼線（搭配 a-branch rot -0.3 抬前緣過眉） */
       ue.scale.set(0.92 * ue.scale.x, 0.96 * ue.scale.y, 0.9 * ue.scale.z),
       (ue.position.y -= 0.01),
       (ue.position.z -= 0.008));
