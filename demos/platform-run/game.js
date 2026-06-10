@@ -4535,6 +4535,16 @@ function updateGame(dt) {
   /* Vignette at 40% max for daytime */
   dom.vignette.style.opacity = state.timeLeft < 10 ? String((1 - state.timeLeft / 10) * 0.4) : "0";
 
+  /* 車門紅閃倒數：最後 10 秒北上車門 emissive 脈動（3D 緊迫感，門材質皆獨立 clone 不影響全域） */
+  {
+    const doorUrgency = state.timeLeft < 10 ? 1 - Math.max(0, state.timeLeft) / 10 : 0;
+    const doorPulse = doorUrgency > 0 ? (0.5 + 0.5 * Math.sin(performance.now() * 0.012)) * doorUrgency * 0.85 : 0;
+    for (let dI = 0; dI < northDoors.length; dI++) {
+      northDoors[dI].left.material.emissive.setRGB(doorPulse, doorPulse * 0.08, doorPulse * 0.06);
+      northDoors[dI].right.material.emissive.setRGB(doorPulse, doorPulse * 0.08, doorPulse * 0.06);
+    }
+  }
+
   if (state.timeLeft < 8) {
     dom.timerText.style.color = "#e74c3c";
   } else if (state.timeLeft < 15) {
@@ -5295,9 +5305,22 @@ function updateCamera(dt) {
   }
 
   if (state.phase === "grabbed") {
-    camPos.set(father.position.x + 2, 2, father.position.z + 2);
-    camera.position.lerp(camPos, dt * 3);
-    camera.lookAt(father.position.x, 1, father.position.z);
+    /* 抱起瞬間 1.6 秒環繞收特寫：從追逐後側 90° 掃到前側、收近收低，
+       與 catchMoment DOM 定格同步，完成「30 秒擁抱」的視覺權重 */
+    state.grabOrbit = (state.grabOrbit || 0) + dt;
+    const gk = Math.min(1, state.grabOrbit / 1.6);
+    const gEase = gk * gk * (3 - 2 * gk);
+    const gAng = -Math.PI / 4 + gEase * (Math.PI * 0.75);
+    const gR = 2.8 - 1.1 * gEase;
+    camPos.set(
+      father.position.x + Math.sin(gAng) * gR,
+      2 - 0.55 * gEase,
+      father.position.z + Math.cos(gAng) * gR
+    );
+    camera.position.lerp(camPos, dt * 3.2);
+    camera.lookAt(father.position.x, 1 + 0.2 * gEase, father.position.z);
+  } else if (state.grabOrbit) {
+    state.grabOrbit = 0;
   }
 
   if (state.phase === "victory") {
