@@ -78,8 +78,7 @@
     <link rel="modulepreload" href="assets/lm402/vendor-three.module.js" />
     <link rel="modulepreload" href="assets/lm402/three.core.js" />
     <link rel="modulepreload" href="assets/lm402/renderer.js" />
-    <!-- prefetch GLB：等 renderer.js 解析完才會發 fetch；先 prefetch 讓瀏覽器並行下載 -->
-    <link rel="prefetch" href="assets/lm402/characters/junior/exports/junior_2005_runtime.glb" as="fetch" crossorigin />
+    <!-- GLB prefetch 已移除：GLB 載入管線目前未啟用（manifest 未接），prefetch 是 134KB 死流量 -->
     <link rel="stylesheet" href="fonts/fonts.css" />
     <link rel="stylesheet" href="assets/lm402/lm402.css" />
     <!-- Audio auto-stop hook：頁面隱藏 / 關閉時自動停所有音樂（toni 要求；對所有玩家生效） -->

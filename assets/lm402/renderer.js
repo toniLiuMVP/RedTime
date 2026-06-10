@@ -324,7 +324,7 @@ function buildReferenceJuniorHeroHead(t = {}) {
         o.add(n));
       const s = new e.Mesh(
         new e.SphereGeometry(0.0036, 16, 16),
-        new e.MeshBasicMaterial({ color: "#161113" }),
+        JM.createPupilMaterialHR(), // 微反光瞳孔（工廠早已寫好，正式接線）
       );
       (s.position.set(0, 0, 0.022), s.scale.set(0.76, 0.82, 0.32), o.add(s));
       const r = new e.Mesh(new e.CapsuleGeometry(0.0026, 0.028, 4, 10), i);
@@ -1227,8 +1227,9 @@ function S(t) {
       sheenColor: new e.Color("#6a4a30"),
     });
     const bandMat = new e.MeshPhysicalMaterial({
-      color: "#e8d0b8", roughness: 0.52, metalness: 0.02,
-      clearcoat: 0.18, clearcoatRoughness: 0.3,
+      // 2005 定稿照：黑色髮圈（原米色 #e8d0b8 與定稿不符）；roughness 提高 = 布質感
+      color: "#161012", roughness: 0.75, metalness: 0.02,
+      clearcoat: 0.08, clearcoatRoughness: 0.5,
     });
     const ptBand = new e.Mesh(new e.TorusGeometry(0.028, 0.006, 8, 16), bandMat);
     ptBand.position.set(0, 1.52, -0.12);
@@ -4985,7 +4986,12 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     //   desktop 保留 premium(4096² / radius 14 / 40 samples)。
     (Te.shadow.radius = V ? 7 : 14),
     (Te.shadow.blurSamples = V ? 16 : 40),
-    (Te.shadow.mapSize.set(V ? 1536 : 4096, V ? 1536 : 4096)),
+    // 尊重畫質檔位（原本硬編 1536/4096 蓋掉 renderTuning.shadowMapSize，tier 形同失效）；
+    // 行動裝置仍以 1536 為上限（iOS-safe）
+    (Te.shadow.mapSize.set(
+      V ? Math.min(1536, renderTuning.shadowMapSize) : renderTuning.shadowMapSize,
+      V ? Math.min(1536, renderTuning.shadowMapSize) : renderTuning.shadowMapSize,
+    )),
     W.add(Te));
   // E3 季節時間環境 — 5 preset 切換（dusk/night/rainy/snowy/day）
   // 窗戶玻璃 + 窗框材質 — 提前宣告(下方 createEnvironmentPresets 需要 glassMaterial,
@@ -7816,9 +7822,10 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         Co.userData.heroCloseupModelRoot?.scale.setScalar(
           renderTuning.portraitBoost,
         ),
+        // iOS-safe：行動裝置 shadow map 以 1536 為上限（使用者持久化 ultra/perfect 也不超標）
         Te.shadow.mapSize.set(
-          renderTuning.shadowMapSize,
-          renderTuning.shadowMapSize,
+          V ? Math.min(1536, renderTuning.shadowMapSize) : renderTuning.shadowMapSize,
+          V ? Math.min(1536, renderTuning.shadowMapSize) : renderTuning.shadowMapSize,
         ),
         qo());
     },

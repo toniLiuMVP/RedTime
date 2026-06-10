@@ -8372,10 +8372,15 @@
           body.appendChild(card);
         });
       }
-      // 辯論模式：經典劇情時，多位文人就同一母題互相辯論（隨機一場）
+      // 辯論模式：多位文人就同一母題互相辯論（隨機一場）。
+      // toni 紀律：必須註明是「模擬辯論」，點名假設是誰、他們會怎麼想
       function _renderDebate(body, ep, debates) {
         const d = debates[Math.floor(Math.random() * debates.length)] || {};
-        body.appendChild(_litDiv("lit-intro", "古今中外的文人，為這一段吵了起來。"));
+        const names = [];
+        (d.turns || []).forEach(function (t) {
+          if (t.who && names.indexOf(t.who) === -1) names.push(t.who);
+        });
+        body.appendChild(_litDiv("lit-intro", "模擬辯論 · 假設是" + (names.join("、") || "幾位文人") + "讀到這一段，他們會怎麼想？以下為模擬，非本人言論。"));
         const wrap = _litDiv("lit-debate");
         if (d.topic) wrap.appendChild(_litDiv("lit-debate-topic", "⚔️ " + d.topic));
         (d.turns || []).forEach(function (turn, i) {

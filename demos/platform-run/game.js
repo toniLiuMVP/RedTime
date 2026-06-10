@@ -2451,10 +2451,20 @@ function buildFather() {
   backpack.castShadow = true;
   father.add(backpack);
 
-  /* Contact shadow (blob) for visual grounding */
+  /* Contact shadow (blob) for visual grounding — radial gradient 取代硬邊圓（落地感） */
+  const csCanvas = document.createElement("canvas");
+  csCanvas.width = csCanvas.height = 64;
+  const csCtx = csCanvas.getContext("2d");
+  const csGrad = csCtx.createRadialGradient(32, 32, 2, 32, 32, 32);
+  csGrad.addColorStop(0, "rgba(0,0,0,0.38)");
+  csGrad.addColorStop(0.6, "rgba(0,0,0,0.18)");
+  csGrad.addColorStop(1, "rgba(0,0,0,0)");
+  csCtx.fillStyle = csGrad;
+  csCtx.fillRect(0, 0, 64, 64);
+  const csTex = new THREE.CanvasTexture(csCanvas);
   const contactShadow = new THREE.Mesh(
     new THREE.CircleGeometry(0.5, 16),
-    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.25 })
+    new THREE.MeshBasicMaterial({ map: csTex, transparent: true, depthWrite: false })
   );
   contactShadow.rotation.x = -Math.PI / 2;
   contactShadow.position.y = FATHER_BASE_Y + 0.01;
@@ -5434,7 +5444,8 @@ function applyQuality(level) {
   mainLight.shadow.map = null;
 
   if (p.fog) {
-    scene.fog = new THREE.FogExp2(0xc8dff0, 0.003);
+    // 對齊 sunset envmap/背景（原 0xc8dff0 是白天藍霧，切畫質會閃回白天色調）
+    scene.fog = new THREE.FogExp2(0xb09878, 0.0025);
   } else {
     scene.fog = null;
   }
