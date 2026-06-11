@@ -298,10 +298,11 @@ function buildReferenceJuniorHeroHead(t = {}) {
   (v.position.set(0, -0.076, 0.067), (v.renderOrder = 17), o.add(v));
   const G = new e.Mesh(new e.CapsuleGeometry(0.004, 0.032, 4, 10), p);
   (G.position.set(0, -0.072, 0.066), (G.rotation.z = Math.PI / 2), o.add(G));
-  // (b3) 下唇 — 比上唇亮 + 更高 clearcoat（飽滿、唇蜜感）；加大加深提升存在感
-  const z = new e.Mesh(new e.CapsuleGeometry(0.0052, 0.036, 4, 10), JM.createLipMaterialHR("#d18a88"));
+  // (b3) 下唇 — 比上唇亮 + 更高 clearcoat（飽滿、唇蜜感）
+  // r 0.0052→0.0044、上靠 3mm：正式機位實測過厚會與上唇讀成「疊餅」
+  const z = new e.Mesh(new e.CapsuleGeometry(0.0044, 0.036, 4, 10), JM.createLipMaterialHR("#d18a88"));
   ((z.material.clearcoat = 0.58),
-    z.position.set(0, -0.082, 0.065),
+    z.position.set(0, -0.0795, 0.065),
     (z.rotation.z = Math.PI / 2),
     o.add(z));
   // (3D audit P2) philtrum groove (人中) — faint vertical shadow hint between nose-base and upper-lip; additive + low-opacity so it is easily revertible
@@ -431,8 +432,9 @@ function buildReferenceJuniorHeroHead(t = {}) {
     eyeR = eyeGroup(1);
   o.add(eyeL.root, eyeR.root);
   const T = new e.Mesh(new e.CapsuleGeometry(0.002, 0.028, 4, 10), d);
+  // 眉變細：正式機位實測原厚度讀成黑色粗條
   (T.position.set(-0.046, 0.032, 0.084),
-    T.scale.set(0.72, 0.8, 0.68),
+    T.scale.set(0.66, 0.55, 0.6),
     T.rotation.set(0.03, 0.05, 0.12),
     o.add(T));
   const R = T.clone();
@@ -469,21 +471,22 @@ function buildReferenceJuniorHeroHead(t = {}) {
   );
   (E.position.set(0.024, 0.086, -0.128), (E.rotation.x = Math.PI / 2), o.add(E));
   E.visible = !1;
-  // 空氣瀏海：沿用原垂落方向（rx 小負值貼額），加寬至原 1.6 倍、
+  // 空氣瀏海：沿用原垂落方向（rx 小負值貼額），加寬增濃、
   // 略縮短（下緣收在眼上緣），五片成簾補中央縫
+  //（正式機位實測：太窄太透會讀成稀疏直絲）
   const U = [
-    { x: -0.048, y: 0.062, z: 0.092, w: 0.026, h: 0.08, rx: -0.06, ry: 0.1, rz: 0.12 },
-    { x: -0.024, y: 0.058, z: 0.098, w: 0.022, h: 0.066, rx: -0.04, ry: 0.06, rz: 0.06 },
-    { x: 0, y: 0.058, z: 0.1, w: 0.022, h: 0.062, rx: -0.04, ry: 0, rz: 0 },
-    { x: 0.022, y: 0.058, z: 0.098, w: 0.022, h: 0.066, rx: -0.04, ry: -0.06, rz: -0.06 },
-    { x: 0.046, y: 0.062, z: 0.092, w: 0.026, h: 0.08, rx: -0.06, ry: -0.1, rz: -0.12 },
+    { x: -0.048, y: 0.062, z: 0.092, w: 0.03, h: 0.08, rx: -0.06, ry: 0.1, rz: 0.12 },
+    { x: -0.024, y: 0.058, z: 0.098, w: 0.026, h: 0.066, rx: -0.04, ry: 0.06, rz: 0.06 },
+    { x: 0, y: 0.058, z: 0.1, w: 0.026, h: 0.062, rx: -0.04, ry: 0, rz: 0 },
+    { x: 0.022, y: 0.058, z: 0.098, w: 0.026, h: 0.066, rx: -0.04, ry: -0.06, rz: -0.06 },
+    { x: 0.046, y: 0.062, z: 0.092, w: 0.03, h: 0.08, rx: -0.06, ry: -0.1, rz: -0.12 },
   ];
   U.forEach((t) => {
     const a = buildJuniorHairRibbon(n, t.w, t.h, {
       curve: 0.012,
-      topWidth: 0.34,
-      bottomWidth: 0.52,
-      opacity: 0.9,
+      topWidth: 0.4,
+      bottomWidth: 0.6,
+      opacity: 0.95,
     });
     // rx + π：ribbon alpha 貼圖髮尖在窄端（上半），不翻轉會「尖端朝天」
     // （hero 頭從未上過線，此向位 bug 首次特寫驗證才現形）
@@ -537,7 +540,7 @@ function buildReferenceJuniorHeroHead(t = {}) {
       opacity: 0.72,
     }),
   );
-  (teethPlane.position.set(0, -0.076, 0.062),
+  (teethPlane.position.set(0, -0.076, 0.058),
     (teethPlane.renderOrder = 16),
     o.add(teethPlane));
   // Tier 2.2 耳朵 — 左右兩側 sphere（用副皮膚 i 含 SSS，耳殼薄處透光）
@@ -6871,6 +6874,15 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     })(To[t.type]);
     (L.set(t.id, o), F.add(o));
   });
+  // junior 熱點提示環上移：高細節頭加高後，原高度的環會「戴」在頭頂像帽簷
+  //（實機低角度驗證）；上移後對舊頭也仍懸浮頭頂上方，兩種頭皆淨空
+  {
+    const juniorMarker = L.get("junior");
+    juniorMarker &&
+      juniorMarker.children.forEach((c) => {
+        c.position.y += 0.16;
+      });
+  }
   const Io = new e.CatmullRomCurve3([
       new e.Vector3(N - 0.74 * ot, 12.2, g(3050)),
       new e.Vector3(N - 0.62 * ot, 11, g(2820)),
@@ -7206,7 +7218,9 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         const p = m.position,
           y = p.y,
           ax = Math.abs(p.x);
-        if (y < 0.15 || y > 1.32) return;
+        // 上限 1.32→1.42：衣領 box（y 1.38）要跟著軀幹收，
+        // 否則胸口浮出白色方片（正式機位實測）；頭區零件由補掃另管
+        if (y < 0.15 || y > 1.42) return;
         const rec = { sx: m.scale.x, sy: m.scale.y, sz: m.scale.z, px: p.x };
         if (ax < 0.06 && y > 0.95) {
           m.scale.x = rec.sx * 0.82;
