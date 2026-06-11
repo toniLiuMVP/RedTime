@@ -233,12 +233,16 @@ export function createJuniorExpressionRig(refs, options = {}) {
     if (refs.jawShell)     refs.jawShell.rotation.x = rest.jawShell.rotX + mo * 0.06;
 
     // === 微笑（嘴角上揚 / 下垂） ===
+    // rest 相對而非絕對：唇膠囊建構時 rotation.z = π/2 才是「橫放」，
+    // 絕對賦值會把它歸零 → 唇直立成「溫度計」（特寫實測抓到的元兇）
     if (refs.heroLipLine) {
-      refs.heroLipLine.rotation.z = sm * 0.05;
+      refs.heroLipLine.rotation.z = (rest.heroLipLine?.rotZ ?? 0) + sm * 0.05;
       refs.heroLipLine.scale.x   *= 1 + Math.abs(sm) * 0.04;
     }
-    if (refs.heroUpperLip) refs.heroUpperLip.rotation.z = sm * 0.06;
-    if (refs.heroLowerLip) refs.heroLowerLip.rotation.z = sm * 0.06;
+    if (refs.heroUpperLip)
+      refs.heroUpperLip.rotation.z = (rest.heroUpperLip?.rotZ ?? 0) + sm * 0.06;
+    if (refs.heroLowerLip)
+      refs.heroLowerLip.rotation.z = (rest.heroLowerLip?.rotZ ?? 0) + sm * 0.06;
 
     // === 揚眉 ===
     if (refs.heroBrowL) refs.heroBrowL.position.y += br * 0.007;

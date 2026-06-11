@@ -250,8 +250,9 @@ function buildReferenceJuniorHeroHead(t = {}) {
     new e.CapsuleGeometry(0.0042, 0.042, 4, 10),
     i,
   );
-  (g.position.set(0, -0.020, 0.080),
-    g.scale.set(0.40, 0.78, 0.58),
+  // 縮短後收：平視特寫實測原參數讀成「柱狀」（鼻樑+高光+人中疊成直柱）
+  (g.position.set(0, -0.022, 0.077),
+    g.scale.set(0.40, 0.66, 0.52),
     o.add(g));
   // (c1) 鼻根 — 在鼻樑頂端、眉間下方做微凸（接續眉骨）
   const noseRoot = new e.Mesh(new e.SphereGeometry(0.006, 16, 16), i);
@@ -261,10 +262,11 @@ function buildReferenceJuniorHeroHead(t = {}) {
   // (c1) 鼻樑高光 — 模擬黃昏側光打在鼻骨上（細長白點）
   const noseHi = new e.Mesh(
     new e.SphereGeometry(0.0024, 12, 12),
-    new e.MeshBasicMaterial({ color: "#ffffff", transparent: !0, opacity: 0.34 }),
+    new e.MeshBasicMaterial({ color: "#ffffff", transparent: !0, opacity: 0.22 }),
   );
-  (noseHi.position.set(0, -0.012, 0.086),
-    noseHi.scale.set(0.4, 1.6, 0.3),
+  // 縮短減弱：直立白條是「柱狀感」的強化訊號之一
+  (noseHi.position.set(0, -0.014, 0.084),
+    noseHi.scale.set(0.4, 1.1, 0.3),
     o.add(noseHi));
   const x = new e.Mesh(new e.SphereGeometry(0.013, 24, 24), i);
   (x.position.set(0, -0.048, 0.088), x.scale.set(0.72, 0.52, 0.84), o.add(x));
@@ -285,7 +287,7 @@ function buildReferenceJuniorHeroHead(t = {}) {
       roughness: 0.62,
       metalness: 0,
       transparent: !0,
-      opacity: 0.28, // 0.56 太重：與唇線疊成紅十字（特寫機位實測）
+      opacity: 0.2, // 0.56→0.28→0.2：與唇線/人中疊出垂直柱感（特寫機位實測）
     }),
   );
   // 唇組件群整體上移貼回下顎面（原座標掛在下巴底下、懸浮臉前 3-4cm，
@@ -294,10 +296,10 @@ function buildReferenceJuniorHeroHead(t = {}) {
   // 唇線縮窄壓薄：唇身（G/z 加大版）才是主角，唇線只是縫隙暗示
   const v = new e.Mesh(new e.PlaneGeometry(0.028, 0.005), m);
   (v.position.set(0, -0.076, 0.067), (v.renderOrder = 17), o.add(v));
-  const G = new e.Mesh(new e.CapsuleGeometry(0.0036, 0.03, 4, 10), p);
+  const G = new e.Mesh(new e.CapsuleGeometry(0.004, 0.032, 4, 10), p);
   (G.position.set(0, -0.072, 0.066), (G.rotation.z = Math.PI / 2), o.add(G));
-  // (b3) 下唇 — 比上唇亮 + 更高 clearcoat（飽滿、唇蜜感）
-  const z = new e.Mesh(new e.CapsuleGeometry(0.0046, 0.034, 4, 10), JM.createLipMaterialHR("#d29694"));
+  // (b3) 下唇 — 比上唇亮 + 更高 clearcoat（飽滿、唇蜜感）；加大加深提升存在感
+  const z = new e.Mesh(new e.CapsuleGeometry(0.0052, 0.036, 4, 10), JM.createLipMaterialHR("#d18a88"));
   ((z.material.clearcoat = 0.58),
     z.position.set(0, -0.082, 0.065),
     (z.rotation.z = Math.PI / 2),
@@ -7209,7 +7211,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         if (ax < 0.06 && y > 0.95) {
           m.scale.x = rec.sx * 0.82;
           m.scale.z = rec.sz * 0.88;
-        } else if (ax < 0.06 && y >= 0.7) {
+        } else if (ax < 0.06 && y >= 0.65) {
+          // 下限 0.7→0.65：短褲箱在 y 0.67，原本漏在帶外（腰瘦褲不瘦）
           m.scale.x = rec.sx * 0.86;
           m.scale.z = rec.sz * 0.9;
         } else if (ax >= 0.06 && ax < 0.14 && y < 0.8) {
