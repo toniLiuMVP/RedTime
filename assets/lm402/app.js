@@ -146,14 +146,20 @@ const QUALITY_TIERS = {
   perfect: { shadowMapSize: 4096, maxPixelRatio: 8.0,  dustCount: 256, mirrorOpacity: 0.18, portraitBoost: 1.5 },
   real:    { shadowMapSize: 4096, maxPixelRatio: 8.0,  dustCount: 320, mirrorOpacity: 0.20, portraitBoost: 1.5, realisticJunior: true, juniorDetail: 3 },
 };
-const QUALITY_ORDER = ["low", "smooth", "high", "ultra", "perfect", "real"];
+// real（真實畫質）自選單隱藏：tier 定義與 renderer 邏輯全保留、不再更新，
+// console 走 window.__REAL_TIER__() 仍可開啟（封存非刪除）
+const QUALITY_ORDER = ["low", "smooth", "high", "ultra", "perfect"];
 const QUALITY_LABELS = { low: "低", smooth: "順暢", high: "高級", ultra: "全開最高", perfect: "完美畫質", real: "真實畫質" };
 function getDefaultQuality() {
   const isMobile = window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   return isMobile ? "smooth" : "ultra";
 }
 function loadQualitySetting() {
-  try { const v = localStorage.getItem(STORAGE_KEYS.graphicsQuality); return QUALITY_TIERS[v] ? v : getDefaultQuality(); } catch { return getDefaultQuality(); }
+  try {
+    const v = localStorage.getItem(STORAGE_KEYS.graphicsQuality);
+    if (v === "real") return "perfect"; // 已持久化 real 的使用者平移到完美畫質
+    return QUALITY_TIERS[v] ? v : getDefaultQuality();
+  } catch { return getDefaultQuality(); }
 }
 
 const canvas = document.getElementById("scene-canvas");
@@ -258,9 +264,23 @@ function applyQualityTier() {
 }
 function cycleQualityTier() {
   const idx = QUALITY_ORDER.indexOf(state.graphicsQuality);
-  state.graphicsQuality = QUALITY_ORDER[(idx + 1) % QUALITY_ORDER.length];
+  if (idx === -1) {
+    // 從隱藏檔位（console 開的 real）點切換 → 落回完美，不直摔到低
+    state.graphicsQuality = "perfect";
+  } else {
+    state.graphicsQuality = QUALITY_ORDER[(idx + 1) % QUALITY_ORDER.length];
+  }
   applyQualityTier();
   persistQualitySetting();
+}
+// 封存檔位的 console 開關（選單已隱藏；重新整理會回完美畫質，
+// 即時生效的是材質/燈光/身形組件，建場期幾何細分不啟用）
+if (typeof window !== "undefined") {
+  window.__REAL_TIER__ = function () {
+    state.graphicsQuality = "real";
+    applyQualityTier();
+    return "real tier on (live effects only; resets to perfect on reload)";
+  };
 }
 
 function loadFontScale() {

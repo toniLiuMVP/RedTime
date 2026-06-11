@@ -7194,6 +7194,41 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       ? e.MathUtils.clamp(progress, 0, 1)
       : null;
   }
+  // 物體性質微校（桌機，一次性）：大面物件的粗糙度走物理合理值 —
+  // 木質課桌椅＝啞光木器（roughness 0.62-0.85）、白牆天花＝純啞光（>=0.9）。
+  // 只動 roughness/clearcoat，不動顏色與光照；尺寸門檻避免誤掃角色小件。
+  if (!V) {
+    let _physCount = 0;
+    j.traverse((m) => {
+      if (!m.isMesh || !m.material) return;
+      const mat = m.material;
+      if (
+        (!mat.isMeshPhysicalMaterial && !mat.isMeshStandardMaterial) ||
+        !mat.color ||
+        mat.userData.__physPass
+      )
+        return;
+      // 玻璃／半透明材質不參與（窗玻璃 #dce8f2 會誤中白牆分支 → 毛玻璃）
+      if (mat.transparent || (mat.transmission || 0) > 0) return;
+      if (!m.geometry.boundingSphere && m.geometry.computeBoundingSphere)
+        m.geometry.computeBoundingSphere();
+      const br = (m.geometry && m.geometry.boundingSphere && m.geometry.boundingSphere.radius) || 0;
+      if (br < 0.5) return;
+      const c = mat.color;
+      if (c.r > 0.45 && c.r > c.g * 1.15 && c.g > c.b * 1.05) {
+        mat.roughness = Math.min(0.85, Math.max(0.62, mat.roughness));
+        if ("clearcoat" in mat && mat.clearcoat < 0.03) mat.clearcoat = 0.03;
+      } else if (c.r > 0.82 && c.g > 0.8 && c.b > 0.72) {
+        mat.roughness = Math.max(mat.roughness, 0.9);
+      } else {
+        return;
+      }
+      mat.userData.__physPass = 1;
+      _physCount++;
+    });
+    typeof console !== "undefined" &&
+      console.info("[phys-pass] " + _physCount + " large-surface materials normalized");
+  }
   // 真實畫質身形校正：朝 2005 參考照的纖細身形收斂（其他畫質檔剪影不動）。
   // 依 y 帶與 |x| 分區：上身收 18%/髖 14%/肩袖內收縮小/手臂內收/腿微內收。
   // 原值快取於 Map，切離真實畫質完整還原。hero 頭與物理馬尾子樹不參與。
