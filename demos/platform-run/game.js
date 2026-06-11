@@ -1,4 +1,5 @@
 import * as THREE from "../_vendor/three.module.js";
+import { createPostFX } from "./postfx.js";
 /* ════════════════════════════════════════════════
    fix-7 (r33 Codex finding):timer registry
    ════════════════════════════════════════════════
@@ -252,6 +253,54 @@ if (preset.fog) {
 const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 500);
 camera.position.set(0, 12, PLATFORM_LEN / 2 + 20);
 camera.lookAt(0, 0, 0);
+
+/* ── 電影後製管線（移植自主場景 postfx；僅最高畫質檔啟用） ──
+   月台是 400m 開放尺度 + primitive 大量 mesh，跟教室參數不同：
+   DOF 焦段放寬、SSAO 先關（接觸陰影收益低、省 GPU）、bloom 壓低。
+   可能過曝的 effect（godRays/lensFlare/volFog/chroma）沿用預設 0。 */
+const POSTFX_MIN_QUALITY = 4; // 「完美」檔才開（桌機預設檔；行動預設「全開」不啟用）
+let postfx = null;
+let postfxOn = false;
+const _fxAnchor = new THREE.Vector3();
+function setPostfxEnabled(on) {
+  if (on && !postfx) {
+    try {
+      postfx = createPostFX({ renderer, scene, camera });
+      postfx.tuning.dof.focalRange = 10;
+      postfx.tuning.dof.maxBlur = 2.2;
+      postfx.tuning.ssao.enabled = false;
+      postfx.tuning.bloom.strength = 0.14;
+      postfx.tuning.grain.amount = 0.010;
+      postfx.tuning.exposure = 1.05; // 對齊直出路徑（applyArtUpgrade 實際覆寫值 1.05）
+      postfxSetSize();
+    } catch (e) {
+      console.warn("[postfx] init failed, falling back to direct render:", e && e.message);
+      postfx = null;
+      on = false;
+    }
+  }
+  postfxOn = Boolean(on && postfx);
+  if (typeof window !== "undefined") window.__PT_POSTFX__ = postfxOn ? postfx : null;
+  /* GPU 後製上線時退場 DOM 假暗角/顆粒，避免雙重暗角 */
+  const fake = document.getElementById("art-upgrade-postfx");
+  if (fake) fake.style.display = postfxOn ? "none" : "";
+}
+function renderFrame() {
+  if (postfxOn) {
+    _fxAnchor.set(father.position.x, father.position.y + 1.5, father.position.z);
+    postfx.setJuniorAnchor(_fxAnchor);
+    postfx.render(state.clock); // 傳時間給 film grain，否則噪點靜態化
+  } else {
+    renderer.render(scene, camera);
+  }
+}
+/* postfx RT 尺寸對齊直出路徑的 pixelRatio（Retina 上選最高檔不掉解析度；
+   弱機由 adaptive 降檔自動關 postfx 兜底） */
+function postfxSetSize() {
+  if (!postfx) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  postfx.setSize(Math.round(window.innerWidth * dpr), Math.round(window.innerHeight * dpr));
+}
 
 /* ════════════════════════════════════════════════
    r36 push4 美術強化 batch 1(platform-run-twin)
@@ -5280,8 +5329,11 @@ function updateCamera(dt) {
   if (state.phase === "intro") return;
 
   if (state.phase === "running" || state.phase === "sprint2") {
-    const behind = 6;
-    const height = 3.5;
+    /* 韓影慢推軌：越接近女兒（__PT_BOND__ 0→1）鏡頭越貼越低，
+       與紅線色溫條同源驅動，整段跑程是一個連續的 push-in */
+    const bond = (typeof window !== "undefined" && window.__PT_BOND__) || 0;
+    const behind = 6 - bond * 1.6;
+    const height = 3.5 - bond * 0.7;
     const fovTarget = state.sprinting ? 68 : 58;
     camera.fov = THREE.MathUtils.lerp(camera.fov, fovTarget, dt * 3);
     camera.updateProjectionMatrix();
@@ -5325,15 +5377,19 @@ function updateCamera(dt) {
 
   if (state.phase === "victory") {
     if (state.victoryPhase <= 1) {
-      /* Orbit around father as he boards */
-      var vAngle = state.victoryTimer * 0.3;
+      /* Orbit around father as he boards —
+         韓影收尾：起手快、漸慢漸近漸低（等速圓周 → smoothstep 緩動） */
+      var vT = Math.min(1, state.victoryTimer / 6);
+      var vEase = vT * vT * (3 - 2 * vT);
+      var vAngle = state.victoryTimer * (0.42 - 0.2 * vEase);
+      var vR = 5 - 1.2 * vEase;
       camPos.set(
-        father.position.x + Math.cos(vAngle) * 5,
-        2.5,
-        father.position.z + Math.sin(vAngle) * 5
+        father.position.x + Math.cos(vAngle) * vR,
+        2.5 - 0.6 * vEase,
+        father.position.z + Math.sin(vAngle) * vR
       );
       camera.position.lerp(camPos, dt * 2);
-      camera.lookAt(father.position.x, 1.2, father.position.z);
+      camera.lookAt(father.position.x, 1.2 + 0.15 * vEase, father.position.z);
     } else {
       /* Watch train leave */
       camPos.set(trainNorth.position.x - 5, 4, trainNorth.position.z + 8);
@@ -5480,6 +5536,10 @@ function applyQuality(level) {
   }
 
   renderer.setSize(window.innerWidth, window.innerHeight);
+
+  /* 電影後製跟檔位走：最高檔開、降檔（含 adaptive 自動降）即關 */
+  setPostfxEnabled(level >= POSTFX_MIN_QUALITY);
+  postfxSetSize();
 }
 
 dom.qualityBtn.addEventListener("click", function() {
@@ -5506,7 +5566,7 @@ function animate() {
   if (state.grabSlow > 0) { state.grabSlow = Math.max(0, state.grabSlow - dt); dt *= 0.34; } // 抱到女兒的子彈時間：真實 dt 遞減，歸 0 後自動恢復全速
   /* B：看「把拔的回憶」時凍結模擬（計時、火車、移動全停），只續 render，避免時間到沒接到女兒的出戲。
      兩個來源：window.__RUN_PAUSED__（💭 把拔的回憶 launcher 回憶鏈）、state.transitionFreeze（關卡過場 LEVEL_HOOK 把拔每關回憶）。*/
-  if (window.__RUN_PAUSED__ || state.transitionFreeze) { renderer.render(scene, camera); return; }
+  if (window.__RUN_PAUSED__ || state.transitionFreeze) { renderFrame(); return; }
   state.clock += dt;
 
   /* adaptive 品質:90 幀 window avg FPS < 40 → applyQuality 降一級,cooldown 300 幀防 flapping */
@@ -5563,7 +5623,19 @@ function animate() {
   }
 
   updateNarrative(dt);
-  renderer.render(scene, camera);
+  /* 倒數緊迫感 → 後製連動（雙向平滑：進 victory/fail 會自動衰減回基準）
+     最壞疊加 guard：門紅閃 + DOM 紅暈同時最大時，chroma 上限 0.0022 仍遠低於
+     console 建議區間下緣 0.002~0.006 的中值，vignette 增幅 0.10 不致黑框。 */
+  if (postfxOn && postfx) {
+    const fxU =
+      (state.phase === "running" || state.phase === "sprint2") && state.timeLeft < 10
+        ? 1 - Math.max(0, state.timeLeft) / 10
+        : 0;
+    state._fxUrgency = (state._fxUrgency || 0) + (fxU - (state._fxUrgency || 0)) * Math.min(1, dt * 4);
+    postfx.tuning.chroma.strength = state._fxUrgency * 0.0022;
+    postfx.tuning.vignette.darkness = 0.32 + state._fxUrgency * 0.1;
+  }
+  renderFrame();
 }
 
 /* ════════════════════════════════════════════════
@@ -5583,6 +5655,8 @@ function init() {
   /* 預設氛圍燈光(月台夜景):火車頭燈 + 天花板燈,低強度 iOS 友善(原本只在 console __ART_APPLY_ALL__ 才開) */
   try { window.__TRAIN_HEADLIGHT__(1.5, '#fff5d6'); } catch(e) {}
   try { window.__CEILING_LIGHTS__(6, 2.0); } catch(e) {}
+  /* 電影後製初始檔位判定(桌機預設「完美」→ 啟用) */
+  setPostfxEnabled(state.quality >= POSTFX_MIN_QUALITY);
   animate();
 }
 
@@ -5875,6 +5949,7 @@ window.addEventListener("resize", function() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+  postfxSetSize();
 });
 
 init();

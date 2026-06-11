@@ -610,7 +610,7 @@ function S(t) {
   o.userData.baseY = 0;
   const a = Boolean(t.referenceJunior),
     n = t.female && a,
-    segK = t.detail === 2 ? 2 : 1,
+    segK = t.detail >= 2 ? Math.min(4, Math.round(t.detail)) : 1,
     s = new e.MeshPhysicalMaterial({
       color: t.torso,
       roughness: t.female ? 0.42 : 0.5,
@@ -3194,7 +3194,8 @@ function setJuniorHeroLeadVisibility(t, o, a = {}) {
     t.referenceHairCap,
     t.headGlow,
     t.hairBack,
-  ].forEach((t) => d(t, i ? !1 : !0));
+  // hero 頭與舊臉共位：GLB ready（i）或 hero 頭實際要顯示（n && h）時都得藏舊臉
+  ].forEach((t) => d(t, i || (n && h) ? !1 : !0));
   t.legacyChildren?.forEach((t) => d(t, i ? !1 : (l || !0)));
   if (s) {
     p(s);
@@ -6492,8 +6493,11 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       ponytailCurve: 0.14,
       skinGlow: 0.22,
       hairSheen: 0.35,
-      // 幾何細分綁畫質檔（只分幾何段數；材質升級兩檔皆套用）：desktop 2x
-      detail: V ? 1 : 2,
+      // 幾何細分：行動 1x；桌機依建場時的畫質檔 juniorDetail（real=3x，其餘 2x）。
+      // 建場後切檔不重建幾何（同 dustCount 慣例，重新整理後生效）。
+      detail: V
+        ? 1
+        : (runtimeState.qualityTiers?.[runtimeState.qualityTier]?.juniorDetail ?? 2),
     }),
     Bo = S({
       torso: "#f2c49e",
@@ -7114,6 +7118,42 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       ? e.MathUtils.clamp(progress, 0, 1)
       : null;
   }
+  // 真實畫質檔：寫實組件自動套用（克制版）。
+  // 只收角色寫實（皮膚 SSS／毛孔 normal／髮絲高光／角膜／睫毛／眼動）
+  // 與低強度光氛（rim／catchlight／接觸陰影／體積光／god rays），
+  // 刻意排除天氣、粉筆板書、CSM、selective bloom — 最壞疊加在 eye_contact
+  // 暖度 1.0 時仍須不過曝。值一律低於各 console API 的 batch 預設。
+  let _tierRealismOn = !1;
+  function applyTierRealism(on) {
+    if (Boolean(on) === _tierRealismOn || typeof window === "undefined") return;
+    _tierRealismOn = Boolean(on);
+    const call = (name, ...args) => {
+      try { typeof window[name] === "function" && window[name](...args); } catch (e) {}
+    };
+    if (_tierRealismOn) {
+      call("__SSS__", 0.5, 0.3);
+      call("__SKIN_NORMAL__", 0.5, 256);
+      call("__HAIR_STREAK__", 0.7, 64);
+      call("__EYE_CORNEA__", 0.011, 0.6);
+      call("__EYELASH__", 12, 0.018);
+      call("__SACCADE__", 200, 0.8);
+      call("__RIM_LIGHT__", 1.0, "#ff9a4f");
+      call("__CATCHLIGHT__", 2, 0.6);
+      call("__CONTACT_SHADOW__", 0.5);
+      call("__VOLUMETRIC__", 30, 0.3);
+      call("__GOD_RAYS__", null, 0.3);
+    } else {
+      // 皮膚 SSS／毛孔／髮絲是冪等材質參數（無 _OFF_），重新整理才完全還原
+      call("__EYE_CORNEA_OFF__");
+      call("__EYELASH_OFF__");
+      call("__SACCADE_OFF__");
+      call("__RIM_LIGHT_OFF__");
+      call("__CATCHLIGHT_OFF__");
+      call("__CONTACT_SHADOW_OFF__");
+      call("__VOLUMETRIC_OFF__");
+      call("__GOD_RAYS_OFF__");
+    }
+  }
   return {
     getStairY: getStairY,
     triggerWormhole: triggerWormhole,
@@ -7244,6 +7284,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
                 heroHeadRoot: e.heroHeadRoot,
                 keepLegacyBody: !1,
                 suppressRuntimeModel: !1,
+                // hero 換頭暫關（2026-06-11 實機驗證：瀏海髮帶/髮髻/髮絲 transform
+                // 在特寫機位不合格，需專門調校後才可隨真實畫質檔開啟）
                 showHeroHeadRoot: !1,
               });
               if (e.head?.material && e.jaw?.material) {
@@ -7915,6 +7957,16 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         Te.shadow.mapSize.set(
           V ? Math.min(1536, renderTuning.shadowMapSize) : renderTuning.shadowMapSize,
           V ? Math.min(1536, renderTuning.shadowMapSize) : renderTuning.shadowMapSize,
+        ),
+        // shadow RT 已配置時 Three 不會自動 resize；dispose 讓下一幀以新尺寸重建
+        // （VSM 的 blur 中繼 mapPass 也要一起 dispose，否則 blur 解析度卡在舊檔）
+        Te.shadow.map && (Te.shadow.map.dispose(), (Te.shadow.map = null)),
+        Te.shadow.mapPass && (Te.shadow.mapPass.dispose(), (Te.shadow.mapPass = null)),
+        applyTierRealism(
+          Boolean(
+            runtimeState.qualityTiers?.[runtimeState.qualityTier]
+              ?.realisticJunior,
+          ),
         ),
         qo());
     },

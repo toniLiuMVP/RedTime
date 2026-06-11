@@ -135,8 +135,32 @@ const HOTSPOT_MAP = Object.fromEntries(
 
 let liveState = null;
 
+/* ── Graphics Quality System ──
+   tier 表定義在建場之前：createLm402Scene 需要在首幀前知道 tier，
+   幾何細分（segK）與寫實組件才能在建場時就用正確檔位。 */
+const QUALITY_TIERS = {
+  low:     { shadowMapSize: 256,  maxPixelRatio: 0.75, dustCount: 16,  mirrorOpacity: 0.04, portraitBoost: 1 },
+  smooth:  { shadowMapSize: 512,  maxPixelRatio: 1.0,  dustCount: 32,  mirrorOpacity: 0.08, portraitBoost: 1 },
+  high:    { shadowMapSize: 1024, maxPixelRatio: 1.5,  dustCount: 64,  mirrorOpacity: 0.10, portraitBoost: 1 },
+  ultra:   { shadowMapSize: 2048, maxPixelRatio: 4.0,  dustCount: 128, mirrorOpacity: 0.14, portraitBoost: 1 },
+  perfect: { shadowMapSize: 4096, maxPixelRatio: 8.0,  dustCount: 256, mirrorOpacity: 0.18, portraitBoost: 1.5 },
+  real:    { shadowMapSize: 4096, maxPixelRatio: 8.0,  dustCount: 320, mirrorOpacity: 0.20, portraitBoost: 1.5, realisticJunior: true, juniorDetail: 3 },
+};
+const QUALITY_ORDER = ["low", "smooth", "high", "ultra", "perfect", "real"];
+const QUALITY_LABELS = { low: "低", smooth: "順暢", high: "高級", ultra: "全開最高", perfect: "完美畫質", real: "真實畫質" };
+function getDefaultQuality() {
+  const isMobile = window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  return isMobile ? "smooth" : "ultra";
+}
+function loadQualitySetting() {
+  try { const v = localStorage.getItem(STORAGE_KEYS.graphicsQuality); return QUALITY_TIERS[v] ? v : getDefaultQuality(); } catch { return getDefaultQuality(); }
+}
+
 const canvas = document.getElementById("scene-canvas");
-const scene = createLm402Scene(canvas);
+const scene = createLm402Scene(canvas, {
+  qualityTier: loadQualitySetting(),
+  qualityTiers: QUALITY_TIERS,
+});
 
 const dom = {
   body: document.body,
@@ -224,23 +248,7 @@ const FONT_SCALE_PRESETS = { small: 0.85, standard: 1, large: 1.2, xlarge: 1.4 }
 const FONT_SCALE_ORDER = ["small", "standard", "large", "xlarge"];
 const FONT_SCALE_LABELS = { small: "小", standard: "標準", large: "大", xlarge: "特大" };
 
-/* ── Graphics Quality System ── */
-const QUALITY_TIERS = {
-  low:     { shadowMapSize: 256,  maxPixelRatio: 0.75, dustCount: 16,  mirrorOpacity: 0.04, portraitBoost: 1 },
-  smooth:  { shadowMapSize: 512,  maxPixelRatio: 1.0,  dustCount: 32,  mirrorOpacity: 0.08, portraitBoost: 1 },
-  high:    { shadowMapSize: 1024, maxPixelRatio: 1.5,  dustCount: 64,  mirrorOpacity: 0.10, portraitBoost: 1 },
-  ultra:   { shadowMapSize: 2048, maxPixelRatio: 4.0,  dustCount: 128, mirrorOpacity: 0.14, portraitBoost: 1 },
-  perfect: { shadowMapSize: 4096, maxPixelRatio: 8.0,  dustCount: 256, mirrorOpacity: 0.18, portraitBoost: 1.5 },
-};
-const QUALITY_ORDER = ["low", "smooth", "high", "ultra", "perfect"];
-const QUALITY_LABELS = { low: "低", smooth: "順暢", high: "高級", ultra: "全開最高", perfect: "完美畫質" };
-function getDefaultQuality() {
-  const isMobile = window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  return isMobile ? "smooth" : "ultra";
-}
-function loadQualitySetting() {
-  try { const v = localStorage.getItem(STORAGE_KEYS.graphicsQuality); return QUALITY_TIERS[v] ? v : getDefaultQuality(); } catch { return getDefaultQuality(); }
-}
+/* ── Graphics Quality System(tier 表與讀取函式已前移到 createLm402Scene 之前) ── */
 function persistQualitySetting() {
   try { localStorage.setItem(STORAGE_KEYS.graphicsQuality, state.graphicsQuality); } catch {}
 }
