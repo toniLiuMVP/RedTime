@@ -7180,6 +7180,58 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       ? e.MathUtils.clamp(progress, 0, 1)
       : null;
   }
+  // 真實畫質身形校正：朝 2005 參考照的纖細身形收斂（其他畫質檔剪影不動）。
+  // 依 y 帶與 |x| 分區：上身收 18%/髖 14%/肩袖內收縮小/手臂內收/腿微內收。
+  // 原值快取於 Map，切離真實畫質完整還原。hero 頭與物理馬尾子樹不參與。
+  let _slimOrig = null;
+  function applyJuniorSlimming(on) {
+    const pose = Co.userData.pose,
+      hh = pose?.heroHeadRoot;
+    if (!pose || !hh) return;
+    if (on && !_slimOrig) {
+      const keep = new Set();
+      hh.traverse((m) => keep.add(m));
+      pose.ponytailGroup && pose.ponytailGroup.traverse((m) => keep.add(m));
+      // GLB/portrait 子樹不參與：座標帶與 legacy 重疊，載入後切檔會誤改網格
+      pose.runtimeModelRoot && pose.runtimeModelRoot.traverse((m) => keep.add(m));
+      pose.heroCloseupModelRoot &&
+        pose.heroCloseupModelRoot.traverse((m) => keep.add(m));
+      Co.userData.portraitShell &&
+        Co.userData.portraitShell.traverse((m) => keep.add(m));
+      _slimOrig = new Map();
+      Co.traverse((m) => {
+        if (!m.isMesh || keep.has(m)) return;
+        const p = m.position,
+          y = p.y,
+          ax = Math.abs(p.x);
+        if (y < 0.15 || y > 1.32) return;
+        const rec = { sx: m.scale.x, sy: m.scale.y, sz: m.scale.z, px: p.x };
+        if (ax < 0.06 && y > 0.95) {
+          m.scale.x = rec.sx * 0.82;
+          m.scale.z = rec.sz * 0.88;
+        } else if (ax < 0.06 && y >= 0.7) {
+          m.scale.x = rec.sx * 0.86;
+          m.scale.z = rec.sz * 0.9;
+        } else if (ax >= 0.06 && ax < 0.14 && y < 0.8) {
+          p.x = rec.px * 0.9;
+          m.scale.x = rec.sx * 0.94;
+          m.scale.z = rec.sz * 0.94;
+        } else if (ax >= 0.1 && y > 0.95) {
+          p.x = rec.px * 0.82;
+          m.scale.set(rec.sx * 0.85, rec.sy, rec.sz * 0.85);
+        } else if (ax >= 0.14 && y >= 0.5) {
+          p.x = rec.px * 0.82;
+        } else return;
+        _slimOrig.set(m, rec);
+      });
+    } else if (!on && _slimOrig) {
+      _slimOrig.forEach((r, m) => {
+        m.scale.set(r.sx, r.sy, r.sz);
+        m.position.x = r.px;
+      });
+      _slimOrig = null;
+    }
+  }
   // 真實畫質檔：寫實組件自動套用（克制版）。
   // 只收角色寫實（皮膚 SSS／毛孔 normal／髮絲高光／角膜／睫毛／眼動）
   // 與低強度光氛（rim／catchlight／接觸陰影／體積光／god rays），
@@ -7221,6 +7273,9 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       call("__CONTACT_SHADOW__", 0.5);
       call("__VOLUMETRIC__", 30, 0.3);
       call("__GOD_RAYS__", null, 0.3);
+      try {
+        applyJuniorSlimming(!0);
+      } catch (e) {}
     } else {
       // 皮膚 SSS／毛孔／髮絲是冪等材質參數（無 _OFF_），重新整理才完全還原
       call("__EYE_CORNEA_OFF__");
@@ -7231,6 +7286,9 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       call("__CONTACT_SHADOW_OFF__");
       call("__VOLUMETRIC_OFF__");
       call("__GOD_RAYS_OFF__");
+      try {
+        applyJuniorSlimming(!1);
+      } catch (e) {}
     }
   }
   return {
