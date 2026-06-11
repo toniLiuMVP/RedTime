@@ -157,16 +157,18 @@ function buildJuniorHairRibbon(t, o, a, n = {}) {
 }
 function buildReferenceJuniorHeroHead(t = {}) {
   const o = new e.Group();
-  (o.position.set(0.01, 1.55, 0.008), o.scale.set(0.62, 0.64, 0.62));
+  // 0.62 縮放是特寫專用時代的遺產：全程換頭後遠景頭身比例破掉（小頭大身），
+  // 升到 0.95 對齊身體比例；錨點隨縮放連動換算（×1.532）
+  (o.position.set(0.01, 1.59, 0.008), o.scale.set(0.95, 0.98, 0.95));
   o.visible = !1;
   o.userData.kind = "procedural_hero_head";
   o.userData.ready = !0;
   o.userData.heroAnchor = {
-    center: new e.Vector3(0.01, 1.548, 0.008),
-    face: new e.Vector3(0.01, 1.602, 0.106),
-    chest: new e.Vector3(0.01, 1.468, 0.072),
-    eyes: new e.Vector3(0.01, 1.592, 0.102),
-    shoulder: new e.Vector3(0.01, 1.428, 0.036),
+    center: new e.Vector3(0.01, 1.587, 0.008),
+    face: new e.Vector3(0.01, 1.67, 0.158),
+    chest: new e.Vector3(0.01, 1.464, 0.106),
+    eyes: new e.Vector3(0.01, 1.654, 0.152),
+    shoulder: new e.Vector3(0.01, 1.403, 0.051),
   };
   const a = new e.Color(t.skinColor ?? "#f9e7da"),
     n = new e.Color(t.hairColor ?? "#3c2a22"),
@@ -331,8 +333,9 @@ function buildReferenceJuniorHeroHead(t = {}) {
         JM.createPupilMaterialHR(), // 微反光瞳孔（工廠早已寫好，正式接線）
       );
       (s.position.set(0, 0, 0.022), s.scale.set(0.76, 0.82, 0.32), o.add(s));
+      // 上眼瞼上移：原 y 0.008 壓住眼球上 1/3，特寫讀成微瞇（眼睛開度修正）
       const r = new e.Mesh(new e.CapsuleGeometry(0.0026, 0.028, 4, 10), i);
-      (r.position.set(0, 0.008, 0.008), (r.rotation.z = Math.PI / 2), o.add(r));
+      (r.position.set(0, 0.0115, 0.008), (r.rotation.z = Math.PI / 2), o.add(r));
       // (b1) 雙眼皮 — 上眼瞼上方薄條，半透明深棕（亞洲女性辨識特徵）
       const doubleLid = new e.Mesh(
         new e.CapsuleGeometry(0.0008, 0.024, 3, 8),
@@ -344,7 +347,7 @@ function buildReferenceJuniorHeroHead(t = {}) {
           metalness: 0,
         }),
       );
-      (doubleLid.position.set(0, 0.013, 0.012),
+      (doubleLid.position.set(0, 0.0165, 0.012),
         (doubleLid.rotation.z = Math.PI / 2),
         doubleLid.scale.set(0.95, 1, 0.6),
         o.add(doubleLid));
@@ -354,7 +357,7 @@ function buildReferenceJuniorHeroHead(t = {}) {
         l.scale.set(0.92, 0.74, 0.72),
         o.add(l));
       const p = new e.Mesh(new e.CapsuleGeometry(0.0016, 0.03, 4, 10), d);
-      (p.position.set(0, 0.007, 0.016),
+      (p.position.set(0, 0.0105, 0.016),
         (p.rotation.z = Math.PI / 2),
         p.scale.set(0.84, 0.82, 0.68),
         o.add(p));
@@ -389,7 +392,7 @@ function buildReferenceJuniorHeroHead(t = {}) {
         new e.PlaneGeometry(0.03, 0.0085),
         JM.createLashFanMaterialHR(),
       );
-      (lashPlane.position.set(0, 0.013, 0.022),
+      (lashPlane.position.set(0, 0.0165, 0.022),
         (lashPlane.rotation.x = -0.22),
         (lashPlane.renderOrder = 19),
         o.add(lashPlane));
@@ -444,7 +447,7 @@ function buildReferenceJuniorHeroHead(t = {}) {
     l,
   );
   (I.position.set(0, 0.036, -0.04),
-    I.scale.set(0.74, 0.74, 0.68),
+    I.scale.set(0.8, 0.8, 0.73), // +8% 髮量：貼頭髮帽在遠景讀成「小頭」
     (I.rotation.x = -0.12),
     o.add(I));
   const A = new e.Mesh(new e.SphereGeometry(0.092, 40, 40), l);
