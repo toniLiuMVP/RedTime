@@ -283,28 +283,31 @@ function buildReferenceJuniorHeroHead(t = {}) {
       roughness: 0.62,
       metalness: 0,
       transparent: !0,
-      opacity: 0.56,
+      opacity: 0.28, // 0.56 太重：與唇線疊成紅十字（特寫機位實測）
     }),
   );
-  (P.position.set(0, -0.078, 0.088), o.add(P));
-  const v = new e.Mesh(new e.PlaneGeometry(0.036, 0.01), m);
-  (v.position.set(0, -0.094, 0.096), (v.renderOrder = 17), o.add(v));
-  const G = new e.Mesh(new e.CapsuleGeometry(0.0026, 0.026, 4, 10), p);
-  (G.position.set(0, -0.09, 0.098), (G.rotation.z = Math.PI / 2), o.add(G));
+  // 唇組件群整體上移貼回下顎面（原座標掛在下巴底下、懸浮臉前 3-4cm，
+  // 特寫實測讀成「領口紅十字」— hero 頭首次上線的盲建位置修正）
+  (P.position.set(0, -0.062, 0.06), o.add(P));
+  // 唇線縮窄壓薄：唇身（G/z 加大版）才是主角，唇線只是縫隙暗示
+  const v = new e.Mesh(new e.PlaneGeometry(0.028, 0.005), m);
+  (v.position.set(0, -0.076, 0.067), (v.renderOrder = 17), o.add(v));
+  const G = new e.Mesh(new e.CapsuleGeometry(0.0036, 0.03, 4, 10), p);
+  (G.position.set(0, -0.072, 0.066), (G.rotation.z = Math.PI / 2), o.add(G));
   // (b3) 下唇 — 比上唇亮 + 更高 clearcoat（飽滿、唇蜜感）
-  const z = new e.Mesh(new e.CapsuleGeometry(0.0032, 0.03, 4, 10), JM.createLipMaterialHR("#d29694"));
+  const z = new e.Mesh(new e.CapsuleGeometry(0.0046, 0.034, 4, 10), JM.createLipMaterialHR("#d29694"));
   ((z.material.clearcoat = 0.58),
-    z.position.set(0, -0.1, 0.096),
+    z.position.set(0, -0.082, 0.065),
     (z.rotation.z = Math.PI / 2),
     o.add(z));
   // (3D audit P2) philtrum groove (人中) — faint vertical shadow hint between nose-base and upper-lip; additive + low-opacity so it is easily revertible
   const philtrumMat = new e.MeshStandardMaterial({ color: "#9c6f68", roughness: 0.8, metalness: 0, transparent: !0, opacity: 0.4 });
   const philtrum = new e.Mesh(new e.CapsuleGeometry(0.0011, 0.011, 3, 6), philtrumMat);
-  (philtrum.position.set(0, -0.071, 0.0902), philtrum.scale.set(1, 1, 0.55), (philtrum.renderOrder = 16), o.add(philtrum));
+  (philtrum.position.set(0, -0.064, 0.064), philtrum.scale.set(1, 1, 0.55), (philtrum.renderOrder = 16), o.add(philtrum));
   // (3D audit P2) cupid's bow (唇峰) — 2 subtle peaks on the upper-lip top edge suggesting the M-shape
   const bowMat = JM.createLipMaterialHR("#c98f8d");
   const bowL = new e.Mesh(new e.SphereGeometry(0.0034, 12, 10), bowMat);
-  (bowL.position.set(-0.0072, -0.0852, 0.0972), bowL.scale.set(0.92, 0.58, 0.7), (bowL.renderOrder = 17), o.add(bowL));
+  (bowL.position.set(-0.0072, -0.069, 0.067), bowL.scale.set(0.92, 0.58, 0.7), (bowL.renderOrder = 17), o.add(bowL));
   const bowR = bowL.clone();
   ((bowR.position.x = 0.0072), o.add(bowR));
   // (3D audit P2) ear concha (耳殼凹) — inner-ear shadow bowl so the ear reads as an ear, not a flat blob; per-side, additive
@@ -448,6 +451,9 @@ function buildReferenceJuniorHeroHead(t = {}) {
   (A.position.set(0, -0.012, -0.11), A.scale.set(0.68, 0.84, 0.56), o.add(A));
   const C = new e.Mesh(new e.SphereGeometry(0.028, 20, 20), l);
   (C.position.set(0.024, 0.086, -0.13), C.scale.set(0.88, 0.78, 0.76), o.add(C));
+  // hero 頭的髮髻/髮圈/短馬尾停用：真實畫質沿用身體的物理長馬尾＋黑髮圈
+  // （彈簧擺動是 r98 成果，比三段 capsule 短馬尾自然；雙馬尾並存會穿插）
+  C.visible = !1;
   const E = new e.Mesh(
     new e.TorusGeometry(0.03, 0.011, 10, 24),
     new e.MeshStandardMaterial({
@@ -457,28 +463,35 @@ function buildReferenceJuniorHeroHead(t = {}) {
     }),
   );
   (E.position.set(0.024, 0.086, -0.128), (E.rotation.x = Math.PI / 2), o.add(E));
+  E.visible = !1;
+  // 空氣瀏海：沿用原垂落方向（rx 小負值貼額），加寬至原 1.6 倍、
+  // 略縮短（下緣收在眼上緣），五片成簾補中央縫
   const U = [
-    { x: -0.048, y: 0.064, z: 0.092, w: 0.016, h: 0.094, rx: -0.06, ry: 0.1, rz: 0.12 },
-    { x: -0.024, y: 0.06, z: 0.098, w: 0.012, h: 0.078, rx: -0.04, ry: 0.06, rz: 0.06 },
-    { x: 0.022, y: 0.06, z: 0.098, w: 0.012, h: 0.078, rx: -0.04, ry: -0.06, rz: -0.06 },
-    { x: 0.046, y: 0.064, z: 0.092, w: 0.016, h: 0.094, rx: -0.06, ry: -0.1, rz: -0.12 },
+    { x: -0.048, y: 0.062, z: 0.092, w: 0.026, h: 0.08, rx: -0.06, ry: 0.1, rz: 0.12 },
+    { x: -0.024, y: 0.058, z: 0.098, w: 0.022, h: 0.066, rx: -0.04, ry: 0.06, rz: 0.06 },
+    { x: 0, y: 0.058, z: 0.1, w: 0.022, h: 0.062, rx: -0.04, ry: 0, rz: 0 },
+    { x: 0.022, y: 0.058, z: 0.098, w: 0.022, h: 0.066, rx: -0.04, ry: -0.06, rz: -0.06 },
+    { x: 0.046, y: 0.062, z: 0.092, w: 0.026, h: 0.08, rx: -0.06, ry: -0.1, rz: -0.12 },
   ];
   U.forEach((t) => {
     const a = buildJuniorHairRibbon(n, t.w, t.h, {
       curve: 0.012,
-      topWidth: 0.3,
-      bottomWidth: 0.48,
-      opacity: 0.82,
+      topWidth: 0.34,
+      bottomWidth: 0.52,
+      opacity: 0.9,
     });
+    // rx + π：ribbon alpha 貼圖髮尖在窄端（上半），不翻轉會「尖端朝天」
+    // （hero 頭從未上過線，此向位 bug 首次特寫驗證才現形）
     (a.position.set(t.x, t.y, t.z),
-      a.rotation.set(t.rx, t.ry, t.rz),
+      a.rotation.set(t.rx + Math.PI, t.ry, t.rz),
       o.add(a));
   });
+  // 耳前碎髮：縮短變細，貼臉框不蓋眼
   [
-    { x: -0.072, y: 0, z: 0.064, w: 0.022, h: 0.16, ry: 0.28, rz: 0.12 },
-    { x: -0.056, y: -0.008, z: 0.084, w: 0.012, h: 0.084, ry: 0.14, rz: 0.04, opacity: 0.58 },
-    { x: 0.072, y: 0, z: 0.064, w: 0.022, h: 0.16, ry: -0.28, rz: -0.12 },
-    { x: 0.056, y: -0.008, z: 0.084, w: 0.012, h: 0.084, ry: -0.14, rz: -0.04, opacity: 0.58 },
+    { x: -0.074, y: -0.004, z: 0.06, w: 0.018, h: 0.12, ry: 0.3, rz: 0.1 },
+    { x: -0.058, y: 0.01, z: 0.082, w: 0.012, h: 0.07, ry: 0.14, rz: 0.05, opacity: 0.6 },
+    { x: 0.074, y: -0.004, z: 0.06, w: 0.018, h: 0.12, ry: -0.3, rz: -0.1 },
+    { x: 0.058, y: 0.01, z: 0.082, w: 0.012, h: 0.07, ry: -0.14, rz: -0.05, opacity: 0.6 },
   ].forEach((t) => {
     const a = buildJuniorHairRibbon(n, t.w, t.h, {
       curve: 0.016,
@@ -486,12 +499,14 @@ function buildReferenceJuniorHeroHead(t = {}) {
       bottomWidth: 0.58,
       opacity: t.opacity ?? 0.78,
     });
+    // 同瀏海：rx + π 讓髮尖朝下
     (a.position.set(t.x, t.y, t.z),
-      a.rotation.set(-0.02, t.ry, t.rz),
+      a.rotation.set(-0.02 + Math.PI, t.ry, t.rz),
       o.add(a));
   });
   const W = new e.Group();
   (W.position.set(0.026, 0.066, -0.134), o.add(W));
+  W.visible = !1; // 同上：短馬尾停用，沿用身體物理馬尾
   [
     { y: -0.018, z: -0.008, r: 0.02, len: 0.074, rotX: -0.16, rotZ: -0.06 },
     { y: -0.082, z: 0, r: 0.018, len: 0.088, rotX: -0.1, rotZ: -0.08 },
@@ -517,7 +532,7 @@ function buildReferenceJuniorHeroHead(t = {}) {
       opacity: 0.72,
     }),
   );
-  (teethPlane.position.set(0, -0.094, 0.094),
+  (teethPlane.position.set(0, -0.076, 0.062),
     (teethPlane.renderOrder = 16),
     o.add(teethPlane));
   // Tier 2.2 耳朵 — 左右兩側 sphere（用副皮膚 i 含 SSS，耳殼薄處透光）
@@ -560,6 +575,7 @@ function buildReferenceJuniorHeroHead(t = {}) {
     flyRibbon.geometry.computeVertexNormals();
     flyRibbon.position.set(cfg.px, cfg.py, cfg.pz);
     flyRibbon.rotation.set(cfg.rx, 0, cfg.rz);
+    flyRibbon.visible = !1; // 正面視角讀成頭頂尖刺（特寫實測），先停用
     o.add(flyRibbon);
   }
   const D = new e.Mesh(
@@ -3194,12 +3210,13 @@ function setJuniorHeroLeadVisibility(t, o, a = {}) {
     t.referenceHairCap,
     t.headGlow,
     t.hairBack,
-  // hero 頭與舊臉共位：GLB ready（i）或 hero 頭實際要顯示（n && h）時都得藏舊臉
-  ].forEach((t) => d(t, i || (n && h) ? !1 : !0));
+  // hero 頭與舊臉共位：GLB ready（i）或 hero 頭顯示中（h，真實畫質全程）都得藏舊臉
+  ].forEach((t) => d(t, i || h ? !1 : !0));
   t.legacyChildren?.forEach((t) => d(t, i ? !1 : (l || !0)));
   if (s) {
     p(s);
-    const o = n && h;
+    // h && !i：GLB ready 時程序 hero 頭必須讓位（避免未來接線後雙頭共存）
+    const o = h && !i;
     (s.visible = o),
       o
         ? (s.position.copy(s.userData.basePosition),
@@ -3219,7 +3236,7 @@ function setJuniorHeroLeadVisibility(t, o, a = {}) {
       r.rotation.copy(r.userData.baseRotation),
       r.scale.copy(r.userData.baseScale));
   }
-  if (!n && !i) {
+  if (!n && !i && !h) {
     [
       t.head,
       t.jaw,
@@ -3257,6 +3274,47 @@ function setJuniorHeroLeadVisibility(t, o, a = {}) {
       t.hairBack,
     ].forEach((t) => t && (t.visible = !0));
     t.closeupRefinement && (t.closeupRefinement.visible = !1);
+  }
+  // hero 頭顯示時，每幀補掃 refs 表未收錄的舊頭區零件（睫毛 box／腮紅球／
+  // 眼神光球／髮髻球＋髮圈環…，y>=1.4 即頭區）。名單首次計算後快取。
+  // 上游 GLB 切換器每幀 re-show 全部 legacyChildren，本函式在其後執行故能壓回。
+  // 物理長馬尾（ponytailGroup）與其錨點黑髮圈刻意保留 — 真實畫質的馬尾用它。
+  if (h && !i && s) {
+    if (!t.headZoneHideList) {
+      const keep = new Set();
+      s.traverse((e) => keep.add(e));
+      t.ponytailGroup && t.ponytailGroup.traverse((e) => keep.add(e));
+      // hairBack 顯式保留：hero 髮帽（0.62 縮放）蓋不到後腦下緣，
+      // 後腦髮量靠它補（先前靠「距錨點 0.0482 < 0.05」的巧合存活，鎖定意圖）
+      t.hairBack && keep.add(t.hairBack);
+      const list = [];
+      s.parent &&
+        s.parent.traverse((e) => {
+          if (!e.isMesh || keep.has(e)) return;
+          const p = e.position;
+          // 頭區（y>=1.4）：refs 沒收錄的零件全掃
+          let sweep = p.y >= 1.4;
+          // 背面舊髮件補掃：後髮背板 Box ＋ 粗 capsule 馬尾鏈（半徑 2-4cm
+          // 香腸狀，背面特寫實測過粗；真實畫質的馬尾交給 ponytailGroup 細管束）
+          if (!sweep && p.z < -0.05 && p.y > 0.9) {
+            const g = e.geometry?.type;
+            sweep = g === "BoxGeometry" || g === "CapsuleGeometry";
+          }
+          if (!sweep) return;
+          if (
+            t.ponytailGroup &&
+            p.distanceTo(t.ponytailGroup.position) < 0.05
+          )
+            return; // 馬尾錨點黑髮圈保留
+          list.push(e);
+        });
+      t.headZoneHideList = list;
+    }
+    t.headZoneHideList.forEach((e) => (e.visible = !1));
+  } else if (t.headZoneHideList) {
+    // 不在套用態（含未來 GLB ready）一律歸還並清空名單
+    t.headZoneHideList.forEach((e) => (e.visible = !0));
+    t.headZoneHideList = null;
   }
 }
 function setJuniorGltfFaceVisibility(t, o) {
@@ -4261,6 +4319,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       let count = 0;
       W.traverse((obj) => {
         if (!obj.material || typeof obj.material.anisotropy !== 'number') return;
+        if (obj.userData.noStreak) return; // 管狀幾何上條紋圖會碎成珠串（真實畫質已剔除）
         const n = (obj.name || '').toLowerCase();
         if (!/(hair|wig|fringe|bang|ponytail)/.test(n)) return;
         obj.material.anisotropyMap = _hairAnisoTex;
@@ -7134,6 +7193,23 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       call("__SSS__", 0.5, 0.3);
       call("__SKIN_NORMAL__", 0.5, 256);
       call("__HAIR_STREAK__", 0.7, 64);
+      // HAIR_STREAK 的條紋方向圖繞細管捲一圈會碎成珠串狀高光
+      //（背面特寫實測）；馬尾管/膠囊改用去條紋材質副本，平面髮片保留
+      try {
+        Co.traverse((m) => {
+          if (!m.isMesh) return;
+          const g = m.geometry?.type;
+          if (
+            (g === "TubeGeometry" || g === "CapsuleGeometry") &&
+            m.material?.anisotropyMap
+          ) {
+            m.material = m.material.clone();
+            m.material.anisotropyMap = null;
+            m.material.needsUpdate = !0;
+            m.userData.noStreak = !0; // 防 __HAIR_STREAK__ 重呼叫時再裝回 → clone 累積
+          }
+        });
+      } catch (e) {}
       call("__EYE_CORNEA__", 0.011, 0.6);
       call("__EYELASH__", 12, 0.018);
       call("__SACCADE__", 200, 0.8);
@@ -7284,9 +7360,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
                 heroHeadRoot: e.heroHeadRoot,
                 keepLegacyBody: !1,
                 suppressRuntimeModel: !1,
-                // hero 換頭暫關（2026-06-11 實機驗證：瀏海髮帶/髮髻/髮絲 transform
-                // 在特寫機位不合格，需專門調校後才可隨真實畫質檔開啟）
-                showHeroHeadRoot: !1,
+                // 真實畫質：hero 高細節頭全程上陣（配件 transform 已實機調校）
+                showHeroHeadRoot: _tierRealismOn,
               });
               if (e.head?.material && e.jaw?.material) {
                 [e.head.material, e.jaw.material].forEach((t) => {
