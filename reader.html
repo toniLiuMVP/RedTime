@@ -2495,6 +2495,15 @@
         letter-spacing: 0.06em;
         transition: background 0.16s ease, border-color 0.16s ease;
       }
+      /* 2D 穿越圖：開面板時光弧描繪動畫 */
+      .tv-svg-wrap path {
+        stroke-dasharray: 600;
+        stroke-dashoffset: 600;
+        animation: tvDraw 1.6s ease-out forwards;
+      }
+      @keyframes tvDraw {
+        to { stroke-dashoffset: 0; }
+      }
       /* ── 說書人 ── */
       .ep-storyteller .ep-note-toggle {
         color: rgba(233, 196, 142, 0.92);
@@ -7812,7 +7821,7 @@
             const color = safeCssColor(TRAVERSE_COLOR_MAP[t.type] || "var(--t2)", "var(--t2)");
             const typeLabel = escapeHtml(TRAVERSE_LABEL_MAP[t.type] || t.type);
             const whoLabel = escapeHtml(t.who === "daughter" ? "女兒那條線" : "學妹那條線");
-            return `<div class="tv-event type-${escapeHtml(t.type)}"><div class="tv-event-head"><div class="tv-step" style="color:${color}"><div class="tv-step-count">${String(i + 1).padStart(2, "0")}</div><div class="tv-step-copy"><div class="tv-step-title" style="color:${color}">${typeLabel}</div><div class="tv-step-sub">這一段先在 ${fmtEp(t.revealAfterEp)} 遇見</div></div></div><div class="tv-badges"><span class="tv-badge" style="border-color:${color};color:${color}">${fmtEp(t.revealAfterEp)} 先遇見</span><span class="tv-badge">${whoLabel}</span></div></div><div class="tv-route"><div class="tv-node"><div class="tv-node-kicker">從這一端</div><div class="tv-node-label">${escapeHtml(t.from_label)}</div><div class="tv-node-year">${escapeHtml(formatYearLabel(t.from_year))}</div></div><div class="tv-route-arrow" style="color:${color}">${renderIcon("arrow-right")}</div><div class="tv-node"><div class="tv-node-kicker">走向那一端</div><div class="tv-node-label">${escapeHtml(t.to_label)}</div><div class="tv-node-year">${escapeHtml(formatYearLabel(t.to_year))}</div></div></div><div class="tv-event-desc">${escapeHtml(t.desc)}</div></div>`;
+            return `<div class="tv-event type-${escapeHtml(t.type)}" role="button" tabindex="0" style="cursor:pointer" onclick="goToEp(${t.revealAfterEp});closeInfo()"><div class="tv-event-head"><div class="tv-step" style="color:${color}"><div class="tv-step-count">${String(i + 1).padStart(2, "0")}</div><div class="tv-step-copy"><div class="tv-step-title" style="color:${color}">${typeLabel}</div><div class="tv-step-sub">這一段先在 ${fmtEp(t.revealAfterEp)} 遇見</div></div></div><div class="tv-badges"><span class="tv-badge" style="border-color:${color};color:${color}">${fmtEp(t.revealAfterEp)} 先遇見</span><span class="tv-badge">${whoLabel}</span></div></div><div class="tv-route"><div class="tv-node"><div class="tv-node-kicker">從這一端</div><div class="tv-node-label">${escapeHtml(t.from_label)}</div><div class="tv-node-year">${escapeHtml(formatYearLabel(t.from_year))}</div></div><div class="tv-route-arrow" style="color:${color}">${renderIcon("arrow-right")}</div><div class="tv-node"><div class="tv-node-kicker">走向那一端</div><div class="tv-node-label">${escapeHtml(t.to_label)}</div><div class="tv-node-year">${escapeHtml(formatYearLabel(t.to_year))}</div></div></div><div class="tv-event-desc">${escapeHtml(t.desc)}</div></div>`;
           })
           .join("");
         p.innerHTML = `<div class="tv-container"><div class="tv-title">時空穿越圖（截至目前章節）</div><div class="ip-section-note">命運阿嬤不會一下子把全部攤開，她會一段一段陪你看。你讀到哪，她就陪你看到哪。先看這條線怎麼走，剩下的，往下讀就會懂。</div>${stats}<div class="tv-legend"><div class="tv-legend-item"><span class="tv-legend-dot" style="background:rgba(255,72,88,.85)"></span><span>學妹線</span></div><div class="tv-legend-item"><span class="tv-legend-dot" style="background:rgba(168,164,156,.72)"></span><span>時間軸</span></div><div class="tv-legend-item"><span class="tv-legend-dot" style="background:rgba(200,144,16,.85)"></span><span>女兒線</span></div></div><div class="tv-svg-wrap">${svg}</div><div class="tv-events">${evts}</div></div>`;
