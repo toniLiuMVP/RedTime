@@ -516,23 +516,32 @@ window.__PLATFORM_TILE__ = function(intensity) {
   if (typeof document === 'undefined') return;
   if (!_platformTileTex) {
     var c = document.createElement('canvas');
-    c.width = c.height = 256;
+    c.width = c.height = 512;
     var ctx = c.getContext('2d');
-    /* tile pattern */
-    ctx.fillStyle = '#7a7568';
-    ctx.fillRect(0, 0, 256, 256);
-    for (var x = 0; x < 256; x += 64) {
-      for (var y = 0; y < 256; y += 64) {
-        ctx.fillStyle = '#86806f';
-        ctx.fillRect(x + 1, y + 1, 62, 62);
-        /* dirt 隨機 */
-        ctx.fillStyle = 'rgba(40,35,25,' + (Math.random() * 0.2) + ')';
-        ctx.fillRect(x + 1 + Math.random() * 50, y + 1 + Math.random() * 50, 8, 8);
+    /* 磚面:深溝縫 + 每磚微色差 + 污漬 + 伸縮縫(舊版 1px 縫近乎隱形) */
+    ctx.fillStyle = '#5f5a50';
+    ctx.fillRect(0, 0, 512, 512);
+    for (var x = 0; x < 512; x += 64) {
+      for (var y = 0; y < 512; y += 64) {
+        var shade = 0.92 + Math.random() * 0.16;
+        ctx.fillStyle = 'rgb(' + Math.round(134 * shade) + ',' + Math.round(128 * shade) + ',' + Math.round(111 * shade) + ')';
+        ctx.fillRect(x + 3, y + 3, 58, 58);
+        ctx.fillStyle = 'rgba(40,35,25,' + (Math.random() * 0.22) + ')';
+        ctx.fillRect(x + 3 + Math.random() * 44, y + 3 + Math.random() * 44, 10, 10);
+        /* 邊角磨損亮邊 */
+        ctx.fillStyle = 'rgba(255,250,240,' + (Math.random() * 0.05) + ')';
+        ctx.fillRect(x + 3, y + 3, 58, 3);
       }
     }
+    /* 伸縮縫(每 256px 一條深縫) */
+    ctx.fillStyle = '#423e36';
+    ctx.fillRect(0, 254, 512, 5);
+    ctx.fillRect(254, 0, 5, 512);
     _platformTileTex = new THREE.CanvasTexture(c);
     _platformTileTex.wrapS = _platformTileTex.wrapT = THREE.RepeatWrapping;
-    _platformTileTex.repeat.set(8, 8);
+    /* 甲板 ~10×400:依長寬比設 repeat 接近方磚(8×8 會拉成 50m 長條) */
+    _platformTileTex.repeat.set(3, 80);
+    _platformTileTex.anisotropy = 8;
   }
   var count = 0;
   scene.traverse(function(obj) {
@@ -1006,15 +1015,15 @@ window.__PENDING_ART_RAFS__ = function() {
    光源 — DAYTIME
    ════════════════════════════════════════════════ */
 /* 半球光 — 天空/地面漸層環境光 */
-const hemiLight = new THREE.HemisphereLight(0x87CEEB, 0x8B7355, 0.4);
+const hemiLight = new THREE.HemisphereLight(0x9ec8ee, 0x8a7a66, 0.55); /* 天藍/地暖的柔和塑形 */
 scene.add(hemiLight);
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.18); /* 平光壓低,把立體感讓給斜陽 */
 scene.add(ambientLight);
 
 /* 主陽光（更強、更真實的陰影） */
-const mainLight = new THREE.DirectionalLight(0xfff5e6, 2.2);
-mainLight.position.set(20, 60, 15);
+const mainLight = new THREE.DirectionalLight(0xffe2b8, 2.8); /* 午後暖陽 */
+mainLight.position.set(38, 26, 18); /* 仰角 ~31°:長影斜照,柱/人/樹的影子落在月台上 */
 mainLight.castShadow = true;
 mainLight.shadow.mapSize.set(preset.shadowSize || 1024, preset.shadowSize || 1024);
 mainLight.shadow.camera.left   = -30;
@@ -1024,7 +1033,7 @@ mainLight.shadow.camera.bottom = -80;
 mainLight.shadow.camera.near = 0.5;
 mainLight.shadow.camera.far = 200;
 mainLight.shadow.bias = -0.0005;
-mainLight.shadow.normalBias = 0.02;
+mainLight.shadow.normalBias = 0.06; /* 31° 斜陽下地面 depth 梯度大,0.02 會出條紋 acne */
 scene.add(mainLight);
 scene.add(mainLight.target);
 
@@ -1412,7 +1421,7 @@ function buildBackground() {
       topColor:    { value: new THREE.Color(0x3a7ec8) },  /* 頂部深藍 */
       midColor:    { value: new THREE.Color(0x6aadee) },  /* 中段天藍 */
       bottomColor: { value: new THREE.Color(0xf0e0c8) },  /* 地平線暖金 */
-      sunDir:      { value: new THREE.Vector3(0.5, 0.4, 0.3).normalize() },
+      sunDir:      { value: new THREE.Vector3(38, 26, 18).normalize() }, /* 與主光同向 */
       sunColor:    { value: new THREE.Color(0xfff5e0) },
       offset:      { value: 12 },
       exponent:    { value: 0.35 }
@@ -1454,11 +1463,11 @@ function buildBackground() {
   /* 太陽光盤（可見的太陽） */
   var sunGlowMat = new THREE.MeshBasicMaterial({ color: 0xfffce8, transparent: true, opacity: 0.7 });
   var sunOuter = new THREE.Mesh(new THREE.CircleGeometry(8, 32), new THREE.MeshBasicMaterial({ color: 0xfff8e0, transparent: true, opacity: 0.3 }));
-  sunOuter.position.set(80, 65, 50);
+  sunOuter.position.set(131, 90, 62); /* 沿主光方向放遠(normalize(38,26,18)×170) */
   sunOuter.lookAt(0, 0, 0);
   scene.add(sunOuter);
   var sunCore = new THREE.Mesh(new THREE.CircleGeometry(3.5, 32), sunGlowMat);
-  sunCore.position.set(80, 65, 50);
+  sunCore.position.set(131, 90, 62);
   sunCore.lookAt(0, 0, 0);
   scene.add(sunCore);
 
@@ -1853,6 +1862,15 @@ function buildTrain(group, color, stripe, hasDoors) {
     body.position.set(0, 1.2, cz);
     body.castShadow = true;
     group.add(body);
+
+    /* 側裙板:車側下緣深色收邊,破掉整面平板感 */
+    var skirt = new THREE.Mesh(new THREE.BoxGeometry(3.26, 0.34, CAR_LEN - 1.1), bottomMat);
+    skirt.position.set(0, 0.12, cz);
+    group.add(skirt);
+    /* 車頂簷線:車體與圓頂交界的細收邊 */
+    var eave = new THREE.Mesh(new THREE.BoxGeometry(3.27, 0.07, CAR_LEN - 1.1), ventMat); /* 3.27:避免與窗框外面(±1.63)共面閃爍 */
+    eave.position.set(0, 2.42, cz);
+    group.add(eave);
 
     /* 圓頂 */
     var roofGeo = new THREE.CylinderGeometry(1.6, 1.6, CAR_LEN - 1.2, 12, 1, false, 0, Math.PI);
@@ -2433,6 +2451,15 @@ function buildFather() {
   torso.castShadow = true;
   father.add(torso);
 
+
+  /* 肩頭圓帽:把手臂跟軀幹接起來(原本肩膀有縫) */
+  const shoulderL = new THREE.Mesh(new THREE.SphereGeometry(0.095, 10, 10), MAT.fatherBody);
+  shoulderL.position.set(-0.34, 1.27, 0);
+  father.add(shoulderL);
+  const shoulderR = new THREE.Mesh(new THREE.SphereGeometry(0.095, 10, 10), MAT.fatherBody);
+  shoulderR.position.set(0.34, 1.27, 0);
+  father.add(shoulderR);
+
   /* 衣領 */
   var collarMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.6 });
   var collar = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.03, 6, 12, Math.PI), collarMat);
@@ -2497,11 +2524,31 @@ function buildFather() {
   fatherRightLeg.position.set(0.13, 0.6, 0);
   father.add(fatherRightLeg);
 
-  /* Camo backpack */
+  /* Camo backpack(圓頂蓋+側袋+肩帶,保留「好大的包」的份量感) */
   const backpack = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.65, 0.35), MAT_camo);
   backpack.position.set(0, 1.05, 0.35);
   backpack.castShadow = true;
   father.add(backpack);
+  const packTop = new THREE.Mesh(new THREE.CylinderGeometry(0.175, 0.175, 0.55, 10, 1, false, 0, Math.PI), MAT_camo);
+  packTop.rotation.z = Math.PI / 2;
+  packTop.position.set(0, 1.375, 0.35);
+  packTop.castShadow = true;
+  father.add(packTop);
+  const pocketL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.3, 0.22), MAT_camo);
+  pocketL.position.set(-0.315, 0.95, 0.35);
+  father.add(pocketL);
+  const pocketR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.3, 0.22), MAT_camo);
+  pocketR.position.set(0.315, 0.95, 0.35);
+  father.add(pocketR);
+  const strapMat = new THREE.MeshStandardMaterial({ color: 0x3a4434, roughness: 0.85 });
+  const strapL = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.42, 0.04), strapMat);
+  strapL.position.set(-0.16, 1.16, -0.27);
+  strapL.rotation.x = 0.12;
+  father.add(strapL);
+  const strapR = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.42, 0.04), strapMat);
+  strapR.position.set(0.16, 1.16, -0.27);
+  strapR.rotation.x = 0.12;
+  father.add(strapR);
 
   /* Contact shadow (blob) for visual grounding — radial gradient 取代硬邊圓（落地感） */
   const csCanvas = document.createElement("canvas");
@@ -5686,7 +5733,7 @@ function animate() {
     }
   }
 
-  mainLight.position.set(father.position.x + 15, 50, father.position.z + 10);
+  mainLight.position.set(father.position.x + 38, 26, father.position.z + 18); /* 同步午後斜陽角 */
   mainLight.target.position.copy(father.position);
   mainLight.target.updateMatrixWorld();
   warmFill.position.z = father.position.z;
