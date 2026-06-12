@@ -2671,7 +2671,7 @@ function B({ base: e, line: t, speck: o } = {}) {
     6,
   );
 }
-function k({ base: e, dark: t, highlight: o } = {}) {
+function k({ base: e, dark: t, highlight: o, rx = 3, ry = 6 } = {}) {
   return G(
     512,
     512,
@@ -2716,8 +2716,8 @@ function k({ base: e, dark: t, highlight: o } = {}) {
           a.stroke());
       }
     },
-    3,
-    6,
+    rx,
+    ry,
   );
 }
 function T(
@@ -4714,22 +4714,26 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       ctx.font = 'bold 56px Caveat, cursive';
       const lines = text.split('\n');
       lines.forEach((line, i) => ctx.fillText(line, 60, 80 + i * 80));
-      // 擦痕
-      for (let i = 0; i < 8; i++) {
-        ctx.strokeStyle = `rgba(255,255,255,${0.05 + Math.random() * 0.1})`;
-        ctx.lineWidth = 20 + Math.random() * 30;
+      // 擦痕（局部短揮痕：板面很寬，整條橫線會被拉成漆紋）
+      for (let i = 0; i < 12; i++) {
+        ctx.strokeStyle = `rgba(255,255,255,${0.025 + Math.random() * 0.035})`;
+        ctx.lineWidth = 16 + Math.random() * 22;
         ctx.beginPath();
-        const y = Math.random() * 512;
-        ctx.moveTo(0, y); ctx.lineTo(1024, y + (Math.random() - 0.5) * 50);
+        const x = Math.random() * 1024, y = 90 + Math.random() * 330, l = 24 + Math.random() * 38;
+        ctx.moveTo(x, y);
+        ctx.quadraticCurveTo(x + l / 2, y + (Math.random() - 0.5) * 18, x + l, y + (Math.random() - 0.5) * 10);
         ctx.stroke();
       }
+      if (_chalkTex) _chalkTex.dispose();
       _chalkTex = new e.CanvasTexture(c);
+      _chalkTex.colorSpace = e.SRGBColorSpace;
       let count = 0;
       W.traverse((obj) => {
         if (!obj.material) return;
         const n = (obj.name || '').toLowerCase();
         if (!/(blackboard|chalkboard|board)/.test(n)) return;
         obj.material.map = _chalkTex;
+        obj.material.color && obj.material.color.set("#e4eae4");
         obj.material.needsUpdate = true;
         count++;
       });
@@ -5197,7 +5201,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
   (Ue.position.set((ee + te) / 2, 1.82, xe - 1.6), W.add(Ue));
   const We = new e.PointLight(16772829, 0.8, 12, 2);
   (We.position.set(g(200), 2.8, g(t.backDoor.center.z + 100)), W.add(We));
-  const qe = k({ base: "#856549", dark: "#5c422d", highlight: "#b18a63" }),
+  const qe = k({ base: "#856549", dark: "#5c422d", highlight: "#b18a63", rx: 10, ry: 14 }),
     _e = B({
       base: "#bcc3cb",
       line: "rgba(245,245,250,.65)",
@@ -5221,6 +5225,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       warm: !0,
     }),
     Xe = k({ base: "#96704a", dark: "#5c3e26", highlight: "#b8925e" }),
+    Xet = k({ base: "#96704a", dark: "#7a5a38", highlight: "#aa845c", rx: 1, ry: 1 }),
     je = G(
       512,
       512,
@@ -5289,16 +5294,16 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     }),
     Je = new e.MeshPhysicalMaterial({
       color: "#9a6e42",
-      map: Xe,
+      map: Xet,
       roughness: 0.58,
       metalness: 0.06,
       clearcoat: 0.15,
       clearcoatRoughness: 0.35,
     }),
     Ke = new e.MeshStandardMaterial({
-      color: "#7e868e",
-      roughness: 0.42,
-      metalness: 0.52,
+      color: "#6e747a",
+      roughness: 0.52,
+      metalness: 0.32,
     }),
     Qe = new e.MeshPhysicalMaterial({
       color: "#1a3828",
@@ -5812,15 +5817,17 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         label: "board_wall",
       },
     ),
-    R(
-      j,
-      A,
-      new e.BoxGeometry(pe - de, g(t.board.y2 - t.board.y1), 0.06),
-      Qe,
-      new e.Vector3(me, g((t.board.y1 + t.board.y2) / 2), he - 0.02),
-      null,
-      Z,
-      null,
+    ((d) => ((d.name = "blackboard"), d))(
+      R(
+        j,
+        A,
+        new e.BoxGeometry(pe - de, g(t.board.y2 - t.board.y1), 0.06),
+        Qe,
+        new e.Vector3(me, g((t.board.y1 + t.board.y2) / 2), he - 0.02),
+        null,
+        Z,
+        null,
+      )
     ),
     R(
       j,
@@ -5832,6 +5839,40 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       Z,
       null,
     ));
+  {
+    /* 黑板鋁框：上下左右四條收邊 */
+    const bw = pe - de,
+      by1 = g(t.board.y1),
+      by2 = g(t.board.y2),
+      bz = he - 0.052,
+      fm = new e.MeshStandardMaterial({ color: "#b8bcc0", roughness: 0.4, metalness: 0.55 });
+    [
+      [bw + 0.1, 0.05, me, by2 + 0.025],
+      [bw + 0.1, 0.05, me, by1 - 0.025],
+    ].forEach(([w2, h2, x2, y2]) => {
+      const d2 = new e.Mesh(new e.BoxGeometry(w2, h2, 0.05), fm);
+      (d2.position.set(x2, y2, bz), j.add(d2));
+    });
+    [me - bw / 2 - 0.025, me + bw / 2 + 0.025].forEach((x2) => {
+      const d2 = new e.Mesh(new e.BoxGeometry(0.05, by2 - by1 + 0.1, 0.05), fm);
+      (d2.position.set(x2, (by1 + by2) / 2, bz), j.add(d2));
+    });
+    /* 粉筆槽上：兩支粉筆＋一個板擦 */
+    const ck = new e.MeshStandardMaterial({ color: "#f4f2ec", roughness: 0.92, metalness: 0.01 }),
+      ck2 = new e.MeshStandardMaterial({ color: "#e8d27a", roughness: 0.92, metalness: 0.01 }),
+      er = new e.MeshStandardMaterial({ color: "#44506a", roughness: 0.8, metalness: 0.04 }),
+      ty = by1 - 0.085;
+    const c1 = new e.Mesh(new e.BoxGeometry(0.075, 0.016, 0.016), ck);
+    (c1.position.set(me - 1.1, ty + 0.01, he - 0.12), (c1.rotation.y = 0.3), j.add(c1));
+    const c2 = new e.Mesh(new e.BoxGeometry(0.06, 0.016, 0.016), ck2);
+    (c2.position.set(me - 0.92, ty + 0.01, he - 0.13), (c2.rotation.y = -0.5), j.add(c2));
+    const c3 = new e.Mesh(new e.BoxGeometry(0.14, 0.04, 0.055), er);
+    (c3.position.set(me + 1.3, ty + 0.022, he - 0.12), (c3.rotation.y = 0.15), j.add(c3));
+    /* 建場後自動套無字粉筆鬼影（原系統 0 命中＝從未生效） */
+    setTimeout(() => {
+      try { window.__CHALKBOARD__ && window.__CHALKBOARD__("", 0.55); } catch (o2) {}
+    }, 0);
+  }
   const Wt = new e.Mesh(new e.BoxGeometry(0.96, 0.98, 0.72), Je);
   (Wt.position.set(me - 4.2, 0.49, he - 0.86),
     (Wt.castShadow = !0),
@@ -5853,8 +5894,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       metalness: 0.02,
     }),
   );
-  ((qt.rotation.z = Math.PI / 2),
-    qt.position.set(me + 6.1, 2.14, he - 0.02),
+  ((qt.rotation.x = Math.PI / 2),
+    qt.position.set(me - 10.4, 2.3, ft - le / 2 - 0.04),
     j.add(qt),
     t.lightBeams.forEach((t, o) => {
       const a = new e.MeshBasicMaterial({
@@ -6493,17 +6534,47 @@ export function createLm402Scene(D, runtimeOptions = {}) {
   j.add(bo);
   const So = new e.Mesh(
     new e.BoxGeometry(ne, 0.08, ut),
-    new e.MeshStandardMaterial({ color: "#f3f1ed", roughness: 0.94, metalness: 0.01 }),
+    new e.MeshStandardMaterial({
+      color: "#ffffff",
+      map: G(
+        256,
+        256,
+        (c2, w2, h2) => {
+          c2.fillStyle = "#f3f1ed";
+          c2.fillRect(0, 0, w2, h2);
+          for (let i2 = 0; i2 < 40; i2++) {
+            c2.fillStyle = `rgba(120,114,104,${0.02 + 0.03 * Math.random()})`;
+            c2.fillRect(Math.random() * w2, Math.random() * h2, 6 + Math.random() * 18, 2 + Math.random() * 6);
+          }
+          c2.strokeStyle = "rgba(150,145,136,0.6)";
+          c2.lineWidth = 3;
+          c2.strokeRect(1.5, 1.5, w2 - 3, h2 - 3);
+        },
+        Math.round(ne / 1.2),
+        Math.round(ut / 0.6),
+      ),
+      roughness: 0.94,
+      metalness: 0.01,
+    }),
   );
   (So.position.set((ee + te) / 2, 2.88, yt),
     (So.receiveShadow = !0),
     j.add(So));
+  {
+    const sk = new e.MeshStandardMaterial({ color: "#6b6157", roughness: 0.9, metalness: 0.02 }),
+      sx = new e.Mesh(new e.BoxGeometry(te - ee - 0.1, 0.09, 0.022), sk);
+    (sx.position.set((ee + te) / 2, 0.045, ft - le / 2 - 0.013), j.add(sx));
+    const sx2 = new e.Mesh(new e.BoxGeometry(te - ee - 0.1, 0.09, 0.022), sk);
+    (sx2.position.set((ee + te) / 2, 0.045, Mt + le / 2 + 0.013), j.add(sx2));
+    const sz2 = new e.Mesh(new e.BoxGeometry(0.022, 0.09, ft - Mt - 0.1), sk);
+    (sz2.position.set(te - le / 2 - 0.013, 0.045, (Mt + ft) / 2), j.add(sz2));
+  }
   const zo = new e.MeshStandardMaterial({
       color: "#ffffff",
       emissive: "#ffffff",
       emissiveIntensity: 0.5,
     }),
-    Po = new e.BoxGeometry(0.3, 0.04, 0.3);
+    Po = new e.BoxGeometry(1.16, 0.05, 0.3);
   t.desks.forEach((t, o) => {
     if (o % 4 != 0) return;
     const a = new e.Mesh(Po, zo);
