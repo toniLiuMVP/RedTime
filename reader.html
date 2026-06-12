@@ -2508,6 +2508,64 @@
       }
       .m3l-title { opacity: 0.5; }
       .m3l-sep { opacity: 0.25; }
+      /* ── 導讀區 vs 故事正文 視覺區隔 ──
+         導讀(說書人/時間線/注解/阿嬤/科普/文人說)收進低溫青色容器,
+         正文前一條金色「✦ 故事正文」起點線 — 讀者一眼知道誰是誰 */
+      .ep-companion {
+        position: relative;
+        margin: 18px 0 6px;
+        padding: 14px 14px 10px;
+        border-radius: 16px;
+        background: linear-gradient(180deg, rgba(120, 196, 198, 0.045), rgba(120, 196, 198, 0.015));
+        border: 1px solid rgba(120, 196, 198, 0.12);
+      }
+      .ep-companion-tag {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .ep-companion-tag .ec-lbl {
+        font: 600 10px 'DM Mono', monospace;
+        letter-spacing: 0.22em;
+        color: rgba(143, 216, 218, 0.66);
+        white-space: nowrap;
+      }
+      .ep-companion-tag .ec-line {
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(120, 196, 198, 0.25), transparent);
+      }
+      .ep-story-divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 26px 0 8px;
+      }
+      .ep-story-divider .esd-mark {
+        font: 600 11px 'Noto Serif TC', serif;
+        letter-spacing: 0.3em;
+        color: rgba(232, 200, 122, 0.8);
+        white-space: nowrap;
+      }
+      .ep-story-divider .esd-line {
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(232, 200, 122, 0.3), transparent);
+      }
+      body.day-mode .ep-companion {
+        background: linear-gradient(180deg, rgba(36, 90, 90, 0.05), rgba(36, 90, 90, 0.015));
+        border-color: rgba(36, 90, 90, 0.16);
+      }
+      body.day-mode .ep-companion-tag .ec-lbl {
+        color: rgba(36, 90, 90, 0.7);
+      }
+      body.day-mode .ep-story-divider .esd-mark {
+        color: rgba(140, 100, 20, 0.85);
+      }
+      body.day-mode .ep-story-divider .esd-line {
+        background: linear-gradient(90deg, transparent, rgba(140, 100, 20, 0.3), transparent);
+      }
       .eg-diagram-cap {
         font-family: 'Noto Sans TC', sans-serif;
         font-size: 10.5px;
@@ -5970,21 +6028,10 @@
         <button class="fab-nav-btn" id="fab-prev" onclick="navEp(-1)">
           上一集
         </button>
-        <button
-          class="fab-nav-btn"
-          onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
-        >
+        <button class="fab-nav-btn" onclick="scrollToReaderTop()">
           最上面
         </button>
-        <button
-          class="fab-nav-btn"
-          onclick="
-            window.scrollTo({
-              top: document.documentElement.scrollHeight,
-              behavior: 'smooth',
-            })
-          "
-        >
+        <button class="fab-nav-btn" onclick="scrollToReaderBottom()">
           最下面
         </button>
         <button class="fab-nav-btn" id="fab-next" onclick="navEp(1)">
@@ -7833,6 +7880,15 @@
         });
         defs += "</defs>";
         let arrs = "";
+        /* 同一年同一線的端點會疊成一坨（2005-2006 一帶最擠）：
+           依佔用次序給 ±10px 縱向微移（x＝年份語意不動），弧頂高度也按序錯開 */
+        const _occ = {};
+        const dodge = (lane, x) => {
+          const k = lane + ":" + Math.round(x / 14);
+          const n = _occ[k] || 0;
+          _occ[k] = n + 1;
+          return n === 0 ? 0 : (n % 2 ? -1 : 1) * Math.min(14, Math.ceil(n / 2) * 10);
+        };
         vis.forEach((t, i) => {
           const fy = parseInt(
             (String(t.from_year).match(/\d{4}/) || ["2006"])[0],
@@ -7846,16 +7902,23 @@
             x2 = Math.min(xE - 8, Math.max(xP + 8, yx(ty)));
           const color = TRAVERSE_COLOR_MAP[t.type] || "rgba(255,255,255,.6)";
           if (t.type === "traverse") {
-            arrs += `<path d="M ${x1} ${laneY.female} Q ${(x1 + x2) / 2} 10 ${x2} ${laneY.female}" stroke="${color}" stroke-width="2.2" fill="none" marker-end="url(#tvm${i})"/><circle cx="${x1}" cy="${laneY.female}" r="4.2" fill="${color}" opacity=".35"/><circle cx="${x2}" cy="${laneY.female}" r="4.6" fill="${color}" opacity=".85"/>`;
+            const y1 = laneY.female + dodge("f", x1),
+              y2 = laneY.female + dodge("f", x2);
+            arrs += `<path d="M ${x1} ${y1} Q ${(x1 + x2) / 2} ${10 + (i % 3) * 7} ${x2} ${y2}" stroke="${color}" stroke-width="2.2" fill="none" marker-end="url(#tvm${i})"/><circle cx="${x1}" cy="${y1}" r="4.2" fill="${color}" opacity=".35"/><circle cx="${x2}" cy="${y2}" r="4.6" fill="${color}" opacity=".85"/>`;
           }
           if (t.type === "push") {
-            arrs += `<path d="M ${x1} ${laneY.female} Q ${(x1 + x2) / 2} 18 ${x2} ${laneY.female}" stroke="${color}" stroke-width="2.1" fill="none" stroke-dasharray="5,4" marker-end="url(#tvm${i})"/><rect x="${x1 - 4}" y="${laneY.female - 4}" width="8" height="8" rx="2" fill="${color}" opacity=".3"/><circle cx="${x2}" cy="${laneY.female}" r="4.2" fill="${color}" opacity=".78"/>`;
+            const y1 = laneY.female + dodge("f", x1),
+              y2 = laneY.female + dodge("f", x2);
+            arrs += `<path d="M ${x1} ${y1} Q ${(x1 + x2) / 2} ${18 + (i % 3) * 7} ${x2} ${y2}" stroke="${color}" stroke-width="2.1" fill="none" stroke-dasharray="5,4" marker-end="url(#tvm${i})"/><rect x="${x1 - 4}" y="${y1 - 4}" width="8" height="8" rx="2" fill="${color}" opacity=".3"/><circle cx="${x2}" cy="${y2}" r="4.2" fill="${color}" opacity=".78"/>`;
           }
           if (t.type === "dream") {
-            arrs += `<path d="M ${x1} ${laneY.daughter} C ${x1} ${laneY.daughter - 24} ${(x1 + x2) / 2} ${laneY.time + 12} ${x2} ${laneY.time}" stroke="${color}" stroke-width="2.1" fill="none" stroke-dasharray="4,4" marker-end="url(#tvm${i})"/><circle cx="${x1}" cy="${laneY.daughter}" r="4.2" fill="${color}" opacity=".42"/><circle cx="${x2}" cy="${laneY.time}" r="4.2" fill="${color}" opacity=".85"/>`;
+            const y1 = laneY.daughter + dodge("d", x1),
+              y2 = laneY.time + dodge("t", x2);
+            arrs += `<path d="M ${x1} ${y1} C ${x1} ${y1 - 24} ${(x1 + x2) / 2} ${y2 + 12} ${x2} ${y2}" stroke="${color}" stroke-width="2.1" fill="none" stroke-dasharray="4,4" marker-end="url(#tvm${i})"/><circle cx="${x1}" cy="${y1}" r="4.2" fill="${color}" opacity=".42"/><circle cx="${x2}" cy="${y2}" r="4.2" fill="${color}" opacity=".85"/>`;
           }
           if (t.type === "superpose") {
-            arrs += `<ellipse cx="${x1}" cy="${laneY.female}" rx="15" ry="24" fill="none" stroke="${color}" stroke-width="1.8" stroke-dasharray="3,4"/><circle cx="${x1}" cy="${laneY.female}" r="5" fill="rgba(255,72,88,.82)"/><circle cx="${x1}" cy="${laneY.female}" r="9.5" fill="none" stroke="${color}" stroke-width="1.4" stroke-dasharray="2,3"/>`;
+            const yc = laneY.female + dodge("f", x1);
+            arrs += `<ellipse cx="${x1}" cy="${yc}" rx="15" ry="24" fill="none" stroke="${color}" stroke-width="1.8" stroke-dasharray="3,4"/><circle cx="${x1}" cy="${yc}" r="5" fill="rgba(255,72,88,.82)"/><circle cx="${x1}" cy="${yc}" r="9.5" fill="none" stroke="${color}" stroke-width="1.4" stroke-dasharray="2,3"/>`;
           }
         });
         const svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="min-width:${W}px"><rect x="12" y="12" width="${W - 24}" height="${H - 34}" rx="18" fill="rgba(255,255,255,.015)" stroke="rgba(255,255,255,.04)"/><rect x="${xP - 12}" y="22" width="${xE - xP + 24}" height="128" rx="16" fill="rgba(0,0,0,.1)"/>${defs}${grid}${lanes}${arrs}</svg>`;
@@ -8075,7 +8138,7 @@
         const litH = litPool.length
           ? `<div class="ep-note ep-literati"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleLiterati(this, ${ep.ep})">▸ 文人說</div><div class="ep-note-body hidden" id="lit-body-${ep.ep}"></div></div>`
           : "";
-        sec.innerHTML = `<div class="ep-bg-num">${fmtEp(ep.ep).replace("EP", "")}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${escapeHtml(ARC_LBL[arc] || arc)}</span></div><div class="ep-title">${escapeHtml(cT)}</div><div class="ep-meta-row"><span>${readMins(ep.html)} 分鐘</span><span class="ep-meta-dot"></span><span>${escapeHtml(ep.chars || "")} 字</span></div></div>${stH}<div class="ep-info-strip"><div class="ep-info-head" role="button" tabindex="0" onclick="toggleEpInfo(this)"><span class="eih-icon">${renderIcon("guide")}</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-arc-legend"><span class="tal-chip" style="color:var(--jade)">● 把拔</span><span class="tal-chip" style="color:var(--silver)">● 學長</span><span class="tal-chip" style="color:var(--f3,#ff4858)">● 學妹</span><span class="tal-chip" style="color:var(--amber)">● 女兒</span><span class="tal-chip" style="color:var(--ember)">● 複合</span></div><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>${tline ? `<div class="ep-tline-wrap"><div class="ep-tline-toggle" role="button" tabindex="0" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${escapeHtml(tline)}</span></div></div>` : ""}${note ? `<div class="ep-note"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${linkifyEpRefs(note)}</div></div>` : ""}${cluesH}${grannyH}${scienceH}${litH}<div class="ep-body-wrap"></div>${tH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
+        sec.innerHTML = `<div class="ep-bg-num">${fmtEp(ep.ep).replace("EP", "")}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${escapeHtml(ARC_LBL[arc] || arc)}</span></div><div class="ep-title">${escapeHtml(cT)}</div><div class="ep-meta-row"><span>${readMins(ep.html)} 分鐘</span><span class="ep-meta-dot"></span><span>${escapeHtml(ep.chars || "")} 字</span></div></div><div class="ep-companion"><div class="ep-companion-tag"><span class="ec-line"></span><span class="ec-lbl">導讀區 · 點各列展開</span><span class="ec-line"></span></div>${stH}<div class="ep-info-strip"><div class="ep-info-head" role="button" tabindex="0" onclick="toggleEpInfo(this)"><span class="eih-icon">${renderIcon("guide")}</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-arc-legend"><span class="tal-chip" style="color:var(--jade)">● 把拔</span><span class="tal-chip" style="color:var(--silver)">● 學長</span><span class="tal-chip" style="color:var(--f3,#ff4858)">● 學妹</span><span class="tal-chip" style="color:var(--amber)">● 女兒</span><span class="tal-chip" style="color:var(--ember)">● 複合</span></div><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>${tline ? `<div class="ep-tline-wrap"><div class="ep-tline-toggle" role="button" tabindex="0" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${escapeHtml(tline)}</span></div></div>` : ""}${note ? `<div class="ep-note"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${linkifyEpRefs(note)}</div></div>` : ""}${cluesH}${grannyH}${scienceH}${litH}</div><div class="ep-story-divider" aria-hidden="true"><span class="esd-line"></span><span class="esd-mark">✦ 故事正文</span><span class="esd-line"></span></div><div class="ep-body-wrap"></div>${tH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
         const bd = document.createElement("div");
         bd.className = "ep-body";
         bd.innerHTML = ep.html;
@@ -8508,31 +8571,94 @@
         };
       }
       function scrollToReaderTop(behavior = "smooth") {
-        const desktopHost = getDesktopScrollHost();
-        if (desktopHost) {
-          desktopHost.scrollTo({ top: 0, behavior });
+        /* runtime 偵測實際捲動容器（media query 在手機 main-col 仍可捲時會誤判 window） */
+        const host = _liveScrollHost();
+        if (host) {
+          host.scrollTo({ top: 0, behavior });
           return;
         }
         window.scrollTo({ top: 0, behavior });
       }
-      function scrollToReaderBottom(behavior = "smooth") {
-        const { max, host } = getScrollMetrics();
-        if (host && host !== window) {
-          host.scrollTo({ top: max, behavior });
-          return;
+      /* ── content-visibility:auto 下的精準跳轉核心（對齊 hash-jump v7）──
+         病根:占位高度(contain-intrinsic-size 800px)讓目標座標被低估,
+         smooth 捲動途中上方章節真實 render 把內容往下推 → 遠集 under-shoot。
+         解法:hash-jumping flag 強制展開 layout + instant 跳 + 逐幀 delta
+         自修正(連續 2 幀 |delta|<=3px 才收工);移除 flag 後再跑第二輪吸收塌陷位移。 */
+      function _liveScrollHost() {
+        const mainCol = document.getElementById("main-col");
+        const ok =
+          mainCol &&
+          mainCol.scrollHeight > mainCol.clientHeight + 4 &&
+          getComputedStyle(mainCol).overflowY !== "visible";
+        return ok ? mainCol : null;
+      }
+      function _instantScroll(host, top) {
+        if (host) {
+          const sb = host.style.scrollBehavior;
+          host.style.scrollBehavior = "auto";
+          host.scrollTop = top;
+          void host.offsetHeight;
+          host.style.scrollBehavior = sb;
+        } else {
+          const sb = document.documentElement.style.scrollBehavior;
+          document.documentElement.style.scrollBehavior = "auto";
+          window.scrollTo({ top, behavior: "auto" });
+          document.documentElement.style.scrollBehavior = sb;
         }
-        window.scrollTo({ top: max, behavior });
+      }
+      function scrollToReaderBottom() {
+        /* 底部 = 全章節「真實展開」後的 scrollHeight;塌陷下的 max 會短少
+           → 全章節 visible + 強制 layout,逐幀釘底直到高度連續 2 幀不再長 */
+        document.body.classList.add("hash-jumping");
+        EPISODES.forEach((ep) => {
+          const s = document.getElementById("ep-" + ep.ep);
+          if (s) s.classList.add("visible");
+        });
+        void document.body.offsetHeight;
+        const host = _liveScrollHost();
+        const maxTop = () =>
+          Math.max(
+            0,
+            host
+              ? host.scrollHeight - host.clientHeight
+              : document.documentElement.scrollHeight - window.innerHeight,
+          );
+        const curTop = () =>
+          host ? host.scrollTop : window.scrollY || document.documentElement.scrollTop || 0;
+        let frames = 0,
+          stable = 0,
+          last = -1;
+        function pin() {
+          frames++;
+          const m = maxTop();
+          _instantScroll(host, m);
+          if (Math.abs(m - last) <= 2 && curTop() >= m - 2) stable++;
+          else stable = 0;
+          last = m;
+          if (stable < 2 && frames < 60) requestAnimationFrame(pin);
+          else {
+            document.body.classList.remove("hash-jumping");
+            requestAnimationFrame(() =>
+              requestAnimationFrame(() => {
+                /* 上方章節重新塌陷後高度縮短 → 再釘一次真正的底 */
+                _instantScroll(host, maxTop());
+              }),
+            );
+          }
+        }
+        requestAnimationFrame(pin);
       }
       function goToEp(n) {
-        const el = document.getElementById("ep-" + n);
-        if (!el) return;
-        // Ensure all episodes up to n are visible (opacity:0 guard)
+        const target = document.getElementById("ep-" + n);
+        if (!target) return;
+        document.body.classList.add("hash-jumping");
         EPISODES.forEach((ep) => {
           if (ep.ep <= n) {
             const s = document.getElementById("ep-" + ep.ep);
             if (s) s.classList.add("visible");
           }
         });
+        void document.body.offsetHeight;
         const topOffset =
           parseInt(
             getComputedStyle(document.documentElement).getPropertyValue(
@@ -8540,21 +8666,55 @@
             ),
             10,
           ) || 84;
-        const desktopHost = getDesktopScrollHost();
-        if (desktopHost) {
-          const hostRect = desktopHost.getBoundingClientRect();
-          const y =
-            el.getBoundingClientRect().top -
-            hostRect.top +
-            desktopHost.scrollTop -
-            topOffset +
-            8;
-          desktopHost.scrollTo({ top: y, behavior: "smooth" });
-          return;
+        const host = _liveScrollHost();
+        const rectTop = () => target.getBoundingClientRect().top;
+        const baseTop = () => (host ? host.getBoundingClientRect().top : 0);
+        if (host) {
+          _instantScroll(
+            host,
+            Math.max(0, rectTop() - baseTop() + host.scrollTop - topOffset - 8),
+          );
+        } else {
+          _instantScroll(
+            null,
+            (window.scrollY || document.documentElement.scrollTop || 0) +
+              rectTop() -
+              topOffset -
+              8,
+          );
         }
-        const y =
-          el.getBoundingClientRect().top + window.scrollY - topOffset + 8;
-        window.scrollTo({ top: y, behavior: "smooth" });
+        function correction(onDone) {
+          let corr = 0,
+            stable = 0;
+          function step() {
+            corr++;
+            const delta = rectTop() - (baseTop() + topOffset + 8);
+            if (Math.abs(delta) <= 3) stable++;
+            else {
+              stable = 0;
+              if (host) _instantScroll(host, host.scrollTop + delta);
+              else
+                _instantScroll(
+                  null,
+                  (window.scrollY || document.documentElement.scrollTop || 0) +
+                    delta,
+                );
+            }
+            if (stable < 2 && corr < 40) requestAnimationFrame(step);
+            else onDone();
+          }
+          requestAnimationFrame(step);
+        }
+        correction(() => {
+          document.body.classList.remove("hash-jumping");
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() =>
+              correction(() => {
+                if (typeof currentEpNum !== "undefined") currentEpNum = n;
+              }),
+            ),
+          );
+        });
       }
       function toggleEpInfo(h) {
         h.classList.toggle("open");

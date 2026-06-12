@@ -185,6 +185,7 @@ const dom = {
   audioWidget: document.getElementById("audio-widget"),
   audioToggle: document.getElementById("audio-toggle"),
   audioToggleValue: document.getElementById("audio-toggle-value"),
+  councilReplay: document.getElementById("council-replay"),
   musicPrompt: document.getElementById("music-prompt"),
   musicPromptButton: document.getElementById("music-prompt-button"),
   musicPromptClose: document.getElementById("music-prompt-close"),
@@ -283,6 +284,14 @@ if (typeof window !== "undefined") {
   };
 }
 
+/* 意識菜市場完成紀錄（重看入口的顯示條件;key 不進 data.js,純 app 層） */
+const COUNCIL_SEEN_KEY = "lm402_council_seen_v1";
+function loadCouncilSeen() {
+  try { return localStorage.getItem(COUNCIL_SEEN_KEY) === "1"; } catch { return false; }
+}
+function saveCouncilSeen() {
+  try { localStorage.setItem(COUNCIL_SEEN_KEY, "1"); } catch {}
+}
 function loadFontScale() {
   try { const v = parseFloat(localStorage.getItem(STORAGE_KEYS.fontScale)); return Number.isFinite(v) ? v : 1; } catch { return 1; }
 }
@@ -1499,6 +1508,8 @@ function applyEffect(effect) {
       try { if (window.__TWIN_BALANCE__) window.__TWIN_BALANCE__("mid"); } catch (e) {}
       window.__COUNCIL__.start(function (res) {
         try { if (window.__TWIN_BALANCE__) window.__TWIN_BALANCE__("off"); } catch (e) {}
+        saveCouncilSeen();
+        if (dom.councilReplay) dom.councilReplay.hidden = false;
         setSubtitle("女兒", (res && res.ok)
           ? "我把阿姨『練穩』那一刻的溫度，悄悄收進只有我看得見的時空口袋裡。"
           : "阿姨的聲音還有點亂，但她還是把那句話交了出去。我把這份顫抖也收好了。", 4.5);
@@ -1606,6 +1617,8 @@ function applyEffect(effect) {
         if (state.mode !== "play") { proceedToRear(); return; }
         window.__COUNCIL__.start(function (res) {
           try { if (window.__TWIN_BALANCE__) window.__TWIN_BALANCE__("off"); } catch (e) {}
+          saveCouncilSeen();
+          if (dom.councilReplay) dom.councilReplay.hidden = false;
           proceedToRear();
         });
       }, 1500);
@@ -1990,6 +2003,7 @@ function finishIntro() {
   const resume = state.intro.replay ? state.intro.resume : null;
   clearTransientInput();
   state.mode = "play";
+  if (dom.councilReplay && loadCouncilSeen()) dom.councilReplay.hidden = false;
   state.cameraMode = "play";
   state.intro.replay = false;
   state.intro.resume = null;
@@ -3400,11 +3414,26 @@ function bindUI() {
       sel.hidden = !sel.hidden;
       if (!sel.hidden) audioSystem.syncSongUI();
       dom.audioToggleValue.textContent = sel.hidden ? "開啟音樂選單" : "關閉音樂選單";
+      /* 歌單往下展開會疊到重看鈕 → 展開期間先收 */
+      if (dom.councilReplay) dom.councilReplay.classList.toggle("squeezed", !sel.hidden);
     }
   });
   /* 音樂選單預設收合：玩家點擊「開啟音樂選單」後展開 */
   { const selInit = document.getElementById("song-selector");
     if (selInit) { selInit.hidden = true; }
+  }
+  /* 意識菜市場重看入口：完成過一次（本次或先前造訪）才顯示;
+     揭示時機在 finishIntro(intro 期間 mode 不是 play,按了沒反應會像死按鈕) */
+  if (dom.councilReplay) {
+    dom.councilReplay.addEventListener("click", () => {
+      if (!window.__COUNCIL__ || state.mode !== "play") return;
+      if (window.__COUNCIL__.isActive && window.__COUNCIL__.isActive()) return;
+      try { if (window.__TWIN_BALANCE__) window.__TWIN_BALANCE__("mid"); } catch (e) {}
+      window.__COUNCIL__.start(() => {
+        try { if (window.__TWIN_BALANCE__) window.__TWIN_BALANCE__("off"); } catch (e) {}
+        setSubtitle("女兒", "再走一次意識菜市場。不同年紀的阿姨，還是在替她把那句話練穩。", 4.5);
+      });
+    });
   }
   dom.musicPromptButton.addEventListener("click", () => {
     if (!state.audioEnabled) {

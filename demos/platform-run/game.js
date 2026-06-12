@@ -1151,15 +1151,14 @@ scene.add(platformFill);
       });
       totalUpgraded += upgraded;
       tries++;
-      if (upgraded > 0 || tries >= maxTries) {
-        console.info('[art-upgrade r45 v2] polling traverse:', totalUpgraded, 'materials | byCategory:', JSON.stringify(stats.byName), '| tries:', tries, '(twin)');
+      /* 只在真的有新材質時 log;follow-up 只排一個(原本一次排兩個,
+         每關新道具都觸發 upgraded>0 → timer 指數疊加洗版 console) */
+      if (upgraded > 0) {
+        console.info('[art-upgrade r45 v2] polling traverse:', totalUpgraded, 'materials | byCategory:', JSON.stringify(stats.byName), '| tries:', tries);
         if (typeof window !== 'undefined') window.__PLATFORM_TWIN_UPGRADE_STATS__ = stats;
-        if (tries < maxTries && totalUpgraded > 0) {
-          setTimeout(tryUpgrade, 2000);
-          setTimeout(tryUpgrade, 6000);
-        }
-      } else {
-        setTimeout(tryUpgrade, 600);
+      }
+      if (tries < maxTries) {
+        setTimeout(tryUpgrade, upgraded > 0 ? 2000 : 600);
       }
     }
     setTimeout(tryUpgrade, 600);
@@ -1258,6 +1257,7 @@ const MAT_camo = new THREE.MeshStandardMaterial({ map: camoTexture, roughness: 0
 function buildPlatform() {
   const g = new THREE.BoxGeometry(PLATFORM_W, 0.6, PLATFORM_LEN);
   const m = new THREE.Mesh(g, MAT.platform);
+  m.name = "platform-deck"; /* 美術 pass 靠名稱匹配(原本全場景無命名,半數效果 no-op) */
   m.position.y = -0.3;
   m.receiveShadow = true;
   scene.add(m);
@@ -1848,6 +1848,7 @@ function buildTrain(group, color, stripe, hasDoors) {
 
     /* 車體主結構（圓頂造型） */
     var body = new THREE.Mesh(new THREE.BoxGeometry(3.2, 2.4, CAR_LEN - 1), bodyMat);
+    body.name = "train-car-body";
     body.position.set(0, 1.2, cz);
     body.castShadow = true;
     group.add(body);
@@ -2310,6 +2311,7 @@ const fatherLeftArm = new THREE.Group();
 const fatherRightArm = new THREE.Group();
 
 const FATHER_BASE_Y = -0.01;
+let fatherContactShadow = null; /* 接觸陰影 handle:跳躍時釘地用(animate 每幀抵銷升降) */
 
 function buildFather() {
   /* Head（更高面數、更圓潤） */
@@ -2518,6 +2520,7 @@ function buildFather() {
   contactShadow.rotation.x = -Math.PI / 2;
   contactShadow.position.y = FATHER_BASE_Y + 0.01;
   father.add(contactShadow);
+  fatherContactShadow = contactShadow;
 
   father.position.set(0, FATHER_BASE_Y, state.playerZ);
   scene.add(father);
@@ -4531,6 +4534,13 @@ function updateGame(dt) {
   const bobAmt = (state.isJumping || !isMoving) ? 0 : (Math.abs(Math.sin(state.clock * bobFreq)) * 0.035);
   father.position.y = FATHER_BASE_Y + bobAmt + state.jumpY;
   father.rotation.z = (state.isJumping || !isMoving) ? 0 : (Math.sin(state.clock * bobFreq * 0.5) * 0.05);
+  /* 接觸陰影釘地:抵銷 bob+跳躍位移(否則影子黏腳跟著飛);跳越高影子越小越淡 */
+  if (fatherContactShadow) {
+    fatherContactShadow.position.y = 0.02 - bobAmt - state.jumpY;
+    const csK = Math.max(0.5, 1 - state.jumpY * 0.4);
+    fatherContactShadow.scale.setScalar(csK);
+    fatherContactShadow.material.opacity = Math.max(0.3, 1 - state.jumpY * 0.5);
+  }
 
   /* Leg animation */
   if (state.isJumping) {
@@ -5511,6 +5521,38 @@ function buildQualityPanel() {
   });
 }
 
+/* 美術強化按畫質檔位自動接線(這批效果原本只有 console 後門,從未預設啟用):
+   全部檔位:基礎氛圍燈(車頭燈/天花板燈,低強度 iOS 友善)
+   高級(2)+:靜態升級(火車物理材質/月台磁磚/車身標示/站牌/NPC 多樣化)
+   全開(3)+:密度與氛圍(城市天際線/月台道具/較亮燈光)
+   完美(4):動態氛圍(蒸汽/濕地反射/熱浪)
+   永不自動開:CAMERA_BREATH/FOOT_IK/NPC_MOTION(自帶 RAF 會跟主迴圈搶寫位置)、
+   VIGNETTE/MONTAI_GRAIN(完美檔 postfx 已有同效,疊加過暗) */
+let _artTierApplied = -1;
+function applyArtTier(level) {
+  if (level === _artTierApplied) return;
+  _artTierApplied = level;
+  try { if (window.__ART_RESET_EVERYTHING__) window.__ART_RESET_EVERYTHING__(); } catch (e) {}
+  try { if (window.__CAMERA_BREATH_OFF__) window.__CAMERA_BREATH_OFF__(); } catch (e) {}
+  /* 基礎氛圍燈(所有檔位,維持原 init 預設) */
+  try { window.__TRAIN_HEADLIGHT__(level >= 3 ? 2.5 : 1.5, '#fff5d6'); } catch (e) {}
+  try { window.__CEILING_LIGHTS__(6, level >= 3 ? 3.0 : 2.0); } catch (e) {}
+  if (level >= 2) {
+    try { window.__TRAIN_PHYSICAL__(0.85, 0.35, 0.4); } catch (e) {}
+    try { window.__PLATFORM_TILE__(0.7); } catch (e) {}
+    try { window.__TRAIN_DECALS__('自強號'); } catch (e) {}
+    try { window.__PLATFORM_SIGN__('時光月台', '通往 2005'); } catch (e) {}
+  }
+  if (level >= 3) {
+    try { window.__CITY_SKYLINE__(40, 80); } catch (e) {}
+    try { window.__PROP_VARIETY__(12); } catch (e) {}
+  }
+  if (level >= 4) {
+    try { window.__STEAM__(150, 0.7); } catch (e) {}
+    try { window.__WET_FLOOR__(0.3); } catch (e) {}
+    try { window.__HEAT_HAZE__(0.4); } catch (e) {}
+  }
+}
 function applyQuality(level) {
   state.quality = level;
   const p = QUALITY_PRESETS[level];
@@ -5536,6 +5578,9 @@ function applyQuality(level) {
   }
 
   renderer.setSize(window.innerWidth, window.innerHeight);
+
+  /* 美術強化跟檔位走(在 NPC rebuild 之後套,NPC_VARIETY 才吃得到新 NPC) */
+  applyArtTier(level);
 
   /* 電影後製跟檔位走：最高檔開、降檔（含 adaptive 自動降）即關 */
   setPostfxEnabled(level >= POSTFX_MIN_QUALITY);
@@ -5652,9 +5697,8 @@ function init() {
   createDoorMarker();
   detectMobile();
   buildQualityPanel();
-  /* 預設氛圍燈光(月台夜景):火車頭燈 + 天花板燈,低強度 iOS 友善(原本只在 console __ART_APPLY_ALL__ 才開) */
-  try { window.__TRAIN_HEADLIGHT__(1.5, '#fff5d6'); } catch(e) {}
-  try { window.__CEILING_LIGHTS__(6, 2.0); } catch(e) {}
+  /* 美術強化初始接線(檔位分級,含基礎氛圍燈) */
+  applyArtTier(state.quality);
   /* 電影後製初始檔位判定(桌機預設「完美」→ 啟用) */
   setPostfxEnabled(state.quality >= POSTFX_MIN_QUALITY);
   animate();

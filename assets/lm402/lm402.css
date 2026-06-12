@@ -416,6 +416,46 @@ body[data-ui-preset="ending"] #scene-canvas {
   top: 162px;
   left: 18px;
 }
+/* 意識菜市場重看入口（完成過一次後出現,對齊月台的常駐入口模式） */
+.council-replay {
+  position: absolute;
+  z-index: 12;
+  top: 234px;
+  left: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 207, 158, 0.35);
+  border-radius: 999px;
+  background: rgba(8, 11, 16, 0.55);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  color: #ffd9a8;
+  font:
+    500 11px DM Mono,
+    monospace;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+.council-replay.squeezed {
+  opacity: 0;
+  pointer-events: none;
+}
+.council-replay:hover,
+.council-replay:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(255, 207, 158, 0.7);
+  box-shadow: 0 8px 24px rgba(255, 190, 130, 0.18);
+  outline: none;
+}
+.council-replay-icon {
+  font-size: 13px;
+}
 .song-selector {
   margin-top: 8px;
   display: grid;
@@ -1804,6 +1844,13 @@ body.landscape-prompt .debug-panel {
     right: max(8px, env(safe-area-inset-right));
     z-index: 20;
   }
+  .council-replay {
+    top: max(54px, calc(env(safe-area-inset-top) + 46px));
+    left: max(8px, env(safe-area-inset-left));
+    z-index: 20;
+    padding: 8px 12px;
+    font-size: 10px;
+  }
   .time-watch {
     top: max(8px, env(safe-area-inset-top));
     left: 50%;
@@ -2919,9 +2966,9 @@ body.landscape-prompt .debug-panel {
   display: flex;
 }
 
-/* Transparent-bottom UI surface pass */
+/* Transparent-bottom UI surface pass
+   （.hud-body 排除:資訊面板是大段內文,透明化會讓底下 widget/場景透進文字 — 維持自身 92% 底+blur） */
 .hud-toggle,
-.hud-body,
 .time-watch,
 .speed-toggle,
 .speed-panel,
