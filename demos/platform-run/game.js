@@ -303,7 +303,7 @@ function postfxSetSize() {
 }
 
 /* ════════════════════════════════════════════════
-   r36 push4 美術強化 batch 1(platform-run-twin)
+   r36 push4 美術強化 batch 1(platform-run)
    所有 API 預設 OFF,console call 才啟用 — 避免壞掉
    ════════════════════════════════════════════════ */
 let _trainHeadlight = null;
@@ -474,7 +474,7 @@ window.__ART_RESET_ALL__ = function() {
 };
 
 /* ════════════════════════════════════════════════
-   r38 push6 美術 batch 2(platform-run-twin)
+   r38 push6 美術 batch 2(platform-run)
    ════════════════════════════════════════════════ */
 /* M6 火車金屬 MeshPhysical 升等(traverse 火車相關 mesh)*/
 window.__TRAIN_PHYSICAL__ = function(metalness, roughness, clearcoat) {
@@ -624,7 +624,7 @@ window.__FPS_POV__ = function(mode) {
   console.info('[__FPS_POV__] mode="' + mode + '"');
 };
 
-/* r38 batch 2 apply / reset for platform-run-twin */
+/* r38 batch 2 apply / reset for platform-run */
 window.__ART_APPLY_BATCH2__ = function() {
   try { window.__TRAIN_PHYSICAL__(0.85, 0.35, 0.4); } catch(e) {}
   try { window.__PLATFORM_TILE__(0.7); } catch(e) {}
@@ -641,16 +641,16 @@ window.__ART_RESET_BATCH2__ = function() {
 window.__ART_APPLY_EVERYTHING__ = function() {
   try { window.__ART_APPLY_ALL__(); } catch(e) {}
   try { window.__ART_APPLY_BATCH2__(); } catch(e) {}
-  console.info('[__ART_APPLY_EVERYTHING__] platform-run-twin 全 2 batch 美術全套啟用');
+  console.info('[__ART_APPLY_EVERYTHING__] platform-run 全 2 batch 美術全套啟用');
 };
 window.__ART_RESET_EVERYTHING__ = function() {
   try { window.__ART_RESET_ALL__(); } catch(e) {}
   try { window.__ART_RESET_BATCH2__(); } catch(e) {}
-  console.info('[__ART_RESET_EVERYTHING__] platform-run-twin 全 2 batch 重置');
+  console.info('[__ART_RESET_EVERYTHING__] platform-run 全 2 batch 重置');
 };
 
 /* ════════════════════════════════════════════════
-   r39 push7 美術 batch 3(platform-run-twin)— 5 個 procedural 拉回
+   r39 push7 美術 batch 3(platform-run)— 5 個 procedural 拉回
    ════════════════════════════════════════════════ */
 
 /* E5 月台招牌 SDF text sprite */
@@ -834,17 +834,17 @@ window.__ART_APPLY_EVERYTHING__ = function() {
   try { window.__ART_APPLY_ALL__(); } catch(e) {}
   try { window.__ART_APPLY_BATCH2__(); } catch(e) {}
   try { window.__ART_APPLY_BATCH3__(); } catch(e) {}
-  console.info('[__ART_APPLY_EVERYTHING__] platform-run-twin 全 3 batch 美術全套啟用');
+  console.info('[__ART_APPLY_EVERYTHING__] platform-run 全 3 batch 美術全套啟用');
 };
 window.__ART_RESET_EVERYTHING__ = function() {
   try { window.__ART_RESET_ALL__(); } catch(e) {}
   try { window.__ART_RESET_BATCH2__(); } catch(e) {}
   try { window.__ART_RESET_BATCH3__(); } catch(e) {}
-  console.info('[__ART_RESET_EVERYTHING__] platform-run-twin 全 3 batch 重置');
+  console.info('[__ART_RESET_EVERYTHING__] platform-run 全 3 batch 重置');
 };
 
 /* ════════════════════════════════════════════════
-   r40 push8 美術 batch 4(platform-run-twin)
+   r40 push8 美術 batch 4(platform-run)
    F9 grain overlay + P5 foot IK fake + A9 heat haze 月台
    ════════════════════════════════════════════════ */
 
@@ -969,14 +969,14 @@ window.__ART_APPLY_EVERYTHING__ = function() {
   try { window.__ART_APPLY_BATCH2__(); } catch(e) {}
   try { window.__ART_APPLY_BATCH3__(); } catch(e) {}
   try { window.__ART_APPLY_BATCH4__(); } catch(e) {}
-  console.info('[__ART_APPLY_EVERYTHING__] platform-run-twin 全 4 batch 美術全套啟用');
+  console.info('[__ART_APPLY_EVERYTHING__] platform-run 全 4 batch 美術全套啟用');
 };
 window.__ART_RESET_EVERYTHING__ = function() {
   try { window.__ART_RESET_ALL__(); } catch(e) {}
   try { window.__ART_RESET_BATCH2__(); } catch(e) {}
   try { window.__ART_RESET_BATCH3__(); } catch(e) {}
   try { window.__ART_RESET_BATCH4__(); } catch(e) {}
-  console.info('[__ART_RESET_EVERYTHING__] platform-run-twin 全 4 batch 重置');
+  console.info('[__ART_RESET_EVERYTHING__] platform-run 全 4 batch 重置');
 };
 
 /* ════════════════════════════════════════════════

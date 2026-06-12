@@ -6,7 +6,8 @@
  */
 
 const STORAGE_KEY = "lm402_panel_layouts_v2";
-const STORAGE_VERSION = 2;
+/* v3: 失效化舊存檔 — v2 時代會把未拖曳藥丸的 (pad,pad) fallback 位置存進來 */
+const STORAGE_VERSION = 3;
 const MOBILE_BREAKPOINT = 800;
 const registry = new Map();
 
@@ -350,6 +351,10 @@ function toggleTranscriptMaximize(id = "transcript") {
 
 function applyPanelLayout(panel) {
   if (!panel?.el) return;
+  /* 非可縮放的提示藥丸（focus/hint/objective 等）：使用者沒拖曳過就維持
+     CSS 排版。初始化時這些元素還是 0 尺寸，generic fallback 會把它們
+     釘到視窗左上 (pad,pad) 蓋住設定選單，並被 saveLayouts 持久化。 */
+  if (!panel.resizable && !panel.state.pos) return;
   const rect = getPanelRect(panel);
   panel.state.pos = { x: rect.x, y: rect.y };
   if (panel.resizable) {
