@@ -16,6 +16,19 @@ return;
   var _gr = document.querySelector(".cinematic-gate-read");
   if (_gr) _gr.addEventListener("click", function () { if (window.__GATE_GUIDE__) window.__GATE_GUIDE__.open(); });
 
+  // 直立手機在玄關就先講「建議橫向」,別讓玩家投入一兩分鐘後才被 rotate-lock 擋下
+  (function () {
+    var hint = document.getElementById("gate-portrait-hint");
+    if (!hint) return;
+    function sync() {
+      var touch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+      hint.hidden = !(touch && window.innerHeight > window.innerWidth);
+    }
+    sync();
+    window.addEventListener("orientationchange", sync, { passive: true });
+    window.addEventListener("resize", sync, { passive: true });
+  })();
+
   // a11y：玄關 dialog focus trap — Tab/Shift+Tab 鎖在玄關內，初始 focus 給進場鈕
   function _gateFocusables() {
 return Array.prototype.slice.call(gate.querySelectorAll('button:not([disabled]),a[href],[tabindex]:not([tabindex="-1"])'))

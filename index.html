@@ -76,6 +76,11 @@
     <link rel="preload" href="fonts/co3bmX5slCNuHLi8bLeY9MK7whWMhyjYqXtKky2F7g.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="fonts/fonts.css" />
     <link rel="stylesheet" href="index.css" />
+    <noscript>
+      <style>
+        .reveal { opacity: 1 !important; transform: none !important; }
+      </style>
+    </noscript>
   </head>
   <body>
     <a href="#main-content" class="skip-link">跳到內容</a>
@@ -243,7 +248,8 @@
       </div>
     </nav>
 
-    <div class="site-font-widget" aria-label="全站字體大小">
+    <div class="site-font-widget" aria-label="全站字體大小" id="site-font-widget">
+      <button class="site-font-collapse" id="site-font-collapse" type="button" aria-label="展開或收合字體大小選單">字</button>
       <div class="site-font-widget-label">字體大小</div>
       <div class="site-font-options" id="site-font-options">
         <button class="site-font-btn" type="button" data-font-scale="small">
@@ -290,6 +296,9 @@
             <p class="hero-tagline">
               一眼，只有一秒。<br />讀懂它，用了二十年。
             </p>
+            <p class="hero-subline">
+              一個把拔與女兒的故事，也是學長與學妹的故事。
+            </p>
             <div class="hero-actions">
               <a class="btn-continue" id="hero-continue" hidden href="reader.html"></a>
               <a class="btn-primary" href="reader.html"
@@ -300,7 +309,7 @@
                 <span>你是第一次來嗎？</span>
               </button>
               <a class="btn-ghost btn-latest" href="reader.html#ep-41" aria-label="跳到 EP41 最新連載 — 這不是童話故事"
-                >★ &nbsp; EP41 · 這不是童話故事</a
+                >★ &nbsp; 最新 EP41 · 這不是童話故事</a
               >
               <a class="btn-ghost" href="#about">這個故事的起點</a>
               <div class="hero-scene-bridge">同一個把拔，一條紅線牽著他愛的人，一條牽著他的女兒。<br>他要的不是她一直在身邊，而是他不在的時候，她會想起他。<br>挑一條線走進去，那一眼、那場奔跑，這次換你親眼看。</div>
@@ -399,7 +408,7 @@
               </a>
               <a class="tour-sample" data-entry="daughter" href="reader.html">
                 <div class="tour-sample-tag">⌬ EP41 · 這不是童話故事 · 女兒視角　↗ 直接讀</div>
-                <div class="tour-sample-desc">2026 年。故事的拱心石。她看過所有結局，卻發現「知道」救不了眼前的人。她最後只傳給他四個數字，然後選擇，跟他一起相信。</div>
+                <div class="tour-sample-desc">2026 年。故事的拱心石。她看過所有結局，卻發現「知道」救不了眼前的人。<span class="spoiler-mask" role="button" tabindex="0" aria-label="微雷內容，點一下顯示"><span class="spoiler-badge">微雷</span><span class="spoiler-text">她最後只傳給他四個數字，然後選擇，跟他一起相信</span></span>。</div>
               </a>
             </div>
           </div>
@@ -772,7 +781,7 @@
               <div class="sample-card-num">試讀 3 · 拱心石</div>
               <div class="sample-card-ep">EP41 · 這不是童話故事</div>
               <div class="sample-card-sub">女兒視角 · 2026 年</div>
-              <div class="sample-card-desc">「款款的」三個字打進來，他用一個「ＸＤ」接住。「知道」救不了現在的他。</div>
+              <div class="sample-card-desc"><span class="spoiler-mask" role="button" tabindex="0" aria-label="微雷內容，點一下顯示"><span class="spoiler-badge">微雷</span><span class="spoiler-text">「款款的」三個字打進來，他用一個「ＸＤ」接住。「知道」救不了現在的他。</span></span></div>
               <div class="sample-card-arrow">→ 讀這集</div>
             </a>
           </div>
@@ -899,6 +908,9 @@
           </div>
         </div>
         <div class="foot-links">
+          <a class="foot-link" href="reader.html">翻開故事</a>
+          <a class="foot-link" href="lm402.html">LM402 一眼瞬間</a>
+          <a class="foot-link" href="demos/platform-run/index.html">月台上的狂奔</a>
           <a
             class="foot-link"
             href="https://www.youtube.com/c/toniMVP"

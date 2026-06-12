@@ -2921,7 +2921,7 @@
             max-width: 1100px;
             margin: 0 auto }
 .is-6 { 
-                font-family: &quot;DM Mono&quot;, monospace;
+                font-family: "DM Mono", monospace;
                 font-size: 9px;
                 letter-spacing: 0.3em;
                 text-transform: uppercase;
@@ -2945,7 +2945,7 @@
                     url('assets/video-thumbs/eACPFC4K89o.jpg') }
 .is-9 { 
                 margin-top: 12px;
-                font-family: &quot;Noto Sans TC&quot;, sans-serif;
+                font-family: "Noto Sans TC", sans-serif;
                 font-size: 13px;
                 color: var(--warm);
                 line-height: 1.8;
@@ -3011,7 +3011,7 @@
                 display: inline-flex;
                 align-items: center;
                 gap: 8px;
-                font-family: &quot;Noto Sans TC&quot;, sans-serif;
+                font-family: "Noto Sans TC", sans-serif;
                 font-size: 13px;
                 letter-spacing: 0.08em;
                 padding: 10px 24px;
@@ -3022,3 +3022,58 @@
                 background: rgba(22, 168, 100, 0.05);
                 transition: border-color 0.15s }
 .is-24 { vertical-align:middle;margin-right:6px }
+
+/* hero 定位副標(persona 首屏 10 秒定位) */
+.hero-subline {
+  margin-top: 10px;
+  font: 400 14px/1.9 "Noto Serif TC", serif;
+  letter-spacing: 0.12em;
+  color: rgba(234, 230, 222, 0.62);
+}
+/* 字級面板折衷收合 */
+.site-font-collapse {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(234, 230, 222, 0.25);
+  background: rgba(12, 14, 12, 0.82);
+  color: rgba(234, 230, 222, 0.85);
+  font: 600 15px "Noto Serif TC", serif;
+  cursor: pointer;
+}
+.site-font-widget.collapsed .site-font-collapse {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.site-font-widget.collapsed .site-font-widget-label,
+.site-font-widget.collapsed .site-font-options {
+  display: none;
+}
+.site-font-widget:not(.collapsed) .site-font-collapse {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+}
+/* 微雷遮罩:預設模糊,點一下顯示(文字一字不動) */
+.spoiler-mask { cursor: pointer; }
+.spoiler-mask .spoiler-text {
+  filter: blur(5px);
+  transition: filter 0.3s ease;
+}
+.spoiler-mask.revealed .spoiler-text { filter: none; }
+.spoiler-mask.revealed { cursor: inherit; }
+.spoiler-badge {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 7px;
+  border: 1px solid rgba(232, 200, 122, 0.45);
+  border-radius: 999px;
+  font: 600 10px "Noto Sans TC", sans-serif;
+  letter-spacing: 0.14em;
+  color: rgba(232, 200, 122, 0.85);
+  vertical-align: middle;
+}
+.spoiler-mask.revealed .spoiler-badge { opacity: 0.4; }

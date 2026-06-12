@@ -2012,6 +2012,9 @@
       }
       /* 列印時強制全 42 章 render，避免 content-visibility:auto 讓畫面外章節漏印或分頁排版錯位 */
       @media print {
+        .ep-companion .ep-companion-body {
+          display: block !important;
+        }
         .episode {
           content-visibility: visible !important;
           contain-intrinsic-size: auto !important;
@@ -2535,6 +2538,47 @@
         flex: 1;
         height: 1px;
         background: linear-gradient(90deg, transparent, rgba(120, 196, 198, 0.25), transparent);
+      }
+      .ep-companion-tag {
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+      }
+      .ep-companion .ep-companion-body {
+        display: none;
+      }
+      .ep-companion.open .ep-companion-body {
+        display: block;
+      }
+      .ep-companion.open .ec-arrow {
+        display: inline-block;
+        transform: rotate(90deg);
+      }
+      .ec-arrow {
+        display: inline-block;
+        transition: transform 0.2s ease;
+        margin-right: 2px;
+      }
+      .ec-count {
+        opacity: 0.7;
+      }
+      .ep-companion:not(.open) {
+        padding-bottom: 12px;
+      }
+      /* 側欄集數別名(TL 事件 label 重用) */
+      .sb-ep-alias {
+        display: block;
+        font-size: 10px;
+        letter-spacing: 0.06em;
+        color: var(--t3);
+        margin-top: 1px;
+      }
+      /* 手機底欄:往下捲自動收合(行動閱讀標準手勢),往上捲喚回 */
+      body.fab-hidden #fab-bar {
+        transform: translateY(110%) !important;
+      }
+      #fab-bar {
+        transition: transform 0.28s ease;
       }
       .ep-story-divider {
         display: flex;
@@ -5731,8 +5775,11 @@
           <button class="dsk-btn" onclick="cycleFont()" id="btn-font" aria-label="切換字體大小">
             字 A
           </button>
-          <button class="dsk-btn" onclick="magnifyFont()" id="btn-magnify" aria-label="放大鏡 · 一鍵切換到最大字體（長輩友善）" title="放大鏡 · 一鍵超特大">
-            🔍
+          <button class="dsk-btn" onclick="magnifyFont()" id="btn-magnify" aria-label="一鍵切換到最大字體（長輩友善）" title="一鍵超特大字體">
+            字A⁺
+          </button>
+          <button class="dsk-btn" onclick="openSearch()" id="btn-search" aria-label="全文搜尋 · 找場景、台詞、伏筆" title="全文搜尋（/ 或 Cmd+K）">
+            🔍 搜尋
           </button>
           <button class="dsk-btn" onclick="toggleDay()">
             <span class="ui-glyph btn-icon" data-ui-icon="sun"></span
@@ -7502,6 +7549,14 @@
           .querySelectorAll("[data-ui-icon]")
           .forEach((el) => setIconHolder(el, el.dataset.uiIcon));
       }
+      /* 側欄/跳章副標:同名集(系列標題剝掉後重複)用 TL 既有事件 label 區分;
+         label 是親寫資料的重用,不另創集名 */
+      function epAliasLabel(epNum) {
+        try {
+          const e = TL.find((x) => x.ep === epNum);
+          return e ? e.label : "";
+        } catch (err) { return ""; }
+      }
       function shortEpisodeTitle(ep) {
         return (
           (ep.title || "")
@@ -7509,7 +7564,8 @@
             .replace(/EP\d+/g, "")
             .replace(/[|｜]/g, "")
             .replace(/\s*x\s*/gi, " · ")
-            .trim() || fmtEp(ep.ep)
+            .trim()
+            .replace(/[·\s]+$/, "") || fmtEp(ep.ep)
         );
       }
       hydrateStaticIcons();
@@ -7587,7 +7643,9 @@
           },
         ].forEach(({ card, title, sub }) => {
           if (!card || !title || !sub) return;
-          if (!ep) {
+          /* 首訪剛載入時 EP0 進視野就會觸發 saveProgress(0) — 還沒真的讀過,
+             「你上次停在這」是假話;有實質進度(EP1+)才顯示續讀卡 */
+          if (!ep || epNum <= 0) {
             card.classList.remove("show");
             return;
           }
@@ -7765,6 +7823,13 @@
           const name = document.createElement("span");
           name.className = "sb-ep-name";
           name.textContent = nm;
+          const alias = epAliasLabel(ep.ep);
+          if (alias && alias !== nm) {
+            const al = document.createElement("span");
+            al.className = "sb-ep-alias";
+            al.textContent = alias;
+            name.appendChild(al);
+          }
           const star = document.createElement("span");
           star.className = "sb-ep-star";
           star.textContent = "✦";
@@ -8165,7 +8230,7 @@
           tH = `<div class="ep-teaser" onclick="goToEp(${nx.ep})"><div class="et-label">下一集</div><div class="et-num">${fmtEp(nx.ep)} · ${escapeHtml(ARC_LBL[nx.arc] || nx.arc)}</div><div class="et-text">${escapeHtml(pv)}…</div><div class="et-arrow">繼續閱讀 →</div></div>`;
         } else {
           // 完讀收束卡：讀到最後一集不該斷在灰按鈕，把終點變成新一圈的起點
-          tH = `<div class="ep-finale"><div class="ef-kicker">你走完了 1991 → 2026，整條紅線</div><div class="ef-title">「我也相信。」</div><div class="ef-sub">四十二集，三十五年，都為了那一眼瞬間。接下來，換你決定怎麼再走一次。</div><div class="ef-actions"><button type="button" class="ef-btn ef-btn-main" onclick="if(window.__FAN_QUIZ__)window.__FAN_QUIZ__.open()">★ 鐵粉測驗 · 看你記得多少</button><button type="button" class="ef-btn" onclick="goToEp(0)">☆ 回 EP0 · 再走一次紅線</button><a class="ef-btn" href="demos/platform-run/index.html">🏃 再陪把拔跑一次月台</a></div></div>`;
+          tH = `<div class="ep-finale"><div class="ef-kicker">你走完了 1991 → 2026，整條紅線</div><div class="ef-title">「我也相信。」</div><div class="ef-sub">四十二集，三十五年，都為了那一眼瞬間。接下來，換你決定怎麼再走一次。</div><div class="ef-actions"><button type="button" class="ef-btn ef-btn-main" onclick="if(window.__FAN_QUIZ__)window.__FAN_QUIZ__.open()">★ 鐵粉測驗 · 看你記得多少</button><button type="button" class="ef-btn" onclick="goToEp(0)">☆ 回 EP0 · 再走一次紅線</button><a class="ef-btn" href="lm402.html">↗ 走進 LM402 · 親眼看那一眼</a><a class="ef-btn" href="demos/platform-run/index.html">🏃 再陪把拔跑一次月台</a></div></div>`;
         }
         const pvBtn =
           idx > 0
@@ -8192,7 +8257,7 @@
         const litH = litPool.length
           ? `<div class="ep-note ep-literati"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleLiterati(this, ${ep.ep})">▸ 文人說</div><div class="ep-note-body hidden" id="lit-body-${ep.ep}"></div></div>`
           : "";
-        sec.innerHTML = `<div class="ep-bg-num">${fmtEp(ep.ep).replace("EP", "")}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${escapeHtml(ARC_LBL[arc] || arc)}</span></div><div class="ep-title">${escapeHtml(cT)}</div><div class="ep-meta-row"><span>${readMins(ep.html)} 分鐘</span><span class="ep-meta-dot"></span><span>${escapeHtml(ep.chars || "")} 字</span></div></div><div class="ep-companion"><div class="ep-companion-tag"><span class="ec-line"></span><span class="ec-lbl">導讀區 · 點各列展開</span><span class="ec-line"></span></div>${stH}<div class="ep-info-strip"><div class="ep-info-head" role="button" tabindex="0" onclick="toggleEpInfo(this)"><span class="eih-icon">${renderIcon("guide")}</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-arc-legend"><span class="tal-chip" style="color:var(--jade)">● 把拔</span><span class="tal-chip" style="color:var(--silver)">● 學長</span><span class="tal-chip" style="color:var(--f3,#ff4858)">● 學妹</span><span class="tal-chip" style="color:var(--amber)">● 女兒</span><span class="tal-chip" style="color:var(--ember)">● 複合</span></div><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>${tline ? `<div class="ep-tline-wrap"><div class="ep-tline-toggle" role="button" tabindex="0" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${escapeHtml(tline)}</span></div></div>` : ""}${note ? `<div class="ep-note"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${linkifyEpRefs(note)}</div></div>` : ""}${cluesH}${grannyH}${scienceH}${litH}</div><div class="ep-story-divider" aria-hidden="true"><span class="esd-line"></span><span class="esd-mark">✦ 故事正文</span><span class="esd-line"></span></div><div class="ep-body-wrap"></div>${tH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
+        sec.innerHTML = `<div class="ep-bg-num">${fmtEp(ep.ep).replace("EP", "")}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${escapeHtml(ARC_LBL[arc] || arc)}</span></div><div class="ep-title">${escapeHtml(cT)}</div><div class="ep-meta-row"><span>${readMins(ep.html)} 分鐘</span><span class="ep-meta-dot"></span><span>${escapeHtml(ep.chars || "")} 字</span></div></div><div class="ep-companion"><div class="ep-companion-tag" role="button" tabindex="0" onclick="toggleCompanion(this)"><span class="ec-line"></span><span class="ec-lbl"><span class="ec-arrow">▸</span> 導讀區<span class="ec-count"></span> · 點開陪你讀</span><span class="ec-line"></span></div><div class="ep-companion-body">${stH}${vis.length === 0 ? "" : `<div class="ep-info-strip"><div class="ep-info-head" role="button" tabindex="0" onclick="toggleEpInfo(this)"><span class="eih-icon">${renderIcon("guide")}</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-arc-legend"><span class="tal-chip" style="color:var(--jade)">● 把拔</span><span class="tal-chip" style="color:var(--silver)">● 學長</span><span class="tal-chip" style="color:var(--f3,#ff4858)">● 學妹</span><span class="tal-chip" style="color:var(--amber)">● 女兒</span><span class="tal-chip" style="color:var(--ember)">● 複合</span></div><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>`}${tline ? `<div class="ep-tline-wrap"><div class="ep-tline-toggle" role="button" tabindex="0" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${escapeHtml(tline)}</span></div></div>` : ""}${note ? `<div class="ep-note"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${linkifyEpRefs(note)}</div></div>` : ""}${cluesH}${grannyH}${scienceH}${litH}</div></div><div class="ep-story-divider" aria-hidden="true"><span class="esd-line"></span><span class="esd-mark">✦ 故事正文</span><span class="esd-line"></span></div><div class="ep-body-wrap"></div>${tH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
         const bd = document.createElement("div");
         bd.className = "ep-body";
         bd.innerHTML = ep.html;
@@ -8356,8 +8421,23 @@
       }
 
       // ── IntersectionObserver ──
+      // 顯示與「目前集數」分成兩個 observer:
+      // 超長集(EP37/38/41 高 15000px+)在 threshold 0.06 下最大相交比 < 0.06,
+      // 單一 observer 會讓它們永遠不 reveal、進度永遠不更新(大結局整章隱形)。
       let maxEpReached = -1,
         currentEpNum = -1;
+      /* 1) reveal:任何相交就顯示(一次性,顯示後即 unobserve) */
+      const revealObs = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (!e.isIntersecting) return;
+            e.target.classList.add("visible");
+            revealObs.unobserve(e.target);
+          });
+        },
+        { threshold: 0, rootMargin: "0px 0px -18% 0px" },
+      );
+      /* 2) current:章節進入視窗中帶(35%~45%)才算「目前集」,長短章節皆可靠 */
       const obs = new IntersectionObserver(
         (entries) => {
           entries.forEach((e) => {
@@ -8401,13 +8481,34 @@
             }
           });
         },
-        { threshold: 0.06, rootMargin: "0px 0px -25% 0px" },
+        { threshold: 0, rootMargin: "-35% 0px -55% 0px" },
       );
-      document.querySelectorAll(".episode").forEach((el) => obs.observe(el));
+      document.querySelectorAll(".episode").forEach((el) => {
+        revealObs.observe(el);
+        obs.observe(el);
+      });
+      applyCompanionPref(); /* 章節建構完才有 .ep-companion 可套偏好與計數 */
       buildTimelinePanel(0);
       buildTraversePanel(0);
       syncMobileNav();
 
+      /* 手機底欄捲動收合:向下捲(讀下去)收起,向上捲喚回;24px 滯後防抖 */
+      (function () {
+        function onScrollDir(getY) {
+          let lastY = -1; /* 各容器各持座標(main-col 與 window 座標系不可混算) */
+          return function () {
+            const y = getY();
+            if (lastY < 0) { lastY = y; return; }
+            const d = y - lastY;
+            if (Math.abs(d) < 24) return;
+            document.body.classList.toggle("fab-hidden", d > 0 && y > 300);
+            lastY = y;
+          };
+        }
+        const mc = document.getElementById("main-col");
+        if (mc) mc.addEventListener("scroll", onScrollDir(() => mc.scrollTop), { passive: true });
+        window.addEventListener("scroll", onScrollDir(() => window.scrollY || 0), { passive: true });
+      })();
       /* 快取 MediaQueryList 避免 scroll 事件中重複建立 */
       const _mqMobile = window.matchMedia("(max-width:767px)");
       const _mqDesktop = window.matchMedia("(min-width:768px)");
@@ -8773,6 +8874,24 @@
               }),
             ),
           );
+        });
+      }
+      /* 導讀區整組收合:預設摺單列,點開展開;偏好記憶(想常開的讀者只按一次) */
+      const COMPANION_PREF_KEY = "redtime_reader_companion_open_v1"; /* redtime_ prefix:清除本機紀錄要掃得到 */
+      function toggleCompanion(h) {
+        const wrap = h.closest(".ep-companion");
+        if (!wrap) return;
+        const open = wrap.classList.toggle("open");
+        try { localStorage.setItem(COMPANION_PREF_KEY, open ? "1" : "0"); } catch (e) {}
+      }
+      function applyCompanionPref() {
+        let open = false;
+        try { open = localStorage.getItem(COMPANION_PREF_KEY) === "1"; } catch (e) {}
+        document.querySelectorAll(".ep-companion").forEach((w) => {
+          w.classList.toggle("open", open);
+          const c = w.querySelector(".ec-count");
+          const nItems = w.querySelectorAll(".ep-companion-body > *").length;
+          if (c) c.textContent = "（" + nItems + "）";
         });
       }
       function toggleEpInfo(h) {
@@ -9447,8 +9566,18 @@
           return '<span class="es-expert" title="' + escapeHtml(e.zh) + ' · ' + escapeHtml(e.en) + '">' + e.icon + ' ' + escapeHtml(e.zh) + '<span class="es-expert-en">' + escapeHtml(e.en) + '</span></span>';
         }).join('');
         const avatarIcon = (experts[0] && experts[0].icon) || '⚛';
-        return `<div class="ep-science"><div class="ep-science-toggle" onclick="toggleScience(this)" role="button" tabindex="0" aria-expanded="false" aria-controls="science-body-${s.ep}"><div class="es-avatar"><span aria-hidden="true">${avatarIcon}</span></div><span class="es-label">科普 · <span style="font-size:10px;opacity:.7;letter-spacing:.08em">${escapeHtml(s.topic.split('—')[0].split('/')[0].trim())}</span></span><span class="es-arrow">▾</span></div><div class="ep-science-body" id="science-body-${s.ep}"><div class="es-kicker">EP${s.ep} · 科普小單元</div><div class="es-frame">讓懂物理的人補一句：定律是真的，拿來比喻紅線的部分，是文學。</div>${expertsHTML ? '<div class="es-experts">' + expertsHTML + '</div>' : ''}<div class="es-title">${_sciGlossTitle(s.topic)}</div>${scienceTermChips(s.body)}<div class="es-text es-notebook">${formatScienceBody(s.body)}</div>${scienceThreadFooter(s.ep)}</div></div>`;
+        return `<div class="ep-science"><div class="ep-science-toggle" onclick="toggleScience(this)" role="button" tabindex="0" aria-expanded="false" aria-controls="science-body-${s.ep}"><div class="es-avatar"><span aria-hidden="true">${avatarIcon}</span></div><span class="es-label">科普 · <span style="font-size:10px;opacity:.7;letter-spacing:.08em">${escapeHtml(s.topic.split('。')[0].split('—')[0].split('/')[0].trim())}</span></span><span class="es-arrow">▾</span></div><div class="ep-science-body" id="science-body-${s.ep}"><div class="es-kicker">EP${s.ep} · 科普小單元</div><div class="es-frame">讓懂物理的人補一句：定律是真的，拿來比喻紅線的部分，是文學。</div>${expertsHTML ? '<div class="es-experts">' + expertsHTML + '</div>' : ''}<div class="es-title">${_sciGlossTitle(s.topic)}</div>${scienceTermChips(s.body)}<div class="es-text es-notebook">${formatScienceBody(s.body)}</div>${scienceThreadFooter(s.ep)}</div></div>`;
       }
+      /* 桌面搜尋快捷鍵:/ 或 Cmd+K (Mac) / Ctrl+K (Windows);輸入框聚焦時不攔 */
+      document.addEventListener("keydown", (e) => {
+        const tag = (document.activeElement || {}).tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA") return;
+        const k = e.key;
+        if (k === "/" || ((e.metaKey || e.ctrlKey) && (k === "k" || k === "K"))) {
+          e.preventDefault();
+          if (typeof openSearch === "function") openSearch();
+        }
+      });
       function toggleScience(h) {
         h.classList.toggle("open");
         h.nextElementSibling.classList.toggle("open");
@@ -9524,6 +9653,10 @@
       let allExpanded = false;
       function toggleAllSections() {
         allExpanded = !allExpanded;
+        // 導讀區容器跟著一鍵展開/收起
+        document.querySelectorAll(".ep-companion").forEach((w) => {
+          w.classList.toggle("open", allExpanded);
+        });
         // Episode info strips
         document.querySelectorAll(".ep-info-head").forEach((h) => {
           const body = h.nextElementSibling;

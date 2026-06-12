@@ -88,6 +88,7 @@
       // 逃生/節奏:跳過鈕 + 進度點
       ".act-ov .act-skip{position:fixed;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));z-index:20;background:rgba(20,16,22,.6);border:1px solid rgba(255,210,160,.3);color:rgba(244,236,226,.7);font-family:inherit;font-size:11px;letter-spacing:.18em;padding:7px 14px;border-radius:999px;cursor:pointer;opacity:.5;transition:opacity .3s,background .3s}",
       ".act-ov .act-skip:hover,.act-ov .act-skip:focus-visible{opacity:1;background:rgba(255,210,160,.16);outline:none}",
+      ".act-ov .act-skip-all{top:calc(max(14px,env(safe-area-inset-top)) + 40px)}",
       ".act-ov .act-progress{position:fixed;top:max(16px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:20;display:flex;gap:6px}",
       ".act-ov .act-prog-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,210,160,.22)}",
       ".act-ov .act-prog-dot.on{background:rgba(255,210,160,.9);box-shadow:0 0 8px rgba(255,200,150,.6)}",
@@ -177,6 +178,13 @@
     const skip = el("button", "act-skip", "跳過這段 ›"); skip.type = "button"; skip.setAttribute("aria-label", "跳過這段");
     skip.addEventListener("click", doSkip);
     ov.appendChild(skip);
+    // 全鏈總跳過（第 2 段起才出現）:先把鏈推到尾端,再走單段 doSkip 的既有收尾(關 overlay/清 watchdog/guard 回呼)→ next() 直接觸發 onAll
+    if (_chainProgress && _chainProgress.i > 0 && typeof _chainProgress.skipAll === "function") {
+      const chainEnd = _chainProgress.skipAll;
+      const skipAll = el("button", "act-skip act-skip-all", "跳到結局 »"); skipAll.type = "button"; skipAll.setAttribute("aria-label", "跳到結局");
+      skipAll.addEventListener("click", function () { chainEnd(); doSkip(); });
+      ov.appendChild(skipAll);
+    }
     document.addEventListener("keydown", onEsc);
     if (armed) armed.onCleanup = cleanup; // 正常結束也清 watchdog/esc（guard 內部呼叫，不受 act 持有原始參考影響）
     wd = setTimeout(function () { if (armed && !armed.done) doSkip(); }, 30000); // 防卡死最後保險
@@ -927,7 +935,7 @@
     let i = 0;
     function next() {
       if (i >= ids.length) { _chainProgress = null; if (onAll) onAll(); return; }
-      _chainProgress = { i: i, total: ids.length };
+      _chainProgress = { i: i, total: ids.length, skipAll: function () { i = ids.length; } }; // skipAll:把游標推到尾端,下一次 next() 即收鏈呼叫 onAll
       const fn = map[ids[i++]];
       if (typeof fn === "function") fn(arm(next)); else next();
     }

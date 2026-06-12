@@ -119,6 +119,7 @@ const dom = {
   hiddenEnding:   document.getElementById("hidden-ending"),
   hiddenEndingText: document.getElementById("hidden-ending-text"),
   ultimateCount:  document.getElementById("ultimate-count"),
+  introSkip:      document.getElementById("intro-skip"),
 };
 
 /* Set text content safely (no innerHTML) */
@@ -4248,6 +4249,7 @@ function checkCollisions() {
    開場動畫
    ════════════════════════════════════════════════ */
 let introScreechPlayed = false;
+let introSeenOnce = false; // 本次瀏覽階段是否已完整看過一次開場（看過後續場才提供跳過）
 
 function startIntro() {
   state.phase = "intro";
@@ -4259,6 +4261,8 @@ function startIntro() {
   state.trainNorthZ = -PLATFORM_LEN * 0.8;
   state.trainSouthArrived = false;
   state.trainNorthArrived = false;
+  /* 已完整看過一次開場 → 之後每次開場提供「跳過」鈕 */
+  dom.introSkip.style.display = introSeenOnce ? "block" : "none";
 }
 
 function updateIntro(dt) {
@@ -4319,32 +4323,64 @@ function updateIntro(dt) {
   }
 
   if (t >= 9.5) {
-    state.phase = "running";
-    state.timeLeft = GAME_TIME;
-    dom.hud.style.display = "block";
-    dom.sprintWrap.style.display = "block";
-    dom.buffIndicators.style.display = "block";
-    dom.breathHint.style.opacity = "1";
-    dom.levelText.textContent = "\u7B2C " + state.currentLevel + " \u95DC";
-    updateUltimateUI();
-    if (isMobile) {
-      dom.touchCtrl.style.display = "block";
-      dom.sprintBtn.style.display = "block";
-      dom.jumpBtn.style.display = "block";
-      dom.ultimateBtn.style.display = "block";
-      dom.ultimateCount.style.display = "block";
-    }
-    safeSetTimeout(function() { dom.breathHint.style.opacity = "0"; }, 4000);
-    document.body.classList.remove("letterbox-on");
-    if (state.currentLevel === 1) {
-      showNarrative("\u8DD1\uFF01", 1.5);
-    } else {
-      showNarrative("\u7B2C " + state.currentLevel + " \u95DC\u958B\u59CB\uFF01", 2);
-    }
-    if (window.__LEVEL_MECHANICS__) window.__LEVEL_MECHANICS__.activate(state.currentLevel);  // \u76F4\u547C,\u6DB5\u84CB\u6240\u6709\u95DC + \u4E0D\u4F9D\u8CF4 observer
-    if (audioCtx) playDoorChime();
-    startAmbientSounds();
+    introSeenOnce = true; // 完整看完一次開場，之後的開場可跳過
+    beginRunning();
   }
+}
+
+/* 進入跑步階段 — 開場自然結束（t>=9.5）與「跳過」共用同一份收尾設定 */
+function beginRunning() {
+  state.phase = "running";
+  state.timeLeft = GAME_TIME;
+  dom.introSkip.style.display = "none";
+  dom.hud.style.display = "block";
+  dom.sprintWrap.style.display = "block";
+  dom.buffIndicators.style.display = "block";
+  dom.breathHint.style.opacity = "1";
+  dom.levelText.textContent = "\u7B2C " + state.currentLevel + " \u95DC";
+  updateUltimateUI();
+  if (isMobile) {
+    dom.touchCtrl.style.display = "block";
+    dom.sprintBtn.style.display = "block";
+    dom.jumpBtn.style.display = "block";
+    dom.ultimateBtn.style.display = "block";
+    dom.ultimateCount.style.display = "block";
+  }
+  safeSetTimeout(function() { dom.breathHint.style.opacity = "0"; }, 4000);
+  document.body.classList.remove("letterbox-on");
+  if (state.currentLevel === 1) {
+    showNarrative("\u8DD1\uFF01", 1.5);
+  } else {
+    showNarrative("\u7B2C " + state.currentLevel + " \u95DC\u958B\u59CB\uFF01", 2);
+  }
+  if (window.__LEVEL_MECHANICS__) window.__LEVEL_MECHANICS__.activate(state.currentLevel);  // \u76F4\u547C,\u6DB5\u84CB\u6240\u6709\u95DC + \u4E0D\u4F9D\u8CF4 observer
+  if (audioCtx) playDoorChime();
+  startAmbientSounds();
+  /* 開跑閒置提示：每關進入跑步階段重新計時 */
+  idleHintTimer = 0;
+  idleHintDone = false;
+}
+
+/* 跳過開場：把場景等效推進到開場 9.5 秒的結束點再開跑 */
+function skipIntro() {
+  if (state.phase !== "intro") return;
+  state.introTimer = 9.5;
+  introScreechPlayed = true;
+  /* 兩列火車直接到位：南下停妥、北上進站並開門（對齊 updateIntro 跑完的狀態） */
+  state.trainSouthZ = 0;
+  state.trainSouthArrived = true;
+  trainSouth.position.z = 0;
+  state.trainNorthZ = 0;
+  if (!state.trainNorthArrived) {
+    state.trainNorthArrived = true;
+    state.trainNorthDoorOpen = true;
+    state.doorPhase = 0;
+  }
+  trainNorth.position.z = 0;
+  /* 鏡頭直接落到跑步追焦基準位（與 updateCamera 的 running 公式同源） */
+  camera.position.set(father.position.x * 0.3, 3.5, father.position.z + 6);
+  camera.lookAt(father.position.x, 1.2, father.position.z - 8);
+  beginRunning();
 }
 
 /* ════════════════════════════════════════════════
@@ -4447,6 +4483,8 @@ function updateJump(dt) {
    ════════════════════════════════════════════════ */
 let footstepTimer = 0;
 let sprint2HintShown = false;
+let idleHintTimer = 0;    // 進入跑步階段後，尚未前進輸入的累計秒數
+let idleHintDone = false; // 本關閒置提示是否已處理（已顯示過，或玩家已前進）
 
 function updateGame(dt) {
   if (state.phase !== "running" && state.phase !== "sprint2") return;
@@ -4463,6 +4501,19 @@ function updateGame(dt) {
     if (keys["KeyW"] || keys["ArrowUp"])    moveZ = -1;
     /* NO backward: KeyS and ArrowDown are ignored */
     state.sprinting = !!(keys["ShiftLeft"] || keys["ShiftRight"]);
+  }
+
+  /* 開跑閒置提示：進入跑步後 3 秒內完全沒有前進輸入，提示一次（每關最多一次） */
+  if (!idleHintDone) {
+    if (moveZ < 0) {
+      idleHintDone = true;
+    } else {
+      idleHintTimer += dt;
+      if (idleHintTimer >= 3) {
+        idleHintDone = true;
+        showNarrative(isMobile ? "推住搖桿往前跑！" : "按住 W 往前跑！", 2.5);
+      }
+    }
   }
 
   /* Calculate speed multipliers */
@@ -4669,6 +4720,15 @@ function loadLeaderboard() {
 
 function saveLeaderboard(entries) {
   try { localStorage.setItem(LB_KEY, JSON.stringify(entries)); } catch (e) { /* quota */ }
+}
+
+/* 標題畫面個人最佳：取排行榜第一名（已依分數排序）；沒有紀錄就留空，CSS :empty 自動隱藏 */
+function updateTitleBest() {
+  var el = document.getElementById("title-best");
+  if (!el) return;
+  var entries = loadLeaderboard();
+  var best = entries.length > 0 ? entries[0] : null;
+  el.textContent = best ? "你的最佳：第 " + best.level + " 關 · 總分 " + best.score : "";
 }
 
 /* Score = A(totalTimeBank) + B(totalItemsBank) = C */
@@ -5697,6 +5757,8 @@ function init() {
   createDoorMarker();
   detectMobile();
   buildQualityPanel();
+  /* 標題畫面個人最佳 */
+  updateTitleBest();
   /* 美術強化初始接線(檔位分級,含基礎氛圍燈) */
   applyArtTier(state.quality);
   /* 電影後製初始檔位判定(桌機預設「完美」→ 啟用) */
@@ -5873,6 +5935,7 @@ function resetGame(keepCarryState) {
   dom.goldFlash.style.opacity = "0";
   dom.buffIndicators.style.display = "none";
   dom.buffIndicators.textContent = "";
+  dom.introSkip.style.display = "none";
   document.body.classList.remove("letterbox-on");
 
   /* Ultimate button reset */
@@ -5915,6 +5978,9 @@ function resetGame(keepCarryState) {
     child.parentNode.replaceChild(clone, child);
   }
 
+  /* 標題畫面個人最佳（節點重建後重新填值） */
+  updateTitleBest();
+
   footstepTimer = 0;
   introScreechPlayed = false;
 }
@@ -5942,12 +6008,23 @@ dom.title.setAttribute("role", "button");
 dom.title.setAttribute("tabindex", "0");
 dom.title.setAttribute("aria-label", "點擊或按 Enter 開始月台上的狂奔");
 
+/* 開場跳過鈕（看過一次完整開場後，startIntro 才會把它顯示出來） */
+dom.introSkip.addEventListener("click", function() { skipIntro(); });
+dom.introSkip.addEventListener("keydown", function(e) {
+  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); skipIntro(); }
+});
+
 dom.resultRetry.addEventListener("click", function() {
   /* After level 10 clear: restart with carry state */
   if (state.phase === "final_result") {
     resetGame(true);
   } else {
+    /* 失敗重試：不繞回標題畫面，重置後以「開場跳過」等效狀態直接開跑 */
     resetGame(false);
+    dom.title.style.display = "none";
+    dom.title.classList.add("hide");
+    startIntro();
+    skipIntro();
   }
 });
 

@@ -83,5 +83,16 @@ overlay.addEventListener("click", function (e) {
   if (e.target === overlay) window.closeLM402Tutorial();
 });
   }
+  // 場景 HUD 的教學重看鈕:玄關還在時保持隱藏,進場（玄關移除）後常駐右上
+  const replayBtn = document.getElementById("tutorial-replay");
+  if (replayBtn) {
+replayBtn.addEventListener("click", function () { window.openLM402Tutorial(); });
+const revealTimer = setInterval(function () {
+  if (window.__lm402GateEntered && !document.getElementById("cinematic-gate")) {
+replayBtn.hidden = false;
+clearInterval(revealTimer);
+  }
+}, 500);
+  }
 });
 })();

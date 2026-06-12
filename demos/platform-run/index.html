@@ -8,10 +8,10 @@
 <!-- Defense-in-depth CSP（最佳做法仍是 HTTP header，但 GitHub Pages 無法設 header，故以 meta 作為最低防線） -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; media-src 'self' https:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';" />
 <!-- google-site-verification 只需在 index.html 設定 -->
-<meta name="description" content="一眼只有一秒，卻用了二十年才讀懂。《時間裡的兩個妳》 連載中。" />
+<meta name="description" content="2018 年台中火車站，把拔在 30 秒內衝到月台盡頭抱起女兒。十關橫向跑酷，對位《時間裡的兩個妳》EP36。" />
 <meta property="og:type" content="website" />
 <meta property="og:title" content="月台上的狂奔 · 每一次，都要趕上" />
-<meta property="og:description" content="一眼只有一秒，卻用了二十年才讀懂。《時間裡的兩個妳》 連載中。" />
+<meta property="og:description" content="2018 年台中火車站，把拔在 30 秒內衝到月台盡頭抱起女兒。十關橫向跑酷，對位《時間裡的兩個妳》EP36。" />
 <meta property="og:url" content="https://toniliumvp.github.io/RedTime/demos/platform-run/index.html" />
 <meta property="og:image" content="https://toniliumvp.github.io/RedTime/assets/og-image.jpg" />
 <meta property="og:image:width" content="1200" />
@@ -23,7 +23,7 @@
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:image" content="https://toniliumvp.github.io/RedTime/assets/og-image.jpg" />
 <meta name="twitter:title" content="月台上的狂奔 · 每一次，都要趕上" />
-<meta name="twitter:description" content="一眼只有一秒，卻用了二十年才讀懂。《時間裡的兩個妳》 連載中。" />
+<meta name="twitter:description" content="2018 年台中火車站，把拔在 30 秒內衝到月台盡頭抱起女兒。十關橫向跑酷，對位《時間裡的兩個妳》EP36。" />
 <link rel="canonical" href="https://toniliumvp.github.io/RedTime/demos/platform-run/index.html" />
 <link rel="manifest" href="../../manifest.json" />
     <link rel="apple-touch-icon" href="../../assets/pwa-icon-192.png" />
@@ -74,13 +74,18 @@
 <div class="letterbox-top"></div>
 <div class="letterbox-bot"></div>
 
+<!-- 開場跳過鈕（看過一次完整開場後才會顯示） -->
+<div id="intro-skip" role="button" tabindex="0" aria-label="跳過開場動畫">跳過 ›</div>
+
 <!-- 標題畫面 -->
 <div id="title-screen">
   <div class="title-year">2018 年 台中火車站</div>
   <div class="title-main">月台上的狂奔</div>
   <div class="title-sub">每一次，都要趕上</div>
   <div class="title-start">點擊或按 Enter 開始</div>
+  <div class="title-best" id="title-best"></div>
   <a class="title-read" href="../../reader.html#ep-36">📖 先讀這段故事 · EP36</a>
+  <a class="title-read" href="../../index.html">← 回首頁</a>
 </div>
 
 <!-- 遊戲 HUD -->
@@ -120,7 +125,7 @@
     <button id="save-score-btn">記錄成績</button>
   </div>
   <div class="result-retry" id="result-retry">再陪他跑一次</div>
-  <div id="leaderboard-btn">🏆 排行榜</div>
+  <div id="leaderboard-btn">🏆 本機排行榜</div>
   <div class="result-links">
     <a class="result-link" href="../../index.html">回到首頁</a>
     <a class="result-link" href="../../reader.html">閱讀完整故事</a>
@@ -129,7 +134,7 @@
 
 <!-- 排行榜面板 -->
 <div id="leaderboard-panel">
-  <div class="lb-title" id="lb-title">🏆 排行榜 TOP 10</div>
+  <div class="lb-title" id="lb-title">🏆 本機排行榜 TOP 10</div>
   <div id="lb-body"></div>
   <div class="lb-close" id="lb-close">關閉</div>
 </div>
@@ -224,7 +229,8 @@
       <h2 class="pt-step-title">怎麼跑</h2>
       <div class="pt-step-body">
         <p><strong>電腦：</strong><br>
-          A／D 左右閃 · W 前進 · Shift 衝刺 · Space 跳</p>
+          A／D 左右閃 · W 前進 · Shift 衝刺 · Space 跳<br>
+           E 必殺技：清開前方、加速衝刺（每過一關 +1 次）</p>
         <p><strong>手機：</strong><br>
           左下搖桿走 · 右下「衝刺」「跳躍」按鈕</p>
       </div>

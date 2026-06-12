@@ -90,6 +90,20 @@ saved = localStorage.getItem(SITE_KEY) || localStorage.getItem(LEGACY_KEY) || "m
 if (!LEVELS[saved]) saved = "medium";
   } catch {}
   applyScale(saved);
+  /* 折衷收合:首訪展開(長輩第一眼就看得到);選過字級或收合過 → 記憶收合成單顆「字」鈕 */
+  const FONTBAR_COLLAPSED_KEY = "redtime_fontbar_collapsed_v1";
+  const _fontWidget = document.getElementById("site-font-widget");
+  const _fontCollapseBtn = document.getElementById("site-font-collapse");
+  function _setFontBarCollapsed(c) {
+    if (_fontWidget) _fontWidget.classList.toggle("collapsed", c);
+    try { localStorage.setItem(FONTBAR_COLLAPSED_KEY, c ? "1" : "0"); } catch (e) {}
+  }
+  try {
+    if (_fontWidget && localStorage.getItem(FONTBAR_COLLAPSED_KEY) === "1") _fontWidget.classList.add("collapsed");
+  } catch (e) {}
+  if (_fontCollapseBtn) _fontCollapseBtn.addEventListener("click", function () {
+    _setFontBarCollapsed(!_fontWidget.classList.contains("collapsed"));
+  });
   buttons.forEach((button) => {
 button.addEventListener("click", () => {
   const level = button.dataset.fontScale || "medium";
@@ -98,6 +112,8 @@ button.addEventListener("click", () => {
     localStorage.setItem(LEGACY_KEY, level);  // 寫舊鍵保 backward compat
   } catch {}
   applyScale(level);
+  if (window.__fontBarT) clearTimeout(window.__fontBarT); /* 連點調整不被前一顆 timer 收掉 */
+  window.__fontBarT = setTimeout(function () { _setFontBarCollapsed(true); }, 900);
 });
   });
   // 放大鏡按鈕 — 一鍵跳到最大階「超特大」(長輩友善 elderly mode)
@@ -472,7 +488,20 @@ _bd = bd; return card;
     return st;
   }
   // 首頁繼續閱讀條：有進度才現身
-  (function setupContinueBar() {
+  (function setupSpoilerMasks() {
+  document.querySelectorAll(".spoiler-mask").forEach(function (el) {
+    function reveal(e) {
+      if (el.classList.contains("revealed")) return;
+      e.preventDefault();
+      e.stopPropagation();
+      el.classList.add("revealed");
+    }
+    el.addEventListener("click", reveal);
+    el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") reveal(e); });
+  });
+})();
+
+(function setupContinueBar() {
     try {
       var el = document.getElementById("hero-continue");
       if (!el) return;
@@ -527,6 +556,7 @@ card.appendChild(ce("div", "ob-sub", "選哪個都行，第一眼都會回到 20
 var opts = ce("div", "ob-options");
 function opt(t, s, fn) { var e = optEl("button", t, s); e.addEventListener("click", fn); return e; }
 opts.appendChild(opt("📖 讀 EP3 試讀", "一個 21 歲男生狼狽又認真的初戀，從那一眼開始。", function () { remember("read"); go(READER + "#ep-3"); }));
+opts.appendChild(opt("☆ 第一次來？5 分鐘引路", "讓 toni 陪你走一遍：從哪一集開始、路上會遇到什麼。", function () { remember("tour"); try { closeModal(); } catch (e) {} if (window.openNewcomerTour) window.openNewcomerTour(); }));
 opts.appendChild(opt("↗ 走進 LM402", "站到他站過的位置，看那一眼會不會發生，這次換你親眼看。", function () { remember("lm402"); go("lm402.html"); }));
 opts.appendChild(opt("🏃 走進月台上的狂奔", "月台那 30 秒，自己跑一次就忘不了。", function () { remember("platform"); go("demos/platform-run/index.html"); }));
 opts.appendChild(opt("★ 我是老朋友 · 鐵粉測驗", "讓我看看你記得多少。十題，最後一題我故意留了狠的。", function () { remember("fan"); renderQuiz(card); }));
@@ -624,14 +654,48 @@ el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key ===
 
   // 進站分流窗：開啟後 20 秒無互動自動關閉（與 ×／Esc／點背景同一套 closeModal）。
   // 只在進站分流窗 arm（不影響使用者主動點開的視角卡／鐵粉測驗）；任何關閉都會 clearTimeout。
-  function openRouter() { if (_autoCloseT) { clearTimeout(_autoCloseT); _autoCloseT = null; } var card = openModal(); renderChoose(card); _autoCloseT = setTimeout(closeModal, 20000); }
+  function openRouter() {
+    if (_autoCloseT) { clearTimeout(_autoCloseT); _autoCloseT = null; }
+    var card = openModal();
+    renderChoose(card);
+    _autoCloseT = setTimeout(closeModal, 20000);
+    /* 「20 秒無互動」才關:首次互動(點選/按鍵,例如開始作答鐵粉測驗)即解除計時 */
+    card.addEventListener("pointerdown", _disarmAutoClose, { once: true });
+    card.addEventListener("keydown", _disarmAutoClose, { once: true });
+  }
+  function _disarmAutoClose() { if (_autoCloseT) { clearTimeout(_autoCloseT); _autoCloseT = null; } }
   window.__ENTRY_ROUTER__ = { open: openRouter, viewpoint: openViewpoint, reset: function () { try { localStorage.removeItem(ROUTE_KEY); } catch (e) {} } };
 
   var tourDeep = false; try { tourDeep = new URLSearchParams(location.search).get("tour") === "1"; } catch (e) {}
   // 進站分流永遠顯示（每次進站都跳，鐵粉題庫多、每次有驚喜）；可手動跳過（× / Escape / 點背景）。
   // ?tour=1 深連時讓既有新讀者導覽接手，不雙開。
   // 延到 3.5 秒：先讓 hero「一眼只有一秒，讀懂它用了二十年」這句落地，再彈分流窗。
-  if (!tourDeep) { setTimeout(openRouter, 3500); }
+  if (!tourDeep) {
+    var _routerFired = false;
+    function _tryOpenRouter() {
+      if (_routerFired) return;
+      _routerFired = true;
+      /* 使用者已在讀新手導覽就別打斷(分流窗 openModal 會強制關導覽) */
+      var nt = document.getElementById("newcomer-tour");
+      if (nt && !nt.hidden) return;
+      openRouter();
+    }
+    var _isFresh = true;
+    try { _isFresh = !getReturnState().hasProgress && !localStorage.getItem(ROUTE_KEY); } catch (e) {}
+    if (_isFresh) {
+      /* 純新客:先讓 hero 完整亮相 — 首次往下捲(離開首屏)或停留 15 秒才彈 */
+      var _onFirstScroll = function () {
+        if (window.scrollY > window.innerHeight * 0.5) {
+          window.removeEventListener("scroll", _onFirstScroll);
+          setTimeout(_tryOpenRouter, 600);
+        }
+      };
+      window.addEventListener("scroll", _onFirstScroll, { passive: true });
+      setTimeout(_tryOpenRouter, 15000);
+    } else {
+      setTimeout(_tryOpenRouter, 3500);
+    }
+  }
 })();
 
 // ── block 5 ──
