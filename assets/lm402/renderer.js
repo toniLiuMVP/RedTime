@@ -2349,12 +2349,13 @@ function S(t) {
           ((o.material = o.material.clone()),
           (o.material.transparent = !0),
           (o.material.opacity = t.echoOpacity ?? 0.35),
-          o.material.emissive && o.material.emissive.set
-            ? (o.material.emissive.set(t.echoColor ?? "#ffcfb1"),
-               (o.material.emissiveIntensity = 0.16))
-            : (o.material.emissive = new e.Color(t.echoColor ?? "#ffcfb1"),
-               (o.material.emissiveIntensity = 0.16),
-               (o.material.needsUpdate = !0)));
+          /* 只有原生支援 emissive 的材質才設;MeshBasicMaterial 強塞 emissive 會讓
+             three 的 refreshUniformsCommon 每幀 TypeError → render 狀態堆疊洩漏
+             (echo 顯形時 0.8MB/s 直到瀏覽器殺頁)。basic 材質的 echo 感靠
+             transparent+opacity 已足夠 */
+          o.material.emissive && o.material.emissive.set &&
+            (o.material.emissive.set(t.echoColor ?? "#ffcfb1"),
+             (o.material.emissiveIntensity = 0.16)));
       }),
     o.scale.setScalar(t.scale ?? 0.95),
     (o.userData.pose = {
@@ -8327,12 +8328,12 @@ export function createLm402Scene(D, runtimeOptions = {}) {
                 (Xo.rotation.y = -Math.PI / 2),
                 v(Xo, 0, 1)))
           : "board" === t &&
-            ((Xo = createSilhouette({
+            ((Xo = S({ /* 工廠已 minify 成 S;舊名 createSilhouette 是 runtime ReferenceError */
               phone: !0,
-              hairColor: "#11100f",
-              shirtColor: "#323846",
-              pantsColor: "#1d222a",
-              shoesColor: "#383634",
+              hair: "#11100f",
+              torso: "#323846",
+              legs: "#1d222a",
+              shoes: "#383634",
               echo: !0,
               echoOpacity: 0.8,
               echoColor: "#88ccff",

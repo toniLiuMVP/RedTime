@@ -1646,6 +1646,9 @@ body[data-ui-preset="ending"] #scene-canvas {
   background: #0a0e16;
   box-shadow: var(--shadow);
   cursor: grab;
+  /* 面板系統會固定高度:內容超出時內捲,不再外溢/截斷 */
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .dialogue-card:active,
 .ending-card:active {
@@ -1679,6 +1682,11 @@ body[data-ui-preset="ending"] #scene-canvas {
   gap: 10px;
   color: #eee8ded1;
   line-height: 1.8;
+  /* 長段劇情內捲:卡片高度受控,選項不會被擠出畫面 */
+  max-height: 44vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 6px;
 }
 .dialogue-copy p {
   margin: 0;
@@ -1697,7 +1705,8 @@ body[data-ui-preset="ending"] #scene-canvas {
   border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: #ffffff0a;
-  text-align: center;
+  text-align: left;
+  line-height: 1.6;
 }
 .dialogue-choice strong,
 .ending-button {
@@ -1790,6 +1799,16 @@ body[data-ui-preset="ending"] #scene-canvas {
 body.dialogue-open .mobile-controls,
 body.ending-open .mobile-controls {
   pointer-events: none;
+}
+/* 對話進行中:底部左側 UI 讓位(否則疊在選項上,排版亂) */
+body.dialogue-open .transcript-dock,
+body.dialogue-open .transcript-toggle,
+body.dialogue-open .focus-prompt,
+body.dialogue-open .hint-pill,
+body.dialogue-open .bottom-dock {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
 }
 body.landscape-prompt .hud,
 body.landscape-prompt .speed-widget,

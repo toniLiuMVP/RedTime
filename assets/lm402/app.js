@@ -3036,6 +3036,7 @@ function renderFrame() {
   renderDebugPanel();
 }
 
+const _tickFuse = { lastMsg: null, count: 0, halted: false }; /* tick 重複錯誤熔斷器 */
 function tick(now) {
   try {
     if (!tick.last) {
@@ -3072,15 +3073,35 @@ function tick(now) {
       window.__E4_PROPS__.update(dt);   // E4 雨/雪粒子 + 雲微飄
     }
     renderFrame();
+    _tickFuse.count = 0; /* 成功一幀就重置(只熔斷「連續」同錯) */
+    _tickFuse.lastMsg = null;
   } catch (err) {
-    console.error("[tick] error:", err);
+    /* 熔斷:同一錯誤每幀重複 = 靜默放大器(render 例外會讓 three 的
+       render 狀態堆疊每幀洩漏)。重複錯誤降噪,連續 120 幀同錯就停渲染迴圈
+       並亮出可讀提示,別讓頁面安靜地吃光記憶體 */
+    const msg = String(err && err.message || err);
+    if (msg === _tickFuse.lastMsg) {
+      _tickFuse.count++;
+      if (_tickFuse.count === 10) console.error("[tick] 同一錯誤已連續 10 幀，後續不再逐幀印出：", err);
+      if (_tickFuse.count >= 120 && !_tickFuse.halted) {
+        console.error("[tick] 同一錯誤連續 120 幀，熔斷停止渲染迴圈：", err);
+        _tickFuse.halted = true;
+        try {
+          setSubtitle("系統", "畫面引擎遇到重複錯誤，已暫停。請重新整理頁面。", 60);
+        } catch (_) {}
+      }
+    } else {
+      _tickFuse.lastMsg = msg;
+      _tickFuse.count = 1;
+      console.error("[tick] error:", err);
+    }
     // If intro is stuck due to error, force finish it
     if (state.mode === "intro") {
       console.warn("[tick] forcing finishIntro due to tick error");
       try { finishIntro(); } catch (_) { state.mode = "play"; }
     }
   }
-  requestAnimationFrame(tick);
+  if (!_tickFuse.halted) requestAnimationFrame(tick);
 }
 
 function bindKeyboard() {

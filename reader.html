@@ -1147,6 +1147,36 @@
           display: flex;
           flex-direction: column;
         }
+        /* 寬版檢視:時空穿越圖/3D 圖一次看全(僅桌面;手機抽屜本來就近全螢幕)
+           注意 cascade:基底 display:none 必須在前,桌面 inline-block 在後才會贏 */
+        .ip-expand {
+          margin-left: auto;
+          margin-right: 10px;
+          font: 500 11px "DM Mono", monospace;
+          letter-spacing: 0.08em;
+          color: var(--t2);
+          background: none;
+          border: 1px solid var(--line);
+          border-radius: 999px;
+          padding: 5px 12px;
+          cursor: pointer;
+        }
+        .ip-expand:hover {
+          color: var(--t1);
+          border-color: var(--t3);
+        }
+        @media (min-width: 768px) {
+          #info-panel.wide {
+            width: min(92vw, 1380px);
+          }
+          #info-panel.wide .tv-svg-wrap svg {
+            min-width: 0 !important;
+            width: 100%;
+          }
+          #info-panel.wide #map3d-wrap {
+            height: 480px !important;
+          }
+        }
         #info-panel.open {
           transform: none;
           transition-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
@@ -2609,6 +2639,16 @@
       }
       body.day-mode .ep-story-divider .esd-line {
         background: linear-gradient(90deg, transparent, rgba(140, 100, 20, 0.3), transparent);
+      }
+      /* 時間地圖放大鈕:僅桌面顯示(手機抽屜本來近全螢幕)。
+         display 開關放全域區,避免被外層桌面 media 包住導致手機套不到基底 none */
+      .ip-expand {
+        display: none;
+      }
+      @media (min-width: 768px) {
+        .ip-expand {
+          display: inline-block;
+        }
       }
       .eg-diagram-cap {
         font-family: 'Noto Sans TC', sans-serif;
@@ -5830,6 +5870,7 @@
       <div class="ip-handle"></div>
       <div class="ip-head">
         <span class="ip-title">時間地圖</span>
+        <button class="ip-expand" id="ip-expand" onclick="toggleInfoWide()" aria-label="放大檢視時間地圖" title="放大檢視（時空穿越圖一次看全）">⛶ 放大</button>
         <button class="ip-close" onclick="closeInfo()">✕</button>
       </div>
       <div class="ip-tabs">
@@ -8192,7 +8233,13 @@
         }
         applyCam();
         frame();
-        return { update };
+        function resize() {
+          const w2 = wrap.clientWidth || 320, h2 = wrap.clientHeight || 320;
+          renderer.setSize(w2, h2);
+          camera.aspect = w2 / h2;
+          camera.updateProjectionMatrix();
+        }
+        return { update, resize };
       }
 
       // ── Build episodes ──
@@ -8250,7 +8297,7 @@
         // 說書人：每集 10 位，展開時顯示三位（renderStoryteller 負責內容）
         const stPool = (typeof STORYTELLERS !== 'undefined' && STORYTELLERS[String(ep.ep)]) || [];
         const stH = stPool.length
-          ? `<div class="ep-note ep-storyteller"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleStoryteller(this, ${ep.ep})">▸ 說書人開講</div><div class="ep-note-body hidden" id="st-body-${ep.ep}"></div></div>`
+          ? `<div class="ep-note ep-storyteller"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleStoryteller(this, ${ep.ep})">▸ 說書人</div><div class="ep-note-body hidden" id="st-body-${ep.ep}"></div></div>`
           : '';
         // 文人說：本集有資料才出現；展開時隨機抽 1-10 位（renderLiterati 負責內容）
         const litPool = (LITERATI && LITERATI[String(ep.ep)]) || [];
@@ -9028,10 +9075,33 @@
         actions.appendChild(reroll);
         body.appendChild(actions);
       }
+      /* 時間地圖寬版檢視:360px 抽屜 ↔ 92vw 大畫布(時空穿越圖整張一次顯示) */
+      function toggleInfoWide() {
+        const p = document.getElementById("info-panel");
+        if (!p) return;
+        const wide = p.classList.toggle("wide");
+        const btn = document.getElementById("ip-expand");
+        if (btn) btn.textContent = wide ? "⇥ 收窄" : "⛶ 放大";
+        try { localStorage.setItem("redtime_infopanel_wide_v1", wide ? "1" : "0"); } catch (e) {}
+        /* 3D 圖 canvas 尺寸跟著容器走 */
+        if (typeof _map3d !== "undefined" && _map3d && _map3d.resize) _map3d.resize();
+      }
+      function applyInfoWidePref() {
+        try {
+          if (localStorage.getItem("redtime_infopanel_wide_v1") === "1") {
+            const p = document.getElementById("info-panel");
+            if (p) {
+              p.classList.add("wide");
+              const btn = document.getElementById("ip-expand");
+              if (btn) btn.textContent = "⇥ 收窄";
+            }
+          }
+        } catch (e) {}
+      }
       function toggleStoryteller(h, ep) {
         const b = h.nextElementSibling;
         const hid = b.classList.toggle('hidden');
-        h.textContent = (hid ? '▸' : '▾') + ' 說書人開講';
+        h.textContent = (hid ? '▸' : '▾') + ' 說書人';
         if (!hid) renderStoryteller(ep);
       }
       function toggleLiterati(h, ep) {
@@ -9065,6 +9135,7 @@
       function openInfo() {
         buildTimelinePanel(maxEpReached);
         buildTraversePanel(maxEpReached);
+        applyInfoWidePref();
         if (!isMobile()) {
           document.getElementById("info-panel").classList.add("open");
           const bc = document.getElementById("btn-collapse");
@@ -9701,6 +9772,11 @@
           if (allExpanded && body && typeof body.id === "string" && body.id.indexOf("lit-body-") === 0) {
             const ep = parseInt(body.id.slice("lit-body-".length), 10);
             if (!isNaN(ep) && typeof renderLiterati === "function") renderLiterati(ep);
+          }
+          // 說書人同文人說:一鍵展開時要 render 內容,否則開的是空殼(再點一次反而先關殼)
+          if (allExpanded && body && typeof body.id === "string" && body.id.indexOf("st-body-") === 0) {
+            const ep2 = parseInt(body.id.slice("st-body-".length), 10);
+            if (!isNaN(ep2) && typeof renderStoryteller === "function") renderStoryteller(ep2);
           }
         });
         // Granny sections

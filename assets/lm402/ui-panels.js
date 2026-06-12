@@ -7,7 +7,8 @@
 
 const STORAGE_KEY = "lm402_panel_layouts_v2";
 /* v3: 失效化舊存檔 — v2 時代會把未拖曳藥丸的 (pad,pad) fallback 位置存進來 */
-const STORAGE_VERSION = 3;
+/* v4: 清 v3 期可能殘留的對話卡左側釘死位置 */
+const STORAGE_VERSION = 4;
 const MOBILE_BREAKPOINT = 800;
 const registry = new Map();
 
@@ -157,8 +158,9 @@ function dialogueDefaultRect() {
   const pad = getViewportPadding();
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const width = isMobile() ? Math.round(vw * 0.92) : clamp(480, 360, vw - pad * 2);
-  const height = isMobile() ? Math.round(vh * 0.52) : clamp(380, 260, vh - pad * 2);
+  /* 桌面預設加大:480x380 對「長劇情+多選項」會夾爆內容(排版亂的主因) */
+  const width = isMobile() ? Math.round(vw * 0.92) : clamp(Math.min(720, vw - pad * 2), 360, vw - pad * 2);
+  const height = isMobile() ? Math.round(vh * 0.52) : clamp(Math.round(vh * 0.66), 300, vh - pad * 2);
   const x = Math.round((vw - width) / 2);
   const y = isMobile()
     ? Math.max(pad, Math.round(vh - height - 260))

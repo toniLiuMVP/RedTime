@@ -3077,3 +3077,27 @@
   vertical-align: middle;
 }
 .spoiler-mask.revealed .spoiler-badge { opacity: 0.4; }
+
+/* 時間軸卡片可點(深連結到對應集數) */
+a.tl-event {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.25s ease, border-color 0.3s ease;
+}
+a.tl-event:hover,
+a.tl-event:focus-visible {
+  transform: translateX(4px);
+}
+.tl-event-go {
+  margin-top: 10px;
+  font: 500 12px "DM Mono", monospace;
+  letter-spacing: 0.1em;
+  color: rgba(232, 200, 122, 0.55);
+  transition: color 0.25s ease;
+}
+a.tl-event:hover .tl-event-go,
+a.tl-event:focus-visible .tl-event-go {
+  color: rgba(232, 200, 122, 0.95);
+}

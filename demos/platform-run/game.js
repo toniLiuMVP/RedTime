@@ -5605,7 +5605,8 @@ function applyArtTier(level) {
   }
   if (level >= 3) {
     try { window.__CITY_SKYLINE__(40, 80); } catch (e) {}
-    try { window.__PROP_VARIETY__(12); } catch (e) {}
+    /* PROP_VARIETY 不自動開:它在跑道內隨機撒無碰撞道具(穿越式幽靈模型),
+       視覺上像 bug;留 console 後門 */
   }
   if (level >= 4) {
     try { window.__STEAM__(150, 0.7); } catch (e) {}
