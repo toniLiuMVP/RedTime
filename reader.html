@@ -7965,20 +7965,29 @@
         const femaleCount = vis.filter((t) => t.who === "female").length;
         const daughterCount = vis.filter((t) => t.who === "daughter").length;
         const W = Math.max(360, vis.length * 92 + 120),
-          H = 178;
+          H = 224; /* +46:底部集數軸 */
         const xP = 56,
           xE = W - 30,
-          YM = 1994,
+          YM = 1991, /* 對齊 3D 圖與故事全跨度(1991-2026) */
           YX = 2026;
         const laneY = { female: 42, time: 90, daughter: 138 };
         const yx = (y) => xP + ((y - YM) / (YX - YM)) * (xE - xP);
-        const yrs = [1994, 2000, 2005, 2010, 2015, 2020, 2026];
-        const grid = yrs
-          .map(
-            (y) =>
-              `<line x1="${yx(y)}" y1="24" x2="${yx(y)}" y2="154" stroke="rgba(255,255,255,.06)" stroke-width="1"/><text x="${yx(y)}" y="169" fill="rgba(255,255,255,.2)" font-size="7.4" text-anchor="middle" font-family="DM Mono,monospace">${y}</text>`,
-          )
-          .join("");
+        /* 逐年細格(1991-2026);主要年加標籤;故事關鍵年(2005/2018/2025/2026)加 12 格月份刻度 */
+        const majorYrs = [1991, 1995, 2000, 2005, 2010, 2015, 2020, 2026];
+        const keyYrs = [2005, 2018, 2025, 2026];
+        let grid = "";
+        for (let y = YM; y <= YX; y++) {
+          const major = majorYrs.includes(y);
+          grid += `<line x1="${yx(y)}" y1="24" x2="${yx(y)}" y2="154" stroke="rgba(255,255,255,${major ? ".07" : ".028"})" stroke-width="1"/>`;
+          if (major) grid += `<text x="${yx(y)}" y="169" fill="rgba(255,255,255,.22)" font-size="7.4" text-anchor="middle" font-family="DM Mono,monospace">${y}</text>`;
+          if (keyYrs.includes(y) && y < YX) { /* 末年(2026)的月份刻會畫出圖外,略過 */
+            grid += `<text x="${yx(y)}" y="161" fill="rgba(232,200,122,.4)" font-size="6" text-anchor="middle" font-family="DM Mono,monospace">${majorYrs.includes(y) ? "" : y}</text>`;
+            const w1 = (yx(y + 1) - yx(y)) / 12;
+            for (let m = 1; m < 12; m++) {
+              grid += `<line x1="${yx(y) + m * w1}" y1="150" x2="${yx(y) + m * w1}" y2="154" stroke="rgba(232,200,122,.18)" stroke-width=".8"/>`;
+            }
+          }
+        }
         const lanes = `<line x1="${xP}" y1="${laneY.female}" x2="${xE}" y2="${laneY.female}" stroke="rgba(255,72,88,.18)" stroke-width="1.5" stroke-dasharray="4,4"/><line x1="${xP}" y1="${laneY.time}" x2="${xE}" y2="${laneY.time}" stroke="rgba(168,164,156,.16)" stroke-width="1.2"/><line x1="${xP}" y1="${laneY.daughter}" x2="${xE}" y2="${laneY.daughter}" stroke="rgba(200,144,16,.2)" stroke-width="1.5" stroke-dasharray="4,4"/><text x="${xP - 10}" y="${laneY.female + 4}" fill="rgba(255,72,88,.56)" font-size="8" text-anchor="end" font-family="DM Mono">學妹</text><text x="${xP - 10}" y="${laneY.time + 4}" fill="rgba(168,164,156,.45)" font-size="8" text-anchor="end" font-family="DM Mono">時間</text><text x="${xP - 10}" y="${laneY.daughter + 4}" fill="rgba(200,144,16,.5)" font-size="8" text-anchor="end" font-family="DM Mono">女兒</text>`;
         let defs = "<defs>";
         vis.forEach((t, i) => {
@@ -8027,7 +8036,21 @@
             arrs += `<ellipse cx="${x1}" cy="${yc}" rx="15" ry="24" fill="none" stroke="${color}" stroke-width="1.8" stroke-dasharray="3,4"/><circle cx="${x1}" cy="${yc}" r="5" fill="rgba(255,72,88,.82)"/><circle cx="${x1}" cy="${yc}" r="9.5" fill="none" stroke="${color}" stroke-width="1.4" stroke-dasharray="2,3"/>`;
           }
         });
-        const svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="min-width:${W}px"><rect x="12" y="12" width="${W - 24}" height="${H - 34}" rx="18" fill="rgba(255,255,255,.015)" stroke="rgba(255,255,255,.04)"/><rect x="${xP - 12}" y="22" width="${xE - xP + 24}" height="128" rx="16" fill="rgba(0,0,0,.1)"/>${defs}${grid}${lanes}${arrs}</svg>`;
+        /* 集數軸:42 集逐集節點(依集數順序排,非年份;已讀實心、未讀空心、點擊跳集) */
+        const ARC_C = { father: "#16a864", male: "#a8a49c", female: "#ff4858", daughter: "#c89010", mixed: "#dc6034" };
+        const railY = H - 26;
+        let rail = `<line x1="${xP}" y1="${railY}" x2="${xE}" y2="${railY}" stroke="rgba(255,255,255,.1)" stroke-width="1"/><text x="${xP - 10}" y="${railY + 3}" fill="rgba(255,255,255,.34)" font-size="7.6" text-anchor="end" font-family="DM Mono">集數</text>`;
+        EPISODES.forEach((e2, i2) => {
+          const rx = xP + (i2 / (EPISODES.length - 1)) * (xE - xP);
+          const col = ARC_C[e2.arc] || "rgba(255,255,255,.5)";
+          const read = e2.ep <= maxEp;
+          const tlEv = TL.find((v) => v.ep === e2.ep);
+          const tip = "EP" + e2.ep + " · " + escapeHtml(tlEv ? tlEv.label : shortEpisodeTitle(e2));
+          rail += `<g onclick="goToEp(${e2.ep});closeInfo()" style="cursor:pointer"><title>${tip}</title><circle cx="${rx}" cy="${railY}" r="${read ? 4 : 3}" fill="${read ? col : "none"}" stroke="${col}" stroke-width="1.2" opacity="${read ? 0.95 : 0.45}"/><rect x="${rx - 5.5}" y="${railY - 9}" width="11" height="18" fill="transparent"/></g>`;
+          if (e2.ep % 10 === 0 || e2.ep === 41) rail += `<text x="${rx}" y="${railY + 14}" fill="rgba(255,255,255,.28)" font-size="6.4" text-anchor="middle" font-family="DM Mono">${e2.ep}</text>`;
+        });
+        rail += `<text x="${(xP + xE) / 2}" y="${H - 2}" fill="rgba(255,255,255,.22)" font-size="6.8" text-anchor="middle" font-family="Noto Sans TC">集數軸 · 依集數順序 · 點節點跳到該集（實心＝已讀到）</text>`;
+        const svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="min-width:${W}px"><rect x="12" y="12" width="${W - 24}" height="${H - 34}" rx="18" fill="rgba(255,255,255,.015)" stroke="rgba(255,255,255,.04)"/><rect x="${xP - 12}" y="22" width="${xE - xP + 24}" height="128" rx="16" fill="rgba(0,0,0,.1)"/>${defs}${grid}${lanes}${arrs}${rail}</svg>`;
         const stats = `<div class="tv-overview"><div class="tv-stat"><span class="tv-stat-num">${vis.length}</span><span class="tv-stat-label">先陪你看見的</span><span class="tv-stat-sub">目前先浮上來的幾段穿越</span></div><div class="tv-stat"><span class="tv-stat-num">${femaleCount}</span><span class="tv-stat-label">學妹那條線</span><span class="tv-stat-sub">從她那邊開始回頭的時間</span></div><div class="tv-stat"><span class="tv-stat-num">${daughterCount}</span><span class="tv-stat-label">女兒那條線</span><span class="tv-stat-sub">她在夢裡一路飛去的時間</span></div></div>`;
         const evts = vis
           .map((t, i) => {
@@ -8053,7 +8076,7 @@
         if (_map3dLoading) return;
         _map3dLoading = true;
         p.innerHTML =
-          '<div class="ip-section-note">三條軌道是三條時間線，跨軌的光弧是穿越。拖曳旋轉 · 滾輪縮放 · 你讀到哪，光弧亮到哪。</div><div id="map3d-wrap" style="width:100%;height:320px;border-radius:14px;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,#171310,#0a0807);touch-action:none"></div><div class="map3d-legend"><span class="m3l-title">軌道</span><span class="m3l-chip" style="color:#ff4858">━ 學妹線</span><span class="m3l-chip" style="color:#a8a49c">━ 時間軸</span><span class="m3l-chip" style="color:#c89010">━ 女兒線</span><span class="m3l-sep">｜</span><span class="m3l-title">光弧</span><span class="m3l-chip" style="color:#ff4858">⌒ 穿越</span><span class="m3l-chip" style="color:#4da6ff">⌒ 推回</span><span class="m3l-chip" style="color:#b78aff">⌒ 夢境</span><span class="m3l-chip" style="color:#ffd479">⌒ 疊合</span></div><div id="map3d-status" style="font-size:11px;opacity:.5;padding:8px 2px">3D 模組載入中…</div>';
+          '<div class="ip-section-note">三條軌道是三條時間線，跨軌的光弧是穿越。拖曳旋轉 · 滾輪縮放 · 你讀到哪，光弧亮到哪。</div><div id="map3d-wrap" style="width:100%;height:320px;border-radius:14px;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,#171310,#0a0807);touch-action:none"></div><div class="map3d-legend"><span class="m3l-title">軌道</span><span class="m3l-chip" style="color:#ff4858">━ 學妹線</span><span class="m3l-chip" style="color:#a8a49c">━ 時間軸</span><span class="m3l-chip" style="color:#c89010">━ 女兒線</span><span class="m3l-sep">｜</span><span class="m3l-title">光弧</span><span class="m3l-chip" style="color:#ff4858">⌒ 穿越</span><span class="m3l-chip" style="color:#4da6ff">⌒ 推回</span><span class="m3l-chip" style="color:#b78aff">⌒ 夢境</span><span class="m3l-chip" style="color:#ffd479">⌒ 疊合</span><span class="m3l-sep">｜</span><span class="m3l-chip" style="color:rgba(220,205,180,.8)">● 集數軸（點節點或弧頂標籤可跳到該集）</span></div><div id="map3d-status" style="font-size:11px;opacity:.5;padding:8px 2px">3D 模組載入中…</div>';
         try {
           const THREE = await import("./assets/lm402/vendor-three.module.js");
           _map3d = initMap3D(THREE, document.getElementById("map3d-wrap"));
@@ -8143,27 +8166,78 @@
           lbl.position.set(-3.95, 0.18, l.z);
           scene.add(lbl);
         });
-        [1991, 1994, 2005, 2006, 2018, 2022, 2026].forEach((y) => {
+        /* 逐年細刻(1991-2026)+主要年大球與標籤+故事關鍵年月份微刻 */
+        const MAJOR_Y = [1991, 1994, 2005, 2006, 2018, 2022, 2026];
+        const KEY_Y = [2005, 2018, 2025, 2026];
+        for (let y = Y0; y <= Y1; y++) {
+          const major = MAJOR_Y.includes(y);
           const tick = new THREE.Mesh(
-            new THREE.SphereGeometry(0.035, 10, 10),
-            new THREE.MeshBasicMaterial({ color: 0x8a8378, transparent: true, opacity: 0.8 }),
+            new THREE.SphereGeometry(major ? 0.035 : 0.014, 8, 8),
+            new THREE.MeshBasicMaterial({ color: 0x8a8378, transparent: true, opacity: major ? 0.8 : 0.4 }),
           );
           tick.position.set(yearX(y), 0, 0);
           scene.add(tick);
-          const lbl = textSprite(String(y), "rgba(220,205,180,.6)", 0.26);
-          lbl.position.set(yearX(y), -0.34, 0);
-          scene.add(lbl);
-        });
+          if (major) {
+            const lbl = textSprite(String(y), "rgba(220,205,180,.6)", 0.26);
+            lbl.position.set(yearX(y), -0.34, 0);
+            scene.add(lbl);
+          }
+          if (KEY_Y.includes(y) && y < Y1) {
+            /* 12 格月份微刻(細短柱) */
+            const span = yearX(y + 1) - yearX(y);
+            for (let m2 = 1; m2 < 12; m2++) {
+              const mk = new THREE.Mesh(
+                new THREE.BoxGeometry(0.006, 0.05, 0.006),
+                new THREE.MeshBasicMaterial({ color: 0xe8c87a, transparent: true, opacity: 0.4 }),
+              );
+              mk.position.set(yearX(y) + (m2 / 12) * span, 0.03, 0);
+              scene.add(mk);
+            }
+          }
+        }
         const arcsGroup = new THREE.Group();
         scene.add(arcsGroup);
         const TYPE_C = { traverse: 0xff4858, push: 0x4da6ff, dream: 0xb78aff, superpose: 0xffd479 };
+        const _clickTargets = []; /* 可點物件(事件標籤+集數節點)→ep */
         function update(maxEp) {
+          _clickTargets.length = 0;
           while (arcsGroup.children.length) {
             const ch = arcsGroup.children.pop();
             /* Sprite 的 geometry 是 three.js 全域共用,不可 dispose(會砍掉其他 sprite 的 buffer) */
             if (!ch.isSprite && ch.geometry) ch.geometry.dispose();
             ch.material && ch.material.dispose();
           }
+          /* 集數軌:依集數順序(非年份)排 42 顆節點,點擊跳該集 */
+          const ARC_C3 = { father: 0x16a864, male: 0xa8a49c, female: 0xff4858, daughter: 0xc89010, mixed: 0xdc6034 };
+          const railZ = 1.85;
+          const railLine = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.008, 0.008, 6.9, 6),
+            new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.14 }),
+          );
+          railLine.rotation.z = Math.PI / 2;
+          railLine.position.set(0, 0, railZ);
+          arcsGroup.add(railLine);
+          const railLbl = textSprite("集數軸 · 點節點跳該集", "rgba(220,205,180,.55)", 0.22);
+          railLbl.position.set(-3.0, 0.22, railZ);
+          arcsGroup.add(railLbl);
+          EPISODES.forEach((e2, i2) => {
+            const read = e2.ep <= maxEp;
+            const dot2 = new THREE.Mesh(
+              new THREE.SphereGeometry(read ? 0.05 : 0.032, 10, 10),
+              new THREE.MeshBasicMaterial({ color: ARC_C3[e2.arc] || 0xffffff, transparent: true, opacity: read ? 0.95 : 0.28 }),
+            );
+            dot2.position.set(-3.4 + (i2 / (EPISODES.length - 1)) * 6.8, 0, railZ);
+            arcsGroup.add(dot2);
+            /* 隱形放大命中球:5px 視覺點太難點,命中區放大到 ~3 倍 */
+            const hitProxy = new THREE.Mesh(
+              new THREE.SphereGeometry(0.14, 6, 6),
+              new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }),
+            );
+            hitProxy.position.copy(dot2.position);
+            arcsGroup.add(hitProxy);
+            _clickTargets.push({ obj: hitProxy, ep: e2.ep });
+            _clickTargets.push({ obj: dot2, ep: e2.ep });
+          });
           const vis = TRAVERSALS.filter((t) => t.revealAfterEp <= maxEp);
           const _haloOcc = {};
           vis.forEach((t, i) => {
@@ -8197,6 +8271,12 @@
             const dot = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 12), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.6 }));
             dot.position.set(x1, 0, lane.z);
             arcsGroup.add(dot);
+            /* 弧頂事件標籤:EPn·型態,可點跳該集 */
+            const apex = curve.getPoint(0.5);
+            const lblSprite = textSprite("EP" + t.revealAfterEp + " · " + (TRAVERSE_LABEL_MAP[t.type] || t.type), "#" + col.toString(16).padStart(6, "0"), 0.24);
+            lblSprite.position.set(apex.x, apex.y + 0.24, apex.z);
+            arcsGroup.add(lblSprite);
+            _clickTargets.push({ obj: lblSprite, ep: t.revealAfterEp });
             /* 出發/抵達端點光暈 sprite(共用 haloTex,材質染色);
                同端點第 n 顆遞減透明度,避免加法混合疊成白心 */
             [[x1, lane.z, 0.34], [x2, lane.z, 0.5]].forEach(([hx, hz, hs]) => {
@@ -8219,9 +8299,23 @@
           );
           camera.lookAt(0, 0.3, 0);
         }
-        wrap.addEventListener("pointerdown", (e) => { dragging = true; px = e.clientX; py = e.clientY; wrap.setPointerCapture(e.pointerId); });
+        const _ray = new THREE.Raycaster(), _ndc = new THREE.Vector2();
+        let _downX = 0, _downY = 0;
+        wrap.addEventListener("pointerdown", (e) => { dragging = true; px = e.clientX; py = e.clientY; _downX = e.clientX; _downY = e.clientY; wrap.setPointerCapture(e.pointerId); });
         wrap.addEventListener("pointermove", (e) => { if (!dragging) return; yaw -= (e.clientX - px) * 0.008; pitch += (e.clientY - py) * 0.006; px = e.clientX; py = e.clientY; });
-        wrap.addEventListener("pointerup", () => { dragging = false; });
+        wrap.addEventListener("pointerup", (e) => {
+          dragging = false;
+          /* 點擊(非拖曳)→ raycast 事件標籤與集數節點,命中就跳該集 */
+          if (Math.hypot(e.clientX - _downX, e.clientY - _downY) > 6) return;
+          const r2 = renderer.domElement.getBoundingClientRect();
+          _ndc.set(((e.clientX - r2.left) / r2.width) * 2 - 1, -((e.clientY - r2.top) / r2.height) * 2 + 1);
+          _ray.setFromCamera(_ndc, camera);
+          const hits = _ray.intersectObjects(_clickTargets.map((c) => c.obj), false);
+          if (hits.length) {
+            const c = _clickTargets.find((x) => x.obj === hits[0].object);
+            if (c && typeof goToEp === "function") { goToEp(c.ep); closeInfo(); }
+          }
+        });
         wrap.addEventListener("wheel", (e) => { e.preventDefault(); dist = Math.max(3.4, Math.min(11, dist + e.deltaY * 0.005)); }, { passive: false });
         function frame() {
           requestAnimationFrame(frame);
