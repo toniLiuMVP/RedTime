@@ -7977,28 +7977,64 @@
         const yearX = (y) => -3.4 + ((y - Y0) / (Y1 - Y0)) * 6.8;
         const LANE = { female: { z: -1.15, c: 0xff4858 }, time: { z: 0, c: 0xa8a49c }, daughter: { z: 1.15, c: 0xc89010 } };
         function textSprite(text, color, size) {
+          /* 高解析標籤(512×128 + 56px + 微光暈),遠看不糊 */
           const c = document.createElement("canvas");
-          c.width = 256; c.height = 64;
+          c.width = 512; c.height = 128;
           const x = c.getContext("2d");
-          x.font = "600 30px 'Noto Sans TC',sans-serif";
+          x.font = "600 56px 'Noto Sans TC',sans-serif";
           x.fillStyle = color;
           x.textAlign = "center";
           x.textBaseline = "middle";
-          x.fillText(text, 128, 32);
+          x.shadowColor = color;
+          x.shadowBlur = 14;
+          x.fillText(text, 256, 64);
           const t = new THREE.CanvasTexture(c);
+          t.anisotropy = 4;
           const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, depthWrite: false }));
           s.scale.set(size * 4, size, 1);
           return s;
         }
+        /* 端點光暈貼圖(共用一張,radial gradient) */
+        const haloTex = (() => {
+          const c = document.createElement("canvas");
+          c.width = c.height = 64;
+          const x = c.getContext("2d");
+          const g = x.createRadialGradient(32, 32, 2, 32, 32, 32);
+          g.addColorStop(0, "rgba(255,255,255,0.85)");
+          g.addColorStop(0.4, "rgba(255,255,255,0.25)");
+          g.addColorStop(1, "rgba(255,255,255,0)");
+          x.fillStyle = g;
+          x.fillRect(0, 0, 64, 64);
+          return new THREE.CanvasTexture(c);
+        })();
+        /* 地面微光底盤:給軌道一個深度參照面 */
+        const ground = new THREE.Mesh(
+          new THREE.PlaneGeometry(8.4, 3.6),
+          new THREE.MeshBasicMaterial({ color: 0x1a1410, transparent: true, opacity: 0.5, depthWrite: false }),
+        );
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -0.06;
+        ground.renderOrder = -1; /* 先畫:transparent 排序若後畫會把更低處的年份標籤壓暗 */
+        scene.add(ground);
         Object.entries(LANE).forEach(([k, l]) => {
+          /* 發光軌道:實心管 + 加法光暈伴管 */
+          const laneGeo = new THREE.CylinderGeometry(0.024, 0.024, 6.9, 10);
           const lane = new THREE.Mesh(
-            new THREE.BoxGeometry(6.9, 0.014, 0.014),
-            new THREE.MeshBasicMaterial({ color: l.c, transparent: true, opacity: 0.55 }),
+            laneGeo,
+            new THREE.MeshBasicMaterial({ color: l.c, transparent: true, opacity: 0.85 }),
           );
+          lane.rotation.z = Math.PI / 2;
           lane.position.set(0, 0, l.z);
           scene.add(lane);
+          const laneGlow = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.07, 0.07, 6.9, 10),
+            new THREE.MeshBasicMaterial({ color: l.c, transparent: true, opacity: 0.14, blending: THREE.AdditiveBlending, depthWrite: false }),
+          );
+          laneGlow.rotation.z = Math.PI / 2;
+          laneGlow.position.set(0, 0, l.z);
+          scene.add(laneGlow);
           const lbl = textSprite(k === "female" ? "學妹線" : k === "time" ? "時間軸" : "女兒線", "#" + l.c.toString(16).padStart(6, "0"), 0.3);
-          lbl.position.set(-3.85, 0.16, l.z);
+          lbl.position.set(-3.95, 0.18, l.z);
           scene.add(lbl);
         });
         [1991, 1994, 2005, 2006, 2018, 2022, 2026].forEach((y) => {
@@ -8018,10 +8054,12 @@
         function update(maxEp) {
           while (arcsGroup.children.length) {
             const ch = arcsGroup.children.pop();
-            ch.geometry && ch.geometry.dispose();
+            /* Sprite 的 geometry 是 three.js 全域共用,不可 dispose(會砍掉其他 sprite 的 buffer) */
+            if (!ch.isSprite && ch.geometry) ch.geometry.dispose();
             ch.material && ch.material.dispose();
           }
           const vis = TRAVERSALS.filter((t) => t.revealAfterEp <= maxEp);
+          const _haloOcc = {};
           vis.forEach((t, i) => {
             const fy = parseInt((String(t.from_year).match(/\d{4}/) || ["2006"])[0], 10);
             const ty = parseInt((String(t.to_year).match(/\d{4}/) || ["2005"])[0], 10);
@@ -8034,19 +8072,35 @@
               new THREE.Vector3(x2, 0, lane.z),
             );
             const col = TYPE_C[t.type] || 0xffffff;
+            /* 主管加粗 + 加法光暈伴管(精緻發光弧) */
             const tube = new THREE.Mesh(
-              new THREE.TubeGeometry(curve, 36, 0.022, 8, false),
-              new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.85 }),
+              new THREE.TubeGeometry(curve, 48, 0.03, 10, false),
+              new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.92 }),
             );
             arcsGroup.add(tube);
-            const tip = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.16, 10), new THREE.MeshBasicMaterial({ color: col }));
+            const tubeGlow = new THREE.Mesh(
+              new THREE.TubeGeometry(curve, 48, 0.085, 10, false),
+              new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false }),
+            );
+            arcsGroup.add(tubeGlow);
+            const tip = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.2, 12), new THREE.MeshBasicMaterial({ color: col }));
             const end = curve.getPoint(1), tan = curve.getTangent(1);
             tip.position.copy(end);
             tip.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), tan.normalize());
             arcsGroup.add(tip);
-            const dot = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 10), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.5 }));
+            const dot = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 12), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.6 }));
             dot.position.set(x1, 0, lane.z);
             arcsGroup.add(dot);
+            /* 出發/抵達端點光暈 sprite(共用 haloTex,材質染色);
+               同端點第 n 顆遞減透明度,避免加法混合疊成白心 */
+            [[x1, lane.z, 0.34], [x2, lane.z, 0.5]].forEach(([hx, hz, hs]) => {
+              const hk = hx.toFixed(1) + ":" + hz;
+              const hn = (_haloOcc[hk] = (_haloOcc[hk] || 0) + 1);
+              const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex, color: col, transparent: true, opacity: hn === 1 ? 0.55 : 0.22, blending: THREE.AdditiveBlending, depthWrite: false }));
+              halo.position.set(hx, 0, hz);
+              halo.scale.set(hs, hs, 1);
+              arcsGroup.add(halo);
+            });
           });
         }
         let yaw = 0.5, pitch = 0.42, dist = 6.4, dragging = false, px = 0, py = 0;
@@ -8592,6 +8646,7 @@
           getComputedStyle(mainCol).overflowY !== "visible";
         return ok ? mainCol : null;
       }
+      let _jumpGen = 0; /* 連點跳轉時舊修正迴圈立即讓位 */
       function _instantScroll(host, top) {
         if (host) {
           const sb = host.style.scrollBehavior;
@@ -8609,6 +8664,7 @@
       function scrollToReaderBottom() {
         /* 底部 = 全章節「真實展開」後的 scrollHeight;塌陷下的 max 會短少
            → 全章節 visible + 強制 layout,逐幀釘底直到高度連續 2 幀不再長 */
+        const gen = ++_jumpGen;
         document.body.classList.add("hash-jumping");
         EPISODES.forEach((ep) => {
           const s = document.getElementById("ep-" + ep.ep);
@@ -8629,6 +8685,7 @@
           stable = 0,
           last = -1;
         function pin() {
+          if (gen !== _jumpGen) { document.body.classList.remove("hash-jumping"); return; }
           frames++;
           const m = maxTop();
           _instantScroll(host, m);
@@ -8651,6 +8708,7 @@
       function goToEp(n) {
         const target = document.getElementById("ep-" + n);
         if (!target) return;
+        const gen = ++_jumpGen;
         document.body.classList.add("hash-jumping");
         EPISODES.forEach((ep) => {
           if (ep.ep <= n) {
@@ -8687,6 +8745,7 @@
           let corr = 0,
             stable = 0;
           function step() {
+            if (gen !== _jumpGen) { document.body.classList.remove("hash-jumping"); return; }
             corr++;
             const delta = rectTop() - (baseTop() + topOffset + 8);
             if (Math.abs(delta) <= 3) stable++;

@@ -20,8 +20,10 @@
 
 import * as THREE from "./vendor-three.module.js";
 
-// Tier 7：預設黃昏太陽方向（世界空間，朝場景）— god rays / lens flare 用這個方向
-export const SUNSET_SUN_DIR = new THREE.Vector3(0.4, 0.18, -0.85).normalize();
+// 太陽方向（世界空間，朝太陽）— god rays / lens flare / env 暖點共用。
+// r107 陽光統一:對齊主 DirectionalLight 實測方向(pos(-11.2,10.8,5.4)→target(0,0,21.3),仰角 29°),
+// 影子方向、體積光、鏡頭光暈、環境暖點從此同一顆太陽(原本是仰角 11° 的黃昏低日,與影子矛盾)。
+export const SUNSET_SUN_DIR = new THREE.Vector3(-0.504, 0.486, -0.714).normalize();
 
 // ─── Shader：把球面方向 → 黃昏 gradient + 太陽光暈 ───
 const SKY_VERT = /* glsl */ `
@@ -74,7 +76,7 @@ const SKY_FRAG = /* glsl */ `
  * @param {string} [opts.zenith="#2a3552"]   - 天頂色（深藍紫，營造「快入夜」氛圍）
  * @param {string} [opts.horizon="#ffb58a"]  - 地平線（暖桃橙，黃昏招牌色）
  * @param {string} [opts.ground="#1a1015"]   - 地面下方（深暗，符合 fog 系統）
- * @param {number[]} [opts.sunDir=[0.4,0.18,-0.85]] - 太陽方向（低角度斜後）
+ * @param {number[]} [opts.sunDir] - 太陽方向(預設對齊 SUNSET_SUN_DIR 主光方向)
  * @param {string} [opts.sunColor="#ffd49c"] - 太陽色（暖白偏橙）
  * @param {number} [opts.sunIntensity=6.0]   - HDR 強度（>=2 才會在 PBR 上看見明顯熱點反射）
  * @returns {THREE.Texture}
@@ -91,7 +93,7 @@ export function buildSunsetEnvMap(renderer, opts = {}) {
       uZenith:       { value: new THREE.Color(opts.zenith   ?? "#2a3552") },
       uHorizon:      { value: new THREE.Color(opts.horizon  ?? "#ffb58a") },
       uGround:       { value: new THREE.Color(opts.ground   ?? "#1a1015") },
-      uSunDir:       { value: new THREE.Vector3(...(opts.sunDir ?? [0.4, 0.18, -0.85])).normalize() },
+      uSunDir:       { value: opts.sunDir ? new THREE.Vector3(...opts.sunDir).normalize() : SUNSET_SUN_DIR.clone() },
       uSunColor:     { value: new THREE.Color(opts.sunColor ?? "#ffd49c") },
       uSunIntensity: { value: opts.sunIntensity ?? 6.0 },
     },
