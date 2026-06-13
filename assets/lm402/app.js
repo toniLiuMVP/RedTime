@@ -186,6 +186,7 @@ const dom = {
   audioToggle: document.getElementById("audio-toggle"),
   audioToggleValue: document.getElementById("audio-toggle-value"),
   councilReplay: document.getElementById("council-replay"),
+  councilReadStory: document.getElementById("council-read-story"),
   musicPrompt: document.getElementById("music-prompt"),
   musicPromptButton: document.getElementById("music-prompt-button"),
   musicPromptClose: document.getElementById("music-prompt-close"),
@@ -598,6 +599,7 @@ const state = {
   cameraMode: "intro",
   hudMode: "chip",
   subtitleMode: "full",
+  storyPaused: false,
   transcriptExpanded: false,
   transcriptMaximized: false,
   pointerLockState: "free",
@@ -1576,6 +1578,7 @@ function applyEffect(effect) {
         try { if (window.__TWIN_BALANCE__) window.__TWIN_BALANCE__("off"); } catch (e) {}
         saveCouncilSeen();
         if (dom.councilReplay) dom.councilReplay.hidden = false;
+        if (dom.councilReadStory) dom.councilReadStory.hidden = false;
         setSubtitle("女兒", (res && res.ok)
           ? "我把阿姨『練穩』那一刻的溫度，悄悄收進只有我看得見的時空口袋裡。"
           : "阿姨的聲音還有點亂，但她還是把那句話交了出去。我把這份顫抖也收好了。", 4.5);
@@ -1687,6 +1690,7 @@ function applyEffect(effect) {
           try { if (window.__TWIN_BALANCE__) window.__TWIN_BALANCE__("off"); } catch (e) {}
           saveCouncilSeen();
           if (dom.councilReplay) dom.councilReplay.hidden = false;
+          if (dom.councilReadStory) dom.councilReadStory.hidden = false;
           proceedToRear();
         });
       }, 1500);
@@ -2072,6 +2076,7 @@ function finishIntro() {
   clearTransientInput();
   state.mode = "play";
   if (dom.councilReplay && loadCouncilSeen()) dom.councilReplay.hidden = false;
+  if (dom.councilReadStory && loadCouncilSeen()) dom.councilReadStory.hidden = false;
   state.cameraMode = "play";
   state.intro.replay = false;
   state.intro.resume = null;
@@ -3117,8 +3122,9 @@ function tick(now) {
     if (!tick.last) {
       tick.last = now;
     }
-    const dt = Math.min((now - tick.last) / 1000, 0.033);
+    let dt = Math.min((now - tick.last) / 1000, 0.033);
     tick.last = now;
+    if (state.storyPaused) dt = 0; /* 遊戲內讀故事：凍結時間與模擬，仍續 render，不跳出遊戲 */
     state.time += dt;
 
     dom.rotateLock.hidden = !wantsLandscape();
@@ -3178,6 +3184,62 @@ function tick(now) {
   }
   if (!_tickFuse.halted) requestAnimationFrame(tick);
 }
+
+/* ── 遊戲內故事閱讀 overlay：iframe 嵌 reader.html?embed=1，凍結場景、不跳出遊戲 ──
+   安全：純 createElement + textContent（無 innerHTML）；reader.html 為同源，CSP default-src 'self' 允許。 */
+function ensureStoryOverlay() {
+  let ov = document.getElementById("lm402-story-overlay");
+  if (ov) return ov;
+  ov = document.createElement("div");
+  ov.id = "lm402-story-overlay";
+  ov.setAttribute("role", "dialog");
+  ov.setAttribute("aria-label", "故事閱讀");
+  ov.style.cssText = "position:fixed;inset:0;z-index:100000;background:rgba(6,8,11,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;opacity:0;transition:opacity .35s ease";
+  const bar = document.createElement("div");
+  bar.style.cssText = "position:absolute;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:2;background:linear-gradient(180deg,rgba(6,8,11,.96),rgba(6,8,11,0));pointer-events:none";
+  const lbl = document.createElement("div");
+  lbl.textContent = "故事 · 意識菜市場這一段";
+  lbl.style.cssText = "color:#cdbfae;font-size:13px;letter-spacing:.14em";
+  const close = document.createElement("button");
+  close.id = "lm402-story-close";
+  close.type = "button";
+  close.textContent = "✕ 回到教室";
+  close.style.cssText = "pointer-events:auto;background:rgba(8,11,16,.72);color:#cfe0f0;border:1px solid rgba(159,208,255,.5);border-radius:999px;font-family:inherit;font-size:13px;letter-spacing:.06em;padding:8px 16px;cursor:pointer";
+  close.addEventListener("click", closeStoryReader);
+  bar.appendChild(lbl); bar.appendChild(close);
+  const frame = document.createElement("iframe");
+  frame.id = "lm402-story-iframe";
+  frame.title = "故事閱讀";
+  frame.style.cssText = "position:absolute;inset:0;width:100%;height:100%;border:0;background:#0a0c0e";
+  ov.appendChild(frame); ov.appendChild(bar);
+  document.body.appendChild(ov);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && ov.style.display === "block") closeStoryReader(); });
+  return ov;
+}
+let _storyReturnFocus = null;
+function openStoryReader(ep) {
+  const ov = ensureStoryOverlay();
+  const frame = document.getElementById("lm402-story-iframe");
+  frame.src = "reader.html?embed=1#ep-" + (ep || 38);
+  ov.style.display = "block";
+  requestAnimationFrame(function () { ov.style.opacity = "1"; });
+  state.storyPaused = true;
+  try { if (document.exitPointerLock) document.exitPointerLock(); } catch (e) {} /* 讀故事時釋放指標鎖 */
+  _storyReturnFocus = document.activeElement; /* 記住觸發鈕，關閉後還焦點 */
+  const close = document.getElementById("lm402-story-close");
+  if (close) requestAnimationFrame(function () { try { close.focus(); } catch (e) {} });
+}
+function closeStoryReader() {
+  const ov = document.getElementById("lm402-story-overlay");
+  if (!ov) return;
+  ov.style.opacity = "0";
+  setTimeout(function () { ov.style.display = "none"; const f = document.getElementById("lm402-story-iframe"); if (f) f.src = "about:blank"; }, 350);
+  state.storyPaused = false;
+  tick.last = 0; /* 重置 dt 基準，避免恢復時一次大跳 */
+  if (_storyReturnFocus && _storyReturnFocus.focus) { try { _storyReturnFocus.focus(); } catch (e) {} }
+  _storyReturnFocus = null;
+}
+if (typeof window !== "undefined") window.__LM402_READ_STORY__ = openStoryReader;
 
 function bindKeyboard() {
   window.addEventListener("keydown", (event) => {
@@ -3528,6 +3590,7 @@ function bindUI() {
       dom.audioToggleValue.textContent = sel.hidden ? "開啟音樂選單" : "關閉音樂選單";
       /* 歌單往下展開會疊到重看鈕 → 展開期間先收 */
       if (dom.councilReplay) dom.councilReplay.classList.toggle("squeezed", !sel.hidden);
+      if (dom.councilReadStory) dom.councilReadStory.classList.toggle("squeezed", !sel.hidden);
     }
   });
   /* 音樂選單預設收合：玩家點擊「開啟音樂選單」後展開 */
@@ -3546,6 +3609,9 @@ function bindUI() {
         setSubtitle("女兒", "再走一次意識菜市場。不同年紀的阿姨，還是在替她把那句話練穩。", 4.5);
       });
     });
+  }
+  if (dom.councilReadStory) {
+    dom.councilReadStory.addEventListener("click", () => openStoryReader(38));
   }
   dom.musicPromptButton.addEventListener("click", () => {
     if (!state.audioEnabled) {

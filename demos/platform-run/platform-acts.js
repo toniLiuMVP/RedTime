@@ -382,6 +382,57 @@
     next();
   }
 
+  // 遊戲內故事閱讀 overlay：iframe 嵌 reader.html?embed=1，開啟時凍結月台、不跳出遊戲
+  let _storyPaused = false;
+  function ensureStoryOverlay() {
+    let ov = document.getElementById("pt-story-overlay");
+    if (ov) return ov;
+    ov = document.createElement("div");
+    ov.id = "pt-story-overlay";
+    ov.setAttribute("role", "dialog");
+    ov.setAttribute("aria-label", "故事閱讀");
+    ov.style.cssText = "position:fixed;inset:0;z-index:100001;background:rgba(6,8,11,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;opacity:0;transition:opacity .35s ease";
+    const bar = document.createElement("div");
+    bar.style.cssText = "position:absolute;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:2;background:linear-gradient(180deg,rgba(6,8,11,.96),rgba(6,8,11,0));pointer-events:none";
+    const lbl = el("div", null, "故事 · 月台這一段");
+    lbl.style.cssText = "color:#cdbfae;font-size:13px;letter-spacing:.14em";
+    const close = el("button", null, "✕ 回到月台");
+    close.id = "pt-story-close";
+    close.style.cssText = "pointer-events:auto;background:rgba(20,14,10,.72);color:#f0d0a8;border:1px solid rgba(232,160,90,.5);border-radius:999px;font-family:inherit;font-size:13px;letter-spacing:.06em;padding:8px 16px;cursor:pointer";
+    close.addEventListener("click", closeStoryReader);
+    bar.appendChild(lbl); bar.appendChild(close);
+    const frame = document.createElement("iframe");
+    frame.id = "pt-story-iframe";
+    frame.title = "故事閱讀";
+    frame.style.cssText = "position:absolute;inset:0;width:100%;height:100%;border:0;background:#0a0c0e";
+    ov.appendChild(frame); ov.appendChild(bar);
+    document.body.appendChild(ov);
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && ov.style.display === "block") closeStoryReader(); });
+    return ov;
+  }
+  let _storyReturnFocus = null;
+  function openStoryReader(ep) {
+    const ov = ensureStoryOverlay();
+    const frame = document.getElementById("pt-story-iframe");
+    frame.src = "../../reader.html?embed=1#ep-" + (ep || 36);
+    ov.style.display = "block";
+    requestAnimationFrame(function () { ov.style.opacity = "1"; });
+    if (!_storyPaused) { _storyPaused = true; _pause(1); }
+    _storyReturnFocus = document.activeElement;
+    const close = document.getElementById("pt-story-close");
+    if (close) requestAnimationFrame(function () { try { close.focus(); } catch (e) {} });
+  }
+  function closeStoryReader() {
+    const ov = document.getElementById("pt-story-overlay");
+    if (!ov) return;
+    ov.style.opacity = "0";
+    setTimeout(function () { ov.style.display = "none"; const f = document.getElementById("pt-story-iframe"); if (f) f.src = "about:blank"; }, 350);
+    if (_storyPaused) { _storyPaused = false; _pause(-1); }
+    if (_storyReturnFocus && _storyReturnFocus.focus) { try { _storyReturnFocus.focus(); } catch (e) {} }
+    _storyReturnFocus = null;
+  }
+  if (typeof window !== "undefined") window.__PT_READ_STORY__ = openStoryReader;
+
   // 自注入「把拔的回憶」launcher（top-left，subtle；播 5 段父女記憶鏈）
   function injectLauncher() {
     if (document.getElementById("pacts-launcher")) return;
@@ -398,9 +449,12 @@
       r.style.cssText = "position:fixed;top:50px;left:14px;z-index:70;background:rgba(20,14,10,.6);color:#f0d0a8;border:1px solid rgba(232,160,90,.45);border-radius:999px;font-family:inherit;font-size:12px;letter-spacing:.08em;padding:7px 14px;cursor:pointer;backdrop-filter:blur(4px);opacity:.8;transition:opacity .3s";
       r.setAttribute("aria-label", "讀這段故事 EP36");
       r.addEventListener("mouseenter", function () { r.style.opacity = "1"; });
-      r.addEventListener("click", function () { window.location.href = "../../reader.html#ep-36"; });
+      r.addEventListener("click", function () { openStoryReader(36); });
       document.body.appendChild(r);
     }
+    // title 畫面「先讀這段故事」也走遊戲內 overlay（不離開頁面）
+    const tr = document.getElementById("title-read-story");
+    if (tr && !tr._wired) { tr._wired = true; tr.addEventListener("click", function (e) { e.preventDefault(); openStoryReader(36); }); }
   }
   if (typeof document !== "undefined") {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", injectLauncher, { once: true });

@@ -291,6 +291,40 @@
         text-align: center;
         text-wrap: pretty;
       }
+      /* 遊戲內嵌讀模式（?embed=1）：藏掉所有 chrome，只留單一集的故事正文，給遊戲 iframe 用 */
+      body.reader-embed #hero,
+      body.reader-embed #sidebar,
+      body.reader-embed #fab-bar,
+      body.reader-embed .skip-link,
+      body.reader-embed .reading-progress,
+      body.reader-embed #info-panel,
+      body.reader-embed #site-footer,
+      body.reader-embed .ep-nav,
+      body.reader-embed #to-top,
+      body.reader-embed .scroll-top,
+      body.reader-embed #search-fab,
+      body.reader-embed #topnav-mobile {
+        display: none !important;
+      }
+      body.reader-embed {
+        background: #0a0c0e !important;
+      }
+      /* 內嵌時把正文欄置中，維持舒適閱讀寬度（不貼齊左緣） */
+      body.reader-embed #main {
+        width: min(100%, 880px) !important;
+        max-width: 880px !important;
+        margin: 0 auto !important;
+        border-left: none !important;
+        border-right: none !important;
+        background: none !important;
+        padding: 12px clamp(16px, 4vw, 40px) 64px !important;
+      }
+      body.reader-embed .episode {
+        border-bottom: none !important;
+      }
+      body.reader-embed .episode.embed-hidden {
+        display: none !important;
+      }
       /* P0-1:新讀者引路 button (redirect to index.html?tour=1) */
       .hero-newcomer {
         display: inline-flex;
@@ -8465,7 +8499,8 @@
       //             matchMedia(min-width:768px) 判斷,mobile 回傳 null,scroll target 算錯。
       //    v5 修:disable browser scrollRestoration / mark visible / window past hero / direct
       //         mainCol.scrollTop instant 寫入 / 雙 rAF / 驗證 landed / retry 最多 5 次。 ──
-      if (typeof window !== 'undefined' && window.location.hash) {
+      if (typeof window !== 'undefined' && window.location.hash
+          && new URLSearchParams(location.search).get('embed') !== '1') {
         const hashMatch = window.location.hash.match(/^#ep-(\d+)$/);
         if (hashMatch) {
           const targetN = parseInt(hashMatch[1], 10);
@@ -11645,8 +11680,31 @@
   };
 })();
 </script>
-
-
+  <script>
+    /* 遊戲內嵌讀模式：?embed=1#ep-N 時只顯示該集故事正文，供 LM402 / 月台 用 iframe 嵌入閱讀 */
+    (function () {
+      var params = new URLSearchParams(location.search);
+      if (params.get("embed") !== "1") return;
+      document.body.classList.add("reader-embed");
+      var m = (location.hash || "").match(/ep-(\d+)/);
+      var ep = m ? parseInt(m[1], 10) : 0;
+      var tries = 0;
+      var iv = setInterval(function () {
+        var target = document.getElementById("ep-" + ep);
+        var eps = document.querySelectorAll(".episode");
+        if (target && eps.length) {
+          clearInterval(iv);
+          eps.forEach(function (e) { if (e !== target) e.classList.add("embed-hidden"); });
+          target.classList.add("visible", "in");
+          target.style.contentVisibility = "visible";
+          target.style.containIntrinsicSize = "auto";
+          window.scrollTo(0, 0);
+        } else if (++tries > 80) {
+          clearInterval(iv);
+        }
+      }, 80);
+    })();
+  </script>
 
   </body>
 </html>

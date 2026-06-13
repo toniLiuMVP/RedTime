@@ -483,6 +483,17 @@ body[data-ui-preset="ending"] #scene-canvas {
   opacity: 0;
   pointer-events: none;
 }
+/* 讀這段故事：在重看鈕下方，女兒視角藍調，跟琥珀重看鈕區隔 */
+.council-read-story {
+  top: 284px;
+  border-color: rgba(159, 208, 255, 0.34);
+  color: #cfe0f0;
+}
+.council-read-story:hover,
+.council-read-story:focus-visible {
+  border-color: rgba(159, 208, 255, 0.7);
+  box-shadow: 0 8px 24px rgba(130, 175, 255, 0.18);
+}
 .council-replay:hover,
 .council-replay:focus-visible {
   transform: translateY(-2px);
@@ -1962,6 +1973,9 @@ body.landscape-prompt .debug-panel {
     z-index: 20;
     padding: 8px 12px;
     font-size: 10px;
+  }
+  .council-read-story {
+    top: max(96px, calc(env(safe-area-inset-top) + 88px));
   }
   .tutorial-replay {
     top: max(54px, calc(env(safe-area-inset-top) + 46px));
