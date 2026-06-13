@@ -303,11 +303,25 @@
       body.reader-embed #to-top,
       body.reader-embed .scroll-top,
       body.reader-embed #search-fab,
-      body.reader-embed #topnav-mobile {
+      body.reader-embed #topnav-mobile,
+      body.reader-embed #desktop-topbar,
+      body.reader-embed #story-progress-slider,
+      body.reader-embed #jump-tb,
+      body.reader-embed #auto-panel,
+      body.reader-embed #toast {
         display: none !important;
       }
       body.reader-embed {
         background: #0a0c0e !important;
+      }
+      /* 桌機版面是 grid(sidebar 260px + 正文)；embed 藏掉 sidebar 後正文欄會掉進那條
+         260px 窄欄而崩成「一個字一行」。改成 block 讓正文欄佔滿整寬、再由下方 #main 置中。 */
+      body.reader-embed #desktop-layout {
+        display: block !important;
+      }
+      body.reader-embed #main-col {
+        height: auto !important;
+        min-height: 100vh;
       }
       /* 內嵌時把正文欄置中，維持舒適閱讀寬度（不貼齊左緣） */
       body.reader-embed #main {

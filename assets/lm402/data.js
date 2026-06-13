@@ -252,7 +252,7 @@ export const HOTSPOTS = [
     y: 136,
     z: 608,
     radius: 150,
-    revealIn: ["consciousness_market"],
+    revealIn: ["consciousness_market", "front_call", "rear_wait"],
   },
 ];
 export const MEMORY_FRAGMENTS = {
@@ -731,10 +731,58 @@ export const INTERACTIONS = {
     ],
     choices: [
       {
+        id: "bulletin_names",
+        label: "讀情書上一封封的芳名",
+        detail: "誰把她的名字寫得那麼用力。",
+        effect: "open_bulletin_names",
+      },
+      {
+        id: "bulletin_song",
+        label: "聽禮堂飄來的那首畢業歌",
+        detail: "第一個長音「傷離別」還在梁上。",
+        effect: "open_bulletin_song",
+      },
+      {
         id: "bulletin_close",
-        label: "把紙角壓平",
+        label: "把情書的紙角輕輕壓平",
         detail: "留一點空白給命運。",
         effect: "lore_bulletin",
+      },
+    ],
+  },
+  bulletin_names: {
+    eyebrow: "意識菜市場 · 1994",
+    title: "一封封的芳名",
+    speaker: "女兒",
+    copy: [
+      "她的名字，被不熟練卻用力的筆畫，寫進一封封情書，外圈密密畫滿愛心。",
+      "可是十八歲的阿姨，一封都沒有回。",
+      "她把指尖貼在自己的脈搏上，像在搜尋命運密碼：如果命中注定會遇見那個人，他現在在哪裡？",
+    ],
+    choices: [
+      {
+        id: "bulletin_names_close",
+        label: "他在十一年後的那道後門外",
+        detail: "2005 年，他會從前門的樓梯走上來。",
+        effect: "close_only",
+      },
+    ],
+  },
+  bulletin_song: {
+    eyebrow: "意識菜市場 · 1994",
+    title: "傷離別",
+    speaker: "女兒",
+    copy: [
+      "禮堂喇叭放著畢業歌，第一個長音「傷離別」在梁上盤旋。",
+      "十八歲的她還不知道，真正的離別，要等到很多年以後。",
+      "也還不知道，會有一個人，把這首歌，聽成兩個人的。",
+    ],
+    choices: [
+      {
+        id: "bulletin_song_close",
+        label: "把這個夏天輕輕收好",
+        detail: "原來傷離別，是先學會相遇。",
+        effect: "close_only",
       },
     ],
   },
@@ -750,9 +798,57 @@ export const INTERACTIONS = {
     ],
     choices: [
       {
+        id: "note_future",
+        label: "想像她未來會在這張紙上寫什麼",
+        detail: "2006 年 1 月，她會寫下一句話。",
+        effect: "open_note_future",
+      },
+      {
+        id: "note_why",
+        label: "她為什麼只會用「離開」照顧人",
+        detail: "有些溫柔，年輕時只懂得用背影表達。",
+        effect: "open_note_why",
+      },
+      {
         id: "note_close",
         label: "把紙條留在原地",
         detail: "有些話，要很多年後才寫得出來。",
+        effect: "close_only",
+      },
+    ],
+  },
+  note_future: {
+    eyebrow: "靠窗座位 · 桌角",
+    title: "2006 年 1 月的那張紙條",
+    speaker: "學妹（內心獨白）",
+    copy: [
+      "2006 年 1 月，她會在一張這樣的紙條上寫下：",
+      "「我走了，你要好好照顧自己。」",
+      "然後把它放在學長的 125 機車上。",
+    ],
+    choices: [
+      {
+        id: "note_future_close",
+        label: "很多年後，她才敢補上後半句",
+        detail: "「我說我走了，但我從沒離開過。」",
+        effect: "close_only",
+      },
+    ],
+  },
+  note_why: {
+    eyebrow: "靠窗座位 · 桌角",
+    title: "用離開照顧一個人",
+    speaker: "學妹（內心獨白）",
+    copy: [
+      "那時候的她，只會用「離開」來照顧一個人。",
+      "把自己先收走，怕留下來，會變成對方的負擔。",
+      "她還要走很長的路，才學得會：留下來，也是一種溫柔。",
+    ],
+    choices: [
+      {
+        id: "note_why_close",
+        label: "把這份笨拙的溫柔收好",
+        detail: "她的背影，其實一直朝著他。",
         effect: "close_only",
       },
     ],

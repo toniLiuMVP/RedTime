@@ -18,7 +18,7 @@
     { lean: +1, color: "#f5dce6", label: "49 歲（看透的妳）", line: "去愛這一次吧。後面好多年的我們，都會謝謝妳今天沒有逃跑。" },
   ];
 
-  const CLOCK_MAX = 40;
+  const CLOCK_MAX = 20; // 時間調快 2 倍(原 40s → 20s),節奏更緊、不拖
   let host = null, active = false, onDone = null, raf = 0;
   let skew = 0, steady = 0, clock = 0, lastTick = 0;
   let watchEl = null, steadyFill = null, skewKnob = null, lineEl = null, daughterEl = null, dBodyEl = null, dStateEl = null;
@@ -217,13 +217,13 @@
     // 活的七嘴八舌:沒被安撫的聲音持續變激動，並把 skew 往自己的 lean 拉
     let drift = 0;
     for (let k = 0; k < VOICES.length; k++) {
-      agit[k] = Math.min(1, (agit[k] || 0) + dt * 0.11);
+      agit[k] = Math.min(1, (agit[k] || 0) + dt * 0.18); // 聲音變激動更快,2x 節奏下不單調
       drift += agit[k] * VOICES[k].lean;
     }
-    skew += drift * dt * 0.14;
+    skew += drift * dt * 0.2;
     skew = Math.max(-6, Math.min(6, skew));
-    // 穩定:維持在中間就慢慢回穩，偏掉才流失（流失放緩，主動調節就能贏）
-    steady += (Math.abs(skew) <= 1.5 ? dt * 5.5 : -dt * 3.5);
+    // 穩定:半場時間下加倍累積速率，主動調節仍贏得了
+    steady += (Math.abs(skew) <= 1.5 ? dt * 9.5 : -dt * 5);
     steady = Math.max(0, Math.min(100, steady));
     if (breathCd > 0) breathCd = Math.max(0, breathCd - dt);
     render();

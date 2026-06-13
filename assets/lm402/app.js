@@ -1500,6 +1500,10 @@ function applyEffect(effect) {
     openDialogue(INTERACTIONS.earphone);
     return;
   }
+  if (effect === "open_bulletin_names") { openDialogue(INTERACTIONS.bulletin_names); return; }
+  if (effect === "open_bulletin_song") { openDialogue(INTERACTIONS.bulletin_song); return; }
+  if (effect === "open_note_future") { openDialogue(INTERACTIONS.note_future); return; }
+  if (effect === "open_note_why") { openDialogue(INTERACTIONS.note_why); return; }
   if (effect === "collect_plaque" || effect === "memory_plaque") {
     collectMemory("plaque");
     setSubtitle("女兒", "門牌：LM402。粉筆味像一層薄雲。", 3.8);
