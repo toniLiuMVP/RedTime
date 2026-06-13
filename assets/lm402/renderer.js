@@ -1026,7 +1026,7 @@ function S(t) {
     n && (X.position.set(0, 1.462, 0.032), X.scale.set(0.44, 0.34, 0.52)));
   const j = new e.SphereGeometry(0.032, 16, 16),
     $ = new e.Mesh(j, c);
-  ($.position.set(-0.165, 1.55, 0.01), $.scale.set(0.72, 1.02, 0.56));
+  ($.position.set(-0.165, 1.55, 0.045), $.scale.set(0.72, 1.02, 0.56));
   const H = $.clone();
   ((H.position.x = 0.165),
     o.add($, H),
@@ -1063,8 +1063,8 @@ function S(t) {
     o.add(N));
   const O = new e.Mesh(
     new e.TorusGeometry(
-      t.female && a ? 0.038 : 0.045,
-      t.female && a ? 0.0065 : 0.009,
+      t.female && a ? 0.038 : 0.03,
+      t.female && a ? 0.0065 : 0.006,
       8,
       18,
       Math.PI,
@@ -2261,19 +2261,7 @@ function S(t) {
     }
   }
   if (!t.female) {
-    const t = new e.Mesh(
-      new e.BoxGeometry(0.11, 0.52, 0.03),
-      new e.MeshPhysicalMaterial({
-        color: "#5f7893",
-        roughness: 0.42,
-        metalness: 0.03,
-        clearcoat: 0.12,
-        clearcoatRoughness: 0.28,
-        transparent: !0,
-        opacity: 0.94,
-      }),
-    );
-    (t.position.set(0, 1.08, 0.19), o.add(t));
+    /* 胸前直板已移除：白 T 上讀成異物 */
     const a = new e.Mesh(
       new e.CapsuleGeometry(0.162, 0.52, 8, 16),
       new e.MeshPhysicalMaterial({
@@ -2311,8 +2299,8 @@ function S(t) {
     ((l.position.x = 0.06), (l.rotation.z = 0.3), o.add(i, l));
     const c = new e.Mesh(new e.BoxGeometry(0.136, 0.084, 0.054), d);
     (c.position.set(0, 1.616, 0.122), o.add(c));
-    const h = new e.Mesh(new e.BoxGeometry(0.032, 0.18, 0.028), d);
-    (h.position.set(-0.132, 1.5, 0.06), (h.rotation.z = -0.06));
+    const h = new e.Mesh(new e.BoxGeometry(0.032, 0.1, 0.028), d);
+    (h.position.set(-0.132, 1.535, 0.06), (h.rotation.z = -0.06));
     const p = h.clone();
     ((p.position.x = 0.128), (p.rotation.z = 0.06));
     const m = new e.Mesh(new e.BoxGeometry(0.18, 0.07, 0.06), d);
@@ -2334,12 +2322,12 @@ function S(t) {
         metalness: 0.28,
       }),
     );
-    (t.position.set(0.16, 1.38, 0.07),
+    (t.position.set(0.185, 1.27, 0.09),
       t.rotation.set(-0.24, 0.16, 0.18),
       o.add(t));
   }
   if (t.highlight) {
-    const e = b("rgba(255,234,184,1)", 1.2, 1.8, 0.28);
+    const e = b("rgba(255,234,184,1)", 1.2, 1.8, t.female ? 0.28 : 0.12);
     (e.position.set(0.12, 1.16, -0.08), o.add(e), (o.userData.glow = e));
   }
   return (

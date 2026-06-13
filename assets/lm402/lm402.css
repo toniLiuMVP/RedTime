@@ -1649,6 +1649,18 @@ body[data-ui-preset="ending"] #scene-canvas {
   /* 面板系統會固定高度:內容超出時內捲,不再外溢/截斷 */
   overflow-y: auto;
   overscroll-behavior: contain;
+  /* 捲軸常駐環境兩側對稱保留 gutter,選單才不會在卡內偏左 */
+  scrollbar-gutter: stable both-edges;
+}
+.ending-card::-webkit-scrollbar {
+  width: 8px;
+}
+.ending-card::-webkit-scrollbar-track {
+  background: transparent;
+}
+.ending-card::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 4px;
 }
 .dialogue-card:active,
 .ending-card:active {
@@ -2263,6 +2275,7 @@ body.landscape-prompt .debug-panel {
     position: relative;
     top: auto;
     bottom: auto;
+    left: auto;
     transform: none;
     width: min(860px, calc(100vw - 24px));
     max-height: calc(100dvh - 36px - env(safe-area-inset-top));

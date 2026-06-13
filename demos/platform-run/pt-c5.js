@@ -120,16 +120,7 @@ function ensureStyle() {
       0%, 100% { right: -300px; }
       20%, 60% { right: 18px; }
     }
-    /* L8 bench — center silhouette */
-    #${ROOT_ID} .c8-mech-bench {
-      position: absolute; bottom: 28vh; left: 50%;
-      transform: translateX(-50%);
-      width: clamp(140px, 18vw, 220px); height: 22px;
-      background: linear-gradient(180deg, rgba(80, 60, 42, 0.55), rgba(40, 28, 18, 0.78));
-      border-radius: 2px;
-      opacity: 0;
-    }
-    #${ROOT_ID}.active[data-mech="bench"] .c8-mech-bench { opacity: 1; }
+    /* L8 bench — 取消中央剪影條（讀起來像殘留圖案；場上已有 3D 長椅與行李) */
     /* L9 flicker — random dim */
     #${ROOT_ID} .c8-mech-flicker {
       position: absolute; inset: 0;
@@ -192,7 +183,6 @@ function ensureRoot() {
   root.appendChild(makeDiv('c8-mech-queue-r'));
   root.appendChild(makeDiv('c8-mech-baby', '嬰兒的哭聲'));
   root.appendChild(makeDiv('c8-mech-announce', '本次往南列車即將進站'));
-  root.appendChild(makeDiv('c8-mech-bench'));
   root.appendChild(makeDiv('c8-mech-flicker'));
   root.appendChild(makeDiv('c8-mech-redline'));
   document.body.appendChild(root);

@@ -3097,6 +3097,29 @@ a.tl-event:focus-visible {
   color: rgba(232, 200, 122, 0.55);
   transition: color 0.25s ease;
 }
+
+/* 引言區點擊導流（mid-echo EP28 / end-echo EP41）：整塊可點，hover 才亮提示 */
+a.echo-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+.echo-go {
+  text-align: center;
+  opacity: 0.55;
+  transition: opacity 0.25s ease, color 0.25s ease;
+}
+a.echo-link:hover .echo-go,
+a.echo-link:focus-visible .echo-go {
+  opacity: 1;
+  color: rgba(232, 200, 122, 0.95);
+}
+a.echo-link:hover .mid-echo-quote,
+a.echo-link:hover .end-echo-main {
+  color: #fff;
+}
+
 a.tl-event:hover .tl-event-go,
 a.tl-event:focus-visible .tl-event-go {
   color: rgba(232, 200, 122, 0.95);

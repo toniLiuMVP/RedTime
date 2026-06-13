@@ -1455,7 +1455,7 @@ function applyEffect(effect) {
   }
   if (effect === "memory_board" || effect === "memory_board_soft") {
     collectMemory("board");
-    renderer.spawnHologram("board", state.time);
+    scene.spawnHologram("board", state.time);
     if (effect === "memory_board") {
       setSubtitle("33 歲的聲音", "十一點整，下課鐘會響。他會先從前門探頭看，可是看不到妳。", 4.2);
     }
@@ -1464,14 +1464,14 @@ function applyEffect(effect) {
   }
   if (effect === "memory_seat") {
     collectMemory("seat");
-    renderer.spawnHologram("seat", state.time);
+    scene.spawnHologram("seat", state.time);
     setSubtitle("女兒", "原來阿姨當時就是站在這格光裡。用 29 歲的身體、18 歲的心跳，等著把拔走過來。", 5.0);
     closeDialogue();
     return;
   }
   if (effect === "memory_notes") {
     collectMemory("notes");
-    renderer.spawnHologram("notes", state.time);
+    scene.spawnHologram("notes", state.time);
     audioSystem.playCue("thread");
     safeTimeout(() => {
       if (state.mode === "play") setSubtitle("把拔（心底的聲音）", "「這一次，依然再次遇見妳。」", 3.5);
@@ -1528,11 +1528,13 @@ function applyEffect(effect) {
     setSubtitle("女兒", "我停在後門旁，剛好能看到走廊的一小段。", 4.2);
     setAmbience("光從窗邊切進來，把地板照得有點過分地亮。所有版本的呼吸都慢慢安靜下來。");
     if (window.__ACTS__ && state.mode === "play" && !state.flags.loveArcSeen) {
-      state.flags.loveArcSeen = true;
       safeTimeout(() => {
+        if (state.ending || state.endingSequence) return; /* 結局演出中不疊戀愛弧 */
+        if (state.flags.loveArcSeen) return;
+        state.flags.loveArcSeen = true; /* 實際播出才消耗，中止時留給 perfect_eye 流程 */
         if (state.mode === "play" && window.__ACTS__) window.__ACTS__.gaze(function (res) {
           setSubtitle("女兒", (res && res.ok)
-            ? "我親眼看著那一眼，整個人被釘在原地。這就是我存在的起點。"
+            ? "我親眼看著那一眼，整個人被釘在原地。這就是那條紅線的起點。"
             : "就算只是餘光，他們也已經開始了。", 5.0);
           safeTimeout(() => {
             if (state.mode === "play" && window.__ACTS__) {
@@ -2042,7 +2044,7 @@ function finishIntro() {
       lookInput: { x: 0, y: 0 },
       isGhostObserver: true,
     };
-    setSubtitle("女兒", "意識市集開始了，這是把拔跟阿姨的第一次見面。四周的記憶碎片正在浮現⋯⋯", 8);
+    setSubtitle("女兒", "意識菜市場開始了，這是把拔跟阿姨的第一次見面。四周的記憶碎片正在浮現⋯⋯", 8);
     setAmbience("十點四十分，教室像一只剛被打開的舊鐘，所有指針還沒對準。走廊的風撥動粉筆灰，陽光沿著矮牆一格一格鋪進來。");
   }
 
@@ -2171,6 +2173,13 @@ function dismissEnding() {
   if (!dom.endingOverlay) return;
   dom.endingOverlay.hidden = true;
   dom.body.classList.remove("ending-open");
+  /* missed 後不清狀態會卡死互動（F 鍵與指標鎖定都被 state.ending 擋住）；
+     關卡回後門等待，玩家可立刻再試一次 */
+  if (state.ending === "missed") {
+    state.ending = null;
+    state.endingSequence = null;
+    setPhase("rear_wait");
+  }
 }
 
 function resetScene() {
@@ -2214,7 +2223,7 @@ function resetScene() {
   dom.body.classList.remove("dialogue-open");
   updateObjective(true);
   updateMemoryList();
-  setSubtitle("女兒", "意識市集開始了，這是把拔跟阿姨的第一次見面。四周的記憶碎片正在浮現⋯⋯", 5);
+  setSubtitle("女兒", "意識菜市場開始了，這是把拔跟阿姨的第一次見面。四周的記憶碎片正在浮現⋯⋯", 5);
   setAmbience("十點四十分的教室只有陽光和粉筆灰，走廊的風帶著校園樹葉的氣味，一切還停在被喚醒之前。");
   syncDockState();
   updatePointerHint();
