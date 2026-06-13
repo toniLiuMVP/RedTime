@@ -877,7 +877,22 @@ function S(t) {
         metalness: 0.06,
       }),
     );
-    (n.position.set(0, 0.72, 0.016), o.add(t, a, n));
+    (n.position.set(0, 0.72, 0.016), o.add(n));
+    /* 髖關節 pivot:把膚色腿 + 牛仔褲(稍後再加鞋)收進同一條腿,走路時整條一起從髖部擺。
+       原本 pose.leftLeg/rightLeg 只指膚色 capsule,P() 擺它時牛仔褲不動 → 腳穿過褲子。 */
+    var _hipL = new e.Group();
+    _hipL.position.set(S.position.x, 0.72, S.position.z);
+    var _hipR = new e.Group();
+    _hipR.position.set(z.position.x, 0.72, z.position.z);
+    o.add(_hipL, _hipR);
+    S.position.set(S.position.x - _hipL.position.x, S.position.y - _hipL.position.y, S.position.z - _hipL.position.z);
+    S.rotation.set(0, 0, 0);
+    z.position.set(z.position.x - _hipR.position.x, z.position.y - _hipR.position.y, z.position.z - _hipR.position.z);
+    z.rotation.set(0, 0, 0);
+    t.position.set(t.position.x - _hipL.position.x, t.position.y - _hipL.position.y, t.position.z - _hipL.position.z);
+    a.position.set(a.position.x - _hipR.position.x, a.position.y - _hipR.position.y, a.position.z - _hipR.position.z);
+    _hipL.add(S, t);
+    _hipR.add(z, a);
   }
   const v = new e.BoxGeometry(n ? 0.1 : 0.13, n ? 0.05 : 0.06, n ? 0.2 : 0.25),
     G = new e.Mesh(v, p);
@@ -885,6 +900,13 @@ function S(t) {
     (G.rotation.x = 0.04));
   const C = G.clone();
   ((C.position.x = t.female ? (n ? 0.078 : 0.094) : 0.102), o.add(G, C));
+  /* 男生:把鞋子也收進髖關節 pivot,讓整條腿(膚色+牛仔褲+鞋)一起擺(走路才不會腳穿出褲子/鞋脫節) */
+  if (_hipL) {
+    G.position.set(G.position.x - _hipL.position.x, G.position.y - _hipL.position.y, G.position.z - _hipL.position.z);
+    C.position.set(C.position.x - _hipR.position.x, C.position.y - _hipR.position.y, C.position.z - _hipR.position.z);
+    _hipL.add(G);
+    _hipR.add(C);
+  }
   const B = new e.Mesh(
     new e.SphereGeometry(t.female ? (n ? 0.068 : 0.086) : 0.102, 18, 18),
     s,
@@ -2352,8 +2374,8 @@ function S(t) {
       chest: f,
       leftArm: I,
       rightArm: R,
-      leftLeg: S,
-      rightLeg: z,
+      leftLeg: _hipL ?? S,
+      rightLeg: _hipR ?? z,
       leftHand: V,
       rightHand: E,
       head: L,
