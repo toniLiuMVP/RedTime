@@ -5566,6 +5566,26 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         const P = new e.Mesh(new e.BoxGeometry(h + 0.02, c, o - 0.06), mt);
         (P.position.set(b + 0.02, n * (g + 0.5) * c - 0.07 * n, a), (P.receiveShadow = !0), j.add(P));
       }
+      /* 梯側封板 stringer + 梯底斜封 soffit：把懸空踏板封成實心樓梯,去掉浮空木板感 */
+      {
+        const _ang = Math.atan2(n * l * c, r - s),
+          _len = Math.hypot(s - r, l * c) + 0.16,
+          _mx = (s + r) / 2,
+          _my = (n * l * c) / 2;
+        [a - o / 2 - 0.025, a + o / 2 + 0.025].forEach((zz) => {
+          const sb = new e.Mesh(new e.BoxGeometry(_len, 0.46, 0.05), mt);
+          (sb.position.set(_mx, _my - 0.13, zz),
+            (sb.rotation.z = _ang),
+            (sb.castShadow = !0),
+            (sb.receiveShadow = !0),
+            j.add(sb));
+        });
+        const _sof = new e.Mesh(new e.BoxGeometry(_len, 0.07, o + 0.05), mt);
+        (_sof.position.set(_mx, _my - 0.2, a),
+          (_sof.rotation.z = _ang),
+          (_sof.receiveShadow = !0),
+          j.add(_sof));
+      }
       const g = new e.Mesh(new e.BoxGeometry(0.92, 0.08, o + 0.04), mt);
       (g.position.set(r + 0.38, n * (l * c + 0.02), a),
         (g.receiveShadow = !0),
@@ -5588,7 +5608,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       const hrEndB2 = hrEndB.clone();
       hrEndB2.position.z = a + o / 2 + 0.06;
       j.add(hrEndB2);
-      const S = Math.max(3, Math.floor(i / 0.42));
+      const S = Math.max(3, Math.floor(i / 0.92));
       for (let o = 0; o <= S; o += 1) {
         const l = r + 0.16 + (o / S) * (i - 0.16),
           d = new e.Mesh(hrPost, wt),
