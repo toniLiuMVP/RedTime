@@ -432,6 +432,12 @@ export const INTERACTIONS = {
         detail: "把視線留給等一下的一眼瞬間。",
         effect: "close_only",
       },
+      {
+        id: "seat_note",
+        label: "看桌角那張還沒寫的紙條",
+        detail: "一張空白的紙條，安靜地躺在桌角。",
+        effect: "open_note",
+      },
     ],
   },
   notes: {
@@ -704,6 +710,12 @@ export const INTERACTIONS = {
         detail: "記住自己是怎麼走進這一秒的。",
         effect: "close_only",
       },
+      {
+        id: "textbook_earphone",
+        label: "戴上命運阿嬤的時空耳機",
+        detail: "同時聽見兩個人的心。",
+        effect: "open_earphone",
+      },
     ],
   },
   bulletin: {
@@ -712,7 +724,8 @@ export const INTERACTIONS = {
     speaker: "女兒",
     copy: [
       "意識菜市場最熱鬧的時候，牆上浮出一面 1994 年的布告欄。",
-      "那是阿姨十八歲、高三的穿堂。風把一封情書的紙角掀了起來。",
+      "那是阿姨十八歲、高三的穿堂。禮堂喇叭放著畢業歌，那句「傷離別」還在梁上盤旋。",
+      "風把一封寫滿她芳名的情書，紙角掀了起來。",
       "她伸出食指，輕輕把紙角壓平，卻沒有撕下來。",
       "她不讓七嘴八舌的喧鬧替她決定什麼。就像等一下，她會在後門安安靜靜地站好。",
     ],
@@ -721,6 +734,44 @@ export const INTERACTIONS = {
         id: "bulletin_close",
         label: "把紙角壓平",
         detail: "留一點空白給命運。",
+        effect: "lore_bulletin",
+      },
+    ],
+  },
+  note: {
+    eyebrow: "靠窗座位 · 桌角",
+    title: "還沒寫的紙條",
+    speaker: "學妹（內心獨白）",
+    copy: [
+      "靠窗座位的桌角，放著一張還沒寫的空白紙條。",
+      "她還不知道，2006 年 1 月，她會在一張這樣的紙條上寫下：「我走了，你要好好照顧自己。」",
+      "然後把它放在學長的 125 機車上。",
+      "那時候的她，只會用「離開」來照顧一個人。",
+    ],
+    choices: [
+      {
+        id: "note_close",
+        label: "把紙條留在原地",
+        detail: "有些話，要很多年後才寫得出來。",
+        effect: "close_only",
+      },
+    ],
+  },
+  earphone: {
+    eyebrow: "命運阿嬤的禮物",
+    title: "時空耳機",
+    speaker: "女兒",
+    copy: [
+      "命運阿嬤說：「妳上次第一次段考考得不錯。這副『時空耳機』給妳，戴上去就知道了。」",
+      "我戴上時空耳機，整間教室的聲音忽然分了層。",
+      "我聽見的不只是 2005 年的這一秒，還有把拔和阿姨各自心裡，那條一直沒斷的線。",
+      "原來戴上它，就能同時聽見兩個人沒說出口的話。",
+    ],
+    choices: [
+      {
+        id: "earphone_close",
+        label: "把耳機摘下來",
+        detail: "聽過一次，就再也假裝沒聽過。",
         effect: "close_only",
       },
     ],

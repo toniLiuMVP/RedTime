@@ -1482,6 +1482,22 @@ function applyEffect(effect) {
     closeDialogue();
     return;
   }
+  if (effect === "lore_bulletin") {
+    /* EP32 1994 穿堂布告欄情書壓平 payoff */
+    setSubtitle("學妹（1994 · 18歲）", "她把紙角壓平，沒有撕下來。她不讓任何人的喧鬧，替她決定要不要心動。這份安靜，她會一路帶到 2005 年那道後門。", 5.6);
+    closeDialogue();
+    return;
+  }
+  if (effect === "open_note") {
+    /* EP12 桌角還沒寫的紙條（從座位互動接進來） */
+    openDialogue(INTERACTIONS.note);
+    return;
+  }
+  if (effect === "open_earphone") {
+    /* EP34 時空耳機（從課本互動接進來） */
+    openDialogue(INTERACTIONS.earphone);
+    return;
+  }
   if (effect === "collect_plaque" || effect === "memory_plaque") {
     collectMemory("plaque");
     setSubtitle("女兒", "門牌：LM402。粉筆味像一層薄雲。", 3.8);

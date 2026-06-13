@@ -5946,6 +5946,15 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     const flap = new e.Mesh(new e.PlaneGeometry(0.34, 0.12), letterMat);
     (flap.rotation.set(-0.5, 0, 0), flap.position.set(6.02, 1.99, 7.17), flap.castShadow = !0, j.add(flap));
   }
+  {
+    /* EP12 還沒寫的空白紙條：躺在靠窗座位桌角（world ~23.7,25.7） */
+    const noteMat = new e.MeshStandardMaterial({ color: "#f3ecdc", roughness: 0.95, metalness: 0.01, side: e.DoubleSide });
+    const note = new e.Mesh(new e.PlaneGeometry(0.16, 0.12), noteMat);
+    (note.rotation.set(-Math.PI / 2, 0, 0.55), note.position.set(24.56, 0.825, 25.42), note.receiveShadow = !0, j.add(note));
+    /* 微微翹起的一角 */
+    const corner = new e.Mesh(new e.PlaneGeometry(0.16, 0.04), noteMat);
+    (corner.rotation.set(-Math.PI / 2 + 0.4, 0, 0.55), corner.position.set(24.59, 0.835, 25.48), j.add(corner));
+  }
   const Wt = new e.Mesh(new e.BoxGeometry(0.96, 0.98, 0.72), Je);
   (Wt.position.set(me - 4.2, 0.49, he - 0.86),
     (Wt.castShadow = !0),
