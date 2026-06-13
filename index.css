@@ -3029,6 +3029,7 @@
   font: 400 14px/1.9 "Noto Serif TC", serif;
   letter-spacing: 0.12em;
   color: rgba(234, 230, 222, 0.62);
+  text-align: center;
 }
 /* 字級面板折衷收合 */
 .site-font-collapse {
