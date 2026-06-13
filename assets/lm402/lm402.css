@@ -1703,6 +1703,44 @@ body[data-ui-preset="ending"] #scene-canvas {
 .dialogue-copy p {
   margin: 0;
 }
+/* 視角徽章：卡片頂端標明「現在這句是誰的視角」，玩家不迷路 */
+.dialogue-pov {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  font:
+    600 12.5px/1 "Noto Sans TC",
+    sans-serif;
+  letter-spacing: 0.08em;
+  color: var(--pov, #c8bca8);
+  border: 1px solid color-mix(in srgb, var(--pov, #c8bca8) 50%, transparent);
+  background: color-mix(in srgb, var(--pov, #c8bca8) 12%, transparent);
+}
+.dialogue-pov::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--pov, #c8bca8);
+}
+/* 七嘴八舌逐句說話者前綴 */
+.dialogue-line {
+  padding-left: 2px;
+}
+.dl-spk {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 1px 8px;
+  border-radius: 6px;
+  font: 600 11.5px/1.5 "Noto Sans TC", sans-serif;
+  letter-spacing: 0.06em;
+  color: var(--pov, #c8bca8);
+  background: color-mix(in srgb, var(--pov, #c8bca8) 14%, transparent);
+  vertical-align: 0.06em;
+}
 .dialogue-choices,
 .ending-actions {
   display: grid;

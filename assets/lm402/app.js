@@ -1368,6 +1368,16 @@ function revealHint(text) {
   revealHint.timer = window.setTimeout(() => dom.hintPill.classList.remove("show"), 2400);
 }
 
+/* 視角徽章配色：讓玩家一眼看出「現在這句是誰的視角」，不迷路 */
+function speakerPovColor(speaker) {
+  const s = String(speaker || "");
+  if (s.indexOf("女兒") >= 0) return "#ff9fb6";
+  if (s.indexOf("把拔") >= 0) return "#6f8fc0";
+  if (s.indexOf("學長") >= 0) return "#7aa8dc";
+  if (s.indexOf("阿嬤") >= 0) return "#e8c87a";
+  if (s.indexOf("學妹") >= 0 || s.indexOf("歲") >= 0 || s.indexOf("年齡") >= 0 || s.indexOf("年紀") >= 0) return "#ffc78a";
+  return "#c8bca8";
+}
 function openDialogue(definition) {
   if (document.pointerLockElement === canvas) {
     document.exitPointerLock?.();
@@ -1375,9 +1385,43 @@ function openDialogue(definition) {
   state.dialogue = definition;
   state.cameraMode = "dialogue";
   dom.dialogueEyebrow.textContent = definition.eyebrow;
-  dom.dialogueTitle.textContent = `${definition.speaker} · ${definition.title}`;
-  dom.dialogueCopy.innerHTML = definition.copy.map((text) => `<p>${escapeHtml(text)}</p>`).join("");
-  appendTranscriptEntry(definition.speaker, definition.copy.join("\n"), "dialogue");
+  dom.dialogueTitle.textContent = definition.title;
+  /* 用 DOM 方法建構（不碰 innerHTML）：卡片頂端獨立 POV 徽章 + 逐句說話者 */
+  dom.dialogueCopy.replaceChildren();
+  const _hasLines = Array.isArray(definition.lines) && definition.lines.length;
+  const _povName = definition.speaker || (_hasLines ? "不同年紀的自己" : "");
+  if (_povName) {
+    const _pov = document.createElement("div");
+    _pov.className = "dialogue-pov";
+    _pov.style.setProperty("--pov", speakerPovColor(_povName));
+    _pov.textContent = _povName;
+    dom.dialogueCopy.appendChild(_pov);
+  }
+  let _transcript;
+  if (Array.isArray(definition.lines) && definition.lines.length) {
+    /* 七嘴八舌：逐句顯示說話者（不同年紀的自己），玩家分得出誰在說 */
+    definition.lines.forEach((ln) => {
+      const p = document.createElement("p");
+      p.className = "dialogue-line";
+      const spk = document.createElement("span");
+      spk.className = "dl-spk";
+      spk.style.setProperty("--pov", speakerPovColor(ln.speaker));
+      spk.textContent = ln.speaker;
+      p.appendChild(spk);
+      p.appendChild(document.createTextNode(ln.text));
+      dom.dialogueCopy.appendChild(p);
+    });
+    _transcript = definition.lines.map((ln) => `${ln.speaker}：${ln.text}`).join("\n");
+  } else {
+    const _copyArr = Array.isArray(definition.copy) ? definition.copy : [definition.copy];
+    _copyArr.forEach((text) => {
+      const p = document.createElement("p");
+      p.textContent = text;
+      dom.dialogueCopy.appendChild(p);
+    });
+    _transcript = _copyArr.join("\n");
+  }
+  appendTranscriptEntry(_povName, _transcript, "dialogue");
   dom.dialogueChoices.innerHTML = "";
   definition.choices.forEach((choice, index) => {
     const button = document.createElement("button");
