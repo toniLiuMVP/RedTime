@@ -5341,17 +5341,28 @@ function showFinalResult() {
   dom.resultTitle.textContent = "\u5168\u90E8\u904E\u95DC\uFF01";
   dom.resultBody.textContent = "";
   /* \u7A4D\u6975 emotion\uFF1A\u7D50\u7B97\u5148\u7D66\u4E00\u53E5\u60C5\u7DD2\uFF0C\u518D\u5217\u6578\u5B57 \u2014 \u8B93\u901A\u95DC\u50CF\u6545\u4E8B\u7684\u4E00\u523B\uFF0C\u4E0D\u53EA\u662F\u5206\u6578 */
+  /* \u4E09\u6BB5\u63A5\u529B ending \u8499\u592A\u5947\uFF1AC \u5148\u642D\u597D\u90A3\u7247\u5929\u7A7A \u2192 B \u96F6\u79D2\u5DEE \u2192 A \u9084\u662F\u76F8\u4FE1\uFF08\u4F9D\u5E8F\u6DE1\u5165\uFF0C\u843D\u5728\u300C\u76F8\u4FE1\u300D\uFF09 */
   try {
-    var emo = document.createElement("div");
-    emo.style.cssText = 'margin:2px 0 16px;padding:14px 16px;border-left:2px solid rgba(228,70,80,0.45);background:rgba(228,70,80,0.06);border-radius:2px;font-family:"Noto Serif TC",serif;line-height:1.8;text-align:left;';
-    var emoMain = document.createElement("div");
-    emoMain.textContent = "\u4F60\u8FFD\u7684\u4E0D\u662F\u706B\u8ECA\u3002";
-    emoMain.style.cssText = 'color:rgba(248,224,216,0.95);font-size:15px;letter-spacing:0.06em;';
-    var emoSub = document.createElement("div");
-    emoSub.textContent = "\u662F\u6BCF\u4E00\u6B21\uFF0C\u90FD\u60F3\u8D95\u4E0A\u7684\u90A3\u500B\u4EBA\u3002";
-    emoSub.style.cssText = 'color:rgba(218,184,168,0.80);font-size:13px;letter-spacing:0.06em;margin-top:6px;';
-    emo.appendChild(emoMain); emo.appendChild(emoSub);
-    dom.resultBody.appendChild(emo);
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var stanzas = [
+      "\u6C92\u6709\u5C3F\u5E03\u53F0\uFF0C\u4ED6\u5C31\u7528\u5169\u96BB\u624B\u81C2\u66FF\u59B3\u6490\u51FA\u4E00\u5EA7\u6A4B\uFF1B\u6C92\u6709\u591A\u7684\u6642\u9593\uFF0C\u4ED6\u5C31\u7528\u5168\u90E8\u7684\u529B\u6C23\u53BB\u63DB\u90A3\u4E09\u5341\u79D2\u3002\u9019\u500B\u4E16\u754C\u5F88\u5C11\u5148\u70BA\u4ED6\u6E96\u5099\u597D\u4EC0\u9EBC\uFF0C\u4ED6\u537B\u628A\u6BCF\u4E00\u500B\u300C\u6C92\u6709\u6E96\u5099\u597D\u300D\uFF0C\u90FD\u8DD1\u6210\u4E86\u59B3\u7684\u7406\u6240\u7576\u7136\u3002",
+      "\u706B\u8ECA\u53EF\u4EE5\u958B\u8D70\uFF0C\u57CE\u5E02\u53EF\u4EE5\u628A\u4F60\u5011\u9694\u958B\uFF0C\u90A3\u689D\u7C89\u7D05\u8272\u7684\u7DDA\u537B\u5F9E\u4F86\u6C92\u6709\u91CF\u904E\u8DDD\u96E2\u3002\u59B3\u5728\u8F38\u5165\u6B04\u4E00\u500B\u5B57\u4E00\u500B\u5B57\u6253\u8457\u60F3\u5FF5\uFF0C\u4ED6\u7684\u90A3\u4E00\u53E5\u537B\u5148\u4E00\u6B65\u62B5\u9054\u3002",
+      "\u6C92\u6709\u4E00\u73ED\u8ECA\u627F\u8AFE\u904E\u6703\u7B49\u4ED6\uFF0C\u4ED6\u9084\u662F\u4E00\u6B21\u53C8\u4E00\u6B21\u5F80\u5FEB\u95DC\u4E0A\u7684\u9580\u72C2\u5954\u3002\u591A\u5E74\u5F8C\u59B3\u624D\u770B\u61C2\uFF0C\u90A3\u500B\u5598\u8457\u6C23\u7684\u7B11\uFF0C\u4ED6\u628A\u5B83\u53EB\u505A\u76F8\u4FE1\u3002\u800C\u4ECA\u5929\uFF0C\u63DB\u59B3\u4F38\u624B\u63A5\u4F4F\u9019\u5169\u500B\u5B57\u3002"
+    ];
+    var emoWrap = document.createElement("div");
+    emoWrap.style.cssText = 'margin:2px 0 16px;padding:14px 16px;border-left:2px solid rgba(228,70,80,0.45);background:rgba(228,70,80,0.06);border-radius:2px;text-align:left;';
+    stanzas.forEach(function (txt, i) {
+      var p = document.createElement("div");
+      p.textContent = txt;
+      p.style.cssText = 'font-family:"Noto Serif TC",serif;line-height:1.9;font-size:14px;letter-spacing:0.04em;color:rgba(244,222,210,0.92);' +
+        (i > 0 ? 'margin-top:13px;padding-top:13px;border-top:1px solid rgba(228,70,80,0.14);' : '') +
+        (reduce ? '' : 'opacity:0;transform:translateY(6px);transition:opacity 1.1s ease,transform 1.1s ease;');
+      emoWrap.appendChild(p);
+      if (!reduce) {
+        safeSetTimeout(function () { p.style.opacity = "1"; p.style.transform = "none"; }, 350 + i * 2400);
+      }
+    });
+    dom.resultBody.appendChild(emoWrap);
   } catch (e_emo) {}
   var totalAvg = state.levelTimes.length > 0 ? (state.totalTimeBank / state.levelTimes.length) : 0;
   var fastest = state.levelTimes.length > 0 ? Math.min.apply(null, state.levelTimes) : 0;

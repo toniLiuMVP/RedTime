@@ -1432,6 +1432,12 @@ function applyEffect(effect) {
     closeDialogue();
     return;
   }
+  if (effect === "lore_eraser") {
+    /* EP38 板擦懸停粉末（黑板互動的子選項，不收進記憶碎片，純氛圍） */
+    setSubtitle("女兒", "黑板剛被擦過，板擦推過的粉末還懸在空氣裡，遲遲沒有落下。10:40 的這一分鐘，像被誰按住了暫停鍵。", 5.4);
+    closeDialogue();
+    return;
+  }
   if (effect === "collect_plaque" || effect === "memory_plaque") {
     collectMemory("plaque");
     setSubtitle("女兒", "門牌：LM402。粉筆味像一層薄雲。", 3.8);
@@ -3429,6 +3435,22 @@ function bindUI() {
   dom.speedToggle.addEventListener("click", () => {
     toggleSpeedPanel();
   });
+  /* 時空手錶可點：翻面看由來（EP23 命運阿嬤的禮物） */
+  const watchEl = document.getElementById("time-watch");
+  if (watchEl) {
+    watchEl.style.cursor = "pointer";
+    watchEl.setAttribute("role", "button");
+    watchEl.setAttribute("tabindex", "0");
+    watchEl.setAttribute("title", "點一下看手錶的由來");
+    const openWatch = () => {
+      if (state.mode !== "play" || state.dialogue || state.ending) return;
+      openDialogue(INTERACTIONS.watch);
+    };
+    watchEl.addEventListener("click", openWatch);
+    watchEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openWatch(); }
+    });
+  }
   dom.speedPresets.querySelectorAll("[data-speed-preset]").forEach((button) => {
     button.addEventListener("click", () => {
       setLookSensitivity({ preset: button.dataset.speedPreset, scalar: LOOK_PRESETS[button.dataset.speedPreset] });

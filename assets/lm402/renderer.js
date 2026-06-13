@@ -5861,6 +5861,49 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       try { window.__CHALKBOARD__ && window.__CHALKBOARD__("", 0.55); } catch (o2) {}
     }, 0);
   }
+  /* r114 互動物件：攤開的〈背影〉課本（EP35）+ 1994 穿堂布告欄（EP32） */
+  {
+    /* 課本：靠走道課桌上一本攤開的書，書角一條紅線微光（hotspot textbook 世界座標 ~14.3,20） */
+    const bookG = new e.Group();
+    bookG.position.set(14.3, 0.83, 20);
+    bookG.rotation.y = -0.32;
+    const pageMat = new e.MeshStandardMaterial({ color: "#f3ecdc", roughness: 0.92, metalness: 0.01 });
+    const coverMat = new e.MeshStandardMaterial({ color: "#3a5b76", roughness: 0.7, metalness: 0.04 });
+    const cover = new e.Mesh(new e.BoxGeometry(0.42, 0.02, 0.3), coverMat);
+    cover.position.y = 0.0;
+    bookG.add(cover);
+    const pL = new e.Mesh(new e.BoxGeometry(0.2, 0.012, 0.28), pageMat);
+    (pL.position.set(-0.105, 0.018, 0), (pL.rotation.z = 0.05), bookG.add(pL));
+    const pR = new e.Mesh(new e.BoxGeometry(0.2, 0.012, 0.28), pageMat);
+    (pR.position.set(0.105, 0.018, 0), (pR.rotation.z = -0.05), bookG.add(pR));
+    const spine = new e.Mesh(new e.BoxGeometry(0.018, 0.03, 0.3), coverMat);
+    (spine.position.set(0, 0.012, 0), bookG.add(spine));
+    /* 書角紅線微光 */
+    const threadMat = new e.MeshStandardMaterial({ color: "#ff4858", emissive: "#c81830", emissiveIntensity: 0.5, roughness: 0.5 });
+    const thread = new e.Mesh(new e.BoxGeometry(0.006, 0.006, 0.16), threadMat);
+    (thread.position.set(0.17, 0.028, 0.07), (thread.rotation.y = 0.5), bookG.add(thread));
+    bookG.traverse((o2) => { if (o2.isMesh) o2.castShadow = !0; });
+    j.add(bookG);
+  }
+  {
+    /* 布告欄：窗側牆面（牆 x≈-10.9，板貼牆朝 +x；hotspot bulletin 世界座標 ~-10.55,16） */
+    const corkMat = new e.MeshStandardMaterial({ color: "#8a6a44", roughness: 0.92, metalness: 0.02 });
+    const frameMat = new e.MeshStandardMaterial({ color: "#6a5236", roughness: 0.8, metalness: 0.04 });
+    const cork = new e.Mesh(new e.BoxGeometry(0.05, 1.0, 1.5), corkMat);
+    cork.position.set(-10.70, 1.7, 16);
+    cork.receiveShadow = !0;
+    j.add(cork);
+    const frame = new e.Mesh(new e.BoxGeometry(0.04, 1.12, 1.62), frameMat);
+    frame.position.set(-10.72, 1.7, 16);
+    frame.castShadow = !0;
+    j.add(frame);
+    /* 一封被風掀起紙角的情書 */
+    const letterMat = new e.MeshStandardMaterial({ color: "#f4eee2", roughness: 0.94, metalness: 0.01, side: e.DoubleSide });
+    const letter = new e.Mesh(new e.PlaneGeometry(0.34, 0.46), letterMat);
+    (letter.rotation.y = Math.PI / 2, letter.position.set(-10.66, 1.78, 16.1), letter.castShadow = !0, j.add(letter));
+    const flap = new e.Mesh(new e.PlaneGeometry(0.34, 0.12), letterMat);
+    (flap.rotation.set(0, Math.PI / 2, 0.5), flap.position.set(-10.58, 1.99, 16.1), flap.castShadow = !0, j.add(flap));
+  }
   const Wt = new e.Mesh(new e.BoxGeometry(0.96, 0.98, 0.72), Je);
   (Wt.position.set(me - 4.2, 0.49, he - 0.86),
     (Wt.castShadow = !0),

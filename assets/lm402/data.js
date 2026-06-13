@@ -232,6 +232,28 @@ export const HOTSPOTS = [
     radius: 186,
     revealIn: ["rear_wait", "eye_contact"],
   },
+  {
+    id: "textbook",
+    type: "memory",
+    label: "攤開的課本",
+    prompt: "看課本",
+    x: 1144,
+    y: 70,
+    z: 1600,
+    radius: 120,
+    revealIn: ["consciousness_market", "front_call", "rear_wait"],
+  },
+  {
+    id: "bulletin",
+    type: "memory",
+    label: "穿堂布告欄",
+    prompt: "看布告欄",
+    x: -844,
+    y: 136,
+    z: 1280,
+    radius: 150,
+    revealIn: ["consciousness_market"],
+  },
 ];
 export const MEMORY_FRAGMENTS = {
   plaque: {
@@ -384,6 +406,12 @@ export const INTERACTIONS = {
         detail: "把節拍留給等一下的走位。",
         effect: "memory_board_soft",
       },
+      {
+        id: "board_eraser",
+        label: "看看粉筆溝上的板擦",
+        detail: "黑板剛被擦過。",
+        effect: "lore_eraser",
+      },
     ],
   },
   seat: {
@@ -515,7 +543,7 @@ export const INTERACTIONS = {
     speaker: "不同年齡的聲音",
     copy: [
       "10:40，一束光打在阿姨身上，不是陽光，是比陽光更安靜、更古老的光。這是阿姨的第二次穿越。",
-      "那道光落在一個十八歲女生身上。她站在那裡，眼睛裡同時映著兩個時空的走廊。",
+      "那道光落在她29歲的身體上，喚醒的卻是十八歲的意識。她坐在那裡，眼睛裡同時映著兩個時空的走廊。",
       "18 歲阿姨的意識正式上線。從這一刻起，她是這間教室的主角。",
       "不同年齡的「我」一下子全擠進來，像同一條巷子忽然開了好多個攤位。",
       "有人說話很穩、有人語調很尖，有人聽起來像剛哭完，還有一個聲音，溫溫的，好像已經看過很多次日出。",
@@ -618,7 +646,7 @@ export const INTERACTIONS = {
     copy: [
       "那段從前門到後門的路，其實不長。大概就是半條走廊、十幾根柱子、兩面窗。",
       "可是走在那段路上的時候，我覺得整個走廊的光都變慢了。",
-      "我當時不知道那叫什麼。後來才知道，那就是你媽媽。",
+      "我當時不知道那叫什麼。後來才知道，那就是你阿姨。",
       "走過那道門洞的時候，粉筆味忽然濃了一下。然後我看見她了。",
       "她站在門邊，光落在她那一側，像有人替她先畫好了位置。",
       "我心裡先跳出一句很不正經的念頭：『也太像徐若瑄了吧。』",
@@ -637,6 +665,63 @@ export const INTERACTIONS = {
         label: "飛進把拔心裡",
         detail: "女兒化作意識，潛入學長的視角。",
         effect: "fly_into_father_heart",
+      },
+    ],
+  },
+  watch: {
+    eyebrow: "時空手錶",
+    title: "命運阿嬤的禮物",
+    speaker: "女兒",
+    copy: [
+      "這支手錶，是命運阿嬤送我的七歲生日禮物。",
+      "它會自己對時——不管我飛到哪一條時間線，錶面永遠停在那一格該停的時刻。",
+      "現在它指著 10:59。再過一分鐘，鐘聲就會響，把拔會從那頭走過來。",
+      "我握著它，像握著一整段倒數。每一次看錶，都是在數同一秒。",
+    ],
+    choices: [
+      {
+        id: "watch_close",
+        label: "把錶收回口袋",
+        detail: "繼續等那一秒。",
+        effect: "close_only",
+      },
+    ],
+  },
+  textbook: {
+    eyebrow: "10:40 · 靠走道的課桌",
+    title: "攤開的〈背影〉",
+    speaker: "女兒",
+    copy: [
+      "課桌上攤著一本國文課本，翻到〈背影〉那一頁。",
+      "書角有一條細細的紅線，亮了一下——就是它，在第二次段考前的午後，把睡著的我牽到這裡。",
+      "我才知道，那道光的年紀，是十八歲。",
+      "紅線從書角一路延伸，指向教室後門。那一秒，正在那裡等我。",
+    ],
+    choices: [
+      {
+        id: "textbook_close",
+        label: "順著紅線看向後門",
+        detail: "記住自己是怎麼走進這一秒的。",
+        effect: "close_only",
+      },
+    ],
+  },
+  bulletin: {
+    eyebrow: "意識菜市場 · 1994",
+    title: "穿堂的布告欄",
+    speaker: "女兒",
+    copy: [
+      "意識菜市場最熱鬧的時候，牆上浮出一面 1994 年的布告欄。",
+      "那是阿姨十八歲、高三的穿堂。風把一封情書的紙角掀了起來。",
+      "她伸出食指，輕輕把紙角壓平——卻沒有撕下來。",
+      "她不讓七嘴八舌的喧鬧替她決定什麼。就像等一下，她會在後門安安靜靜地站好。",
+    ],
+    choices: [
+      {
+        id: "bulletin_close",
+        label: "把紙角壓平",
+        detail: "留一點空白給命運。",
+        effect: "close_only",
       },
     ],
   },
