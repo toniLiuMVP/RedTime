@@ -2473,7 +2473,7 @@ function P(e, t, o = 1) {
   const n = Math.max(-1, Math.min(1, t)),
     s = Math.abs(n),
     r = Math.asin(n),
-    i = a.female ? 0.58 : 0.48,
+    i = a.female ? 0.58 : 0.26,
     l = Math.sin(r - 0.22),
     c = a.hasPhone ? 0.14 : 0.42;
   ((a.leftLeg.rotation.x = n * i), (a.rightLeg.rotation.x = -n * i));
@@ -5908,23 +5908,23 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     j.add(bookG);
   }
   {
-    /* 布告欄：窗側牆面（牆 x≈-10.9，板貼牆朝 +x；hotspot bulletin 世界座標 ~-10.55,16） */
+    /* 布告欄：教室後牆（z≈7，板貼牆朝 +z 進教室；hotspot bulletin 世界座標 ~6,7.6） */
     const corkMat = new e.MeshStandardMaterial({ color: "#8a6a44", roughness: 0.92, metalness: 0.02 });
     const frameMat = new e.MeshStandardMaterial({ color: "#6a5236", roughness: 0.8, metalness: 0.04 });
-    const cork = new e.Mesh(new e.BoxGeometry(0.05, 1.0, 1.5), corkMat);
-    cork.position.set(-10.70, 1.7, 16);
+    const cork = new e.Mesh(new e.BoxGeometry(1.5, 1.0, 0.05), corkMat);
+    cork.position.set(6, 1.7, 7.12);
     cork.receiveShadow = !0;
     j.add(cork);
-    const frame = new e.Mesh(new e.BoxGeometry(0.04, 1.12, 1.62), frameMat);
-    frame.position.set(-10.72, 1.7, 16);
+    const frame = new e.Mesh(new e.BoxGeometry(1.62, 1.12, 0.04), frameMat);
+    frame.position.set(6, 1.7, 7.10);
     frame.castShadow = !0;
     j.add(frame);
     /* 一封被風掀起紙角的情書 */
     const letterMat = new e.MeshStandardMaterial({ color: "#f4eee2", roughness: 0.94, metalness: 0.01, side: e.DoubleSide });
     const letter = new e.Mesh(new e.PlaneGeometry(0.34, 0.46), letterMat);
-    (letter.rotation.y = Math.PI / 2, letter.position.set(-10.66, 1.78, 16.1), letter.castShadow = !0, j.add(letter));
+    (letter.position.set(6.02, 1.78, 7.16), letter.castShadow = !0, j.add(letter));
     const flap = new e.Mesh(new e.PlaneGeometry(0.34, 0.12), letterMat);
-    (flap.rotation.set(0, Math.PI / 2, 0.5), flap.position.set(-10.58, 1.99, 16.1), flap.castShadow = !0, j.add(flap));
+    (flap.rotation.set(-0.5, 0, 0), flap.position.set(6.02, 1.99, 7.17), flap.castShadow = !0, j.add(flap));
   }
   const Wt = new e.Mesh(new e.BoxGeometry(0.96, 0.98, 0.72), Je);
   (Wt.position.set(me - 4.2, 0.49, he - 0.86),

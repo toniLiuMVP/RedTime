@@ -1720,6 +1720,10 @@ body[data-ui-preset="ending"] #scene-canvas {
   text-align: left;
   line-height: 1.6;
 }
+/* 結局選單 5 顆按鈕統一置中（對話選單仍靠左） */
+.ending-button {
+  text-align: center;
+}
 .dialogue-choice strong,
 .ending-button {
   font-weight: 500;
