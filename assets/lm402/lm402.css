@@ -483,9 +483,9 @@ body[data-ui-preset="ending"] #scene-canvas {
   opacity: 0;
   pointer-events: none;
 }
-/* 讀這段故事：在重看鈕下方，女兒視角藍調，跟琥珀重看鈕區隔 */
+/* 讀這段故事：女兒視角藍調（重看鈕已移除，補上它原本的位置） */
 .council-read-story {
-  top: 284px;
+  top: 234px;
   border-color: rgba(159, 208, 255, 0.34);
   color: #cfe0f0;
 }
@@ -1975,7 +1975,7 @@ body.landscape-prompt .debug-panel {
     font-size: 10px;
   }
   .council-read-story {
-    top: max(96px, calc(env(safe-area-inset-top) + 88px));
+    top: max(54px, calc(env(safe-area-inset-top) + 46px));
   }
   .tutorial-replay {
     top: max(54px, calc(env(safe-area-inset-top) + 46px));

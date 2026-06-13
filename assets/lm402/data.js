@@ -191,7 +191,7 @@ export const HOTSPOTS = [
     x: 1896,
     y: 86,
     z: 2058,
-    radius: 170,
+    radius: 300,
     revealIn: [
       "consciousness_market",
       "front_call",
@@ -240,7 +240,7 @@ export const HOTSPOTS = [
     x: 1144,
     y: 70,
     z: 1600,
-    radius: 120,
+    radius: 300,
     revealIn: ["consciousness_market", "front_call", "rear_wait"],
   },
   {
@@ -251,7 +251,7 @@ export const HOTSPOTS = [
     x: 480,
     y: 136,
     z: 608,
-    radius: 150,
+    radius: 320,
     revealIn: ["consciousness_market", "front_call", "rear_wait"],
   },
 ];
