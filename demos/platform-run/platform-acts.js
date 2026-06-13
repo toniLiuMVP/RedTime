@@ -441,7 +441,7 @@
       const st = document.createElement("style");
       st.id = "pt-launcher-style";
       st.textContent =
-        "#pt-launcher{position:fixed;top:50px;left:14px;z-index:70;display:flex;flex-direction:column;gap:8px;align-items:flex-start}" +
+        "#pt-launcher{position:fixed;top:120px;left:14px;z-index:70;display:flex;flex-direction:column;gap:8px;align-items:flex-start}" +
         "#pt-launcher .pt-row{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}" +
         "#pt-launcher .pt-row-items{display:flex;gap:8px;flex-wrap:wrap}" +
         "#pt-launcher .pt-toggle{display:none}" +
