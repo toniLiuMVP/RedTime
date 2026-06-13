@@ -452,6 +452,26 @@
       r.addEventListener("click", function () { openStoryReader(36); });
       document.body.appendChild(r);
     }
+    // 跳出遊戲：飛回首頁（top-left 第 3 顆）
+    if (!document.getElementById("pt-fly-home")) {
+      const h = el("button", null, "🏠 飛回首頁");
+      h.id = "pt-fly-home";
+      h.style.cssText = "position:fixed;top:86px;left:14px;z-index:70;background:rgba(12,16,22,.6);color:#bcd0e4;border:1px solid rgba(150,180,210,.4);border-radius:999px;font-family:inherit;font-size:12px;letter-spacing:.08em;padding:7px 14px;cursor:pointer;backdrop-filter:blur(4px);opacity:.8;transition:opacity .3s";
+      h.setAttribute("aria-label", "飛回首頁");
+      h.addEventListener("mouseenter", function () { h.style.opacity = "1"; });
+      h.addEventListener("click", function () { window.location.href = "../../index.html"; });
+      document.body.appendChild(h);
+    }
+    // 跳出遊戲：飛到閱讀故事全集（top-left 第 4 顆）
+    if (!document.getElementById("pt-fly-reader")) {
+      const a = el("button", null, "📖 飛到閱讀把拔跟過女兒的故事");
+      a.id = "pt-fly-reader";
+      a.style.cssText = "position:fixed;top:122px;left:14px;z-index:70;background:rgba(20,14,10,.6);color:#f0d0a8;border:1px solid rgba(232,160,90,.45);border-radius:999px;font-family:inherit;font-size:12px;letter-spacing:.08em;padding:7px 14px;cursor:pointer;backdrop-filter:blur(4px);opacity:.8;transition:opacity .3s";
+      a.setAttribute("aria-label", "飛到閱讀把拔跟過女兒的故事全集");
+      a.addEventListener("mouseenter", function () { a.style.opacity = "1"; });
+      a.addEventListener("click", function () { window.location.href = "../../reader.html"; });
+      document.body.appendChild(a);
+    }
     // title 畫面「先讀這段故事」也走遊戲內 overlay（不離開頁面）
     const tr = document.getElementById("title-read-story");
     if (tr && !tr._wired) { tr._wired = true; tr.addEventListener("click", function (e) { e.preventDefault(); openStoryReader(36); }); }

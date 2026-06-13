@@ -11700,8 +11700,12 @@
       var params = new URLSearchParams(location.search);
       if (params.get("embed") !== "1") return;
       document.body.classList.add("reader-embed");
+      try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch (e) {}
       var m = (location.hash || "").match(/ep-(\d+)/);
       var ep = m ? parseInt(m[1], 10) : 0;
+      // 先把 hash 拿掉:不然瀏覽器會原生捲到「42 集都在時」的 #ep-N 像素位置(很下面),
+      // 等下面把其他集藏掉、文件高度塌成單一集,捲動位置被夾到那一集的底部=最後一頁。
+      try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
       var tries = 0;
       var iv = setInterval(function () {
         var target = document.getElementById("ep-" + ep);
@@ -11712,7 +11716,13 @@
           target.classList.add("visible", "in");
           target.style.contentVisibility = "visible";
           target.style.containIntrinsicSize = "auto";
-          window.scrollTo(0, 0);
+          // reflow 後連續壓回頂端,蓋掉任何 late native scroll / 夾位,確保從第一頁開始讀
+          var pin = 0;
+          var topIv = setInterval(function () {
+            window.scrollTo(0, 0);
+            if (document.scrollingElement) document.scrollingElement.scrollTop = 0;
+            if (++pin > 8) clearInterval(topIv);
+          }, 60);
         } else if (++tries > 80) {
           clearInterval(iv);
         }
