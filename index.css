@@ -873,7 +873,8 @@
       .btn-continue {
         display: flex;
         flex-direction: column;
-        align-items: flex-start;
+        align-items: center;
+        text-align: center;
         gap: 3px;
         padding: 12px 30px;
         background: rgba(255, 72, 88, 0.12);
