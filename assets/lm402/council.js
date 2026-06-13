@@ -22,6 +22,8 @@
   let host = null, active = false, onDone = null, raf = 0;
   let skew = 0, steady = 0, clock = 0, lastTick = 0;
   let watchEl = null, steadyFill = null, skewKnob = null, lineEl = null, daughterEl = null, dBodyEl = null, dStateEl = null;
+  // 活的七嘴八舌:每個聲音的「激動度」隨時間漲，越漲越把 skew 往自己的 lean 拉；玩家點它＝安撫
+  let cards = [], agit = [], breathCd = 0, breathBtn = null;
 
   function el(tag, cls, txt) {
     const e = document.createElement(tag);
@@ -57,6 +59,15 @@
       "#council-overlay .cc-steadybar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd9a8,#ff8fb0);transition:width .4s ease}",
       "#council-overlay .cc-daughter{margin-top:1em;font-size:12px;letter-spacing:.1em;color:#ffd9e6;transition:opacity .5s}",
       "#council-overlay .cc-dchar{transition:opacity .55s ease}",
+      // 活的七嘴八舌:激動的聲音浮起、發燙、輕顫(agit 越高越明顯)
+      "#council-overlay .cc-voice{will-change:transform,filter}",
+      "@keyframes cc-jitter{0%,100%{transform:translate(0,0)}25%{transform:translate(-1px,.5px)}50%{transform:translate(1px,-.5px)}75%{transform:translate(-.5px,-1px)}}",
+      "#council-overlay .cc-voice.hot{animation:cc-jitter .5s linear infinite}",
+      "#council-overlay .cc-breath{margin-top:1.1em;background:rgba(160,210,255,.10);border:1px solid rgba(160,210,255,.4);color:#cfe6ff;",
+      "border-radius:999px;padding:9px 22px;font:inherit;font-size:13px;letter-spacing:.16em;cursor:pointer;transition:opacity .3s,transform .3s,background .3s}",
+      "#council-overlay .cc-breath:hover:not(:disabled),#council-overlay .cc-breath:focus{transform:translateY(-2px);background:rgba(160,210,255,.2);outline:none}",
+      "#council-overlay .cc-breath:disabled{opacity:.32;cursor:default}",
+      "#council-overlay .cc-tint{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .6s ease;z-index:-1}",
     ].join("");
     document.head.appendChild(s);
   }
@@ -92,6 +103,7 @@
       card.addEventListener("click", () => pick(i));
       card.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(i); } });
       vbox.appendChild(card);
+      cards[i] = card;
     });
     host.appendChild(vbox);
 
@@ -124,6 +136,17 @@
     daughterEl.appendChild(dStateEl);
     host.appendChild(daughterEl);
 
+    // 深呼吸:把七嘴八舌一次壓下去、skew 拉回中間、補一點穩定（有冷卻，不能狂按）
+    breathBtn = el("button", "cc-breath", "深呼吸");
+    breathBtn.type = "button";
+    breathBtn.addEventListener("click", breathe);
+    host.appendChild(breathBtn);
+
+    // 情緒染色層:太衝偏暖紅、太退偏冷藍
+    const tint = el("div", "cc-tint");
+    tint.id = "cc-tint";
+    host.appendChild(tint);
+
     document.body.appendChild(host);
     requestAnimationFrame(() => host.classList.add("show"));
   }
@@ -134,7 +157,21 @@
     skew += v.lean;
     const balanced = Math.abs(skew) <= 1;
     steady = Math.max(0, Math.min(100, steady + (balanced ? 14 : -8)));
+    // 安撫:被點到的聲音激動歸零，左右鄰座也降一半（你聽見她了，她們就小聲一點）
+    agit[i] = 0;
+    if (agit[i - 1] != null) agit[i - 1] *= 0.5;
+    if (agit[i + 1] != null) agit[i + 1] *= 0.5;
     lineEl.textContent = "「" + v.line + "」";
+    render();
+  }
+
+  function breathe() {
+    if (!active || breathCd > 0) return;
+    for (let k = 0; k < agit.length; k++) agit[k] *= 0.18; // 七嘴八舌一次壓下去
+    skew *= 0.35;                                          // 拉回中間
+    steady = Math.max(0, Math.min(100, steady + 8));       // 補一點穩定
+    breathCd = 4;                                          // 冷卻 4 秒
+    if (lineEl) lineEl.textContent = "（深呼吸。讓所有年紀的妳，先靜一下。）";
     render();
   }
 
@@ -149,13 +186,47 @@
       for (let k = 0; k < n; k++) chars[k].style.opacity = (skew > 3 && k >= n - vanish) ? "0" : (skew < -3 ? "0.4" : "1");
     }
     if (dStateEl) dStateEl.textContent = skew > 3 ? "　正在淡化……（太衝了）" : (skew < -3 ? "　太冷了，這一眼會錯過……" : "　穩定");
+    // 卡片激動視覺:越激動越浮起、發燙、輕顫
+    for (let k = 0; k < cards.length; k++) {
+      const c = cards[k]; if (!c) continue;
+      const a = agit[k] || 0;
+      c.style.opacity = String(0.7 + a * 0.3);
+      c.style.transform = "scale(" + (1 + a * 0.06) + ")";
+      c.style.filter = a > 0.55 ? "none" : "blur(" + (0.4 * (1 - a)) + "px) saturate(" + (0.85 + a * 0.15) + ")";
+      if (a > 0.6) c.classList.add("hot"); else c.classList.remove("hot");
+    }
+    // 情緒染色:太衝暖紅、太退冷藍
+    const tint = document.getElementById("cc-tint");
+    if (tint) {
+      if (skew > 1.5) { tint.style.background = "radial-gradient(120% 90% at 50% 45%,rgba(255,110,80,.16),transparent 70%)"; tint.style.opacity = String(Math.min(0.9, (skew - 1.5) / 3)); }
+      else if (skew < -1.5) { tint.style.background = "radial-gradient(120% 90% at 50% 45%,rgba(90,150,230,.16),transparent 70%)"; tint.style.opacity = String(Math.min(0.9, (-skew - 1.5) / 3)); }
+      else tint.style.opacity = "0";
+    }
+    if (breathBtn) {
+      breathBtn.disabled = breathCd > 0;
+      breathBtn.textContent = breathCd > 0 ? "深呼吸（" + Math.ceil(breathCd) + "）" : "深呼吸";
+    }
   }
 
   function tick(t) {
     if (!active) return;
     if (!lastTick) lastTick = t;
-    clock += Math.min((t - lastTick) / 1000, 0.05); // W2：切分頁回來不會時間暴衝、提早結算
+    const dt = Math.min((t - lastTick) / 1000, 0.05); // W2：切分頁回來不會時間暴衝、提早結算
+    clock += dt;
     lastTick = t;
+    // 活的七嘴八舌:沒被安撫的聲音持續變激動，並把 skew 往自己的 lean 拉
+    let drift = 0;
+    for (let k = 0; k < VOICES.length; k++) {
+      agit[k] = Math.min(1, (agit[k] || 0) + dt * 0.11);
+      drift += agit[k] * VOICES[k].lean;
+    }
+    skew += drift * dt * 0.14;
+    skew = Math.max(-6, Math.min(6, skew));
+    // 穩定:維持在中間就慢慢回穩，偏掉才流失（流失放緩，主動調節就能贏）
+    steady += (Math.abs(skew) <= 1.5 ? dt * 5.5 : -dt * 3.5);
+    steady = Math.max(0, Math.min(100, steady));
+    if (breathCd > 0) breathCd = Math.max(0, breathCd - dt);
+    render();
     const mm = Math.min(60, Math.floor((clock / CLOCK_MAX) * 20) + 40);
     watchEl.textContent = mm >= 60 ? "11:00" : "10:" + mm;
     if (clock >= CLOCK_MAX) { finish(); return; }
@@ -188,6 +259,7 @@
     onDone = (typeof onComplete === "function") ? onComplete : null;
     active = true;
     skew = 0; steady = 0; clock = 0; lastTick = 0;
+    cards = []; agit = [0, 0, 0, 0, 0]; breathCd = 0;
     injectStyle(); build(); render();
     raf = requestAnimationFrame(tick);
   }
