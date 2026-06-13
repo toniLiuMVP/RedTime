@@ -433,55 +433,79 @@
   }
   if (typeof window !== "undefined") window.__PT_READ_STORY__ = openStoryReader;
 
-  // 自注入左上角按鈕（2×2：回憶/讀這段故事 一排，飛回首頁/飛到全集 一排）
+  // 自注入左上角按鈕。桌機：2×2 並列、下移避開倒數進度條。
+  // 手機：兩排各收合成一顆（💭 回憶 / 🏠 飛回），點一下展開原本兩顆、再點收合。
   function injectLauncher() {
     if (document.getElementById("pt-launcher")) return;
-    const btnStyle = function (bg, color, border) {
-      return "background:" + bg + ";color:" + color + ";border:1px solid " + border + ";border-radius:999px;font-family:inherit;font-size:12px;letter-spacing:.06em;padding:7px 14px;cursor:pointer;backdrop-filter:blur(4px);opacity:.8;transition:opacity .3s;white-space:nowrap";
+    if (!document.getElementById("pt-launcher-style")) {
+      const st = document.createElement("style");
+      st.id = "pt-launcher-style";
+      st.textContent =
+        "#pt-launcher{position:fixed;top:50px;left:14px;z-index:70;display:flex;flex-direction:column;gap:8px;align-items:flex-start}" +
+        "#pt-launcher .pt-row{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}" +
+        "#pt-launcher .pt-row-items{display:flex;gap:8px;flex-wrap:wrap}" +
+        "#pt-launcher .pt-toggle{display:none}" +
+        "@media (max-width:768px){#pt-launcher .pt-toggle{display:inline-flex}#pt-launcher .pt-row:not(.pt-open) .pt-row-items{display:none}}";
+      document.head.appendChild(st);
+    }
+    const pill = function (bg, color, border) {
+      return "background:" + bg + ";color:" + color + ";border:1px solid " + border + ";border-radius:999px;font-family:inherit;font-size:12px;letter-spacing:.06em;padding:7px 14px;cursor:pointer;backdrop-filter:blur(4px);opacity:.85;transition:opacity .3s;white-space:nowrap";
     };
+    const wire = function (btn) { btn.addEventListener("mouseenter", function () { btn.style.opacity = "1"; }); };
     const wrap = document.createElement("div");
     wrap.id = "pt-launcher";
-    wrap.style.cssText = "position:fixed;top:14px;left:14px;z-index:70;display:flex;flex-direction:column;gap:8px;align-items:flex-start";
-    const row1 = document.createElement("div");
-    row1.style.cssText = "display:flex;gap:8px;flex-wrap:wrap";
-    const row2 = document.createElement("div");
-    row2.style.cssText = "display:flex;gap:8px;flex-wrap:wrap";
-    wrap.appendChild(row1); wrap.appendChild(row2);
-    document.body.appendChild(wrap);
-    const wire = function (btn) { btn.addEventListener("mouseenter", function () { btn.style.opacity = "1"; }); };
 
-    // 第 1 排：把拔的回憶 ｜ 讀這段故事
+    // 第 1 排：💭 回憶（手機收合鈕）→ 把拔的回憶 ｜ 讀這段故事
+    const row1 = document.createElement("div"); row1.className = "pt-row";
+    const tg1 = el("button", "pt-toggle", "💭 回憶");
+    tg1.style.cssText = pill("rgba(10,14,20,.6)", "#cfe0f0", "rgba(159,208,255,.4)");
+    tg1.setAttribute("aria-label", "展開／收合回憶與讀故事按鈕");
+    wire(tg1);
+    tg1.addEventListener("click", function () { row1.classList.toggle("pt-open"); });
+    const items1 = document.createElement("div"); items1.className = "pt-row-items";
+
     const b = el("button", null, "💭 把拔的回憶");
     b.id = "pacts-launcher";
-    b.style.cssText = btnStyle("rgba(10,14,20,.6)", "#cfe0f0", "rgba(159,208,255,.4)");
+    b.style.cssText = pill("rgba(10,14,20,.6)", "#cfe0f0", "rgba(159,208,255,.4)");
     wire(b);
     b.addEventListener("click", function () { runChain(["echo", "tracing", "cantTravel", "runaway13", "subwaySky"], function () {}); });
-    row1.appendChild(b);
 
     const r = el("button", null, "📖 讀這段故事");
     r.id = "pt-read-story";
-    r.style.cssText = btnStyle("rgba(20,14,10,.6)", "#f0d0a8", "rgba(232,160,90,.45)");
+    r.style.cssText = pill("rgba(20,14,10,.6)", "#f0d0a8", "rgba(232,160,90,.45)");
     r.setAttribute("aria-label", "讀這段故事 EP36");
     wire(r);
     r.addEventListener("click", function () { openStoryReader(36); });
-    row1.appendChild(r);
+    items1.appendChild(b); items1.appendChild(r);
+    row1.appendChild(tg1); row1.appendChild(items1);
 
-    // 第 2 排：飛回首頁 ｜ 飛到把拔跟女兒的故事（兩顆都跳出遊戲）
+    // 第 2 排：🏠 飛回（手機收合鈕）→ 飛回首頁 ｜ 飛到把拔跟女兒的故事（皆跳出遊戲）
+    const row2 = document.createElement("div"); row2.className = "pt-row";
+    const tg2 = el("button", "pt-toggle", "🏠 飛回");
+    tg2.style.cssText = pill("rgba(12,16,22,.6)", "#bcd0e4", "rgba(150,180,210,.4)");
+    tg2.setAttribute("aria-label", "展開／收合飛回首頁與飛到全集按鈕");
+    wire(tg2);
+    tg2.addEventListener("click", function () { row2.classList.toggle("pt-open"); });
+    const items2 = document.createElement("div"); items2.className = "pt-row-items";
+
     const h = el("button", null, "🏠 飛回首頁");
     h.id = "pt-fly-home";
-    h.style.cssText = btnStyle("rgba(12,16,22,.6)", "#bcd0e4", "rgba(150,180,210,.4)");
+    h.style.cssText = pill("rgba(12,16,22,.6)", "#bcd0e4", "rgba(150,180,210,.4)");
     h.setAttribute("aria-label", "飛回首頁");
     wire(h);
     h.addEventListener("click", function () { window.location.href = "../../index.html"; });
-    row2.appendChild(h);
 
     const a = el("button", null, "📖 飛到把拔跟女兒的故事");
     a.id = "pt-fly-reader";
-    a.style.cssText = btnStyle("rgba(20,14,10,.6)", "#f0d0a8", "rgba(232,160,90,.45)");
+    a.style.cssText = pill("rgba(20,14,10,.6)", "#f0d0a8", "rgba(232,160,90,.45)");
     a.setAttribute("aria-label", "飛到把拔跟女兒的故事全集");
     wire(a);
     a.addEventListener("click", function () { window.location.href = "../../reader.html"; });
-    row2.appendChild(a);
+    items2.appendChild(h); items2.appendChild(a);
+    row2.appendChild(tg2); row2.appendChild(items2);
+
+    wrap.appendChild(row1); wrap.appendChild(row2);
+    document.body.appendChild(wrap);
 
     // title 畫面「先讀這段故事」也走遊戲內 overlay（不離開頁面）
     const tr = document.getElementById("title-read-story");
