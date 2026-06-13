@@ -1602,6 +1602,14 @@ function applyEffect(effect) {
         if (state.flags.loveArcSeen) return;
         state.flags.loveArcSeen = true; /* 實際播出才消耗，中止時留給 perfect_eye 流程 */
         if (state.mode === "play" && window.__ACTS__) window.__ACTS__.gaze(function (res) {
+          if (res && res.ok) {
+            // 一眼瞬間:把學妹的微表情、暖邊光、眼神光、主題曲，全在這一秒交出去
+            // SPARK 是一次性微表情；RIM/CATCHLIGHT 用 r36 vetted 值，刻意留著當這一刻之後的暖色餘韻
+            try { window.__SPARK_MOMENT__ && window.__SPARK_MOMENT__(); } catch (e) {}
+            try { window.__RIM_LIGHT__ && window.__RIM_LIGHT__(1.2, "#ff9a4f"); } catch (e) {}
+            try { window.__CATCHLIGHT__ && window.__CATCHLIGHT__(3, 0.8); } catch (e) {}
+            try { audioSystem.unlockSong && audioSystem.unlockSong("one_gaze_song"); } catch (e) {}
+          }
           setSubtitle("女兒", (res && res.ok)
             ? "我親眼看著那一眼，整個人被釘在原地。這就是那條紅線的起點。"
             : "就算只是餘光，他們也已經開始了。", 5.0);

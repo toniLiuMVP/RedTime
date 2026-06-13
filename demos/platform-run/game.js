@@ -4741,6 +4741,19 @@ function updateGame(dt) {
     scene.remove(daughter);
     father.add(daughter);
     daughter.position.set(0.3, 0.6, 0.2);
+    // 抱到女兒那一秒,一束暖光從兩人之間漫出來,blooms then 退去(additive,自己移除)
+    try {
+      const hugGlow = new THREE.PointLight(0xffd9a0, 0, 9);
+      hugGlow.position.set(0.2, 1.0, 0.2);
+      father.add(hugGlow);
+      let hk = 0;
+      const hugIv = setInterval(function () {
+        hk += 1; const t = hk / 110; // ~3.5s
+        // t 跑完 OR 中途重開/失敗(gotDaughter 被 resetGame 清掉)就收掉,不殘留到下一局
+        if (t >= 1 || !state.gotDaughter) { father.remove(hugGlow); clearInterval(hugIv); return; }
+        hugGlow.intensity = Math.sin(Math.min(1, t) * Math.PI) * 2.4; // 0 → 峰 → 0,壓低避免跟既有暖光疊爆
+      }, 32);
+    } catch (e) {}
     safeSetTimeout(function() {
       state.phase = "sprint2";
       showNarrative("\u5FEB\uFF01\u5317\u4E0A\u81EA\u5F37\u865F\u7684\u9580\u8981\u95DC\u4E86\uFF01", 2.5);
