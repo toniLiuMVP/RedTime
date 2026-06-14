@@ -301,3 +301,7 @@ body:has(#title-screen.hide) .pt-tutorial-trigger { display: none !important; }
   font-family: "DM Mono", monospace; font-size: 10px;
   letter-spacing: 0.2em; cursor: pointer; text-decoration: underline;
 }
+
+/* 標題畫面法律資訊(虛構聲明/版權/連結) */
+.title-legal{margin-top:18px;font-size:11px;line-height:1.7;opacity:.5;}
+.title-legal a{color:inherit;text-decoration:underline;}

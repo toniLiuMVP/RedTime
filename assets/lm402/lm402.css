@@ -4277,3 +4277,7 @@ body.side-panel-collapsed .game-shell {
   .cinematic-gate-enter { animation: none; }
   .cinematic-gate.gate-exiting { animation-duration: 0.3s; }
 }
+
+/* 載入畫面法律資訊(虛構聲明/版權/連結) */
+.lm402-loader-legal{margin-top:22px;max-width:34em;font-size:11px;line-height:1.7;opacity:.42;text-align:center;}
+.lm402-loader-legal a{color:inherit;text-decoration:underline;}
