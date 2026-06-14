@@ -254,8 +254,10 @@ return {
   }
   for (var i = 0; i < 150; i++) pts.push(mkP());
 
+  var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   function draw() {
 frame++;
+if (prefersReducedMotion.matches) return; // prefers-reduced-motion：停止 hero canvas rAF（CSS 已隱藏，動畫應真正停止而非只是看不見）
 /* 當 hero 完全滾出視野時暫停繪製，節省 CPU/電池 */
 if (cvs.getBoundingClientRect().bottom < 0) {
   requestAnimationFrame(draw);
@@ -287,6 +289,11 @@ requestAnimationFrame(draw);
   }
   resize();
   draw();
+  var onReducedMotionChange = function (mq) {
+    if (!mq.matches) draw(); // 使用者關閉「減少動態」→ 恢復 hero 動畫
+  };
+  if (prefersReducedMotion.addEventListener) prefersReducedMotion.addEventListener("change", onReducedMotionChange);
+  else if (prefersReducedMotion.addListener) prefersReducedMotion.addListener(onReducedMotionChange);
   window.addEventListener("resize", resize, { passive: true });
 })();
 

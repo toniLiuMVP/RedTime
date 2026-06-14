@@ -389,7 +389,7 @@
       .hero-reading-step strong {
         display: block;
         font-family: "DM Mono", monospace;
-        font-size: 8.2px;
+        font-size: 10px;
         letter-spacing: 0.16em;
         text-transform: uppercase;
         color: rgba(255, 233, 185, 0.82);
@@ -419,7 +419,7 @@
       }
       .hero-secondary-kicker {
         font-family: "DM Mono", monospace;
-        font-size: 8.2px;
+        font-size: 10px;
         letter-spacing: 0.16em;
         text-transform: uppercase;
         color: rgba(234, 230, 222, 0.56);

@@ -350,6 +350,8 @@ window.__CEILING_LIGHTS_OFF__ = function() {
 /* K7 火車經過鏡頭震動(camera shake transfer) */
 let _shakeRAF = null, _shakeT0 = 0;
 window.__TRAIN_SHAKE__ = function(amplitude, durationMs) {
+  /* A11Y-06：尊重 prefers-reduced-motion，前庭敏感者跳過火車經過的鏡頭震動（移動核心保留） */
+  if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   if (amplitude === undefined) amplitude = 0.08;
   if (durationMs === undefined) durationMs = 1200;
   if (_shakeRAF) cancelAnimationFrame(_shakeRAF);

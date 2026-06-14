@@ -17,7 +17,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <meta name="apple-mobile-web-app-title" content="時間裡的兩個妳" />
     <!-- Defense-in-depth CSP（最佳做法仍是 HTTP header，但 GitHub Pages 無法設 header，故以 meta 作為最低防線） -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'self' https:; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none';" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none';" />
+    <script src="assets/frame-guard.js"></script>
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <meta
       name="description"
@@ -8006,10 +8007,17 @@
           star.className = "jp-ep-star";
           star.textContent = "✦";
           btn.append(dot, num, name, star);
+          // A11Y-04：jp-ep-btn 用 .onclick 屬性建立，不被全域 div[onclick] patch 涵蓋 → 自補語意 + 鍵盤 + 弧名
+          btn.setAttribute("role", "button");
+          btn.setAttribute("tabindex", "0");
+          btn.setAttribute("aria-label", fmtEp(ep.ep) + " " + nm + "（" + (ARC_LBL[ep.arc] || ep.arc) + "）");
           btn.onclick = () => {
             goToEp(ep.ep);
             closeJump();
           };
+          btn.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); btn.click(); }
+          });
           jpList.appendChild(btn);
         });
         if (typeof applyReadMarks === "function") applyReadMarks(); // 已讀灰階：跳章格重建後套回已讀標記

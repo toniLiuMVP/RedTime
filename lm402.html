@@ -17,7 +17,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <meta name="apple-mobile-web-app-title" content="時間裡的兩個妳" />
     <!-- Defense-in-depth CSP（最佳做法仍是 HTTP header，但 GitHub Pages 無法設 header，故以 meta 作為最低防線） -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob: https:; media-src 'self' https: data:; worker-src 'self' blob:; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none';" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; media-src 'self' data:; worker-src 'self' blob:; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none';" />
+    <script src="assets/frame-guard.js"></script>
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <meta
       name="description"
