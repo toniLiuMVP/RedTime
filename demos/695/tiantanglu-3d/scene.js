@@ -285,33 +285,51 @@ crate(13, -14, 1.8); crate(14.5, -13.2, 1.2); crate(12.6, -12.4, 1.0);
 let cowTail = null, cowHead = null;
 (function buildCow() {
   const cx = -14, cz = 18;
-  const hide = mat(0xf6f3ee, { roughness: 0.9, envMapIntensity: 0.55 }), patch = mat(0x2b251e, { roughness: 0.94, envMapIntensity: 0.5 }), hoof = mat(0x231e1a, { roughness: 0.95, envMapIntensity: 0.5 });
-  const body = add(new THREE.BoxGeometry(1.8, 0.92, 0.84), hide, cx, 1.05, cz); body.rotation.y = 0.6;
-  const sp = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.56, 0.86), patch); sp.position.set(0.34, 0.14, 0.01); body.add(sp);
-  const sp2 = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.46, 0.86), patch); sp2.position.set(-0.5, -0.04, -0.02); body.add(sp2);
-  cowHead = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.56, 0.5), hide); cowHead.position.set(1.06, 0.1, 0); body.add(cowHead);
-  const blaze = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.4, 0.52), patch); blaze.position.set(0.14, 0.08, 0); cowHead.add(blaze);   // 額斑
-  const snout = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.42), mat(0xa89b92, { roughness: 0.85, envMapIntensity: 0.5 })); snout.position.set(0.36, -0.14, 0); cowHead.add(snout);
+  const hide = mat(0xf4f1ea, { roughness: 0.93, envMapIntensity: 0.48 }), patch = mat(0x2a241d, { roughness: 0.95, envMapIntensity: 0.42 }), hoof = mat(0x1f1a16, { roughness: 0.96, envMapIntensity: 0.42 }), muz = mat(0xb0a098, { roughness: 0.86, envMapIntensity: 0.45 });
+  const root = new THREE.Group(); root.position.set(cx, 0, cz); root.rotation.y = 0.55; ROOT.add(root);
+  const part = (geo, m, x, y, z, p) => { const e = new THREE.Mesh(geo, m); e.position.set(x, y, z); e.castShadow = e.receiveShadow = true; (p || root).add(e); return e; };
+  const body = part(new THREE.BoxGeometry(1.55, 0.84, 0.8), hide, -0.05, 1.08, 0);                 // 軀幹
+  part(new THREE.BoxGeometry(0.74, 0.74, 0.76), hide, 0.7, 1.04, 0);                                // 肩胸(前段略寬)
+  part(new THREE.BoxGeometry(0.58, 0.56, 0.82), patch, 0.28, 0.14, 0.01, body);                     // 黑斑(背)
+  part(new THREE.BoxGeometry(0.44, 0.5, 0.82), patch, -0.48, -0.04, -0.02, body);                   // 黑斑(後腹)
+  part(new THREE.BoxGeometry(0.34, 0.42, 0.84), patch, -0.06, 0.18, 0.0, body);                     // 黑斑(肩)
+  const neck = part(new THREE.BoxGeometry(0.44, 0.5, 0.52), hide, 1.04, 0.82, 0);                   // 頸(往前下)
+  neck.rotation.z = -0.5;
+  cowHead = part(new THREE.BoxGeometry(0.5, 0.46, 0.44), hide, 1.32, 0.52, 0);                       // 頭(低垂吃草)
+  part(new THREE.BoxGeometry(0.15, 0.34, 0.46), patch, 0.1, 0.05, 0, cowHead);                       // 額斑
+  part(new THREE.BoxGeometry(0.32, 0.26, 0.4), muz, 0.3, -0.13, 0, cowHead);                         // 口鼻
   for (const s of [-1, 1]) {
-    const ear = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.2, 0.3), hide); ear.position.set(-0.02, 0.26, 0.33 * s); cowHead.add(ear);
-    const horn = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.22, 6), mat(0xd9cfb2, { roughness: 0.6 })); horn.position.set(-0.06, 0.42, 0.17 * s); cowHead.add(horn);
+    const ear = part(new THREE.BoxGeometry(0.22, 0.09, 0.16), hide, -0.05, 0.16, 0.3 * s, cowHead); ear.rotation.z = 0.35;   // 寬扁耳(非刺)
+    const horn = part(new THREE.CylinderGeometry(0.025, 0.055, 0.16, 6), mat(0xcabf9e, { roughness: 0.6 }), 0.05, 0.27, 0.11 * s, cowHead); horn.rotation.z = -0.45 * s;   // 短鈍角
+    part(new THREE.SphereGeometry(0.035, 8, 6), patch, 0.2, 0.0, 0.18 * s, cowHead);                 // 眼
   }
-  for (const [lx, lz] of [[0.56, 0.3], [0.56, -0.3], [-0.62, 0.3], [-0.62, -0.3]]) { const leg = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.72, 0.2), hoof); leg.position.set(lx, -0.71, lz); body.add(leg); }
-  cowTail = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.62, 0.09), hide); cowTail.position.set(-0.92, -0.16, 0); cowTail.rotation.z = 0.35; body.add(cowTail);
-  const tuft = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.16, 0.14), patch); tuft.position.set(0, -0.36, 0); cowTail.add(tuft);
+  for (const [lx, lz] of [[0.56, 0.27], [0.56, -0.27], [-0.6, 0.27], [-0.6, -0.27]]) {
+    part(new THREE.BoxGeometry(0.17, 0.66, 0.17), hide, lx, 0.4, lz);                                // 腿
+    part(new THREE.BoxGeometry(0.19, 0.12, 0.19), hoof, lx, 0.06, lz);                               // 蹄
+  }
+  cowTail = part(new THREE.BoxGeometry(0.08, 0.58, 0.08), hide, -0.82, 0.9, 0);
+  cowTail.rotation.z = 0.4;
+  part(new THREE.BoxGeometry(0.12, 0.14, 0.12), patch, 0, -0.33, 0, cowTail);                        // 尾穗
 })();
 
 /* ───────── 夢中違和物件:反穿的學校外套(#3 名字藏起來;軍營裡一件學校外套=夢的錯位) ───────── */
 (function buildJacket() {
   const jx = 12, jz = 16;
-  const benchW = mat(0x6b4f32, { roughness: 0.86 });
-  add(new THREE.BoxGeometry(1.4, 0.08, 0.42), benchW, jx, 0.42, jz);                                  // 長椅板
-  for (const lx of [-0.6, 0.6]) for (const lz of [-0.15, 0.15]) add(new THREE.BoxGeometry(0.08, 0.42, 0.08), benchW, jx + lx, 0.2, jz + lz);  // 4 腿
-  const jOuter = mat(0x26304e, { roughness: 0.93 });   // 深藍校服(外面)
-  const jLining = mat(0x8c92a0, { roughness: 0.9 });    // 內裡(反面朝上=把名字藏住)
-  const fold = add(new THREE.BoxGeometry(0.66, 0.13, 0.5), jLining, jx, 0.52, jz); fold.rotation.y = 0.28;  // 折疊的外套身(反面朝上)
-  const collar = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.06, 0.12), jOuter); collar.position.set(0, 0.07, -0.22); fold.add(collar);  // 領
-  for (const s of [-1, 1]) { const sl = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.1, 0.4), jOuter); sl.position.set(0.27 * s, 0.01, 0.05); sl.rotation.y = 0.22 * s; fold.add(sl); }  // 折在身上的袖
+  const benchW = mat(0x5f4730, { roughness: 0.9 }), benchM = mat(0x4a3826, { roughness: 0.92 });
+  add(new THREE.BoxGeometry(1.5, 0.09, 0.46), benchW, jx, 0.45, jz);                                  // 椅板
+  add(new THREE.BoxGeometry(1.5, 0.4, 0.06), benchM, jx, 0.74, jz - 0.2);                             // 椅背(讓外套披掛)
+  for (const lx of [-0.64, 0.64]) for (const lz of [-0.16, 0.16]) add(new THREE.BoxGeometry(0.08, 0.45, 0.08), benchM, jx + lx, 0.22, jz + lz);  // 4 腿
+  const jOut = mat(0x232c46, { roughness: 0.95, envMapIntensity: 0.4 });   // 深藍校服(正面)
+  const jLin = mat(0x9097a3, { roughness: 0.92, envMapIntensity: 0.4 });    // 內裡(反穿朝外=名字藏住)
+  const root = new THREE.Group(); root.position.set(jx, 0, jz); root.rotation.y = 0.12; ROOT.add(root);
+  const part = (geo, m, x, y, z, rx, rz) => { const e = new THREE.Mesh(geo, m); e.position.set(x, y, z); if (rx) e.rotation.x = rx; if (rz) e.rotation.z = rz; e.castShadow = true; root.add(e); return e; };
+  part(new THREE.BoxGeometry(0.72, 0.5, 0.1), jLin, 0, 0.74, -0.14, 0.12, 0);                          // 披在椅背的外套身(反面朝外)
+  part(new THREE.BoxGeometry(0.74, 0.12, 0.18), jOut, 0, 0.98, -0.11, 0.34, 0);                        // 翻出的領(深藍)
+  part(new THREE.BoxGeometry(0.64, 0.12, 0.42), jLin, 0, 0.5, 0.06, 0, 0);                             // 下襬披在椅面(反面)
+  for (const s of [-1, 1]) {
+    part(new THREE.BoxGeometry(0.15, 0.52, 0.15), jOut, 0.33 * s, 0.6, -0.04, -0.15, 0.13 * s);        // 垂掛的袖
+    part(new THREE.BoxGeometry(0.16, 0.09, 0.16), jLin, 0.37 * s, 0.35, 0.01, 0, 0);                   // 袖口(反面)
+  }
 })();
 
 /* ══════════════ 武器系統:鐵鎚 / 刺槍 / 小刀 / 槍械(每把含 moveMul 移速) ══════════════ */
@@ -638,6 +656,11 @@ bindSetting("set-chcolor", "chColor", true, applyCrosshair);
   el.addEventListener("input", () => { settings.difficulty = Math.max(1, Math.min(5, Math.round(parseFloat(el.value)) || 3)); saveSettings(); upd(); });
 })();
 const restartBtnEl = document.getElementById("restart-btn"); if (restartBtnEl) restartBtnEl.addEventListener("click", () => { restartGame(); if (canvas.requestPointerLock) canvas.requestPointerLock(); });
+(function bindTutorial() {   // 新手教學:cold-open 後進場畫面的友善教學(stopPropagation 不觸發進場)
+  const btn = document.getElementById("tut-btn"), ov = document.getElementById("tutorial"), close = document.getElementById("tut-close");
+  if (btn && ov) btn.addEventListener("click", (e) => { e.stopPropagation(); ov.classList.add("on"); });
+  if (close && ov) close.addEventListener("click", (e) => { e.stopPropagation(); ov.classList.remove("on"); });
+})();
 
 /* ── 特效資源 ── */
 const fireTex = tex((c, S) => { const g = c.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2); g.addColorStop(0, "rgba(255,250,235,1)"); g.addColorStop(0.25, "rgba(255,212,120,1)"); g.addColorStop(0.55, "rgba(240,120,40,0.9)"); g.addColorStop(1, "rgba(120,30,10,0)"); c.fillStyle = g; c.fillRect(0, 0, S, S); }, 128);
@@ -1179,8 +1202,8 @@ function updateFP(dt) {
   if (skyDomeMat) skyDomeMat.color.setScalar(1 - skyDarkCur * 0.62);
   if (sunDiscMat) sunDiscMat.color.setScalar(1 - skyDarkCur * 0.5);
   sun.intensity = 3.3 * (1 - skyDarkCur * 0.55); ambient.intensity = 0.32 * (1 - skyDarkCur * 0.45); hemi.intensity = 0.9 * (1 - skyDarkCur * 0.4);
-  if (cowTail) cowTail.rotation.z = 0.35 + Math.sin(realT * 2.1) * 0.28;   // 顧牛 idle:尾巴搖
-  if (cowHead) { cowHead.rotation.x = Math.sin(realT * 0.7) * 0.12 + 0.06; cowHead.position.y = 0.12 - Math.max(0, Math.sin(realT * 0.7)) * 0.14; }   // 低頭吃草微動
+  if (cowTail) cowTail.rotation.z = 0.4 + Math.sin(realT * 2.1) * 0.26;   // 顧牛 idle:尾巴搖
+  if (cowHead) { cowHead.rotation.z = Math.sin(realT * 0.7) * 0.1; cowHead.position.y = 0.52 - Math.max(0, Math.sin(realT * 0.7)) * 0.08; }   // 低頭吃草微動(頭 base y=0.52)
   if (realT - lastShot > 0.12) { sprayPitch += (0 - sprayPitch) * Math.min(1, dt * 6); sprayYaw += (0 - sprayYaw) * Math.min(1, dt * 6); }
   if (muzzleLight.intensity > 0) muzzleLight.intensity = Math.max(0, muzzleLight.intensity - dt * 70);
   if ((sprayResetT -= dt) <= 0) sprayCount = 0;
@@ -1199,8 +1222,25 @@ function updateFP(dt) {
   // 武器姿態(bob + 後座 + 揮舞/投擲 + ADS 置中)
   bob += dt * (moving ? (crouch ? 7 : 11) : 1.6);
   const bobAmp = (moving ? (crouch ? 0.008 : 0.014) : 0.003) * (1 - adsBlend * 0.7);
-  let swingRot = 0, lunge = 0;
-  if ((w.type === "melee" || w.type === "throw") && w.swingT > 0) { w.swingT -= dt; const dur = w.type === "throw" ? 0.45 : (w.swingDur || 0.3); const pr = Math.min(1, 1 - w.swingT / dur); if (w.melee === "swing") swingRot = -Math.sin(pr * Math.PI) * 1.2; else lunge = -Math.sin(pr * Math.PI) * 0.28; }
+  // 揮擊動畫:三段弧線(蓄力↗ → 揮擊↘ → 收回),多軸 pitch/roll/位移,真實揮砍
+  let swRx = 0, swRy = 0, swRz = 0, swPx = 0, swPy = 0, swPz = 0;
+  if ((w.type === "melee" || w.type === "throw") && w.swingT > 0) {
+    w.swingT -= dt;
+    const dur = w.type === "throw" ? 0.45 : (w.swingDur || 0.3);
+    const pr = Math.min(1, 1 - w.swingT / dur);
+    if (w.melee === "swing") {   // 鐵鎚/小刀:過肩斜揮
+      if (pr < 0.22) { const k = pr / 0.22, e = k * k; swRx = e * 0.85; swRz = e * 0.6; swPy = e * 0.07; }                                                       // 蓄力:抬起+側傾
+      else if (pr < 0.52) { const k = (pr - 0.22) / 0.3, e = 1 - (1 - k) * (1 - k); swRx = 0.85 - e * 2.3; swRz = 0.6 - e * 1.2; swPx = -e * 0.05; swPy = 0.07 - e * 0.19; swPz = -e * 0.17; }   // 揮擊:快速下掃+前送
+      else { const k = (pr - 0.52) / 0.48, e = k * k * (3 - 2 * k); swRx = -1.45 * (1 - e); swRz = -0.6 * (1 - e); swPx = -0.05 * (1 - e); swPy = -0.12 * (1 - e); swPz = -0.17 * (1 - e); }   // 收回:smoothstep 回 base
+    } else if (w.melee === "stab") {   // 刺槍:後拉蓄力 → 快速前刺 → 收回
+      if (pr < 0.25) { const k = pr / 0.25, e = k * k; swPz = e * 0.09; swRx = e * 0.16; }
+      else if (pr < 0.5) { const k = (pr - 0.25) / 0.25, e = 1 - (1 - k) * (1 - k); swPz = 0.09 - e * 0.55; swRx = 0.16 - e * 0.18; }
+      else { const k = (pr - 0.5) / 0.5, e = k * k * (3 - 2 * k); swPz = -0.46 * (1 - e); swRx = -0.02 * (1 - e); }
+    } else {   // 手榴彈:過肩投擲
+      if (pr < 0.3) { const k = pr / 0.3, e = k * k; swRx = e * 0.7; swPz = e * 0.08; }
+      else { const k = (pr - 0.3) / 0.7, e = 1 - (1 - k) * (1 - k); swRx = 0.7 - e * 1.1; swPz = 0.08 - e * 0.2; }
+    }
+  }
   // spring sway:武器對滑鼠轉向產生慣性延遲(現代手感)
   const dyaw = yaw - prevYaw, dpitch = pitch - prevPitch; prevYaw = yaw; prevPitch = pitch;
   const sk = Math.min(1, dt * 9);
@@ -1211,8 +1251,8 @@ function updateFP(dt) {
   if (drawT > 0) { const dp = 1 - drawT / drawDur, e = 1 - (1 - dp) * (1 - dp); drawDipY = -(1 - e) * 0.4; drawDipZ = (1 - e) * 0.12; drawRotX = (1 - e) * 1.0; }
   if (reloadT > 0) { const rp = 1 - reloadT / reloadDur, dip = Math.sin(rp * Math.PI); rlDipY = -dip * 0.22; rlRotX = dip * 0.7; rlRotZ = dip * 0.5; }
   const ax = w.base.x * (1 - adsBlend * 0.7) + swayX, ay = w.base.y + adsBlend * 0.03 + swayY;
-  w.group.position.set(ax + Math.sin(bob) * bobAmp, ay + Math.abs(Math.cos(bob)) * bobAmp - recoilKick * 0.5 + drawDipY + rlDipY, w.base.z + recoilKick * 1.2 + lunge + drawDipZ);
-  w.group.rotation.set(w.rot.x + swingRot - swayY * 2 + drawRotX + rlRotX, w.rot.y + swayX * 2, w.rot.z + rlRotZ);
+  w.group.position.set(ax + Math.sin(bob) * bobAmp + swPx, ay + Math.abs(Math.cos(bob)) * bobAmp - recoilKick * 0.5 + drawDipY + rlDipY + swPy, w.base.z + recoilKick * 1.2 + swPz + drawDipZ);
+  w.group.rotation.set(w.rot.x + swRx - swayY * 2 + drawRotX + rlRotX, w.rot.y + swRy + swayX * 2, w.rot.z + swRz + rlRotZ);
   w.group.visible = !scoped;
   updateProjectiles(dt); updateTargets(dt); updateEnemies(dt); updateEffects(dt);
   updateFxPool(sparkPool, dt); updateFxPool(dustPool, dt); updateFxPool(trailPool, dt); updateFxPool(bloodPool, dt);

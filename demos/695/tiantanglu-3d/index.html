@@ -46,6 +46,16 @@
     border:1px solid rgba(255,220,170,.4);border-radius:40px;padding:14px 30px;backdrop-filter:blur(4px);}
   #enter .sub{font-size:12px;letter-spacing:.18em;opacity:.6;margin-top:12px;}
   #enter.hide{opacity:0;pointer-events:none;}
+  #tut-btn{display:inline-block;margin-top:16px;font-size:13px;letter-spacing:.16em;color:#ffd9a8;background:rgba(255,220,170,.08);border:1px solid rgba(255,220,170,.35);border-radius:40px;padding:9px 22px;cursor:pointer;transition:background .3s;}
+  #tut-btn:hover{background:rgba(255,220,170,.18);}
+  #tutorial{position:fixed;inset:0;z-index:9;display:none;align-items:center;justify-content:center;background:rgba(8,6,10,.9);padding:24px;}
+  #tutorial.on{display:flex;}
+  #tutorial .panel{max-width:560px;background:rgba(28,22,30,.97);border:1px solid rgba(255,220,170,.25);border-radius:16px;padding:30px 34px;font-family:'Noto Serif TC',serif;color:#f3e6d8;}
+  #tutorial h2{font-size:20px;letter-spacing:.2em;color:#ffce54;margin-bottom:18px;text-align:center;}
+  #tutorial .sec{margin:13px 0;font-size:14px;line-height:1.9;letter-spacing:.04em;}
+  #tutorial .sec b{color:#ffd9a8;font-weight:700;}
+  #tutorial .close{margin-top:22px;text-align:center;font-size:14px;letter-spacing:.2em;color:#fdf3e2;border:1px solid rgba(255,220,170,.35);border-radius:40px;padding:11px;cursor:pointer;transition:background .3s;}
+  #tutorial .close:hover{background:rgba(255,220,170,.14);}
 
   /* ── 狙擊鏡 ── */
   #scope{position:fixed;inset:0;z-index:5;pointer-events:none;display:none;}
@@ -178,7 +188,18 @@
 <div id="enter">
   <div class="ring">點擊畫面進入軍營</div>
   <div class="sub">WASD 快走 · 左鍵射擊 · 右鍵瞄準/開鏡 · Shift 蹲下 · Ctrl 慢步 · 空白跳躍 · 1~9 換武器 · R 換彈</div>
+  <div id="tut-btn">📖 新手教學</div>
 </div>
+<div id="tutorial"><div class="panel">
+  <h2>新手教學</h2>
+  <div class="sec"><b>移動</b>：WASD 走動，Shift 蹲下，Ctrl 慢步，空白跳躍。</div>
+  <div class="sec"><b>戰鬥</b>：左鍵攻擊，右鍵瞄準/開鏡，1~9 換武器，R 換彈。近戰(鐵鎚/刺槍/小刀)無限使用。</div>
+  <div class="sec"><b>軍營探索</b>：自由走動。走近那頭牛、或長椅上那件外套，按 <b>E</b> 會浮現一段話。</div>
+  <div class="sec"><b>進入實戰</b>：走到靶場(紅白標靶處)按 <b>E</b>，閉眼睜眼進入「實戰模擬練習」。</div>
+  <div class="sec"><b>目標</b>：撐過考驗後，遊戲會引導你按 <b>H</b> 放下槍。這不是要你變強，是撐到那一刻，能放下。</div>
+  <div class="sec"><b>覺得難</b>：左上齒輪可調難度，劇情模式血量彈藥最寬裕，最適合先看故事。</div>
+  <div class="close" id="tut-close">開始</div>
+</div></div>
 
 <script src="cold-open.js"></script>
 <script type="module" src="scene.js"></script>
