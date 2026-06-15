@@ -523,7 +523,7 @@ const WEAPONS = [
   { name: "手榴彈", group: gGrenade, type: "throw", count: 3, rate: 0.85, moveMul: 1.0, base: gGrenade.position.clone(), rot: gGrenade.rotation.clone(), swingT: 0 },
   { name: "火箭砲", group: gRocket, type: "launcher", count: 4, rate: 1.2, adsFov: 62, moveMul: 0.7, base: gRocket.position.clone(), rot: gRocket.rotation.clone(), muzzle: rocketMuzzle, muzzleT: 0 },
 ];
-WEAPONS.forEach((w) => { if (w.reserve != null) w.baseReserve = w.reserve; if (w.count != null) w.baseCount = w.count; });   // 難度套彈藥倍率用的基準
+WEAPONS.forEach((w) => { if (w.reserve != null) w.baseReserve = w.reserve; if (w.count != null) w.baseCount = w.count; w.owned = (w.type === "melee" || w.name === "小槍"); });   // 難度套彈藥倍率基準 + 購買系統:近戰+小槍預設擁有,其餘要買
 /* ── 5 段難度(toni:劇情/新手/正常/困難/天堂路) ── */
 const DIFF = {
   1: { name: "劇情", hp: 3, ammo: 3, enemyMul: 1, smart: false },
@@ -548,6 +548,7 @@ function updateHUD() {
 }
 function showWeapon(i) {
   if (i < 0 || i >= WEAPONS.length) return;
+  if (!WEAPONS[i].owned) { if (actx) tone(280, 200, 0.07, 0.06, "square"); return; }   // 購買系統:未擁有不可切(去軍械庫買)
   wi = i; WEAPONS.forEach((w, k) => (w.group.visible = k === i));
   ads = false; sprayCount = 0; sprayResetT = 0; reloadT = 0; reloadFilled = true;   // 切槍取消換彈
   const cur = WEAPONS[i];   // 拔槍動畫:步槍 520ms / 手槍 380ms / 近戰投擲快
@@ -624,7 +625,7 @@ const keys = {};
 const enterEl = document.getElementById("enter");
 let ads = false, mouseDown = false, lastShot = 0;
 const DIGIT = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3, Digit5: 4, Digit6: 5, Digit7: 6, Digit8: 7, Digit9: 8 };
-addEventListener("keydown", (e) => { keys[e.code] = 1; if (e.code === "Space" || e.code === "Tab") e.preventDefault(); if (e.code in DIGIT) showWeapon(DIGIT[e.code]); else if (e.code === "KeyQ") showWeapon((wi + 1) % WEAPONS.length); else if (e.code === "KeyR") reload(); else if (e.code === "KeyE") tryInteract(); else if (e.code === "KeyH") { if (MODE === "sim" && awaitDisarm) startGaze(); } });
+addEventListener("keydown", (e) => { keys[e.code] = 1; if (e.code === "Space" || e.code === "Tab") e.preventDefault(); if (e.code in DIGIT) showWeapon(DIGIT[e.code]); else if (e.code === "KeyQ") showWeapon((wi + 1) % WEAPONS.length); else if (e.code === "KeyR") reload(); else if (e.code === "KeyE") tryInteract(); else if (e.code === "KeyH") { if (MODE === "sim" && awaitDisarm) startGaze(); } else if (e.code === "KeyB") { if (shopEl && shopEl.classList.contains("on")) closeShop(); else openShop(); } });
 addEventListener("keyup", (e) => { keys[e.code] = 0; });
 canvas.addEventListener("contextmenu", (e) => e.preventDefault());
 canvas.addEventListener("mousedown", (e) => {
@@ -672,6 +673,47 @@ const restartBtnEl = document.getElementById("restart-btn"); if (restartBtnEl) r
   if (btn && ov) btn.addEventListener("click", (e) => { e.stopPropagation(); ov.classList.add("on"); });
   if (close && ov) close.addEventListener("click", (e) => { e.stopPropagation(); ov.classList.remove("on"); });
 })();
+
+/* ── 軍械庫(購買裝備系統):軍餉 1000 起 / 近戰+小槍免費 / 撐過每波 +150 / 軍營或波間按 B ── */
+const shopEl = document.getElementById("shop"), moneyEl = document.getElementById("money"), arEl = document.getElementById("ar"), maskEl = document.getElementById("mask");
+const SHOP_ITEMS = [
+  { id: "vest", nm: "防彈背心", ds: "+100 ARMOR，吸收一半傷害", price: 650, has: () => armor >= 100, buy: () => { armor = 100; updateArmorHUD(); } },
+  { id: "mask", nm: "防護面罩", ds: "護目特效，收窄視野邊緣", price: 350, has: () => maskOwned, buy: () => { maskOwned = true; if (maskEl) maskEl.classList.add("on"); } },
+  { id: "ammo", nm: "彈藥補給", ds: "已擁有槍械補滿備彈", price: 200, has: () => false, buy: () => { WEAPONS.forEach((w) => { if (!w.owned) return; if (w.baseReserve != null) w.reserve = Math.round(w.baseReserve * (curDiff ? curDiff.ammo : 1)); if (w.baseCount != null) w.count = Math.round(w.baseCount * (curDiff ? curDiff.ammo : 1)); }); updateHUD(); } },
+  { id: "rifle", nm: "步槍", ds: "全自動 · 30 發", price: 600, wpn: "步槍" },
+  { id: "mg", nm: "機關槍", ds: "100 發壓制火力", price: 900, wpn: "機關槍" },
+  { id: "sniper", nm: "狙擊槍", ds: "開鏡一槍重擊", price: 750, wpn: "狙擊槍" },
+  { id: "nade", nm: "手榴彈", ds: "x3 投擲爆炸", price: 300, wpn: "手榴彈" },
+  { id: "rocket", nm: "火箭砲", ds: "範圍爆炸", price: 1100, wpn: "火箭砲" },
+];
+function updateMoneyHUD() { if (moneyEl) moneyEl.textContent = money; const sm = document.getElementById("shop-money"); if (sm) sm.textContent = money; }
+function updateArmorHUD() { if (arEl) arEl.textContent = Math.round(armor); }
+function itemOwned(it) { if (it.wpn) { const w = WEAPONS.find((x) => x.name === it.wpn); return !!(w && w.owned); } return it.has ? it.has() : false; }
+function buyItem(it) {
+  if (money < it.price || (it.id !== "ammo" && itemOwned(it))) return;
+  money -= it.price;
+  if (it.wpn) { const w = WEAPONS.find((x) => x.name === it.wpn); if (w) { w.owned = true; if (w.baseReserve != null) w.reserve = Math.round(w.baseReserve * (curDiff ? curDiff.ammo : 1)); if (w.baseCount != null) w.count = Math.round(w.baseCount * (curDiff ? curDiff.ammo : 1)); } }
+  else if (it.buy) it.buy();
+  if (actx) tone(620, 880, 0.09, 0.12, "sine"); updateMoneyHUD(); renderShop();
+}
+function renderShop() {
+  const list = document.getElementById("shop-list"); if (!list) return; updateMoneyHUD();
+  while (list.firstChild) list.removeChild(list.firstChild);
+  for (const it of SHOP_ITEMS) {
+    const owned = it.id !== "ammo" && itemOwned(it);
+    const row = document.createElement("div"); row.className = "item" + (owned ? " owned" : "");
+    const info = document.createElement("div"); info.className = "nm"; info.textContent = it.nm;
+    const ds = document.createElement("div"); ds.className = "ds"; ds.textContent = it.ds; info.appendChild(ds); row.appendChild(info);
+    const pr = document.createElement("div"); pr.className = "pr"; pr.textContent = "$" + it.price; row.appendChild(pr);
+    const btn = document.createElement("button"); btn.type = "button"; btn.textContent = owned ? "已擁有" : "購買"; btn.disabled = owned || money < it.price;
+    btn.addEventListener("click", () => buyItem(it)); row.appendChild(btn);
+    list.appendChild(row);
+  }
+}
+function shopOpenable() { return !dead && !gameOver && (MODE === "hub" || (MODE === "sim" && inBreak)); }
+function openShop() { if (!shopEl || !shopOpenable()) return; shopEl.classList.add("on"); renderShop(); if (document.pointerLockElement === canvas && document.exitPointerLock) document.exitPointerLock(); }
+function closeShop() { if (shopEl) shopEl.classList.remove("on"); }
+if (document.getElementById("shop-close")) document.getElementById("shop-close").addEventListener("click", closeShop);
 
 /* ── 特效資源 ── */
 const fireTex = tex((c, S) => { const g = c.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2); g.addColorStop(0, "rgba(255,250,235,1)"); g.addColorStop(0.25, "rgba(255,212,120,1)"); g.addColorStop(0.55, "rgba(240,120,40,0.9)"); g.addColorStop(1, "rgba(120,30,10,0)"); c.fillStyle = g; c.fillRect(0, 0, S, S); }, 128);
@@ -867,7 +909,7 @@ function updateWaves(dt) {
   if (spawnQueue > 0) { spawnTimer -= dt; if (spawnTimer <= 0) { const p = SPAWN_PTS[(Math.random() * SPAWN_PTS.length) | 0]; spawnEnemy(p[0], p[1], 90 + wave * 14); spawnQueue--; spawnTimer = 0.5 + Math.random() * 0.6; } }
   if (waveAlive <= 0 && spawnQueue <= 0) {
     if (wave >= GOAL_WAVE) { awaitDisarm = true; inBreak = true; for (const e of enemies) scene.remove(e); enemies.length = 0; if (waveEl) waveEl.textContent = "撐過了"; }   // B1:撐過 GOAL_WAVE → 停波+清殘敵,保護放下槍高潮不被殘敵打死
-    else { inBreak = true; betweenT = 4; updateWaveHUD(); if (wave === 1 || wave % 5 === 0) showNarr(NARR.wave, 3.4); }   // 金句稀缺:只首波/每5波,中段留白
+    else { inBreak = true; betweenT = 4; money += 150; updateMoneyHUD(); updateWaveHUD(); if (wave === 1 || wave % 5 === 0) showNarr(NARR.wave, 3.4); }   // 撐過一波 +150 軍餉(波間按 B 補裝);金句稀缺:只首波/每5波留白
   }
 }
 updateWaveHUD();
@@ -946,6 +988,7 @@ function updateEnemies(dt) {
 const hpEl = document.getElementById("hp"), dmgEl = document.getElementById("dmg"), deadEl = document.getElementById("dead"), deadStatsEl = document.getElementById("dead-stats");
 const scarEl = document.getElementById("scar"), narrEl = document.getElementById("narr"), mendEl = document.getElementById("mend-line"), hintEl = document.getElementById("hint");
 let playerHP = 100, MAX_HP = 100, curDiff = null, dead = false, deaths = 0, bestWave = 0, scarFloor = 0, scarFlash = 0;
+let money = 1000, armor = 0, maskOwned = false;   // 購買系統:軍餉 / 防彈背心 ARMOR / 防護面罩
 /* ── toni 連接句留白(只有 toni 可改;Claude 一字不寫,僅留 placeholder 標位置;聲音=把拔夢中第一人稱) ── */
 const NARR = {
   // #1 進軍營(夢框建立)— toni 選 EP40 verbatim:首次鎖入軍營顯示一次,痛與迷惘的夢框底色
@@ -1073,7 +1116,7 @@ function endGaze() {
     stopMusic(); updateWaveHUD();
   }, 1700);
 }
-function hurtPlayer(d) { if (dead || gameOver || awaitDisarm) return; playerHP = Math.max(0, playerHP - d); if (hpEl) hpEl.textContent = Math.round(playerHP); if (dmgEl) { dmgEl.style.opacity = Math.min(0.85, 0.3 + d / 35).toString(); clearTimeout(dmgEl._t); dmgEl._t = setTimeout(() => (dmgEl.style.opacity = "0"), 130); } sfxHurt(); if (playerHP <= 0) endRun(); }
+function hurtPlayer(d) { if (dead || gameOver || awaitDisarm) return; if (armor > 0) { const a = Math.min(armor, d * 0.5); armor -= a; d -= a; updateArmorHUD(); } playerHP = Math.max(0, playerHP - d); if (hpEl) hpEl.textContent = Math.round(playerHP); if (dmgEl) { dmgEl.style.opacity = Math.min(0.85, 0.3 + d / 35).toString(); clearTimeout(dmgEl._t); dmgEl._t = setTimeout(() => (dmgEl.style.opacity = "0"), 130); } sfxHurt(); if (playerHP <= 0) endRun(); }
 function endRun() {
   if (dead) return;
   dead = true; gameOver = true; deaths++; stopMusic();   // 修補拍=樂停,沉默讓連接句說話
@@ -1203,7 +1246,7 @@ function updateFP(dt) {
   chSpread = Math.max(0, chSpread - dt * 26);
   if (scarFlash > 0) scarFlash = Math.max(0, scarFlash - dt * 0.55);   // 疤痕閃光衰減,留下永久 scarFloor
   if (scarEl) scarEl.style.opacity = (scarFloor + scarFlash).toFixed(3);
-  if (hintEl) { if (MODE === "sim" && awaitDisarm) { hintEl.style.opacity = "1"; hintEl.textContent = "撐過了 · 按 H 放下槍"; } else if (MODE === "hub" && document.pointerLockElement === canvas) { hintEl.style.opacity = "1"; hintEl.textContent = nearCow() ? "按 E · 顧那頭牛" : nearJacket() ? "按 E · 看那件外套" : nearRangeEntry() ? "按 E 進入「實戰模擬練習」" : "自由走動軍營 · 走到靶場(右前方)按 E 開始實戰模擬"; } else hintEl.style.opacity = "0"; }
+  if (hintEl) { if (MODE === "sim" && awaitDisarm) { hintEl.style.opacity = "1"; hintEl.textContent = "撐過了 · 按 H 放下槍"; } else if (MODE === "hub" && document.pointerLockElement === canvas) { hintEl.style.opacity = "1"; hintEl.textContent = nearCow() ? "按 E · 顧那頭牛" : nearJacket() ? "按 E · 看那件外套" : nearRangeEntry() ? "按 E 進入「實戰模擬練習」" : "自由走動軍營 · 按 B 開軍械庫購買裝備 · 走到靶場(右前方)按 E 開始實戰模擬"; } else hintEl.style.opacity = "0"; }
   updateMusic(dt);
   moodSim += ((MODE === "sim" && !dead ? 1 : 0) - moodSim) * Math.min(1, dt * 0.8);   // 夢進熔爐:光影收緊(暗角加深 / 曝光略降 / 顆粒略增)
   if (postfxOn && postfx) { const tt = postfx.tuning; tt.vignette.darkness = 0.26 + moodSim * 0.14 + skyDarkCur * 0.12; tt.exposure = 1.08 - moodSim * 0.07 - skyDarkCur * 0.06; tt.grain.amount = 0.012 + moodSim * 0.01; }
