@@ -624,6 +624,9 @@ function sfxHurt() { if (!actx) return; noiseHit(0.16, 500, 120, 0.4); tone(160,
 const keys = {};
 const enterEl = document.getElementById("enter");
 let ads = false, mouseDown = false, lastShot = 0;
+const isTouch = (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) || ("ontouchstart" in window) || navigator.maxTouchPoints > 0 || /[?&]touch\b/i.test(location.search || "");   // 手機觸控(可 ?touch 強制)
+let touchActive = false, tjx = 0, tjz = 0;
+function isActive() { return document.pointerLockElement === canvas || touchActive; }   // pointer lock(桌機)或 touchActive(手機)
 const DIGIT = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3, Digit5: 4, Digit6: 5, Digit7: 6, Digit8: 7, Digit9: 8 };
 addEventListener("keydown", (e) => { keys[e.code] = 1; if (e.code === "Space" || e.code === "Tab") e.preventDefault(); if (e.code in DIGIT) showWeapon(DIGIT[e.code]); else if (e.code === "KeyQ") showWeapon((wi + 1) % WEAPONS.length); else if (e.code === "KeyR") reload(); else if (e.code === "KeyE") tryInteract(); else if (e.code === "KeyH") { if (MODE === "sim" && awaitDisarm) startGaze(); } else if (e.code === "KeyB") { if (shopEl && shopEl.classList.contains("on")) closeShop(); else openShop(); } });
 addEventListener("keyup", (e) => { keys[e.code] = 0; });
@@ -638,6 +641,38 @@ canvas.addEventListener("mousedown", (e) => {
 addEventListener("mouseup", (e) => { if (e.button === 0) mouseDown = false; else if (e.button === 2) ads = false; });
 document.addEventListener("pointerlockchange", () => { if (enterEl) enterEl.classList.toggle("hide", document.pointerLockElement === canvas); if (document.pointerLockElement !== canvas) { mouseDown = false; ads = false; } else if (MODE === "hub" && !firstHubShown) { firstHubShown = true; showNarr(NARR.hubEnter, 4.2); } });   // #1 首次進軍營:夢框建立句(placeholder 自動不顯示)
 addEventListener("mousemove", (e) => { if (document.pointerLockElement === canvas) { const sens = 0.0023 * settings.sens * (camera.fov / 80); yaw -= e.movementX * sens; pitch -= e.movementY * sens; pitch = Math.max(-1.2, Math.min(1.2, pitch)); } });
+/* ── 手機觸控:進場 + 左搖桿移動 + 右側拖曳視角 + 按鈕 ── */
+const tbDisarmEl = document.getElementById("tb-disarm");
+if (isTouch) {
+  const touchUI = document.getElementById("touch"), tjEl = document.getElementById("tj"), tjKnob = document.getElementById("tj-knob");
+  // 進場:第一次點畫面 → touchActive(取代 pointer lock)
+  canvas.addEventListener("touchstart", (e) => {
+    if (!touchActive && MODE !== "gaze") { touchActive = true; if (enterEl) enterEl.classList.add("hide"); if (touchUI) touchUI.classList.add("on"); ensureAudio(); if (maskOwned && maskEl) maskEl.classList.add("on"); if (MODE === "hub" && !firstHubShown) { firstHubShown = true; showNarr(NARR.hubEnter, 4.2); } e.preventDefault(); }
+  }, { passive: false });
+  // 左搖桿:類比移動
+  let tjId = null;
+  function tjUpd(t) { const r = tjEl.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, max = r.width / 2; let dx = t.clientX - cx, dy = t.clientY - cy; const d = Math.hypot(dx, dy) || 1; if (d > max) { dx = dx / d * max; dy = dy / d * max; } tjKnob.style.transform = "translate(" + dx + "px," + dy + "px)"; tjx = dx / max; tjz = -dy / max; }
+  tjEl.addEventListener("touchstart", (e) => { tjId = e.changedTouches[0].identifier; tjUpd(e.changedTouches[0]); e.preventDefault(); e.stopPropagation(); }, { passive: false });
+  tjEl.addEventListener("touchmove", (e) => { for (const t of e.changedTouches) if (t.identifier === tjId) { tjUpd(t); e.preventDefault(); } }, { passive: false });
+  const tjEnd = (e) => { for (const t of e.changedTouches) if (t.identifier === tjId) { tjId = null; tjx = 0; tjz = 0; tjKnob.style.transform = ""; } };
+  tjEl.addEventListener("touchend", tjEnd); tjEl.addEventListener("touchcancel", tjEnd);
+  // 右側拖曳:視角(略過按鈕/搖桿/上方齒輪)
+  let lookId = null, lpx = 0, lpy = 0;
+  addEventListener("touchstart", (e) => { if (!touchActive || lookId !== null) return; for (const t of e.changedTouches) { const el = document.elementFromPoint(t.clientX, t.clientY); if (el && (el.classList.contains("tbtn") || el.id === "tj" || el.id === "tj-knob" || el.id === "gear")) continue; lookId = t.identifier; lpx = t.clientX; lpy = t.clientY; break; } }, { passive: true });
+  addEventListener("touchmove", (e) => { if (lookId === null) return; for (const t of e.changedTouches) if (t.identifier === lookId) { const s = 0.0052 * settings.sens; yaw -= (t.clientX - lpx) * s; pitch -= (t.clientY - lpy) * s; pitch = Math.max(-1.2, Math.min(1.2, pitch)); lpx = t.clientX; lpy = t.clientY; e.preventDefault(); } }, { passive: false });
+  const lookEnd = (e) => { for (const t of e.changedTouches) if (t.identifier === lookId) lookId = null; };
+  addEventListener("touchend", lookEnd); addEventListener("touchcancel", lookEnd);
+  // 按鈕
+  const tbtn = (id, down, up) => { const el = document.getElementById(id); if (!el) return; el.addEventListener("touchstart", (e) => { e.preventDefault(); e.stopPropagation(); if (down) down(); }, { passive: false }); if (up) { el.addEventListener("touchend", (e) => { e.preventDefault(); up(); }); el.addEventListener("touchcancel", up); } };
+  tbtn("tb-fire", () => { mouseDown = true; if (WEAPONS[wi].type !== "auto") fire(); }, () => { mouseDown = false; });
+  tbtn("tb-jump", () => { keys.Space = 1; setTimeout(() => { keys.Space = 0; }, 60); });
+  tbtn("tb-aim", () => { ads = !ads; });
+  tbtn("tb-reload", () => reload());
+  tbtn("tb-wpn", () => { let n = wi; for (let i = 0; i < WEAPONS.length; i++) { n = (n + 1) % WEAPONS.length; if (WEAPONS[n].owned) { showWeapon(n); break; } } });
+  tbtn("tb-act", () => { tryInteract(); });
+  tbtn("tb-shop", () => { if (shopEl && shopEl.classList.contains("on")) closeShop(); else openShop(); });
+  tbtn("tb-disarm", () => { if (MODE === "sim" && awaitDisarm) startGaze(); });
+}
 
 /* ── 設定選單 + 可調準星 + 結算重啟 ── */
 const settingsEl = document.getElementById("settings"), gearEl = document.getElementById("gear");
@@ -744,7 +779,7 @@ function spreadOf(w) { let s = w.type === "auto" ? 0.006 : 0.003; if (w.recoilMu
 function findHit(o) { let p = o; while (p) { if (p.userData && p.userData.kind) return p; p = p.parent; } return null; }
 function killBarrel(o) { o.userData.dead = true; o.visible = false; const i = explosives.indexOf(o); if (i >= 0) explosives.splice(i, 1); }
 function fire() {
-  if (document.pointerLockElement !== canvas || dead) return;
+  if (!isActive() || dead) return;
   if (drawT > 0 || reloadT > 0) return;   // 拔槍/換彈動畫期間不能開火
   const w = WEAPONS[wi];
   if (w.type === "melee") { if (w.swingT <= 0) { w.swingT = w.swingDur || 0.3; (w.name === "鐵鎚" ? sfxThud : w.name === "小刀" ? sfxKnife : sfxSwoosh)(); meleeHit(w); } return; }
@@ -1037,7 +1072,7 @@ function enterSim() {
     updateWaveHUD(); playMusic(MUSIC_SIM); showNarr(NARR.enter, 3.6); blinking = false;
   });
 }
-function tryInteract() { if (MODE !== "hub" || document.pointerLockElement !== canvas) return; if (nearCow()) showNarr(NARR.cow, 5.5); else if (nearJacket()) showNarr(NARR.dream3, 5.5); else if (nearRangeEntry()) enterSim(); }
+function tryInteract() { if (MODE !== "hub" || !isActive()) return; if (nearCow()) showNarr(NARR.cow, 5.5); else if (nearJacket()) showNarr(NARR.dream3, 5.5); else if (nearRangeEntry()) enterSim(); }
 /* ── 一眼瞬間(Tier 2):撐過 GOAL_WAVE → 主動放下槍 → 抽象光形非戰鬥高光(放下武器,光才出現) ── */
 const GOAL_WAVE = 5;   // 撐過這波=撐過了,夢讓他停下(toni 選先驗收用 5)
 let awaitDisarm = false;
@@ -1221,6 +1256,7 @@ function updateFP(dt) {
   // 水平移動(ADS 減速)
   camera.getWorldDirection(fwd); fwd.y = 0; fwd.normalize(); right.crossVectors(fwd, UP).normalize();
   let mx = 0, mz = 0; if (keys.KeyW) mz += 1; if (keys.KeyS) mz -= 1; if (keys.KeyD) mx += 1; if (keys.KeyA) mx -= 1;
+  if (tjx || tjz) { mx += tjx; mz += tjz; }   // 手機左搖桿類比移動
   const moving = !!(mx || mz); mvMoving = moving; mvCrouch = crouch;
   let speed = (crouch ? 1.6 : (silent ? 2.5 : 4.8)) * (w.moveMul || 1); if (ads) speed *= w.scope ? 0.5 : 0.72;
   const len = Math.hypot(mx, mz) || 1;
@@ -1246,7 +1282,8 @@ function updateFP(dt) {
   chSpread = Math.max(0, chSpread - dt * 26);
   if (scarFlash > 0) scarFlash = Math.max(0, scarFlash - dt * 0.55);   // 疤痕閃光衰減,留下永久 scarFloor
   if (scarEl) scarEl.style.opacity = (scarFloor + scarFlash).toFixed(3);
-  if (hintEl) { if (MODE === "sim" && awaitDisarm) { hintEl.style.opacity = "1"; hintEl.textContent = "撐過了 · 按 H 放下槍"; } else if (MODE === "hub" && document.pointerLockElement === canvas) { hintEl.style.opacity = "1"; hintEl.textContent = nearCow() ? "按 E · 顧那頭牛" : nearJacket() ? "按 E · 看那件外套" : nearRangeEntry() ? "按 E 進入「實戰模擬練習」" : "自由走動軍營 · 按 B 開軍械庫購買裝備 · 走到靶場(右前方)按 E 開始實戰模擬"; } else hintEl.style.opacity = "0"; }
+  if (tbDisarmEl) tbDisarmEl.classList.toggle("on", isTouch && touchActive && MODE === "sim" && awaitDisarm);   // 手機放下槍鈕
+  if (hintEl) { if (MODE === "sim" && awaitDisarm) { hintEl.style.opacity = "1"; hintEl.textContent = isTouch ? "撐過了 · 按「放下槍」" : "撐過了 · 按 H 放下槍"; } else if (MODE === "hub" && isActive()) { hintEl.style.opacity = "1"; hintEl.textContent = nearCow() ? "按 E · 顧那頭牛" : nearJacket() ? "按 E · 看那件外套" : nearRangeEntry() ? "按 E 進入「實戰模擬練習」" : "自由走動軍營 · 按 B 開軍械庫購買裝備 · 走到靶場(右前方)按 E 開始實戰模擬"; } else hintEl.style.opacity = "0"; }
   updateMusic(dt);
   moodSim += ((MODE === "sim" && !dead ? 1 : 0) - moodSim) * Math.min(1, dt * 0.8);   // 夢進熔爐:光影收緊(暗角加深 / 曝光略降 / 顆粒略增)
   if (postfxOn && postfx) { const tt = postfx.tuning; tt.vignette.darkness = 0.26 + moodSim * 0.14 + skyDarkCur * 0.12; tt.exposure = 1.08 - moodSim * 0.07 - skyDarkCur * 0.06; tt.grain.amount = 0.012 + moodSim * 0.01; }
@@ -1270,7 +1307,7 @@ function updateFP(dt) {
   // 動態準心:開火/移動/跳躍張開,靜止收攏(對齊真實 spread 回饋)
   if (crossEl && !scoped) { let ex = chSpread; if (!grounded) ex += 16; else if (mvMoving && !crouch) ex += 7; else if (crouch && !mvMoving) ex -= 1.5; if (ads) ex *= 0.3; document.documentElement.style.setProperty("--ch-gap", Math.max(1, settings.chGap + ex).toFixed(1) + "px"); }
   // 自動射擊(步槍/機槍按住)
-  if (!dead && mouseDown && w.type === "auto" && document.pointerLockElement === canvas && realT - lastShot >= w.rate) { lastShot = realT; fire(); }
+  if (!dead && mouseDown && w.type === "auto" && isActive() && realT - lastShot >= w.rate) { lastShot = realT; fire(); }
   // 槍口焰
   for (const k of WEAPONS) if (k.muzzle) { if (k.muzzleT > 0) { k.muzzleT -= dt; k.muzzle.material.opacity = Math.max(0, k.muzzleT / 0.06) * 0.9; k.muzzle.scale.setScalar(1 + (1 - k.muzzleT / 0.06) * 0.7); } else k.muzzle.material.opacity = 0; }
   // 武器姿態(bob + 後座 + 揮舞/投擲 + ADS 置中)

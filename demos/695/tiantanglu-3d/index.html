@@ -84,6 +84,23 @@
     border-radius:50%;box-shadow:0 0 0 100vmax rgba(8,10,8,.94),inset 0 0 40px rgba(0,0,0,.7);border:2px solid rgba(0,0,0,.85);}
   #scope .v{position:absolute;left:50%;top:8%;bottom:8%;width:1px;background:rgba(10,20,10,.7);transform:translateX(-50%);}
   #scope .h{position:absolute;top:50%;left:8%;right:8%;height:1px;background:rgba(10,20,10,.7);transform:translateY(-50%);}
+
+  /* ── 手機觸控操作 ── */
+  #touch{position:fixed;inset:0;z-index:6;display:none;pointer-events:none;font-family:'Noto Sans TC',sans-serif;}
+  #touch.on{display:block;}
+  #tj{position:fixed;left:20px;bottom:108px;width:124px;height:124px;border-radius:50%;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.16);pointer-events:auto;touch-action:none;}
+  #tj-knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:rgba(255,220,170,.3);border:1.5px solid rgba(255,220,170,.5);}
+  .tbtn{position:fixed;pointer-events:auto;touch-action:none;border-radius:50%;background:rgba(20,16,20,.4);border:1.5px solid rgba(255,220,170,.34);color:#f3e6d8;font-size:13px;letter-spacing:.04em;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;}
+  .tbtn:active{background:rgba(255,220,170,.26);}
+  #tb-fire{right:24px;bottom:30px;width:98px;height:98px;font-size:15px;}
+  #tb-jump{right:132px;bottom:48px;width:62px;height:62px;}
+  #tb-aim{right:40px;bottom:140px;width:62px;height:62px;}
+  #tb-reload{right:134px;bottom:124px;width:56px;height:56px;font-size:12px;}
+  #tb-wpn{right:22px;top:94px;width:54px;height:54px;font-size:12px;}
+  #tb-act{right:84px;top:94px;width:54px;height:54px;}
+  #tb-shop{right:146px;top:94px;width:54px;height:54px;font-size:12px;}
+  #tb-disarm{left:50%;bottom:118px;transform:translateX(-50%);border-radius:40px;padding:13px 26px;font-size:15px;display:none;background:rgba(20,16,20,.62);}
+  #tb-disarm.on{display:flex;}
   #scope .dot{position:absolute;left:50%;top:50%;width:3px;height:3px;background:#c0392b;border-radius:50%;transform:translate(-50%,-50%);}
 
   /* ── 擊殺數 ── */
@@ -229,6 +246,17 @@
   <div class="close" id="shop-close">關閉 (B)</div>
 </div></div>
 <div id="mask"></div>
+<div id="touch">
+  <div id="tj"><div id="tj-knob"></div></div>
+  <button id="tb-fire" class="tbtn" type="button">射擊</button>
+  <button id="tb-jump" class="tbtn" type="button">跳</button>
+  <button id="tb-aim" class="tbtn" type="button">瞄準</button>
+  <button id="tb-reload" class="tbtn" type="button">換彈</button>
+  <button id="tb-wpn" class="tbtn" type="button">武器</button>
+  <button id="tb-act" class="tbtn" type="button">E</button>
+  <button id="tb-shop" class="tbtn" type="button">軍械</button>
+  <button id="tb-disarm" class="tbtn" type="button">放下槍</button>
+</div>
 
 <script src="cold-open.js"></script>
 <script type="module" src="scene.js"></script>
