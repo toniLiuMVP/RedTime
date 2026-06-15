@@ -301,6 +301,19 @@ let cowTail = null, cowHead = null;
   const tuft = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.16, 0.14), patch); tuft.position.set(0, -0.36, 0); cowTail.add(tuft);
 })();
 
+/* ───────── 夢中違和物件:反穿的學校外套(#3 名字藏起來;軍營裡一件學校外套=夢的錯位) ───────── */
+(function buildJacket() {
+  const jx = 12, jz = 16;
+  const benchW = mat(0x6b4f32, { roughness: 0.86 });
+  add(new THREE.BoxGeometry(1.4, 0.08, 0.42), benchW, jx, 0.42, jz);                                  // 長椅板
+  for (const lx of [-0.6, 0.6]) for (const lz of [-0.15, 0.15]) add(new THREE.BoxGeometry(0.08, 0.42, 0.08), benchW, jx + lx, 0.2, jz + lz);  // 4 腿
+  const jOuter = mat(0x26304e, { roughness: 0.93 });   // 深藍校服(外面)
+  const jLining = mat(0x8c92a0, { roughness: 0.9 });    // 內裡(反面朝上=把名字藏住)
+  const fold = add(new THREE.BoxGeometry(0.66, 0.13, 0.5), jLining, jx, 0.52, jz); fold.rotation.y = 0.28;  // 折疊的外套身(反面朝上)
+  const collar = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.06, 0.12), jOuter); collar.position.set(0, 0.07, -0.22); fold.add(collar);  // 領
+  for (const s of [-1, 1]) { const sl = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.1, 0.4), jOuter); sl.position.set(0.27 * s, 0.01, 0.05); sl.rotation.y = 0.22 * s; fold.add(sl); }  // 折在身上的袖
+})();
+
 /* ══════════════ 武器系統:鐵鎚 / 刺槍 / 小刀 / 槍械(每把含 moveMul 移速) ══════════════ */
 const gunMetal = new THREE.MeshStandardMaterial({ color: 0x3b3f45, metalness: 0.78, roughness: 0.38, envMapIntensity: 0.85 });
 const gunPoly = new THREE.MeshStandardMaterial({ color: 0x2f3127, metalness: 0.12, roughness: 0.66, envMapIntensity: 0.5 });
@@ -787,6 +800,7 @@ let wave = 0, score = 0, waveAlive = 0, spawnQueue = 0, spawnTimer = 0, betweenT
 let MODE = "hub";   // hub(自由走軍營,不生敵) | sim(實戰模擬練習,波次戰鬥) — 把拔的夢:走到靶場才回到天堂路
 const RANGE_ENTRY = new THREE.Vector3(32, 0, 6.5);   // 靶場射擊位(進入實戰模擬的觸發點)
 const COW_POS = new THREE.Vector3(-14, 0, 18);       // 顧牛互動點
+const JACKET_POS = new THREE.Vector3(12, 0, 16);     // 反穿外套互動點(#3 夢中違和)
 const waveEl = document.getElementById("wave"), scoreEl = document.getElementById("scoreval");
 function updateWaveHUD() { if (MODE !== "sim") { if (waveEl) waveEl.textContent = "軍營"; return; } if (waveEl) waveEl.textContent = inBreak ? (wave < 1 ? "準備" : "第 " + wave + " 波 · 清空") : "第 " + wave + " 波"; if (scoreEl) scoreEl.textContent = score; }
 function startWave() { wave++; inBreak = false; const n = Math.min(16, 3 + Math.round(wave * 1.7)); spawnQueue = n; waveAlive = n; spawnTimer = 0; updateWaveHUD(); }
@@ -876,16 +890,16 @@ const scarEl = document.getElementById("scar"), narrEl = document.getElementById
 let playerHP = 100, dead = false, deaths = 0, bestWave = 0, scarFloor = 0, scarFlash = 0;
 /* ── toni 連接句留白(只有 toni 可改;Claude 一字不寫,僅留 placeholder 標位置;聲音=把拔夢中第一人稱) ── */
 const NARR = {
-  // #1 進軍營(夢框建立)— 連接句待 toni 親寫;方向:未來的把拔又一次夢回當兵第一天,「一遍一遍回到那條天堂路」(toni 夢框原話,非 EP canon,故留白)。isReal 守門:placeholder 不顯示,toni 填真句後自動生效
-  hubEnter: "［連接句 #1 待 toni 親寫 · 夢回當兵第一天的夢框建立句］",
-  // #3 夢中違和細節(軍服反穿/藏起名字)— 連接句待 toni 親寫;方向:夢裡細節總錯位(EP30/33),觸發點隨夢物件(#29)接上
-  dream3: "［連接句 #3 待 toni 親寫 · 夢中違和：軍服反穿、名字藏起來］",
+  // #1 進軍營(夢框建立)— toni 選 EP40 verbatim:首次鎖入軍營顯示一次,痛與迷惘的夢框底色
+  hubEnter: "有時候腦袋很亂。痛。痛到不知道未來在哪裡。",
+  // #3 夢中違和(反穿的學校外套/名字藏起來)— toni 選 EP33 verbatim:走近夢中反穿外套觸發
+  dream3: "原來長大，有時是把名字藏起來的練習。",
   // 顧牛(EP40 夢中違和物件)— toni 親寫 verbatim canon(連長叫砲兵連算彈最快的計算手去顧牛;忠誠不亂跑)
   cow: "連長叫我去顧一頭牛。我就負責顧著這頭牛不要亂跑，我也不要亂跑。",
   // #4 死亡「修補」拍 — toni 選「炸裂修補」方向 → 用 EP8 原句(toni 親寫,非 Claude 代筆;要換成新句隨時說)
   mend: "炸裂！修補。再炸裂！再修補。",
-  // #4b 撐出新高波時的變奏(W6:綁 bestWave 突破才換;讓重複長出意義)— 待 toni 親寫
-  mendRecord: "［連接句 #4b 待 toni 親寫 · 撐出新高時的「又被縫一針」變奏(EP19 一針一針把心縫起來)］",
+  // #4b 撐出新高波時的變奏(W6:綁 bestWave 突破才換)— toni 選 EP34 verbatim:結痂仍留疤的更深修補
+  mendRecord: "我知道傷口結痂後，傷口還是會存在。",
   // #5 撐過一波 — toni 選「撐≠強,是相信」方向 → 用 EP40 原句
   wave: "所以我撐，跟我強不強沒關係，是因為未來還沒到。",
   // #2 進實戰模擬前 — toni 選「熔爐不是軍隊是她」→ EP8 原句(鋼鐵人是她要的)
@@ -900,6 +914,7 @@ function showNarr(text, dur) { if (!narrEl || !isReal(text)) return; narrEl.text
 /* ── hub/sim 狀態機:把拔的夢,走到靶場才回到天堂路(實戰模擬練習) ── */
 function nearRangeEntry() { const dx = camera.position.x - RANGE_ENTRY.x, dz = camera.position.z - RANGE_ENTRY.z; return dx * dx + dz * dz < 49; }
 function nearCow() { const dx = camera.position.x - COW_POS.x, dz = camera.position.z - COW_POS.z; return dx * dx + dz * dz < 16; }
+function nearJacket() { const dx = camera.position.x - JACKET_POS.x, dz = camera.position.z - JACKET_POS.z; return dx * dx + dz * dz < 13; }
 const eyelidEl = document.getElementById("eyelid");
 let blinking = false;
 function blink(closeMs, holdMs, openMs, midFn) {   // 閉眼→(切換)→睜眼:夢框進場,世界在闔眼時切換
@@ -920,7 +935,7 @@ function enterSim() {
     updateWaveHUD(); playMusic(MUSIC_SIM); showNarr(NARR.enter, 3.6); blinking = false;
   });
 }
-function tryInteract() { if (MODE !== "hub" || document.pointerLockElement !== canvas) return; if (nearCow()) showNarr(NARR.cow, 5.5); else if (nearRangeEntry()) enterSim(); }
+function tryInteract() { if (MODE !== "hub" || document.pointerLockElement !== canvas) return; if (nearCow()) showNarr(NARR.cow, 5.5); else if (nearJacket()) showNarr(NARR.dream3, 5.5); else if (nearRangeEntry()) enterSim(); }
 /* ── 一眼瞬間(Tier 2):撐過 GOAL_WAVE → 主動放下槍 → 抽象光形非戰鬥高光(放下武器,光才出現) ── */
 const GOAL_WAVE = 5;   // 撐過這波=撐過了,夢讓他停下(toni 選先驗收用 5)
 let awaitDisarm = false;
@@ -1129,7 +1144,7 @@ function updateFP(dt) {
   chSpread = Math.max(0, chSpread - dt * 26);
   if (scarFlash > 0) scarFlash = Math.max(0, scarFlash - dt * 0.55);   // 疤痕閃光衰減,留下永久 scarFloor
   if (scarEl) scarEl.style.opacity = (scarFloor + scarFlash).toFixed(3);
-  if (hintEl) { if (MODE === "sim" && awaitDisarm) { hintEl.style.opacity = "1"; hintEl.textContent = "撐過了 · 按 H 放下槍"; } else if (MODE === "hub" && document.pointerLockElement === canvas) { hintEl.style.opacity = "1"; hintEl.textContent = nearCow() ? "按 E · 顧那頭牛" : nearRangeEntry() ? "按 E 進入「實戰模擬練習」" : "自由走動軍營 · 走到靶場(右前方)按 E 開始實戰模擬"; } else hintEl.style.opacity = "0"; }
+  if (hintEl) { if (MODE === "sim" && awaitDisarm) { hintEl.style.opacity = "1"; hintEl.textContent = "撐過了 · 按 H 放下槍"; } else if (MODE === "hub" && document.pointerLockElement === canvas) { hintEl.style.opacity = "1"; hintEl.textContent = nearCow() ? "按 E · 顧那頭牛" : nearJacket() ? "按 E · 看那件外套" : nearRangeEntry() ? "按 E 進入「實戰模擬練習」" : "自由走動軍營 · 走到靶場(右前方)按 E 開始實戰模擬"; } else hintEl.style.opacity = "0"; }
   updateMusic(dt);
   moodSim += ((MODE === "sim" && !dead ? 1 : 0) - moodSim) * Math.min(1, dt * 0.8);   // 夢進熔爐:光影收緊(暗角加深 / 曝光略降 / 顆粒略增)
   if (postfxOn && postfx) { const tt = postfx.tuning; tt.vignette.darkness = 0.26 + moodSim * 0.14 + skyDarkCur * 0.12; tt.exposure = 1.08 - moodSim * 0.07 - skyDarkCur * 0.06; tt.grain.amount = 0.012 + moodSim * 0.01; }
