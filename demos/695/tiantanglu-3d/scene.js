@@ -628,7 +628,7 @@ const isTouch = (window.matchMedia && window.matchMedia("(pointer: coarse)").mat
 let touchActive = false, tjx = 0, tjz = 0;
 function isActive() { return document.pointerLockElement === canvas || touchActive; }   // pointer lock(桌機)或 touchActive(手機)
 const DIGIT = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3, Digit5: 4, Digit6: 5, Digit7: 6, Digit8: 7, Digit9: 8 };
-addEventListener("keydown", (e) => { keys[e.code] = 1; if (e.code === "Space" || e.code === "Tab") e.preventDefault(); if (e.code in DIGIT) showWeapon(DIGIT[e.code]); else if (e.code === "KeyQ") showWeapon((wi + 1) % WEAPONS.length); else if (e.code === "KeyR") reload(); else if (e.code === "KeyE") tryInteract(); else if (e.code === "KeyH") { if (MODE === "sim" && awaitDisarm) startGaze(); } else if (e.code === "KeyB") { if (shopEl && shopEl.classList.contains("on")) closeShop(); else openShop(); } });
+addEventListener("keydown", (e) => { keys[e.code] = 1; if (e.code === "Space" || e.code === "Tab") e.preventDefault(); if (e.code in DIGIT) showWeapon(DIGIT[e.code]); else if (e.code === "KeyQ") showWeapon((wi + 1) % WEAPONS.length); else if (e.code === "KeyR") reload(); else if (e.code === "KeyE") tryInteract(); else if (e.code === "KeyH") { if (MODE === "sim" && awaitDisarm) startGaze(); } else if (e.code === "KeyB") { if (shopEl && shopEl.classList.contains("on")) closeShop(); else openShop(); } else if (e.code === "KeyG") callArtillery(); });
 addEventListener("keyup", (e) => { keys[e.code] = 0; });
 canvas.addEventListener("contextmenu", (e) => e.preventDefault());
 canvas.addEventListener("mousedown", (e) => {
@@ -642,7 +642,7 @@ addEventListener("mouseup", (e) => { if (e.button === 0) mouseDown = false; else
 document.addEventListener("pointerlockchange", () => { if (enterEl) enterEl.classList.toggle("hide", document.pointerLockElement === canvas); if (document.pointerLockElement !== canvas) { mouseDown = false; ads = false; } else if (MODE === "hub" && !firstHubShown) { firstHubShown = true; showNarr(NARR.hubEnter, 4.2); } });   // #1 首次進軍營:夢框建立句(placeholder 自動不顯示)
 addEventListener("mousemove", (e) => { if (document.pointerLockElement === canvas) { const sens = 0.0023 * settings.sens * (camera.fov / 80); yaw -= e.movementX * sens; pitch -= e.movementY * sens; pitch = Math.max(-1.2, Math.min(1.2, pitch)); } });
 /* ── 手機觸控:進場 + 左搖桿移動 + 右側拖曳視角 + 按鈕 ── */
-const tbDisarmEl = document.getElementById("tb-disarm");
+const tbDisarmEl = document.getElementById("tb-disarm"), tbArtyEl = document.getElementById("tb-arty");
 if (isTouch) {
   const touchUI = document.getElementById("touch"), tjEl = document.getElementById("tj"), tjKnob = document.getElementById("tj-knob");
   // 進場:第一次點畫面 → touchActive(取代 pointer lock)
@@ -672,6 +672,7 @@ if (isTouch) {
   tbtn("tb-act", () => { tryInteract(); });
   tbtn("tb-shop", () => { if (shopEl && shopEl.classList.contains("on")) closeShop(); else openShop(); });
   tbtn("tb-disarm", () => { if (MODE === "sim" && awaitDisarm) startGaze(); });
+  tbtn("tb-arty", () => { callArtillery(); });
 }
 
 /* ── 設定選單 + 可調準星 + 結算重啟 ── */
@@ -831,7 +832,34 @@ function explode(pos, depth, big) {
   if (!dead && !gameOver) { const pd = camera.position.distanceTo(pos); if (pd < R && !losBlocked(pos.x, pos.z, camera.position.x, camera.position.z)) hurtPlayer(Math.round((big ? 60 : 38) * (1 - pd / R))); }   // B2:躲掩體後不被隔牆雷炸死
   if (depth < 3) for (const m of explosives.slice()) { if (m.userData.boom && !m.userData.dead && m.position.distanceTo(pos) < (big ? 6.5 : 4.8)) { const pp = m.position.clone(); killBarrel(m); setTimeout(() => explode(pp, depth + 1, false), 90); } }
 }
+/* ── 天降砲擊(計算手呼叫火力:瞄地面標座標 → 呼嘯延遲 → 6 發叢集砲彈天降;28s 冷卻) ── */
+const artyMarker = new THREE.Mesh(new THREE.RingGeometry(1.6, 2.4, 28), new THREE.MeshBasicMaterial({ color: 0xff5232, transparent: true, opacity: 0.7, side: THREE.DoubleSide, depthWrite: false, fog: false }));
+artyMarker.rotation.x = -Math.PI / 2; artyMarker.visible = false; scene.add(artyMarker);
+let artyCD = 0; const ARTY_CD = 28;
+function callArtillery() {
+  if (MODE !== "sim" || dead || gameOver || awaitDisarm) return;
+  if (artyCD > 0) { if (actx) tone(280, 200, 0.07, 0.06, "square"); showNarr("砲擊冷卻 " + Math.ceil(artyCD) + " 秒", 1.2); return; }
+  const o = camera.getWorldPosition(new THREE.Vector3()), d = camera.getWorldDirection(new THREE.Vector3());
+  if (d.y > -0.05) { showNarr("瞄準地面再呼叫砲擊", 1.4); return; }
+  const t = -o.y / d.y, tx = o.x + d.x * t, tz = o.z + d.z * t;
+  if (Math.hypot(tx, tz + 20) > 76) { showNarr("座標超出射界", 1.4); return; }
+  if (Math.hypot(tx - o.x, tz - o.z) < 15) { showNarr("座標太近 · 危險距離，瞄遠一點", 1.6); return; }   // 防誤炸自己(danger close)
+  artyCD = ARTY_CD;
+  artyMarker.position.set(tx, 0.06, tz); artyMarker.visible = true;
+  showNarr("砲擊已呼叫 · 座標鎖定", 2.4);
+  if (actx) { tone(520, 680, 0.12, 0.1, "square"); setTimeout(() => { if (actx) tone(430, 580, 0.1, 0.08, "square"); }, 150); }
+  const N = 6;
+  for (let i = 0; i < N; i++) setTimeout(() => {
+    if (MODE !== "sim") return;
+    if (actx) tone(1900, 160, 0.55, 0.1, "sawtooth");   // 呼嘯下墜
+    setTimeout(() => { if (MODE === "sim") explode(new THREE.Vector3(tx + (Math.random() - 0.5) * 5.5, 0.3, tz + (Math.random() - 0.5) * 5.5), 0, true); }, 470);
+  }, 2500 + i * 230);
+  setTimeout(() => { artyMarker.visible = false; }, 2500 + N * 230 + 700);
+}
 function updateEffects(dt) {
+  if (MODE === "sim" && artyCD > 0) artyCD = Math.max(0, artyCD - dt);
+  if (artyMarker.visible) artyMarker.material.opacity = 0.45 + Math.abs(Math.sin(realT * 5)) * 0.4;
+  if (tbArtyEl) tbArtyEl.textContent = artyCD > 0 ? Math.ceil(artyCD) : "砲擊";   // 手機鈕顯冷卻
   for (let i = effects.length - 1; i >= 0; i--) {
     const e = effects[i]; e.t += dt;
     if (e.fb) { const k = Math.min(1, e.t / 0.5); e.fb.scale.setScalar((e.big ? 2.6 : 1.5) + k * 6); e.fb.material.opacity = Math.max(0, 1 - k); }
