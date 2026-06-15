@@ -104,7 +104,14 @@ assets/sw-register.js
 /assets/lm402-twin-OLD/
 /assets/lm402-parallel-OLD/
 /demos/695T/
-/demos/695/
+# demos/695: 整批不公開,只放行天堂路遊戲本身(其餘原型 / dev 產物 / 故事 dump 全擋)
+/demos/695/*
+!/demos/695/一眼瞬間.mp3
+!/demos/695/相信「相信的力量」.mp3
+!/demos/695/tiantanglu-3d/
+/demos/695/tiantanglu-3d/*
+!/demos/695/tiantanglu-3d/index.html
+!/demos/695/tiantanglu-3d/scene.js
 /demos/platform-run-OLD/
 /demos/platform-run-twin-OLD/
 /demos/platform-run-parallel-OLD/

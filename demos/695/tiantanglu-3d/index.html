@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'none'; worker-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none';">
+<title>天堂路 · 時間裡的兩個妳</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{width:100%;height:100%;overflow:hidden;background:#1a1620;
+    font-family:"Noto Serif TC","Songti TC",ui-serif,serif;color:#fdf6ee;
+    user-select:none;-webkit-user-select:none;touch-action:none;}
+  #c{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:1;}
+
+  /* ── 準星 (可調 size/gap/thick/color) ── */
+  :root{--ch-size:8px;--ch-gap:4px;--ch-thick:2px;--ch-color:#7dff8a;}
+  #cross{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;pointer-events:none;width:60px;height:60px;}
+  #cross i{position:absolute;background:var(--ch-color);box-shadow:0 0 2px rgba(0,0,0,.85);}
+  #cross .h{width:var(--ch-size);height:var(--ch-thick);top:calc(50% - var(--ch-thick)/2);}
+  #cross .h.l{right:calc(50% + var(--ch-gap));} #cross .h.r{left:calc(50% + var(--ch-gap));}
+  #cross .v{width:var(--ch-thick);height:var(--ch-size);left:calc(50% - var(--ch-thick)/2);}
+  #cross .v.t{bottom:calc(50% + var(--ch-gap));} #cross .v.b{top:calc(50% + var(--ch-gap));}
+  #cross .dot{width:2px;height:2px;left:calc(50% - 1px);top:calc(50% - 1px);background:var(--ch-color);opacity:.55;}
+
+  /* ── HUD ── */
+  #hud{position:fixed;inset:0;z-index:4;pointer-events:none;
+    font-family:"DIN Condensed","Oswald","Arial Narrow",sans-serif;}
+  .hud-box{position:absolute;bottom:30px;display:flex;align-items:flex-end;gap:10px;
+    text-shadow:0 2px 8px rgba(0,0,0,.7);}
+  #hud-left{left:36px;} #hud-right{right:36px;}
+  .hud-num{font-size:52px;font-weight:700;line-height:.9;letter-spacing:1px;}
+  .hud-lbl{font-size:13px;letter-spacing:.25em;opacity:.7;margin-bottom:8px;}
+  .hp{color:#9fe6b0;} .ar{color:#9fc6f0;} .am{color:#ffd98a;}
+  #hud-right .sep{width:2px;height:38px;background:rgba(255,255,255,.3);margin:0 6px 6px;}
+  .am-res{font-size:26px;font-weight:700;opacity:.6;margin-bottom:6px;}
+
+  /* ── 標題 + 進入提示 ── */
+  #title{position:fixed;left:0;right:0;top:9vh;z-index:3;text-align:center;pointer-events:none;opacity:0;transition:opacity 2s;}
+  #title .t{font-size:clamp(20px,4.4vw,34px);letter-spacing:.3em;font-weight:700;color:#fff3e6;text-shadow:0 2px 30px rgba(0,0,0,.6);}
+  #title .s{font-size:clamp(10px,2.6vw,13px);letter-spacing:.5em;opacity:.55;margin-top:8px;}
+  #title .hook{font-family:"Noto Serif TC",serif;font-size:clamp(13px,2.8vw,18px);letter-spacing:.16em;line-height:1.9;color:#f3e6d8;opacity:.82;margin-top:26px;text-shadow:0 2px 22px rgba(0,0,0,.7);}
+  #title.show{opacity:1;}
+  #enter{position:fixed;left:50%;top:58%;transform:translateX(-50%);z-index:5;text-align:center;
+    cursor:pointer;transition:opacity .4s;}
+  #enter .ring{font-size:15px;letter-spacing:.2em;color:#fdf3e2;background:rgba(20,14,18,.5);
+    border:1px solid rgba(255,220,170,.4);border-radius:40px;padding:14px 30px;backdrop-filter:blur(4px);}
+  #enter .sub{font-size:12px;letter-spacing:.18em;opacity:.6;margin-top:12px;}
+  #enter.hide{opacity:0;pointer-events:none;}
+
+  /* ── 狙擊鏡 ── */
+  #scope{position:fixed;inset:0;z-index:5;pointer-events:none;display:none;}
+  #scope.on{display:block;}
+  #scope .lens{position:absolute;left:50%;top:50%;width:74vh;height:74vh;transform:translate(-50%,-50%);
+    border-radius:50%;box-shadow:0 0 0 100vmax rgba(8,10,8,.94),inset 0 0 40px rgba(0,0,0,.7);border:2px solid rgba(0,0,0,.85);}
+  #scope .v{position:absolute;left:50%;top:8%;bottom:8%;width:1px;background:rgba(10,20,10,.7);transform:translateX(-50%);}
+  #scope .h{position:absolute;top:50%;left:8%;right:8%;height:1px;background:rgba(10,20,10,.7);transform:translateY(-50%);}
+  #scope .dot{position:absolute;left:50%;top:50%;width:3px;height:3px;background:#c0392b;border-radius:50%;transform:translate(-50%,-50%);}
+
+  /* ── 擊殺數 ── */
+  #score{position:fixed;top:24px;right:36px;z-index:4;font-family:"DIN Condensed","Oswald","Arial Narrow",sans-serif;
+    text-align:right;text-shadow:0 2px 8px rgba(0,0,0,.7);pointer-events:none;}
+  #score .n{font-size:34px;font-weight:700;color:#ffd98a;}
+  #score .l{font-size:11px;letter-spacing:.25em;opacity:.6;}
+  #hitmark{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;color:#fff;font-size:22px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .08s;}
+  #dmg{position:fixed;inset:0;z-index:5;pointer-events:none;opacity:0;transition:opacity .35s;
+    box-shadow:inset 0 0 200px 40px rgba(170,20,20,.7);}
+  /* ── 疤痕 vignette(每次死亡 +1,只變淡不歸零,帶著傷前進) ── */
+  #scar{position:fixed;inset:0;z-index:3;pointer-events:none;opacity:0;
+    box-shadow:inset 0 0 210px 46px rgba(16,4,6,.96),inset 0 0 80px 14px rgba(48,10,12,.5);}
+  /* ── 旁白(每波結束 / 連接句,toni 親寫) ── */
+  #narr{position:fixed;left:0;right:0;top:30%;z-index:4;text-align:center;pointer-events:none;
+    font-family:"Noto Serif TC",serif;font-size:clamp(15px,2.4vw,20px);letter-spacing:.12em;
+    color:#f3e6d8;text-shadow:0 2px 18px rgba(0,0,0,.85);opacity:0;transition:opacity 1s;padding:0 8vw;line-height:1.7;}
+  /* ── hub 互動提示(走到靶場按 E 進實戰模擬) ── */
+  #hint{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);z-index:4;pointer-events:none;
+    font-family:"Noto Serif TC",serif;font-size:15px;letter-spacing:.12em;color:#fdf3e2;text-align:center;
+    background:rgba(20,14,18,.5);border:1px solid rgba(255,220,170,.35);border-radius:30px;padding:9px 22px;
+    opacity:0;transition:opacity .3s;backdrop-filter:blur(3px);}
+  /* ── 一眼瞬間 overlay(抽象光形 + 電影黑邊 + 連接句;放下槍後的非戰鬥高光) ── */
+  #gaze{position:fixed;inset:0;z-index:9;display:none;background:#05040a;overflow:hidden;}
+  #gaze.on{display:block;}
+  #gaze-cv{position:absolute;inset:0;width:100%;height:100%;}
+  #gaze .lb{position:absolute;left:0;right:0;height:0;background:#000;z-index:2;transition:height 1.1s ease;}
+  #gaze .lb-t{top:0;} #gaze .lb-b{bottom:0;}
+  #gaze.closing .lb{height:50%;}
+  #gaze.open .lb{height:8%;}
+  #gaze-line{position:absolute;left:0;right:0;bottom:15%;z-index:3;text-align:center;padding:0 10vw;
+    font-family:"Noto Serif TC",serif;font-size:clamp(16px,2.6vw,22px);letter-spacing:.14em;line-height:1.9;
+    color:#f3e6d8;text-shadow:0 2px 20px rgba(0,0,0,.9);opacity:0;transition:opacity 2s;}
+  #gaze-line.show{opacity:1;}
+  /* 進場閉眼睜眼眼皮(夢框:一遍一遍回到當兵第一天) */
+  #eyelid{position:fixed;inset:0;z-index:11;pointer-events:none;}
+  #eyelid .lid{position:absolute;left:0;right:0;height:0;background:#000;transition:height var(--lid-dur,.5s) cubic-bezier(.5,0,.3,1);}
+  #eyelid .lid-t{top:0;} #eyelid .lid-b{bottom:0;}
+  #eyelid.shut .lid{height:52%;}
+  #dead{position:fixed;inset:0;z-index:7;display:none;align-items:center;justify-content:center;flex-direction:column;
+    background:rgba(8,6,10,.86);color:#f3d8c8;text-align:center;}
+  #dead.on{display:flex;}
+  #dead .b{font-size:40px;letter-spacing:.3em;font-weight:700;color:#ff8a6a;}
+  #dead .mend{font-size:clamp(17px,3vw,24px);letter-spacing:.08em;color:#f0ddcf;line-height:1.85;max-width:640px;padding:0 24px;font-weight:600;}
+  #dead .s{font-size:13px;letter-spacing:.15em;opacity:.5;margin-top:18px;}
+  #dead .restart{margin-top:26px;font-size:16px;letter-spacing:.2em;color:#fdf3e2;background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,220,170,.45);border-radius:40px;padding:13px 30px;cursor:pointer;pointer-events:auto;}
+  #dead .restart:hover{background:rgba(255,220,170,.18);}
+
+  /* ── 波次 ── */
+  #wave{position:fixed;top:22px;left:50%;transform:translateX(-50%);z-index:4;pointer-events:none;
+    font-family:"Noto Serif TC",serif;font-size:20px;letter-spacing:.22em;color:#ffce54;text-shadow:0 2px 12px rgba(0,0,0,.7);}
+  #score .n2{font-size:22px;font-weight:700;color:#cfe3ef;line-height:.9;margin-top:8px;}
+
+  /* ── 設定 ── */
+  #gear{position:fixed;top:18px;left:18px;z-index:6;cursor:pointer;font-size:20px;opacity:.55;
+    line-height:1;padding:6px;}
+  #gear:hover{opacity:.9;}
+  #settings{position:fixed;inset:0;z-index:8;display:none;align-items:center;justify-content:center;background:rgba(10,8,12,.82);}
+  #settings.on{display:flex;}
+  #settings .panel{background:rgba(28,22,30,.97);border:1px solid rgba(255,220,170,.25);border-radius:16px;
+    padding:26px 32px;width:min(440px,90vw);font-family:"Noto Serif TC",serif;}
+  #settings h2{font-size:22px;letter-spacing:.22em;margin-bottom:18px;color:#ffce54;}
+  #settings .row{display:flex;align-items:center;gap:14px;margin:13px 0;font-size:14px;}
+  #settings .row label{flex:0 0 96px;opacity:.85;}
+  #settings input[type=range]{flex:1;accent-color:#ffce54;}
+  #settings input[type=color]{width:42px;height:26px;border:none;background:none;cursor:pointer;}
+  #settings .close{margin-top:20px;text-align:center;font-size:15px;letter-spacing:.2em;color:#fdf3e2;
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,220,170,.35);border-radius:30px;padding:10px 24px;cursor:pointer;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="cross">
+  <i class="h l"></i><i class="h r"></i><i class="v t"></i><i class="v b"></i><i class="dot"></i>
+</div>
+
+<div id="scar"></div>
+<div id="dmg"></div>
+<div id="dead"><div class="mend" id="mend-line"></div><div class="s" id="dead-stats">撐到第 0 波</div><div class="restart" id="restart-btn">重新部署 ▸</div></div>
+<div id="scope"><div class="lens"></div><div class="v"></div><div class="h"></div><div class="dot"></div></div>
+<div id="hitmark">✕</div>
+<div id="wave">準備</div>
+<div id="narr"></div>
+<div id="hint"></div>
+<div id="gaze"><canvas id="gaze-cv"></canvas><div class="lb lb-t"></div><div class="lb lb-b"></div><div id="gaze-line"></div></div>
+<div id="eyelid"><div class="lid lid-t"></div><div class="lid lid-b"></div></div>
+<!-- score HUD 移除:反 CS 計分,通關判定不是變強(雋永藍圖 + Codex 核實的 Tier-0.2 殘留 bug)。kills 仍內部計數供波數結算/死亡字幕 -->
+
+<div id="gear" title="設定 (Esc)">⚙</div>
+<div id="settings"><div class="panel">
+  <h2>設定</h2>
+  <div class="row"><label>畫質</label><input type="range" id="set-quality" min="1" max="5" step="1"><span id="set-quality-val" style="flex:0 0 44px;text-align:right;opacity:.8;color:#ffce54;"></span></div>
+  <div class="row"><label>滑鼠靈敏度</label><input type="range" id="set-sens" min="0.4" max="2.5" step="0.05"></div>
+  <div class="row"><label>音量</label><input type="range" id="set-vol" min="0" max="1" step="0.05"></div>
+  <div class="row"><label>準星大小</label><input type="range" id="set-chsize" min="3" max="18" step="1"></div>
+  <div class="row"><label>準星間距</label><input type="range" id="set-chgap" min="0" max="14" step="1"></div>
+  <div class="row"><label>準星粗細</label><input type="range" id="set-chthick" min="1" max="6" step="1"></div>
+  <div class="row"><label>準星顏色</label><input type="color" id="set-chcolor"></div>
+  <div class="close" id="set-close">關閉 (Esc)</div>
+</div></div>
+
+<div id="hud">
+  <div id="hud-left" class="hud-box">
+    <div><div class="hud-lbl">HEALTH</div><div class="hud-num hp" id="hp">100</div></div>
+    <div><div class="hud-lbl">ARMOR</div><div class="hud-num ar" id="ar">100</div></div>
+  </div>
+  <div id="hud-right" class="hud-box">
+    <div style="text-align:right;margin-right:4px;">
+      <div class="hud-lbl" id="wpn" style="margin-bottom:6px;font-size:16px;opacity:.85;">鐵鎚</div>
+      <div class="hud-num am" id="am">∞</div>
+    </div>
+    <div class="sep"></div>
+    <div class="am-res am" id="amres"></div>
+  </div>
+</div>
+
+<div id="title"><div class="t">天堂路</div><div class="s">時間裡的兩個妳</div><div class="hook">每當我閉上眼睛，我就可以看見妳。</div></div>
+
+<div id="enter">
+  <div class="ring">點擊畫面進入軍營</div>
+  <div class="sub">WASD 快走 · 左鍵射擊 · 右鍵瞄準/開鏡 · Shift 蹲下 · Ctrl 慢步 · 空白跳躍 · 1~9 換武器 · R 換彈</div>
+</div>
+
+<script type="module" src="scene.js"></script>
+</body>
+</html>
