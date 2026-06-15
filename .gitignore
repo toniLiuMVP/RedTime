@@ -112,6 +112,7 @@ assets/sw-register.js
 /demos/695/tiantanglu-3d/*
 !/demos/695/tiantanglu-3d/index.html
 !/demos/695/tiantanglu-3d/scene.js
+!/demos/695/tiantanglu-3d/cold-open.js
 /demos/platform-run-OLD/
 /demos/platform-run-twin-OLD/
 /demos/platform-run-parallel-OLD/

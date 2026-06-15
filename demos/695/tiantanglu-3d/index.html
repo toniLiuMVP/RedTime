@@ -148,6 +148,7 @@
 <div id="settings"><div class="panel">
   <h2>設定</h2>
   <div class="row"><label>畫質</label><input type="range" id="set-quality" min="1" max="5" step="1"><span id="set-quality-val" style="flex:0 0 44px;text-align:right;opacity:.8;color:#ffce54;"></span></div>
+  <div class="row"><label>難度</label><input type="range" id="set-diff" min="1" max="5" step="1"><span id="set-diff-val" style="flex:0 0 58px;text-align:right;opacity:.8;color:#ffce54;"></span></div>
   <div class="row"><label>滑鼠靈敏度</label><input type="range" id="set-sens" min="0.4" max="2.5" step="0.05"></div>
   <div class="row"><label>音量</label><input type="range" id="set-vol" min="0" max="1" step="0.05"></div>
   <div class="row"><label>準星大小</label><input type="range" id="set-chsize" min="3" max="18" step="1"></div>
@@ -172,13 +173,14 @@
   </div>
 </div>
 
-<div id="title"><div class="t">天堂路</div><div class="s">時間裡的兩個妳</div><div class="hook">每當我閉上眼睛，我就可以看見妳。</div></div>
+<div id="title"><div class="t">天堂路</div><div class="s">時間裡的兩個妳</div></div>
 
 <div id="enter">
   <div class="ring">點擊畫面進入軍營</div>
   <div class="sub">WASD 快走 · 左鍵射擊 · 右鍵瞄準/開鏡 · Shift 蹲下 · Ctrl 慢步 · 空白跳躍 · 1~9 換武器 · R 換彈</div>
 </div>
 
+<script src="cold-open.js"></script>
 <script type="module" src="scene.js"></script>
 </body>
 </html>

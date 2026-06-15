@@ -494,6 +494,21 @@ const WEAPONS = [
   { name: "手榴彈", group: gGrenade, type: "throw", count: 3, rate: 0.85, moveMul: 1.0, base: gGrenade.position.clone(), rot: gGrenade.rotation.clone(), swingT: 0 },
   { name: "火箭砲", group: gRocket, type: "launcher", count: 4, rate: 1.2, adsFov: 62, moveMul: 0.7, base: gRocket.position.clone(), rot: gRocket.rotation.clone(), muzzle: rocketMuzzle, muzzleT: 0 },
 ];
+WEAPONS.forEach((w) => { if (w.reserve != null) w.baseReserve = w.reserve; if (w.count != null) w.baseCount = w.count; });   // 難度套彈藥倍率用的基準
+/* ── 5 段難度(toni:劇情/新手/正常/困難/天堂路) ── */
+const DIFF = {
+  1: { name: "劇情", hp: 3, ammo: 3, enemyMul: 1, smart: false },
+  2: { name: "新手", hp: 2, ammo: 2, enemyMul: 1, smart: false },
+  3: { name: "正常", hp: 1, ammo: 1, enemyMul: 1, smart: false },
+  4: { name: "困難", hp: 1, ammo: 1, enemyMul: 2, smart: false },
+  5: { name: "天堂路", hp: 1, ammo: 1, enemyMul: 2, smart: true },
+};
+function applyDifficulty() {   // 進實戰/重新部署時套:玩家 HP、彈藥、敵人倍率/AI(讀 curDiff)
+  curDiff = DIFF[settings.difficulty] || DIFF[3];
+  MAX_HP = Math.round(100 * curDiff.hp); playerHP = MAX_HP; if (hpEl) hpEl.textContent = MAX_HP;
+  WEAPONS.forEach((w) => { if (w.baseReserve != null) { w.ammo = w.mag; w.reserve = Math.round(w.baseReserve * curDiff.ammo); } if (w.baseCount != null) w.count = Math.round(w.baseCount * curDiff.ammo); });
+  updateHUD();
+}
 let wi = 0; // 預設鐵鎚(slot 1)
 function updateHUD() {
   const w = WEAPONS[wi]; const am = document.getElementById("am"), ar = document.getElementById("amres"), nm = document.getElementById("wpn");
@@ -520,7 +535,7 @@ function reload() {
 
 /* ══════════════ Web Audio 音效 ══════════════ */
 let actx = null, masterGain = null;
-const settings = { sens: 1, vol: 0.8, chSize: 8, chGap: 4, chThick: 2, chColor: "#7dff8a", quality: 3 };
+const settings = { sens: 1, vol: 0.8, chSize: 8, chGap: 4, chThick: 2, chColor: "#7dff8a", quality: 3, difficulty: 3 };
 try { Object.assign(settings, JSON.parse(localStorage.getItem("tiantanglu_settings_v1") || "{}")); } catch (e) { }
 (function sanitizeSettings() {   // 防 tampered localStorage:數值夾範圍 + chColor 必須 hex(擋 chColor → CSS 變數注入路徑)
   const num = (v, lo, hi, d) => { v = +v; return isFinite(v) ? Math.max(lo, Math.min(hi, v)) : d; };
@@ -528,6 +543,7 @@ try { Object.assign(settings, JSON.parse(localStorage.getItem("tiantanglu_settin
   settings.chSize = num(settings.chSize, 3, 18, 8); settings.chGap = num(settings.chGap, 0, 14, 4); settings.chThick = num(settings.chThick, 1, 6, 2);
   if (!/^#[0-9a-fA-F]{6}$/.test(settings.chColor)) settings.chColor = "#7dff8a";
   settings.quality = Math.max(1, Math.min(5, Math.round(+settings.quality) || 3));
+  settings.difficulty = Math.max(1, Math.min(5, Math.round(+settings.difficulty) || 3));
 })();
 function saveSettings() { try { localStorage.setItem("tiantanglu_settings_v1", JSON.stringify(settings)); } catch (e) { } }
 function applyCrosshair() { const r = document.documentElement.style; r.setProperty("--ch-size", settings.chSize + "px"); r.setProperty("--ch-gap", settings.chGap + "px"); r.setProperty("--ch-thick", settings.chThick + "px"); r.setProperty("--ch-color", /^#[0-9a-fA-F]{6}$/.test(settings.chColor) ? settings.chColor : "#7dff8a"); }   // 消費點也守 hex(belt-and-suspenders,擋 chColor → CSS url() 外洩)
@@ -613,6 +629,13 @@ bindSetting("set-chcolor", "chColor", true, applyCrosshair);
   if (!el) return; const upd = () => { if (val) val.textContent = QNAMES[settings.quality] || "中"; };
   el.value = settings.quality; upd();
   el.addEventListener("input", () => { settings.quality = Math.max(1, Math.min(5, Math.round(parseFloat(el.value)) || 3)); saveSettings(); applyQuality(settings.quality); upd(); });
+})();
+(function bindDifficulty() {   // 難度 5 段:存設定,下次進實戰生效(避免戰鬥中改 HP)
+  const DNAMES = { 1: "劇情", 2: "新手", 3: "正常", 4: "困難", 5: "天堂路" };
+  const el = document.getElementById("set-diff"), val = document.getElementById("set-diff-val");
+  if (!el) return; const upd = () => { if (val) val.textContent = DNAMES[settings.difficulty] || "正常"; };
+  el.value = settings.difficulty; upd();
+  el.addEventListener("input", () => { settings.difficulty = Math.max(1, Math.min(5, Math.round(parseFloat(el.value)) || 3)); saveSettings(); upd(); });
 })();
 const restartBtnEl = document.getElementById("restart-btn"); if (restartBtnEl) restartBtnEl.addEventListener("click", () => { restartGame(); if (canvas.requestPointerLock) canvas.requestPointerLock(); });
 
@@ -803,7 +826,7 @@ const COW_POS = new THREE.Vector3(-14, 0, 18);       // 顧牛互動點
 const JACKET_POS = new THREE.Vector3(12, 0, 16);     // 反穿外套互動點(#3 夢中違和)
 const waveEl = document.getElementById("wave"), scoreEl = document.getElementById("scoreval");
 function updateWaveHUD() { if (MODE !== "sim") { if (waveEl) waveEl.textContent = "軍營"; return; } if (waveEl) waveEl.textContent = inBreak ? (wave < 1 ? "準備" : "第 " + wave + " 波 · 清空") : "第 " + wave + " 波"; if (scoreEl) scoreEl.textContent = score; }
-function startWave() { wave++; inBreak = false; const n = Math.min(16, 3 + Math.round(wave * 1.7)); spawnQueue = n; waveAlive = n; spawnTimer = 0; updateWaveHUD(); }
+function startWave() { wave++; inBreak = false; const em = curDiff ? curDiff.enemyMul : 1; const n = Math.min(Math.round(16 * em), Math.round((3 + wave * 1.7) * em)); spawnQueue = n; waveAlive = n; spawnTimer = 0; updateWaveHUD(); }   // 困難/天堂路:每波敵人 ×2
 function updateWaves(dt) {
   if (gameOver || MODE !== "sim" || awaitDisarm) return;
   if (inBreak) { betweenT -= dt; if (betweenT <= 0) startWave(); return; }
@@ -854,14 +877,15 @@ function updateEnemies(dt) {
     g.rotation.x = u.flinch > 0 ? -0.14 * (u.flinch / 0.16) : 0; if (u.flinch > 0) u.flinch -= dt;
     if (u.coverT > 0) u.coverT -= dt;
     const sees = dist < 72 ? enemySeesPlayer(g, dist) : false;
+    const smart = !!(curDiff && curDiff.smart);   // 天堂路模式:團隊圍攻
     const fx = dx / dist, fz = dz / dist, rx = -fz, rz = fx; let mvx = 0, mvz = 0, sp = 2.0;
-    if ((u.coverT > 0 || u.hp < 40) && sees) { // 找最近掩體
+    if ((u.coverT > 0 || u.hp < 40) && sees && !smart) { // 找最近掩體(天堂路模式少躲,主動圍攻)
       let best = null, bd = 1e9; for (const c of COVER_PTS) { const d = c.distanceTo(g.position); if (d < bd) { bd = d; best = c; } }
       if (best && bd > 1.8) { const cdx = best.x - g.position.x, cdz = best.z - g.position.z, cl = Math.hypot(cdx, cdz) || 1; mvx = cdx / cl; mvz = cdz / cl; sp = 2.7; }
     } else if (!sees && dist > 6) { mvx = fx; mvz = fz; sp = 2.4; } // 看不到 → 推進找視線
-    else if (dist > 17) { mvx = fx; mvz = fz; } else if (dist < 9) { mvx = -fx; mvz = -fz; }
-    u.strafeT -= dt; if (u.strafeT <= 0) { u.strafe *= -1; u.strafeT = 1 + Math.random() * 1.6; }
-    if (sees && dist < 42) { mvx += rx * u.strafe * 0.8; mvz += rz * u.strafe * 0.8; }
+    else if (dist > (smart ? 12 : 17)) { mvx = fx; mvz = fz; } else if (dist < 9) { mvx = -fx; mvz = -fz; }
+    if (!smart) { u.strafeT -= dt; if (u.strafeT <= 0) { u.strafe *= -1; u.strafeT = 1 + Math.random() * 1.6; } }   // 天堂路:strafe 持續同向(各敵分左右包抄)
+    if (sees && dist < 42) { const sw = smart ? 1.3 : 0.8; mvx += rx * u.strafe * sw; mvz += rz * u.strafe * sw; }
     const ml = Math.hypot(mvx, mvz);
     if (ml > 0.01) {
       const s = (u.flinch > 0 ? 0.4 : sp) * dt;
@@ -887,7 +911,7 @@ function updateEnemies(dt) {
 /* ── 玩家生命 + 結算 ── */
 const hpEl = document.getElementById("hp"), dmgEl = document.getElementById("dmg"), deadEl = document.getElementById("dead"), deadStatsEl = document.getElementById("dead-stats");
 const scarEl = document.getElementById("scar"), narrEl = document.getElementById("narr"), mendEl = document.getElementById("mend-line"), hintEl = document.getElementById("hint");
-let playerHP = 100, dead = false, deaths = 0, bestWave = 0, scarFloor = 0, scarFlash = 0;
+let playerHP = 100, MAX_HP = 100, curDiff = null, dead = false, deaths = 0, bestWave = 0, scarFloor = 0, scarFlash = 0;
 /* ── toni 連接句留白(只有 toni 可改;Claude 一字不寫,僅留 placeholder 標位置;聲音=把拔夢中第一人稱) ── */
 const NARR = {
   // #1 進軍營(夢框建立)— toni 選 EP40 verbatim:首次鎖入軍營顯示一次,痛與迷惘的夢框底色
@@ -931,6 +955,7 @@ function enterSim() {
   blinking = true;
   blink(480, 320, 800, () => {
     MODE = "sim"; wave = 0; score = 0; kills = 0; waveAlive = 0; spawnQueue = 0; inBreak = true; betweenT = 1.2;
+    applyDifficulty();   // 套玩家 HP/彈藥 + 敵人倍率/AI(難度)
     if (scoreEl) scoreEl.textContent = 0; if (killsEl) killsEl.textContent = 0; if (hintEl) hintEl.style.opacity = "0";
     updateWaveHUD(); playMusic(MUSIC_SIM); showNarr(NARR.enter, 3.6); blinking = false;
   });
@@ -1034,7 +1059,7 @@ function restartGame() {
   for (const g of enemies) scene.remove(g); enemies.length = 0;
   wave = 0; score = 0; waveAlive = 0; spawnQueue = 0; inBreak = true; betweenT = 1.5; gameOver = false; dead = false; kills = 0;
   if (killsEl) killsEl.textContent = 0; updateWaveHUD();
-  playerHP = 100; if (hpEl) hpEl.textContent = 100; if (deadEl) deadEl.classList.remove("on"); if (dmgEl) dmgEl.style.opacity = "0";   // scarFloor/deaths/bestWave 刻意不重置(帶著傷前進)
+  applyDifficulty(); if (deadEl) deadEl.classList.remove("on"); if (dmgEl) dmgEl.style.opacity = "0";   // 重新部署套難度 HP/彈藥;scarFloor/deaths/bestWave 刻意不重置(帶著傷前進)
   camera.position.set(8, EYE, 13); yaw = -0.3; pitch = 0; sprayPitch = 0; sprayYaw = 0; recoilKick = 0;
   drawT = 0; reloadT = 0; reloadFilled = true; chSpread = 0;   // 重生清乾淨拔槍/換彈/擴散狀態(死在換彈途中重開不卡)
   playMusic(MUSIC_SIM);   // 重新部署=夢又把他帶回熔爐,主題樂回來
