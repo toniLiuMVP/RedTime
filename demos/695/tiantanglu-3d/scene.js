@@ -191,7 +191,18 @@ barracks(-30, -16, Math.PI / 2, false);
 (function flag() {
   add(new THREE.CylinderGeometry(0.18, 0.22, 15, 12), new THREE.MeshStandardMaterial({ color: 0xd8dde2, metalness: 0.7, roughness: 0.3, envMapIntensity: 1.3 }), 0, 7.5, -6);
   add(new THREE.SphereGeometry(0.36, 12, 8), new THREE.MeshStandardMaterial({ color: 0xe9b44b, metalness: 0.8, roughness: 0.25, envMapIntensity: 1.4 }), 0, 15.2, -6);
-  const fl = add(new THREE.BoxGeometry(5, 3.2, 0.12), mat(0xb83f2c, { roughness: 0.75, side: THREE.DoubleSide }), 2.7, 12.4, -6); fl.rotation.y = 0.05;
+  // 中華民國國旗(青天白日滿地紅):紅地 + 左上藍 canton + 12 道白光芒白日
+  const fcv = document.createElement("canvas"); fcv.width = 300; fcv.height = 200; const fctx = fcv.getContext("2d");
+  fctx.fillStyle = "#cf2331"; fctx.fillRect(0, 0, 300, 200);                     // 滿地紅
+  fctx.fillStyle = "#003da5"; fctx.fillRect(0, 0, 150, 100);                     // 藍 canton(左上 1/4)
+  const sx = 75, sy = 50;                                                        // 青天白日中心
+  fctx.fillStyle = "#fff";
+  for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; fctx.beginPath(); fctx.moveTo(sx + Math.cos(a) * 40, sy + Math.sin(a) * 40); fctx.lineTo(sx + Math.cos(a + 0.135) * 18, sy + Math.sin(a + 0.135) * 18); fctx.lineTo(sx + Math.cos(a - 0.135) * 18, sy + Math.sin(a - 0.135) * 18); fctx.closePath(); fctx.fill(); }   // 12 道白光芒
+  fctx.beginPath(); fctx.arc(sx, sy, 21, 0, 7); fctx.fillStyle = "#fff"; fctx.fill();      // 白日外輪
+  fctx.beginPath(); fctx.arc(sx, sy, 18, 0, 7); fctx.fillStyle = "#003da5"; fctx.fill();   // 藍環
+  fctx.beginPath(); fctx.arc(sx, sy, 15, 0, 7); fctx.fillStyle = "#fff"; fctx.fill();      // 白日內
+  const flagTex = new THREE.CanvasTexture(fcv); flagTex.colorSpace = THREE.SRGBColorSpace;
+  const fl = add(new THREE.BoxGeometry(5, 3.2, 0.12), new THREE.MeshStandardMaterial({ map: flagTex, roughness: 0.78, side: THREE.DoubleSide, envMapIntensity: 0.55 }), 2.7, 12.4, -6); fl.rotation.y = 0.05;
 })();
 
 /* ───────── 哨所(高崗哨) ───────── */
