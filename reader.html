@@ -1343,6 +1343,12 @@
           --top-offset: 72px;
           --page-bottom-space: 230px;
         }
+        /* 手機:頁尾(社群連結/回到首頁/版權)需讓出底部固定工具列(fab-bar 約佔底部 250px)的高度,
+           否則捲到最底時最後一段內容會被工具列蓋住看不到。
+           !important 是必要的:基礎 #site-footer 的 padding 簡寫在原始碼後段,會蓋掉這裡的 padding-bottom 長寫 */
+        #site-footer {
+          padding-bottom: calc(300px + env(safe-area-inset-bottom, 0px)) !important;
+        }
         #info-panel {
           position: fixed;
           bottom: 0;
@@ -5808,9 +5814,6 @@
               >
               <span class="resume-progress" id="resume-progress"></span>
             </button>
-            <a class="hero-scene-link" href="lm402.html"
-              >↗ &nbsp; 走進 LM402 那一秒</a
-            >
           </div>
 
         </div>
