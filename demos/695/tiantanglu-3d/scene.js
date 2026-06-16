@@ -590,10 +590,10 @@ const WEAPONS = [
   { name: "鐵鎚", group: gHammer, type: "melee", melee: "swing", swingDur: 0.42, reach: 2.0, rate: 0.55, moveMul: 0.9, base: gHammer.position.clone(), rot: gHammer.rotation.clone(), swingT: 0 },
   { name: "刺槍", group: gBayonet, type: "melee", melee: "stab", swingDur: 0.3, reach: 2.7, rate: 0.45, moveMul: 0.92, base: gBayonet.position.clone(), rot: gBayonet.rotation.clone(), swingT: 0 },
   { name: "小刀", group: gKnife, type: "melee", melee: "swing", swingDur: 0.26, reach: 1.8, rate: 0.32, moveMul: 1.15, base: gKnife.position.clone(), rot: gKnife.rotation.clone(), swingT: 0 },
-  { name: "小槍", group: gPistol, type: "semi", mag: 12, ammo: 12, reserve: 48, rate: 0.17, adsFov: 70, moveMul: 1.05, base: gPistol.position.clone(), rot: gPistol.rotation.clone(), muzzle: pistolMuzzle, muzzleT: 0 },
-  { name: "步槍", group: gRifle, type: "auto", mag: 30, ammo: 30, reserve: 90, rate: 0.1, adsFov: 66, moveMul: 0.95, base: gRifle.position.clone(), rot: gRifle.rotation.clone(), muzzle: rifleMuzzle, muzzleT: 0 },
-  { name: "機關槍", group: gMG, type: "auto", mag: 100, ammo: 100, reserve: 200, rate: 0.08, adsFov: 72, recoilMul: 1.7, moveMul: 0.82, base: gMG.position.clone(), rot: gMG.rotation.clone(), muzzle: mgMuzzle, muzzleT: 0 },
-  { name: "狙擊槍", group: gSniper, type: "semi", mag: 5, ammo: 5, reserve: 30, rate: 0.9, adsFov: 22, scope: true, recoilMul: 2.0, moveMul: 0.9, base: gSniper.position.clone(), rot: gSniper.rotation.clone(), muzzle: sniperMuzzle, muzzleT: 0 },
+  { name: "小槍", group: gPistol, type: "semi", mag: 12, ammo: 12, reserve: 48, rate: 0.17, adsFov: 70, moveMul: 1.05, base: gPistol.position.clone(), rot: gPistol.rotation.clone(), muzzle: pistolMuzzle, muzzleT: 0, tracerEvery: 0 },
+  { name: "步槍", group: gRifle, type: "auto", mag: 30, ammo: 30, reserve: 90, rate: 0.1, adsFov: 66, moveMul: 0.95, base: gRifle.position.clone(), rot: gRifle.rotation.clone(), muzzle: rifleMuzzle, muzzleT: 0, tracerEvery: 4, tracerColor: 0xffe09a, tracerOp: 0.7 },
+  { name: "機關槍", group: gMG, type: "auto", mag: 100, ammo: 100, reserve: 200, rate: 0.08, adsFov: 72, recoilMul: 1.7, moveMul: 0.82, base: gMG.position.clone(), rot: gMG.rotation.clone(), muzzle: mgMuzzle, muzzleT: 0, tracerEvery: 3, tracerColor: 0xffe6b0, tracerOp: 0.85 },
+  { name: "狙擊槍", group: gSniper, type: "semi", mag: 5, ammo: 5, reserve: 30, rate: 0.9, adsFov: 22, scope: true, recoilMul: 2.0, moveMul: 0.9, base: gSniper.position.clone(), rot: gSniper.rotation.clone(), muzzle: sniperMuzzle, muzzleT: 0, tracerEvery: 1, tracerColor: 0xffb060, tracerOp: 0.95 },
   { name: "手榴彈", group: gGrenade, type: "throw", count: 3, rate: 0.85, moveMul: 1.0, base: gGrenade.position.clone(), rot: gGrenade.rotation.clone(), swingT: 0 },
   { name: "火箭砲", group: gRocket, type: "launcher", count: 4, rate: 1.2, adsFov: 62, moveMul: 0.7, base: gRocket.position.clone(), rot: gRocket.rotation.clone(), muzzle: rocketMuzzle, muzzleT: 0 },
 ];
@@ -634,7 +634,25 @@ function reload() {
   if (w.type !== "semi" && w.type !== "auto") return;
   if (w.ammo >= w.mag || w.reserve <= 0 || reloadT > 0 || drawT > 0) return;
   reloadDur = reloadT = w.name === "機關槍" ? 3.5 : w.name === "狙擊槍" ? 3.0 : w.name === "小槍" ? 2.0 : 2.4; // 換彈動畫時長(數值在 60% 補滿)
-  reloadFilled = false; sfxReload();
+  reloadFilled = false; sfxReload(w.name, reloadDur);
+}
+function reloadCurve(name, rp) {   // 回 [dipY, rotX, rotZ];每把槍換彈動作不同
+  if (name === "機關槍") {   // 掀鏈蓋(往上)→鋪彈鏈(緩起伏)→拍合
+    if (rp < 0.2) { const e = rp / 0.2; return [-0.06 * e, 0.55 * e, 0.08 * e]; }
+    if (rp < 0.65) { const e = (rp - 0.2) / 0.45; return [-0.16 - Math.sin(e * Math.PI * 3) * 0.05, 0.55 - e * 0.1, 0.08]; }
+    if (rp < 0.85) { const e = (rp - 0.65) / 0.2; return [-0.16 + e * 0.1, 0.45 - e * 0.6, 0.08 - e * 0.08]; }
+    const e = (rp - 0.85) / 0.15, s = e * (2 - e); return [-0.06 * (1 - s), -0.15 * (1 - s), 0];
+  }
+  if (name === "狙擊槍") {   // 大傾斜 + 5 段鋸齒逐發 → 推栓回正
+    if (rp < 0.8) { const k = (rp / 0.16) % 1, press = Math.sin(k * Math.PI); return [-0.2 - press * 0.05, 0.45 + press * 0.13, 0.2]; }
+    const e = (rp - 0.8) / 0.2, s = e * (2 - e); return [-0.2 * (1 - s), 0.45 * (1 - s), 0.2 * (1 - s)];
+  }
+  const rack = name === "步槍";   // 小槍/步槍:下壓退匣→插匣→(步槍)拉槍栓→回正
+  if (rp < 0.28) { const e = rp / 0.28; return [-0.22 * e, 0.08 * e, 0.55 * e]; }
+  if (rp < 0.5) return [-0.22, 0.08, 0.55];
+  if (rp < 0.6) { const e = (rp - 0.5) / 0.1; return [-0.22 + e * 0.04, 0.08, 0.55 - e * 0.42]; }
+  if (rack && rp < 0.82) { const e = (rp - 0.6) / 0.22, j = Math.sin(e * Math.PI); return [-0.18, 0.08 + j * 0.55, 0.13]; }
+  const start = rack ? 0.82 : 0.6, e = (rp - start) / (1 - start), s = e * (2 - e); return [-0.18 * (1 - s), 0.08 * (1 - s), 0.13 * (1 - s)];
 }
 
 /* ══════════════ Web Audio 音效 ══════════════ */
@@ -678,11 +696,19 @@ function sfxShot(type) { if (!actx) return; noiseHit(0.16, type === "auto" ? 280
 function sfxStep(crouch) { if (!actx) return; noiseHit(0.07, crouch ? 460 : 820, crouch ? 200 : 320, crouch ? 0.1 : 0.18); }
 function sfxSwoosh() { if (!actx) return; noiseHit(0.22, 300, 1600, 0.22, "bandpass"); }
 function sfxExplode(pos) { if (!actx) return; const o = pos ? panner(pos) : null; noiseHit(0.7, 1200, 60, 0.85, "lowpass", o); tone(120, 28, 0.6, 0.7, "sine", o); tone(60, 20, 0.9, 0.5, "sine", o); }
-function sfxReload() { if (!actx) return; setTimeout(() => noiseHit(0.05, 1400, 700, 0.2), 0); setTimeout(() => noiseHit(0.05, 1000, 500, 0.2), 140); setTimeout(() => noiseHit(0.06, 1800, 900, 0.25), 300); }
+function sfxReload(name, dur) {
+  if (!actx) return; const D = (dur || 2.4) * 1000, at = (frac, fn) => setTimeout(fn, frac * D);
+  const magOut = () => noiseHit(0.06, 1300, 600, 0.2), magIn = () => { noiseHit(0.05, 900, 420, 0.24); tone(150, 90, 0.05, 0.14, "square"); };
+  if (name === "機關槍") { at(0.08, () => noiseHit(0.1, 700, 260, 0.26)); for (let i = 0; i < 6; i++) at(0.25 + i * 0.06, () => noiseHit(0.03, 1600, 900, 0.12)); at(0.8, () => { noiseHit(0.09, 600, 220, 0.26); tone(120, 70, 0.06, 0.16, "square"); }); }   // 掀蓋→鋪彈鏈→拍合
+  else if (name === "狙擊槍") { for (let i = 0; i < 5; i++) at(0.12 + i * 0.13, () => { noiseHit(0.04, 1500, 800, 0.18); tone(200, 120, 0.04, 0.12, "square"); }); at(0.85, () => { noiseHit(0.06, 1100, 500, 0.22); tone(160, 90, 0.05, 0.15, "square"); }); }   // 逐發壓彈→推栓
+  else if (name === "步槍") { at(0.1, magOut); at(0.5, magIn); at(0.66, () => { noiseHit(0.04, 2000, 1100, 0.22); setTimeout(() => noiseHit(0.04, 1300, 700, 0.2), 90); }); }   // 退匣→插匣→拉槍栓雙段
+  else { at(0.08, magOut); at(0.5, magIn); at(0.82, () => noiseHit(0.04, 2100, 1200, 0.2)); }   // 小槍:退匣→插匣→滑套釋放
+}
 function sfxJump() { if (!actx) return; noiseHit(0.06, 700, 400, 0.12); }
 function sfxLand() { if (!actx) return; noiseHit(0.1, 500, 150, 0.28); tone(90, 50, 0.08, 0.2); }
 function sfxSwitch() { if (!actx) return; noiseHit(0.05, 1600, 900, 0.18); }
 function sfxDry() { if (!actx) return; noiseHit(0.04, 2200, 1400, 0.12); }
+function sfxBoltCatch() { if (!actx) return; noiseHit(0.03, 2400, 1400, 0.16, "bandpass"); tone(180, 110, 0.05, 0.13, "square"); }   // 空倉槍機後定
 function sfxPing() { if (!actx) return; tone(2400, 1400, 0.12, 0.18, "triangle"); }
 function sfxImpact() { if (!actx) return; noiseHit(0.08, 1400, 500, 0.2); }
 function sfxThud() { if (!actx) return; noiseHit(0.12, 600, 180, 0.32); tone(120, 60, 0.1, 0.22); }
@@ -941,8 +967,9 @@ function fire() {
   if (w.type === "melee") { if (w.swingT <= 0) { w.swingT = w.swingDur || 0.3; (w.name === "鐵鎚" ? sfxThud : w.name === "小刀" ? sfxKnife : sfxSwoosh)(); meleeHit(w); } return; }
   if (w.type === "throw") { if (w.swingT <= 0) { w.swingT = 0.45; throwGrenade(w); } return; }
   if (w.type === "launcher") { if (realT - lastShot < w.rate) return; lastShot = realT; fireRocket(w); return; }
-  if (w.ammo <= 0) { sfxDry(); return; }
-  w.ammo--; updateHUD(); chSpread = Math.min(30, chSpread + (w.type === "auto" ? 5 : 9)); recoilKick = Math.min(0.22, recoilKick + (w.type === "auto" ? 0.02 : 0.05) * (w.recoilMul || 1));
+  if (w.ammo <= 0) { sfxBoltCatch(); return; }   // 空槍扣扳機:槍機已後定的金屬扣響(非近戰乾擊)
+  w.ammo--; updateHUD(); if (w.ammo === 0) setTimeout(sfxBoltCatch, 70);   // 打掉最後一發:槍機後定
+  chSpread = Math.min(30, chSpread + (w.type === "auto" ? 5 : 9)); recoilKick = Math.min(0.22, recoilKick + (w.type === "auto" ? 0.02 : 0.05) * (w.recoilMul || 1));
   const spr = WSPRAY[w.name] || 0; sprayPitch = Math.min(0.17, sprayPitch + spr); sprayYaw += Math.sin(sprayCount * 0.8) * spr * 0.6;
   sprayCount++; sprayResetT = 0.35; w.muzzleT = 0.05; sfxShot(w.type); if (w.scope) sfxBolt();
   flashMuzzleLight(w); addKick(w.name);
@@ -954,7 +981,7 @@ function shootHit(w) {
   let s = spreadOf(w); if (ads) s *= 0.45;
   tmpD.x += (Math.random() - 0.5) * s; tmpD.y += (Math.random() - 0.5) * s; tmpD.z += (Math.random() - 0.5) * s; tmpD.normalize();
   ray.set(tmpO, tmpD); ray.far = 300; const h = ray.intersectObject(ROOT, true);
-  if (w.muzzle) { w.muzzle.getWorldPosition(tmpO2); const ex = h.length ? h[0].point.x : tmpO.x + tmpD.x * 140, ey = h.length ? h[0].point.y : tmpO.y + tmpD.y * 140, ez = h.length ? h[0].point.z : tmpO.z + tmpD.z * 140; tracer(tmpO2.x, tmpO2.y, tmpO2.z, ex, ey, ez); }   // CS 級曳光彈
+  if (w.muzzle && w.tracerEvery) { w.muzzle.getWorldPosition(tmpO2); const ex = h.length ? h[0].point.x : tmpO.x + tmpD.x * 140, ey = h.length ? h[0].point.y : tmpO.y + tmpD.y * 140, ez = h.length ? h[0].point.z : tmpO.z + tmpD.z * 140; w._shotN = (w._shotN || 0) + 1; const td = Math.hypot(ex - tmpO2.x, ey - tmpO2.y, ez - tmpO2.z); if (w._shotN % w.tracerEvery === 0 && td > 8) tracer(tmpO2.x, tmpO2.y, tmpO2.z, ex, ey, ez, w.tracerColor, w.tracerOp); }   // 曳光彈:每把槍頻率/顏色不同,貼臉(<8m)不畫,小槍不發
   if (!h.length) return;
   const o = findHit(h[0].object);
   if (o && o.userData.kind === "barrel") { if (o.userData.boom) { const p = o.position.clone(); killBarrel(o); explode(p, 0, false); } else impact(h[0].point, "metal"); }
@@ -1149,7 +1176,9 @@ function hitmark(tier) {   // 只剩靶場練習 target 用(去爽:敵人不給�
   hitmarkEl.style.fontSize = tier === "hit" ? "22px" : "30px";
   hitmarkEl.style.opacity = "1"; clearTimeout(hitmarkEl._t); hitmarkEl._t = setTimeout(() => (hitmarkEl.style.opacity = "0"), tier === "hit" ? 90 : 150);
 }
-function flashMuzzleLight(w) { if (!w.muzzle) return; w.muzzle.getWorldPosition(tmpO); muzzleLight.position.copy(tmpO); muzzleLight.intensity = 14; }   // CS 級槍口火光加強
+const MUZBASE = { "小槍": 8, "步槍": 12, "機關槍": 14, "狙擊槍": 22, "火箭砲": 30 };
+const _muz0 = new THREE.Color(0xffd9a0), _muz1 = new THREE.Color(0xffb060);
+function flashMuzzleLight(w) { if (!w.muzzle) return; w.muzzle.getWorldPosition(tmpO); muzzleLight.position.copy(tmpO); muzzleLight.intensity = (MUZBASE[w.name] || 12) * (0.8 + Math.random() * 0.5); muzzleLight.color.lerpColors(_muz0, _muz1, Math.random()); }   // 槍口火光:每把基準不同 + 強度/色抖動(連射忽明忽暗)
 function updateTargets(dt) { for (const g of targets) { const u = g.userData; if (u.down) { u.downT += dt; if (u.downT < 4) g.rotation.x = Math.max(-1.45, g.rotation.x - dt * 6); else { g.rotation.x = Math.min(0, g.rotation.x + dt * 3); if (g.rotation.x >= -0.001) { g.rotation.x = 0; u.down = false; u.downT = 0; } } } } }
 
 /* ── 敵兵 AI(接近 / 開火 / 中彈流血 / 陣亡復活) ── */
@@ -1172,10 +1201,10 @@ function memoryShatter(pos) {   // 擊倒→記憶光點上升消散(碎成她�
 function updateMemShards(dt) { for (const sh of memShards) { if (!sh.on) continue; sh.t += dt; const k = sh.t / sh.life; if (k >= 1) { sh.on = false; sh.s.visible = false; continue; } sh.s.position.x += sh.vx * dt; sh.s.position.y += sh.vy * dt; sh.s.position.z += sh.vz * dt; sh.vy -= 0.45 * dt; sh.s.material.opacity = 0.95 * (1 - k * k); sh.s.scale.setScalar(0.16 + k * 0.22); } }
 /* ── CS 級曳光彈(扎實射擊手感,只在遠程開火) ── */
 const tracers = [];
-for (let i = 0; i < 10; i++) { const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]); const m = new THREE.LineBasicMaterial({ color: 0xffe09a, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }); const ln = new THREE.Line(geo, m); ln.visible = false; ln.frustumCulled = false; scene.add(ln); tracers.push({ ln, t: 0, on: false }); }
+for (let i = 0; i < 16; i++) { const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]); const m = new THREE.LineBasicMaterial({ color: 0xffe09a, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }); const ln = new THREE.Line(geo, m); ln.visible = false; ln.frustumCulled = false; scene.add(ln); tracers.push({ ln, t: 0, on: false, op: 0.8 }); }
 let trI = 0;
-function tracer(fx, fy, fz, tx, ty, tz) { const tr = tracers[trI = (trI + 1) % tracers.length]; const p = tr.ln.geometry.attributes.position; p.setXYZ(0, fx, fy, fz); p.setXYZ(1, tx, ty, tz); p.needsUpdate = true; tr.ln.material.opacity = 0.8; tr.ln.visible = true; tr.on = true; tr.t = 0; }
-function updateTracers(dt) { for (const tr of tracers) { if (!tr.on) continue; tr.t += dt; if (tr.t > 0.055) { tr.on = false; tr.ln.visible = false; continue; } tr.ln.material.opacity = 0.8 * (1 - tr.t / 0.055); } }
+function tracer(fx, fy, fz, tx, ty, tz, color, opacity) { const tr = tracers[trI = (trI + 1) % tracers.length]; const p = tr.ln.geometry.attributes.position; p.setXYZ(0, fx, fy, fz); p.setXYZ(1, tx, ty, tz); p.needsUpdate = true; if (color != null) tr.ln.material.color.setHex(color); tr.op = opacity != null ? opacity : 0.8; tr.ln.material.opacity = tr.op; tr.ln.visible = true; tr.on = true; tr.t = 0; }
+function updateTracers(dt) { for (const tr of tracers) { if (!tr.on) continue; tr.t += dt; if (tr.t > 0.055) { tr.on = false; tr.ln.visible = false; continue; } tr.ln.material.opacity = tr.op * (1 - tr.t / 0.055); } }
 const eBody = new THREE.MeshStandardMaterial({ color: 0x55502f, roughness: 0.85, envMapIntensity: 0.7 });
 const eGear = new THREE.MeshStandardMaterial({ color: 0x35351f, roughness: 0.82 });
 const eSkin = new THREE.MeshStandardMaterial({ color: 0xb98c63, roughness: 0.72 });
@@ -1256,7 +1285,11 @@ function enemyShoot(g, dist) {
   const dir = new THREE.Vector3(Math.sin(g.rotation.y), 0, Math.cos(g.rotation.y));
   const mp = g.position.clone().setY(1.25).addScaledVector(dir, 0.6);
   emitFx(sparkPool, mp, 0.1, 0.28, 0.3, true); sfxEnemyShot(mp);
-  const hitChance = Math.max(0.08, 0.46 - dist * 0.009); if (Math.random() < hitChance) hurtPlayer(6 + Math.random() * 8);
+  const hitChance = Math.max(0.08, 0.46 - dist * 0.009); const hit = Math.random() < hitChance;
+  camera.getWorldPosition(tmpO2);   // 朝玩家飛來的曳光:命中=直指頭胸,未命中=擦身偏移(冷橘區隔敵我,讓「子彈朝你飛來」可見)
+  const ox = hit ? 0 : (Math.random() - 0.5) * 1.3, oy = hit ? 0.05 : (Math.random() - 0.5) * 1.0, oz = hit ? 0 : (Math.random() - 0.5) * 1.3;
+  tracer(mp.x, mp.y, mp.z, tmpO2.x + ox, tmpO2.y - 0.15 + oy, tmpO2.z + oz, 0xff7040, 0.7);
+  if (hit) hurtPlayer(6 + Math.random() * 8);
 }
 function enemyGrenade(g) {
   camera.getWorldPosition(tmpO2); const from = g.position.clone().setY(1.2);
@@ -1546,7 +1579,7 @@ function clampBound(p) { const ex = p.x, ez = p.z + 20, er = Math.hypot(ex, ez);
 function resolveCollision() { resolveCollisionFor(camera.position, PLAYER_R); }
 const scopeEl = document.getElementById("scope"), crossEl = document.getElementById("cross");
 let bob = 0, recoilKick = 0, vy = 0, jumpY = 0, curEye = EYE, sprayResetT = 0, lastFootstep = 0, wasGrounded = true, adsBlend = 0;
-let vmKick = 0, vmKickRot = 0;   // 武器在手中的後座頓挫(每發瞬間衝擊 → 快速回彈,與鏡頭爬升 recoilKick 分開)
+let vmKick = 0, vmKickRot = 0, landDip = 0, prevAdsState = false;   // 武器在手中的後座頓挫(每發瞬間衝擊 → 快速回彈,與鏡頭爬升 recoilKick 分開);landDip=落地下沉;prevAdsState=開鏡狀態偵測
 // 每把武器的頓挫量[往後位移衝擊, 槍口上揚衝擊];數值小但快,給「槍在手上一頓」的視覺
 const WKICK = { "小槍": [0.05, 0.18], "步槍": [0.055, 0.2], "機關槍": [0.036, 0.13], "狙擊槍": [0.12, 0.45], "火箭砲": [0.17, 0.55] };
 function addKick(name) { const k = WKICK[name]; if (!k) return; vmKick = Math.min(0.2, vmKick + k[0]); vmKickRot = Math.min(0.62, vmKickRot + k[1]); }
@@ -1581,16 +1614,17 @@ function updateFP(dt) {
   }
   // 跳躍重力
   if (!dead && keys.Space && grounded) { vy = JUMPV; grounded = false; sfxJump(); }
-  if (!grounded) { vy -= GRAV * dt; jumpY += vy * dt; if (jumpY <= 0) { jumpY = 0; vy = 0; grounded = true; if (!wasGrounded) sfxLand(); } }
+  if (!grounded) { vy -= GRAV * dt; jumpY += vy * dt; if (jumpY <= 0) { jumpY = 0; const vimp = vy; vy = 0; grounded = true; if (!wasGrounded) { sfxLand(); landDip = Math.min(0.2, -vimp * 0.022); vmKickRot = Math.min(0.62, vmKickRot + landDip * 0.5); if (vimp < -7) shake = Math.max(shake, 0.25); } } }   // 落地:依落地速度下沉+槍口點一下,重摔加震
   wasGrounded = grounded;
   // 蹲下視高
   const targetEye = crouch ? CROUCH_EYE : STAND; curEye += (targetEye - curEye) * Math.min(1, dt * 12);
-  camera.position.y = curEye + jumpY;
+  camera.position.y = curEye + jumpY - landDip;
   // 腳步聲(快走/蹲走有聲,Ctrl 靜步無聲)
   if (moving && grounded && !silent) { lastFootstep -= dt; if (lastFootstep <= 0) { sfxStep(crouch); lastFootstep = crouch ? 0.5 : 0.36; } } else lastFootstep = 0;
   // 後座衰減 + spray reset
   if (recoilKick > 0) recoilKick = Math.max(0, recoilKick - dt * 0.5);
   vmKick += (0 - vmKick) * Math.min(1, dt * 17); vmKickRot += (0 - vmKickRot) * Math.min(1, dt * 15);   // 頓挫快速回彈(snappy)
+  if (landDip > 0) landDip += (0 - landDip) * Math.min(1, dt * 12);   // 落地下沉 spring 回彈
   if (drawT > 0) drawT = Math.max(0, drawT - dt);
   if (reloadT > 0) { reloadT = Math.max(0, reloadT - dt); if (!reloadFilled && 1 - reloadT / reloadDur >= 0.6) { const rw = WEAPONS[wi]; const t = Math.min(rw.mag - rw.ammo, rw.reserve); rw.ammo += t; rw.reserve -= t; reloadFilled = true; updateHUD(); } }
   chSpread = Math.max(0, chSpread - dt * 26);
@@ -1610,11 +1644,12 @@ function updateFP(dt) {
   if (cowTail) cowTail.rotation.z = 0.4 + Math.sin(realT * 2.1) * 0.26;   // 顧牛 idle:尾巴搖
   if (cowHead) { cowHead.rotation.z = Math.sin(realT * 0.7) * 0.1; cowHead.position.y = 0.52 - Math.max(0, Math.sin(realT * 0.7)) * 0.08; }   // 低頭吃草微動(頭 base y=0.52)
   if (realT - lastShot > 0.12) { sprayPitch += (0 - sprayPitch) * Math.min(1, dt * 6); sprayYaw += (0 - sprayYaw) * Math.min(1, dt * 6); }
-  if (muzzleLight.intensity > 0) muzzleLight.intensity = Math.max(0, muzzleLight.intensity - dt * 70);
+  if (muzzleLight.intensity > 0) muzzleLight.intensity = Math.max(0, muzzleLight.intensity - dt * (60 + Math.random() * 30));
   if ((sprayResetT -= dt) <= 0) sprayCount = 0;
   // ADS 縮放 + 狙擊鏡
   const scoped = ads && !!w.scope;
-  adsBlend += ((ads ? 1 : 0) - adsBlend) * Math.min(1, dt * 14);
+  if (actx && ads !== prevAdsState) { if (ads) { noiseHit(0.03, 1500, 900, 0.1); if (WEAPONS[wi].scope) tone(2200, 2200, 0.02, 0.06, "triangle"); } else noiseHit(0.025, 1100, 700, 0.07); prevAdsState = ads; }   // 開/出鏡就位咔聲(狙擊額外玻璃 tick),端槍瞄準的儀式感
+  adsBlend += ((ads ? 1 : 0) - adsBlend) * Math.min(1, dt * 18);
   const tgFov = (ads && w.adsFov) ? w.adsFov : 80; camera.fov += (tgFov - camera.fov) * Math.min(1, dt * 12); camera.updateProjectionMatrix();
   if (scopeEl) scopeEl.classList.toggle("on", scoped);
   if (crossEl) crossEl.style.display = scoped ? "none" : "block";
@@ -1623,7 +1658,7 @@ function updateFP(dt) {
   // 自動射擊(步槍/機槍按住)
   if (!dead && mouseDown && w.type === "auto" && isActive() && realT - lastShot >= w.rate) { lastShot = realT; fire(); }
   // 槍口焰
-  for (const k of WEAPONS) if (k.muzzle) { if (k.muzzleT > 0) { k.muzzleT -= dt; k.muzzle.material.opacity = Math.max(0, k.muzzleT / 0.06) * 0.9; k.muzzle.scale.setScalar(1 + (1 - k.muzzleT / 0.06) * 0.7); } else k.muzzle.material.opacity = 0; }
+  for (const k of WEAPONS) if (k.muzzle) { if (k.muzzleT > 0) { k.muzzleT -= dt; const aSup = k === w ? adsBlend : 0; k.muzzle.material.opacity = Math.max(0, k.muzzleT / 0.06) * 0.9 * (1 - aSup * 0.55); k.muzzle.scale.setScalar((1 + (1 - k.muzzleT / 0.06) * 0.7) * (1 - aSup * 0.6)); } else k.muzzle.material.opacity = 0; }   // 開鏡抑制火光,不糊住瞄準
   // 武器姿態(bob + 後座 + 揮舞/投擲 + ADS 置中)
   bob += dt * (moving ? (crouch ? 7 : 11) : 1.6);
   const bobAmp = (moving ? (crouch ? 0.008 : 0.014) : 0.003) * (1 - adsBlend * 0.7);
@@ -1654,9 +1689,9 @@ function updateFP(dt) {
   // 拔槍/換彈位移:拔槍由低處 ease-out 升起;換彈正弦下沉+傾斜
   let drawDipY = 0, drawDipZ = 0, drawRotX = 0, rlDipY = 0, rlRotX = 0, rlRotZ = 0;
   if (drawT > 0) { const dp = 1 - drawT / drawDur, e = 1 - (1 - dp) * (1 - dp); drawDipY = -(1 - e) * 0.4; drawDipZ = (1 - e) * 0.12; drawRotX = (1 - e) * 1.0; }
-  if (reloadT > 0) { const rp = 1 - reloadT / reloadDur, dip = Math.sin(rp * Math.PI); rlDipY = -dip * 0.22; rlRotX = dip * 0.7; rlRotZ = dip * 0.5; }
+  if (reloadT > 0) { const rp = 1 - reloadT / reloadDur, rc = reloadCurve(WEAPONS[wi].name, rp); rlDipY = rc[0]; rlRotX = rc[1]; rlRotZ = rc[2]; }
   const ax = w.base.x * (1 - adsBlend * 0.7) + swayX, ay = w.base.y + adsBlend * 0.03 + swayY;
-  w.group.position.set(ax + Math.sin(bob) * bobAmp + swPx, ay + Math.abs(Math.cos(bob)) * bobAmp - recoilKick * 0.5 + vmKick * 0.16 + drawDipY + rlDipY + swPy, w.base.z + recoilKick * 1.2 + vmKick + swPz + drawDipZ);
+  w.group.position.set(ax + Math.sin(bob) * bobAmp + swPx, ay + Math.abs(Math.cos(bob)) * bobAmp - recoilKick * 0.5 + vmKick * 0.16 - landDip * 0.5 + drawDipY + rlDipY + swPy, w.base.z + recoilKick * 1.2 + vmKick + swPz + drawDipZ);
   w.group.rotation.set(w.rot.x + swRx - swayY * 2 + vmKickRot + drawRotX + rlRotX, w.rot.y + swRy + swayX * 2, w.rot.z + swRz + rlRotZ);
   w.group.visible = !scoped;
   updateProjectiles(dt); updateTargets(dt); updateEnemies(dt); updateEffects(dt);
