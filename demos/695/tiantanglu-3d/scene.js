@@ -1144,29 +1144,42 @@ const eGear = new THREE.MeshStandardMaterial({ color: 0x35351f, roughness: 0.82 
 const eSkin = new THREE.MeshStandardMaterial({ color: 0xb98c63, roughness: 0.72 });
 const WDMG = { 鐵鎚: 75, 刺槍: 60, 小刀: 58, 小槍: 34, 步槍: 36, 機關槍: 32, 狙擊槍: 120 };
 const eBoot = new THREE.MeshStandardMaterial({ color: 0x1c1a16, roughness: 0.7 });
+// 夢中天堂路的對手:三兵種(標準步兵 / 重裝 / 突擊),體型 + 血量 + 移速 + 頭盔各異
+const ENEMY_TYPES = [
+  { key: "rifleman", weight: 5, scale: 1.0, hpMul: 1.0, speedMul: 1.0, cap: false, pack: false },
+  { key: "heavy", weight: 2, scale: 1.18, hpMul: 1.9, speedMul: 0.78, cap: false, pack: true },
+  { key: "scout", weight: 3, scale: 0.86, hpMul: 0.6, speedMul: 1.35, cap: true, pack: false },
+];
+function pickEnemyType() { let tot = 0; for (const t of ENEMY_TYPES) tot += t.weight; let r = Math.random() * tot; for (const t of ENEMY_TYPES) { r -= t.weight; if (r <= 0) return t; } return ENEMY_TYPES[0]; }
+function jitterMat(base, dh, ds, dl) { const m = base.clone(); const hsl = {}; m.color.getHSL(hsl); m.color.setHSL((hsl.h + dh + 1) % 1, Math.max(0, Math.min(1, hsl.s + ds)), Math.max(0.04, Math.min(0.96, hsl.l + dl))); return m; }
 function spawnEnemy(x, z, hp) {
   const g = new THREE.Group(); g.position.set(x, 0, z);
+  const type = pickEnemyType();
+  const body = jitterMat(eBody, (Math.random() - 0.5) * 0.05, (Math.random() - 0.5) * 0.1, (Math.random() - 0.5) * 0.14);   // 每隻軍服色略不同
+  const skin = jitterMat(eSkin, (Math.random() - 0.5) * 0.03, (Math.random() - 0.5) * 0.08, (Math.random() - 0.5) * 0.16);  // 每隻膚色略不同
   const ms = [];
   const eb = (w, h, d, m, px, py, pz) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(px, py, pz); ms.push(b); return b; };
-  eb(0.5, 0.74, 0.3, eBody, 0, 1.16, 0);                 // 軀幹
+  eb(0.5, 0.74, 0.3, body, 0, 1.16, 0);                  // 軀幹
   eb(0.56, 0.5, 0.36, eGear, 0, 1.2, 0.01);              // 防彈背心
   eb(0.2, 0.16, 0.1, eGear, 0, 1.32, 0.19);              // 彈匣袋(前)
   eb(0.46, 0.36, 0.3, eGear, 0, 0.68, 0);                // 臀
-  eb(0.12, 0.12, 0.12, eSkin, 0, 1.57, 0);               // 頸
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.15, 14, 12), eSkin); head.position.y = 1.68; head.userData.head = true; ms.push(head);
-  const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.18, 14, 10, 0, 6.3, 0, 1.6), eGear); helmet.position.y = 1.72; helmet.userData.head = true; ms.push(helmet);
-  eb(0.4, 0.05, 0.4, eGear, 0, 1.64, 0);                 // 盔簷
+  eb(0.12, 0.12, 0.12, skin, 0, 1.57, 0);                // 頸
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.15, 14, 12), skin); head.position.y = 1.68; head.userData.head = true; ms.push(head);
+  if (type.cap) { eb(0.34, 0.12, 0.34, eGear, 0, 1.79, 0).userData.head = true; eb(0.42, 0.04, 0.16, eGear, 0, 1.75, 0.18); }   // 突擊兵:軟帽 + 帽簷
+  else { const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.18, 14, 10, 0, 6.3, 0, 1.6), eGear); helmet.position.y = 1.72; helmet.userData.head = true; ms.push(helmet); eb(0.4, 0.05, 0.4, eGear, 0, 1.64, 0); }   // 鋼盔 + 盔簷
+  if (type.pack) eb(0.42, 0.5, 0.22, eGear, 0, 1.2, -0.24);   // 重裝:背包
   for (const sx of [-1, 1]) {
     eb(0.18, 0.62, 0.22, eGear, sx * 0.13, 0.4, 0);       // 腿
     eb(0.2, 0.12, 0.3, eBoot, sx * 0.13, 0.06, 0.04);     // 靴
-    eb(0.14, 0.5, 0.16, eBody, sx * 0.27, 1.18, 0.02);    // 上臂
+    eb(0.14, 0.5, 0.16, body, sx * 0.27, 1.18, 0.02);     // 上臂
   }
   // 持槍(胸前) + 前臂
   eb(0.1, 0.1, 0.62, gunMetal, 0.1, 1.16, -0.28);        // 步槍
   eb(0.07, 0.16, 0.12, gunMag, 0.1, 1.04, -0.12);        // 彈匣
-  eb(0.14, 0.34, 0.14, eBody, 0.18, 1.0, -0.18);         // 前臂
+  eb(0.14, 0.34, 0.14, body, 0.18, 1.0, -0.18);          // 前臂
   ms.forEach((m) => { m.castShadow = true; g.add(m); });
-  g.userData.kind = "enemy"; g.userData.hp = hp || 100; g.userData.dead = false; g.userData.deadT = 0; g.userData.fireT = 1 + Math.random() * 2; g.userData.flinch = 0; g.userData.strafe = Math.random() < 0.5 ? 1 : -1; g.userData.strafeT = 1 + Math.random() * 2; g.userData.state = "chase"; g.userData.grenadeT = 6 + Math.random() * 8; g.userData.spawn = new THREE.Vector3(x, 0, z);
+  g.scale.setScalar(type.scale);
+  g.userData.kind = "enemy"; g.userData.hp = Math.round((hp || 100) * type.hpMul); g.userData.speedMul = type.speedMul; g.userData.etype = type.key; g.userData.dead = false; g.userData.deadT = 0; g.userData.fireT = 1 + Math.random() * 2; g.userData.flinch = 0; g.userData.strafe = Math.random() < 0.5 ? 1 : -1; g.userData.strafeT = 1 + Math.random() * 2; g.userData.state = "chase"; g.userData.grenadeT = 6 + Math.random() * 8; g.userData.spawn = new THREE.Vector3(x, 0, z);
   ROOT.add(g); enemies.push(g);
 }
 /* ── 波次 horde + 計分 ── */
@@ -1242,7 +1255,7 @@ function updateEnemies(dt) {
     if (sees && dist < 42) { const sw = smart ? 1.3 : 0.8; mvx += rx * u.strafe * sw; mvz += rz * u.strafe * sw; }
     const ml = Math.hypot(mvx, mvz);
     if (ml > 0.01) {
-      const s = (u.flinch > 0 ? 0.4 : sp) * dt;
+      const s = (u.flinch > 0 ? 0.4 : sp) * (u.speedMul || 1) * dt;   // 兵種移速:重裝慢 / 突擊快
       let ndx = mvx / ml, ndz = mvz / ml;
       // 繞行:直線下一步若撞建築/木箱,左右交替偏轉找空檔(非 A*,單檔輕量探路)
       if (blockedAt(g.position.x + ndx * 0.9, g.position.z + ndz * 0.9, 0.5)) {
@@ -1690,6 +1703,7 @@ if (DEBUG) {
   window.__SHOOT__ = () => shootHit(WEAPONS[wi]); // debug 射擊
   window.__FIRE__ = () => fire(); // debug 完整擊發(含退殼/槍口煙/後焰)
   window.__WEP__ = (i) => showWeapon(i); // debug 切武器
+  window.__SPAWN__ = (n) => { for (let i = 0; i < (n || 6); i++) spawnEnemy(-6 + i * 2.4, -8); return enemies.map((e) => e.userData.etype); }; // debug 生敵人看兵種變化
   window.__ADS__ = (v) => { ads = !!v; }; // debug 開鏡
   window.__AIM__ = (x, y, z) => { camera.lookAt(x, y, z); yaw = camera.rotation.y; pitch = camera.rotation.x; }; // debug 瞄向
   window.__KILLTEST__ = () => { let best = null, bd = 1e9; for (const g of enemies) { if (g.userData.dead) continue; const d = g.position.distanceTo(camera.position); if (d < bd) { bd = d; best = g; } } if (!best) return "no enemy"; camera.lookAt(best.position.clone().setY(1.2)); yaw = camera.rotation.y; pitch = camera.rotation.x; camera.updateMatrixWorld(true); const hp0 = best.userData.hp; for (let i = 0; i < 6; i++) shootHit(WEAPONS[wi]); return { dist: Math.round(bd), hp0, hpAfter: best.userData.hp, kills }; }; // debug 殺最近敵
