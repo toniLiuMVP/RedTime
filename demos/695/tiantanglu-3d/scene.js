@@ -354,6 +354,37 @@ let cowTail = null, cowHead = null;
   add(new THREE.CylinderGeometry(0.012, 0.012, 0.2, 8), mat(0x222), dx + 0.1, 0.88, dz + 0.1).rotation.set(0, 0, 1.3);  // 筆
 })();
 
+/* ───────── lived-in 軍營氛圍(散落物 + 風化,不動既有模組;沙包/補給當掩體) ───────── */
+(function camplife() {
+  const sand = mat(0x8a7c52, { roughness: 0.97 }), sand2 = mat(0x9a8a5e, { roughness: 0.97 }), drumR = mat(0x7a4030, { roughness: 0.5, metalness: 0.4 }), drumG = mat(0x4a6a3e, { roughness: 0.5, metalness: 0.4 }), wood = mat(0x7a5d38, { roughness: 0.9 }), metal = mat(0x4a4f46, { roughness: 0.5, metalness: 0.5 }), tarp = mat(0x3c4636, { roughness: 0.92 });
+  const stain = (cx, cz, w, l, ang, col, op) => { const m = add(new THREE.PlaneGeometry(w, l), new THREE.MeshStandardMaterial({ color: col, transparent: true, opacity: op, roughness: 1, depthWrite: false }), cx, 0.025, cz); m.rotation.x = -Math.PI / 2; m.rotation.z = ang; m.receiveShadow = false; };
+  // 沙包掩體(三層磚砌交錯) + 加入 OBSTACLES 當掩體
+  const sandbagWall = (cx, cz, ang, len) => {
+    const dx = Math.cos(ang), dz = Math.sin(ang);
+    for (let row = 0; row < 3; row++) { const n = len - (row % 2); for (let i = 0; i < n; i++) { const off = (i - n / 2 + 0.5) * 0.52 + (row % 2) * 0.26; const sb = add(new THREE.BoxGeometry(0.5, 0.27, 0.34), i % 2 ? sand : sand2, cx + dx * off, 0.16 + row * 0.25, cz + dz * off); sb.rotation.y = ang + (Math.random() - 0.5) * 0.12; } }
+    const hw = len * 0.26; OBSTACLES.push([cx - Math.abs(dx) * hw - 0.2, cx + Math.abs(dx) * hw + 0.2, cz - Math.abs(dz) * hw - 0.2, cz + Math.abs(dz) * hw + 0.2]);
+  };
+  sandbagWall(26, 3, 0.35, 6); sandbagWall(-4, 26, 1.25, 5);
+  // 油桶堆(直立 + 一個倒地)
+  const drums = (cx, cz) => { add(new THREE.CylinderGeometry(0.4, 0.4, 1.1, 16), drumR, cx, 0.55, cz); add(new THREE.CylinderGeometry(0.4, 0.4, 1.1, 16), drumG, cx + 0.85, 0.55, cz + 0.15); add(new THREE.CylinderGeometry(0.4, 0.4, 1.1, 16), drumR, cx + 0.42, 0.55, cz + 0.78); const lay = add(new THREE.CylinderGeometry(0.4, 0.4, 1.1, 16), drumG, cx - 0.7, 0.4, cz + 0.6); lay.rotation.z = Math.PI / 2; stain(cx, cz + 0.4, 2.4, 2.4, 0.3, 0x14100a, 0.4); };
+  drums(-9, 23); drums(17, -7);
+  // 棧板 + 木箱補給堆 + 帆布(掩體)
+  const supply = (cx, cz) => {
+    add(new THREE.BoxGeometry(2.2, 0.14, 1.4), wood, cx, 0.07, cz);                                  // 棧板
+    for (let i = 0; i < 5; i++) { const s = 0.7 + (i % 3) * 0.06; add(new THREE.BoxGeometry(s, s, s), matT(0x9b7a45, T.crate, 1, 1, { roughness: 0.85 }), cx - 0.5 + (i % 2) * 0.85 + (i > 3 ? 0.4 : 0), 0.14 + s / 2 + (i > 1 && i < 4 ? 0.7 : 0), cz - 0.35 + (i % 2) * 0.7); }
+    const tp = add(new THREE.BoxGeometry(1.7, 0.5, 1.1), tarp, cx + 1.7, 0.45, cz); tp.rotation.y = 0.2;   // 帆布蓋的補給
+    OBSTACLES.push([cx - 1.2, cx + 2.7, cz - 0.9, cz + 0.9]);
+  };
+  supply(18, 22);
+  // 通訊天線桅杆(細桿 + 橫臂 + 拉線感)
+  const antenna = (cx, cz) => { add(new THREE.CylinderGeometry(0.08, 0.12, 9, 8), metal, cx, 4.5, cz); for (const h of [3.5, 5.5, 7.2]) add(new THREE.BoxGeometry(1.4, 0.06, 0.06), metal, cx, h, cz); add(new THREE.SphereGeometry(0.12, 8, 6), mat(0xcc4030, { emissive: new THREE.Color(0x882010), emissiveIntensity: 0.6 }), cx, 9.1, cz); for (const a of [0, 2.1, 4.2]) { const gw = add(new THREE.CylinderGeometry(0.012, 0.012, 9.2, 4), metal, cx + Math.cos(a) * 1.4, 4.4, cz + Math.sin(a) * 1.4); gw.rotation.set(Math.sin(a) * 0.28, 0, -Math.cos(a) * 0.28); } };
+  antenna(-28, 9);
+  // 輪胎痕 + 油漬(地面 lived-in)
+  stain(2, -2, 1.0, 22, 0.15, 0x1a150e, 0.32); stain(2.7, -2, 1.0, 22, 0.15, 0x1a150e, 0.32);   // 雙輪胎痕橫過操場
+  stain(-18, 4, 0.9, 16, -0.7, 0x1a150e, 0.3); stain(-18.7, 4, 0.9, 16, -0.7, 0x1a150e, 0.3);
+  stain(8, 9, 3, 3, 0, 0x120e08, 0.4); stain(20, 26, 2.5, 2.5, 0.5, 0x120e08, 0.35);
+})();
+
 /* ══════════════ 武器系統:鐵鎚 / 刺槍 / 小刀 / 槍械(每把含 moveMul 移速) ══════════════ */
 const gunMetal = new THREE.MeshStandardMaterial({ color: 0x3b3f45, metalness: 0.78, roughness: 0.38, envMapIntensity: 0.85 });
 const gunPoly = new THREE.MeshStandardMaterial({ color: 0x2f3127, metalness: 0.12, roughness: 0.66, envMapIntensity: 0.5 });
