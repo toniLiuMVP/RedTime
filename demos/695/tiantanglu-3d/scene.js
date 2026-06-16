@@ -183,6 +183,16 @@ function barracks(x, z, ry, lit) {
   add(new THREE.BoxGeometry(2.6, 0.2, 1.2), mat(0xb0a589), -W / 2 + 3, 0.1, D / 2 + 0.7, g);
   // 落水管
   for (const sx of [-1, 1]) add(new THREE.CylinderGeometry(0.13, 0.13, H, 8), mat(0x8c8576, { metalness: 0.3, roughness: 0.6 }), sx * (W / 2 - 0.3), H / 2, D / 2 + 0.2, g);
+  // ── 寫實補強:屋簷封簷板(陰影線) + 雨槽 + 屋脊蓋 + 通風帽 + 牆腳雨濺髒污 ──
+  const trim = mat(0x6f6453, { roughness: 0.72 });
+  const metalDark = mat(0x6a6a62, { metalness: 0.45, roughness: 0.6 });
+  for (const sz of [1, -1]) {
+    add(new THREE.BoxGeometry(W + 1.4, 0.34, 0.16), trim, 0, H + 0.02, sz * (D / 2 + 0.56), g);     // 封簷板:屋簷下緣那條陰影線,最關鍵的「真房子」線索
+    add(new THREE.BoxGeometry(W + 1.2, 0.16, 0.26), metalDark, 0, H - 0.12, sz * (D / 2 + 0.46), g).castShadow = false;   // 雨槽:讓落水管接得到水
+  }
+  add(new THREE.BoxGeometry(W + 0.3, 0.26, 0.5), metalDark, 0, H + 2.55, 0, g);                      // 屋脊蓋
+  for (const vx of [-W / 4, W / 4]) add(new THREE.CylinderGeometry(0.32, 0.42, 0.6, 10), metalDark, vx, H + 2.0, 0, g);   // 屋脊通風帽
+  add(new THREE.BoxGeometry(W + 0.06, 1.0, D + 0.06), mat(0x5f523f, { roughness: 1, transparent: true, opacity: 0.5 }), 0, 1.15, 0, g).castShadow = false;   // 牆腳雨濺髒污(略大於牆,包四面)
 }
 barracks(0, -30, 0, true);
 barracks(-30, -16, Math.PI / 2, false);
