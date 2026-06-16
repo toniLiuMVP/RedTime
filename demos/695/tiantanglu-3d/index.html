@@ -76,6 +76,20 @@
   #shop .close:hover{background:rgba(255,220,170,.14);}
   #mask{position:fixed;inset:0;z-index:4;pointer-events:none;display:none;box-shadow:inset 0 0 130px 36px rgba(10,14,20,.85),inset 0 0 30px 6px rgba(0,0,0,.5);}
   #mask.on{display:block;}
+  /* 大兵日記(#4-④ 雋永連結) */
+  #diary{position:fixed;inset:0;z-index:9;display:none;align-items:center;justify-content:center;background:rgba(6,5,9,.94);padding:24px;}
+  #diary.on{display:flex;}
+  #diary .panel{max-width:540px;width:100%;background:linear-gradient(180deg,rgba(36,30,26,.98),rgba(26,22,20,.98));border:1px solid rgba(200,170,120,.25);border-radius:14px;padding:32px 34px;font-family:'Noto Serif TC',serif;color:#e8ddc8;max-height:88vh;overflow-y:auto;}
+  #diary h2{font-size:20px;letter-spacing:.24em;color:#d8b878;text-align:center;margin-bottom:20px;}
+  #diary .d-ctx{font-size:13px;line-height:2;opacity:.7;margin-bottom:16px;letter-spacing:.04em;}
+  #diary .d-line{font-size:16px;line-height:2.1;letter-spacing:.06em;margin:10px 0;padding-left:14px;border-left:2px solid rgba(200,170,120,.4);}
+  #diary .d-photo{margin:30px auto 40px;width:128px;height:94px;border-radius:4px;background:radial-gradient(circle at 50% 38%,rgba(255,222,182,.5),rgba(176,138,108,.22));border:6px solid #efe6d4;box-shadow:0 6px 24px rgba(0,0,0,.5);position:relative;filter:blur(.6px);}
+  #diary .d-photo-cap{position:absolute;left:-90px;right:-90px;bottom:-28px;text-align:center;font-size:12px;letter-spacing:.08em;color:#d8c8b0;opacity:.85;white-space:nowrap;}
+  #diary .d-link-hint{text-align:center;font-size:13px;letter-spacing:.1em;opacity:.65;margin:18px 0 14px;}
+  #diary .d-link{display:block;text-align:center;text-decoration:none;font-size:15px;letter-spacing:.1em;color:#e8ddc8;border:1px solid rgba(200,170,120,.35);border-radius:40px;padding:12px;margin:9px 0;transition:background .3s;}
+  #diary .d-link:hover{background:rgba(200,170,120,.14);}
+  #diary .close{margin-top:18px;text-align:center;font-size:14px;letter-spacing:.2em;color:#cbbfa8;border:1px solid rgba(200,170,120,.3);border-radius:40px;padding:11px;cursor:pointer;}
+  #diary .close:hover{background:rgba(200,170,120,.1);}
 
   /* ── 狙擊鏡 ── */
   #scope{position:fixed;inset:0;z-index:5;pointer-events:none;display:none;}
@@ -246,6 +260,17 @@
   <div id="shop-list"></div>
   <div class="shop-hint">近戰(鐵鎚 / 刺槍 / 小刀)免費 · 撐過每波 +150 軍餉 · 軍營按 B 開關</div>
   <div class="close" id="shop-close">關閉 (B)</div>
+</div></div>
+<div id="diary"><div class="panel">
+  <h2>大兵日記</h2>
+  <div class="d-ctx">那段時間，我在大兵日記裡寫了整本。其中兩句話是：</div>
+  <div class="d-line">「如果是你，承受得了周芷若那一劍嗎？」</div>
+  <div class="d-line">「要當個不倒人，打不倒的自信、敲不碎的心。」</div>
+  <div class="d-photo"><div class="d-photo-cap">每當我閉上眼睛，我就可以看見妳。</div></div>
+  <div class="d-link-hint">這條紅線，還牽著另外兩段時間</div>
+  <a class="d-link" href="../../../lm402.html">走進 LM402 · 一眼瞬間</a>
+  <a class="d-link" href="../../platform-run/index.html">月台上的狂奔</a>
+  <div class="close" id="diary-close">闔上日記</div>
 </div></div>
 <div id="mask"></div>
 <div id="touch">
