@@ -149,6 +149,28 @@ function add(geo, m, x, y, z, parent) { const b = new THREE.Mesh(geo, m); b.posi
   add(new THREE.BoxGeometry(80, 0.42, 9), matT(0x57534d, T.asphalt, 16, 2, { roughness: 0.85 }), 0, 0.22, 18).castShadow = false;
 })();
 
+/* ───────── 地面大尺度變化(破除平坦感:走出來的夯實泥路 / 礫石沙斑 / 晨露水漬) ───────── */
+(function groundDetail() {
+  const blob = tex((c, S) => { const g = c.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2); g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(0.55, "rgba(255,255,255,0.72)"); g.addColorStop(1, "rgba(255,255,255,0)"); c.fillStyle = g; c.fillRect(0, 0, S, S); }, 128, [1, 1]);
+  function patch(x, z, w, l, ang, col, op, rough, metal) {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, l), new THREE.MeshStandardMaterial({ color: new THREE.Color(col), alphaMap: blob, transparent: true, opacity: op, roughness: rough, metalness: metal || 0, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, envMapIntensity: metal ? 1.5 : 0.6 }));
+    m.rotation.set(-Math.PI / 2, 0, ang); m.position.set(x, 0.03, z); ROOT.add(m);
+  }
+  const PATH = 0xa3936f, GRAVEL = 0xc2b48c, DAMP = 0x39342a;
+  // 走出來的夯實泥路(淺色,低糙度=被踩平)
+  patch(31, -10, 8, 28, 0.08, PATH, 0.42, 0.68);     // 通往靶場縱路
+  patch(0, -37, 42, 8, 0, PATH, 0.38, 0.68);         // 營房前橫路
+  patch(-33, -2, 8, 26, -0.06, PATH, 0.36, 0.68);    // 左側巡邏路
+  // 礫石 / 沙斑(較淺,粗糙)
+  patch(34, 11, 15, 17, -0.3, GRAVEL, 0.3, 1);
+  patch(-35, -26, 14, 12, 0.5, GRAVEL, 0.3, 1);
+  patch(20, -39, 17, 11, 0.2, GRAVEL, 0.28, 1);
+  // 晨露水漬(深 + 低糙度 + 微金屬感反晨光=濕)
+  patch(-27, -31, 11, 7, 0.4, DAMP, 0.5, 0.3, 0.14);
+  patch(25, -33, 8, 6, -0.5, DAMP, 0.46, 0.32, 0.12);
+  patch(-34, 9, 9, 7, 0.2, DAMP, 0.4, 0.34, 0.1);
+})();
+
 /* ───────── 山牆屋頂 helper ───────── */
 function gableRoof(parent, w, d, baseY, rh, ov) {
   ov = ov || 0.6; const slabLen = Math.sqrt((d / 2) * (d / 2) + rh * rh) + ov; const ang = Math.atan2(rh, d / 2);
