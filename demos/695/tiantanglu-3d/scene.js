@@ -867,6 +867,36 @@ let mvMoving = false, mvCrouch = false, grounded = true, sprayCount = 0;
 function spreadOf(w) { let s = w.type === "auto" ? 0.006 : 0.003; if (w.recoilMul) s *= w.recoilMul * 0.7; if (!grounded) s += 0.06; else if (mvMoving) s += 0.022; else if (mvCrouch) s *= 0.4; s += sprayCount * 0.004; return s; }
 function findHit(o) { let p = o; while (p) { if (p.userData && p.userData.kind) return p; p = p.parent; } return null; }
 function killBarrel(o) { o.userData.dead = true; o.visible = false; const i = explosives.indexOf(o); if (i >= 0) explosives.splice(i, 1); }
+/* ── 退殼系統:黃銅彈殼從拋殼口飛出,受重力 + 地面彈跳;每把槍殼大小不同(小槍小殼 / 狙擊大殼) ── */
+const casingMat = new THREE.MeshStandardMaterial({ color: 0xc7a23c, metalness: 0.85, roughness: 0.33, envMapIntensity: 1.2 });
+const casings = []; let casingI = 0;
+for (let i = 0; i < 20; i++) { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.021, 0.024, 0.085, 6), casingMat); m.visible = false; scene.add(m); casings.push({ m, on: false, v: new THREE.Vector3(), spin: new THREE.Vector3(), t: 0, life: 0 }); }
+const _ejP = new THREE.Vector3(), _ejF = new THREE.Vector3(), _ejR = new THREE.Vector3();
+function ejectCasing(scale) {
+  const c = casings[casingI = (casingI + 1) % casings.length];
+  camera.getWorldPosition(_ejP); camera.getWorldDirection(_ejF); _ejR.crossVectors(_ejF, UP).normalize();
+  c.m.position.copy(_ejP).addScaledVector(_ejF, 0.5).addScaledVector(_ejR, 0.26); c.m.position.y -= 0.2;   // 拋殼口大致位置(右前下)
+  c.m.scale.setScalar(scale);
+  c.v.copy(_ejR).multiplyScalar(2.6 + Math.random() * 1.3); c.v.y = 2.0 + Math.random(); c.v.addScaledVector(_ejF, -0.5 - Math.random() * 0.5);   // 往右上後彈出
+  c.spin.set((Math.random() - 0.5) * 26, (Math.random() - 0.5) * 26, (Math.random() - 0.5) * 26);
+  c.on = true; c.t = 0; c.life = 2.0; c.m.visible = true;
+}
+function updateCasings(dt) {
+  for (const c of casings) {
+    if (!c.on) continue; c.t += dt; c.v.y -= 17 * dt;
+    c.m.position.addScaledVector(c.v, dt);
+    c.m.rotation.x += c.spin.x * dt; c.m.rotation.y += c.spin.y * dt; c.m.rotation.z += c.spin.z * dt;
+    if (c.m.position.y < 0.04) { c.m.position.y = 0.04; c.v.y *= -0.32; c.v.x *= 0.55; c.v.z *= 0.55; c.spin.multiplyScalar(0.4); }   // 落地彈跳 + 滾動衰減
+    if (c.t >= c.life) { c.on = false; c.m.visible = false; }
+  }
+}
+// 每把槍擊發的物理差異:cas=彈殼大小 / sm=槍口煙[life,base,grow]
+const WMUZZLE = {
+  "小槍": { cas: 0.72, sm: [0.22, 0.08, 0.32] },
+  "步槍": { cas: 1.0, sm: [0.3, 0.13, 0.48] },
+  "機關槍": { cas: 1.0, sm: [0.38, 0.16, 0.66] },
+  "狙擊槍": { cas: 1.55, sm: [0.6, 0.22, 1.05] },
+};
 function fire() {
   if (!isActive() || dead || vehicle) return;   // 駕駛中左鍵=戰車開炮(updateVehicle 處理),不開手持武器
   if (drawT > 0 || reloadT > 0) return;   // 拔槍/換彈動畫期間不能開火
@@ -879,7 +909,7 @@ function fire() {
   const spr = WSPRAY[w.name] || 0; sprayPitch = Math.min(0.17, sprayPitch + spr); sprayYaw += Math.sin(sprayCount * 0.8) * spr * 0.6;
   sprayCount++; sprayResetT = 0.35; w.muzzleT = 0.05; sfxShot(w.type); if (w.scope) sfxBolt();
   flashMuzzleLight(w);
-  if (w.muzzle) { w.muzzle.getWorldPosition(tmpO); emitFx(dustPool, tmpO, 0.3, 0.14, 0.45, false); }
+  if (w.muzzle) { w.muzzle.getWorldPosition(tmpO); const fx = WMUZZLE[w.name]; if (fx) { emitFx(dustPool, tmpO, fx.sm[0], fx.sm[1], fx.sm[2], false); ejectCasing(fx.cas); } else emitFx(dustPool, tmpO, 0.3, 0.14, 0.45, false); }
   shootHit(w);
 }
 function shootHit(w) {
@@ -1408,8 +1438,12 @@ function throwGrenade(w) {
   projectiles.push({ m, vel, type: "grenade", t: 0, fuse: 1.5 });
 }
 function fireRocket(w) {
-  if (w.count <= 0) { sfxDry(); return; } w.count--; updateHUD(); sfxRocketFire(); w.muzzleT = 0.06; recoilKick = Math.min(0.25, recoilKick + 0.12); shake = Math.max(shake, 0.3);
+  if (w.count <= 0) { sfxDry(); return; } w.count--; updateHUD(); sfxRocketFire(); w.muzzleT = 0.06; recoilKick = Math.min(0.32, recoilKick + 0.22); shake = Math.max(shake, 0.62);   // 火箭筒:大後座 + 強震(整個人被推一把)
   camera.getWorldPosition(tmpO); camera.getWorldDirection(tmpD);
+  // 前方大火焰 + 濃煙 + 後焰 back-blast(火箭筒特徵:尾管向後下方噴一大團煙焰)
+  if (w.muzzle) { w.muzzle.getWorldPosition(tmpO2); emitFx(sparkPool, tmpO2, 0.32, 0.55, 1.5, true); emitFx(dustPool, tmpO2, 0.85, 0.45, 2.0, false); }
+  _ejP.copy(tmpO).addScaledVector(tmpD, -0.5); _ejP.y -= 0.45;
+  for (let i = 0; i < 3; i++) { _ejR.set((Math.random() - 0.5) * 1.3, -0.3 - Math.random() * 0.4, (Math.random() - 0.5) * 1.3).add(_ejP); emitFx(dustPool, _ejR, 0.75, 0.4, 1.7, false); }
   const m = new THREE.Group();
   const body = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.5, 12), rocketBodyMat); body.rotation.x = Math.PI / 2; m.add(body);
   const tip = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.2, 12), rocketHeadMat); tip.rotation.x = -Math.PI / 2; tip.position.z = -0.32; m.add(tip);
@@ -1469,7 +1503,7 @@ function updateFP(dt) {
     updateVehicle(dt); updateWaves(dt); updateMusic(dt); updateAmbient(dt);
     updateProjectiles(dt); updateTargets(dt); updateEnemies(dt); updateEffects(dt);
     updateFxPool(sparkPool, dt); updateFxPool(dustPool, dt); updateFxPool(trailPool, dt); updateFxPool(bloodPool, dt);
-    updateMemShards(dt); updateTracers(dt); updateShells(dt); updateListener();
+    updateMemShards(dt); updateTracers(dt); updateShells(dt); updateCasings(dt); updateListener();
     return;
   }
   const crouch = !!(keys.ShiftLeft || keys.ShiftRight) || tCrouch;   // 桌機 Shift / 手機蹲鈕
@@ -1572,7 +1606,7 @@ function updateFP(dt) {
   w.group.visible = !scoped;
   updateProjectiles(dt); updateTargets(dt); updateEnemies(dt); updateEffects(dt);
   updateFxPool(sparkPool, dt); updateFxPool(dustPool, dt); updateFxPool(trailPool, dt); updateFxPool(bloodPool, dt);
-  updateMemShards(dt); updateTracers(dt); updateShells(dt);   // 記憶光點 + CS 曳光 + 榴彈砲彈道
+  updateMemShards(dt); updateTracers(dt); updateShells(dt); updateCasings(dt);   // 記憶光點 + CS 曳光 + 榴彈砲彈道 + 退殼
   updateListener();
 }
 showWeapon(0);
@@ -1654,6 +1688,8 @@ if (DEBUG) {
   window.__TP__ = (x, y, z) => { camera.position.set(x, y, z); }; // debug 傳送
   window.__BOOM__ = (n) => { const m = explosives[n || 0]; if (m) { const p = m.position.clone(); m.userData.dead = true; m.visible = false; const i = explosives.indexOf(m); if (i >= 0) explosives.splice(i, 1); explode(p, 0); } }; // debug 引爆
   window.__SHOOT__ = () => shootHit(WEAPONS[wi]); // debug 射擊
+  window.__FIRE__ = () => fire(); // debug 完整擊發(含退殼/槍口煙/後焰)
+  window.__WEP__ = (i) => showWeapon(i); // debug 切武器
   window.__ADS__ = (v) => { ads = !!v; }; // debug 開鏡
   window.__AIM__ = (x, y, z) => { camera.lookAt(x, y, z); yaw = camera.rotation.y; pitch = camera.rotation.x; }; // debug 瞄向
   window.__KILLTEST__ = () => { let best = null, bd = 1e9; for (const g of enemies) { if (g.userData.dead) continue; const d = g.position.distanceTo(camera.position); if (d < bd) { bd = d; best = g; } } if (!best) return "no enemy"; camera.lookAt(best.position.clone().setY(1.2)); yaw = camera.rotation.y; pitch = camera.rotation.x; camera.updateMatrixWorld(true); const hp0 = best.userData.hp; for (let i = 0; i < 6; i++) shootHit(WEAPONS[wi]); return { dist: Math.round(bd), hp0, hpAfter: best.userData.hp, kills }; }; // debug 殺最近敵
