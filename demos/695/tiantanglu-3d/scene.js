@@ -620,7 +620,7 @@ try { Object.assign(settings, JSON.parse(localStorage.getItem("tiantanglu_settin
 function saveSettings() { try { localStorage.setItem("tiantanglu_settings_v1", JSON.stringify(settings)); } catch (e) { } }
 function applyCrosshair() { const r = document.documentElement.style; r.setProperty("--ch-size", settings.chSize + "px"); r.setProperty("--ch-gap", settings.chGap + "px"); r.setProperty("--ch-thick", settings.chThick + "px"); r.setProperty("--ch-color", /^#[0-9a-fA-F]{6}$/.test(settings.chColor) ? settings.chColor : "#7dff8a"); }   // 消費點也守 hex(belt-and-suspenders,擋 chColor → CSS url() 外洩)
 applyCrosshair();
-function ensureAudio() { if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); masterGain = actx.createGain(); masterGain.gain.value = settings.vol; masterGain.connect(actx.destination); } catch (e) { } } if (actx && actx.state === "suspended") actx.resume(); }
+function ensureAudio() { if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); masterGain = actx.createGain(); masterGain.gain.value = settings.vol; masterGain.connect(actx.destination); } catch (e) { } } if (actx && actx.state === "suspended") actx.resume(); startAmbient(); }
 /* ── 音樂:進觸發點(sim 熔爐)才播,離開自動淡出停;聲音=相信「相信的力量」(EP40 韌性主題曲) ── */
 const MUSIC_SIM = "../相信「相信的力量」.mp3";   // 同源 mp3(CSP media-src 'self')
 let music = null, musicUrl = null, musicTarget = 0, musicCur = 0, moodSim = 0, skyDarkCur = 0;
@@ -661,6 +661,31 @@ function sfxPunch() { if (!actx) return; noiseHit(0.1, 700, 250, 0.22); }
 function sfxKnife() { if (!actx) return; noiseHit(0.14, 2600, 900, 0.2, "bandpass"); }
 function sfxEnemyShot(pos) { if (!actx) return; noiseHit(0.14, 1600, 350, pos ? 0.34 : 0.28, "lowpass", pos ? panner(pos) : null); }
 function sfxHurt() { if (!actx) return; noiseHit(0.16, 500, 120, 0.4); tone(160, 70, 0.14, 0.3); }
+
+/* ── 環境音床(無配樂時的軍營黎明氛圍:風 + 遠處低鳴 + 國旗拍動 + 鳥鳴);全程序合成,零外部檔案 ── */
+let ambStarted = false, ambGain = null, flagT = 4, birdT = 6, gustT = 0;
+function startAmbient() {
+  if (ambStarted || !actx || !masterGain) return; ambStarted = true;
+  ambGain = actx.createGain(); ambGain.gain.value = 0.0001; ambGain.connect(masterGain);
+  // 風:長 noise loop → bandpass,LFO 慢調變濾波頻率(陣風明暗)
+  const wind = actx.createBufferSource(); wind.buffer = noiseBuf(3); wind.loop = true;
+  const wf = actx.createBiquadFilter(); wf.type = "bandpass"; wf.frequency.value = 460; wf.Q.value = 0.7;
+  const wg = actx.createGain(); wg.gain.value = 0.14;
+  wind.connect(wf).connect(wg).connect(ambGain); wind.start();
+  const lfo = actx.createOscillator(); lfo.type = "sine"; lfo.frequency.value = 0.08;
+  const lg = actx.createGain(); lg.gain.value = 230; lfo.connect(lg).connect(wf.frequency); lfo.start();
+  // 遠處低鳴(開闊地的空氣感)
+  const drone = actx.createOscillator(); drone.type = "triangle"; drone.frequency.value = 52;
+  const dg = actx.createGain(); dg.gain.value = 0.045; drone.connect(dg).connect(ambGain); drone.start();
+  ambGain.gain.exponentialRampToValueAtTime(0.85, actx.currentTime + 2.6);   // 緩淡入
+}
+function sfxFlag() { if (!actx) return; const n = 3 + Math.floor(Math.random() * 3); for (let i = 0; i < n; i++) setTimeout(() => noiseHit(0.05 + Math.random() * 0.05, 1300, 620, 0.045, "bandpass"), i * (60 + Math.random() * 70)); }   // 國旗在風裡拍動
+function sfxBird() { if (!actx) return; const b = 1800 + Math.random() * 1500; tone(b, b * 1.35, 0.08, 0.038, "triangle"); setTimeout(() => tone(b * 1.18, b * 0.92, 0.1, 0.032, "triangle"), 105); }   // 黎明遠處鳥鳴
+function updateAmbient(dt) {
+  if (!ambStarted) return;
+  flagT -= dt; if (flagT <= 0) { sfxFlag(); flagT = 5 + Math.random() * 7; }
+  birdT -= dt; if (birdT <= 0) { sfxBird(); birdT = 9 + Math.random() * 15; }
+}
 
 /* ══════════════ 第一人稱控制 + 物理 ══════════════ */
 const keys = {};
@@ -761,8 +786,8 @@ const restartBtnEl = document.getElementById("restart-btn"); if (restartBtnEl) r
 const shopEl = document.getElementById("shop"), moneyEl = document.getElementById("money"), arEl = document.getElementById("ar"), maskEl = document.getElementById("mask");
 const SHOP_ITEMS = [
   { id: "vest", nm: "防彈背心", ds: "+100 ARMOR，吸收一半傷害", price: 650, has: () => armor >= 100, buy: () => { armor = 100; updateArmorHUD(); } },
-  { id: "mask", nm: "防護面罩", ds: "護目特效，收窄視野邊緣", price: 350, has: () => maskOwned, buy: () => { maskOwned = true; if (maskEl) maskEl.classList.add("on"); } },
-  { id: "ammo", nm: "彈藥補給", ds: "已擁有槍械補滿備彈", price: 200, has: () => false, buy: () => { WEAPONS.forEach((w) => { if (!w.owned) return; if (w.baseReserve != null) w.reserve = Math.round(w.baseReserve * (curDiff ? curDiff.ammo : 1)); if (w.baseCount != null) w.count = Math.round(w.baseCount * (curDiff ? curDiff.ammo : 1)); }); updateHUD(); } },
+  { id: "mask", nm: "防護面罩", ds: "純氣氛特效，視野邊緣收窄（不影響戰力）", price: 350, has: () => maskOwned, buy: () => { maskOwned = true; if (maskEl) maskEl.classList.add("on"); } },
+  { id: "ammo", nm: "彈藥補給", ds: "把已買的槍全部補滿備彈", price: 200, has: () => false, buy: () => { WEAPONS.forEach((w) => { if (!w.owned) return; if (w.baseReserve != null) w.reserve = Math.round(w.baseReserve * (curDiff ? curDiff.ammo : 1)); if (w.baseCount != null) w.count = Math.round(w.baseCount * (curDiff ? curDiff.ammo : 1)); }); updateHUD(); } },
   { id: "rifle", nm: "步槍", ds: "全自動 · 30 發", price: 600, wpn: "步槍" },
   { id: "mg", nm: "機關槍", ds: "100 發壓制火力", price: 900, wpn: "機關槍" },
   { id: "sniper", nm: "狙擊槍", ds: "開鏡一槍重擊", price: 750, wpn: "狙擊槍" },
@@ -893,7 +918,7 @@ function callArtillery() {
   if (MODE !== "sim" || dead || gameOver || awaitDisarm) return;
   if (artyCD > 0) { if (actx) tone(280, 200, 0.07, 0.06, "square"); showNarr("砲擊冷卻 " + Math.ceil(artyCD) + " 秒", 1.2); return; }
   const o = camera.getWorldPosition(new THREE.Vector3()), d = camera.getWorldDirection(new THREE.Vector3());
-  if (d.y > -0.05) { showNarr("瞄準地面再呼叫砲擊", 1.4); return; }
+  if (d.y > -0.05) { showNarr("準星先對準地面，再呼叫砲擊", 1.4); return; }
   const t = -o.y / d.y, tx = o.x + d.x * t, tz = o.z + d.z * t;
   if (Math.hypot(tx, tz + 20) > 76) { showNarr("座標超出射界", 1.4); return; }
   if (Math.hypot(tx - o.x, tz - o.z) < 15) { showNarr("座標太近 · 危險距離，瞄遠一點", 1.6); return; }   // 防誤炸自己(danger close)
@@ -947,7 +972,7 @@ makeVehicle("tank", 31, 25, 0.2);
 makeVehicle("howitzer", 30, 13, 0);
 let vehicle = null;
 function nearVehicle() { for (const v of VEHICLES) { const dx = camera.position.x - v.group.position.x, dz = camera.position.z - v.group.position.z; if (dx * dx + dz * dz < 18) return v; } return null; }
-function enterVehicle(v) { vehicle = v; v.speed = 0; if (WEAPONS[wi]) WEAPONS[wi].group.visible = false; showNarr(v.type === "tank" ? "戰車 · WASD／搖桿駕駛 · 左鍵開炮 · 按 E 下車" : v.type === "howitzer" ? "榴彈砲 · 看高一點增加射程 · 左鍵發射 · 按 E 離開砲位" : "悍馬車 · WASD／搖桿駕駛 · 按 E 下車", 3.4); }
+function enterVehicle(v) { vehicle = v; v.speed = 0; if (WEAPONS[wi]) WEAPONS[wi].group.visible = false; const fire = isTouch ? "射擊鈕" : "左鍵"; showNarr(v.type === "tank" ? "戰車 · WASD／搖桿駕駛 · " + fire + "開炮 · 按 E 下車" : v.type === "howitzer" ? "榴彈砲 · 看高一點增加射程 · " + fire + "發射 · 按 E 離開砲位" : "悍馬車 · WASD／搖桿駕駛 · 按 E 下車", 3.4); }
 function exitVehicle() { if (!vehicle) return; const v = vehicle; camera.position.set(v.group.position.x + Math.cos(v.heading) * 3, EYE, v.group.position.z + Math.sin(v.heading) * 3); yaw = v.heading + Math.PI / 2; pitch = 0; vehicle = null; if (WEAPONS[wi]) WEAPONS[wi].group.visible = true; }
 function fireTankShell(v, fx, fz) {
   const tip = new THREE.Vector3(v.group.position.x + fx * 3.6, 1.6, v.group.position.z + fz * 3.6);
@@ -985,7 +1010,7 @@ function updateVehicle(dt) {
     v.turret.rotation.y = Math.max(-1.0, Math.min(1.0, trav)); v.turret.rotation.x = Math.max(0.05, Math.min(1.1, pitch));   // 方位±57°/仰角
     if (v.fireT > 0) v.fireT -= dt;
     if (mouseDown && v.fireT <= 0) { v.fireT = 2.2; fireHowitzer(v); }
-    if (hintEl) { hintEl.style.opacity = "1"; hintEl.textContent = "榴彈砲 · 看高一點增加射程 · 左鍵發射 · 按 E 離開砲位"; }
+    if (hintEl) { hintEl.style.opacity = "1"; hintEl.textContent = isTouch ? "榴彈砲 · 鏡頭抬高增加射程 · 射擊鈕發射 · 按 E 離開砲位" : "榴彈砲 · 看高一點增加射程 · 左鍵發射 · 按 E 離開砲位"; }
     return;
   }
   let thr = 0, steer = 0;
@@ -1346,7 +1371,7 @@ function endRun() {
   if (dmgEl) dmgEl.style.opacity = "0.92";            // 炸裂:紅閃
   try { sfxThud(); sfxExplode(camera.position.clone()); } catch (e) { }
   if (document.exitPointerLock) document.exitPointerLock();
-  if (deadStatsEl) deadStatsEl.textContent = "撐到第 " + wave + " 波 · 擊殺 " + kills + " · 歷來最高 " + bestWave + " 波";   // 去分數當頭;最高波=撐更久而非 K/D 的 replay 驅動
+  if (deadStatsEl) deadStatsEl.textContent = "撐到第 " + wave + " 波 · 歷來最久 " + bestWave + " 波";   // 去分數當頭:死亡字幕不報擊殺數(反 CS 計分),只記撐了多久
   clearTimeout(endRun._t);
   endRun._t = setTimeout(() => { if (dmgEl) dmgEl.style.opacity = "0"; if (deadEl) deadEl.classList.add("on"); }, ceremony ? 2000 : 420);   // 修補:黑屏沉默拉長(韓劇式呼吸,只首死/破紀錄首死演足,N4 防稀釋)
 }
@@ -1431,7 +1456,7 @@ let drawT = 0, drawDur = 0.5, reloadT = 0, reloadDur = 2.4, reloadFilled = true,
 function updateFP(dt) {
   const w = WEAPONS[wi];
   if (vehicle) {   // 駕駛載具:獨立路徑(驅動 + 追逐攝影機),仍更新世界
-    updateVehicle(dt); updateWaves(dt); updateMusic(dt);
+    updateVehicle(dt); updateWaves(dt); updateMusic(dt); updateAmbient(dt);
     updateProjectiles(dt); updateTargets(dt); updateEnemies(dt); updateEffects(dt);
     updateFxPool(sparkPool, dt); updateFxPool(dustPool, dt); updateFxPool(trailPool, dt); updateFxPool(bloodPool, dt);
     updateMemShards(dt); updateTracers(dt); updateShells(dt); updateListener();
@@ -1473,8 +1498,8 @@ function updateFP(dt) {
   if (scarFlash > 0) scarFlash = Math.max(0, scarFlash - dt * 0.55);   // 疤痕閃光衰減,留下永久 scarFloor
   if (scarEl) scarEl.style.opacity = (scarFloor + scarFlash).toFixed(3);
   if (tbDisarmEl) tbDisarmEl.classList.toggle("on", isTouch && touchActive && MODE === "sim" && awaitDisarm);   // 手機放下槍鈕
-  if (hintEl) { if (MODE === "sim" && awaitDisarm) { hintEl.style.opacity = "1"; hintEl.textContent = isTouch ? "撐過了 · 按「放下槍」" : "撐過了 · 按 H 放下槍"; } else if (MODE === "hub" && isActive()) { hintEl.style.opacity = "1"; hintEl.textContent = nearVehicle() ? "按 E 上車駕駛" : nearCow() ? "按 E · 顧那頭牛" : nearJacket() ? "按 E · 看那件外套" : nearDiary() ? "按 E · 翻開大兵日記" : nearRangeEntry() ? "按 E 進入「實戰模擬練習」" : (isTouch ? "搖桿走動軍營 · 按「軍械」鈕購買裝備 · 走到靶場(右前方)按 E 開始實戰" : "自由走動軍營 · 按 B 開軍械庫購買裝備 · 走到靶場(右前方)按 E 開始實戰模擬"); } else hintEl.style.opacity = "0"; }
-  updateMusic(dt);
+  if (hintEl) { if (MODE === "sim" && awaitDisarm) { hintEl.style.opacity = "1"; hintEl.textContent = isTouch ? "撐過了 · 按「放下槍」" : "撐過了 · 按 H 放下槍"; } else if (MODE === "hub" && isActive()) { hintEl.style.opacity = "1"; hintEl.textContent = nearVehicle() ? "按 E 上車駕駛" : nearCow() ? "按 E · 替連長顧那頭牛" : nearJacket() ? "按 E · 看那件反穿的外套" : nearDiary() ? "按 E · 翻開大兵日記" : nearRangeEntry() ? "按 E 進入「實戰模擬練習」" : (isTouch ? "搖桿走動軍營 · 按「軍械」鈕購買裝備 · 走到靶場(右前方)按 E 開始實戰" : "自由走動軍營 · 按 B 開軍械庫購買裝備 · 走到靶場(右前方)按 E 開始實戰模擬"); } else hintEl.style.opacity = "0"; }
+  updateMusic(dt); updateAmbient(dt);
   moodSim += ((MODE === "sim" && !dead ? 1 : 0) - moodSim) * Math.min(1, dt * 0.8);   // 夢進熔爐:光影收緊(暗角加深 / 曝光略降 / 顆粒略增)
   if (postfxOn && postfx) { const tt = postfx.tuning; tt.vignette.darkness = 0.26 + moodSim * 0.14 + skyDarkCur * 0.12; tt.exposure = 1.08 - moodSim * 0.07 - skyDarkCur * 0.06; tt.grain.amount = 0.012 + moodSim * 0.01; }
   // 漸暗天空:撐越久天越暗(夢的長夜情緒累積),平滑 lerp 不換波跳變

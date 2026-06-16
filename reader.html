@@ -309,9 +309,23 @@
       body.reader-embed #story-progress-slider,
       body.reader-embed #jump-tb,
       body.reader-embed #auto-panel,
+      body.reader-embed .ep-game-bridge,
       body.reader-embed #toast {
         display: none !important;
       }
+      /* 跨媒介連接塊:讀完某集 → 走進對應 3D 場景(純導航,不動故事正文) */
+      .ep-game-bridge {
+        display: flex; flex-direction: column; align-items: center; gap: 4px;
+        max-width: 560px; margin: 6px auto 30px; padding: 18px 22px;
+        border: 1px solid rgba(255, 217, 168, 0.32); border-radius: 14px;
+        background: linear-gradient(180deg, rgba(40, 32, 26, 0.5), rgba(26, 22, 20, 0.35));
+        text-decoration: none; color: #f0e6d6; text-align: center;
+        transition: border-color 0.3s, background 0.3s, transform 0.2s;
+      }
+      .ep-game-bridge:hover { border-color: rgba(255, 217, 168, 0.6); background: linear-gradient(180deg, rgba(56, 44, 34, 0.6), rgba(34, 28, 24, 0.45)); transform: translateY(-2px); }
+      .ep-game-bridge .egb-eyebrow { font-family: "DM Mono", monospace; font-size: 10px; letter-spacing: 0.34em; text-transform: uppercase; color: rgba(255, 217, 168, 0.66); }
+      .ep-game-bridge .egb-label { font-family: "Noto Serif TC", serif; font-size: 17px; letter-spacing: 0.08em; }
+      .ep-game-bridge .egb-arrow { color: rgba(255, 217, 168, 0.7); font-size: 13px; margin-top: 2px; }
       body.reader-embed {
         background: #0a0c0e !important;
       }
@@ -8438,6 +8452,13 @@
 
       // ── Build episodes ──
       const cont = document.getElementById("episodes");
+      // 跨媒介連接地圖:讀完某集 → 走進逐拍對應的 3D 場景。label 採中性場景名(不替故事下標)。
+      const SCENE_LINKS = {
+        3:  { url: "lm402.html", eyebrow: "互動 3D 場景", label: "LM402 · 一眼瞬間" },
+        33: { url: "demos/695/tiantanglu-3d/index.html", eyebrow: "互動 3D 場景", label: "天堂路" },
+        36: { url: "demos/platform-run/index.html", eyebrow: "互動 3D 場景", label: "月台上的狂奔" },
+        40: { url: "demos/695/tiantanglu-3d/index.html", eyebrow: "互動 3D 場景", label: "天堂路" },
+      };
       EPISODES.forEach((ep, idx) => {
         const arc = ep.arc;
         const ann = ANNOTATIONS[String(ep.ep)] || ["", ""];
@@ -8504,6 +8525,20 @@
         bd.innerHTML = ep.html;
         sec.querySelector(".ep-body-wrap").appendChild(bd);
         cont.appendChild(sec);
+        // 跨媒介連接:特定集數結尾 → 對應 3D 場景(純 DOM 導航,零 innerHTML,不動故事 html)
+        var _sl = SCENE_LINKS[ep.ep];
+        if (_sl) {
+          var _gb = document.createElement("a");
+          _gb.className = "ep-game-bridge";
+          _gb.href = _sl.url;
+          var _eb = document.createElement("span"); _eb.className = "egb-eyebrow"; _eb.textContent = _sl.eyebrow;
+          var _lb = document.createElement("span"); _lb.className = "egb-label"; _lb.textContent = _sl.label;
+          var _ar = document.createElement("span"); _ar.className = "egb-arrow"; _ar.textContent = "↗ 進入";
+          _gb.append(_eb, _lb, _ar);
+          var _nav = sec.querySelector(".ep-nav");
+          if (_nav && _nav.parentNode) _nav.parentNode.insertBefore(_gb, _nav);
+          else sec.appendChild(_gb);
+        }
         // 回訪書籤：每章 ep-nav 中央插入「收藏本集」切換鈕（DOM 建構，零 innerHTML）
         var _navEl = sec.querySelector(".ep-nav");
         if (_navEl) {
