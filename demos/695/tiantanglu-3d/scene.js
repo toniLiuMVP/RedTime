@@ -912,21 +912,31 @@ function makeVehicle(type, x, z, ry) {
     add(new THREE.BoxGeometry(2.42, 0.5, 1.3), vOlive, 0, 1.16, -1.86, g);                                  // 引擎蓋
     add(new THREE.BoxGeometry(2.45, 0.1, 2.0), vDark, 0, 2.22, 0.45, g);                                    // 車頂
     for (const sx of [-1, 1]) for (const sz of [-1.45, 1.45]) { const wh = add(new THREE.CylinderGeometry(0.56, 0.56, 0.42, 14), vTire, sx * 1.2, 0.56, sz, g); wh.rotation.z = Math.PI / 2; }
-  } else {   // tank
+  } else if (type === "tank") {
     add(new THREE.BoxGeometry(2.9, 0.82, 5.2), vOlive, 0, 0.98, 0, g);                                      // 車體
     for (const sx of [-1, 1]) { add(new THREE.BoxGeometry(0.76, 0.78, 5.4), vDark, sx * 1.46, 0.6, 0, g); for (let i = -2; i <= 2; i++) { const rl = add(new THREE.CylinderGeometry(0.3, 0.3, 0.82, 12), vTire, sx * 1.46, 0.6, i * 1.05, g); rl.rotation.z = Math.PI / 2; } }
     turret = new THREE.Group(); turret.position.set(0, 1.56, -0.1); g.add(turret);
     add(new THREE.BoxGeometry(2.0, 0.72, 2.4), vOlive, 0, 0, 0, turret);
     add(new THREE.CylinderGeometry(0.18, 0.2, 0.42, 12), vOlive, 0, 0.42, 0.1, turret);                     // 砲塔頂
     const bar = add(new THREE.CylinderGeometry(0.14, 0.17, 3.3, 14), gunMetal, 0, 0.04, -2.4, turret); bar.rotation.x = Math.PI / 2;   // 砲管
+  } else {   // howitzer 榴彈砲(站位手動瞄發)
+    add(new THREE.BoxGeometry(1.5, 0.38, 1.0), vOlive, 0, 0.72, 0.5, g);                                    // 砲架體
+    for (const sx of [-1, 1]) { const wh = add(new THREE.CylinderGeometry(0.68, 0.68, 0.28, 16), vTire, sx * 1.0, 0.68, 0.5, g); wh.rotation.z = Math.PI / 2; }  // 大輪
+    add(new THREE.BoxGeometry(1.9, 1.0, 0.12), vDark, 0, 1.18, -0.2, g);                                    // 防盾
+    add(new THREE.BoxGeometry(0.22, 0.22, 2.2), vOlive, 0, 0.5, 1.7, g);                                    // 駐鋤(後拖)
+    turret = new THREE.Group(); turret.position.set(0, 1.2, 0); g.add(turret);                              // 俯仰組
+    const bar = add(new THREE.CylinderGeometry(0.12, 0.16, 3.8, 14), gunMetal, 0, 0, -1.9, turret); bar.rotation.x = Math.PI / 2;   // 長砲管
+    add(new THREE.BoxGeometry(0.42, 0.42, 0.6), gunMetal, 0, 0, 0.25, turret);                              // 砲閂
+    turret.rotation.x = 0.3;
   }
   const v = { type, group: g, turret, heading: ry, speed: 0, fireT: 0 }; VEHICLES.push(v); return v;
 }
 makeVehicle("humvee", 22, 32, 0.5);
 makeVehicle("tank", 31, 25, 0.2);
+makeVehicle("howitzer", 30, 13, 0);
 let vehicle = null;
 function nearVehicle() { for (const v of VEHICLES) { const dx = camera.position.x - v.group.position.x, dz = camera.position.z - v.group.position.z; if (dx * dx + dz * dz < 18) return v; } return null; }
-function enterVehicle(v) { vehicle = v; v.speed = 0; if (WEAPONS[wi]) WEAPONS[wi].group.visible = false; showNarr(v.type === "tank" ? "戰車 · WASD／搖桿駕駛 · 左鍵開炮 · 按 E 下車" : "悍馬車 · WASD／搖桿駕駛 · 按 E 下車", 3.2); }
+function enterVehicle(v) { vehicle = v; v.speed = 0; if (WEAPONS[wi]) WEAPONS[wi].group.visible = false; showNarr(v.type === "tank" ? "戰車 · WASD／搖桿駕駛 · 左鍵開炮 · 按 E 下車" : v.type === "howitzer" ? "榴彈砲 · 看高一點增加射程 · 左鍵發射 · 按 E 離開砲位" : "悍馬車 · WASD／搖桿駕駛 · 按 E 下車", 3.4); }
 function exitVehicle() { if (!vehicle) return; const v = vehicle; camera.position.set(v.group.position.x + Math.cos(v.heading) * 3, EYE, v.group.position.z + Math.sin(v.heading) * 3); yaw = v.heading + Math.PI / 2; pitch = 0; vehicle = null; if (WEAPONS[wi]) WEAPONS[wi].group.visible = true; }
 function fireTankShell(v, fx, fz) {
   const tip = new THREE.Vector3(v.group.position.x + fx * 3.6, 1.6, v.group.position.z + fz * 3.6);
@@ -935,8 +945,38 @@ function fireTankShell(v, fx, fz) {
   const pt = (h.length && h[0].point) ? h[0].point.clone() : tip.clone().addScaledVector(d, 70);
   setTimeout(() => { explode(new THREE.Vector3(pt.x, 0.3, pt.z), 0, true); }, 110);
 }
+const shells = [];
+function spawnShell(pos, vel) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 6), gunMetal); m.position.copy(pos); m.castShadow = true; scene.add(m); shells.push({ m, vel: vel.clone(), prev: pos.clone(), life: 9 }); }
+function updateShells(dt) {
+  for (let i = shells.length - 1; i >= 0; i--) {
+    const s = shells[i]; s.vel.y -= 17 * dt; s.prev.copy(s.m.position);
+    const np = s.m.position.clone().addScaledVector(s.vel, dt);
+    let hit = null;
+    if (np.y <= 0.25) hit = new THREE.Vector3(np.x, 0.3, np.z);
+    else { ray.set(s.prev, s.vel.clone().normalize()); ray.far = s.prev.distanceTo(np) + 0.3; const h = ray.intersectObject(ROOT, true); if (h.length) hit = h[0].point.clone(); }
+    if (hit) { explode(hit, 0, true); scene.remove(s.m); shells.splice(i, 1); continue; }
+    s.m.position.copy(np); s.life -= dt; if (s.life <= 0) { scene.remove(s.m); shells.splice(i, 1); }
+  }
+}
+function fireHowitzer(v) {
+  shake = Math.max(shake, 0.7); sfxExplode(v.group.position);
+  const d = new THREE.Vector3(); camera.getWorldDirection(d);
+  const muzz = camera.position.clone().addScaledVector(d, 2.2); muzz.y += 0.3;
+  spawnShell(muzz, d.multiplyScalar(42)); emitFx(sparkPool, muzz, 0.4, 0.45, 1.3, true);
+}
 function updateVehicle(dt) {
   const v = vehicle;
+  if (v.type === "howitzer") {   // 站位榴彈砲:自由瞄準 + 砲管俯仰 + 彈道發射
+    camera.rotation.set(pitch, yaw, 0);
+    const hfx = -Math.sin(v.heading), hfz = -Math.cos(v.heading);
+    camera.position.set(v.group.position.x - hfx * 0.7, 1.78, v.group.position.z - hfz * 0.7);
+    let trav = yaw - v.heading; while (trav > Math.PI) trav -= 2 * Math.PI; while (trav < -Math.PI) trav += 2 * Math.PI;
+    v.turret.rotation.y = Math.max(-1.0, Math.min(1.0, trav)); v.turret.rotation.x = Math.max(0.05, Math.min(1.1, pitch));   // 方位±57°/仰角
+    if (v.fireT > 0) v.fireT -= dt;
+    if (mouseDown && v.fireT <= 0) { v.fireT = 2.2; fireHowitzer(v); }
+    if (hintEl) { hintEl.style.opacity = "1"; hintEl.textContent = "榴彈砲 · 看高一點增加射程 · 左鍵發射 · 按 E 離開砲位"; }
+    return;
+  }
   let thr = 0, steer = 0;
   if (keys.KeyW) thr += 1; if (keys.KeyS) thr -= 1; if (keys.KeyA) steer -= 1; if (keys.KeyD) steer += 1;
   thr += tjz; steer += tjx;
@@ -1383,7 +1423,7 @@ function updateFP(dt) {
     updateVehicle(dt); updateWaves(dt); updateMusic(dt);
     updateProjectiles(dt); updateTargets(dt); updateEnemies(dt); updateEffects(dt);
     updateFxPool(sparkPool, dt); updateFxPool(dustPool, dt); updateFxPool(trailPool, dt); updateFxPool(bloodPool, dt);
-    updateMemShards(dt); updateTracers(dt); updateListener();
+    updateMemShards(dt); updateTracers(dt); updateShells(dt); updateListener();
     return;
   }
   const crouch = !!(keys.ShiftLeft || keys.ShiftRight);
@@ -1486,7 +1526,7 @@ function updateFP(dt) {
   w.group.visible = !scoped;
   updateProjectiles(dt); updateTargets(dt); updateEnemies(dt); updateEffects(dt);
   updateFxPool(sparkPool, dt); updateFxPool(dustPool, dt); updateFxPool(trailPool, dt); updateFxPool(bloodPool, dt);
-  updateMemShards(dt); updateTracers(dt);   // 記憶光點 + CS 曳光
+  updateMemShards(dt); updateTracers(dt); updateShells(dt);   // 記憶光點 + CS 曳光 + 榴彈砲彈道
   updateListener();
 }
 showWeapon(0);
