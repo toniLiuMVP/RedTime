@@ -264,7 +264,7 @@ function targetTex() {
   const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = -0.25; ROOT.add(g);
   add(new THREE.BoxGeometry(11, 0.4, 22), matT(0xb5a888, T.concrete, 2, 5, { roughness: 0.95 }), 0, 0.25, 0, g).castShadow = false;
   // 射擊位沙包
-  for (let i = -1; i <= 1; i++) { add(new THREE.BoxGeometry(2.4, 0.8, 1.1), mat(0xc3ad82, { roughness: 1 }), i * 3, 0.7, 9, g); add(new THREE.BoxGeometry(2.0, 0.7, 0.9), mat(0xb8a277, { roughness: 1 }), i * 3, 1.4, 9, g); }
+  for (let i = -1; i <= 1; i++) { add(new THREE.BoxGeometry(2.4, 0.8, 1.1), mat(0xc3ad82, { roughness: 1 }), i * 3, 0.7, 9, g).userData.surface = "sand"; add(new THREE.BoxGeometry(2.0, 0.7, 0.9), mat(0xb8a277, { roughness: 1 }), i * 3, 1.4, 9, g).userData.surface = "sand"; }
   const tm = new THREE.MeshStandardMaterial({ map: targetTex(), roughness: 0.92 });
   for (let i = 0; i < 3; i++) { add(new THREE.BoxGeometry(0.3, 3.4, 0.3), mat(0x6e5436), (i - 1) * 3, 1.7, -9.5, g); add(new THREE.BoxGeometry(2.1, 2.1, 0.18), tm, (i - 1) * 3, 2.9, -9.3, g); }
 })(34, -2);
@@ -273,7 +273,7 @@ function targetTex() {
 (function fdc(x, z) {
   const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = 0.5; ROOT.add(g);
   add(new THREE.BoxGeometry(8, 3.6, 6.5), matT(0x6b6f42, T.wall, 2, 1, { roughness: 0.93 }), 0, 1.8, 0, g);
-  for (let i = -2; i <= 2; i++) for (const sz of [-1, 1]) add(new THREE.BoxGeometry(1.5, 0.6, 1.1), mat(0xc3ad82, { roughness: 1 }), i * 1.5, 3.9, sz * 2.5, g);
+  for (let i = -2; i <= 2; i++) for (const sz of [-1, 1]) add(new THREE.BoxGeometry(1.5, 0.6, 1.1), mat(0xc3ad82, { roughness: 1 }), i * 1.5, 3.9, sz * 2.5, g).userData.surface = "sand";
   add(new THREE.BoxGeometry(5, 1.0, 0.12), mat(0x10141a, { roughness: 0.3, metalness: 0.2, envMapIntensity: 1.4 }), 0, 2.3, 3.28, g).castShadow = false;
   add(new THREE.CylinderGeometry(0.07, 0.07, 6.5, 6), new THREE.MeshStandardMaterial({ color: 0x9aa0a4, metalness: 0.7, roughness: 0.4, envMapIntensity: 1.3 }), 2.6, 7, -1.8, g);
   const dish = add(new THREE.SphereGeometry(0.95, 18, 12, 0, 6.3, 0, 1.15), new THREE.MeshStandardMaterial({ color: 0xb8bcc0, metalness: 0.5, roughness: 0.45, envMapIntensity: 1.4, side: THREE.DoubleSide }), -2.4, 5.0, -1.6, g); dish.rotation.set(1.0, 0.5, 0);
@@ -319,7 +319,7 @@ for (const [x, z, col, boom] of [[10, 6, 0x7a4030, 1], [11.4, 6.6, 0x4a6a3e, 0],
 }
 
 /* ───────── CS 風掩體木箱 ───────── */
-function crate(x, z, s) { add(new THREE.BoxGeometry(s, s, s), matT(0x9b7a45, T.crate, 1, 1, { roughness: 0.85 }), x, s / 2, z); OBSTACLES.push([x - s / 2, x + s / 2, z - s / 2, z + s / 2]); }
+function crate(x, z, s) { add(new THREE.BoxGeometry(s, s, s), matT(0x9b7a45, T.crate, 1, 1, { roughness: 0.85 }), x, s / 2, z).userData.surface = "wood"; OBSTACLES.push([x - s / 2, x + s / 2, z - s / 2, z + s / 2]); }
 crate(4, 4, 1.7); crate(5.4, 2.6, 1.2); crate(3.4, 2.3, 1.0);
 crate(-8, -12, 1.9); crate(-6.3, -12.7, 1.4);
 crate(13, -14, 1.8); crate(14.5, -13.2, 1.2); crate(12.6, -12.4, 1.0);
@@ -393,7 +393,7 @@ let cowTail = null, cowHead = null;
   // 沙包掩體(三層磚砌交錯) + 加入 OBSTACLES 當掩體
   const sandbagWall = (cx, cz, ang, len) => {
     const dx = Math.cos(ang), dz = Math.sin(ang);
-    for (let row = 0; row < 3; row++) { const n = len - (row % 2); for (let i = 0; i < n; i++) { const off = (i - n / 2 + 0.5) * 0.52 + (row % 2) * 0.26; const sb = add(new THREE.BoxGeometry(0.5, 0.27, 0.34), i % 2 ? sand : sand2, cx + dx * off, 0.16 + row * 0.25, cz + dz * off); sb.rotation.y = ang + (Math.random() - 0.5) * 0.12; } }
+    for (let row = 0; row < 3; row++) { const n = len - (row % 2); for (let i = 0; i < n; i++) { const off = (i - n / 2 + 0.5) * 0.52 + (row % 2) * 0.26; const sb = add(new THREE.BoxGeometry(0.5, 0.27, 0.34), i % 2 ? sand : sand2, cx + dx * off, 0.16 + row * 0.25, cz + dz * off); sb.rotation.y = ang + (Math.random() - 0.5) * 0.12; sb.userData.surface = "sand"; } }
     const hw = len * 0.26; OBSTACLES.push([cx - Math.abs(dx) * hw - 0.2, cx + Math.abs(dx) * hw + 0.2, cz - Math.abs(dz) * hw - 0.2, cz + Math.abs(dz) * hw + 0.2]);
   };
   sandbagWall(26, 3, 0.35, 6); sandbagWall(-4, 26, 1.25, 5);
@@ -881,7 +881,22 @@ function emitFx(pool, pos, life, base, grow, add) { const e = pool[pool._i = (po
 function updateFxPool(pool, dt) { for (const e of pool) { if (!e.on) continue; e.t += dt; const k = e.t / e.life; if (k >= 1) { e.on = false; e.s.visible = false; continue; } e.s.material.opacity = (e.add ? 0.9 : 0.6) * (1 - k); e.s.scale.setScalar(e.base + e.grow * k); } }
 function spark(pos) { emitFx(sparkPool, pos, 0.16, 0.32, 0.4, true); }
 function dust(pos) { emitFx(dustPool, pos, 0.5, 0.3, 1.0, false); }
-function impact(point) { const p = point.clone().addScaledVector(tmpD, -0.03); spark(p); dust(p); putDecal(p); sfxImpact(); }
+function sfxRicochet() { if (!actx) return; noiseHit(0.05, 3200, 1400, 0.16, "bandpass"); tone(2600, 900, 0.12, 0.14, "triangle"); }   // 金屬跳彈 ping
+function sfxWoodHit() { if (!actx) return; noiseHit(0.08, 900, 300, 0.22); tone(180, 90, 0.07, 0.16, "square"); }            // 木頭悶響
+function sfxDirtHit() { if (!actx) return; noiseHit(0.12, 420, 130, 0.24, "lowpass"); }                                       // 泥土噗
+// 表面判定:物件標記 surface 優先,油桶=金屬,低處=泥土,其餘=混凝土
+function surfaceOf(hitObj, point) { let p = hitObj; while (p) { const u = p.userData; if (u && u.surface) return u.surface; if (u && u.kind === "barrel") return "metal"; p = p.parent; } return point.y < 0.3 ? "dirt" : "concrete"; }
+const _imp = new THREE.Vector3();
+// 分材質彈著:金屬跳彈火花 / 木屑 / 泥土揚塵 / 混凝土灰 / 沙包悶噗
+function impact(point, surf) {
+  const p = point.clone().addScaledVector(tmpD, -0.03);
+  surf = surf || "dirt";
+  if (surf === "metal") { for (let i = 0; i < 3; i++) { _imp.copy(p); _imp.x += (Math.random() - 0.5) * 0.16; _imp.y += (Math.random() - 0.5) * 0.16; spark(_imp); } putDecal(p); sfxRicochet(); }   // 鐵桶:火花四濺 + 跳彈,無揚塵
+  else if (surf === "wood") { dust(p); spark(p); _imp.copy(p); _imp.y += 0.1; spark(_imp); putDecal(p); sfxWoodHit(); }   // 木箱:木屑 + 悶響
+  else if (surf === "sand") { dust(p); dust(p); sfxDirtHit(); }   // 沙包:多揚塵悶噗,無火花無彈孔
+  else if (surf === "concrete") { dust(p); spark(p); putDecal(p); sfxImpact(); }   // 混凝土:灰粉 + 小火花 + 彈孔
+  else { dust(p); dust(p); putDecal(p); sfxDirtHit(); }   // 泥土:大揚塵,無火花
+}
 
 /* ── 命中判定 ── */
 const ray = new THREE.Raycaster(); const tmpO = new THREE.Vector3(), tmpD = new THREE.Vector3(), tmpO2 = new THREE.Vector3();
@@ -942,19 +957,19 @@ function shootHit(w) {
   if (w.muzzle) { w.muzzle.getWorldPosition(tmpO2); const ex = h.length ? h[0].point.x : tmpO.x + tmpD.x * 140, ey = h.length ? h[0].point.y : tmpO.y + tmpD.y * 140, ez = h.length ? h[0].point.z : tmpO.z + tmpD.z * 140; tracer(tmpO2.x, tmpO2.y, tmpO2.z, ex, ey, ez); }   // CS 級曳光彈
   if (!h.length) return;
   const o = findHit(h[0].object);
-  if (o && o.userData.kind === "barrel") { if (o.userData.boom) { const p = o.position.clone(); killBarrel(o); explode(p, 0, false); } else impact(h[0].point); }
+  if (o && o.userData.kind === "barrel") { if (o.userData.boom) { const p = o.position.clone(); killBarrel(o); explode(p, 0, false); } else impact(h[0].point, "metal"); }
   else if (o && o.userData.kind === "enemy") { const hs = !!(h[0].object.userData && h[0].object.userData.head); hitEnemy(o, (WDMG[w.name] || 30) * (hs ? 2.6 : 1), hs, h[0].point); }
   else if (o && o.userData.kind === "target") targetHit(o);
-  else impact(h[0].point);
+  else impact(h[0].point, surfaceOf(h[0].object, h[0].point));
 }
 function meleeHit(w) {
   camera.getWorldPosition(tmpO); camera.getWorldDirection(tmpD); ray.set(tmpO, tmpD); ray.far = w.reach;
   const h = ray.intersectObject(ROOT, true); if (!h.length || h[0].distance > w.reach) return;
   const o = findHit(h[0].object);
-  if (o && o.userData.kind === "barrel") { if (o.userData.boom) { const p = o.position.clone(); killBarrel(o); explode(p, 0, false); } else { impact(h[0].point); sfxThud(); } }
+  if (o && o.userData.kind === "barrel") { if (o.userData.boom) { const p = o.position.clone(); killBarrel(o); explode(p, 0, false); } else impact(h[0].point, "metal"); }
   else if (o && o.userData.kind === "enemy") hitEnemy(o, WDMG[w.name] || 30, false, h[0].point);
   else if (o && o.userData.kind === "target") targetHit(o);
-  else { impact(h[0].point); sfxThud(); }
+  else impact(h[0].point, surfaceOf(h[0].object, h[0].point));
 }
 
 /* ── 爆炸 ── */
