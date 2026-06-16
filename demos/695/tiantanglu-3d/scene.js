@@ -780,7 +780,7 @@ function spreadOf(w) { let s = w.type === "auto" ? 0.006 : 0.003; if (w.recoilMu
 function findHit(o) { let p = o; while (p) { if (p.userData && p.userData.kind) return p; p = p.parent; } return null; }
 function killBarrel(o) { o.userData.dead = true; o.visible = false; const i = explosives.indexOf(o); if (i >= 0) explosives.splice(i, 1); }
 function fire() {
-  if (!isActive() || dead) return;
+  if (!isActive() || dead || vehicle) return;   // 駕駛中左鍵=戰車開炮(updateVehicle 處理),不開手持武器
   if (drawT > 0 || reloadT > 0) return;   // 拔槍/換彈動畫期間不能開火
   const w = WEAPONS[wi];
   if (w.type === "melee") { if (w.swingT <= 0) { w.swingT = w.swingDur || 0.3; (w.name === "鐵鎚" ? sfxThud : w.name === "小刀" ? sfxKnife : sfxSwoosh)(); meleeHit(w); } return; }
@@ -855,6 +855,62 @@ function callArtillery() {
     setTimeout(() => { if (MODE === "sim") explode(new THREE.Vector3(tx + (Math.random() - 0.5) * 5.5, 0.3, tz + (Math.random() - 0.5) * 5.5), 0, true); }, 470);
   }, 2500 + i * 230);
   setTimeout(() => { artyMarker.visible = false; }, 2500 + N * 230 + 700);
+}
+/* ── 載具:悍馬車 + 戰車(走近按 E 上車,WASD/搖桿駕駛,戰車左鍵開炮,E 下車) ── */
+const VEHICLES = [];
+const vOlive = mat(0x4a5034, { roughness: 0.82, metalness: 0.12, envMapIntensity: 0.7 }), vDark = mat(0x32371f, { roughness: 0.86 }), vTire = mat(0x16161a, { roughness: 0.92 });
+const vGlass = new THREE.MeshPhysicalMaterial({ color: 0x141c2a, roughness: 0.1, metalness: 0, envMapIntensity: 1.5, clearcoat: 0.5 });
+function makeVehicle(type, x, z, ry) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; ROOT.add(g);
+  let turret = null;
+  if (type === "humvee") {
+    add(new THREE.BoxGeometry(2.5, 0.82, 4.4), vOlive, 0, 1.0, 0, g);
+    add(new THREE.BoxGeometry(2.4, 0.84, 2.1), vOlive, 0, 1.76, 0.4, g);                                   // 駕駛艙
+    add(new THREE.BoxGeometry(2.12, 0.62, 0.1), vGlass, 0, 1.84, -0.66, g);                                 // 擋風
+    add(new THREE.BoxGeometry(2.42, 0.5, 1.3), vOlive, 0, 1.16, -1.86, g);                                  // 引擎蓋
+    add(new THREE.BoxGeometry(2.45, 0.1, 2.0), vDark, 0, 2.22, 0.45, g);                                    // 車頂
+    for (const sx of [-1, 1]) for (const sz of [-1.45, 1.45]) { const wh = add(new THREE.CylinderGeometry(0.56, 0.56, 0.42, 14), vTire, sx * 1.2, 0.56, sz, g); wh.rotation.z = Math.PI / 2; }
+  } else {   // tank
+    add(new THREE.BoxGeometry(2.9, 0.82, 5.2), vOlive, 0, 0.98, 0, g);                                      // 車體
+    for (const sx of [-1, 1]) { add(new THREE.BoxGeometry(0.76, 0.78, 5.4), vDark, sx * 1.46, 0.6, 0, g); for (let i = -2; i <= 2; i++) { const rl = add(new THREE.CylinderGeometry(0.3, 0.3, 0.82, 12), vTire, sx * 1.46, 0.6, i * 1.05, g); rl.rotation.z = Math.PI / 2; } }
+    turret = new THREE.Group(); turret.position.set(0, 1.56, -0.1); g.add(turret);
+    add(new THREE.BoxGeometry(2.0, 0.72, 2.4), vOlive, 0, 0, 0, turret);
+    add(new THREE.CylinderGeometry(0.18, 0.2, 0.42, 12), vOlive, 0, 0.42, 0.1, turret);                     // 砲塔頂
+    const bar = add(new THREE.CylinderGeometry(0.14, 0.17, 3.3, 14), gunMetal, 0, 0.04, -2.4, turret); bar.rotation.x = Math.PI / 2;   // 砲管
+  }
+  const v = { type, group: g, turret, heading: ry, speed: 0, fireT: 0 }; VEHICLES.push(v); return v;
+}
+makeVehicle("humvee", 22, 32, 0.5);
+makeVehicle("tank", 31, 25, 0.2);
+let vehicle = null;
+function nearVehicle() { for (const v of VEHICLES) { const dx = camera.position.x - v.group.position.x, dz = camera.position.z - v.group.position.z; if (dx * dx + dz * dz < 18) return v; } return null; }
+function enterVehicle(v) { vehicle = v; v.speed = 0; if (WEAPONS[wi]) WEAPONS[wi].group.visible = false; showNarr(v.type === "tank" ? "戰車 · WASD／搖桿駕駛 · 左鍵開炮 · 按 E 下車" : "悍馬車 · WASD／搖桿駕駛 · 按 E 下車", 3.2); }
+function exitVehicle() { if (!vehicle) return; const v = vehicle; camera.position.set(v.group.position.x + Math.cos(v.heading) * 3, EYE, v.group.position.z + Math.sin(v.heading) * 3); yaw = v.heading + Math.PI / 2; pitch = 0; vehicle = null; if (WEAPONS[wi]) WEAPONS[wi].group.visible = true; }
+function fireTankShell(v, fx, fz) {
+  const tip = new THREE.Vector3(v.group.position.x + fx * 3.6, 1.6, v.group.position.z + fz * 3.6);
+  shake = Math.max(shake, 0.85); sfxExplode(tip); emitFx(sparkPool, tip, 0.35, 0.35, 1.1, true);
+  const d = new THREE.Vector3(fx, -0.015, fz).normalize(); ray.set(tip, d); ray.far = 90; const h = ray.intersectObject(ROOT, true);
+  const pt = (h.length && h[0].point) ? h[0].point.clone() : tip.clone().addScaledVector(d, 70);
+  setTimeout(() => { explode(new THREE.Vector3(pt.x, 0.3, pt.z), 0, true); }, 110);
+}
+function updateVehicle(dt) {
+  const v = vehicle;
+  let thr = 0, steer = 0;
+  if (keys.KeyW) thr += 1; if (keys.KeyS) thr -= 1; if (keys.KeyA) steer -= 1; if (keys.KeyD) steer += 1;
+  thr += tjz; steer += tjx;
+  const maxSpd = v.type === "tank" ? 8 : 14, accel = v.type === "tank" ? 7 : 12, turnRate = v.type === "tank" ? 1.2 : 1.9;
+  v.speed += thr * accel * dt; v.speed *= Math.max(0, 1 - dt * 1.5); v.speed = Math.max(-maxSpd * 0.45, Math.min(maxSpd, v.speed));
+  if (Math.abs(v.speed) > 0.25) v.heading -= steer * turnRate * dt * Math.sign(v.speed) * Math.min(1, Math.abs(v.speed) / 2.5);
+  v.group.rotation.y = v.heading;
+  const fx = -Math.sin(v.heading), fz = -Math.cos(v.heading);
+  v.group.position.x += fx * v.speed * dt; v.group.position.z += fz * v.speed * dt;
+  resolveCollisionFor(v.group.position, 1.9); clampBound(v.group.position);
+  const cd = v.type === "tank" ? 9.5 : 8.5;
+  camera.position.set(v.group.position.x - fx * cd, 4.7, v.group.position.z - fz * cd);
+  camera.lookAt(v.group.position.x + fx * 3, 1.5, v.group.position.z + fz * 3);
+  if (v.fireT > 0) v.fireT -= dt;
+  if (v.type === "tank" && mouseDown && v.fireT <= 0) { v.fireT = 1.5; fireTankShell(v, fx, fz); }
+  if (hintEl) { hintEl.style.opacity = "1"; hintEl.textContent = v.type === "tank" ? "戰車 · 左鍵開炮 · 按 E 下車" : "悍馬車 · 按 E 下車"; }
 }
 function updateEffects(dt) {
   if (MODE === "sim" && artyCD > 0) artyCD = Math.max(0, artyCD - dt);
@@ -1100,7 +1156,7 @@ function enterSim() {
     updateWaveHUD(); playMusic(MUSIC_SIM); showNarr(NARR.enter, 3.6); blinking = false;
   });
 }
-function tryInteract() { if (MODE !== "hub" || !isActive()) return; if (nearCow()) showNarr(NARR.cow, 5.5); else if (nearJacket()) showNarr(NARR.dream3, 5.5); else if (nearRangeEntry()) enterSim(); }
+function tryInteract() { if (vehicle) { exitVehicle(); return; } if (MODE !== "hub" || !isActive()) return; const v = nearVehicle(); if (v) { enterVehicle(v); return; } if (nearCow()) showNarr(NARR.cow, 5.5); else if (nearJacket()) showNarr(NARR.dream3, 5.5); else if (nearRangeEntry()) enterSim(); }
 /* ── 一眼瞬間(Tier 2):撐過 GOAL_WAVE → 主動放下槍 → 抽象光形非戰鬥高光(放下武器,光才出現) ── */
 const GOAL_WAVE = 5;   // 撐過這波=撐過了,夢讓他停下(toni 選先驗收用 5)
 let awaitDisarm = false;
@@ -1275,6 +1331,13 @@ let bob = 0, recoilKick = 0, vy = 0, jumpY = 0, curEye = EYE, sprayResetT = 0, l
 let drawT = 0, drawDur = 0.5, reloadT = 0, reloadDur = 2.4, reloadFilled = true, chSpread = 0;
 function updateFP(dt) {
   const w = WEAPONS[wi];
+  if (vehicle) {   // 駕駛載具:獨立路徑(驅動 + 追逐攝影機),仍更新世界
+    updateVehicle(dt); updateWaves(dt); updateMusic(dt);
+    updateProjectiles(dt); updateTargets(dt); updateEnemies(dt); updateEffects(dt);
+    updateFxPool(sparkPool, dt); updateFxPool(dustPool, dt); updateFxPool(trailPool, dt); updateFxPool(bloodPool, dt);
+    updateMemShards(dt); updateTracers(dt); updateListener();
+    return;
+  }
   const crouch = !!(keys.ShiftLeft || keys.ShiftRight);
   const silent = !!(keys.ControlLeft || keys.ControlRight);
   updateWaves(dt);
@@ -1311,7 +1374,7 @@ function updateFP(dt) {
   if (scarFlash > 0) scarFlash = Math.max(0, scarFlash - dt * 0.55);   // 疤痕閃光衰減,留下永久 scarFloor
   if (scarEl) scarEl.style.opacity = (scarFloor + scarFlash).toFixed(3);
   if (tbDisarmEl) tbDisarmEl.classList.toggle("on", isTouch && touchActive && MODE === "sim" && awaitDisarm);   // 手機放下槍鈕
-  if (hintEl) { if (MODE === "sim" && awaitDisarm) { hintEl.style.opacity = "1"; hintEl.textContent = isTouch ? "撐過了 · 按「放下槍」" : "撐過了 · 按 H 放下槍"; } else if (MODE === "hub" && isActive()) { hintEl.style.opacity = "1"; hintEl.textContent = nearCow() ? "按 E · 顧那頭牛" : nearJacket() ? "按 E · 看那件外套" : nearRangeEntry() ? "按 E 進入「實戰模擬練習」" : "自由走動軍營 · 按 B 開軍械庫購買裝備 · 走到靶場(右前方)按 E 開始實戰模擬"; } else hintEl.style.opacity = "0"; }
+  if (hintEl) { if (MODE === "sim" && awaitDisarm) { hintEl.style.opacity = "1"; hintEl.textContent = isTouch ? "撐過了 · 按「放下槍」" : "撐過了 · 按 H 放下槍"; } else if (MODE === "hub" && isActive()) { hintEl.style.opacity = "1"; hintEl.textContent = nearVehicle() ? "按 E 上車駕駛" : nearCow() ? "按 E · 顧那頭牛" : nearJacket() ? "按 E · 看那件外套" : nearRangeEntry() ? "按 E 進入「實戰模擬練習」" : "自由走動軍營 · 按 B 開軍械庫購買裝備 · 走到靶場(右前方)按 E 開始實戰模擬"; } else hintEl.style.opacity = "0"; }
   updateMusic(dt);
   moodSim += ((MODE === "sim" && !dead ? 1 : 0) - moodSim) * Math.min(1, dt * 0.8);   // 夢進熔爐:光影收緊(暗角加深 / 曝光略降 / 顆粒略增)
   if (postfxOn && postfx) { const tt = postfx.tuning; tt.vignette.darkness = 0.26 + moodSim * 0.14 + skyDarkCur * 0.12; tt.exposure = 1.08 - moodSim * 0.07 - skyDarkCur * 0.06; tt.grain.amount = 0.012 + moodSim * 0.01; }
