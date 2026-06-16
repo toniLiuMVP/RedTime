@@ -667,8 +667,11 @@ const keys = {};
 const enterEl = document.getElementById("enter");
 let ads = false, mouseDown = false, lastShot = 0;
 const isTouch = (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) || ("ontouchstart" in window) || navigator.maxTouchPoints > 0 || /[?&]touch\b/i.test(location.search || "");   // 手機觸控(可 ?touch 強制)
-let touchActive = false, tjx = 0, tjz = 0;
+let touchActive = false, tjx = 0, tjz = 0, tCrouch = false, tWalk = false;   // tCrouch/tWalk:手機蹲下/慢走切換鍵狀態
 function isActive() { return document.pointerLockElement === canvas || touchActive; }   // pointer lock(桌機)或 touchActive(手機)
+// 任一全螢幕 overlay(設定/軍械/日記/教學)開啟時為 true。手機輕觸常帶微小位移,touchmove 的 preventDefault 會吞掉 overlay 按鈕的 click,
+// 故 overlay 開時整組 touch-look/搖桿/遊戲鈕一律讓位,讓 overlay 自己的按鈕吃到原生 click(修「軍械庫關不掉」)。
+function overlayOpen() { for (const id of ["settings", "shop", "diary", "tutorial"]) { const e = document.getElementById(id); if (e && e.classList.contains("on")) return true; } return false; }
 const DIGIT = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3, Digit5: 4, Digit6: 5, Digit7: 6, Digit8: 7, Digit9: 8 };
 addEventListener("keydown", (e) => { keys[e.code] = 1; if (e.code === "Space" || e.code === "Tab") e.preventDefault(); if (e.code in DIGIT) showWeapon(DIGIT[e.code]); else if (e.code === "KeyQ") showWeapon((wi + 1) % WEAPONS.length); else if (e.code === "KeyR") reload(); else if (e.code === "KeyE") tryInteract(); else if (e.code === "KeyH") { if (MODE === "sim" && awaitDisarm) startGaze(); } else if (e.code === "KeyB") { if (shopEl && shopEl.classList.contains("on")) closeShop(); else openShop(); } else if (e.code === "KeyG") callArtillery(); });
 addEventListener("keyup", (e) => { keys[e.code] = 0; });
@@ -689,23 +692,23 @@ if (isTouch) {
   const touchUI = document.getElementById("touch"), tjEl = document.getElementById("tj"), tjKnob = document.getElementById("tj-knob");
   // 進場:第一次點畫面 → touchActive(取代 pointer lock)
   canvas.addEventListener("touchstart", (e) => {
-    if (!touchActive && MODE !== "gaze") { touchActive = true; if (enterEl) enterEl.classList.add("hide"); if (touchUI) touchUI.classList.add("on"); ensureAudio(); if (maskOwned && maskEl) maskEl.classList.add("on"); if (MODE === "hub" && !firstHubShown) { firstHubShown = true; showNarr(NARR.hubEnter, 4.2); } e.preventDefault(); }
+    if (!touchActive && MODE !== "gaze") { touchActive = true; document.body.classList.add("touch"); if (enterEl) enterEl.classList.add("hide"); if (touchUI) touchUI.classList.add("on"); ensureAudio(); if (maskOwned && maskEl) maskEl.classList.add("on"); if (MODE === "hub" && !firstHubShown) { firstHubShown = true; showNarr(NARR.hubEnter, 4.2); } e.preventDefault(); }
   }, { passive: false });
   // 左搖桿:類比移動
   let tjId = null;
   function tjUpd(t) { const r = tjEl.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, max = r.width / 2; let dx = t.clientX - cx, dy = t.clientY - cy; const d = Math.hypot(dx, dy) || 1; if (d > max) { dx = dx / d * max; dy = dy / d * max; } tjKnob.style.transform = "translate(" + dx + "px," + dy + "px)"; tjx = dx / max; tjz = -dy / max; }
-  tjEl.addEventListener("touchstart", (e) => { tjId = e.changedTouches[0].identifier; tjUpd(e.changedTouches[0]); e.preventDefault(); e.stopPropagation(); }, { passive: false });
+  tjEl.addEventListener("touchstart", (e) => { if (overlayOpen()) return; tjId = e.changedTouches[0].identifier; tjUpd(e.changedTouches[0]); e.preventDefault(); e.stopPropagation(); }, { passive: false });
   tjEl.addEventListener("touchmove", (e) => { for (const t of e.changedTouches) if (t.identifier === tjId) { tjUpd(t); e.preventDefault(); } }, { passive: false });
   const tjEnd = (e) => { for (const t of e.changedTouches) if (t.identifier === tjId) { tjId = null; tjx = 0; tjz = 0; tjKnob.style.transform = ""; } };
   tjEl.addEventListener("touchend", tjEnd); tjEl.addEventListener("touchcancel", tjEnd);
   // 右側拖曳:視角(略過按鈕/搖桿/上方齒輪)
   let lookId = null, lpx = 0, lpy = 0;
-  addEventListener("touchstart", (e) => { if (!touchActive || lookId !== null) return; for (const t of e.changedTouches) { const el = document.elementFromPoint(t.clientX, t.clientY); if (el && (el.classList.contains("tbtn") || el.id === "tj" || el.id === "tj-knob" || el.id === "gear")) continue; lookId = t.identifier; lpx = t.clientX; lpy = t.clientY; break; } }, { passive: true });
-  addEventListener("touchmove", (e) => { if (lookId === null) return; for (const t of e.changedTouches) if (t.identifier === lookId) { const s = 0.0052 * settings.sens; yaw -= (t.clientX - lpx) * s; pitch -= (t.clientY - lpy) * s; pitch = Math.max(-1.2, Math.min(1.2, pitch)); lpx = t.clientX; lpy = t.clientY; e.preventDefault(); } }, { passive: false });
+  addEventListener("touchstart", (e) => { if (!touchActive || lookId !== null || overlayOpen()) return; for (const t of e.changedTouches) { const el = document.elementFromPoint(t.clientX, t.clientY); if (el && (el.classList.contains("tbtn") || el.id === "tj" || el.id === "tj-knob" || el.id === "gear")) continue; lookId = t.identifier; lpx = t.clientX; lpy = t.clientY; break; } }, { passive: true });
+  addEventListener("touchmove", (e) => { if (lookId === null || overlayOpen()) return; for (const t of e.changedTouches) if (t.identifier === lookId) { const s = 0.0052 * settings.sens; yaw -= (t.clientX - lpx) * s; pitch -= (t.clientY - lpy) * s; pitch = Math.max(-1.2, Math.min(1.2, pitch)); lpx = t.clientX; lpy = t.clientY; e.preventDefault(); } }, { passive: false });
   const lookEnd = (e) => { for (const t of e.changedTouches) if (t.identifier === lookId) lookId = null; };
   addEventListener("touchend", lookEnd); addEventListener("touchcancel", lookEnd);
   // 按鈕
-  const tbtn = (id, down, up) => { const el = document.getElementById(id); if (!el) return; el.addEventListener("touchstart", (e) => { e.preventDefault(); e.stopPropagation(); if (down) down(); }, { passive: false }); if (up) { el.addEventListener("touchend", (e) => { e.preventDefault(); up(); }); el.addEventListener("touchcancel", up); } };
+  const tbtn = (id, down, up) => { const el = document.getElementById(id); if (!el) return; el.addEventListener("touchstart", (e) => { e.preventDefault(); e.stopPropagation(); if (overlayOpen()) return; if (down) down(); }, { passive: false }); if (up) { el.addEventListener("touchend", (e) => { e.preventDefault(); up(); }); el.addEventListener("touchcancel", up); } };
   tbtn("tb-fire", () => { mouseDown = true; if (WEAPONS[wi].type !== "auto") fire(); }, () => { mouseDown = false; });
   tbtn("tb-jump", () => { keys.Space = 1; setTimeout(() => { keys.Space = 0; }, 60); });
   tbtn("tb-aim", () => { ads = !ads; });
@@ -715,6 +718,8 @@ if (isTouch) {
   tbtn("tb-shop", () => { if (shopEl && shopEl.classList.contains("on")) closeShop(); else openShop(); });
   tbtn("tb-disarm", () => { if (MODE === "sim" && awaitDisarm) startGaze(); });
   tbtn("tb-arty", () => { callArtillery(); });
+  tbtn("tb-crouch", () => { tCrouch = !tCrouch; const e = document.getElementById("tb-crouch"); if (e) e.classList.toggle("act", tCrouch); });   // 蹲下切換(再按起身)
+  tbtn("tb-walk", () => { tWalk = !tWalk; const e = document.getElementById("tb-walk"); if (e) e.classList.toggle("act", tWalk); });   // 慢走/靜步切換
 }
 
 /* ── 設定選單 + 可調準星 + 結算重啟 ── */
@@ -792,6 +797,12 @@ function shopOpenable() { return !dead && !gameOver && (MODE === "hub" || (MODE 
 function openShop() { if (!shopEl || !shopOpenable()) return; shopEl.classList.add("on"); renderShop(); if (document.pointerLockElement === canvas && document.exitPointerLock) document.exitPointerLock(); }
 function closeShop() { if (shopEl) shopEl.classList.remove("on"); }
 if (document.getElementById("shop-close")) document.getElementById("shop-close").addEventListener("click", closeShop);
+// 點 overlay 背景空白(非 .panel 內)即關閉 — 手機多一條保險出口,避免卡在介面裡
+function backdropClose(overlayId, closeFn) { const ov = document.getElementById(overlayId); if (!ov) return; ov.addEventListener("click", (e) => { if (e.target === ov) closeFn(); }); }
+backdropClose("shop", closeShop);
+backdropClose("settings", closeSettings);
+backdropClose("diary", () => { if (diaryEl) diaryEl.classList.remove("on"); });
+backdropClose("tutorial", () => { const t = document.getElementById("tutorial"); if (t) t.classList.remove("on"); });
 
 /* ── 特效資源 ── */
 const fireTex = tex((c, S) => { const g = c.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2); g.addColorStop(0, "rgba(255,250,235,1)"); g.addColorStop(0.25, "rgba(255,212,120,1)"); g.addColorStop(0.55, "rgba(240,120,40,0.9)"); g.addColorStop(1, "rgba(120,30,10,0)"); c.fillStyle = g; c.fillRect(0, 0, S, S); }, 128);
@@ -1426,8 +1437,8 @@ function updateFP(dt) {
     updateMemShards(dt); updateTracers(dt); updateShells(dt); updateListener();
     return;
   }
-  const crouch = !!(keys.ShiftLeft || keys.ShiftRight);
-  const silent = !!(keys.ControlLeft || keys.ControlRight);
+  const crouch = !!(keys.ShiftLeft || keys.ShiftRight) || tCrouch;   // 桌機 Shift / 手機蹲鈕
+  const silent = !!(keys.ControlLeft || keys.ControlRight) || tWalk;   // 桌機 Ctrl / 手機走鈕(慢走靜步)
   updateWaves(dt);
   // 視角 + 後座 + 震動
   camera.rotation.set(pitch - recoilKick - sprayPitch, yaw + sprayYaw, 0);
@@ -1462,7 +1473,7 @@ function updateFP(dt) {
   if (scarFlash > 0) scarFlash = Math.max(0, scarFlash - dt * 0.55);   // 疤痕閃光衰減,留下永久 scarFloor
   if (scarEl) scarEl.style.opacity = (scarFloor + scarFlash).toFixed(3);
   if (tbDisarmEl) tbDisarmEl.classList.toggle("on", isTouch && touchActive && MODE === "sim" && awaitDisarm);   // 手機放下槍鈕
-  if (hintEl) { if (MODE === "sim" && awaitDisarm) { hintEl.style.opacity = "1"; hintEl.textContent = isTouch ? "撐過了 · 按「放下槍」" : "撐過了 · 按 H 放下槍"; } else if (MODE === "hub" && isActive()) { hintEl.style.opacity = "1"; hintEl.textContent = nearVehicle() ? "按 E 上車駕駛" : nearCow() ? "按 E · 顧那頭牛" : nearJacket() ? "按 E · 看那件外套" : nearDiary() ? "按 E · 翻開大兵日記" : nearRangeEntry() ? "按 E 進入「實戰模擬練習」" : "自由走動軍營 · 按 B 開軍械庫購買裝備 · 走到靶場(右前方)按 E 開始實戰模擬"; } else hintEl.style.opacity = "0"; }
+  if (hintEl) { if (MODE === "sim" && awaitDisarm) { hintEl.style.opacity = "1"; hintEl.textContent = isTouch ? "撐過了 · 按「放下槍」" : "撐過了 · 按 H 放下槍"; } else if (MODE === "hub" && isActive()) { hintEl.style.opacity = "1"; hintEl.textContent = nearVehicle() ? "按 E 上車駕駛" : nearCow() ? "按 E · 顧那頭牛" : nearJacket() ? "按 E · 看那件外套" : nearDiary() ? "按 E · 翻開大兵日記" : nearRangeEntry() ? "按 E 進入「實戰模擬練習」" : (isTouch ? "搖桿走動軍營 · 按「軍械」鈕購買裝備 · 走到靶場(右前方)按 E 開始實戰" : "自由走動軍營 · 按 B 開軍械庫購買裝備 · 走到靶場(右前方)按 E 開始實戰模擬"); } else hintEl.style.opacity = "0"; }
   updateMusic(dt);
   moodSim += ((MODE === "sim" && !dead ? 1 : 0) - moodSim) * Math.min(1, dt * 0.8);   // 夢進熔爐:光影收緊(暗角加深 / 曝光略降 / 顆粒略增)
   if (postfxOn && postfx) { const tt = postfx.tuning; tt.vignette.darkness = 0.26 + moodSim * 0.14 + skyDarkCur * 0.12; tt.exposure = 1.08 - moodSim * 0.07 - skyDarkCur * 0.06; tt.grain.amount = 0.012 + moodSim * 0.01; }
