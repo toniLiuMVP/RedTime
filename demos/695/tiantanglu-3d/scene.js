@@ -945,7 +945,7 @@ function fire() {
   w.ammo--; updateHUD(); chSpread = Math.min(30, chSpread + (w.type === "auto" ? 5 : 9)); recoilKick = Math.min(0.22, recoilKick + (w.type === "auto" ? 0.02 : 0.05) * (w.recoilMul || 1));
   const spr = WSPRAY[w.name] || 0; sprayPitch = Math.min(0.17, sprayPitch + spr); sprayYaw += Math.sin(sprayCount * 0.8) * spr * 0.6;
   sprayCount++; sprayResetT = 0.35; w.muzzleT = 0.05; sfxShot(w.type); if (w.scope) sfxBolt();
-  flashMuzzleLight(w);
+  flashMuzzleLight(w); addKick(w.name);
   if (w.muzzle) { w.muzzle.getWorldPosition(tmpO); const fx = WMUZZLE[w.name]; if (fx) { emitFx(dustPool, tmpO, fx.sm[0], fx.sm[1], fx.sm[2], false); ejectCasing(fx.cas); } else emitFx(dustPool, tmpO, 0.3, 0.14, 0.45, false); }
   shootHit(w);
 }
@@ -1488,7 +1488,7 @@ function throwGrenade(w) {
   projectiles.push({ m, vel, type: "grenade", t: 0, fuse: 1.5 });
 }
 function fireRocket(w) {
-  if (w.count <= 0) { sfxDry(); return; } w.count--; updateHUD(); sfxRocketFire(); w.muzzleT = 0.06; recoilKick = Math.min(0.32, recoilKick + 0.22); shake = Math.max(shake, 0.62);   // 火箭筒:大後座 + 強震(整個人被推一把)
+  if (w.count <= 0) { sfxDry(); return; } w.count--; updateHUD(); sfxRocketFire(); w.muzzleT = 0.06; recoilKick = Math.min(0.32, recoilKick + 0.22); shake = Math.max(shake, 0.62); addKick("火箭砲");   // 火箭筒:大後座 + 強震(整個人被推一把)
   camera.getWorldPosition(tmpO); camera.getWorldDirection(tmpD);
   // 前方大火焰 + 濃煙 + 後焰 back-blast(火箭筒特徵:尾管向後下方噴一大團煙焰)
   if (w.muzzle) { w.muzzle.getWorldPosition(tmpO2); emitFx(sparkPool, tmpO2, 0.32, 0.55, 1.5, true); emitFx(dustPool, tmpO2, 0.85, 0.45, 2.0, false); }
@@ -1546,6 +1546,10 @@ function clampBound(p) { const ex = p.x, ez = p.z + 20, er = Math.hypot(ex, ez);
 function resolveCollision() { resolveCollisionFor(camera.position, PLAYER_R); }
 const scopeEl = document.getElementById("scope"), crossEl = document.getElementById("cross");
 let bob = 0, recoilKick = 0, vy = 0, jumpY = 0, curEye = EYE, sprayResetT = 0, lastFootstep = 0, wasGrounded = true, adsBlend = 0;
+let vmKick = 0, vmKickRot = 0;   // 武器在手中的後座頓挫(每發瞬間衝擊 → 快速回彈,與鏡頭爬升 recoilKick 分開)
+// 每把武器的頓挫量[往後位移衝擊, 槍口上揚衝擊];數值小但快,給「槍在手上一頓」的視覺
+const WKICK = { "小槍": [0.05, 0.18], "步槍": [0.055, 0.2], "機關槍": [0.036, 0.13], "狙擊槍": [0.12, 0.45], "火箭砲": [0.17, 0.55] };
+function addKick(name) { const k = WKICK[name]; if (!k) return; vmKick = Math.min(0.2, vmKick + k[0]); vmKickRot = Math.min(0.62, vmKickRot + k[1]); }
 let drawT = 0, drawDur = 0.5, reloadT = 0, reloadDur = 2.4, reloadFilled = true, chSpread = 0;
 function updateFP(dt) {
   const w = WEAPONS[wi];
@@ -1586,6 +1590,7 @@ function updateFP(dt) {
   if (moving && grounded && !silent) { lastFootstep -= dt; if (lastFootstep <= 0) { sfxStep(crouch); lastFootstep = crouch ? 0.5 : 0.36; } } else lastFootstep = 0;
   // 後座衰減 + spray reset
   if (recoilKick > 0) recoilKick = Math.max(0, recoilKick - dt * 0.5);
+  vmKick += (0 - vmKick) * Math.min(1, dt * 17); vmKickRot += (0 - vmKickRot) * Math.min(1, dt * 15);   // 頓挫快速回彈(snappy)
   if (drawT > 0) drawT = Math.max(0, drawT - dt);
   if (reloadT > 0) { reloadT = Math.max(0, reloadT - dt); if (!reloadFilled && 1 - reloadT / reloadDur >= 0.6) { const rw = WEAPONS[wi]; const t = Math.min(rw.mag - rw.ammo, rw.reserve); rw.ammo += t; rw.reserve -= t; reloadFilled = true; updateHUD(); } }
   chSpread = Math.max(0, chSpread - dt * 26);
@@ -1651,8 +1656,8 @@ function updateFP(dt) {
   if (drawT > 0) { const dp = 1 - drawT / drawDur, e = 1 - (1 - dp) * (1 - dp); drawDipY = -(1 - e) * 0.4; drawDipZ = (1 - e) * 0.12; drawRotX = (1 - e) * 1.0; }
   if (reloadT > 0) { const rp = 1 - reloadT / reloadDur, dip = Math.sin(rp * Math.PI); rlDipY = -dip * 0.22; rlRotX = dip * 0.7; rlRotZ = dip * 0.5; }
   const ax = w.base.x * (1 - adsBlend * 0.7) + swayX, ay = w.base.y + adsBlend * 0.03 + swayY;
-  w.group.position.set(ax + Math.sin(bob) * bobAmp + swPx, ay + Math.abs(Math.cos(bob)) * bobAmp - recoilKick * 0.5 + drawDipY + rlDipY + swPy, w.base.z + recoilKick * 1.2 + swPz + drawDipZ);
-  w.group.rotation.set(w.rot.x + swRx - swayY * 2 + drawRotX + rlRotX, w.rot.y + swRy + swayX * 2, w.rot.z + swRz + rlRotZ);
+  w.group.position.set(ax + Math.sin(bob) * bobAmp + swPx, ay + Math.abs(Math.cos(bob)) * bobAmp - recoilKick * 0.5 + vmKick * 0.16 + drawDipY + rlDipY + swPy, w.base.z + recoilKick * 1.2 + vmKick + swPz + drawDipZ);
+  w.group.rotation.set(w.rot.x + swRx - swayY * 2 + vmKickRot + drawRotX + rlRotX, w.rot.y + swRy + swayX * 2, w.rot.z + swRz + rlRotZ);
   w.group.visible = !scoped;
   updateProjectiles(dt); updateTargets(dt); updateEnemies(dt); updateEffects(dt);
   updateFxPool(sparkPool, dt); updateFxPool(dustPool, dt); updateFxPool(trailPool, dt); updateFxPool(bloodPool, dt);
