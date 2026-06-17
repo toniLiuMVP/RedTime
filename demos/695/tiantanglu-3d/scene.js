@@ -349,31 +349,31 @@ crate(13, -14, 1.8); crate(14.5, -13.2, 1.2); crate(12.6, -12.4, 1.0);
 let cowTail = null, cowHead = null;
 (function buildCow() {
   const cx = -14, cz = 18;
-  const hide = mat(0xf4f1ea, { roughness: 0.93, envMapIntensity: 0.48 }), patch = mat(0x2a241d, { roughness: 0.95, envMapIntensity: 0.42 }), hoof = mat(0x1f1a16, { roughness: 0.96, envMapIntensity: 0.42 }), muz = mat(0xb0a098, { roughness: 0.86, envMapIntensity: 0.45 });
+  const hide = mat(0xe8e3d6, { roughness: 0.92, envMapIntensity: 0.5 }), patch = mat(0x201f1b, { roughness: 0.95, envMapIntensity: 0.4 }), hoof = mat(0x17130f, { roughness: 0.96, envMapIntensity: 0.4 }), muz = mat(0xc7a097, { roughness: 0.84, envMapIntensity: 0.45 }), hornM = mat(0xd6c9a6, { roughness: 0.55, metalness: 0.04 });
   const root = new THREE.Group(); root.position.set(cx, 0, cz); root.rotation.y = 0.55; ROOT.add(root);
   const part = (geo, m, x, y, z, p) => { const e = new THREE.Mesh(geo, m); e.position.set(x, y, z); e.castShadow = e.receiveShadow = true; (p || root).add(e); return e; };
-  const body = part(new THREE.BoxGeometry(1.55, 0.84, 0.8), hide, -0.05, 1.08, 0);                 // 軀幹
-  part(new THREE.BoxGeometry(0.74, 0.74, 0.76), hide, 0.7, 1.04, 0);                                // 肩胸(前段略寬)
-  part(new THREE.BoxGeometry(0.58, 0.56, 0.82), patch, 0.28, 0.14, 0.01, body);                     // 黑斑(背)
-  part(new THREE.BoxGeometry(0.44, 0.5, 0.82), patch, -0.48, -0.04, -0.02, body);                   // 黑斑(後腹)
-  part(new THREE.BoxGeometry(0.34, 0.42, 0.84), patch, -0.06, 0.18, 0.0, body);                     // 黑斑(肩)
-  const neck = part(new THREE.BoxGeometry(0.44, 0.5, 0.52), hide, 1.04, 0.82, 0);                   // 頸(往前下)
-  neck.rotation.z = -0.5;
-  cowHead = part(new THREE.BoxGeometry(0.5, 0.46, 0.44), hide, 1.32, 0.52, 0);                       // 頭(低垂吃草)
-  part(new THREE.BoxGeometry(0.15, 0.34, 0.46), patch, 0.1, 0.05, 0, cowHead);                       // 額斑
-  part(new THREE.BoxGeometry(0.32, 0.26, 0.4), muz, 0.3, -0.13, 0, cowHead);                         // 口鼻
+  const body = part(new THREE.BoxGeometry(1.7, 0.92, 0.94), hide, 0, 1.06, 0);                       // 桶身(橫,略長)
+  part(new THREE.BoxGeometry(1.46, 0.34, 0.86), hide, 0, -0.5, 0, body);                              // 下垂肚腩
+  part(new THREE.BoxGeometry(0.88, 0.98, 0.98), hide, 0.78, 0.05, 0, body);                           // 肩胸(前段高寬)
+  part(new THREE.BoxGeometry(0.72, 0.64, 0.96), patch, 0.22, 0.2, 0, body);                           // 大黑斑(肩背)
+  part(new THREE.BoxGeometry(0.52, 0.6, 0.96), patch, -0.56, 0.02, 0, body);                          // 大黑斑(後)
+  part(new THREE.BoxGeometry(0.3, 0.5, 0.98), patch, -0.08, -0.12, 0, body);                          // 黑斑(腹側)
+  const neck = part(new THREE.BoxGeometry(0.6, 0.66, 0.64), hide, 0.98, 1.32, 0); neck.rotation.z = 0.3;   // 頸(往前上=抬頭)
+  cowHead = part(new THREE.BoxGeometry(0.62, 0.58, 0.52), hide, 1.42, 1.52, 0);                        // 頭(抬起前望,臉看得見)
+  part(new THREE.BoxGeometry(0.2, 0.42, 0.54), patch, 0.04, 0.1, 0, cowHead);                          // 額斑(白臉一道黑)
+  part(new THREE.BoxGeometry(0.42, 0.36, 0.48), muz, 0.38, -0.12, 0, cowHead);                         // 大口鼻(牛的招牌)
+  part(new THREE.BoxGeometry(0.44, 0.13, 0.5), patch, 0.42, -0.24, 0, cowHead);                        // 鼻孔上唇暗
   for (const s of [-1, 1]) {
-    const ear = part(new THREE.BoxGeometry(0.22, 0.09, 0.16), hide, -0.05, 0.16, 0.3 * s, cowHead); ear.rotation.z = 0.35;   // 寬扁耳(非刺)
-    const horn = part(new THREE.CylinderGeometry(0.025, 0.055, 0.16, 6), mat(0xcabf9e, { roughness: 0.6 }), 0.05, 0.27, 0.11 * s, cowHead); horn.rotation.z = -0.45 * s;   // 短鈍角
-    part(new THREE.SphereGeometry(0.035, 8, 6), patch, 0.2, 0.0, 0.18 * s, cowHead);                 // 眼
+    const ear = part(new THREE.BoxGeometry(0.34, 0.1, 0.22), hide, -0.04, 0.02, 0.34 * s, cowHead); ear.rotation.x = 0.4 * s; ear.rotation.z = 0.15;   // 大垂耳
+    const horn = part(new THREE.CylinderGeometry(0.028, 0.075, 0.24, 7), hornM, 0.02, 0.34, 0.15 * s, cowHead); horn.rotation.z = -0.5 * s; horn.rotation.x = -0.25;   // 短角上彎
+    part(new THREE.SphereGeometry(0.055, 8, 6), patch, 0.24, 0.04, 0.21 * s, cowHead);                 // 眼
   }
-  for (const [lx, lz] of [[0.56, 0.27], [0.56, -0.27], [-0.6, 0.27], [-0.6, -0.27]]) {
-    part(new THREE.BoxGeometry(0.17, 0.66, 0.17), hide, lx, 0.4, lz);                                // 腿
-    part(new THREE.BoxGeometry(0.19, 0.12, 0.19), hoof, lx, 0.06, lz);                               // 蹄
+  for (const [lx, lz] of [[0.64, 0.34], [0.64, -0.34], [-0.66, 0.34], [-0.66, -0.34]]) {
+    part(new THREE.BoxGeometry(0.21, 0.74, 0.21), hide, lx, 0.4, lz);                                  // 腿
+    part(new THREE.BoxGeometry(0.23, 0.14, 0.23), hoof, lx, 0.07, lz);                                 // 蹄
   }
-  cowTail = part(new THREE.BoxGeometry(0.08, 0.58, 0.08), hide, -0.82, 0.9, 0);
-  cowTail.rotation.z = 0.4;
-  part(new THREE.BoxGeometry(0.12, 0.14, 0.12), patch, 0, -0.33, 0, cowTail);                        // 尾穗
+  cowTail = part(new THREE.BoxGeometry(0.09, 0.66, 0.09), hide, -0.92, 0.96, 0); cowTail.rotation.z = 0.5;
+  part(new THREE.BoxGeometry(0.15, 0.17, 0.15), patch, 0, -0.38, 0, cowTail);                          // 尾穗
 })();
 
 /* ───────── 夢中違和物件:反穿的學校外套(#3 名字藏起來;軍營裡一件學校外套=夢的錯位) ───────── */
