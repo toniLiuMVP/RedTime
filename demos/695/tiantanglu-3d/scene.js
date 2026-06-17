@@ -1624,6 +1624,7 @@ function clampBound(p) { const ex = p.x, ez = p.z + 20, er = Math.hypot(ex, ez);
 function resolveCollision() { resolveCollisionFor(camera.position, PLAYER_R); }
 const scopeEl = document.getElementById("scope"), crossEl = document.getElementById("cross");
 let bob = 0, recoilKick = 0, recoilVel = 0, vy = 0, jumpY = 0, curEye = EYE, sprayResetT = 0, lastFootstep = 0, wasGrounded = true, adsBlend = 0;
+let curSpeed = 0, mvLastX = 0, mvLastZ = 0, mvSprint = false;   // 移動加速度曲線(慣性,非瞬間滑冰) + 自動衝刺狀態
 const RSPRING = { "小槍": [330, 34], "步槍": [300, 33], "機關槍": [420, 30], "狙擊槍": [180, 22], "火箭砲": [150, 20] };   // 後座回正彈簧[勁度K, 阻尼D];略低於臨界=輕微過衝後定住;狙擊K小晃更久更沉,機槍K大快速碎抖
 let vmKick = 0, vmKickRot = 0, landDip = 0, prevAdsState = false;   // 武器在手中的後座頓挫(每發瞬間衝擊 → 快速回彈,與鏡頭爬升 recoilKick 分開);landDip=落地下沉;prevAdsState=開鏡狀態偵測
 // 每把武器的頓挫量[往後位移衝擊, 槍口上揚衝擊];數值小但快,給「槍在手上一頓」的視覺
@@ -1651,13 +1652,20 @@ function updateFP(dt) {
   if (tjx || tjz) { mx += tjx; mz += tjz; }   // 手機左搖桿類比移動
   const moving = !!(mx || mz); mvMoving = moving; mvCrouch = crouch;
   let speed = (crouch ? 1.6 : (silent ? 2.5 : 4.8)) * (w.moveMul || 1); if (ads) speed *= w.scope ? 0.5 : 0.72;
-  const len = Math.hypot(mx, mz) || 1;
-  if (!dead) {
-    camera.position.addScaledVector(fwd, (mz / len) * speed * dt);
-    camera.position.addScaledVector(right, (mx / len) * speed * dt);
+  const len = Math.hypot(mx, mz);
+  let dirX = 0, dirZ = 0; if (len > 0.01) { dirX = mx / len; dirZ = mz / len; mvLastX = dirX; mvLastZ = dirZ; }   // 記住最後方向供減速滑行
+  // 自動衝刺:直線前進(推到底)+ 未蹲/走/開鏡/開火 + 著地 → 速度緩升(無需鍵位,手機搖桿推到底亦可)
+  const fwdRun = len > 0.01 ? dirZ : 0;
+  mvSprint = fwdRun > 0.7 && Math.abs(dirX) < 0.55 && !crouch && !silent && !ads && !mouseDown && grounded && (realT - lastShot > 0.5);
+  const tgtSpeed = len > 0.05 ? speed * (mvSprint ? 1.4 : 1) : 0;
+  curSpeed += (tgtSpeed - curSpeed) * Math.min(1, dt * (tgtSpeed > curSpeed ? 7 : 13));   // 加速慢/減速快=有慣性,非瞬間起停滑冰
+  if (!dead && curSpeed > 0.04) {
+    const useX = len > 0.01 ? dirX : mvLastX, useZ = len > 0.01 ? dirZ : mvLastZ;   // 鬆鍵後沿最後方向滑行一小段
+    camera.position.addScaledVector(fwd, useZ * curSpeed * dt);
+    camera.position.addScaledVector(right, useX * curSpeed * dt);
     resolveCollision();   // 碰撞:被建築/木箱 AABB 推出(不能走進空殼房屋或穿木箱)
     clampBound(camera.position);   // 圓形邊界貼合圍籬,不再撞方形空氣牆
-  }
+  } else mvSprint = false;
   // 跳躍重力
   if (!dead && keys.Space && grounded) { vy = JUMPV; grounded = false; sfxJump(); }
   if (!grounded) { vy -= GRAV * dt; jumpY += vy * dt; if (jumpY <= 0) { jumpY = 0; const vimp = vy; vy = 0; grounded = true; if (!wasGrounded) { sfxLand(); landDip = Math.min(0.2, -vimp * 0.022); vmKickRot = Math.min(0.62, vmKickRot + landDip * 0.5); if (vimp < -7) shake = Math.max(shake, 0.25); } } }   // 落地:依落地速度下沉+槍口點一下,重摔加震
@@ -1666,7 +1674,7 @@ function updateFP(dt) {
   const targetEye = crouch ? CROUCH_EYE : STAND; curEye += (targetEye - curEye) * Math.min(1, dt * 12);
   camera.position.y = curEye + jumpY - landDip;
   // 腳步聲(快走/蹲走有聲,Ctrl 靜步無聲)
-  if (moving && grounded && !silent) { lastFootstep -= dt; if (lastFootstep <= 0) { sfxStep(crouch); lastFootstep = crouch ? 0.5 : 0.36; } } else lastFootstep = 0;
+  if (moving && grounded && !silent) { lastFootstep -= dt; if (lastFootstep <= 0) { sfxStep(crouch); lastFootstep = crouch ? 0.5 : (mvSprint ? 0.28 : 0.36); } } else lastFootstep = 0;   // 衝刺腳步更急
   // 後座衰減 + spray reset
   { const rs = RSPRING[w.name] || [140, 22]; recoilVel += (-recoilKick * rs[0] - recoilVel * rs[1]) * dt; recoilKick += recoilVel * dt; if (recoilKick < -0.02) recoilKick = -0.02; if (Math.abs(recoilKick) < 0.0004 && Math.abs(recoilVel) < 0.012) { recoilKick = 0; recoilVel = 0; } }   // 彈簧式後座回正:輕微過衝後定住(非線性鋸齒)
   vmKick += (0 - vmKick) * Math.min(1, dt * 17); vmKickRot += (0 - vmKickRot) * Math.min(1, dt * 15);   // 頓挫快速回彈(snappy)
@@ -1696,7 +1704,7 @@ function updateFP(dt) {
   const scoped = ads && !!w.scope;
   if (actx && ads !== prevAdsState) { if (ads) { noiseHit(0.03, 1500, 900, 0.1); if (WEAPONS[wi].scope) tone(2200, 2200, 0.02, 0.06, "triangle"); } else noiseHit(0.025, 1100, 700, 0.07); prevAdsState = ads; }   // 開/出鏡就位咔聲(狙擊額外玻璃 tick),端槍瞄準的儀式感
   adsBlend += ((ads ? 1 : 0) - adsBlend) * Math.min(1, dt * 18);
-  const tgFov = (ads && w.adsFov) ? w.adsFov : 80; camera.fov += (tgFov - camera.fov) * Math.min(1, dt * 12); camera.updateProjectionMatrix();
+  const tgFov = (ads && w.adsFov) ? w.adsFov : (mvSprint ? 86 : 80); camera.fov += (tgFov - camera.fov) * Math.min(1, dt * 12); camera.updateProjectionMatrix();   // 衝刺視野微推給速度感
   if (scopeEl) scopeEl.classList.toggle("on", scoped);
   if (crossEl) crossEl.style.display = scoped ? "none" : "block";
   // 動態準心:開火/移動/跳躍張開,靜止收攏(對齊真實 spread 回饋)
