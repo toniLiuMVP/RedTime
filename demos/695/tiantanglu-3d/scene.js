@@ -1559,7 +1559,7 @@ function endGaze() {
       for (const en of enemies) scene.remove(en); enemies.length = 0;
       wave = 0; waveAlive = 0; spawnQueue = 0; inBreak = true; betweenT = 1.5; gameOver = false; dead = false;
       playerHP = 100; if (hpEl) hpEl.textContent = 100;
-      camera.position.set(8, EYE, 13); yaw = -0.3; pitch = 0;
+      camera.position.set(8, EYE, 13); yaw = -0.3; pitch = 0; curSpeed = 0; mvLastX = 0; mvLastZ = 0; mvSprint = false;   // 清移動慣性,回 hub 不往舊方向抽一下
       stopMusic(); updateWaveHUD();
     }, 1450);
   }, 2400);
@@ -1587,7 +1587,7 @@ function restartGame() {
     wave = 0; score = 0; waveAlive = 0; spawnQueue = 0; inBreak = true; betweenT = 1.5; gameOver = false; dead = false; kills = 0;
     if (killsEl) killsEl.textContent = 0; updateWaveHUD();
     applyDifficulty(); if (deadEl) deadEl.classList.remove("on"); if (dmgEl) dmgEl.style.opacity = "0";   // 重新部署套難度 HP/彈藥;scarFloor/deaths/bestWave 刻意不重置(帶著傷前進)
-    camera.position.set(8, EYE, 13); yaw = -0.3; pitch = 0; sprayPitch = 0; sprayYaw = 0; recoilKick = 0;
+    camera.position.set(8, EYE, 13); yaw = -0.3; pitch = 0; sprayPitch = 0; sprayYaw = 0; recoilKick = 0; curSpeed = 0; mvLastX = 0; mvLastZ = 0; mvSprint = false;   // 清移動慣性,重生不往舊方向抽一下
     drawT = 0; reloadT = 0; reloadFilled = true; chSpread = 0;   // 重生清乾淨拔槍/換彈/擴散狀態(死在換彈途中重開不卡)
     playMusic(MUSIC_SIM);   // 重新部署=夢又把他帶回熔爐,主題樂回來
   });
