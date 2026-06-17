@@ -217,6 +217,14 @@ function barracks(x, z, ry, lit) {
   add(new THREE.BoxGeometry(W + 0.3, 0.26, 0.5), metalDark, 0, H + 2.55, 0, g);                      // 屋脊蓋
   for (const vx of [-W / 4, W / 4]) add(new THREE.CylinderGeometry(0.32, 0.42, 0.6, 10), metalDark, vx, H + 2.0, 0, g);   // 屋脊通風帽
   add(new THREE.BoxGeometry(W + 0.06, 1.0, D + 0.06), mat(0x5f523f, { roughness: 1, transparent: true, opacity: 0.5 }), 0, 1.15, 0, g).castShadow = false;   // 牆腳雨濺髒污(略大於牆,包四面)
+  // ── 住人感:門上連隊番號牌 + 門口沙包垛 + 擱一頂鋼盔 ──
+  const dX = -W / 2 + 3;   // 門中心
+  const signFrame = mat(0x332c22, { roughness: 0.7 }), signPlate = mat(0xc7bb8e, { roughness: 0.85, emissive: new THREE.Color(0x140f04), emissiveIntensity: 0.25 });
+  add(new THREE.BoxGeometry(1.5, 0.66, 0.1), signFrame, dX, 3.32, D / 2 + 0.08, g).castShadow = false;        // 番號牌框
+  add(new THREE.BoxGeometry(1.22, 0.42, 0.12), signPlate, dX, 3.32, D / 2 + 0.1, g).castShadow = false;        // 番號牌面(留白,讀作連隊牌)
+  const sandMat = mat(0xc3ad82, { roughness: 1 });
+  for (const side of [-1, 1]) { const bx = dX + side * 2.05; for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) add(new THREE.BoxGeometry(0.46, 0.26, 0.4), sandMat, bx + (r ? 0.1 : 0), 0.15 + r * 0.26, D / 2 + 0.46 + c * 0.34, g).castShadow = true; }   // 門口沙包垛(兩側,貼牆不擋階)
+  add(new THREE.SphereGeometry(0.2, 12, 8, 0, 6.3, 0, 1.7), mat(0x33351f, { roughness: 0.7 }), dX + 2.05, 0.62, D / 2 + 0.63, g).castShadow = true;   // 沙包上擱一頂鋼盔
 }
 barracks(0, -30, 0, true);
 barracks(-30, -16, Math.PI / 2, false);
