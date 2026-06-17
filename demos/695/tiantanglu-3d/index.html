@@ -188,6 +188,9 @@
   /* ── 波次 ── */
   #wave{position:fixed;top:22px;left:50%;transform:translateX(-50%);z-index:4;pointer-events:none;
     font-family:"Noto Serif TC",serif;font-size:20px;letter-spacing:.22em;color:#ffce54;text-shadow:0 2px 12px rgba(0,0,0,.7);}
+  #radar{position:fixed;top:18px;right:18px;z-index:4;width:148px;height:148px;border-radius:50%;border:1px solid rgba(255,220,170,.32);background:rgba(8,10,14,.5);box-shadow:0 2px 14px rgba(0,0,0,.45);pointer-events:none;display:none;}
+  #radar.on{display:block;}
+  body.touch #radar{width:104px;height:104px;top:60px;right:10px;}
   #score .n2{font-size:22px;font-weight:700;color:#cfe3ef;line-height:.9;margin-top:8px;}
 
   /* ── 設定 ── */
@@ -220,6 +223,7 @@
 <div id="scope"><div class="lens"></div><div class="v"></div><div class="h"></div><div class="dot"></div></div>
 <div id="hitmark">✕</div>
 <div id="wave">準備</div>
+<canvas id="radar" width="296" height="296"></canvas>
 <div id="narr"></div>
 <div id="hint"></div>
 <div id="gaze"><canvas id="gaze-cv"></canvas><div class="lb lb-t"></div><div class="lb lb-b"></div><div id="gaze-line"></div></div>

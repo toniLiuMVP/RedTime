@@ -904,6 +904,8 @@ const SHOP_ITEMS = [
   { id: "veh_tank", nm: "坦克車使用權", ds: "碾過即殲 · 砲彈20發 · 車況=玩家×10", price: () => VEH_CFG.tank.basePrice * vehPriceMul(), has: () => vehUnlocked("tank"), hide: () => vehFreeUse(), buy: () => vehUnlock("tank") },
   { id: "veh_fuel", nm: "油桶", ds: "悍馬／坦克各補 +50 油料", price: 250, consumable: true, has: () => false, buy: () => vehRefuel(50) },
   { id: "veh_shell", nm: "砲彈補給", ds: "坦克 +10 · 大砲 +5 砲彈", price: 300, consumable: true, has: () => false, buy: () => vehRearm() },
+  { id: "radar_map", nm: "戰術地圖", ds: "右上角雷達顯示地形與你的位置", price: () => 400 * radarPriceMul(), has: () => radarMap, hide: () => radarMapFree(), buy: () => { radarMap = true; } },
+  { id: "radar_sat", nm: "衛星偵測系統", ds: "雷達上顯示敵人紅點位置", price: () => 600 * radarPriceMul(), has: () => radarSat, hide: () => radarSatFree(), buy: () => { radarSat = true; } },
 ];
 function updateMoneyHUD() { if (moneyEl) moneyEl.textContent = money; const sm = document.getElementById("shop-money"); if (sm) sm.textContent = money; }
 function updateArmorHUD() { if (arEl) arEl.textContent = Math.round(armor); }
@@ -1198,6 +1200,33 @@ function vehPriceMul() { const d = (curDiff && curDiff.diffIndex) || 3; return d
 function resetVehicles() {   // 進實戰時重置:車況=玩家HP×倍率、油量/砲彈滿、使用權(劇情/新手免費已解;普通以上要買)、復原殘骸與位置
   const freeUse = ((curDiff && curDiff.diffIndex) || 3) <= 2;
   for (const v of VEHICLES) { v.fuel = v.cfg.maxFuel; v.shells = v.cfg.maxShells; v.maxHp = Math.round(MAX_HP * v.cfg.hpMul); v.hp = v.maxHp; v.unlocked = freeUse; v.destroyed = false; v.speed = 0; v.heading = v.baseHeading; v.group.position.copy(v.basePos); v.group.rotation.set(0, v.baseHeading, 0); }
+  const d = (curDiff && curDiff.diffIndex) || 3; radarMap = d <= 3; radarSat = d <= 2;   // item3 雷達:劇情/新手地圖+敵人全開;普通有地圖要買偵測;困難/天堂路都要買
+}
+let radarMap = true, radarSat = true; const _radarDir = new THREE.Vector3();   // radarMap=戰術地圖 / radarSat=衛星偵測(敵人位置)
+const radarEl = document.getElementById("radar"); let radarCtx = null;
+function radarMapFree() { return ((curDiff && curDiff.diffIndex) || 3) <= 2; }     // 劇情/新手:地圖免費,商品隱藏
+function radarSatFree() { return ((curDiff && curDiff.diffIndex) || 3) <= 2; }     // 劇情/新手:偵測免費,商品隱藏
+function radarPriceMul() { return ((curDiff && curDiff.diffIndex) || 3) >= 5 ? 2 : 1; }   // 天堂路 ×2
+function updateRadar() {
+  if (!radarEl) return;
+  if (!(MODE === "sim" && radarMap)) { radarEl.classList.remove("on"); return; }
+  radarEl.classList.add("on");
+  if (!radarCtx) radarCtx = radarEl.getContext("2d");
+  const ctx = radarCtx, S = radarEl.width, R = S / 2, scale = R / 58;   // 58 世界單位半徑
+  ctx.clearRect(0, 0, S, S);
+  ctx.save(); ctx.beginPath(); ctx.arc(R, R, R - 3, 0, 6.2832); ctx.clip();
+  ctx.fillStyle = "rgba(10,16,13,0.42)"; ctx.fillRect(0, 0, S, S);
+  const px = camera.position.x, pz = camera.position.z;
+  const wx = (x) => R + (x - px) * scale, wz = (z) => R + (z - pz) * scale;   // 北上:world +x→右, +z→下
+  ctx.strokeStyle = "rgba(150,172,150,0.4)"; ctx.lineWidth = 2;
+  for (const c of COLLIDERS) { const ax = wx(c[0]), ay = wz(c[2]), bx = wx(c[1]), by = wz(c[3]); ctx.strokeRect(Math.min(ax, bx), Math.min(ay, by), Math.abs(bx - ax), Math.abs(by - ay)); }
+  if (radarSat) { ctx.fillStyle = "rgba(255,72,60,0.95)"; for (const g of enemies) { const u = g.userData; if (u.dead || u.apparition) continue; const x = wx(g.position.x), y = wz(g.position.z), dx = x - R, dy = y - R; if (dx * dx + dy * dy > (R - 5) * (R - 5)) continue; ctx.beginPath(); ctx.arc(x, y, S > 200 ? 5 : 4, 0, 6.2832); ctx.fill(); } }
+  ctx.restore();
+  camera.getWorldDirection(_radarDir);
+  ctx.save(); ctx.translate(R, R); ctx.rotate(Math.atan2(_radarDir.x, -_radarDir.z));
+  ctx.fillStyle = "rgba(125,255,138,0.96)"; ctx.beginPath(); ctx.moveTo(0, -R * 0.13); ctx.lineTo(R * 0.09, R * 0.1); ctx.lineTo(0, R * 0.05); ctx.lineTo(-R * 0.09, R * 0.1); ctx.closePath(); ctx.fill();
+  ctx.restore();
+  ctx.strokeStyle = "rgba(255,220,170,0.22)"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(R, R, R - 3, 0, 6.2832); ctx.stroke();
 }
 function vehFreeUse() { return ((curDiff && curDiff.diffIndex) || 3) <= 2; }   // 劇情/新手:載具免費,使用權商品隱藏
 function vehUnlocked(type) { const v = VEHICLES.find((x) => x.type === type); return !!(v && v.unlocked); }
@@ -2185,7 +2214,7 @@ function renderOnce() {
     renderer.autoClear = ac; renderer.shadowMap.autoUpdate = su; renderer.toneMapping = tm; renderer.toneMappingExposure = te;
   }
 }
-function loop() { requestAnimationFrame(loop); const dt = Math.min(clock.getDelta(), 0.05); realT += dt; updateFP(dt); updateFlag(realT); renderOnce(); }
+function loop() { requestAnimationFrame(loop); const dt = Math.min(clock.getDelta(), 0.05); realT += dt; updateFP(dt); updateFlag(realT); updateRadar(); renderOnce(); }
 /* ── console debug 後門:預設關閉,只在 URL 帶 ?debug 才暴露(production 防作弊 / 輔助 XSS / 資訊洩漏,OWASP 建議) ── */
 const DEBUG = /[?&](debug|dev)\b/i.test(location.search || "");
 if (DEBUG) {
@@ -2199,6 +2228,7 @@ if (DEBUG) {
   window.__WEP__ = (i) => showWeapon(i); // debug 切武器
   window.__SPAWN__ = (n) => { for (let i = 0; i < (n || 6); i++) spawnEnemy(-6 + i * 2.4, -8); return enemies.map((e) => e.userData.etype); }; // debug 生敵人看兵種變化
   window.__SPAWNW__ = (specs, z) => { const arr = specs || ["pistol", "rifle", "mg", "sniper", "rocket", "knife", "frog"]; arr.forEach((w, i) => spawnEnemy(-7.5 + i * 2.6, z == null ? -8 : z, 100, w === "frog" ? { frogman: true } : { weapon: w })); return enemies.map((e) => e.userData.weapon + (e.userData.frog ? "(frog)" : "")); }; // debug 生指定武器/蛙人看模組
+  window.__SIMTEST__ = (diff) => { MODE = "sim"; settings.difficulty = diff || 3; applyDifficulty(); resetVehicles(); inBreak = false; wave = 1; for (let i = 0; i < 5; i++) spawnEnemy(-8 + i * 4, -22 - (i % 2) * 6, 100, { weapon: "pistol" }); return { mode: MODE, radarMap, radarSat }; }; // debug 強制進實戰看雷達/HUD
   window.__FROG__ = (sq) => { spawnFrogmen(sq || 1); return { active: frogmenActive, ghosts: frogmenGhostCount }; };   // debug 觸發蛙人幻影穿越
   window.__ENEMIES__ = () => ({ active: frogmenActive, ghosts: frogmenGhostCount, realT: Math.round(realT * 10) / 10, deadline: Math.round(frogmenDeadline * 10) / 10, list: enemies.map((e) => ({ app: !!e.userData.apparition, z: Math.round(e.position.z * 10) / 10, appT: Math.round((e.userData.appT || 0) * 10) / 10 })) });   // debug 看幻影位置/計時
   window.__DISARMTEST__ = () => { MODE = "sim"; awaitDisarm = true; beginDisarm(); return { disarmT, MODE }; }; // debug 測放下槍動作
