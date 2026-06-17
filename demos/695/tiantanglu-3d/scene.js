@@ -718,6 +718,7 @@ function sfxRocketFire() { if (!actx) return; noiseHit(0.45, 900, 120, 0.7); ton
 function sfxPunch() { if (!actx) return; noiseHit(0.1, 700, 250, 0.22); }
 function sfxKnife() { if (!actx) return; noiseHit(0.14, 2600, 900, 0.2, "bandpass"); }
 function sfxEnemyShot(pos) { if (!actx) return; noiseHit(0.14, 1600, 350, pos ? 0.34 : 0.28, "lowpass", pos ? panner(pos) : null); }
+function sfxEnemyStep(pos) { if (!actx) return; noiseHit(0.06, 520, 200, 0.11, "lowpass", panner(pos)); }   // 敵人腳步(空間音,逼近不再靜音)
 function sfxHurt() { if (!actx) return; noiseHit(0.16, 500, 120, 0.4); tone(160, 70, 0.14, 0.3); }
 
 /* ── 環境音床(無配樂時的軍營黎明氛圍:風 + 遠處低鳴 + 國旗拍動 + 鳥鳴);全程序合成,零外部檔案 ── */
@@ -1245,7 +1246,7 @@ function spawnEnemy(x, z, hp) {
   eb(0.14, 0.34, 0.14, body, 0.18, 1.0, -0.18);          // 前臂
   ms.forEach((m) => { m.castShadow = true; g.add(m); });
   g.scale.setScalar(type.scale);
-  g.userData.kind = "enemy"; g.userData.hp = Math.round((hp || 100) * type.hpMul); g.userData.speedMul = type.speedMul; g.userData.etype = type.key; g.userData.dead = false; g.userData.deadT = 0; g.userData.fireT = 1 + Math.random() * 2; g.userData.flinch = 0; g.userData.strafe = Math.random() < 0.5 ? 1 : -1; g.userData.strafeT = 1 + Math.random() * 2; g.userData.state = "chase"; g.userData.grenadeT = 6 + Math.random() * 8; g.userData.spawn = new THREE.Vector3(x, 0, z);
+  g.userData.kind = "enemy"; g.userData.hp = Math.round((hp || 100) * type.hpMul); g.userData.speedMul = type.speedMul; g.userData.etype = type.key; g.userData.dead = false; g.userData.deadT = 0; g.userData.fireT = 1 + Math.random() * 2; g.userData.flinch = 0; g.userData.strafe = Math.random() < 0.5 ? 1 : -1; g.userData.strafeT = 1 + Math.random() * 2; g.userData.state = "chase"; g.userData.grenadeT = 6 + Math.random() * 8; g.userData.spawn = new THREE.Vector3(x, 0, z); g.userData.stepT = Math.random() * 0.4; g.userData.alertT = 0; g.userData.sawPlayer = false;
   ROOT.add(g); enemies.push(g);
 }
 /* ── 波次 horde + 計分 ── */
@@ -1316,11 +1317,13 @@ function updateEnemies(dt) {
     const g = enemies[i], u = g.userData;
     if (u.dead) { u.deadT += dt; g.rotation.x = Math.max(-1.55, g.rotation.x - dt * 4.5); g.rotation.z += ((u.deathLean || 0) - g.rotation.z) * Math.min(1, dt * 5); if (u.deadT > 5) { scene.remove(g); enemies.splice(i, 1); } continue; }
     const dx = camera.position.x - g.position.x, dz = camera.position.z - g.position.z, dist = Math.hypot(dx, dz) || 1;
-    g.rotation.y = Math.atan2(dx, dz);
+    { const tgtY = Math.atan2(dx, dz); let dY = tgtY - g.rotation.y; while (dY > Math.PI) dY -= 6.2832; while (dY < -Math.PI) dY += 6.2832; g.rotation.y += dY * Math.min(1, dt * (u.alertT > 0 ? 3.5 : 14)); }   // 反應延遲:剛發現玩家慢慢轉(非瞬間鎖定)
     if (u.flinch > 0) { const f = u.flinch / (u.flinchMax || 0.18); g.rotation.x = -0.18 * f; g.rotation.z = (u.flinchSide || 0) * f; u.flinch -= dt; } else { g.rotation.x = 0; g.rotation.z = 0; }   // 方向化中彈:後仰 + 往中彈側扭
     if (u.stagger > 0) u.stagger -= dt;   // 腿傷踉蹌計時
     if (u.coverT > 0) u.coverT -= dt;
     const sees = dist < 72 ? enemySeesPlayer(g, dist) : false;
+    if (sees) { if (!u.sawPlayer) { u.sawPlayer = true; u.alertT = 0.35 + Math.random() * 0.35; } } else u.sawPlayer = false;   // 首次發現玩家 → 反應延遲
+    if (u.alertT > 0) u.alertT -= dt;
     const smart = !!(curDiff && curDiff.smart);   // 天堂路模式:團隊圍攻
     const fx = dx / dist, fz = dz / dist, rx = -fz, rz = fx; let mvx = 0, mvz = 0, sp = 2.0;
     if ((u.coverT > 0 || u.hp < 40) && sees && !smart) { // 找最近掩體(天堂路模式少躲,主動圍攻)
@@ -1328,7 +1331,7 @@ function updateEnemies(dt) {
       if (best && bd > 1.8) { const cdx = best.x - g.position.x, cdz = best.z - g.position.z, cl = Math.hypot(cdx, cdz) || 1; mvx = cdx / cl; mvz = cdz / cl; sp = 2.7; }
     } else if (!sees && dist > 6) { mvx = fx; mvz = fz; sp = 2.4; } // 看不到 → 推進找視線
     else if (dist > (smart ? 12 : 17)) { mvx = fx; mvz = fz; } else if (dist < 9) { mvx = -fx; mvz = -fz; }
-    if (!smart) { u.strafeT -= dt; if (u.strafeT <= 0) { u.strafe *= -1; u.strafeT = 1 + Math.random() * 1.6; } }   // 天堂路:strafe 持續同向(各敵分左右包抄)
+    if (!smart && Math.random() < 0.4 * dt) u.strafe *= -1;   // 低機率隨機翻轉,破除整群同步左右平移
     if (sees && dist < 42) { const sw = smart ? 1.3 : 0.8; mvx += rx * u.strafe * sw; mvz += rz * u.strafe * sw; }
     const ml = Math.hypot(mvx, mvz);
     if (ml > 0.01) {
@@ -1344,8 +1347,9 @@ function updateEnemies(dt) {
       g.position.x += ndx * s; g.position.z += ndz * s;
       resolveCollisionFor(g.position, 0.5);   // 兜底推出:敵人不穿建築/木箱(全擋)
       clampBound(g.position);                 // 圓形邊界
+      if (dist < 40) { u.stepT -= dt; if (u.stepT <= 0) { sfxEnemyStep(g.position); u.stepT = 0.34 / (u.speedMul || 1); } }   // 腳步聲(步頻隨速度,>40m cull)
     }
-    if (!dead && sees && u.flinch <= 0 && dist < 56) {
+    if (!dead && sees && u.flinch <= 0 && u.alertT <= 0 && dist < 56) {   // 反應延遲內不開火(發現→舉槍→開火)
       u.fireT -= dt; if (u.fireT <= 0) { u.fireT = 1.1 + Math.random() * 1.4; enemyShoot(g, dist); }
       u.grenadeT -= dt; if (u.grenadeT <= 0 && dist > 12 && dist < 40) { u.grenadeT = 9 + Math.random() * 8; enemyGrenade(g); }
     } else u.grenadeT -= dt * 0.3;
