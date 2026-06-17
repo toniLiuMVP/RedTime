@@ -76,7 +76,8 @@
       if (i >= CARDS.length) return;   // 最後一張靠 cont 按鈕結束
       var card = CARDS[i];
       render(card);
-      cont.classList.toggle("show", !!card.cont);
+      cont.classList.remove("show");
+      if (card.cont) setTimeout(function () { cont.classList.add("show"); }, 1800);   // bookend 命脈句先在純黑裡獨處 ~1.8s,按鈕後到不搶收束拍
       if (card.auto > 0) autoTimer = setTimeout(next, card.auto + 420);
       else if (!card.cont) armHint();
       else clearHint();

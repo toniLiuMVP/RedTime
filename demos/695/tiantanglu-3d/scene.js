@@ -1328,7 +1328,7 @@ function updateWaves(dt) {
   if (inBreak) { betweenT -= dt; if (betweenT <= 0) startWave(); return; }
   if (spawnQueue > 0) { spawnTimer -= dt; if (spawnTimer <= 0) { const p = SPAWN_PTS[(Math.random() * SPAWN_PTS.length) | 0]; spawnEnemy(p[0], p[1], 90 + wave * 14); spawnQueue--; spawnTimer = 0.5 + Math.random() * 0.6; } }
   if (waveAlive <= 0 && spawnQueue <= 0) {
-    if (wave >= GOAL_WAVE) { awaitDisarm = true; inBreak = true; for (const e of enemies) ROOT.remove(e); enemies.length = 0; if (waveEl) waveEl.textContent = "撐過了"; showNarr(NARR.survived, 5.5); }   // B1:撐過 GOAL_WAVE → 停波+清殘敵 + 放下槍那秒旁白(toni 填);保護高潮不被殘敵打死
+    if (wave >= GOAL_WAVE) { awaitDisarm = true; inBreak = true; stopMusic(); for (const e of enemies) ROOT.remove(e); enemies.length = 0; if (waveEl) waveEl.textContent = "撐過了"; showNarr(NARR.survived, 5.5); }   // B1:撐過 GOAL_WAVE → 停波+清殘敵 + 戰鬥曲提前淡出(放下槍猶豫窗落在安靜裡,讓「夠了」浮得出來) + 放下槍那秒旁白;保護高潮不被殘敵打死
     else { inBreak = true; betweenT = 4; money += 150; updateMoneyHUD(); updateWaveHUD(); if (wave === 1 || wave % 5 === 0) showNarr(NARR.wave, 3.4); }   // 撐過一波 +150 軍餉(波間按 B 補裝);金句稀缺:只首波/每5波留白
   }
 }
@@ -1554,7 +1554,7 @@ function startGaze() {
   setTimeout(() => ov.classList.add("open"), 1150);                // 睜眼(留電影黑邊)
   setTimeout(() => { if (lineEl) lineEl.classList.add("show"); }, 6200);   // 連接句 #6「妳一直都在」浮現
   setTimeout(() => { if (lineEl && isReal(NARR.gazeEcho)) { lineEl.classList.remove("show"); setTimeout(() => { lineEl.textContent = NARR.gazeEcho; lineEl.classList.add("echo", "show"); }, 700); } }, 8900);   // 第二拍:首尾合龍回扣開場(toni 填 gazeEcho 才出現)
-  setTimeout(() => endGaze(), 11600);                             // 收束(留第二拍呼吸空間)
+  setTimeout(() => endGaze(), 14000);                             // 收束(11600→14000:echo 淡入到頂才約 11600,給首尾合龍那句滿亮度呼吸窗,停得住才打進心裡)
   gazeT0 = performance.now(); gazeLoop(ctx);
 }
 function gazeLoop(ctx) {
