@@ -22,6 +22,7 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const scene = new THREE.Scene();
+const RC_NOOP = () => { };   // 純裝飾/VFX sprite 不參與射線(否則 Sprite.raycast 需 raycaster.camera，全域 ray 沒設 → 啟動時噴 console.error)
 
 /* ───────── 程式生成黃昏 HDR 環境貼圖(PMREM → IBL) ───────── */
 function buildDawnEnvMap(rend) {
@@ -76,13 +77,13 @@ const skyClouds = [];   // 雲:給極慢側向飄(死貼圖變活氛圍)
   const hg = hx.createRadialGradient(64, 64, 0, 64, 64, 64); hg.addColorStop(0, "rgba(255,224,168,.95)"); hg.addColorStop(1, "rgba(255,224,168,0)");
   hx.fillStyle = hg; hx.fillRect(0, 0, 128, 128);
   const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(hc), transparent: true, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }));
-  halo.scale.set(190, 190, 1); halo.position.copy(sunPos); scene.add(halo); skyHalo = halo;
+  halo.scale.set(190, 190, 1); halo.position.copy(sunPos); halo.raycast = RC_NOOP; scene.add(halo); skyHalo = halo;
   // 柔雲
   const clc = document.createElement("canvas"); clc.width = 256; clc.height = 128; const cx = clc.getContext("2d");
   for (let i = 0; i < 26; i++) { const x = 30 + Math.random() * 196, y = 50 + Math.random() * 50, r = 18 + Math.random() * 34; const gg = cx.createRadialGradient(x, y, 0, x, y, r); gg.addColorStop(0, "rgba(255,246,232," + (0.5 + Math.random() * 0.3) + ")"); gg.addColorStop(1, "rgba(255,246,232,0)"); cx.fillStyle = gg; cx.beginPath(); cx.arc(x, y, r, 0, 7); cx.fill(); }
   const cloudTex = new THREE.CanvasTexture(clc);
   const cloudPos = [[-180, 120, -340, 150], [220, 150, -380, 200], [-40, 170, -420, 240], [320, 110, -260, 130]];
-  for (const [x, y, z, s] of cloudPos) { const cl = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTex, transparent: true, opacity: 0.38, depthWrite: false, fog: false })); cl.position.set(x, y, z); cl.scale.set(s, s * 0.5, 1); scene.add(cl); skyClouds.push(cl); }
+  for (const [x, y, z, s] of cloudPos) { const cl = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTex, transparent: true, opacity: 0.38, depthWrite: false, fog: false })); cl.position.set(x, y, z); cl.scale.set(s, s * 0.5, 1); cl.raycast = RC_NOOP; scene.add(cl); skyClouds.push(cl); }
 })();
 
 /* ───────── 第一人稱相機 (CS 視角) ───────── */
@@ -908,10 +909,10 @@ const effects = [];
 let shake = 0;
 // 彈孔貼花池
 const decals = []; let decalI = 0;
-for (let i = 0; i < 40; i++) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: decalTex, transparent: true, depthWrite: false, opacity: 0.85, fog: false })); s.scale.setScalar(0.16); s.visible = false; scene.add(s); decals.push(s); }
+for (let i = 0; i < 40; i++) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: decalTex, transparent: true, depthWrite: false, opacity: 0.85, fog: false })); s.scale.setScalar(0.16); s.visible = false; s.raycast = RC_NOOP; scene.add(s); decals.push(s); }
 function putDecal(p) { const s = decals[decalI = (decalI + 1) % decals.length]; s.position.copy(p); s.visible = true; }
 // 池化高頻特效(火花/灰塵/火箭尾煙)— 每槽自帶 material,只重用不 new
-function makeFxPool(n, makeMat) { const a = []; for (let i = 0; i < n; i++) { const s = new THREE.Sprite(makeMat()); s.visible = false; scene.add(s); a.push({ s, on: false, t: 0, life: 0, base: 0, grow: 0, add: false }); } a._i = 0; return a; }
+function makeFxPool(n, makeMat) { const a = []; for (let i = 0; i < n; i++) { const s = new THREE.Sprite(makeMat()); s.visible = false; s.raycast = RC_NOOP; scene.add(s); a.push({ s, on: false, t: 0, life: 0, base: 0, grow: 0, add: false }); } a._i = 0; return a; }
 const sparkPool = makeFxPool(24, () => new THREE.SpriteMaterial({ map: fireTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
 const dustPool = makeFxPool(24, () => new THREE.SpriteMaterial({ map: smokeTex, color: 0x9a8d70, transparent: true, depthWrite: false, fog: false }));
 const trailPool = makeFxPool(48, () => new THREE.SpriteMaterial({ map: smokeTex, color: 0x8a8276, transparent: true, depthWrite: false, fog: false }));
@@ -1039,8 +1040,8 @@ function meleeHit(w) {
 function explode(pos, depth, big) {
   sfxExplode(pos); shake = Math.max(shake, big ? 1.0 : 0.7);
   const fl = new THREE.PointLight(0xffb060, big ? 70 : 45, big ? 46 : 34, 2); fl.position.copy(pos); fl.position.y = Math.max(1.2, pos.y); scene.add(fl);
-  const fb = new THREE.Sprite(new THREE.SpriteMaterial({ map: fireTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); fb.position.copy(pos); fb.position.y += 0.8; fb.scale.setScalar(big ? 2.6 : 1.5); scene.add(fb);
-  const sm = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, color: 0x29251f, transparent: true, opacity: 0, depthWrite: false, fog: false })); sm.position.copy(pos); sm.position.y += 1; sm.scale.setScalar(big ? 3 : 2); scene.add(sm);
+  const fb = new THREE.Sprite(new THREE.SpriteMaterial({ map: fireTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); fb.position.copy(pos); fb.position.y += 0.8; fb.scale.setScalar(big ? 2.6 : 1.5); fb.raycast = RC_NOOP; scene.add(fb);
+  const sm = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, color: 0x29251f, transparent: true, opacity: 0, depthWrite: false, fog: false })); sm.position.copy(pos); sm.position.y += 1; sm.scale.setScalar(big ? 3 : 2); sm.raycast = RC_NOOP; scene.add(sm);
   const N = big ? 26 : 16, deb = []; for (let i = 0; i < N; i++) { const d = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 0.16), debrisMat); d.position.copy(pos); d.position.y += 0.8; d.userData.v = new THREE.Vector3((Math.random() - 0.5) * (big ? 13 : 9), 4 + Math.random() * (big ? 10 : 7), (Math.random() - 0.5) * (big ? 13 : 9)); scene.add(d); deb.push(d); }
   effects.push({ t: 0, life: big ? 3.0 : 2.6, fb, sm, fl, deb, big: !!big });
   for (let i = 0; i < (big ? 14 : 8); i++) emitFx(sparkPool, pos.clone().add(new THREE.Vector3((Math.random() - 0.5) * 2.5, Math.random() * 1.6, (Math.random() - 0.5) * 2.5)), 0.3 + Math.random() * 0.3, 0.3, 1.2, true);
@@ -1225,7 +1226,7 @@ const bloodPool = makeFxPool(18, () => new THREE.SpriteMaterial({ map: smokeTex,
 /* ── 記憶光點(夢敵人擊倒碎成的話語光,取代血池;極簡血+碎成記憶) ── */
 const memDotTex = tex((c, S) => { const g = c.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2); g.addColorStop(0, "rgba(255,238,205,1)"); g.addColorStop(0.45, "rgba(255,214,156,.55)"); g.addColorStop(1, "rgba(255,206,148,0)"); c.fillStyle = g; c.fillRect(0, 0, S, S); }, 32);
 const memShards = [];
-for (let i = 0; i < 56; i++) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: memDotTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, opacity: 0 })); s.visible = false; scene.add(s); memShards.push({ s, on: false, t: 0, life: 0, vx: 0, vy: 0, vz: 0 }); }
+for (let i = 0; i < 56; i++) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: memDotTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, opacity: 0 })); s.visible = false; s.raycast = RC_NOOP; scene.add(s); memShards.push({ s, on: false, t: 0, life: 0, vx: 0, vy: 0, vz: 0 }); }
 let msI = 0;
 function memoryShatter(pos) {   // 擊倒→記憶光點上升消散(碎成她的話語光,不留屍/血)
   const n = 11 + Math.floor(Math.random() * 5);
@@ -1524,12 +1525,27 @@ function gazeLoop(ctx) {
   g.addColorStop(1, "rgba(20,12,18,0)");
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   ctx.globalCompositeOperation = "lighter";
+  const clarity = Math.max(0, 1 - Math.abs(t - 3.9) / 0.95);   // 她整個人浮現完整的那一瞬最清晰（被釘在原地那種看見）
+  // 紅線：沿著紅線走，不會走散 — 她與看的人之間那條跨時間的連結，一直都在
+  const threadA = Math.min(1, reveal * fade * (1 + clarity * 0.4));
+  if (threadA > 0.02) {
+    const heartX = cx, heartY = cy - fh * 0.04, sway = Math.sin(t * 0.7) * W * 0.035;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(W * 0.5, H * 1.04);
+    ctx.bezierCurveTo(W * 0.5 - W * 0.13 + sway, H * 0.82, heartX + W * 0.11 - sway, H * 0.58, heartX, heartY);
+    ctx.strokeStyle = "rgba(214,58,52," + (0.32 * threadA).toFixed(3) + ")"; ctx.lineWidth = 6; ctx.stroke();          // 外層柔光
+    ctx.strokeStyle = "rgba(255,140,122," + (0.5 * threadA).toFixed(3) + ")"; ctx.lineWidth = 1.6; ctx.stroke();       // 內層亮核
+    const hg = ctx.createRadialGradient(heartX, heartY, 0, heartX, heartY, fh * 0.12);   // 線連到的那一點：她的心口微光
+    hg.addColorStop(0, "rgba(255,150,130," + (0.4 * threadA).toFixed(3) + ")"); hg.addColorStop(1, "rgba(255,120,100,0)");
+    ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(heartX, heartY, fh * 0.12, 0, 6.3); ctx.fill();
+  }
   const breathe = 0.85 + 0.15 * Math.sin(t * 1.4);
   for (const p of gazeFigure) {
     const px = cx + p.x * (fh * 0.62), py = top + p.y * fh + Math.sin(t * 0.6 + p.ph) * 2.5;
-    const a = reveal * fade * breathe * (0.5 + 0.5 * Math.sin(t * 1.1 + p.ph)), rr = p.r * (1 + 0.2 * Math.sin(t * 2 + p.ph));
+    const a = reveal * fade * breathe * (0.5 + 0.5 * Math.sin(t * 1.1 + p.ph)) * (1 + clarity * 0.6), rr = p.r * (1 + 0.2 * Math.sin(t * 2 + p.ph));
     const pg = ctx.createRadialGradient(px, py, 0, px, py, rr * 5);
-    pg.addColorStop(0, "rgba(255,248,232," + (a * 0.9).toFixed(3) + ")"); pg.addColorStop(1, "rgba(255,240,210,0)");
+    pg.addColorStop(0, "rgba(255,248,232," + Math.min(1, a * 0.9).toFixed(3) + ")"); pg.addColorStop(1, "rgba(255,240,210,0)");
     ctx.fillStyle = pg; ctx.beginPath(); ctx.arc(px, py, rr * 5, 0, 6.3); ctx.fill();
   }
   ctx.globalCompositeOperation = "source-over";
