@@ -890,13 +890,21 @@ const SHOP_ITEMS = [
   { id: "sniper", nm: "狙擊槍", ds: "開鏡一槍重擊", price: 750, wpn: "狙擊槍" },
   { id: "nade", nm: "手榴彈", ds: "x3 投擲爆炸", price: 300, wpn: "手榴彈" },
   { id: "rocket", nm: "火箭砲", ds: "範圍爆炸", price: 1100, wpn: "火箭砲" },
+  { id: "veh_humvee", nm: "悍馬車使用權", ds: "撞擊殲敵 · 油料限制 · 車況=玩家×5", price: () => VEH_CFG.humvee.basePrice * vehPriceMul(), has: () => vehUnlocked("humvee"), hide: () => vehFreeUse(), buy: () => vehUnlock("humvee") },
+  { id: "veh_howitzer", nm: "大砲使用權", ds: "站位榴彈砲 · 砲彈10發 · 車況=玩家×2", price: () => VEH_CFG.howitzer.basePrice * vehPriceMul(), has: () => vehUnlocked("howitzer"), hide: () => vehFreeUse(), buy: () => vehUnlock("howitzer") },
+  { id: "veh_tank", nm: "坦克車使用權", ds: "碾過即殲 · 砲彈20發 · 車況=玩家×10", price: () => VEH_CFG.tank.basePrice * vehPriceMul(), has: () => vehUnlocked("tank"), hide: () => vehFreeUse(), buy: () => vehUnlock("tank") },
+  { id: "veh_fuel", nm: "油桶", ds: "悍馬／坦克各補 +50 油料", price: 250, consumable: true, has: () => false, buy: () => vehRefuel(50) },
+  { id: "veh_shell", nm: "砲彈補給", ds: "坦克 +10 · 大砲 +5 砲彈", price: 300, consumable: true, has: () => false, buy: () => vehRearm() },
 ];
 function updateMoneyHUD() { if (moneyEl) moneyEl.textContent = money; const sm = document.getElementById("shop-money"); if (sm) sm.textContent = money; }
 function updateArmorHUD() { if (arEl) arEl.textContent = Math.round(armor); }
 function itemOwned(it) { if (it.wpn) { const w = WEAPONS.find((x) => x.name === it.wpn); return !!(w && w.owned); } return it.has ? it.has() : false; }
+function itemPrice(it) { return typeof it.price === "function" ? it.price() : it.price; }   // 價格可為函式(載具使用權隨模式變動)
+function itemConsumable(it) { return it.consumable || it.id === "ammo"; }   // 補給類(彈藥/油桶/砲彈)可重複買,不算「已擁有」
 function buyItem(it) {
-  if (money < it.price || (it.id !== "ammo" && itemOwned(it))) return;
-  money -= it.price;
+  const price = itemPrice(it);
+  if (money < price || (!itemConsumable(it) && itemOwned(it))) return;
+  money -= price;
   if (it.wpn) { const w = WEAPONS.find((x) => x.name === it.wpn); if (w) { w.owned = true; if (w.baseReserve != null) w.reserve = Math.round(w.baseReserve * (curDiff ? curDiff.ammo : 1)); if (w.baseCount != null) w.count = Math.round(w.baseCount * (curDiff ? curDiff.ammo : 1)); } }
   else if (it.buy) it.buy();
   if (actx) tone(620, 880, 0.09, 0.12, "sine"); updateMoneyHUD(); renderShop();
@@ -905,12 +913,14 @@ function renderShop() {
   const list = document.getElementById("shop-list"); if (!list) return; updateMoneyHUD();
   while (list.firstChild) list.removeChild(list.firstChild);
   for (const it of SHOP_ITEMS) {
-    const owned = it.id !== "ammo" && itemOwned(it);
+    if (it.hide && it.hide()) continue;   // 隱藏不適用商品(載具使用權在劇情/新手免費→不顯示)
+    const price = itemPrice(it);
+    const owned = !itemConsumable(it) && itemOwned(it);
     const row = document.createElement("div"); row.className = "item" + (owned ? " owned" : "");
     const info = document.createElement("div"); info.className = "nm"; info.textContent = it.nm;
     const ds = document.createElement("div"); ds.className = "ds"; ds.textContent = it.ds; info.appendChild(ds); row.appendChild(info);
-    const pr = document.createElement("div"); pr.className = "pr"; pr.textContent = "$" + it.price; row.appendChild(pr);
-    const btn = document.createElement("button"); btn.type = "button"; btn.textContent = owned ? "已擁有" : "購買"; btn.disabled = owned || money < it.price;
+    const pr = document.createElement("div"); pr.className = "pr"; pr.textContent = "$" + price; row.appendChild(pr);
+    const btn = document.createElement("button"); btn.type = "button"; btn.textContent = owned ? "已擁有" : "購買"; btn.disabled = owned || money < price;
     btn.addEventListener("click", () => buyItem(it)); row.appendChild(btn);
     list.appendChild(row);
   }
@@ -1110,6 +1120,8 @@ function callArtillery() {
 }
 /* ── 載具:悍馬車 + 戰車(走近按 E 上車,WASD/搖桿駕駛,戰車左鍵開炮,E 下車) ── */
 const VEHICLES = [];
+// 載具設定(item 3):maxFuel 油量(悍馬100繞營一圈/坦克50半圈,榴彈砲不耗油)/ maxShells 砲彈(坦克20/榴彈砲10)/ hpMul 車況=玩家HP×倍率(榴彈2/悍馬5/坦克10)/ basePrice 普通模式使用權底價(困難×2/天堂路×5)
+const VEH_CFG = { humvee: { maxFuel: 100, maxShells: 0, hpMul: 5, basePrice: 800 }, howitzer: { maxFuel: 0, maxShells: 10, hpMul: 2, basePrice: 1200 }, tank: { maxFuel: 50, maxShells: 20, hpMul: 10, basePrice: 1800 } };
 const vOlive = mat(0x4a5034, { roughness: 0.82, metalness: 0.12, envMapIntensity: 0.7 }), vDark = mat(0x32371f, { roughness: 0.86 }), vTire = mat(0x16161a, { roughness: 0.92 });
 const vGlass = new THREE.MeshPhysicalMaterial({ color: 0x141c2a, roughness: 0.1, metalness: 0, envMapIntensity: 1.5, clearcoat: 0.5 });
 function makeVehicle(type, x, z, ry) {
@@ -1139,13 +1151,23 @@ function makeVehicle(type, x, z, ry) {
     add(new THREE.BoxGeometry(0.42, 0.42, 0.6), gunMetal, 0, 0, 0.25, turret);                              // 砲閂
     turret.rotation.x = 0.3;
   }
-  const v = { type, group: g, turret, heading: ry, speed: 0, fireT: 0 }; VEHICLES.push(v); return v;
+  const cfg = VEH_CFG[type]; const v = { type, group: g, turret, heading: ry, baseHeading: ry, basePos: g.position.clone(), speed: 0, fireT: 0, cfg, unlocked: true, fuel: cfg.maxFuel, shells: cfg.maxShells, hp: 100 * cfg.hpMul, maxHp: 100 * cfg.hpMul, destroyed: false }; VEHICLES.push(v); return v;
 }
 makeVehicle("humvee", 22, 32, 0.5);
 makeVehicle("tank", 31, 25, 0.2);
 makeVehicle("howitzer", 30, 13, 0);
 let vehicle = null;
-function nearVehicle() { for (const v of VEHICLES) { const dx = camera.position.x - v.group.position.x, dz = camera.position.z - v.group.position.z; if (dx * dx + dz * dz < 18) return v; } return null; }
+function vehPriceMul() { const d = (curDiff && curDiff.diffIndex) || 3; return d >= 5 ? 5 : d >= 4 ? 2 : 1; }   // 使用權價格:普通×1/困難×2/天堂路×5
+function resetVehicles() {   // 進實戰時重置:車況=玩家HP×倍率、油量/砲彈滿、使用權(劇情/新手免費已解;普通以上要買)、復原殘骸與位置
+  const freeUse = ((curDiff && curDiff.diffIndex) || 3) <= 2;
+  for (const v of VEHICLES) { v.fuel = v.cfg.maxFuel; v.shells = v.cfg.maxShells; v.maxHp = Math.round(MAX_HP * v.cfg.hpMul); v.hp = v.maxHp; v.unlocked = freeUse; v.destroyed = false; v.speed = 0; v.heading = v.baseHeading; v.group.position.copy(v.basePos); v.group.rotation.set(0, v.baseHeading, 0); }
+}
+function vehFreeUse() { return ((curDiff && curDiff.diffIndex) || 3) <= 2; }   // 劇情/新手:載具免費,使用權商品隱藏
+function vehUnlocked(type) { const v = VEHICLES.find((x) => x.type === type); return !!(v && v.unlocked); }
+function vehUnlock(type) { const v = VEHICLES.find((x) => x.type === type); if (v) v.unlocked = true; }
+function vehRefuel(amt) { for (const v of VEHICLES) if (v.cfg.maxFuel > 0) v.fuel = Math.min(v.cfg.maxFuel, v.fuel + amt); }   // 油桶:悍馬/坦克各補油
+function vehRearm() { for (const v of VEHICLES) { if (v.type === "tank") v.shells = Math.min(v.cfg.maxShells, v.shells + 10); if (v.type === "howitzer") v.shells = Math.min(v.cfg.maxShells, v.shells + 5); } }   // 砲彈補給:坦克+10/大砲+5
+function nearVehicle() { for (const v of VEHICLES) { if (v.destroyed) continue; const dx = camera.position.x - v.group.position.x, dz = camera.position.z - v.group.position.z; if (dx * dx + dz * dz < 18) return v; } return null; }
 function enterVehicle(v) { vehicle = v; v.speed = 0; if (WEAPONS[wi]) WEAPONS[wi].group.visible = false; const fire = isTouch ? "射擊鈕" : "左鍵"; showNarr(v.type === "tank" ? "戰車 · WASD／搖桿駕駛 · " + fire + "開炮 · 按 E 下車" : v.type === "howitzer" ? "榴彈砲 · 看高一點增加射程 · " + fire + "發射 · 按 E 離開砲位" : "悍馬車 · WASD／搖桿駕駛 · 按 E 下車", 3.4); if (!firstHeavyShown) { firstHeavyShown = true; setTimeout(() => showNarr(NARR.heavyFire, 5.5), 3800); } }   // 首次上載具:重火力韌性旁白(toni 填)
 function exitVehicle() { if (!vehicle) return; const v = vehicle; camera.position.set(v.group.position.x + Math.cos(v.heading) * 3, EYE, v.group.position.z + Math.sin(v.heading) * 3); yaw = v.heading + Math.PI / 2; pitch = 0; vehicle = null; if (WEAPONS[wi]) WEAPONS[wi].group.visible = true; }
 function fireTankShell(v, fx, fz) {
@@ -1174,8 +1196,25 @@ function fireHowitzer(v) {
   const muzz = camera.position.clone().addScaledVector(d, 2.2); muzz.y += 0.3;
   spawnShell(muzz, d.multiplyScalar(42)); emitFx(sparkPool, muzz, 0.4, 0.45, 1.3, true);
 }
+function vehResHint(v) {   // 駕駛載具資源讀數(只 sim 顯示油量/砲彈/車況;hub 沙盒無限制不顯示)
+  if (MODE !== "sim") return "";
+  const parts = [];
+  if (v.cfg.maxFuel > 0) parts.push("油 " + Math.round(v.fuel));
+  if (v.cfg.maxShells > 0) parts.push("砲彈 " + v.shells);
+  parts.push("車況 " + Math.round(v.hp));
+  return " · " + parts.join(" · ");
+}
+function explodeVehicle(v) {   // 車況歸零→爆炸:駕駛被彈出受傷,殘骸本回合不可再用(item 3)
+  const pos = v.group.position.clone().setY(0.5);
+  v.destroyed = true; v.hp = 0;
+  exitVehicle();   // 先下車(vehicle=null,後續 hurtPlayer 正常扣玩家血)
+  shake = Math.max(shake, 1.1); sfxExplode(pos); try { sfxThud(); } catch (e) { } emitFx(sparkPool, pos.clone().setY(1.4), 0.7, 0.6, 2.2, true);
+  for (const g of enemies) if (!g.userData.dead && g.position.distanceTo(pos) < 6 && !coverBlocked(pos.x, pos.z, g.position.x, g.position.z)) hitEnemy(g, 200);   // 爆炸波及周圍敵人
+  v.group.rotation.z = 0.18;   // 殘骸微傾
+  hurtPlayer(35);   // 駕駛被炸傷(若 HP 不足仍會 endRun)
+}
 function updateVehicle(dt) {
-  const v = vehicle;
+  const v = vehicle, sim = MODE === "sim";
   if (v.type === "howitzer") {   // 站位榴彈砲:自由瞄準 + 砲管俯仰 + 彈道發射
     camera.rotation.set(pitch, yaw, 0);
     const hfx = -Math.sin(v.heading), hfz = -Math.cos(v.heading);
@@ -1183,26 +1222,33 @@ function updateVehicle(dt) {
     let trav = yaw - v.heading; while (trav > Math.PI) trav -= 2 * Math.PI; while (trav < -Math.PI) trav += 2 * Math.PI;
     v.turret.rotation.y = Math.max(-1.0, Math.min(1.0, trav)); v.turret.rotation.x = Math.max(0.05, Math.min(1.1, pitch));   // 方位±57°/仰角
     if (v.fireT > 0) v.fireT -= dt;
-    if (mouseDown && v.fireT <= 0) { v.fireT = 2.2; fireHowitzer(v); }
-    if (hintEl) { hintEl.style.opacity = "1"; hintEl.textContent = isTouch ? "榴彈砲 · 鏡頭抬高增加射程 · 射擊鈕發射 · 按 E 離開砲位" : "榴彈砲 · 看高一點增加射程 · 左鍵發射 · 按 E 離開砲位"; }
+    if (mouseDown && v.fireT <= 0) { if (!sim || v.shells > 0) { v.fireT = 2.2; if (sim) v.shells--; fireHowitzer(v); } else { v.fireT = 0.4; sfxDry(); } }   // 砲彈有限,空了乾擊
+    if (hintEl) { hintEl.style.opacity = "1"; hintEl.textContent = (isTouch ? "榴彈砲 · 鏡頭抬高增加射程 · 射擊鈕發射 · 按 E 離開" : "榴彈砲 · 看高一點增加射程 · 左鍵發射 · 按 E 離開") + vehResHint(v); }
     return;
   }
   let thr = 0, steer = 0;
   if (keys.KeyW) thr += 1; if (keys.KeyS) thr -= 1; if (keys.KeyA) steer -= 1; if (keys.KeyD) steer += 1;
   thr += tjz; steer += tjx;
+  const dry = sim && v.cfg.maxFuel > 0 && v.fuel <= 0;   // 油料耗盡:引擎熄火不能再加速
+  if (dry) thr = 0;
   const maxSpd = v.type === "tank" ? 8 : 14, accel = v.type === "tank" ? 7 : 12, turnRate = v.type === "tank" ? 1.2 : 1.9;
-  v.speed += thr * accel * dt; v.speed *= Math.max(0, 1 - dt * 1.5); v.speed = Math.max(-maxSpd * 0.45, Math.min(maxSpd, v.speed));
+  v.speed += thr * accel * dt; v.speed *= Math.max(0, 1 - dt * (dry ? 3 : 1.5)); v.speed = Math.max(-maxSpd * 0.45, Math.min(maxSpd, v.speed));
   if (Math.abs(v.speed) > 0.25) v.heading -= steer * turnRate * dt * Math.sign(v.speed) * Math.min(1, Math.abs(v.speed) / 2.5);
   v.group.rotation.y = v.heading;
-  const fx = -Math.sin(v.heading), fz = -Math.cos(v.heading);
+  const fx = -Math.sin(v.heading), fz = -Math.cos(v.heading), moved = Math.abs(v.speed) * dt;
   v.group.position.x += fx * v.speed * dt; v.group.position.z += fz * v.speed * dt;
   resolveCollisionFor(v.group.position, 1.9); clampBound(v.group.position);
+  if (sim && v.cfg.maxFuel > 0) v.fuel = Math.max(0, v.fuel - moved * 0.5);   // 油耗隨行駛距離(100油≈繞營一圈,坦克50≈半圈)
+  if (sim && (v.type === "tank" || v.type === "humvee")) {   // 撞擊殲敵:坦克碾過即死,悍馬撞=血量減半(再撞陣亡)
+    const rr = v.type === "tank" ? 2.8 : 2.2;
+    for (const g of enemies) { const u = g.userData; if (u.dead || u.ramCD > 0) continue; const ddx = g.position.x - v.group.position.x, ddz = g.position.z - v.group.position.z; if (ddx * ddx + ddz * ddz < rr * rr) { u.ramCD = 0.6; if (v.type === "tank") hitEnemy(g, u.hp + 999); else if (u.rammedHalf) hitEnemy(g, u.hp + 999); else { hitEnemy(g, Math.max(1, Math.ceil(u.hp / 2))); u.rammedHalf = true; } } }
+  }
   const cd = v.type === "tank" ? 9.5 : 8.5;
   camera.position.set(v.group.position.x - fx * cd, 4.7, v.group.position.z - fz * cd);
   camera.lookAt(v.group.position.x + fx * 3, 1.5, v.group.position.z + fz * 3);
   if (v.fireT > 0) v.fireT -= dt;
-  if (v.type === "tank" && mouseDown && v.fireT <= 0) { v.fireT = 1.5; fireTankShell(v, fx, fz); }
-  if (hintEl) { hintEl.style.opacity = "1"; hintEl.textContent = v.type === "tank" ? "戰車 · 左鍵開炮 · 按 E 下車" : "悍馬車 · 按 E 下車"; }
+  if (v.type === "tank" && mouseDown && v.fireT <= 0) { if (!sim || v.shells > 0) { v.fireT = 1.5; if (sim) v.shells--; fireTankShell(v, fx, fz); } else { v.fireT = 0.4; sfxDry(); } }
+  if (hintEl) { hintEl.style.opacity = "1"; hintEl.textContent = (v.type === "tank" ? "戰車 · 左鍵開炮 · 按 E 下車" : (dry ? "悍馬車 · 油料耗盡 · 按 E 下車" : "悍馬車 · 撞擊殲敵 · 按 E 下車")) + vehResHint(v); }
 }
 function updateEffects(dt) {
   if (MODE === "sim" && artyCD > 0) artyCD = Math.max(0, artyCD - dt);
@@ -1369,7 +1415,7 @@ function spawnEnemy(x, z, hp, opts) {
   g.scale.setScalar(type.scale);
   const ew = ENEMY_WEAPONS[weapon] || ENEMY_WEAPONS.pistol;
   g.userData.kind = "enemy"; g.userData.hp = Math.round((hp || 100) * type.hpMul); g.userData.speedMul = type.speedMul; g.userData.etype = type.key; g.userData.dead = false; g.userData.deadT = 0; g.userData.fireT = 1 + Math.random() * 2; g.userData.flinch = 0; g.userData.strafe = Math.random() < 0.5 ? 1 : -1; g.userData.strafeT = 1 + Math.random() * 2; g.userData.state = "chase"; g.userData.grenadeT = 6 + Math.random() * 8; g.userData.spawn = new THREE.Vector3(x, 0, z); g.userData.stepT = Math.random() * 0.4; g.userData.alertT = 0; g.userData.sawPlayer = false; g.userData.body = body; g.userData.skin = skin; g.userData.lastSeen = new THREE.Vector3(0, 0, -6); g.userData.everSeen = false;   // 存克隆材質供死亡回收(防記憶體洩漏);lastSeen=最後已知玩家位置(預設操場中心當推進目標,看不到玩家時朝這走,不偷看即時座標)
-  g.userData.weapon = weapon; g.userData.ammo = ew.ammo || 0; g.userData.grenadesLeft = opts.grenades || 0; g.userData.frog = frog; g.userData.meleeT = 0;   // item5:武器/有限彈藥(耗盡換刺刀)/手榴彈數;item6:蛙人
+  g.userData.weapon = weapon; g.userData.ammo = ew.ammo || 0; g.userData.grenadesLeft = opts.grenades || 0; g.userData.frog = frog; g.userData.meleeT = 0; g.userData.ramCD = 0; g.userData.rammedHalf = false;   // item5:武器/有限彈藥(耗盡換刺刀)/手榴彈數;item6:蛙人;item3:被載具撞擊冷卻/悍馬撞過半血標記
   g.userData.legs = legs; g.userData.gun = gunPivot; g.userData.upper = upper; g.userData.escale = type.scale; g.userData.walkPh = Math.random() * 6.28; g.userData.gunKick = 0; g.userData.bearing = Math.random() * 6.2832;   // 腿擺 / 槍托後座 / 上半身起伏 / 死亡縮放 / 圍攻方位
   ROOT.add(g); enemies.push(g);
 }
@@ -1476,6 +1522,7 @@ function updateEnemies(dt) {
     if (u.flinch > 0) { const f = u.flinch / (u.flinchMax || 0.18); g.rotation.x = -0.18 * f; g.rotation.z = (u.flinchSide || 0) * f; u.flinch -= dt; } else { g.rotation.x = 0; g.rotation.z = 0; }   // 方向化中彈:後仰 + 往中彈側扭
     if (u.stagger > 0) u.stagger -= dt;   // 腿傷踉蹌計時
     if (u.coverT > 0) u.coverT -= dt;
+    if (u.ramCD > 0) u.ramCD -= dt;   // 被載具撞擊冷卻(避免一次碾過多次扣)
     u.losT = (u.losT || 0) - dt; if (u.losT <= 0) { u.losSees = enemySeesPlayer(g, dist); u.losT = (0.1 + Math.random() * 0.06) * qLosMul; }   // 視線每 ~0.12s 重算快取(節流);低畫質 losMul 再拉長救 CPU
     const sees = u.losSees;
     if (sees) { if (!u.sawPlayer) { u.sawPlayer = true; u.alertT = 0.35 + Math.random() * 0.35; } u.everSeen = true; u.lastSeen.set(camera.position.x, 0, camera.position.z); } else u.sawPlayer = false;   // 只有真看到才更新最後已知位置;看不到時朝記憶位置搜索,不偷看玩家即時座標
@@ -1591,11 +1638,19 @@ function enterSim() {
   blink(480, 320, 800, () => {
     MODE = "sim"; wave = 0; score = 0; kills = 0; waveAlive = 0; spawnQueue = 0; inBreak = true; betweenT = 3.8;   // 首波延後:進場引言先在安靜畫面讀完再開打(文字不被戰鬥蓋台)
     applyDifficulty();   // 套玩家 HP/彈藥 + 敵人倍率/AI(難度)
+    resetVehicles();     // 載具車況/油量/砲彈/使用權重置(item 3:除非重開遊戲不重置→進實戰才重置)
     if (scoreEl) scoreEl.textContent = 0; if (killsEl) killsEl.textContent = 0; if (hintEl) hintEl.style.opacity = "0";
     updateWaveHUD(); playMusic(MUSIC_SIM); showNarr(NARR.enter, 3.6); blinking = false;
   });
 }
-function tryInteract() { if (vehicle) { exitVehicle(); return; } if (MODE !== "hub" || !isActive()) return; const v = nearVehicle(); if (v) { enterVehicle(v); return; } if (nearCow()) showNarr(NARR.cow, 5.5); else if (nearJacket()) showNarr(NARR.dream3, 5.5); else if (nearDiary()) openDiary(); else if (nearRangeEntry()) enterSim(); }
+function tryInteract() {
+  if (vehicle) { exitVehicle(); return; }
+  if (!isActive()) return;
+  const v = nearVehicle();   // 載具:hub 與 sim 都能開(item 3 實戰中可用);sim 需先買使用權(劇情/新手已免費解)
+  if (v && (MODE === "hub" || MODE === "sim")) { if (MODE === "sim" && !v.unlocked) { showNarr("這台要先在軍械庫(B)購買使用權", 2.6); return; } enterVehicle(v); return; }
+  if (MODE !== "hub") return;   // 其餘互動(牛/外套/日記/靶場)只在軍營 hub
+  if (nearCow()) showNarr(NARR.cow, 5.5); else if (nearJacket()) showNarr(NARR.dream3, 5.5); else if (nearDiary()) openDiary(); else if (nearRangeEntry()) enterSim();
+}
 /* ── 一眼瞬間(Tier 2):撐過 GOAL_WAVE → 主動放下槍 → 抽象光形非戰鬥高光(放下武器,光才出現) ── */
 const GOAL_WAVE = 5;   // 撐過這波=撐過了,夢讓他停下(toni 選先驗收用 5)
 let awaitDisarm = false, disarmT = 0;   // disarmT>0:放下槍動作進行中(槍垂下→淡入 gaze,讓「放下」是身體動作不是按鍵)
@@ -1714,7 +1769,7 @@ function endGaze() {
     }, 1450);
   }, 2400);
 }
-function hurtPlayer(d) { if (dead || gameOver || awaitDisarm) return; let _abs = 0; if (armor > 0) { _abs = Math.min(armor, d * 0.5); armor -= _abs; d -= _abs; updateArmorHUD(); } playerHP = Math.max(0, playerHP - d); if (hpEl) hpEl.textContent = Math.round(playerHP); if (dmgEl) { dmgEl.classList.toggle("armor", _abs > 0); dmgEl.style.opacity = Math.min(0.85, 0.3 + d / 35).toString(); clearTimeout(dmgEl._t); dmgEl._t = setTimeout(() => (dmgEl.style.opacity = "0"), 130); } sfxHurt(); if (playerHP <= 0) endRun(); }   // 護甲吃下傷害時冷藍 flash(背心保護看得見),否則紅
+function hurtPlayer(d) { if (dead || gameOver || awaitDisarm) return; if (vehicle && MODE === "sim" && !vehicle.destroyed) { vehicle.hp -= d; if (vehicle.hp <= 0) explodeVehicle(vehicle); else if (shake != null) shake = Math.max(shake, 0.18); return; } let _abs = 0; if (armor > 0) { _abs = Math.min(armor, d * 0.5); armor -= _abs; d -= _abs; updateArmorHUD(); } playerHP = Math.max(0, playerHP - d); if (hpEl) hpEl.textContent = Math.round(playerHP); if (dmgEl) { dmgEl.classList.toggle("armor", _abs > 0); dmgEl.style.opacity = Math.min(0.85, 0.3 + d / 35).toString(); clearTimeout(dmgEl._t); dmgEl._t = setTimeout(() => (dmgEl.style.opacity = "0"), 130); } sfxHurt(); if (playerHP <= 0) endRun(); }   // 護甲吃下傷害時冷藍 flash(背心保護看得見),否則紅
 function endRun() {
   if (dead) return;
   dead = true; gameOver = true; deaths++; stopMusic();   // 修補拍=樂停,沉默讓連接句說話
