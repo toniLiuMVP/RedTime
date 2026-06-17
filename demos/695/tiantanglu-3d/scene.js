@@ -768,7 +768,7 @@ function isActive() { return document.pointerLockElement === canvas || touchActi
 // 故 overlay 開時整組 touch-look/搖桿/遊戲鈕一律讓位,讓 overlay 自己的按鈕吃到原生 click(修「軍械庫關不掉」)。
 function overlayOpen() { for (const id of ["settings", "shop", "diary", "tutorial"]) { const e = document.getElementById(id); if (e && e.classList.contains("on")) return true; } return false; }
 const DIGIT = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3, Digit5: 4, Digit6: 5, Digit7: 6, Digit8: 7, Digit9: 8 };
-addEventListener("keydown", (e) => { keys[e.code] = 1; if (e.code === "Space" || e.code === "Tab") e.preventDefault(); if (e.code in DIGIT) showWeapon(DIGIT[e.code]); else if (e.code === "KeyQ") showWeapon((wi + 1) % WEAPONS.length); else if (e.code === "KeyR") reload(); else if (e.code === "KeyE") tryInteract(); else if (e.code === "KeyH") { if (MODE === "sim" && awaitDisarm) startGaze(); } else if (e.code === "KeyB") { if (shopEl && shopEl.classList.contains("on")) closeShop(); else openShop(); } else if (e.code === "KeyG") callArtillery(); });
+addEventListener("keydown", (e) => { keys[e.code] = 1; if (e.code === "Space" || e.code === "Tab") e.preventDefault(); if (e.code in DIGIT) showWeapon(DIGIT[e.code]); else if (e.code === "KeyQ") showWeapon((wi + 1) % WEAPONS.length); else if (e.code === "KeyR") reload(); else if (e.code === "KeyE") tryInteract(); else if (e.code === "KeyH") { beginDisarm(); } else if (e.code === "KeyB") { if (shopEl && shopEl.classList.contains("on")) closeShop(); else openShop(); } else if (e.code === "KeyG") callArtillery(); });
 addEventListener("keyup", (e) => { keys[e.code] = 0; });
 canvas.addEventListener("contextmenu", (e) => e.preventDefault());
 canvas.addEventListener("mousedown", (e) => {
@@ -811,7 +811,7 @@ if (isTouch) {
   tbtn("tb-wpn", () => { let n = wi; for (let i = 0; i < WEAPONS.length; i++) { n = (n + 1) % WEAPONS.length; if (WEAPONS[n].owned) { showWeapon(n); break; } } });
   tbtn("tb-act", () => { tryInteract(); });
   tbtn("tb-shop", () => { if (shopEl && shopEl.classList.contains("on")) closeShop(); else openShop(); });
-  tbtn("tb-disarm", () => { if (MODE === "sim" && awaitDisarm) startGaze(); });
+  tbtn("tb-disarm", () => { beginDisarm(); });
   tbtn("tb-arty", () => { callArtillery(); });
   tbtn("tb-crouch", () => { tCrouch = !tCrouch; const e = document.getElementById("tb-crouch"); if (e) e.classList.toggle("act", tCrouch); });   // 蹲下切換(再按起身)
   tbtn("tb-walk", () => { tWalk = !tWalk; const e = document.getElementById("tb-walk"); if (e) e.classList.toggle("act", tWalk); });   // 慢走/靜步切換
@@ -997,7 +997,7 @@ const WMUZZLE = {
   "狙擊槍": { cas: 1.55, sm: [0.6, 0.22, 1.05] },
 };
 function fire() {
-  if (!isActive() || dead || vehicle) return;   // 駕駛中左鍵=戰車開炮(updateVehicle 處理),不開手持武器
+  if (!isActive() || dead || vehicle || disarmT > 0) return;   // 駕駛中左鍵=戰車開炮(updateVehicle 處理),不開手持武器;放下槍動作期間不開火
   if (drawT > 0 || reloadT > 0) return;   // 拔槍/換彈動畫期間不能開火
   const w = WEAPONS[wi];
   if (w.type === "melee") { if (w.swingT <= 0) { w.swingT = w.swingDur || 0.3; (w.name === "鐵鎚" ? sfxThud : w.name === "小刀" ? sfxKnife : sfxSwoosh)(); meleeHit(w); } return; }
@@ -1463,7 +1463,8 @@ function enterSim() {
 function tryInteract() { if (vehicle) { exitVehicle(); return; } if (MODE !== "hub" || !isActive()) return; const v = nearVehicle(); if (v) { enterVehicle(v); return; } if (nearCow()) showNarr(NARR.cow, 5.5); else if (nearJacket()) showNarr(NARR.dream3, 5.5); else if (nearDiary()) openDiary(); else if (nearRangeEntry()) enterSim(); }
 /* ── 一眼瞬間(Tier 2):撐過 GOAL_WAVE → 主動放下槍 → 抽象光形非戰鬥高光(放下武器,光才出現) ── */
 const GOAL_WAVE = 5;   // 撐過這波=撐過了,夢讓他停下(toni 選先驗收用 5)
-let awaitDisarm = false;
+let awaitDisarm = false, disarmT = 0;   // disarmT>0:放下槍動作進行中(槍垂下→淡入 gaze,讓「放下」是身體動作不是按鍵)
+function beginDisarm() { if (MODE === "sim" && awaitDisarm && disarmT <= 0) { disarmT = 0.85; ads = false; if (hintEl) hintEl.style.opacity = "0"; } }
 const GAZE_MUSIC_URL = "../一眼瞬間.mp3";   // 一眼瞬間專屬主題曲(非戰鬥樂,不污染)
 let gazeMusic = null, gazeRAF = 0, gazeT0 = 0, gazeFigure = null, heartTimer = 0;
 function buildGazeFigure() {   // 站立女性剪影的光點分佈(抽象光形)
@@ -1723,8 +1724,8 @@ function updateFP(dt) {
   chSpread = Math.max(0, chSpread - dt * 26);
   if (scarFlash > 0) scarFlash = Math.max(0, scarFlash - dt * 0.55);   // 疤痕閃光衰減,留下永久 scarFloor
   if (scarEl) scarEl.style.opacity = (scarFloor + scarFlash).toFixed(3);
-  if (tbDisarmEl) tbDisarmEl.classList.toggle("on", isTouch && touchActive && MODE === "sim" && awaitDisarm);   // 手機放下槍鈕
-  if (hintEl) { if (MODE === "sim" && awaitDisarm) { hintEl.style.opacity = "1"; hintEl.textContent = isTouch ? "夠了 · 輕觸「放下槍」" : "夠了 · 按 H 放下槍"; } else if (MODE === "hub" && isActive()) { hintEl.style.opacity = "1"; hintEl.textContent = nearVehicle() ? "按 E 上車駕駛" : nearCow() ? "按 E · 替連長顧那頭牛" : nearJacket() ? "按 E · 看那件反穿的外套" : nearDiary() ? "按 E · 翻開大兵日記" : nearRangeEntry() ? "按 E 進入「實戰模擬練習」" : (isTouch ? "搖桿走動軍營 · 按「軍械」鈕購買裝備 · 走到靶場(右前方)按 E 開始實戰" : "自由走動軍營 · 按 B 開軍械庫購買裝備 · 走到靶場(右前方)按 E 開始實戰模擬"); } else hintEl.style.opacity = "0"; }
+  if (tbDisarmEl) tbDisarmEl.classList.toggle("on", isTouch && touchActive && MODE === "sim" && awaitDisarm && disarmT <= 0);   // 手機放下槍鈕(放下動作期間隱藏)
+  if (hintEl) { if (MODE === "sim" && awaitDisarm && disarmT <= 0) { hintEl.style.opacity = "1"; hintEl.textContent = isTouch ? "夠了 · 輕觸「放下槍」" : "夠了 · 按 H 放下槍"; } else if (MODE === "hub" && isActive()) { hintEl.style.opacity = "1"; hintEl.textContent = nearVehicle() ? "按 E 上車駕駛" : nearCow() ? "按 E · 替連長顧那頭牛" : nearJacket() ? "按 E · 看那件反穿的外套" : nearDiary() ? "按 E · 翻開大兵日記" : nearRangeEntry() ? "按 E 進入「實戰模擬練習」" : (isTouch ? "搖桿走動軍營 · 按「軍械」鈕購買裝備 · 走到靶場(右前方)按 E 開始實戰" : "自由走動軍營 · 按 B 開軍械庫購買裝備 · 走到靶場(右前方)按 E 開始實戰模擬"); } else hintEl.style.opacity = "0"; }
   updateMusic(dt); updateAmbient(dt);
   moodSim += ((MODE === "sim" && !dead ? 1 : 0) - moodSim) * Math.min(1, dt * 0.8);   // 夢進熔爐:光影收緊(暗角加深 / 曝光略降 / 顆粒略增)
   if (postfxOn && postfx) { const tt = postfx.tuning; tt.vignette.darkness = 0.26 + moodSim * 0.14 + skyDarkCur * 0.12; tt.exposure = 1.08 - moodSim * 0.07 - skyDarkCur * 0.06; tt.grain.amount = 0.012 + moodSim * 0.01; }
@@ -1784,12 +1785,13 @@ function updateFP(dt) {
   swayX += (-dyaw * 1.5 - swayX) * sk; swayY += (dpitch * 1.5 - swayY) * sk;
   swayX = Math.max(-0.045, Math.min(0.045, swayX)); swayY = Math.max(-0.045, Math.min(0.045, swayY));
   // 拔槍/換彈位移:拔槍由低處 ease-out 升起;換彈正弦下沉+傾斜
-  let drawDipY = 0, drawDipZ = 0, drawRotX = 0, rlDipY = 0, rlRotX = 0, rlRotZ = 0;
+  let drawDipY = 0, drawDipZ = 0, drawRotX = 0, rlDipY = 0, rlRotX = 0, rlRotZ = 0, disDipY = 0, disRotX = 0;
+  if (disarmT > 0) { disarmT -= dt; if (disarmT < 0) disarmT = 0; const e = 1 - disarmT / 0.85, s = e * e; disDipY = -s * 0.75; disRotX = s * 1.15; if (disarmT === 0) startGaze(); }   // 放下槍:槍垂下+槍口下傾(ease-in),到底進一眼瞬間
   if (drawT > 0) { const dp = 1 - drawT / drawDur, e = 1 - (1 - dp) * (1 - dp); drawDipY = -(1 - e) * 0.4; drawDipZ = (1 - e) * 0.12; drawRotX = (1 - e) * 1.0; }
   if (reloadT > 0) { const rp = 1 - reloadT / reloadDur, rc = reloadCurve(WEAPONS[wi].name, rp); rlDipY = rc[0]; rlRotX = rc[1]; rlRotZ = rc[2]; }
   const ax = w.base.x * (1 - adsBlend * 0.7) + swayX, ay = w.base.y + adsBlend * 0.03 + swayY;
-  w.group.position.set(ax + Math.sin(bob) * bobAmp + swPx, ay + Math.abs(Math.cos(bob)) * bobAmp - recoilKick * 0.5 + vmKick * 0.16 - landDip * 0.5 + drawDipY + rlDipY + swPy, w.base.z + recoilKick * 1.2 + vmKick + swPz + drawDipZ);
-  w.group.rotation.set(w.rot.x + swRx - swayY * 2 + vmKickRot + drawRotX + rlRotX, w.rot.y + swRy + swayX * 2, w.rot.z + swRz + rlRotZ);
+  w.group.position.set(ax + Math.sin(bob) * bobAmp + swPx, ay + Math.abs(Math.cos(bob)) * bobAmp - recoilKick * 0.5 + vmKick * 0.16 - landDip * 0.5 + drawDipY + rlDipY + disDipY + swPy, w.base.z + recoilKick * 1.2 + vmKick + swPz + drawDipZ);
+  w.group.rotation.set(w.rot.x + swRx - swayY * 2 + vmKickRot + drawRotX + rlRotX + disRotX, w.rot.y + swRy + swayX * 2, w.rot.z + swRz + rlRotZ);
   w.group.visible = !scoped;
   updateProjectiles(dt); updateTargets(dt); updateEnemies(dt); updateEffects(dt);
   updateFxPool(sparkPool, dt); updateFxPool(dustPool, dt); updateFxPool(trailPool, dt); updateFxPool(bloodPool, dt);
@@ -1879,6 +1881,8 @@ if (DEBUG) {
   window.__FIRE__ = () => fire(); // debug 完整擊發(含退殼/槍口煙/後焰)
   window.__WEP__ = (i) => showWeapon(i); // debug 切武器
   window.__SPAWN__ = (n) => { for (let i = 0; i < (n || 6); i++) spawnEnemy(-6 + i * 2.4, -8); return enemies.map((e) => e.userData.etype); }; // debug 生敵人看兵種變化
+  window.__DISARMTEST__ = () => { MODE = "sim"; awaitDisarm = true; beginDisarm(); return { disarmT, MODE }; }; // debug 測放下槍動作
+  window.__STATE__ = () => ({ MODE, awaitDisarm, disarmT: +disarmT.toFixed(2) }); // debug 看 disarm 狀態
   window.__ADS__ = (v) => { ads = !!v; }; // debug 開鏡
   window.__AIM__ = (x, y, z) => { camera.lookAt(x, y, z); yaw = camera.rotation.y; pitch = camera.rotation.x; }; // debug 瞄向
   window.__KILLTEST__ = () => { let best = null, bd = 1e9; for (const g of enemies) { if (g.userData.dead) continue; const d = g.position.distanceTo(camera.position); if (d < bd) { bd = d; best = g; } } if (!best) return "no enemy"; camera.lookAt(best.position.clone().setY(1.2)); yaw = camera.rotation.y; pitch = camera.rotation.x; camera.updateMatrixWorld(true); const hp0 = best.userData.hp; for (let i = 0; i < 6; i++) shootHit(WEAPONS[wi]); return { dist: Math.round(bd), hp0, hpAfter: best.userData.hp, kills }; }; // debug 殺最近敵
