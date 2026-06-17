@@ -1617,7 +1617,7 @@ function endGaze() {
     }, 1450);
   }, 2400);
 }
-function hurtPlayer(d) { if (dead || gameOver || awaitDisarm) return; if (armor > 0) { const a = Math.min(armor, d * 0.5); armor -= a; d -= a; updateArmorHUD(); } playerHP = Math.max(0, playerHP - d); if (hpEl) hpEl.textContent = Math.round(playerHP); if (dmgEl) { dmgEl.style.opacity = Math.min(0.85, 0.3 + d / 35).toString(); clearTimeout(dmgEl._t); dmgEl._t = setTimeout(() => (dmgEl.style.opacity = "0"), 130); } sfxHurt(); if (playerHP <= 0) endRun(); }
+function hurtPlayer(d) { if (dead || gameOver || awaitDisarm) return; let _abs = 0; if (armor > 0) { _abs = Math.min(armor, d * 0.5); armor -= _abs; d -= _abs; updateArmorHUD(); } playerHP = Math.max(0, playerHP - d); if (hpEl) hpEl.textContent = Math.round(playerHP); if (dmgEl) { dmgEl.classList.toggle("armor", _abs > 0); dmgEl.style.opacity = Math.min(0.85, 0.3 + d / 35).toString(); clearTimeout(dmgEl._t); dmgEl._t = setTimeout(() => (dmgEl.style.opacity = "0"), 130); } sfxHurt(); if (playerHP <= 0) endRun(); }   // 護甲吃下傷害時冷藍 flash(背心保護看得見),否則紅
 function endRun() {
   if (dead) return;
   dead = true; gameOver = true; deaths++; stopMusic();   // 修補拍=樂停,沉默讓連接句說話
