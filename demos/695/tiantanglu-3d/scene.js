@@ -926,6 +926,7 @@ function sfxDirtHit() { if (!actx) return; noiseHit(0.12, 420, 130, 0.24, "lowpa
 // 表面判定:物件標記 surface 優先,油桶=金屬,低處=泥土,其餘=混凝土
 function surfaceOf(hitObj, point) { let p = hitObj; while (p) { const u = p.userData; if (u && u.surface) return u.surface; if (u && u.kind === "barrel") return "metal"; p = p.parent; } return point.y < 0.3 ? "dirt" : "concrete"; }
 const _imp = new THREE.Vector3();
+const _projStep = new THREE.Vector3(), _projDir = new THREE.Vector3(), _projLook = new THREE.Vector3(), _shellNp = new THREE.Vector3(), _shellDir = new THREE.Vector3();   // 投射物/砲彈熱迴圈 scratch:免每幀 clone(對齊既有 tmpO/_ejP 慣例)
 // 分材質彈著:金屬跳彈火花 / 木屑 / 泥土揚塵 / 混凝土灰 / 沙包悶噗
 function impact(point, surf) {
   const p = point.clone().addScaledVector(tmpD, -0.03);
@@ -1129,10 +1130,10 @@ function spawnShell(pos, vel) { const m = new THREE.Mesh(new THREE.SphereGeometr
 function updateShells(dt) {
   for (let i = shells.length - 1; i >= 0; i--) {
     const s = shells[i]; s.vel.y -= 17 * dt; s.prev.copy(s.m.position);
-    const np = s.m.position.clone().addScaledVector(s.vel, dt);
+    const np = _shellNp.copy(s.m.position).addScaledVector(s.vel, dt);
     let hit = null;
     if (np.y <= 0.25) hit = new THREE.Vector3(np.x, 0.3, np.z);
-    else { ray.set(s.prev, s.vel.clone().normalize()); ray.far = s.prev.distanceTo(np) + 0.3; const h = ray.intersectObject(ROOT, true); if (h.length) hit = h[0].point.clone(); }
+    else { ray.set(s.prev, _shellDir.copy(s.vel).normalize()); ray.far = s.prev.distanceTo(np) + 0.3; const h = ray.intersectObject(ROOT, true); if (h.length) hit = h[0].point.clone(); }
     if (hit) { explode(hit, 0, true); scene.remove(s.m); shells.splice(i, 1); continue; }
     s.m.position.copy(np); s.life -= dt; if (s.life <= 0) { scene.remove(s.m); shells.splice(i, 1); }
   }
@@ -1228,12 +1229,13 @@ const memDotTex = tex((c, S) => { const g = c.createRadialGradient(S / 2, S / 2,
 const memShards = [];
 for (let i = 0; i < 56; i++) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: memDotTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, opacity: 0 })); s.visible = false; s.raycast = RC_NOOP; scene.add(s); memShards.push({ s, on: false, t: 0, life: 0, vx: 0, vy: 0, vz: 0 }); }
 let msI = 0;
-function memoryShatter(pos) {   // 擊倒→記憶光點上升消散(碎成她的話語光,不留屍/血)
-  const n = 11 + Math.floor(Math.random() * 5);
+function memoryShatter(pos, escale) {   // 擊倒→記憶光點上升消散(碎成她的話語光,不留屍/血);兵種越大,碎成的光越多越散(重裝厚實一綻/突擊兵稀疏一閃)
+  const es = escale || 1;
+  const n = Math.round((11 + Math.floor(Math.random() * 5)) * es);
   for (let i = 0; i < n; i++) {
     const sh = memShards[msI = (msI + 1) % memShards.length];
-    sh.s.position.set(pos.x + (Math.random() - 0.5) * 0.9, 0.85 + Math.random() * 1.1, pos.z + (Math.random() - 0.5) * 0.9);
-    sh.s.scale.setScalar(0.16 + Math.random() * 0.14); sh.s.material.opacity = 0.95; sh.s.visible = true;
+    sh.s.position.set(pos.x + (Math.random() - 0.5) * 0.9 * es, 0.85 + Math.random() * 1.1, pos.z + (Math.random() - 0.5) * 0.9 * es);
+    sh.s.scale.setScalar((0.16 + Math.random() * 0.14) * es); sh.s.material.opacity = 0.95; sh.s.visible = true;
     sh.on = true; sh.t = 0; sh.life = 0.9 + Math.random() * 0.7; sh.vx = (Math.random() - 0.5) * 0.7; sh.vy = 0.9 + Math.random() * 0.9; sh.vz = (Math.random() - 0.5) * 0.7;
   }
 }
@@ -1282,14 +1284,15 @@ function spawnEnemy(x, z, hp) {
     eb(0.14, 0.5, 0.16, body, sx * 0.27, 1.18, 0.02);    // 上臂(持槍備姿,不擺)
   }
   // 持槍(胸前) + 前臂 + 握把手
-  const gun = eb(0.1, 0.1, 0.62, gunMetal, 0.1, 1.16, -0.28);   // 步槍
+  const gunPivot = new THREE.Group(); gunPivot.position.set(0.1, 1.16, 0.03);   // 槍托樞紐:後座只抬槍口(不繞中點 see-saw)
+  const gun = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.62), gunMetal); gun.position.set(0, 0, -0.31); gun.castShadow = true; gunPivot.add(gun); ms.push(gunPivot);   // 步槍
   eb(0.07, 0.16, 0.12, gunMag, 0.1, 1.04, -0.12);              // 彈匣
   eb(0.14, 0.34, 0.14, body, 0.18, 1.0, -0.18);               // 前臂
   const hand = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), skin); hand.position.set(0.1, 1.12, -0.08); ms.push(hand);   // 握把手:膚色球,槍是握著不是浮空
-  ms.forEach((m) => { m.castShadow = true; g.add(m); });
+  const upper = new THREE.Group(); ms.forEach((m) => { m.castShadow = true; upper.add(m); }); g.add(upper);   // 上半身容器:走路起伏/側擺驅動在這(不動 g,g 被 yaw/flinch/death 佔用)
   g.scale.setScalar(type.scale);
   g.userData.kind = "enemy"; g.userData.hp = Math.round((hp || 100) * type.hpMul); g.userData.speedMul = type.speedMul; g.userData.etype = type.key; g.userData.dead = false; g.userData.deadT = 0; g.userData.fireT = 1 + Math.random() * 2; g.userData.flinch = 0; g.userData.strafe = Math.random() < 0.5 ? 1 : -1; g.userData.strafeT = 1 + Math.random() * 2; g.userData.state = "chase"; g.userData.grenadeT = 6 + Math.random() * 8; g.userData.spawn = new THREE.Vector3(x, 0, z); g.userData.stepT = Math.random() * 0.4; g.userData.alertT = 0; g.userData.sawPlayer = false; g.userData.body = body; g.userData.skin = skin;   // 存克隆材質供死亡回收(防記憶體洩漏)
-  g.userData.legs = legs; g.userData.gun = gun; g.userData.escale = type.scale; g.userData.walkPh = Math.random() * 6.28; g.userData.gunKick = 0;   // 走路腿擺 / 開火後座 / 死亡縮放 樞紐
+  g.userData.legs = legs; g.userData.gun = gunPivot; g.userData.upper = upper; g.userData.escale = type.scale; g.userData.walkPh = Math.random() * 6.28; g.userData.gunKick = 0; g.userData.bearing = Math.random() * 6.2832;   // 腿擺 / 槍托後座 / 上半身起伏 / 死亡縮放 / 圍攻方位
   ROOT.add(g); enemies.push(g);
 }
 /* ── 波次 horde + 計分 ── */
@@ -1332,7 +1335,7 @@ function hitEnemy(g, dmg, head, point) {
   if (u.hp <= 0) {
     u.dead = true; u.deadT = 0; kills++; u.deathLean = Math.max(-0.9, Math.min(0.9, (u.flinchSide || 0) * 2.6));   // 往中彈側倒,每隻死法不同
     { let fb = 0; if (point) { const fwx = Math.sin(g.rotation.y), fwz = Math.cos(g.rotation.y); fb = (point.x - g.position.x) * fwx + (point.z - g.position.z) * fwz; } u.deathFwd = fb <= 0; u.deathYaw = g.rotation.y + (Math.random() - 0.5) * 0.7; }   // 中彈前側→被擊退後仰,後側→前撲;加隨機側轉避免雷同
-    sfxThud(); memoryShatter(g.position); waveAlive--; updateWaveHUD();   // 夢敵人擊倒:碎成記憶光點(非血池/屍體)
+    sfxThud(); memoryShatter(g.position, u.escale); waveAlive--; updateWaveHUD();   // 夢敵人擊倒:碎成記憶光點(非血池/屍體),光量隨兵種體型
   } else { if (head) sfxHead(); else sfxImpact(); }   // 去爽 W2:enemy 全程不給十字回饋(連爆頭金✕),殺只是消耗;靶場 target 保留十字
 }
 function enemyShoot(g, dist) {
@@ -1341,7 +1344,7 @@ function enemyShoot(g, dist) {
   const mp = g.position.clone().setY(1.25).addScaledVector(dir, 0.6);
   emitFx(sparkPool, mp, 0.1, 0.28, 0.3, true); sfxEnemyShot(mp);
   const hcBase = g.userData.etype === "heavy" ? 0.5 : g.userData.etype === "scout" ? 0.4 : 0.46;   // 重裝穩準/突擊散
-  const hitChance = Math.max(0.08, hcBase - dist * 0.009); const hit = Math.random() < hitChance;
+  let hitChance = Math.max(0.08, hcBase - dist * 0.009); if (curSpeed > 3.5) hitChance *= 0.62; const hit = Math.random() < hitChance;   // 玩家高速走位更難命中(溫和 ~38%,非 twitch;讓朝你飛來的曳光有意義,死亡只是夢把他帶回)
   camera.getWorldPosition(tmpO2);   // 朝玩家飛來的曳光:命中=直指頭胸,未命中=擦身偏移(冷橘區隔敵我,讓「子彈朝你飛來」可見)
   const ox = hit ? 0 : (Math.random() - 0.5) * 1.3, oy = hit ? 0.05 : (Math.random() - 0.5) * 1.0, oz = hit ? 0 : (Math.random() - 0.5) * 1.3;
   tracer(mp.x, mp.y, mp.z, tmpO2.x + ox, tmpO2.y - 0.15 + oy, tmpO2.z + oz, 0xff7040, 0.7);
@@ -1382,7 +1385,10 @@ function updateEnemies(dt) {
     if (sees) { if (!u.sawPlayer) { u.sawPlayer = true; u.alertT = 0.35 + Math.random() * 0.35; } } else u.sawPlayer = false;   // 首次發現玩家 → 反應延遲
     if (u.alertT > 0) u.alertT -= dt;
     const smart = !!(curDiff && curDiff.smart);   // 天堂路模式:團隊圍攻
-    const fx = dx / dist, fz = dz / dist, rx = -fz, rz = fx; let mvx = 0, mvz = 0, sp = 2.0;
+    let aimX = camera.position.x, aimZ = camera.position.z;
+    if (smart) { aimX += Math.cos(u.bearing || 0) * 7; aimZ += Math.sin(u.bearing || 0) * 7; }   // 圍攻:各佔一個環繞方位,推進目標=玩家旁的側翼點→整隊自然散成弧(不再全疊同一條進線)
+    const adx = aimX - g.position.x, adz = aimZ - g.position.z, adist = Math.hypot(adx, adz) || 1;
+    const fx = adx / adist, fz = adz / adist, rx = -fz, rz = fx; let mvx = 0, mvz = 0, sp = 2.0;   // 非 smart 時 aim=玩家,fx/fz 與原本完全相同
     if ((u.coverT > 0 || u.hp < 40) && sees && !smart && u.etype === "rifleman") { // 只步兵找掩體;突擊兵裸衝/重裝是活掩體,都不躲(天堂路模式全主動圍攻)
       let best = null, bd = 1e9; for (const c of COVER_PTS) { const d = c.distanceTo(g.position); if (d < bd) { bd = d; best = c; } }
       if (best && bd > 1.8) { const cdx = best.x - g.position.x, cdz = best.z - g.position.z, cl = Math.hypot(cdx, cdz) || 1; mvx = cdx / cl; mvz = cdz / cl; sp = 2.7; }
@@ -1395,7 +1401,11 @@ function updateEnemies(dt) {
       if (ml > 0.01) { u.walkPh += dt * sp * 4.2; u.legs[0].rotation.x = Math.sin(u.walkPh) * 0.5; u.legs[1].rotation.x = -Math.sin(u.walkPh) * 0.5; }
       else { const k = Math.min(1, dt * 8); u.legs[0].rotation.x *= 1 - k; u.legs[1].rotation.x *= 1 - k; }
     }
-    if (u.gun) { u.gunKick *= 1 - Math.min(1, dt * 9); u.gun.rotation.x = -u.gunKick; }   // 開火後座衰減:槍口上揚彈回(開火 tell)
+    if (u.upper) {   // 上半身隨步伐起伏 + 微側擺(破除「人偶」感:腿擺但軀幹凍結);停步回正
+      if (ml > 0.01) { u.upper.position.y = Math.abs(Math.sin(u.walkPh)) * 0.025; u.upper.rotation.z = Math.sin(u.walkPh) * 0.03; }
+      else { const k = Math.min(1, dt * 8); u.upper.position.y *= 1 - k; u.upper.rotation.z *= 1 - k; }
+    }
+    if (u.gun) { u.gunKick *= 1 - Math.min(1, dt * 9); u.gun.rotation.x = u.gunKick; }   // 開火後座衰減:槍托樞紐抬槍口彈回(+gunKick=槍口上揚,因樞紐在槍托、槍口在 -z)
     if (ml > 0.01) {
       const s = (u.flinch > 0 ? 0.4 : sp) * (u.speedMul || 1) * (u.stagger > 0 ? 0.35 : 1) * dt;   // 兵種移速:重裝慢 / 突擊快;腿傷踉蹌減速
       let ndx = mvx / ml, ndz = mvz / ml;
@@ -1665,10 +1675,10 @@ function updateProjectiles(dt) {
       p.m.rotation.x += dt * 6; p.m.rotation.y += dt * 4;
       if (p.t >= p.fuse) { explode(p.m.position.clone(), 0, false); scene.remove(p.m); p.m.geometry.dispose(); projectiles.splice(i, 1); }
     } else {
-      p.prev.copy(p.m.position); const step = p.vel.clone().multiplyScalar(dt); const dist = step.length(); p.m.position.add(step);
-      p.m.lookAt(p.m.position.clone().add(p.vel));
+      p.prev.copy(p.m.position); const step = _projStep.copy(p.vel).multiplyScalar(dt); const dist = step.length(); p.m.position.add(step);
+      p.m.lookAt(_projLook.copy(p.m.position).add(p.vel));
       if (Math.random() < 0.85) emitFx(trailPool, p.prev, 0.7, 0.5, 1.4, false);
-      ray.set(p.prev, p.vel.clone().normalize()); ray.far = dist + 0.3; const h = ray.intersectObject(ROOT, true);
+      ray.set(p.prev, _projDir.copy(p.vel).normalize()); ray.far = dist + 0.3; const h = ray.intersectObject(ROOT, true);
       const killRocket = () => { p.m.children.forEach((c) => c.geometry && c.geometry.dispose()); scene.remove(p.m); projectiles.splice(i, 1); };
       if (h.length) { explode(h[0].point.clone(), 0, true); killRocket(); }
       else if (p.m.position.y <= 0.3 || p.t > 4) { explode(p.m.position.clone(), 0, true); killRocket(); }
