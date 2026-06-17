@@ -1466,11 +1466,11 @@ const NARR = {
   gaze: "妳一直都在。",
   // ── 以下 audit 標「需 toni 親寫」的槽位:placeholder([…])不顯示,toni 填真句自動生效 ──
   // 放下槍那一秒(撐過 GOAL_WAVE→awaitDisarm):情緒=不是打贏了,是不必再打了。承接「撐≠強」→「可以放下了」
-  survived: "［放下槍那一秒的旁白：撐過了→可以放下了；不是贏了，是不必再打了。toni 親寫］",
+  survived: "我會走到我變強的那個未來。",
   // 一眼瞬間收束第二拍(首尾合龍):放下槍=字面上閉眼→看見她,回扣開場「每當我閉上眼睛，我就可以看見妳」。低亮度回返一次
   gazeEcho: "每當我閉上眼睛，我就可以看見妳。",
   // 首次呼叫砲擊/上載具:把毀滅性火力翻回韌性/這是夢不是真打(稀缺觸發一次)
-  heavyFire: "［首次重火力旁白：毀滅性火力→把拔的韌性／這是夢不是真打。toni 親寫］",
+  heavyFire: "先讓自己變好。",
 };
 if (mendEl) mendEl.textContent = NARR.mend;
 function isReal(s) { return !!s && s[0] !== "［"; }   // 連接句守門:placeholder([…])不顯示,toni 填真句後自動生效
