@@ -657,7 +657,7 @@ function reloadCurve(name, rp) {   // 回 [dipY, rotX, rotZ];每把槍換彈動�
 }
 
 /* ══════════════ Web Audio 音效 ══════════════ */
-let actx = null, masterGain = null;
+let actx = null, masterGain = null, gunBus = null;   // gunBus:玩家槍聲乾聲 + slap-back 回聲匯流排(大操場遠處彈回)
 const settings = { sens: 1, vol: 0.8, chSize: 8, chGap: 4, chThick: 2, chColor: "#7dff8a", quality: 3, difficulty: 3 };
 try { Object.assign(settings, JSON.parse(localStorage.getItem("tiantanglu_settings_v1") || "{}")); } catch (e) { }
 (function sanitizeSettings() {   // 防 tampered localStorage:數值夾範圍 + chColor 必須 hex(擋 chColor → CSS 變數注入路徑)
@@ -671,7 +671,16 @@ try { Object.assign(settings, JSON.parse(localStorage.getItem("tiantanglu_settin
 function saveSettings() { try { localStorage.setItem("tiantanglu_settings_v1", JSON.stringify(settings)); } catch (e) { } }
 function applyCrosshair() { const r = document.documentElement.style; r.setProperty("--ch-size", settings.chSize + "px"); r.setProperty("--ch-gap", settings.chGap + "px"); r.setProperty("--ch-thick", settings.chThick + "px"); r.setProperty("--ch-color", /^#[0-9a-fA-F]{6}$/.test(settings.chColor) ? settings.chColor : "#7dff8a"); }   // 消費點也守 hex(belt-and-suspenders,擋 chColor → CSS url() 外洩)
 applyCrosshair();
-function ensureAudio() { if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); masterGain = actx.createGain(); masterGain.gain.value = settings.vol; masterGain.connect(actx.destination); } catch (e) { } } if (actx && actx.state === "suspended") actx.resume(); startAmbient(); }
+function ensureAudio() { if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); masterGain = actx.createGain(); masterGain.gain.value = settings.vol; masterGain.connect(actx.destination); buildGunBus(); } catch (e) { } } if (actx && actx.state === "suspended") actx.resume(); startAmbient(); }
+function buildGunBus() {   // 槍聲 slap-back:乾聲直送 + 一路 send 進延遲回授(遠處建物彈回的空曠回聲)
+  if (gunBus || !actx || !masterGain) return;
+  gunBus = actx.createGain(); gunBus.gain.value = 1; gunBus.connect(masterGain);   // 乾聲
+  const send = actx.createGain(); send.gain.value = 0.3; gunBus.connect(send);
+  const delay = actx.createDelay(0.5); delay.delayTime.value = 0.17;
+  const fb = actx.createGain(); fb.gain.value = 0.26;
+  const lp = actx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1700;
+  send.connect(delay); delay.connect(lp); lp.connect(fb); fb.connect(delay); lp.connect(masterGain);   // 延遲→低通→回授(數次遞減 repeats)→輸出
+}
 /* ── 音樂:進觸發點(sim 熔爐)才播,離開自動淡出停;聲音=相信「相信的力量」(EP40 韌性主題曲) ── */
 const MUSIC_SIM = "../相信「相信的力量」.mp3";   // 同源 mp3(CSP media-src 'self')
 let music = null, musicUrl = null, musicTarget = 0, musicCur = 0, moodSim = 0, skyDarkCur = 0;
@@ -693,7 +702,7 @@ function noiseBuf(dur) { const n = Math.max(1, Math.floor(actx.sampleRate * dur)
 function adsr(g, t0, a, peak, d) { g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(peak, t0 + a); g.gain.exponentialRampToValueAtTime(0.0001, t0 + a + d); }
 function noiseHit(dur, f0, f1, peak, type, out) { const t0 = actx.currentTime; const s = actx.createBufferSource(); s.buffer = noiseBuf(dur); const lp = actx.createBiquadFilter(); lp.type = type || "lowpass"; lp.frequency.setValueAtTime(f0, t0); lp.frequency.exponentialRampToValueAtTime(Math.max(40, f1), t0 + dur); const g = actx.createGain(); adsr(g, t0, 0.002, peak, dur); s.connect(lp).connect(g).connect(audioOut(out)); s.start(t0); s.stop(t0 + dur + 0.02); }
 function tone(f0, f1, dur, peak, wave, out) { const t0 = actx.currentTime; const o = actx.createOscillator(); o.type = wave || "sine"; o.frequency.setValueAtTime(f0, t0); o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t0 + dur); const g = actx.createGain(); adsr(g, t0, 0.003, peak, dur); o.connect(g).connect(audioOut(out)); o.start(t0); o.stop(t0 + dur + 0.02); }
-function sfxShot(type) { if (!actx) return; noiseHit(0.16, type === "auto" ? 2800 : 1900, 400, type === "auto" ? 0.5 : 0.6); tone(150, 55, 0.12, 0.4); }
+function sfxShot(type) { if (!actx) return; noiseHit(0.16, type === "auto" ? 2800 : 1900, 400, type === "auto" ? 0.5 : 0.6, undefined, gunBus); tone(150, 55, 0.12, 0.4, undefined, gunBus); }
 function sfxStep(crouch) { if (!actx) return; noiseHit(0.07, crouch ? 460 : 820, crouch ? 200 : 320, crouch ? 0.1 : 0.18); }
 function sfxSwoosh() { if (!actx) return; noiseHit(0.22, 300, 1600, 0.22, "bandpass"); }
 function sfxExplode(pos) { if (!actx) return; const o = pos ? panner(pos) : null; noiseHit(0.7, 1200, 60, 0.85, "lowpass", o); tone(120, 28, 0.6, 0.7, "sine", o); tone(60, 20, 0.9, 0.5, "sine", o); }
@@ -715,7 +724,7 @@ function sfxImpact() { if (!actx) return; noiseHit(0.08, 1400, 500, 0.2); }
 function sfxThud() { if (!actx) return; noiseHit(0.12, 600, 180, 0.32); tone(120, 60, 0.1, 0.22); }
 function sfxBolt() { if (!actx) return; setTimeout(() => noiseHit(0.05, 1800, 900, 0.18), 120); setTimeout(() => noiseHit(0.05, 1200, 600, 0.18), 280); }
 function sfxThrow() { if (!actx) return; noiseHit(0.2, 500, 1800, 0.18, "bandpass"); }
-function sfxRocketFire() { if (!actx) return; noiseHit(0.45, 900, 120, 0.7); tone(220, 60, 0.4, 0.5); }
+function sfxRocketFire() { if (!actx) return; noiseHit(0.45, 900, 120, 0.7, undefined, gunBus); tone(220, 60, 0.4, 0.5, undefined, gunBus); }
 function sfxPunch() { if (!actx) return; noiseHit(0.1, 700, 250, 0.22); }
 function sfxKnife() { if (!actx) return; noiseHit(0.14, 2600, 900, 0.2, "bandpass"); }
 function sfxEnemyShot(pos) { if (!actx) return; noiseHit(0.14, 1600, 350, pos ? 0.34 : 0.28, "lowpass", pos ? panner(pos) : null); }
