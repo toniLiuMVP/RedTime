@@ -1483,8 +1483,8 @@ function updateWaves(dt) {
   if (spawnQueue > 0) { spawnTimer -= dt; if (spawnTimer <= 0) { const p = SPAWN_PTS[(Math.random() * SPAWN_PTS.length) | 0]; spawnEnemy(p[0], p[1], 90 + wave * 14, waveWeapons.length ? waveWeapons.pop() : { weapon: "pistol" }); spawnQueue--; spawnTimer = 0.5 + Math.random() * 0.6; } }   // 依本波武器池逐隻配槍
   if (waveAlive <= 0 && spawnQueue <= 0) {
     if (!frogmenSpawned) { frogmenSpawned = true; const sq = frogmenSquads(wave); if (sq > 0) { spawnFrogmen(sq); showNarr("兩棲蛙人部隊衝上來了 · 紅短褲 · 只有刺刀，但快如水", 3.6); playMusic(MUSIC_SIM); return; } }   // item6:普通敵清完→該模式/波次的蛙人部隊衝入,清完才真正過關
-    if (wave >= GOAL_WAVE) { awaitDisarm = true; inBreak = true; stopMusic(); for (const e of enemies) ROOT.remove(e); enemies.length = 0; if (waveEl) waveEl.textContent = "撐過了"; showNarr(NARR.survived, 5.5); }   // B1:撐過 GOAL_WAVE → 停波+清殘敵 + 戰鬥曲提前淡出(放下槍猶豫窗落在安靜裡,讓「夠了」浮得出來) + 放下槍那秒旁白;保護高潮不被殘敵打死
-    else { inBreak = true; money += 200 + wave * 80; updateMoneyHUD(); updateWaveHUD(); if (wave === 1 || wave % 5 === 0) showNarr(NARR.wave, 3.4); openShopPause(); }   // 撐過一波:獎賞隨波升(280/360/440/520…) + 時間暫停自動開軍械庫(買或關掉再續);金句稀缺:只首波/每5波留白
+    if (wave >= GOAL_WAVE) { awaitDisarm = true; inBreak = true; if (vehicle) exitVehicle(); stopMusic(); for (const e of enemies) ROOT.remove(e); enemies.length = 0; if (waveEl) waveEl.textContent = "撐過了"; showNarr(NARR.survived, 5.5); }   // B1:撐過 GOAL_WAVE → 停波+清殘敵 + 強制下車(放下槍是徒手身體動作,不能在車上) + 戰鬥曲淡出 + 放下槍旁白;保護高潮
+    else { inBreak = true; money += Math.round((200 + wave * 80) * (curDiff ? curDiff.enemyMul : 1)); updateMoneyHUD(); updateWaveHUD(); if (wave === 1 || wave % 5 === 0) showNarr(NARR.wave, 3.4); openShopPause(); }   // 撐過一波:獎賞隨波升 × 模式 enemyMul(困難/天堂路 ×2,讓貴兩倍/五倍的載具使用權買得起=不是死內容);時間暫停自動開軍械庫;金句稀缺
   }
 }
 updateWaveHUD();
@@ -1684,14 +1684,14 @@ function tryInteract() {
   if (vehicle) { exitVehicle(); return; }
   if (!isActive()) return;
   const v = nearVehicle();   // 載具:hub 與 sim 都能開(item 3 實戰中可用);sim 需先買使用權(劇情/新手已免費解)
-  if (v && (MODE === "hub" || MODE === "sim")) { if (MODE === "sim" && !v.unlocked) { showNarr("這台要先在軍械庫(B)購買使用權", 2.6); return; } enterVehicle(v); return; }
+  if (v && !awaitDisarm && (MODE === "hub" || MODE === "sim")) { if (MODE === "sim" && !v.unlocked) { showNarr("這台要先在軍械庫(B)購買使用權", 2.6); return; } enterVehicle(v); return; }   // 放下槍窗口(awaitDisarm)不可再上車
   if (MODE !== "hub") return;   // 其餘互動(牛/外套/日記/靶場)只在軍營 hub
   if (nearCow()) showNarr(NARR.cow, 5.5); else if (nearJacket()) showNarr(NARR.dream3, 5.5); else if (nearDiary()) openDiary(); else if (nearRangeEntry()) enterSim();
 }
 /* ── 一眼瞬間(Tier 2):撐過 GOAL_WAVE → 主動放下槍 → 抽象光形非戰鬥高光(放下武器,光才出現) ── */
 const GOAL_WAVE = 5;   // 撐過這波=撐過了,夢讓他停下(toni 選先驗收用 5)
 let awaitDisarm = false, disarmT = 0;   // disarmT>0:放下槍動作進行中(槍垂下→淡入 gaze,讓「放下」是身體動作不是按鍵)
-function beginDisarm() { if (MODE === "sim" && awaitDisarm && disarmT <= 0) { disarmT = 0.85; ads = false; if (hintEl) hintEl.style.opacity = "0"; } }
+function beginDisarm() { if (vehicle) return; if (MODE === "sim" && awaitDisarm && disarmT <= 0) { disarmT = 0.85; ads = false; if (hintEl) hintEl.style.opacity = "0"; } }   // 駕駛中不可放下槍(放下槍是徒手身體動作)
 const GAZE_MUSIC_URL = "../一眼瞬間.mp3";   // 一眼瞬間專屬主題曲(非戰鬥樂,不污染)
 let gazeMusic = null, gazeRAF = 0, gazeT0 = 0, gazeFigure = null, heartTimer = 0;
 function buildGazeFigure() {   // 站立女性剪影的光點分佈(抽象光形)
@@ -1830,7 +1830,7 @@ function restartGame(resumeWave) {
     for (const g of enemies) ROOT.remove(g); enemies.length = 0;
     wave = (resumeWave && resumeWave > 1) ? resumeWave - 1 : 0; score = 0; waveAlive = 0; spawnQueue = 0; inBreak = true; betweenT = 1.5; gameOver = false; dead = false; kills = 0;   // resumeWave-1 → 下個 startWave 回到陣亡那波;無 resumeWave=回第一波
     if (killsEl) killsEl.textContent = 0; updateWaveHUD();
-    applyDifficulty(); if (deadEl) deadEl.classList.remove("on"); if (dmgEl) dmgEl.style.opacity = "0";   // 重新部署套難度 HP/彈藥;scarFloor/deaths/bestWave 刻意不重置(帶著傷前進)
+    applyDifficulty(); if (!resumeWave) resetVehicles(); if (deadEl) deadEl.classList.remove("on"); if (dmgEl) dmgEl.style.opacity = "0";   // 重新部署套難度 HP/彈藥;手動重新部署(回第一波)才重置載具殘骸/油彈,接關(resumeWave)則保留;scarFloor/deaths/bestWave 不重置(帶著傷前進)
     camera.position.set(8, EYE, 13); yaw = -0.3; pitch = 0; sprayPitch = 0; sprayYaw = 0; recoilKick = 0; curSpeed = 0; mvLastX = 0; mvLastZ = 0; mvSprint = false;   // 清移動慣性,重生不往舊方向抽一下
     drawT = 0; reloadT = 0; reloadFilled = true; chSpread = 0;   // 重生清乾淨拔槍/換彈/擴散狀態(死在換彈途中重開不卡)
     if (curDiff && curDiff.hp >= 2) { money += 1000; updateMoneyHUD(); }   // 劇情/新手:每次重啟 +1000 軍餉(裝備保留 + 彈藥已 reset,越打越有資源=接得下去)
