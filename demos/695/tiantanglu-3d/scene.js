@@ -1411,7 +1411,7 @@ function updateEnemies(dt) {
     if (sees && dist < 42) { const sw = smart ? 1.3 : u.etype === "heavy" ? 0 : u.etype === "scout" ? 1.15 : 0.8; mvx += rx * u.strafe * sw; mvz += rz * u.strafe * sw; }   // 重裝直線壓上不平移,突擊兵繞側更多
     const ml = Math.hypot(mvx, mvz);
     if (u.legs) {   // 走路腿擺(髖樞紐 sin,破除滑行雕像);停步腿回正
-      if (ml > 0.01) { u.walkPh += dt * sp * 4.2; u.legs[0].rotation.x = Math.sin(u.walkPh) * 0.5; u.legs[1].rotation.x = -Math.sin(u.walkPh) * 0.5; }
+      if (ml > 0.01) { u.walkPh += dt * sp * (u.speedMul || 1) * 4.2; u.legs[0].rotation.x = Math.sin(u.walkPh) * 0.5; u.legs[1].rotation.x = -Math.sin(u.walkPh) * 0.5; }   // 步頻隨實際地速(含 speedMul):重裝慢踏/突擊兵快跑,腳不打滑
       else { const k = Math.min(1, dt * 8); u.legs[0].rotation.x *= 1 - k; u.legs[1].rotation.x *= 1 - k; }
     }
     if (u.upper) {   // 上半身隨步伐起伏 + 微側擺(破除「人偶」感:腿擺但軀幹凍結);停步回正
