@@ -1273,18 +1273,23 @@ function spawnEnemy(x, z, hp) {
   if (type.cap) { eb(0.34, 0.12, 0.34, eGear, 0, 1.79, 0).userData.head = true; eb(0.42, 0.04, 0.16, eGear, 0, 1.75, 0.18); }   // 突擊兵:軟帽 + 帽簷
   else { const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.18, 14, 10, 0, 6.3, 0, 1.6), eGear); helmet.position.y = 1.72; helmet.userData.head = true; ms.push(helmet); eb(0.4, 0.05, 0.4, eGear, 0, 1.64, 0); }   // 鋼盔 + 盔簷
   if (type.pack) eb(0.42, 0.5, 0.22, eGear, 0, 1.2, -0.24);   // 重裝:背包
+  const legs = [];
   for (const sx of [-1, 1]) {
-    eb(0.18, 0.62, 0.22, eGear, sx * 0.13, 0.4, 0);       // 腿
-    eb(0.2, 0.12, 0.3, eBoot, sx * 0.13, 0.06, 0.04);     // 靴
-    eb(0.14, 0.5, 0.16, body, sx * 0.27, 1.18, 0.02);     // 上臂
+    const legG = new THREE.Group(); legG.position.set(sx * 0.13, 0.71, 0);                                                                            // 髖關節樞紐:腿從髖擺,不繞中點
+    const thigh = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.62, 0.22), eGear); thigh.position.set(0, -0.31, 0); thigh.castShadow = true; legG.add(thigh);   // 腿
+    const boot = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.12, 0.3), eBoot); boot.position.set(0, -0.65, 0.04); boot.castShadow = true; legG.add(boot);        // 靴
+    g.add(legG); legs.push(legG);
+    eb(0.14, 0.5, 0.16, body, sx * 0.27, 1.18, 0.02);    // 上臂(持槍備姿,不擺)
   }
-  // 持槍(胸前) + 前臂
-  eb(0.1, 0.1, 0.62, gunMetal, 0.1, 1.16, -0.28);        // 步槍
-  eb(0.07, 0.16, 0.12, gunMag, 0.1, 1.04, -0.12);        // 彈匣
-  eb(0.14, 0.34, 0.14, body, 0.18, 1.0, -0.18);          // 前臂
+  // 持槍(胸前) + 前臂 + 握把手
+  const gun = eb(0.1, 0.1, 0.62, gunMetal, 0.1, 1.16, -0.28);   // 步槍
+  eb(0.07, 0.16, 0.12, gunMag, 0.1, 1.04, -0.12);              // 彈匣
+  eb(0.14, 0.34, 0.14, body, 0.18, 1.0, -0.18);               // 前臂
+  const hand = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), skin); hand.position.set(0.1, 1.12, -0.08); ms.push(hand);   // 握把手:膚色球,槍是握著不是浮空
   ms.forEach((m) => { m.castShadow = true; g.add(m); });
   g.scale.setScalar(type.scale);
   g.userData.kind = "enemy"; g.userData.hp = Math.round((hp || 100) * type.hpMul); g.userData.speedMul = type.speedMul; g.userData.etype = type.key; g.userData.dead = false; g.userData.deadT = 0; g.userData.fireT = 1 + Math.random() * 2; g.userData.flinch = 0; g.userData.strafe = Math.random() < 0.5 ? 1 : -1; g.userData.strafeT = 1 + Math.random() * 2; g.userData.state = "chase"; g.userData.grenadeT = 6 + Math.random() * 8; g.userData.spawn = new THREE.Vector3(x, 0, z); g.userData.stepT = Math.random() * 0.4; g.userData.alertT = 0; g.userData.sawPlayer = false; g.userData.body = body; g.userData.skin = skin;   // 存克隆材質供死亡回收(防記憶體洩漏)
+  g.userData.legs = legs; g.userData.gun = gun; g.userData.escale = type.scale; g.userData.walkPh = Math.random() * 6.28; g.userData.gunKick = 0;   // 走路腿擺 / 開火後座 / 死亡縮放 樞紐
   ROOT.add(g); enemies.push(g);
 }
 /* ── 波次 horde + 計分 ── */
@@ -1307,7 +1312,7 @@ function updateWaves(dt) {
   if (inBreak) { betweenT -= dt; if (betweenT <= 0) startWave(); return; }
   if (spawnQueue > 0) { spawnTimer -= dt; if (spawnTimer <= 0) { const p = SPAWN_PTS[(Math.random() * SPAWN_PTS.length) | 0]; spawnEnemy(p[0], p[1], 90 + wave * 14); spawnQueue--; spawnTimer = 0.5 + Math.random() * 0.6; } }
   if (waveAlive <= 0 && spawnQueue <= 0) {
-    if (wave >= GOAL_WAVE) { awaitDisarm = true; inBreak = true; for (const e of enemies) scene.remove(e); enemies.length = 0; if (waveEl) waveEl.textContent = "撐過了"; showNarr(NARR.survived, 5.5); }   // B1:撐過 GOAL_WAVE → 停波+清殘敵 + 放下槍那秒旁白(toni 填);保護高潮不被殘敵打死
+    if (wave >= GOAL_WAVE) { awaitDisarm = true; inBreak = true; for (const e of enemies) ROOT.remove(e); enemies.length = 0; if (waveEl) waveEl.textContent = "撐過了"; showNarr(NARR.survived, 5.5); }   // B1:撐過 GOAL_WAVE → 停波+清殘敵 + 放下槍那秒旁白(toni 填);保護高潮不被殘敵打死
     else { inBreak = true; betweenT = 4; money += 150; updateMoneyHUD(); updateWaveHUD(); if (wave === 1 || wave % 5 === 0) showNarr(NARR.wave, 3.4); }   // 撐過一波 +150 軍餉(波間按 B 補裝);金句稀缺:只首波/每5波留白
   }
 }
@@ -1326,14 +1331,17 @@ function hitEnemy(g, dmg, head, point) {
   // 武器去爽(W5-A):無傷害數字 / 無連殺 / 無分數,殺只是消耗不是獎勵(夢裡改不了的徒勞,非 power fantasy)
   if (u.hp <= 0) {
     u.dead = true; u.deadT = 0; kills++; u.deathLean = Math.max(-0.9, Math.min(0.9, (u.flinchSide || 0) * 2.6));   // 往中彈側倒,每隻死法不同
+    { let fb = 0; if (point) { const fwx = Math.sin(g.rotation.y), fwz = Math.cos(g.rotation.y); fb = (point.x - g.position.x) * fwx + (point.z - g.position.z) * fwz; } u.deathFwd = fb <= 0; u.deathYaw = g.rotation.y + (Math.random() - 0.5) * 0.7; }   // 中彈前側→被擊退後仰,後側→前撲;加隨機側轉避免雷同
     sfxThud(); memoryShatter(g.position); waveAlive--; updateWaveHUD();   // 夢敵人擊倒:碎成記憶光點(非血池/屍體)
   } else { if (head) sfxHead(); else sfxImpact(); }   // 去爽 W2:enemy 全程不給十字回饋(連爆頭金✕),殺只是消耗;靶場 target 保留十字
 }
 function enemyShoot(g, dist) {
+  g.userData.gunKick = 0.16;   // 開火後座 tell:槍口上揚
   const dir = new THREE.Vector3(Math.sin(g.rotation.y), 0, Math.cos(g.rotation.y));
   const mp = g.position.clone().setY(1.25).addScaledVector(dir, 0.6);
   emitFx(sparkPool, mp, 0.1, 0.28, 0.3, true); sfxEnemyShot(mp);
-  const hitChance = Math.max(0.08, 0.46 - dist * 0.009); const hit = Math.random() < hitChance;
+  const hcBase = g.userData.etype === "heavy" ? 0.5 : g.userData.etype === "scout" ? 0.4 : 0.46;   // 重裝穩準/突擊散
+  const hitChance = Math.max(0.08, hcBase - dist * 0.009); const hit = Math.random() < hitChance;
   camera.getWorldPosition(tmpO2);   // 朝玩家飛來的曳光:命中=直指頭胸,未命中=擦身偏移(冷橘區隔敵我,讓「子彈朝你飛來」可見)
   const ox = hit ? 0 : (Math.random() - 0.5) * 1.3, oy = hit ? 0.05 : (Math.random() - 0.5) * 1.0, oz = hit ? 0 : (Math.random() - 0.5) * 1.3;
   tracer(mp.x, mp.y, mp.z, tmpO2.x + ox, tmpO2.y - 0.15 + oy, tmpO2.z + oz, 0xff7040, 0.7);
@@ -1354,7 +1362,16 @@ function updateEnemies(dt) {
   if (awaitDisarm) return;   // B1:放下槍窗口不更新敵人(殘敵已清,雙保險)
   for (let i = enemies.length - 1; i >= 0; i--) {
     const g = enemies[i], u = g.userData;
-    if (u.dead) { u.deadT += dt; g.rotation.x = Math.max(-1.55, g.rotation.x - dt * 4.5); g.rotation.z += ((u.deathLean || 0) - g.rotation.z) * Math.min(1, dt * 5); if (u.deadT > 5) { scene.remove(g); if (u.body) u.body.dispose(); if (u.skin) u.skin.dispose(); enemies.splice(i, 1); } continue; }   // 移除時 dispose 每隻 clone 的軍服/膚色材質(共享幾何不動)
+    if (u.dead) {
+      u.deadT += dt;
+      const fwd = u.deathFwd === false ? 1 : -1;   // 命中身體前側被擊退→後仰;後側→前撲
+      g.rotation.x = fwd < 0 ? Math.max(-1.55, g.rotation.x - dt * 4.5) : Math.min(1.4, g.rotation.x + dt * 4.5);
+      g.rotation.z += ((u.deathLean || 0) - g.rotation.z) * Math.min(1, dt * 5);
+      g.rotation.y += ((u.deathYaw || g.rotation.y) - g.rotation.y) * Math.min(1, dt * 4);   // 輕微側轉,死法不雷同
+      if (u.deadT > 0.8) { const k = Math.min(1, (u.deadT - 0.8) / 1.0); g.scale.setScalar(Math.max(0.0001, (u.escale || 1) * (1 - k * 0.85))); g.position.y = -k * 0.5; }   // 0.8s 後沉地+縮小,化成上升的記憶光(碎成她的話語,不留屍)
+      if (u.deadT > 1.8) { ROOT.remove(g); if (u.body) u.body.dispose(); if (u.skin) u.skin.dispose(); enemies.splice(i, 1); }   // 敵人掛在 ROOT(非 scene),用 ROOT.remove 才真的移除;移除時 dispose 每隻 clone 的軍服/膚色材質(共享幾何不動)
+      continue;
+    }
     const dx = camera.position.x - g.position.x, dz = camera.position.z - g.position.z, dist = Math.hypot(dx, dz) || 1;
     { const tgtY = Math.atan2(dx, dz); let dY = tgtY - g.rotation.y; while (dY > Math.PI) dY -= 6.2832; while (dY < -Math.PI) dY += 6.2832; g.rotation.y += dY * Math.min(1, dt * (u.alertT > 0 ? 3.5 : 14)); }   // 反應延遲:剛發現玩家慢慢轉(非瞬間鎖定)
     if (u.flinch > 0) { const f = u.flinch / (u.flinchMax || 0.18); g.rotation.x = -0.18 * f; g.rotation.z = (u.flinchSide || 0) * f; u.flinch -= dt; } else { g.rotation.x = 0; g.rotation.z = 0; }   // 方向化中彈:後仰 + 往中彈側扭
@@ -1366,14 +1383,19 @@ function updateEnemies(dt) {
     if (u.alertT > 0) u.alertT -= dt;
     const smart = !!(curDiff && curDiff.smart);   // 天堂路模式:團隊圍攻
     const fx = dx / dist, fz = dz / dist, rx = -fz, rz = fx; let mvx = 0, mvz = 0, sp = 2.0;
-    if ((u.coverT > 0 || u.hp < 40) && sees && !smart) { // 找最近掩體(天堂路模式少躲,主動圍攻)
+    if ((u.coverT > 0 || u.hp < 40) && sees && !smart && u.etype === "rifleman") { // 只步兵找掩體;突擊兵裸衝/重裝是活掩體,都不躲(天堂路模式全主動圍攻)
       let best = null, bd = 1e9; for (const c of COVER_PTS) { const d = c.distanceTo(g.position); if (d < bd) { bd = d; best = c; } }
       if (best && bd > 1.8) { const cdx = best.x - g.position.x, cdz = best.z - g.position.z, cl = Math.hypot(cdx, cdz) || 1; mvx = cdx / cl; mvz = cdz / cl; sp = 2.7; }
     } else if (!sees && dist > 6) { mvx = fx; mvz = fz; sp = 2.4; } // 看不到 → 推進找視線
-    else if (dist > (smart ? 12 : 17)) { mvx = fx; mvz = fz; } else if (dist < 9) { mvx = -fx; mvz = -fz; }
+    else if (dist > (smart ? 12 : u.etype === "scout" ? 11 : 17)) { mvx = fx; mvz = fz; } else if (dist < 9) { mvx = -fx; mvz = -fz; }   // 突擊兵壓更近
     if (!smart && Math.random() < 0.4 * dt) u.strafe *= -1;   // 低機率隨機翻轉,破除整群同步左右平移
-    if (sees && dist < 42) { const sw = smart ? 1.3 : 0.8; mvx += rx * u.strafe * sw; mvz += rz * u.strafe * sw; }
+    if (sees && dist < 42) { const sw = smart ? 1.3 : u.etype === "heavy" ? 0 : u.etype === "scout" ? 1.15 : 0.8; mvx += rx * u.strafe * sw; mvz += rz * u.strafe * sw; }   // 重裝直線壓上不平移,突擊兵繞側更多
     const ml = Math.hypot(mvx, mvz);
+    if (u.legs) {   // 走路腿擺(髖樞紐 sin,破除滑行雕像);停步腿回正
+      if (ml > 0.01) { u.walkPh += dt * sp * 4.2; u.legs[0].rotation.x = Math.sin(u.walkPh) * 0.5; u.legs[1].rotation.x = -Math.sin(u.walkPh) * 0.5; }
+      else { const k = Math.min(1, dt * 8); u.legs[0].rotation.x *= 1 - k; u.legs[1].rotation.x *= 1 - k; }
+    }
+    if (u.gun) { u.gunKick *= 1 - Math.min(1, dt * 9); u.gun.rotation.x = -u.gunKick; }   // 開火後座衰減:槍口上揚彈回(開火 tell)
     if (ml > 0.01) {
       const s = (u.flinch > 0 ? 0.4 : sp) * (u.speedMul || 1) * (u.stagger > 0 ? 0.35 : 1) * dt;   // 兵種移速:重裝慢 / 突擊快;腿傷踉蹌減速
       let ndx = mvx / ml, ndz = mvz / ml;
@@ -1390,8 +1412,8 @@ function updateEnemies(dt) {
       if (dist < 40) { u.stepT -= dt; if (u.stepT <= 0) { sfxEnemyStep(g.position); u.stepT = 0.34 / (u.speedMul || 1); } }   // 腳步聲(步頻隨速度,>40m cull)
     }
     if (!dead && sees && u.flinch <= 0 && u.alertT <= 0 && dist < 56) {   // 反應延遲內不開火(發現→舉槍→開火)
-      u.fireT -= dt; if (u.fireT <= 0) { u.fireT = 1.1 + Math.random() * 1.4; enemyShoot(g, dist); }
-      u.grenadeT -= dt; if (u.grenadeT <= 0 && dist > 12 && dist < 40) { u.grenadeT = 9 + Math.random() * 8; enemyGrenade(g); }
+      u.fireT -= dt; if (u.fireT <= 0) { u.fireT = (u.etype === "heavy" ? 0.6 : 1.1) + Math.random() * (u.etype === "heavy" ? 0.8 : 1.4); enemyShoot(g, dist); }   // 重裝壓制射:節奏更密
+      u.grenadeT -= dt; if (u.grenadeT <= 0 && dist > 12 && dist < 40 && u.etype === "rifleman") { u.grenadeT = 9 + Math.random() * 8; enemyGrenade(g); }   // 只步兵丟手榴彈
     } else u.grenadeT -= dt * 0.3;
   }
 }
@@ -1572,7 +1594,7 @@ function endGaze() {
       if (cv) { cv.style.opacity = ""; cv.style.transition = ""; }
       if (lineEl) { lineEl.style.opacity = ""; lineEl.style.transition = ""; lineEl.classList.remove("show", "echo"); }
       MODE = "hub"; awaitDisarm = false;   // 回 hub(夢繼續,點擊再入)
-      for (const en of enemies) scene.remove(en); enemies.length = 0;
+      for (const en of enemies) ROOT.remove(en); enemies.length = 0;
       wave = 0; waveAlive = 0; spawnQueue = 0; inBreak = true; betweenT = 1.5; gameOver = false; dead = false;
       playerHP = 100; if (hpEl) hpEl.textContent = 100;
       camera.position.set(8, EYE, 13); yaw = -0.3; pitch = 0; curSpeed = 0; mvLastX = 0; mvLastZ = 0; mvSprint = false;   // 清移動慣性,回 hub 不往舊方向抽一下
@@ -1599,7 +1621,7 @@ function endRun() {
 function restartGame() {
   // 死亡重生包進閉眼睜眼:夢又把他帶回天堂路第一天(不是 game over 重開,是夢的循環),世界在闔眼時切換
   blink(440, 300, 760, () => {
-    for (const g of enemies) scene.remove(g); enemies.length = 0;
+    for (const g of enemies) ROOT.remove(g); enemies.length = 0;
     wave = 0; score = 0; waveAlive = 0; spawnQueue = 0; inBreak = true; betweenT = 1.5; gameOver = false; dead = false; kills = 0;
     if (killsEl) killsEl.textContent = 0; updateWaveHUD();
     applyDifficulty(); if (deadEl) deadEl.classList.remove("on"); if (dmgEl) dmgEl.style.opacity = "0";   // 重新部署套難度 HP/彈藥;scarFloor/deaths/bestWave 刻意不重置(帶著傷前進)
