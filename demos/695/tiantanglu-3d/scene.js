@@ -387,12 +387,17 @@ let cowTail = null, cowHead = null;
   const jLin = mat(0x9097a3, { roughness: 0.92, envMapIntensity: 0.4 });    // 內裡(反穿朝外=名字藏住)
   const root = new THREE.Group(); root.position.set(jx, 0, jz); root.rotation.y = 0.12; ROOT.add(root);
   const part = (geo, m, x, y, z, rx, rz) => { const e = new THREE.Mesh(geo, m); e.position.set(x, y, z); if (rx) e.rotation.x = rx; if (rz) e.rotation.z = rz; e.castShadow = true; root.add(e); return e; };
-  part(new THREE.BoxGeometry(0.72, 0.5, 0.1), jLin, 0, 0.74, -0.14, 0.12, 0);                          // 披在椅背的外套身(反面朝外)
-  part(new THREE.BoxGeometry(0.74, 0.12, 0.18), jOut, 0, 0.98, -0.11, 0.34, 0);                        // 翻出的領(深藍)
-  part(new THREE.BoxGeometry(0.64, 0.12, 0.42), jLin, 0, 0.5, 0.06, 0, 0);                             // 下襬披在椅面(反面)
+  // 反穿校服外套披在椅背(內裡淺灰朝外=名字藏住;領/袖口翻出深藍)
+  part(new THREE.BoxGeometry(0.92, 0.18, 0.5), jLin, 0, 0.86, -0.18, 0.06, 0);                         // 肩線(搭椅背頂,略寬)
+  part(new THREE.BoxGeometry(0.84, 0.56, 0.1), jLin, 0, 0.52, -0.04, -0.06, 0);                        // 前襟身(垂椅背前,玩家側)
+  part(new THREE.BoxGeometry(0.84, 0.42, 0.1), jLin, 0, 0.58, -0.34, 0.08, 0);                         // 後背身(垂椅背後)
+  part(new THREE.BoxGeometry(0.62, 0.5, 0.42), jLin, 0, 0.28, 0.05, 0, 0);                             // 下襬堆在椅面(反面)
+  part(new THREE.BoxGeometry(0.52, 0.16, 0.2), jOut, 0, 0.96, -0.1, 0.32, 0);                          // 翻出的領(深藍)
+  part(new THREE.BoxGeometry(0.46, 0.05, 0.04), jOut, 0, 0.52, 0.02, -0.06, 0);                        // 前襟開線(深藍細條)
   for (const s of [-1, 1]) {
-    part(new THREE.BoxGeometry(0.15, 0.52, 0.15), jOut, 0.33 * s, 0.6, -0.04, -0.15, 0.13 * s);        // 垂掛的袖
-    part(new THREE.BoxGeometry(0.16, 0.09, 0.16), jLin, 0.37 * s, 0.35, 0.01, 0, 0);                   // 袖口(反面)
+    part(new THREE.BoxGeometry(0.17, 0.66, 0.17), jLin, 0.46 * s, 0.5, 0.04, -0.08, 0.16 * s);         // 上袖(從肩垂下,微外撇)
+    part(new THREE.BoxGeometry(0.16, 0.34, 0.16), jLin, 0.53 * s, 0.12, 0.12, 0.18, 0.04 * s);         // 下袖(垂到椅面前,微彎)
+    part(new THREE.BoxGeometry(0.18, 0.1, 0.18), jOut, 0.56 * s, -0.02, 0.16, 0, 0);                   // 袖口翻出(深藍)
   }
 })();
 
