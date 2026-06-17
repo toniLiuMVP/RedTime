@@ -769,6 +769,7 @@ function updateAmbient(dt) {
 /* ══════════════ 第一人稱控制 + 物理 ══════════════ */
 const keys = {};
 const enterEl = document.getElementById("enter");
+if (isTouch && enterEl) { const _r = enterEl.querySelector(".ring"); if (_r) _r.textContent = "點一下開始"; const _s = enterEl.querySelector(".sub"); if (_s) _s.style.display = "none"; }   // 手機版不需要滑鼠/鍵盤提示
 let ads = false, mouseDown = false, lastShot = 0;
 const isTouch = (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) || ("ontouchstart" in window) || navigator.maxTouchPoints > 0 || /[?&]touch\b/i.test(location.search || "");   // 手機觸控(可 ?touch 強制)
 let touchActive = false, tjx = 0, tjz = 0, tCrouch = false, tWalk = false;   // tCrouch/tWalk:手機蹲下/慢走切換鍵狀態

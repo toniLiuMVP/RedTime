@@ -41,12 +41,12 @@
   #title .hook{font-family:"Noto Serif TC",serif;font-size:clamp(13px,2.8vw,18px);letter-spacing:.16em;line-height:1.9;color:#f3e6d8;opacity:.82;margin-top:26px;text-shadow:0 2px 22px rgba(0,0,0,.7);}
   #title.show{opacity:1;}
   #enter{position:fixed;left:50%;top:58%;transform:translateX(-50%);z-index:5;text-align:center;
-    cursor:pointer;transition:opacity .4s;}
+    cursor:pointer;transition:opacity .4s;pointer-events:none;}   /* 點擊穿透到 canvas 觸發 pointer-lock(原本擋住=點了沒反應);tut-btn 另開 auto */
   #enter .ring{font-size:15px;letter-spacing:.2em;color:#fdf3e2;background:rgba(20,14,18,.5);
     border:1px solid rgba(255,220,170,.4);border-radius:40px;padding:14px 30px;backdrop-filter:blur(4px);}
   #enter .sub{font-size:12px;letter-spacing:.18em;opacity:.6;margin-top:12px;}
   #enter.hide{opacity:0;pointer-events:none;}
-  #tut-btn{display:inline-block;margin-top:16px;font-size:13px;letter-spacing:.16em;color:#ffd9a8;background:rgba(255,220,170,.08);border:1px solid rgba(255,220,170,.35);border-radius:40px;padding:9px 22px;cursor:pointer;transition:background .3s;}
+  #tut-btn{display:inline-block;margin-top:16px;font-size:13px;letter-spacing:.16em;color:#ffd9a8;background:rgba(255,220,170,.08);border:1px solid rgba(255,220,170,.35);border-radius:40px;padding:9px 22px;cursor:pointer;transition:background .3s;pointer-events:auto;}
   #tut-btn:hover{background:rgba(255,220,170,.18);}
   #tutorial{position:fixed;inset:0;z-index:9;display:none;align-items:center;justify-content:center;background:rgba(8,6,10,.9);padding:24px;}
   #tutorial.on{display:flex;}
@@ -257,7 +257,7 @@
 <div id="title"><div class="t">天堂路</div><div class="s">時間裡的兩個妳</div></div>
 
 <div id="enter">
-  <div class="ring">點一下，走進把拔的夢</div>
+  <div class="ring">點擊畫面任何地方，讓滑鼠控制視角</div>
   <div class="sub">WASD 走動 · 左鍵射擊 · 右鍵瞄準 · Shift 蹲 · Ctrl 慢步 · 空白跳 · 1~9 換武器 · R 換彈 · E 互動 · B 軍械庫</div>
   <div id="tut-btn">📖 新手教學</div>
 </div>
