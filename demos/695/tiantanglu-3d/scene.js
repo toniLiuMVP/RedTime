@@ -779,7 +779,7 @@ canvas.addEventListener("mousedown", (e) => {
   else if (e.button === 2) { if (WEAPONS[wi].adsFov) ads = true; }
 });
 addEventListener("mouseup", (e) => { if (e.button === 0) mouseDown = false; else if (e.button === 2) ads = false; });
-document.addEventListener("pointerlockchange", () => { if (enterEl) enterEl.classList.toggle("hide", document.pointerLockElement === canvas); if (document.pointerLockElement !== canvas) { mouseDown = false; ads = false; } else if (MODE === "hub" && !firstHubShown) { firstHubShown = true; showNarr(NARR.hubEnter, 4.2); } });   // #1 首次進軍營:夢框建立句(placeholder 自動不顯示)
+document.addEventListener("pointerlockchange", () => { if (enterEl) enterEl.classList.toggle("hide", document.pointerLockElement === canvas); if (document.pointerLockElement !== canvas) { mouseDown = false; ads = false; } else if (MODE === "hub" && !firstHubShown) { firstHubShown = true; pupilT = 2.0; showNarr(NARR.hubEnter, 4.2); } });   // #1 首次進軍營:夢框建立句(placeholder 自動不顯示)
 addEventListener("mousemove", (e) => { if (document.pointerLockElement === canvas) { const sens = 0.0023 * settings.sens * (camera.fov / 80); yaw -= e.movementX * sens; pitch -= e.movementY * sens; pitch = Math.max(-1.2, Math.min(1.2, pitch)); } });
 /* ── 手機觸控:進場 + 左搖桿移動 + 右側拖曳視角 + 按鈕 ── */
 const tbDisarmEl = document.getElementById("tb-disarm"), tbArtyEl = document.getElementById("tb-arty");
@@ -787,7 +787,7 @@ if (isTouch) {
   const touchUI = document.getElementById("touch"), tjEl = document.getElementById("tj"), tjKnob = document.getElementById("tj-knob");
   // 進場:第一次點畫面 → touchActive(取代 pointer lock)
   canvas.addEventListener("touchstart", (e) => {
-    if (!touchActive && MODE !== "gaze") { touchActive = true; document.body.classList.add("touch"); if (enterEl) enterEl.classList.add("hide"); if (touchUI) touchUI.classList.add("on"); ensureAudio(); if (maskOwned && maskEl) maskEl.classList.add("on"); if (MODE === "hub" && !firstHubShown) { firstHubShown = true; showNarr(NARR.hubEnter, 4.2); } e.preventDefault(); }
+    if (!touchActive && MODE !== "gaze") { touchActive = true; document.body.classList.add("touch"); if (enterEl) enterEl.classList.add("hide"); if (touchUI) touchUI.classList.add("on"); ensureAudio(); if (maskOwned && maskEl) maskEl.classList.add("on"); if (MODE === "hub" && !firstHubShown) { firstHubShown = true; pupilT = 2.0; showNarr(NARR.hubEnter, 4.2); } e.preventDefault(); }
   }, { passive: false });
   // 左搖桿:類比移動
   let tjId = null;
@@ -1300,7 +1300,7 @@ const beacons = [];
 for (const p of [COW_POS, JACKET_POS, DIARY_POS]) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: fireTex, color: 0xffcf90, transparent: true, opacity: 0.14, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); s.position.set(p.x, 0.55, p.z); s.scale.setScalar(1.5); s.raycast = () => { }; ROOT.add(s); beacons.push(s); }   // raycast no-op:信標不是射擊目標(且 Sprite.raycast 需 raycaster.camera,shootHit 沒設→會 crash)
 const waveEl = document.getElementById("wave"), scoreEl = document.getElementById("scoreval");
 function updateWaveHUD() { if (MODE !== "sim") { if (waveEl) waveEl.textContent = "軍營"; return; } if (waveEl) waveEl.textContent = inBreak ? (wave < 1 ? "準備" : "第 " + wave + " 波 · 清空") : "第 " + wave + " 波"; if (scoreEl) scoreEl.textContent = score; }
-function startWave() { wave++; inBreak = false; const em = curDiff ? curDiff.enemyMul : 1; const n = Math.min(Math.round(16 * em), Math.round((3 + wave * 1.7) * em)); spawnQueue = n; waveAlive = n; spawnTimer = 0; updateWaveHUD(); }   // 困難/天堂路:每波敵人 ×2
+function startWave() { wave++; inBreak = false; const em = (curDiff ? curDiff.enemyMul : 1) * qEnemyCap; const n = Math.max(1, Math.min(Math.round(16 * em), Math.round((3 + wave * 1.7) * em))); spawnQueue = n; waveAlive = n; spawnTimer = 0; updateWaveHUD(); }   // 困難/天堂路:每波敵人 ×2;低畫質 enemyCap 砍半救手機
 function updateWaves(dt) {
   if (gameOver || MODE !== "sim" || awaitDisarm) return;
   if (inBreak) { betweenT -= dt; if (betweenT <= 0) startWave(); return; }
@@ -1359,7 +1359,7 @@ function updateEnemies(dt) {
     if (u.flinch > 0) { const f = u.flinch / (u.flinchMax || 0.18); g.rotation.x = -0.18 * f; g.rotation.z = (u.flinchSide || 0) * f; u.flinch -= dt; } else { g.rotation.x = 0; g.rotation.z = 0; }   // 方向化中彈:後仰 + 往中彈側扭
     if (u.stagger > 0) u.stagger -= dt;   // 腿傷踉蹌計時
     if (u.coverT > 0) u.coverT -= dt;
-    u.losT = (u.losT || 0) - dt; if (u.losT <= 0) { u.losSees = enemySeesPlayer(g, dist); u.losT = 0.1 + Math.random() * 0.06; }   // 視線每 ~0.12s 重算一次快取(節流,符合反應延遲)
+    u.losT = (u.losT || 0) - dt; if (u.losT <= 0) { u.losSees = enemySeesPlayer(g, dist); u.losT = (0.1 + Math.random() * 0.06) * qLosMul; }   // 視線每 ~0.12s 重算快取(節流);低畫質 losMul 再拉長救 CPU
     const sees = u.losSees;
     if (sees) { if (!u.sawPlayer) { u.sawPlayer = true; u.alertT = 0.35 + Math.random() * 0.35; } } else u.sawPlayer = false;   // 首次發現玩家 → 反應延遲
     if (u.alertT > 0) u.alertT -= dt;
@@ -1428,7 +1428,7 @@ const NARR = {
 };
 if (mendEl) mendEl.textContent = NARR.mend;
 function isReal(s) { return !!s && s[0] !== "［"; }   // 連接句守門:placeholder([…])不顯示,toni 填真句後自動生效
-let firstHubShown = false;
+let firstHubShown = false, pupilT = 0;   // pupilT>0:黑序幕→軍營瞳孔適應(曝光從低升、暗角從重退,約2s),從黑暗夢境出來不像被開大燈
 function showNarr(text, dur) { if (!narrEl || !isReal(text)) return; narrEl.textContent = text; narrEl.style.opacity = "1"; clearTimeout(narrEl._t); narrEl._t = setTimeout(() => (narrEl.style.opacity = "0"), (dur || 3) * 1000); }
 /* ── hub/sim 狀態機:把拔的夢,走到靶場才回到天堂路(實戰模擬練習) ── */
 function nearRangeEntry() { const dx = camera.position.x - RANGE_ENTRY.x, dz = camera.position.z - RANGE_ENTRY.z; return dx * dx + dz * dz < 49; }
@@ -1728,7 +1728,7 @@ function updateFP(dt) {
   if (hintEl) { if (MODE === "sim" && awaitDisarm && disarmT <= 0) { hintEl.style.opacity = "1"; hintEl.textContent = isTouch ? "夠了 · 輕觸「放下槍」" : "夠了 · 按 H 放下槍"; } else if (MODE === "hub" && isActive()) { hintEl.style.opacity = "1"; hintEl.textContent = nearVehicle() ? "按 E 上車駕駛" : nearCow() ? "按 E · 替連長顧那頭牛" : nearJacket() ? "按 E · 看那件反穿的外套" : nearDiary() ? "按 E · 翻開大兵日記" : nearRangeEntry() ? "按 E 進入「實戰模擬練習」" : (isTouch ? "搖桿走動軍營 · 按「軍械」鈕購買裝備 · 走到靶場(右前方)按 E 開始實戰" : "自由走動軍營 · 按 B 開軍械庫購買裝備 · 走到靶場(右前方)按 E 開始實戰模擬"); } else hintEl.style.opacity = "0"; }
   updateMusic(dt); updateAmbient(dt);
   moodSim += ((MODE === "sim" && !dead ? 1 : 0) - moodSim) * Math.min(1, dt * 0.8);   // 夢進熔爐:光影收緊(暗角加深 / 曝光略降 / 顆粒略增)
-  if (postfxOn && postfx) { const tt = postfx.tuning; tt.vignette.darkness = 0.26 + moodSim * 0.14 + skyDarkCur * 0.12; tt.exposure = 1.08 - moodSim * 0.07 - skyDarkCur * 0.06; tt.grain.amount = 0.012 + moodSim * 0.01; }
+  if (postfxOn && postfx) { const tt = postfx.tuning; tt.vignette.darkness = 0.26 + moodSim * 0.14 + skyDarkCur * 0.12; tt.exposure = 1.08 - moodSim * 0.07 - skyDarkCur * 0.06; tt.grain.amount = 0.012 + moodSim * 0.01; if (pupilT > 0) { pupilT -= dt; const k = Math.max(0, pupilT / 2.0); tt.exposure *= (1 - k * 0.42); tt.vignette.darkness += k * 0.3; } }   // 瞳孔適應:進軍營頭2s 曝光漸升+暗角漸退
   // 漸暗天空:撐越久天越暗(夢的長夜情緒累積),平滑 lerp 不換波跳變
   const skyDarkTgt = MODE === "sim" ? Math.min(1, (wave - 1) / 9) : 0;   // wave1=0 → wave10=1
   skyDarkCur += (skyDarkTgt - skyDarkCur) * Math.min(1, dt * 0.5);
@@ -1832,14 +1832,15 @@ try {
 } catch (e) { console.warn("[3d營] postfx fail", e && e.message); postfxOn = false; }
 
 /* ───────── 5 級畫質(預設中):解析度 / 陰影 / 後製 ───────── */
-const QUALITY = { 1: { pr: 0.6, shadow: false, shadowSize: 0, postfx: false }, 2: { pr: 0.8, shadow: true, shadowSize: 1024, postfx: false }, 3: { pr: 1, shadow: true, shadowSize: 2048, postfx: true }, 4: { pr: 1.5, shadow: true, shadowSize: 2048, postfx: true }, 5: { pr: 2, shadow: true, shadowSize: 4096, postfx: true } };
-let postfxWanted = true;   // postfx 是否被畫質允許(與 runtime fail 分開)
+// losMul=AI 視線重算間隔倍率(越大越省 CPU) / enemyCap=每波敵人數倍率(低檔砍半救中低階手機)
+const QUALITY = { 1: { pr: 0.6, shadow: false, shadowSize: 0, postfx: false, losMul: 2.2, enemyCap: 0.55 }, 2: { pr: 0.8, shadow: true, shadowSize: 1024, postfx: false, losMul: 1.6, enemyCap: 0.78 }, 3: { pr: 1, shadow: true, shadowSize: 2048, postfx: true, losMul: 1, enemyCap: 1 }, 4: { pr: 1.5, shadow: true, shadowSize: 2048, postfx: true, losMul: 1, enemyCap: 1 }, 5: { pr: 2, shadow: true, shadowSize: 4096, postfx: true, losMul: 1, enemyCap: 1 } };
+let postfxWanted = true, qLosMul = 1, qEnemyCap = 1;   // postfx 是否被畫質允許(與 runtime fail 分開) + 效能旗標
 function applyQuality(q) {
   const p = QUALITY[q] || QUALITY[3];
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, p.pr));
   renderer.shadowMap.enabled = p.shadow;
   if (sun && sun.shadow && p.shadowSize) { sun.shadow.mapSize.set(p.shadowSize, p.shadowSize); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } }
-  postfxWanted = p.postfx; postfxOn = p.postfx && !!postfx;
+  postfxWanted = p.postfx; postfxOn = p.postfx && !!postfx; qLosMul = p.losMul || 1; qEnemyCap = p.enemyCap || 1;
   renderer.setSize(window.innerWidth, window.innerHeight);
   if (postfx) postfx.setSize(Math.round(window.innerWidth * renderer.getPixelRatio()), Math.round(window.innerHeight * renderer.getPixelRatio()));
 }
