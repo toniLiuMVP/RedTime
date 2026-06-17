@@ -928,14 +928,15 @@ function surfaceOf(hitObj, point) { let p = hitObj; while (p) { const u = p.user
 const _imp = new THREE.Vector3();
 const _projStep = new THREE.Vector3(), _projDir = new THREE.Vector3(), _projLook = new THREE.Vector3(), _shellNp = new THREE.Vector3(), _shellDir = new THREE.Vector3();   // 投射物/砲彈熱迴圈 scratch:免每幀 clone(對齊既有 tmpO/_ejP 慣例)
 // 分材質彈著:金屬跳彈火花 / 木屑 / 泥土揚塵 / 混凝土灰 / 沙包悶噗
-function impact(point, surf) {
+function impact(point, surf, pw) {
+  pw = pw || 1;   // 彈種威力:小槍輕一抹,狙擊槍重一炸(火花/揚塵量隨之,pw=1=步槍基準)
   const p = point.clone().addScaledVector(tmpD, -0.03);
   surf = surf || "dirt";
-  if (surf === "metal") { for (let i = 0; i < 3; i++) { _imp.copy(p); _imp.x += (Math.random() - 0.5) * 0.16; _imp.y += (Math.random() - 0.5) * 0.16; spark(_imp); } putDecal(p); sfxRicochet(); }   // 鐵桶:火花四濺 + 跳彈,無揚塵
-  else if (surf === "wood") { dust(p); spark(p); _imp.copy(p); _imp.y += 0.1; spark(_imp); putDecal(p); sfxWoodHit(); }   // 木箱:木屑 + 悶響
-  else if (surf === "sand") { dust(p); dust(p); sfxDirtHit(); }   // 沙包:多揚塵悶噗,無火花無彈孔
-  else if (surf === "concrete") { dust(p); spark(p); putDecal(p); sfxImpact(); }   // 混凝土:灰粉 + 小火花 + 彈孔
-  else { dust(p); dust(p); putDecal(p); sfxDirtHit(); }   // 泥土:大揚塵,無火花
+  if (surf === "metal") { const n = Math.round(3 * pw); for (let i = 0; i < n; i++) { _imp.copy(p); _imp.x += (Math.random() - 0.5) * 0.16; _imp.y += (Math.random() - 0.5) * 0.16; spark(_imp); } putDecal(p); sfxRicochet(); }   // 鐵桶:火花四濺 + 跳彈,無揚塵
+  else if (surf === "wood") { dust(p); const n = Math.round(2 * pw); for (let i = 0; i < n; i++) { _imp.copy(p); _imp.y += 0.1 * i; spark(_imp); } putDecal(p); sfxWoodHit(); }   // 木箱:木屑 + 悶響
+  else if (surf === "sand") { const n = Math.round(2 * pw); for (let i = 0; i < n; i++) dust(p); sfxDirtHit(); }   // 沙包:多揚塵悶噗,無火花無彈孔
+  else if (surf === "concrete") { dust(p); const n = Math.max(1, Math.round(pw)); for (let i = 0; i < n; i++) spark(p); putDecal(p); sfxImpact(); }   // 混凝土:灰粉 + 小火花 + 彈孔
+  else { const n = Math.round(2 * pw); for (let i = 0; i < n; i++) dust(p); putDecal(p); sfxDirtHit(); }   // 泥土:大揚塵,無火花
 }
 
 /* ── 命中判定 ── */
@@ -1022,19 +1023,19 @@ function shootHit(w) {
   if (w.muzzle && w.tracerEvery) { w.muzzle.getWorldPosition(tmpO2); const ex = h.length ? h[0].point.x : tmpO.x + tmpD.x * 140, ey = h.length ? h[0].point.y : tmpO.y + tmpD.y * 140, ez = h.length ? h[0].point.z : tmpO.z + tmpD.z * 140; w._shotN = (w._shotN || 0) + 1; const td = Math.hypot(ex - tmpO2.x, ey - tmpO2.y, ez - tmpO2.z); if (w._shotN % w.tracerEvery === 0 && td > 8) tracer(tmpO2.x, tmpO2.y, tmpO2.z, ex, ey, ez, w.tracerColor, w.tracerOp); }   // 曳光彈:每把槍頻率/顏色不同,貼臉(<8m)不畫,小槍不發
   if (!h.length) return;
   const o = findHit(h[0].object);
-  if (o && o.userData.kind === "barrel") { if (o.userData.boom) { const p = o.position.clone(); killBarrel(o); explode(p, 0, false); } else impact(h[0].point, "metal"); }
+  if (o && o.userData.kind === "barrel") { if (o.userData.boom) { const p = o.position.clone(); killBarrel(o); explode(p, 0, false); } else impact(h[0].point, "metal", WIMPACT[w.name] || 1); }
   else if (o && o.userData.kind === "enemy") { const hs = !!(h[0].object.userData && h[0].object.userData.head); hitEnemy(o, (WDMG[w.name] || 30) * (hs ? 2.6 : 1), hs, h[0].point); }
   else if (o && o.userData.kind === "target") targetHit(o);
-  else impact(h[0].point, surfaceOf(h[0].object, h[0].point));
+  else impact(h[0].point, surfaceOf(h[0].object, h[0].point), WIMPACT[w.name] || 1);
 }
 function meleeHit(w) {
   camera.getWorldPosition(tmpO); camera.getWorldDirection(tmpD); ray.set(tmpO, tmpD); ray.far = w.reach;
   const h = ray.intersectObject(ROOT, true); if (!h.length || h[0].distance > w.reach) return;
   const o = findHit(h[0].object);
-  if (o && o.userData.kind === "barrel") { if (o.userData.boom) { const p = o.position.clone(); killBarrel(o); explode(p, 0, false); } else impact(h[0].point, "metal"); }
+  if (o && o.userData.kind === "barrel") { if (o.userData.boom) { const p = o.position.clone(); killBarrel(o); explode(p, 0, false); } else impact(h[0].point, "metal", WIMPACT[w.name] || 1); }
   else if (o && o.userData.kind === "enemy") hitEnemy(o, WDMG[w.name] || 30, false, h[0].point);
   else if (o && o.userData.kind === "target") targetHit(o);
-  else impact(h[0].point, surfaceOf(h[0].object, h[0].point));
+  else impact(h[0].point, surfaceOf(h[0].object, h[0].point), WIMPACT[w.name] || 1);
 }
 
 /* ── 爆炸 ── */
@@ -1253,6 +1254,7 @@ const eBody = new THREE.MeshStandardMaterial({ color: 0x55502f, roughness: 0.85,
 const eGear = new THREE.MeshStandardMaterial({ color: 0x35351f, roughness: 0.82 });
 const eSkin = new THREE.MeshStandardMaterial({ color: 0xb98c63, roughness: 0.72 });
 const WDMG = { 鐵鎚: 75, 刺槍: 60, 小刀: 58, 小槍: 34, 步槍: 36, 機關槍: 32, 狙擊槍: 120 };
+const WIMPACT = { 小槍: 0.7, 步槍: 1.0, 機關槍: 1.0, 狙擊槍: 1.9, 刺槍: 1.2, 小刀: 0.9, 鐵鎚: 1.5 };   // 命中點火花/揚塵量倍率:狙擊一炸 / 小槍一抹
 const eBoot = new THREE.MeshStandardMaterial({ color: 0x1c1a16, roughness: 0.7 });
 // 夢中天堂路的對手:三兵種(標準步兵 / 重裝 / 突擊),體型 + 血量 + 移速 + 頭盔各異
 const ENEMY_TYPES = [
