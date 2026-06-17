@@ -1132,32 +1132,60 @@ const VEHICLES = [];
 // 載具設定(item 3):maxFuel 油量(悍馬100繞營一圈/坦克50半圈,榴彈砲不耗油)/ maxShells 砲彈(坦克20/榴彈砲10)/ hpMul 車況=玩家HP×倍率(榴彈2/悍馬5/坦克10)/ basePrice 普通模式使用權底價(困難×2/天堂路×5)
 const VEH_CFG = { humvee: { maxFuel: 100, maxShells: 0, hpMul: 5, basePrice: 800 }, howitzer: { maxFuel: 0, maxShells: 10, hpMul: 2, basePrice: 1200 }, tank: { maxFuel: 50, maxShells: 20, hpMul: 10, basePrice: 1800 } };
 const vOlive = mat(0x4a5034, { roughness: 0.82, metalness: 0.12, envMapIntensity: 0.7 }), vDark = mat(0x32371f, { roughness: 0.86 }), vTire = mat(0x16161a, { roughness: 0.92 });
+const vHub = mat(0x8e8e84, { metalness: 0.5, roughness: 0.45, envMapIntensity: 0.8 }), vMuzz = mat(0x23231f, { metalness: 0.6, roughness: 0.4 });   // 輪轂 / 砲口制退器(金屬細節讓載具不像玩具)
 const vGlass = new THREE.MeshPhysicalMaterial({ color: 0x141c2a, roughness: 0.1, metalness: 0, envMapIntensity: 1.5, clearcoat: 0.5 });
 function makeVehicle(type, x, z, ry) {
   const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; ROOT.add(g);
   let turret = null;
   if (type === "humvee") {
-    add(new THREE.BoxGeometry(2.5, 0.82, 4.4), vOlive, 0, 1.0, 0, g);
-    add(new THREE.BoxGeometry(2.4, 0.84, 2.1), vOlive, 0, 1.76, 0.4, g);                                   // 駕駛艙
-    add(new THREE.BoxGeometry(2.12, 0.62, 0.1), vGlass, 0, 1.84, -0.66, g);                                 // 擋風
-    add(new THREE.BoxGeometry(2.42, 0.5, 1.3), vOlive, 0, 1.16, -1.86, g);                                  // 引擎蓋
-    add(new THREE.BoxGeometry(2.45, 0.1, 2.0), vDark, 0, 2.22, 0.45, g);                                    // 車頂
-    for (const sx of [-1, 1]) for (const sz of [-1.45, 1.45]) { const wh = add(new THREE.CylinderGeometry(0.56, 0.56, 0.42, 14), vTire, sx * 1.2, 0.56, sz, g); wh.rotation.z = Math.PI / 2; }
+    add(new THREE.BoxGeometry(2.7, 0.6, 4.6), vOlive, 0, 0.92, 0, g);                                       // 底盤(寬扁)
+    add(new THREE.BoxGeometry(2.5, 0.5, 1.5), vOlive, 0, 1.12, -1.85, g);                                   // 引擎蓋(前低)
+    const grille = add(new THREE.BoxGeometry(2.2, 0.42, 0.12), mat(0x20231a, { metalness: 0.3 }), 0, 1.18, -2.6, g); grille.castShadow = false;   // 水箱護罩
+    add(new THREE.BoxGeometry(2.6, 0.22, 0.45), vDark, 0, 0.92, -2.42, g);                                  // 前保險桿
+    for (const sx of [-1, 1]) add(new THREE.CylinderGeometry(0.12, 0.12, 0.16, 10), mat(0xfff0c0, { emissive: new THREE.Color(0xffe8a0), emissiveIntensity: 0.7 }), sx * 0.85, 1.12, -2.62, g).rotation.x = Math.PI / 2;   // 頭燈
+    add(new THREE.BoxGeometry(2.42, 0.95, 2.0), vOlive, 0, 1.58, 0.35, g);                                  // 駕駛艙(方正寬)
+    const ws = add(new THREE.BoxGeometry(2.15, 0.66, 0.08), vGlass, 0, 1.74, -0.62, g); ws.rotation.x = -0.2;   // 擋風(前傾)
+    for (const sx of [-1, 1]) add(new THREE.BoxGeometry(0.07, 0.5, 1.3), vGlass, sx * 1.2, 1.66, 0.4, g);   // 側窗
+    add(new THREE.BoxGeometry(2.5, 0.12, 2.1), vDark, 0, 2.1, 0.35, g);                                     // 車頂
+    add(new THREE.BoxGeometry(2.4, 0.66, 1.4), vOlive, 0, 1.28, 1.78, g);                                   // 後車斗
+    add(new THREE.CylinderGeometry(0.4, 0.46, 0.22, 12), vDark, 0, 2.27, 0.35, g);                          // 車頂槍架環(空)
+    for (const sx of [-1, 1]) { add(new THREE.BoxGeometry(0.06, 0.06, 0.34), vDark, sx * 1.28, 1.8, -0.5, g); add(new THREE.BoxGeometry(0.22, 0.16, 0.05), vDark, sx * 1.46, 1.8, -0.66, g); }   // 後視鏡
+    for (const sx of [-1, 1]) for (const sz of [-1.5, 1.5]) {
+      const wh = add(new THREE.CylinderGeometry(0.62, 0.62, 0.5, 16), vTire, sx * 1.3, 0.6, sz, g); wh.rotation.z = Math.PI / 2;
+      add(new THREE.CylinderGeometry(0.27, 0.27, 0.52, 10), vHub, sx * 1.3, 0.6, sz, g).rotation.z = Math.PI / 2;   // 輪轂
+      add(new THREE.BoxGeometry(0.16, 0.5, 1.05), vDark, sx * 1.36, 1.04, sz, g);                           // 輪拱
+    }
   } else if (type === "tank") {
-    add(new THREE.BoxGeometry(2.9, 0.82, 5.2), vOlive, 0, 0.98, 0, g);                                      // 車體
-    for (const sx of [-1, 1]) { add(new THREE.BoxGeometry(0.76, 0.78, 5.4), vDark, sx * 1.46, 0.6, 0, g); for (let i = -2; i <= 2; i++) { const rl = add(new THREE.CylinderGeometry(0.3, 0.3, 0.82, 12), vTire, sx * 1.46, 0.6, i * 1.05, g); rl.rotation.z = Math.PI / 2; } }
-    turret = new THREE.Group(); turret.position.set(0, 1.56, -0.1); g.add(turret);
-    add(new THREE.BoxGeometry(2.0, 0.72, 2.4), vOlive, 0, 0, 0, turret);
-    add(new THREE.CylinderGeometry(0.18, 0.2, 0.42, 12), vOlive, 0, 0.42, 0.1, turret);                     // 砲塔頂
-    const bar = add(new THREE.CylinderGeometry(0.14, 0.17, 3.3, 14), gunMetal, 0, 0.04, -2.4, turret); bar.rotation.x = Math.PI / 2;   // 砲管
+    add(new THREE.BoxGeometry(3.0, 0.55, 5.6), vOlive, 0, 0.82, 0, g);                                      // 車體
+    const gl = add(new THREE.BoxGeometry(3.0, 0.78, 1.5), vOlive, 0, 0.98, -2.35, g); gl.rotation.x = -0.55;   // 前傾斜甲(glacis)
+    for (const sx of [-1, 1]) {
+      add(new THREE.BoxGeometry(0.72, 0.66, 5.7), vDark, sx * 1.58, 0.5, 0, g);                             // 履帶側
+      add(new THREE.BoxGeometry(0.82, 0.1, 6.0), vDark, sx * 1.58, 1.0, 0, g);                              // 擋泥板
+      for (let i = -2.4; i <= 2.4; i += 0.96) { const rl = add(new THREE.CylinderGeometry(0.34, 0.34, 0.72, 12), vTire, sx * 1.58, 0.5, i, g); rl.rotation.z = Math.PI / 2; }
+      add(new THREE.CylinderGeometry(0.26, 0.26, 0.74, 10), vHub, sx * 1.58, 0.95, -2.8, g).rotation.z = Math.PI / 2;   // 前主動輪
+    }
+    turret = new THREE.Group(); turret.position.set(0, 1.32, 0.2); g.add(turret);
+    add(new THREE.BoxGeometry(2.2, 0.62, 2.5), vOlive, 0, 0.3, 0, turret);                                  // 砲塔
+    const tf = add(new THREE.BoxGeometry(2.1, 0.55, 1.0), vOlive, 0, 0.26, -1.5, turret); tf.rotation.x = -0.22;   // 砲塔前傾甲
+    add(new THREE.BoxGeometry(0.62, 0.46, 0.7), gunMetal, 0, 0.3, -1.75, turret);                           // 砲盾(mantlet)
+    const bar = add(new THREE.CylinderGeometry(0.13, 0.16, 3.7, 14), gunMetal, 0, 0.32, -3.1, turret); bar.rotation.x = Math.PI / 2;   // 砲管
+    add(new THREE.CylinderGeometry(0.2, 0.2, 0.42, 12), vMuzz, 0, 0.32, -4.7, turret).rotation.x = Math.PI / 2;   // 砲口制退器
+    add(new THREE.CylinderGeometry(0.32, 0.34, 0.3, 12), vOlive, 0.5, 0.62, 0.65, turret);                  // 車長指揮塔
+    add(new THREE.BoxGeometry(0.5, 0.16, 0.7), vDark, -0.55, 0.5, 0.85, turret);                            // 後置工具箱
+    add(new THREE.CylinderGeometry(0.018, 0.018, 1.4, 5), vDark, -0.85, 1.2, 0.7, turret);                  // 天線
   } else {   // howitzer 榴彈砲(站位手動瞄發)
-    add(new THREE.BoxGeometry(1.5, 0.38, 1.0), vOlive, 0, 0.72, 0.5, g);                                    // 砲架體
-    for (const sx of [-1, 1]) { const wh = add(new THREE.CylinderGeometry(0.68, 0.68, 0.28, 16), vTire, sx * 1.0, 0.68, 0.5, g); wh.rotation.z = Math.PI / 2; }  // 大輪
-    add(new THREE.BoxGeometry(1.9, 1.0, 0.12), vDark, 0, 1.18, -0.2, g);                                    // 防盾
-    add(new THREE.BoxGeometry(0.22, 0.22, 2.2), vOlive, 0, 0.5, 1.7, g);                                    // 駐鋤(後拖)
-    turret = new THREE.Group(); turret.position.set(0, 1.2, 0); g.add(turret);                              // 俯仰組
-    const bar = add(new THREE.CylinderGeometry(0.12, 0.16, 3.8, 14), gunMetal, 0, 0, -1.9, turret); bar.rotation.x = Math.PI / 2;   // 長砲管
-    add(new THREE.BoxGeometry(0.42, 0.42, 0.6), gunMetal, 0, 0, 0.25, turret);                              // 砲閂
+    add(new THREE.BoxGeometry(1.4, 0.42, 1.2), vOlive, 0, 0.7, 0.4, g);                                     // 砲架體
+    for (const sx of [-1, 1]) {
+      add(new THREE.CylinderGeometry(0.64, 0.64, 0.26, 16), vTire, sx * 1.05, 0.64, 0.4, g).rotation.z = Math.PI / 2;   // 大輪
+      add(new THREE.CylinderGeometry(0.24, 0.24, 0.28, 10), vHub, sx * 1.05, 0.64, 0.4, g).rotation.z = Math.PI / 2;    // 輪轂
+    }
+    for (const sx of [-1, 1]) { const tr = add(new THREE.BoxGeometry(0.18, 0.2, 2.4), vOlive, sx * 0.5, 0.42, 1.6, g); tr.rotation.y = sx * 0.2; }   // 分開式駐鋤
+    add(new THREE.BoxGeometry(2.0, 1.1, 0.1), vDark, 0, 1.2, -0.25, g);                                     // 大防盾
+    turret = new THREE.Group(); turret.position.set(0, 1.18, 0); g.add(turret);                             // 俯仰組
+    add(new THREE.BoxGeometry(0.5, 0.5, 0.92), gunMetal, 0, 0, 0.32, turret);                               // 後膛
+    add(new THREE.CylinderGeometry(0.16, 0.16, 0.72, 12), vMuzz, 0, 0.06, -0.6, turret).rotation.x = Math.PI / 2;   // 反後座筒
+    const bar = add(new THREE.CylinderGeometry(0.11, 0.15, 4.0, 14), gunMetal, 0, 0, -2.0, turret); bar.rotation.x = Math.PI / 2;   // 長砲管
+    add(new THREE.CylinderGeometry(0.2, 0.2, 0.5, 12), vMuzz, 0, 0, -3.95, turret).rotation.x = Math.PI / 2;   // 砲口制退器
     turret.rotation.x = 0.3;
   }
   const cfg = VEH_CFG[type]; const v = { type, group: g, turret, heading: ry, baseHeading: ry, basePos: g.position.clone(), speed: 0, fireT: 0, cfg, unlocked: true, fuel: cfg.maxFuel, shells: cfg.maxShells, hp: 100 * cfg.hpMul, maxHp: 100 * cfg.hpMul, destroyed: false }; VEHICLES.push(v); return v;
