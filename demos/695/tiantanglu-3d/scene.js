@@ -899,7 +899,8 @@ function renderShop() {
 }
 function shopOpenable() { return !dead && !gameOver && (MODE === "hub" || (MODE === "sim" && inBreak)); }
 function openShop() { if (!shopEl || !shopOpenable()) return; shopEl.classList.add("on"); renderShop(); if (document.pointerLockElement === canvas && document.exitPointerLock) document.exitPointerLock(); }
-function closeShop() { if (shopEl) shopEl.classList.remove("on"); }
+function openShopPause() { if (MODE !== "sim") return; shopPause = true; openShop(); }   // 波間/重啟:暫停時間自動開軍械庫(updateWaves 見 shopPause 不倒數)
+function closeShop() { if (shopEl) shopEl.classList.remove("on"); if (shopPause) { shopPause = false; betweenT = 1.2; if (!dead && !gameOver && MODE === "sim" && !isTouch && document.pointerLockElement !== canvas && canvas.requestPointerLock) canvas.requestPointerLock(); } }   // 關閉軍械庫=續關:時間恢復倒數 1.2s 開下一波,桌機重鎖指針(關閉的點擊=user gesture,可 lock)
 if (document.getElementById("shop-close")) document.getElementById("shop-close").addEventListener("click", closeShop);
 // 點 overlay 背景空白(非 .panel 內)即關閉 — 手機多一條保險出口,避免卡在介面裡
 function backdropClose(overlayId, closeFn) { const ov = document.getElementById(overlayId); if (!ov) return; ov.addEventListener("click", (e) => { if (e.target === ov) closeFn(); }); }
@@ -1311,7 +1312,7 @@ function spawnEnemy(x, z, hp) {
 /* ── 波次 horde + 計分 ── */
 const SPAWN_PTS = [[-18, -34], [10, -38], [26, -30], [-30, -26], [38, -20], [-38, -10], [44, 2], [0, -42], [-44, -28], [34, -38]];
 const COVER_PTS = [[4, 4], [5.4, 2.6], [-8, -12], [13, -14], [14.5, -13.2], [10, 6], [-14, -6], [22, 8]].map(([x, z]) => new THREE.Vector3(x, 0, z));
-let wave = 0, score = 0, waveAlive = 0, spawnQueue = 0, spawnTimer = 0, betweenT = 2.5, inBreak = true, gameOver = false;
+let wave = 0, score = 0, waveAlive = 0, spawnQueue = 0, spawnTimer = 0, betweenT = 2.5, inBreak = true, gameOver = false, shopPause = false;   // shopPause:波間/重啟自動開軍械庫時暫停時間
 let MODE = "hub";   // hub(自由走軍營,不生敵) | sim(實戰模擬練習,波次戰鬥) — 把拔的夢:走到靶場才回到天堂路
 const RANGE_ENTRY = new THREE.Vector3(32, 0, 6.5);   // 靶場射擊位(進入實戰模擬的觸發點)
 const COW_POS = new THREE.Vector3(-14, 0, 18);       // 顧牛互動點
@@ -1325,11 +1326,11 @@ function updateWaveHUD() { if (MODE !== "sim") { if (waveEl) waveEl.textContent 
 function startWave() { wave++; inBreak = false; const em = (curDiff ? curDiff.enemyMul : 1) * qEnemyCap; const n = Math.max(1, Math.min(Math.round(16 * em), Math.round((3 + wave * 1.7) * em))); spawnQueue = n; waveAlive = n; spawnTimer = 0; updateWaveHUD(); }   // 困難/天堂路:每波敵人 ×2;低畫質 enemyCap 砍半救手機
 function updateWaves(dt) {
   if (gameOver || MODE !== "sim" || awaitDisarm) return;
-  if (inBreak) { betweenT -= dt; if (betweenT <= 0) startWave(); return; }
+  if (inBreak) { if (shopPause) return; betweenT -= dt; if (betweenT <= 0) startWave(); return; }   // 軍械庫開著=時間暫停,不倒數
   if (spawnQueue > 0) { spawnTimer -= dt; if (spawnTimer <= 0) { const p = SPAWN_PTS[(Math.random() * SPAWN_PTS.length) | 0]; spawnEnemy(p[0], p[1], 90 + wave * 14); spawnQueue--; spawnTimer = 0.5 + Math.random() * 0.6; } }
   if (waveAlive <= 0 && spawnQueue <= 0) {
     if (wave >= GOAL_WAVE) { awaitDisarm = true; inBreak = true; stopMusic(); for (const e of enemies) ROOT.remove(e); enemies.length = 0; if (waveEl) waveEl.textContent = "撐過了"; showNarr(NARR.survived, 5.5); }   // B1:撐過 GOAL_WAVE → 停波+清殘敵 + 戰鬥曲提前淡出(放下槍猶豫窗落在安靜裡,讓「夠了」浮得出來) + 放下槍那秒旁白;保護高潮不被殘敵打死
-    else { inBreak = true; betweenT = 4; money += 150; updateMoneyHUD(); updateWaveHUD(); if (wave === 1 || wave % 5 === 0) showNarr(NARR.wave, 3.4); }   // 撐過一波 +150 軍餉(波間按 B 補裝);金句稀缺:只首波/每5波留白
+    else { inBreak = true; money += 200 + wave * 80; updateMoneyHUD(); updateWaveHUD(); if (wave === 1 || wave % 5 === 0) showNarr(NARR.wave, 3.4); openShopPause(); }   // 撐過一波:獎賞隨波升(280/360/440/520…) + 時間暫停自動開軍械庫(買或關掉再續);金句稀缺:只首波/每5波留白
   }
 }
 updateWaveHUD();
@@ -1639,7 +1640,8 @@ function endRun() {
   if (document.exitPointerLock) document.exitPointerLock();
   if (deadStatsEl) deadStatsEl.textContent = "撐到第 " + wave + " 波 · 歷來最久 " + bestWave + " 波";   // 去分數當頭:死亡字幕不報擊殺數(反 CS 計分),只記撐了多久
   clearTimeout(endRun._t);
-  endRun._t = setTimeout(() => { if (dmgEl) dmgEl.style.opacity = "0"; if (deadEl) deadEl.classList.add("on"); }, ceremony ? 2000 : 420);   // 修補:黑屏沉默拉長(韓劇式呼吸,只首死/破紀錄首死演足,N4 防稀釋)
+  const autoRevive = !!(curDiff && curDiff.hp >= 2);   // 劇情/新手:自動接關(死亡儀式演完直接重生→軍械庫),不卡「重新部署」手動畫面
+  endRun._t = setTimeout(() => { if (dmgEl) dmgEl.style.opacity = "0"; if (autoRevive) restartGame(); else if (deadEl) deadEl.classList.add("on"); }, ceremony ? 2000 : 420);   // 修補:黑屏沉默拉長(韓劇式呼吸,只首死/破紀錄首死演足,N4 防稀釋)
 }
 function restartGame() {
   // 死亡重生包進閉眼睜眼:夢又把他帶回天堂路第一天(不是 game over 重開,是夢的循環),世界在闔眼時切換
@@ -1650,7 +1652,9 @@ function restartGame() {
     applyDifficulty(); if (deadEl) deadEl.classList.remove("on"); if (dmgEl) dmgEl.style.opacity = "0";   // 重新部署套難度 HP/彈藥;scarFloor/deaths/bestWave 刻意不重置(帶著傷前進)
     camera.position.set(8, EYE, 13); yaw = -0.3; pitch = 0; sprayPitch = 0; sprayYaw = 0; recoilKick = 0; curSpeed = 0; mvLastX = 0; mvLastZ = 0; mvSprint = false;   // 清移動慣性,重生不往舊方向抽一下
     drawT = 0; reloadT = 0; reloadFilled = true; chSpread = 0;   // 重生清乾淨拔槍/換彈/擴散狀態(死在換彈途中重開不卡)
+    if (curDiff && curDiff.hp >= 2) { money += 1000; updateMoneyHUD(); }   // 劇情/新手:每次重啟 +1000 軍餉(裝備保留 + 彈藥已 reset,越打越有資源=接得下去)
     playMusic(MUSIC_SIM);   // 重新部署=夢又把他帶回熔爐,主題樂回來
+    openShopPause();   // 重啟也暫停時間自動開軍械庫(關掉再續打)
   });
 }
 
