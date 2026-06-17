@@ -1038,13 +1038,15 @@ function meleeHit(w) {
 }
 
 /* ── 爆炸 ── */
+const SHOCK_GEO = new THREE.RingGeometry(0.8, 1.0, 48);   // 衝擊波環幾何(共享,各爆炸 scale 撐大)
 function explode(pos, depth, big) {
   sfxExplode(pos); shake = Math.max(shake, big ? 1.0 : 0.7);
   const fl = new THREE.PointLight(0xffb060, big ? 70 : 45, big ? 46 : 34, 2); fl.position.copy(pos); fl.position.y = Math.max(1.2, pos.y); scene.add(fl);
   const fb = new THREE.Sprite(new THREE.SpriteMaterial({ map: fireTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); fb.position.copy(pos); fb.position.y += 0.8; fb.scale.setScalar(big ? 2.6 : 1.5); fb.raycast = RC_NOOP; scene.add(fb);
   const sm = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, color: 0x29251f, transparent: true, opacity: 0, depthWrite: false, fog: false })); sm.position.copy(pos); sm.position.y += 1; sm.scale.setScalar(big ? 3 : 2); sm.raycast = RC_NOOP; scene.add(sm);
   const N = big ? 26 : 16, deb = []; for (let i = 0; i < N; i++) { const d = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 0.16), debrisMat); d.position.copy(pos); d.position.y += 0.8; d.userData.v = new THREE.Vector3((Math.random() - 0.5) * (big ? 13 : 9), 4 + Math.random() * (big ? 10 : 7), (Math.random() - 0.5) * (big ? 13 : 9)); scene.add(d); deb.push(d); }
-  effects.push({ t: 0, life: big ? 3.0 : 2.6, fb, sm, fl, deb, big: !!big });
+  const ring = new THREE.Mesh(SHOCK_GEO, new THREE.MeshBasicMaterial({ color: 0xffd9a0, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); ring.rotation.x = -Math.PI / 2; ring.position.set(pos.x, 0.14, pos.z); ring.raycast = RC_NOOP; scene.add(ring);   // 衝擊波亮環:爆炸把空氣/塵往外推,地面平鋪快速擴張淡出
+  effects.push({ t: 0, life: big ? 3.0 : 2.6, fb, sm, fl, deb, ring, ringMax: big ? 17 : 11, big: !!big });
   for (let i = 0; i < (big ? 14 : 8); i++) emitFx(sparkPool, pos.clone().add(new THREE.Vector3((Math.random() - 0.5) * 2.5, Math.random() * 1.6, (Math.random() - 0.5) * 2.5)), 0.3 + Math.random() * 0.3, 0.3, 1.2, true);
   const R = big ? 7 : 5;
   for (const g of targets) if (!g.userData.down && g.position.distanceTo(pos) < R) targetHit(g);
@@ -1183,8 +1185,9 @@ function updateEffects(dt) {
     if (e.fb) { const k = Math.min(1, e.t / 0.5); e.fb.scale.setScalar((e.big ? 2.6 : 1.5) + k * 6); e.fb.material.opacity = Math.max(0, 1 - k); }
     if (e.sm) { const k = Math.min(1, e.t / 2.4); e.sm.scale.setScalar(2 + k * 9); e.sm.position.y += dt * 1.3; e.sm.material.opacity = Math.max(0, 0.6 * Math.sin(k * Math.PI)); }
     if (e.fl) e.fl.intensity = Math.max(0, e.fl.intensity - dt * 140);
+    if (e.ring) { const k = Math.min(1, e.t / 0.45); e.ring.scale.setScalar(0.4 + k * (e.ringMax || 11)); e.ring.material.opacity = Math.max(0, 0.85 * (1 - k)); }   // 衝擊波環:0.45s 內擴張+淡出
     if (e.deb) for (const d of e.deb) { d.userData.v.y -= 18 * dt; d.position.addScaledVector(d.userData.v, dt); if (d.position.y < 0.12) { d.position.y = 0.12; d.userData.v.multiplyScalar(0); } d.rotation.x += dt * 5; d.rotation.y += dt * 4; }
-    if (e.t >= e.life) { if (e.fb) { scene.remove(e.fb); e.fb.material.dispose(); } if (e.sm) { scene.remove(e.sm); e.sm.material.dispose(); } if (e.fl) scene.remove(e.fl); if (e.deb) for (const d of e.deb) { scene.remove(d); d.geometry.dispose(); } effects.splice(i, 1); }
+    if (e.t >= e.life) { if (e.fb) { scene.remove(e.fb); e.fb.material.dispose(); } if (e.sm) { scene.remove(e.sm); e.sm.material.dispose(); } if (e.fl) scene.remove(e.fl); if (e.ring) { scene.remove(e.ring); e.ring.material.dispose(); } if (e.deb) for (const d of e.deb) { scene.remove(d); d.geometry.dispose(); } effects.splice(i, 1); }   // SHOCK_GEO 共享不 dispose
   }
 }
 
@@ -1245,7 +1248,7 @@ const tracers = [];
 for (let i = 0; i < 16; i++) { const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]); const m = new THREE.LineBasicMaterial({ color: 0xffe09a, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }); const ln = new THREE.Line(geo, m); ln.visible = false; ln.frustumCulled = false; scene.add(ln); tracers.push({ ln, t: 0, on: false, op: 0.8 }); }
 let trI = 0;
 function tracer(fx, fy, fz, tx, ty, tz, color, opacity) { const tr = tracers[trI = (trI + 1) % tracers.length]; const p = tr.ln.geometry.attributes.position; p.setXYZ(0, fx, fy, fz); p.setXYZ(1, tx, ty, tz); p.needsUpdate = true; if (color != null) tr.ln.material.color.setHex(color); tr.op = opacity != null ? opacity : 0.8; tr.ln.material.opacity = tr.op; tr.ln.visible = true; tr.on = true; tr.t = 0; }
-function updateTracers(dt) { for (const tr of tracers) { if (!tr.on) continue; tr.t += dt; if (tr.t > 0.055) { tr.on = false; tr.ln.visible = false; continue; } tr.ln.material.opacity = tr.op * (1 - tr.t / 0.055); } }
+function updateTracers(dt) { for (const tr of tracers) { if (!tr.on) continue; tr.t += dt; if (tr.t > 0.08) { tr.on = false; tr.ln.visible = false; continue; } tr.ln.material.opacity = tr.op * (1 - tr.t / 0.08); } }   // 曳光彈拖尾稍長更可見
 const eBody = new THREE.MeshStandardMaterial({ color: 0x55502f, roughness: 0.85, envMapIntensity: 0.7 });
 const eGear = new THREE.MeshStandardMaterial({ color: 0x35351f, roughness: 0.82 });
 const eSkin = new THREE.MeshStandardMaterial({ color: 0xb98c63, roughness: 0.72 });
