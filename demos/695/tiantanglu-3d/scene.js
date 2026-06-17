@@ -171,6 +171,17 @@ function add(geo, m, x, y, z, parent) { const b = new THREE.Mesh(geo, m); b.posi
   patch(-27, -31, 11, 7, 0.4, DAMP, 0.5, 0.3, 0.14);
   patch(25, -33, 8, 6, -0.5, DAMP, 0.46, 0.32, 0.12);
   patch(-34, 9, 9, 7, 0.2, DAMP, 0.4, 0.34, 0.1);
+  // item 6 地形寫實加碼:更多夯實路/礫石/積水 + 載具區輪胎痕
+  patch(22, 28, 13, 16, 0.3, PATH, 0.34, 0.66);      // 載具區夯實路
+  patch(0, 7, 34, 9, 0, GRAVEL, 0.2, 1);             // 操場邊礫石帶
+  patch(40, -30, 14, 11, 0.3, GRAVEL, 0.26, 1);      // 右後礫石
+  patch(-15, -13, 10, 8, 0.4, DAMP, 0.4, 0.34, 0.12);// 操場積水
+  patch(13, -27, 9, 7, -0.2, DAMP, 0.36, 0.34, 0.1); // 營前積水
+  for (const [tx, tz] of [[23.4, 30], [26.2, 30], [30.2, 23], [32.6, 23]]) patch(tx, tz, 1.9, 9, 0.5, 0x2c281f, 0.34, 0.8);   // 載具區輪胎痕(細長深色)
+  // 周界草叢/雜草(破除平坦泥土邊緣,寫實層次)
+  const grassA = mat(0x66793f, { roughness: 1, flatShading: true }), grassB = mat(0x76884a, { roughness: 1, flatShading: true });
+  const gpts = [[44, 30], [50, 8], [-46, 16], [-50, -4], [46, -14], [-44, -30], [38, -42], [-38, -40], [52, -28], [-52, 24], [30, 40], [-30, 42], [56, -2], [-56, 6], [42, 22], [-42, -18]];
+  for (const [gx, gz] of gpts) for (let k = 0; k < 5; k++) { const ox = gx + (Math.random() - 0.5) * 5, oz = gz + (Math.random() - 0.5) * 5, h = 0.32 + Math.random() * 0.34; const t = add(new THREE.ConeGeometry(0.12 + Math.random() * 0.08, h, 5), Math.random() < 0.5 ? grassA : grassB, ox, h / 2, oz); t.castShadow = false; t.rotation.y = Math.random() * 6.28; t.rotation.z = (Math.random() - 0.5) * 0.3; }
 })();
 
 /* ───────── 山牆屋頂 helper ───────── */
@@ -1150,6 +1161,9 @@ function makeVehicle(type, x, z, ry) {
     for (const sx of [-1, 1]) add(new THREE.BoxGeometry(0.07, 0.5, 1.3), vGlass, sx * 1.2, 1.66, 0.4, g);   // 側窗
     add(new THREE.BoxGeometry(2.5, 0.12, 2.1), vDark, 0, 2.1, 0.35, g);                                     // 車頂
     add(new THREE.BoxGeometry(2.4, 0.66, 1.4), vOlive, 0, 1.28, 1.78, g);                                   // 後車斗
+    add(new THREE.CylinderGeometry(0.5, 0.5, 0.3, 14), vTire, -0.55, 1.78, 2.42, g);                        // 後備胎(立)
+    add(new THREE.CylinderGeometry(0.22, 0.22, 0.28, 10), vHub, -0.55, 1.78, 2.43, g);                      // 備胎輪轂
+    add(new THREE.BoxGeometry(0.32, 0.44, 0.24), mat(0x39482c, { roughness: 0.72 }), 0.6, 1.64, 2.4, g);    // 油桶/補給箱
     add(new THREE.CylinderGeometry(0.4, 0.46, 0.22, 12), vDark, 0, 2.27, 0.35, g);                          // 車頂槍架環(空)
     for (const sx of [-1, 1]) { add(new THREE.BoxGeometry(0.06, 0.06, 0.34), vDark, sx * 1.28, 1.8, -0.5, g); add(new THREE.BoxGeometry(0.22, 0.16, 0.05), vDark, sx * 1.46, 1.8, -0.66, g); }   // 後視鏡
     for (const sx of [-1, 1]) for (const sz of [-1.5, 1.5]) {
@@ -1175,6 +1189,8 @@ function makeVehicle(type, x, z, ry) {
     add(new THREE.CylinderGeometry(0.32, 0.34, 0.3, 12), vOlive, 0.5, 0.62, 0.65, turret);                  // 車長指揮塔
     add(new THREE.BoxGeometry(0.5, 0.16, 0.7), vDark, -0.55, 0.5, 0.85, turret);                            // 後置工具箱
     add(new THREE.CylinderGeometry(0.018, 0.018, 1.4, 5), vDark, -0.85, 1.2, 0.7, turret);                  // 天線
+    add(new THREE.BoxGeometry(0.62, 0.4, 0.5), vDark, -0.85, 1.18, 2.5, g);                                 // 後甲板補給箱
+    add(new THREE.CylinderGeometry(0.22, 0.22, 0.56, 10), mat(0x39482c, { roughness: 0.72 }), 0.9, 1.22, 2.5, g).rotation.z = Math.PI / 2;   // 綁在後甲板的油桶
   } else {   // howitzer 榴彈砲(站位手動瞄發)
     add(new THREE.BoxGeometry(1.4, 0.42, 1.2), vOlive, 0, 0.7, 0.4, g);                                     // 砲架體
     for (const sx of [-1, 1]) {
@@ -1449,7 +1465,7 @@ function spawnEnemy(x, z, hp, opts) {
   const ms = [];
   const eb = (w, h, d, m, px, py, pz) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(px, py, pz); ms.push(b); return b; };
   eb(0.5, 0.74, 0.3, frog ? skin : body, 0, 1.16, 0);                  // 軀幹(蛙人裸膚)
-  if (!frog) { eb(0.56, 0.5, 0.36, eGear, 0, 1.2, 0.01); eb(0.2, 0.16, 0.1, eGear, 0, 1.32, 0.19); }   // 防彈背心 + 彈匣袋(蛙人沒有)
+  if (!frog) { eb(0.56, 0.5, 0.36, eGear, 0, 1.2, 0.01); eb(0.2, 0.16, 0.1, eGear, 0, 1.32, 0.19); eb(0.09, 0.52, 0.08, eBoot, -0.16, 1.2, 0.19); eb(0.09, 0.52, 0.08, eBoot, 0.16, 1.2, 0.19); eb(0.18, 0.15, 0.1, eBoot, -0.2, 1.04, 0.21); eb(0.14, 0.13, 0.1, eBoot, 0.21, 1.06, 0.21); }   // 防彈背心 + 彈匣袋 + 胸前背帶×2 + 側掛彈袋(寫實裝具,蛙人沒有)
   eb(0.46, 0.36, 0.3, frog ? FROG_TRUNK : eGear, 0, 0.68, 0);          // 臀 / 蛙人紅短褲
   eb(0.12, 0.12, 0.12, skin, 0, 1.57, 0);                              // 頸
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.15, 14, 12), skin); head.position.y = 1.68; head.userData.head = true; ms.push(head);
