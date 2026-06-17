@@ -1614,7 +1614,8 @@ function resolveCollisionFor(p, r) {   // 圓 vs AABB 推出:建築+木箱都擋
 function clampBound(p) { const ex = p.x, ez = p.z + 20, er = Math.hypot(ex, ez); if (er > BOUND_R) { p.x = ex / er * BOUND_R; p.z = ez / er * BOUND_R - 20; } }   // 圓形邊界(中心 0,-20 貼合圍籬)
 function resolveCollision() { resolveCollisionFor(camera.position, PLAYER_R); }
 const scopeEl = document.getElementById("scope"), crossEl = document.getElementById("cross");
-let bob = 0, recoilKick = 0, vy = 0, jumpY = 0, curEye = EYE, sprayResetT = 0, lastFootstep = 0, wasGrounded = true, adsBlend = 0;
+let bob = 0, recoilKick = 0, recoilVel = 0, vy = 0, jumpY = 0, curEye = EYE, sprayResetT = 0, lastFootstep = 0, wasGrounded = true, adsBlend = 0;
+const RSPRING = { "小槍": [330, 34], "步槍": [300, 33], "機關槍": [420, 30], "狙擊槍": [180, 22], "火箭砲": [150, 20] };   // 後座回正彈簧[勁度K, 阻尼D];略低於臨界=輕微過衝後定住;狙擊K小晃更久更沉,機槍K大快速碎抖
 let vmKick = 0, vmKickRot = 0, landDip = 0, prevAdsState = false;   // 武器在手中的後座頓挫(每發瞬間衝擊 → 快速回彈,與鏡頭爬升 recoilKick 分開);landDip=落地下沉;prevAdsState=開鏡狀態偵測
 // 每把武器的頓挫量[往後位移衝擊, 槍口上揚衝擊];數值小但快,給「槍在手上一頓」的視覺
 const WKICK = { "小槍": [0.05, 0.18], "步槍": [0.055, 0.2], "機關槍": [0.036, 0.13], "狙擊槍": [0.12, 0.45], "火箭砲": [0.17, 0.55] };
@@ -1658,7 +1659,7 @@ function updateFP(dt) {
   // 腳步聲(快走/蹲走有聲,Ctrl 靜步無聲)
   if (moving && grounded && !silent) { lastFootstep -= dt; if (lastFootstep <= 0) { sfxStep(crouch); lastFootstep = crouch ? 0.5 : 0.36; } } else lastFootstep = 0;
   // 後座衰減 + spray reset
-  if (recoilKick > 0) recoilKick = Math.max(0, recoilKick - dt * 0.5);
+  { const rs = RSPRING[w.name] || [140, 22]; recoilVel += (-recoilKick * rs[0] - recoilVel * rs[1]) * dt; recoilKick += recoilVel * dt; if (recoilKick < -0.02) recoilKick = -0.02; if (Math.abs(recoilKick) < 0.0004 && Math.abs(recoilVel) < 0.012) { recoilKick = 0; recoilVel = 0; } }   // 彈簧式後座回正:輕微過衝後定住(非線性鋸齒)
   vmKick += (0 - vmKick) * Math.min(1, dt * 17); vmKickRot += (0 - vmKickRot) * Math.min(1, dt * 15);   // 頓挫快速回彈(snappy)
   if (landDip > 0) landDip += (0 - landDip) * Math.min(1, dt * 12);   // 落地下沉 spring 回彈
   if (drawT > 0) drawT = Math.max(0, drawT - dt);
