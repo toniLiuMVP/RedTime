@@ -1809,7 +1809,7 @@ function updateFP(dt) {
   // 自動射擊(步槍/機槍按住)
   if (!dead && mouseDown && w.type === "auto" && isActive() && realT - lastShot >= w.rate) { lastShot = realT; fire(); }
   // 槍口焰
-  for (const k of WEAPONS) if (k.muzzle) { if (k.muzzleT > 0) { k.muzzleT -= dt; const aSup = k === w ? adsBlend : 0; k.muzzle.material.opacity = Math.max(0, k.muzzleT / 0.06) * 0.9 * (1 - aSup * 0.55); k.muzzle.scale.setScalar((1 + (1 - k.muzzleT / 0.06) * 0.7) * (1 - aSup * 0.6)); } else k.muzzle.material.opacity = 0; }   // 開鏡抑制火光,不糊住瞄準
+  for (const k of WEAPONS) if (k.muzzle) { if (k.muzzleT > 0) { k.muzzleT -= dt; const aSup = k === w ? adsBlend : 0; k.muzzle.material.opacity = Math.max(0, k.muzzleT / 0.06) * 0.9 * (1 - aSup * 0.55); const _ms = (1 + (1 - k.muzzleT / 0.06) * 0.7) * (1 - aSup * 0.6); k.muzzle.scale.set(_ms, _ms, _ms * 2.4); } else k.muzzle.material.opacity = 0; }   // 沿膛線前噴的火舌(z 拉長),非圓球   // 開鏡抑制火光,不糊住瞄準
   // 武器姿態(bob + 後座 + 揮舞/投擲 + ADS 置中)
   bob += dt * (moving ? (crouch ? 7 : 11) : 1.6);
   const bobAmp = (moving ? (crouch ? 0.008 : 0.014) : 0.003) * (1 - adsBlend * 0.7);
