@@ -230,6 +230,7 @@ barracks(0, -30, 0, true);
 barracks(-30, -16, Math.PI / 2, false);
 
 /* ───────── 旗桿 + 旗(操場中軸) ───────── */
+let flagAnim = null;   // 布旗頂點動畫狀態(隨風飄,非木板)
 (function flag() {
   add(new THREE.CylinderGeometry(0.18, 0.22, 15, 12), new THREE.MeshStandardMaterial({ color: 0xd8dde2, metalness: 0.7, roughness: 0.3, envMapIntensity: 1.3 }), 0, 7.5, -6);
   add(new THREE.SphereGeometry(0.36, 12, 8), new THREE.MeshStandardMaterial({ color: 0xe9b44b, metalness: 0.8, roughness: 0.25, envMapIntensity: 1.4 }), 0, 15.2, -6);
@@ -244,8 +245,18 @@ barracks(-30, -16, Math.PI / 2, false);
   fctx.beginPath(); fctx.arc(sx, sy, 18, 0, 7); fctx.fillStyle = "#003da5"; fctx.fill();   // 藍環
   fctx.beginPath(); fctx.arc(sx, sy, 15, 0, 7); fctx.fillStyle = "#fff"; fctx.fill();      // 白日內
   const flagTex = new THREE.CanvasTexture(fcv); flagTex.colorSpace = THREE.SRGBColorSpace;
-  const fl = add(new THREE.BoxGeometry(5, 3.2, 0.12), new THREE.MeshStandardMaterial({ map: flagTex, roughness: 0.78, side: THREE.DoubleSide, envMapIntensity: 0.55 }), 2.7, 12.4, -6); fl.rotation.y = 0.05;
+  const fgeo = new THREE.PlaneGeometry(5, 3.2, 20, 6);   // 分段平面=可變形布旗(取代僵硬木板盒)
+  const fl = new THREE.Mesh(fgeo, new THREE.MeshStandardMaterial({ map: flagTex, roughness: 0.82, side: THREE.DoubleSide, envMapIntensity: 0.5 }));
+  fl.position.set(2.7, 12.4, -6); fl.castShadow = true; ROOT.add(fl);
+  const fp = fgeo.attributes.position, fn = fp.count, fbz = new Float32Array(fn), fnx = new Float32Array(fn);
+  for (let i = 0; i < fn; i++) { fbz[i] = fp.getZ(i); fnx[i] = (fp.getX(i) + 2.5) / 5; }   // fnx:0(貼旗桿端固定)→1(自由端擺最大)
+  flagAnim = { geo: fgeo, fp, fbz, fnx, fn };
 })();
+function updateFlag(t) {   // 布旗隨風飄:自由端擺幅最大、旗桿端固定;兩頻疊加=飄動非僵硬
+  if (!flagAnim) return; const a = flagAnim;
+  for (let i = 0; i < a.fn; i++) { const f = a.fnx[i]; a.fp.setZ(i, a.fbz[i] + (Math.sin(t * 2.6 + f * 6.5) * 0.5 + Math.sin(t * 4.7 + f * 12) * 0.16) * f); }
+  a.fp.needsUpdate = true; a.geo.computeVertexNormals();
+}
 
 /* ───────── 哨所(高崗哨) ───────── */
 (function watchtower(x, z) {
@@ -769,9 +780,9 @@ function updateAmbient(dt) {
 /* ══════════════ 第一人稱控制 + 物理 ══════════════ */
 const keys = {};
 const enterEl = document.getElementById("enter");
-if (isTouch && enterEl) { const _r = enterEl.querySelector(".ring"); if (_r) _r.textContent = "點一下開始"; const _s = enterEl.querySelector(".sub"); if (_s) _s.style.display = "none"; }   // 手機版不需要滑鼠/鍵盤提示
 let ads = false, mouseDown = false, lastShot = 0;
 const isTouch = (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) || ("ontouchstart" in window) || navigator.maxTouchPoints > 0 || /[?&]touch\b/i.test(location.search || "");   // 手機觸控(可 ?touch 強制)
+if (isTouch && enterEl) { const _r = enterEl.querySelector(".ring"); if (_r) _r.textContent = "點一下開始"; const _s = enterEl.querySelector(".sub"); if (_s) _s.style.display = "none"; }   // 手機版不需要滑鼠/鍵盤提示(isTouch 宣告後才用,避免 TDZ)
 let touchActive = false, tjx = 0, tjz = 0, tCrouch = false, tWalk = false;   // tCrouch/tWalk:手機蹲下/慢走切換鍵狀態
 function isActive() { return document.pointerLockElement === canvas || touchActive; }   // pointer lock(桌機)或 touchActive(手機)
 // 任一全螢幕 overlay(設定/軍械/日記/教學)開啟時為 true。手機輕觸常帶微小位移,touchmove 的 preventDefault 會吞掉 overlay 按鈕的 click,
@@ -1949,7 +1960,7 @@ function renderOnce() {
     renderer.autoClear = ac; renderer.shadowMap.autoUpdate = su; renderer.toneMapping = tm; renderer.toneMappingExposure = te;
   }
 }
-function loop() { requestAnimationFrame(loop); const dt = Math.min(clock.getDelta(), 0.05); realT += dt; updateFP(dt); renderOnce(); }
+function loop() { requestAnimationFrame(loop); const dt = Math.min(clock.getDelta(), 0.05); realT += dt; updateFP(dt); updateFlag(realT); renderOnce(); }
 /* ── console debug 後門:預設關閉,只在 URL 帶 ?debug 才暴露(production 防作弊 / 輔助 XSS / 資訊洩漏,OWASP 建議) ── */
 const DEBUG = /[?&](debug|dev)\b/i.test(location.search || "");
 if (DEBUG) {
