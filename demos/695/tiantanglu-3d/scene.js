@@ -635,6 +635,7 @@ function reload() {
   if (w.ammo >= w.mag || w.reserve <= 0 || reloadT > 0 || drawT > 0) return;
   reloadDur = reloadT = w.name === "機關槍" ? 3.5 : w.name === "狙擊槍" ? 3.0 : w.name === "小槍" ? 2.0 : 2.4; // 換彈動畫時長(數值在 60% 補滿)
   reloadFilled = false; sfxReload(w.name, reloadDur);
+  setTimeout(() => { if (reloadT > 0 && WEAPONS[wi] === w) dropMag(w.name); }, reloadDur * 0.22 * 1000);   // 退匣那一刻掉空彈匣
 }
 function reloadCurve(name, rp) {   // 回 [dipY, rotX, rotZ];每把槍換彈動作不同
   if (name === "機關槍") {   // 掀鏈蓋(往上)→鋪彈鏈(緩起伏)→拍合
@@ -951,6 +952,30 @@ function updateCasings(dt) {
     c.m.position.addScaledVector(c.v, dt);
     c.m.rotation.x += c.spin.x * dt; c.m.rotation.y += c.spin.y * dt; c.m.rotation.z += c.spin.z * dt;
     if (c.m.position.y < 0.04) { c.m.position.y = 0.04; c.v.y *= -0.32; c.v.x *= 0.55; c.v.z *= 0.55; c.spin.multiplyScalar(0.4); }   // 落地彈跳 + 滾動衰減
+    if (c.t >= c.life) { c.on = false; c.m.visible = false; }
+  }
+}
+/* ── 換彈空彈匣掉落:退匣那一刻從槍下方掉一個空彈匣,受重力落地(每把槍尺寸不同) ── */
+const magMat = new THREE.MeshStandardMaterial({ color: 0x2a2824, metalness: 0.35, roughness: 0.6 });
+const mags = []; let magI = 0;
+for (let i = 0; i < 6; i++) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.22, 0.08), magMat); m.visible = false; m.castShadow = true; scene.add(m); mags.push({ m, on: false, v: new THREE.Vector3(), spin: new THREE.Vector3(), t: 0, life: 0 }); }
+const MAGSCALE = { "小槍": 0.8, "步槍": 1.0, "機關槍": 1.3, "狙擊槍": 0.7 };
+function dropMag(name) {
+  const sc = MAGSCALE[name]; if (sc == null) return;
+  const c = mags[magI = (magI + 1) % mags.length];
+  camera.getWorldPosition(_ejP); camera.getWorldDirection(_ejF); _ejR.crossVectors(_ejF, UP).normalize();
+  c.m.position.copy(_ejP).addScaledVector(_ejF, 0.45).addScaledVector(_ejR, 0.12); c.m.position.y -= 0.32;   // 彈匣井下方
+  c.m.scale.setScalar(sc);
+  c.v.copy(_ejF).multiplyScalar(0.3).addScaledVector(_ejR, (Math.random() - 0.5) * 0.4); c.v.y = -0.6;   // 主要往下掉
+  c.spin.set((Math.random() - 0.5) * 6, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 6);
+  c.on = true; c.t = 0; c.life = 3.0; c.m.visible = true;
+}
+function updateMags(dt) {
+  for (const c of mags) {
+    if (!c.on) continue; c.t += dt; c.v.y -= 17 * dt;
+    c.m.position.addScaledVector(c.v, dt);
+    c.m.rotation.x += c.spin.x * dt; c.m.rotation.y += c.spin.y * dt; c.m.rotation.z += c.spin.z * dt;
+    const floor = 0.06 * c.m.scale.x; if (c.m.position.y < floor) { c.m.position.y = floor; c.v.y *= -0.25; c.v.x *= 0.5; c.v.z *= 0.5; c.spin.multiplyScalar(0.3); }
     if (c.t >= c.life) { c.on = false; c.m.visible = false; }
   }
 }
@@ -1601,7 +1626,7 @@ function updateFP(dt) {
     updateVehicle(dt); updateWaves(dt); updateMusic(dt); updateAmbient(dt);
     updateProjectiles(dt); updateTargets(dt); updateEnemies(dt); updateEffects(dt);
     updateFxPool(sparkPool, dt); updateFxPool(dustPool, dt); updateFxPool(trailPool, dt); updateFxPool(bloodPool, dt);
-    updateMemShards(dt); updateTracers(dt); updateShells(dt); updateCasings(dt); updateListener();
+    updateMemShards(dt); updateTracers(dt); updateShells(dt); updateCasings(dt); updateMags(dt); updateListener();
     return;
   }
   const crouch = !!(keys.ShiftLeft || keys.ShiftRight) || tCrouch;   // 桌機 Shift / 手機蹲鈕
@@ -1707,7 +1732,7 @@ function updateFP(dt) {
   w.group.visible = !scoped;
   updateProjectiles(dt); updateTargets(dt); updateEnemies(dt); updateEffects(dt);
   updateFxPool(sparkPool, dt); updateFxPool(dustPool, dt); updateFxPool(trailPool, dt); updateFxPool(bloodPool, dt);
-  updateMemShards(dt); updateTracers(dt); updateShells(dt); updateCasings(dt);   // 記憶光點 + CS 曳光 + 榴彈砲彈道 + 退殼
+  updateMemShards(dt); updateTracers(dt); updateShells(dt); updateCasings(dt); updateMags(dt);   // 記憶光點 + CS 曳光 + 榴彈砲彈道 + 退殼 + 空彈匣
   updateListener();
 }
 showWeapon(0);
