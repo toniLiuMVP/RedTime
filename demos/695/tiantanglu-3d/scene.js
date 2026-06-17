@@ -1339,11 +1339,9 @@ function enemyGrenade(g) {
   projectiles.push({ m, vel, type: "grenade", t: 0, fuse: 1.6 }); sfxThrow();
 }
 const losRay = new THREE.Raycaster();
-function enemySeesPlayer(g, dist) {
-  const from = g.position.clone().setY(1.5); camera.getWorldPosition(tmpO2); const dir = tmpO2.clone().setY(1.5).sub(from); const dd = dir.length() || 1; dir.normalize();
-  losRay.set(from, dir); losRay.far = dd; const hs = losRay.intersectObject(ROOT, true);
-  for (const hit of hs) { const o = findHit(hit.object); if (o && o.userData.kind === "enemy") continue; if (hit.distance < dd - 1.4) return false; }
-  return true;
+function enemySeesPlayer(g, dist) {   // 只用建築 AABB 取樣(losBlocked)取代全場 raycast:CPU 熱點降載,低掩體不完全擋視線(站姿玩家更合理)
+  if (dist > 72) return false;
+  return !losBlocked(g.position.x, g.position.z, camera.position.x, camera.position.z);
 }
 function updateEnemies(dt) {
   if (awaitDisarm) return;   // B1:放下槍窗口不更新敵人(殘敵已清,雙保險)
@@ -1355,7 +1353,8 @@ function updateEnemies(dt) {
     if (u.flinch > 0) { const f = u.flinch / (u.flinchMax || 0.18); g.rotation.x = -0.18 * f; g.rotation.z = (u.flinchSide || 0) * f; u.flinch -= dt; } else { g.rotation.x = 0; g.rotation.z = 0; }   // 方向化中彈:後仰 + 往中彈側扭
     if (u.stagger > 0) u.stagger -= dt;   // 腿傷踉蹌計時
     if (u.coverT > 0) u.coverT -= dt;
-    const sees = dist < 72 ? enemySeesPlayer(g, dist) : false;
+    u.losT = (u.losT || 0) - dt; if (u.losT <= 0) { u.losSees = enemySeesPlayer(g, dist); u.losT = 0.1 + Math.random() * 0.06; }   // 視線每 ~0.12s 重算一次快取(節流,符合反應延遲)
+    const sees = u.losSees;
     if (sees) { if (!u.sawPlayer) { u.sawPlayer = true; u.alertT = 0.35 + Math.random() * 0.35; } } else u.sawPlayer = false;   // 首次發現玩家 → 反應延遲
     if (u.alertT > 0) u.alertT -= dt;
     const smart = !!(curDiff && curDiff.smart);   // 天堂路模式:團隊圍攻
@@ -1442,7 +1441,7 @@ function enterSim() {
   if (MODE === "sim" || blinking) return;
   blinking = true;
   blink(480, 320, 800, () => {
-    MODE = "sim"; wave = 0; score = 0; kills = 0; waveAlive = 0; spawnQueue = 0; inBreak = true; betweenT = 1.2;
+    MODE = "sim"; wave = 0; score = 0; kills = 0; waveAlive = 0; spawnQueue = 0; inBreak = true; betweenT = 3.8;   // 首波延後:進場引言先在安靜畫面讀完再開打(文字不被戰鬥蓋台)
     applyDifficulty();   // 套玩家 HP/彈藥 + 敵人倍率/AI(難度)
     if (scoreEl) scoreEl.textContent = 0; if (killsEl) killsEl.textContent = 0; if (hintEl) hintEl.style.opacity = "0";
     updateWaveHUD(); playMusic(MUSIC_SIM); showNarr(NARR.enter, 3.6); blinking = false;
@@ -1515,17 +1514,31 @@ function gazeLoop(ctx) {
 function endGaze() {
   cancelAnimationFrame(gazeRAF); stopHeartbeat();
   if (gazeMusic) { try { gazeMusic.pause(); } catch (e) { } gazeMusic = null; }
-  const ov = document.getElementById("gaze");
-  if (ov) { ov.style.transition = "opacity 1.6s"; ov.style.opacity = "0"; }
+  const ov = document.getElementById("gaze"), cv = document.getElementById("gaze-cv"), lineEl = document.getElementById("gaze-line");
+  // 光形 + 連接句先淡掉,但 overlay 維持純黑(不露 hub):進入留白
+  if (ov) ov.style.background = "#000";
+  if (cv) { cv.style.transition = "opacity 1.5s"; cv.style.opacity = "0"; }
+  if (lineEl) { lineEl.style.transition = "opacity 2s"; lineEl.style.opacity = "0"; }
+  // 心跳尾音:漸慢漸弱幾拍後停(從節拍器化成餘韻)
+  let _ht = 0; const tail = [1300, 1550, 1900];
+  const fadeBeat = (i) => { if (i >= tail.length) { _ht = 0; return; } try { tone(54 - i * 4, 38, 0.17, 0.16 - i * 0.045, "sine"); } catch (e) { } _ht = setTimeout(() => fadeBeat(i + 1), tail[i]); };
+  fadeBeat(0);
+  // 純黑留白 ~2.4s(無 HUD/無樂,只剩漸消的心跳)→ 睜眼回 hub:「我醒了嗎,還是只是第一層夢醒了」
   setTimeout(() => {
-    if (ov) { ov.classList.remove("on", "open", "closing"); ov.style.opacity = ""; ov.style.transition = ""; }
-    MODE = "hub"; awaitDisarm = false;   // 回 hub(夢繼續,點擊再入)
-    for (const en of enemies) scene.remove(en); enemies.length = 0;
-    wave = 0; waveAlive = 0; spawnQueue = 0; inBreak = true; betweenT = 1.5; gameOver = false; dead = false;
-    playerHP = 100; if (hpEl) hpEl.textContent = 100;
-    camera.position.set(8, EYE, 13); yaw = -0.3; pitch = 0;
-    stopMusic(); updateWaveHUD();
-  }, 1700);
+    if (_ht) { clearTimeout(_ht); _ht = 0; }
+    if (ov) { ov.style.transition = "opacity 1.4s"; ov.style.opacity = "0"; }   // 睜眼
+    setTimeout(() => {
+      if (ov) { ov.classList.remove("on", "open", "closing"); ov.style.opacity = ""; ov.style.transition = ""; ov.style.background = ""; }
+      if (cv) { cv.style.opacity = ""; cv.style.transition = ""; }
+      if (lineEl) { lineEl.style.opacity = ""; lineEl.style.transition = ""; lineEl.classList.remove("show"); }
+      MODE = "hub"; awaitDisarm = false;   // 回 hub(夢繼續,點擊再入)
+      for (const en of enemies) scene.remove(en); enemies.length = 0;
+      wave = 0; waveAlive = 0; spawnQueue = 0; inBreak = true; betweenT = 1.5; gameOver = false; dead = false;
+      playerHP = 100; if (hpEl) hpEl.textContent = 100;
+      camera.position.set(8, EYE, 13); yaw = -0.3; pitch = 0;
+      stopMusic(); updateWaveHUD();
+    }, 1450);
+  }, 2400);
 }
 function hurtPlayer(d) { if (dead || gameOver || awaitDisarm) return; if (armor > 0) { const a = Math.min(armor, d * 0.5); armor -= a; d -= a; updateArmorHUD(); } playerHP = Math.max(0, playerHP - d); if (hpEl) hpEl.textContent = Math.round(playerHP); if (dmgEl) { dmgEl.style.opacity = Math.min(0.85, 0.3 + d / 35).toString(); clearTimeout(dmgEl._t); dmgEl._t = setTimeout(() => (dmgEl.style.opacity = "0"), 130); } sfxHurt(); if (playerHP <= 0) endRun(); }
 function endRun() {
@@ -1695,6 +1708,7 @@ function updateFP(dt) {
   if (skyDomeMat) skyDomeMat.color.setScalar(1 - skyDarkCur * 0.62);
   if (sunDiscMat) sunDiscMat.color.setScalar(1 - skyDarkCur * 0.5);
   sun.intensity = 3.3 * (1 - skyDarkCur * 0.55); ambient.intensity = 0.32 * (1 - skyDarkCur * 0.45); hemi.intensity = 0.9 * (1 - skyDarkCur * 0.4);
+  if (scene.fog) { const k = skyDarkCur; scene.fog.color.setRGB(0.917 - k * 0.752, 0.796 - k * 0.623, 0.659 - k * 0.432); scene.fog.near = 95 - k * 40 - moodSim * 14; scene.fog.far = 280 - k * 100 - moodSim * 34; }   // 夜霧:天越暗霧越暗越近(暖桃→暗藍灰),不再永遠亮奶油色
   if (cowTail) cowTail.rotation.z = 0.4 + Math.sin(realT * 2.1) * 0.26;   // 顧牛 idle:尾巴搖
   if (cowHead) { cowHead.rotation.z = Math.sin(realT * 0.7) * 0.1; cowHead.position.y = 0.52 - Math.max(0, Math.sin(realT * 0.7)) * 0.08; }   // 低頭吃草微動(頭 base y=0.52)
   if (realT - lastShot > 0.12) { sprayPitch += (0 - sprayPitch) * Math.min(1, dt * 6); sprayYaw += (0 - sprayYaw) * Math.min(1, dt * 6); }
