@@ -141,14 +141,14 @@ function add(geo, m, x, y, z, parent) { const b = new THREE.Mesh(geo, m); b.posi
   const g = add(new THREE.BoxGeometry(360, 1, 360), matT(0x8a7c5e, T.ground, 40, 40, { roughness: 1 }), 0, -0.5, -30);
   g.castShadow = false;
   // 操場混凝土
-  add(new THREE.BoxGeometry(56, 0.12, 46), matT(0xd0c7ae, T.concrete, 10, 8, { roughness: 0.95 }), 0, 0.0, -6).castShadow = false;   // 操場混凝土壓到近齊地(原 0.4 高→敵人站上去陷進去穿地;flush top 0.06 站得上)
+  add(new THREE.BoxGeometry(56, 0.14, 46), matT(0xd0c7ae, T.concrete, 10, 8, { roughness: 0.95 }), 0, 0.0, -6).castShadow = false;   // 操場混凝土:top 0.07(與柏油道 0.03/地面 0/白線 0.1 各自錯開,避免共面 z-fighting 雜訊;純視覺不影響站位)
   // 操場白漆邊線 + 中線
   const line = mat(0xe8e2cf, { roughness: 0.85 });
   const ln = (w, d, x, z) => { const m = add(new THREE.BoxGeometry(w, 0.05, d), line, x, 0.1, z); m.castShadow = false; };   // 白漆線壓低貼齊新混凝土面
   ln(46, 0.4, 0, -22); ln(46, 0.4, 0, 10); ln(0.4, 32, -23, -6); ln(0.4, 32, 23, -6); ln(46, 0.3, 0, -6);
   // 主幹道(柏油)
-  add(new THREE.BoxGeometry(10, 0.12, 120), matT(0x57534d, T.asphalt, 2, 22, { roughness: 0.85 }), 34, 0.0, -20).castShadow = false;   // 幹道壓齊地
-  add(new THREE.BoxGeometry(80, 0.12, 9), matT(0x57534d, T.asphalt, 16, 2, { roughness: 0.85 }), 0, 0.0, 18).castShadow = false;   // 橫向幹道壓齊地
+  add(new THREE.BoxGeometry(10, 0.12, 120), matT(0x57534d, T.asphalt, 2, 22, { roughness: 0.85 }), 34, -0.03, -20).castShadow = false;   // 幹道 top 0.03(低於操場混凝土 0.07,重疊處被操場蓋住不 z-fight)
+  add(new THREE.BoxGeometry(80, 0.12, 9), matT(0x57534d, T.asphalt, 16, 2, { roughness: 0.85 }), 0, -0.03, 18).castShadow = false;   // 橫向幹道 top 0.03
 })();
 
 /* ───────── 地面大尺度變化(破除平坦感:走出來的夯實泥路 / 礫石沙斑 / 晨露水漬) ───────── */
@@ -845,11 +845,12 @@ if (isTouch) {
 
 /* ── 設定選單 + 可調準星 + 結算重啟 ── */
 const settingsEl = document.getElementById("settings"), gearEl = document.getElementById("gear");
-function openSettings() { if (settingsEl) settingsEl.classList.add("on"); if (document.pointerLockElement === canvas && document.exitPointerLock) document.exitPointerLock(); }
-function closeSettings() { if (settingsEl) settingsEl.classList.remove("on"); }
+let lockBeforeSettings = false;
+function openSettings() { if (settingsEl) settingsEl.classList.add("on"); lockBeforeSettings = document.pointerLockElement === canvas; if (lockBeforeSettings && document.exitPointerLock) document.exitPointerLock(); }
+function closeSettings() { if (settingsEl) settingsEl.classList.remove("on"); if (lockBeforeSettings && !dead && !gameOver && !isTouch && document.pointerLockElement !== canvas && canvas.requestPointerLock) canvas.requestPointerLock(); }   // 關閉時若原本在控視角則重鎖
 if (gearEl) gearEl.addEventListener("click", openSettings);
 const setCloseEl = document.getElementById("set-close"); if (setCloseEl) setCloseEl.addEventListener("click", closeSettings);
-addEventListener("keydown", (e) => { if (e.code === "Escape") { if (settingsEl && settingsEl.classList.contains("on")) closeSettings(); else openSettings(); } });
+addEventListener("keydown", (e) => { if (e.code === "Tab") { e.preventDefault(); if (settingsEl && settingsEl.classList.contains("on")) closeSettings(); else openSettings(); } });   // 系統設定改 TAB(ESC 留給瀏覽器原生跳出視角控制,避免兩者重複)
 function bindSetting(id, key, isColor, fn) { const el = document.getElementById(id); if (!el) return; el.value = settings[key]; el.addEventListener("input", () => { settings[key] = isColor ? el.value : parseFloat(el.value); saveSettings(); if (fn) fn(); }); }
 bindSetting("set-sens", "sens", false);
 bindSetting("set-vol", "vol", false, () => { if (masterGain) masterGain.gain.value = settings.vol; });
@@ -1077,8 +1078,8 @@ function explode(pos, depth, big) {
   for (let i = 0; i < (big ? 14 : 8); i++) emitFx(sparkPool, pos.clone().add(new THREE.Vector3((Math.random() - 0.5) * 2.5, Math.random() * 1.6, (Math.random() - 0.5) * 2.5)), 0.3 + Math.random() * 0.3, 0.3, 1.2, true);
   const R = big ? 7 : 5;
   for (const g of targets) if (!g.userData.down && g.position.distanceTo(pos) < R) targetHit(g);
-  for (const g of enemies) if (!g.userData.dead && g.position.distanceTo(pos) < R && !losBlocked(pos.x, pos.z, g.position.x, g.position.z)) hitEnemy(g, 200);   // B2:隔牆不吃爆炸傷害
-  if (!dead && !gameOver) { const pd = camera.position.distanceTo(pos); if (pd < R && !losBlocked(pos.x, pos.z, camera.position.x, camera.position.z)) hurtPlayer(Math.round((big ? 60 : 38) * (1 - pd / R))); }   // B2:躲掩體後不被隔牆雷炸死
+  for (const g of enemies) if (!g.userData.dead && g.position.distanceTo(pos) < R && !coverBlocked(pos.x, pos.z, g.position.x, g.position.z)) hitEnemy(g, 200);   // 隔掩體(牆/木箱/載具)不吃爆炸傷害
+  if (!dead && !gameOver) { const pd = camera.position.distanceTo(pos); if (pd < R && !coverBlocked(pos.x, pos.z, camera.position.x, camera.position.z)) hurtPlayer(Math.round((big ? 60 : 38) * (1 - pd / R))); }   // 躲掩體(牆/木箱/坦克)後不被隔物雷炸死
   if (depth < 3) for (const m of explosives.slice()) { if (m.userData.boom && !m.userData.dead && m.position.distanceTo(pos) < (big ? 6.5 : 4.8)) { const pp = m.position.clone(); killBarrel(m); setTimeout(() => explode(pp, depth + 1, false), 90); } }
 }
 /* ── 天降砲擊(計算手呼叫火力:瞄地面標座標 → 呼嘯延遲 → 6 發叢集砲彈天降;28s 冷卻) ── */
@@ -1322,7 +1323,7 @@ function spawnEnemy(x, z, hp) {
   const hand = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), skin); hand.position.set(0.1, 1.12, -0.08); ms.push(hand);   // 握把手:膚色球,槍是握著不是浮空
   const upper = new THREE.Group(); ms.forEach((m) => { m.castShadow = true; upper.add(m); }); g.add(upper);   // 上半身容器:走路起伏/側擺驅動在這(不動 g,g 被 yaw/flinch/death 佔用)
   g.scale.setScalar(type.scale);
-  g.userData.kind = "enemy"; g.userData.hp = Math.round((hp || 100) * type.hpMul); g.userData.speedMul = type.speedMul; g.userData.etype = type.key; g.userData.dead = false; g.userData.deadT = 0; g.userData.fireT = 1 + Math.random() * 2; g.userData.flinch = 0; g.userData.strafe = Math.random() < 0.5 ? 1 : -1; g.userData.strafeT = 1 + Math.random() * 2; g.userData.state = "chase"; g.userData.grenadeT = 6 + Math.random() * 8; g.userData.spawn = new THREE.Vector3(x, 0, z); g.userData.stepT = Math.random() * 0.4; g.userData.alertT = 0; g.userData.sawPlayer = false; g.userData.body = body; g.userData.skin = skin;   // 存克隆材質供死亡回收(防記憶體洩漏)
+  g.userData.kind = "enemy"; g.userData.hp = Math.round((hp || 100) * type.hpMul); g.userData.speedMul = type.speedMul; g.userData.etype = type.key; g.userData.dead = false; g.userData.deadT = 0; g.userData.fireT = 1 + Math.random() * 2; g.userData.flinch = 0; g.userData.strafe = Math.random() < 0.5 ? 1 : -1; g.userData.strafeT = 1 + Math.random() * 2; g.userData.state = "chase"; g.userData.grenadeT = 6 + Math.random() * 8; g.userData.spawn = new THREE.Vector3(x, 0, z); g.userData.stepT = Math.random() * 0.4; g.userData.alertT = 0; g.userData.sawPlayer = false; g.userData.body = body; g.userData.skin = skin; g.userData.lastSeen = new THREE.Vector3(0, 0, -6); g.userData.everSeen = false;   // 存克隆材質供死亡回收(防記憶體洩漏);lastSeen=最後已知玩家位置(預設操場中心當推進目標,看不到玩家時朝這走,不偷看即時座標)
   g.userData.legs = legs; g.userData.gun = gunPivot; g.userData.upper = upper; g.userData.escale = type.scale; g.userData.walkPh = Math.random() * 6.28; g.userData.gunKick = 0; g.userData.bearing = Math.random() * 6.2832;   // 腿擺 / 槍托後座 / 上半身起伏 / 死亡縮放 / 圍攻方位
   ROOT.add(g); enemies.push(g);
 }
@@ -1388,9 +1389,9 @@ function enemyGrenade(g) {
   projectiles.push({ m, vel, type: "grenade", t: 0, fuse: 1.6 }); sfxThrow();
 }
 const losRay = new THREE.Raycaster();
-function enemySeesPlayer(g, dist) {   // 只用建築 AABB 取樣(losBlocked)取代全場 raycast:CPU 熱點降載,低掩體不完全擋視線(站姿玩家更合理)
+function enemySeesPlayer(g, dist) {   // 真實掩體遮蔽:建築+木箱油桶+載具都擋(coverBlocked);躲坦克/掩體後敵人看不到你=不會開火
   if (dist > 72) return false;
-  return !losBlocked(g.position.x, g.position.z, camera.position.x, camera.position.z);
+  return !coverBlocked(g.position.x, g.position.z, camera.position.x, camera.position.z);
 }
 function updateEnemies(dt) {
   if (awaitDisarm) return;   // B1:放下槍窗口不更新敵人(殘敵已清,雙保險)
@@ -1407,23 +1408,23 @@ function updateEnemies(dt) {
       continue;
     }
     const dx = camera.position.x - g.position.x, dz = camera.position.z - g.position.z, dist = Math.hypot(dx, dz) || 1;
-    { const tgtY = Math.atan2(dx, dz); let dY = tgtY - g.rotation.y; while (dY > Math.PI) dY -= 6.2832; while (dY < -Math.PI) dY += 6.2832; g.rotation.y += dY * Math.min(1, dt * (u.alertT > 0 ? 3.5 : 14)); }   // 反應延遲:剛發現玩家慢慢轉(非瞬間鎖定)
+    { const ls = u.lastSeen || camera.position; const fX = u.losSees ? camera.position.x : ls.x, fZ = u.losSees ? camera.position.z : ls.z; const tgtY = Math.atan2(fX - g.position.x, fZ - g.position.z); let dY = tgtY - g.rotation.y; while (dY > Math.PI) dY -= 6.2832; while (dY < -Math.PI) dY += 6.2832; g.rotation.y += dY * Math.min(1, dt * (u.alertT > 0 ? 3.5 : 14)); }   // 看到玩家才面向玩家(反應延遲慢轉);看不到則面向最後已知位置,不隔牆鎖頭追視
     if (u.flinch > 0) { const f = u.flinch / (u.flinchMax || 0.18); g.rotation.x = -0.18 * f; g.rotation.z = (u.flinchSide || 0) * f; u.flinch -= dt; } else { g.rotation.x = 0; g.rotation.z = 0; }   // 方向化中彈:後仰 + 往中彈側扭
     if (u.stagger > 0) u.stagger -= dt;   // 腿傷踉蹌計時
     if (u.coverT > 0) u.coverT -= dt;
     u.losT = (u.losT || 0) - dt; if (u.losT <= 0) { u.losSees = enemySeesPlayer(g, dist); u.losT = (0.1 + Math.random() * 0.06) * qLosMul; }   // 視線每 ~0.12s 重算快取(節流);低畫質 losMul 再拉長救 CPU
     const sees = u.losSees;
-    if (sees) { if (!u.sawPlayer) { u.sawPlayer = true; u.alertT = 0.35 + Math.random() * 0.35; } } else u.sawPlayer = false;   // 首次發現玩家 → 反應延遲
+    if (sees) { if (!u.sawPlayer) { u.sawPlayer = true; u.alertT = 0.35 + Math.random() * 0.35; } u.everSeen = true; u.lastSeen.set(camera.position.x, 0, camera.position.z); } else u.sawPlayer = false;   // 只有真看到才更新最後已知位置;看不到時朝記憶位置搜索,不偷看玩家即時座標
     if (u.alertT > 0) u.alertT -= dt;
     const smart = !!(curDiff && curDiff.smart);   // 天堂路模式:團隊圍攻
-    let aimX = camera.position.x, aimZ = camera.position.z;
-    if (smart) { aimX += Math.cos(u.bearing || 0) * 7; aimZ += Math.sin(u.bearing || 0) * 7; }   // 圍攻:各佔一個環繞方位,推進目標=玩家旁的側翼點→整隊自然散成弧(不再全疊同一條進線)
+    let aimX = sees ? camera.position.x : u.lastSeen.x, aimZ = sees ? camera.position.z : u.lastSeen.z;   // 看到=瞄玩家,看不到=朝最後已知位置推進搜索
+    if (smart && sees) { aimX += Math.cos(u.bearing || 0) * 7; aimZ += Math.sin(u.bearing || 0) * 7; }   // 圍攻:各佔一個環繞方位(只在看到玩家時)
     const adx = aimX - g.position.x, adz = aimZ - g.position.z, adist = Math.hypot(adx, adz) || 1;
-    const fx = adx / adist, fz = adz / adist, rx = -fz, rz = fx; let mvx = 0, mvz = 0, sp = 2.0;   // 非 smart 時 aim=玩家,fx/fz 與原本完全相同
+    const fx = adx / adist, fz = adz / adist, rx = -fz, rz = fx; let mvx = 0, mvz = 0, sp = 2.0;
     if ((u.coverT > 0 || u.hp < 40) && sees && !smart && u.etype === "rifleman") { // 只步兵找掩體;突擊兵裸衝/重裝是活掩體,都不躲(天堂路模式全主動圍攻)
       let best = null, bd = 1e9; for (const c of COVER_PTS) { const d = c.distanceTo(g.position); if (d < bd) { bd = d; best = c; } }
       if (best && bd > 1.8) { const cdx = best.x - g.position.x, cdz = best.z - g.position.z, cl = Math.hypot(cdx, cdz) || 1; mvx = cdx / cl; mvz = cdz / cl; sp = 2.7; }
-    } else if (!sees && dist > 6) { mvx = fx; mvz = fz; sp = 2.4; } // 看不到 → 推進找視線
+    } else if (!sees) { if (adist > 2.2) { mvx = fx; mvz = fz; sp = 2.4; } }   // 看不到玩家 → 走向最後已知位置搜索(到了還看不到就停步觀望,不再 GPS 直奔玩家)
     else if (dist > (smart ? 12 : u.etype === "scout" ? 11 : 17)) { mvx = fx; mvz = fz; } else if (dist < 9) { mvx = -fx; mvz = -fz; }   // 突擊兵壓更近
     if (!smart && Math.random() < 0.4 * dt) u.strafe *= -1;   // 低機率隨機翻轉,破除整群同步左右平移
     if (sees && dist < 42) { const sw = smart ? 1.3 : u.etype === "heavy" ? 0 : u.etype === "scout" ? 1.15 : 0.8; mvx += rx * u.strafe * sw; mvz += rz * u.strafe * sw; }   // 重裝直線壓上不平移,突擊兵繞側更多
@@ -1732,6 +1733,15 @@ const COLLIDERS = [
 ];
 const PLAYER_R = 0.55, BOUND_R = 76;   // 圓形邊界半徑(圍籬樁在 R=78,玩家貼內側)
 function losBlocked(ax, az, bx, bz) { for (let s = 1; s <= 8; s++) { const t = s / 9, x = ax + (bx - ax) * t, z = az + (bz - az) * t; for (const c of COLLIDERS) if (x > c[0] && x < c[1] && z > c[2] && z < c[3]) return true; } return false; }   // 線段 vs 建築 AABB 取樣:爆炸/視線遮蔽(只算建築,低掩體不擋手榴彈拋物)
+function coverBlocked(ax, az, bx, bz) {   // 子彈/視線遮蔽真實掩體:建築 + 木箱油桶(OBSTACLES) + 載具(玩家正在駕駛的那台不算自己);敵人 LOS/開火/爆炸都用它,躲坦克木箱後不被穿透
+  for (let s = 1; s <= 8; s++) {
+    const t = s / 9, x = ax + (bx - ax) * t, z = az + (bz - az) * t;
+    for (const c of COLLIDERS) if (x > c[0] && x < c[1] && z > c[2] && z < c[3]) return true;
+    for (const o of OBSTACLES) if (x > o[0] && x < o[1] && z > o[2] && z < o[3]) return true;
+    for (const v of VEHICLES) { if (v === vehicle) continue; const r = v.type === "tank" ? 2.6 : v.type === "howitzer" ? 2.0 : 2.2, vx = v.group.position.x, vz = v.group.position.z; if (x > vx - r && x < vx + r && z > vz - r && z < vz + r) return true; }
+  }
+  return false;
+}
 function blockedAt(x, z, r) { for (const c of COLLIDERS) if (x > c[0] - r && x < c[1] + r && z > c[2] - r && z < c[3] + r) return true; for (const c of OBSTACLES) if (x > c[0] - r && x < c[1] + r && z > c[2] - r && z < c[3] + r) return true; return false; }   // 點+半徑是否壓到建築/木箱(敵人繞行探路用)
 function resolveCollisionFor(p, r) {   // 圓 vs AABB 推出:建築+木箱都擋,玩家(PLAYER_R)與敵人(0.5)共用
   for (const list of [COLLIDERS, OBSTACLES]) for (const c of list) {
