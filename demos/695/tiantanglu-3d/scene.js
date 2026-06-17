@@ -141,14 +141,14 @@ function add(geo, m, x, y, z, parent) { const b = new THREE.Mesh(geo, m); b.posi
   const g = add(new THREE.BoxGeometry(360, 1, 360), matT(0x8a7c5e, T.ground, 40, 40, { roughness: 1 }), 0, -0.5, -30);
   g.castShadow = false;
   // 操場混凝土
-  add(new THREE.BoxGeometry(56, 0.4, 46), matT(0xd0c7ae, T.concrete, 10, 8, { roughness: 0.95 }), 0, 0.2, -6).castShadow = false;
+  add(new THREE.BoxGeometry(56, 0.12, 46), matT(0xd0c7ae, T.concrete, 10, 8, { roughness: 0.95 }), 0, 0.0, -6).castShadow = false;   // 操場混凝土壓到近齊地(原 0.4 高→敵人站上去陷進去穿地;flush top 0.06 站得上)
   // 操場白漆邊線 + 中線
   const line = mat(0xe8e2cf, { roughness: 0.85 });
-  const ln = (w, d, x, z) => { const m = add(new THREE.BoxGeometry(w, 0.05, d), line, x, 0.42, z); m.castShadow = false; };
+  const ln = (w, d, x, z) => { const m = add(new THREE.BoxGeometry(w, 0.05, d), line, x, 0.1, z); m.castShadow = false; };   // 白漆線壓低貼齊新混凝土面
   ln(46, 0.4, 0, -22); ln(46, 0.4, 0, 10); ln(0.4, 32, -23, -6); ln(0.4, 32, 23, -6); ln(46, 0.3, 0, -6);
   // 主幹道(柏油)
-  add(new THREE.BoxGeometry(10, 0.42, 120), matT(0x57534d, T.asphalt, 2, 22, { roughness: 0.85 }), 34, 0.22, -20).castShadow = false;
-  add(new THREE.BoxGeometry(80, 0.42, 9), matT(0x57534d, T.asphalt, 16, 2, { roughness: 0.85 }), 0, 0.22, 18).castShadow = false;
+  add(new THREE.BoxGeometry(10, 0.12, 120), matT(0x57534d, T.asphalt, 2, 22, { roughness: 0.85 }), 34, 0.0, -20).castShadow = false;   // 幹道壓齊地
+  add(new THREE.BoxGeometry(80, 0.12, 9), matT(0x57534d, T.asphalt, 16, 2, { roughness: 0.85 }), 0, 0.0, 18).castShadow = false;   // 橫向幹道壓齊地
 })();
 
 /* ───────── 地面大尺度變化(破除平坦感:走出來的夯實泥路 / 礫石沙斑 / 晨露水漬) ───────── */
@@ -1727,6 +1727,19 @@ function resolveCollisionFor(p, r) {   // 圓 vs AABB 推出:建築+木箱都擋
 }
 function clampBound(p) { const ex = p.x, ez = p.z + 20, er = Math.hypot(ex, ez); if (er > BOUND_R) { p.x = ex / er * BOUND_R; p.z = ez / er * BOUND_R - 20; } }   // 圓形邊界(中心 0,-20 貼合圍籬)
 function resolveCollision() { resolveCollisionFor(camera.position, PLAYER_R); }
+function resolveEnemyPush() {   // 玩家不能穿過敵人:被推出每隻敵人的身體半徑
+  if (MODE !== "sim") return;
+  for (const g of enemies) { const u = g.userData; if (u.dead) continue;
+    const er = 0.42 * (u.escale || 1) + PLAYER_R, dx = camera.position.x - g.position.x, dz = camera.position.z - g.position.z, d2 = dx * dx + dz * dz;
+    if (d2 < er * er && d2 > 1e-4) { const d = Math.sqrt(d2), k = (er - d) / d; camera.position.x += dx * k; camera.position.z += dz * k; }
+  }
+}
+function resolveVehiclePush() {   // 玩家不能穿過停著的載具/大炮(駕駛中人在車裡不檢);粗略圓推出,半徑 < nearVehicle 範圍故仍可按 E 上車/操砲
+  if (vehicle) return;
+  for (const v of VEHICLES) { const rr = (v.type === "tank" ? 2.4 : v.type === "howitzer" ? 1.9 : 2.0) + PLAYER_R, dx = camera.position.x - v.group.position.x, dz = camera.position.z - v.group.position.z, d2 = dx * dx + dz * dz;
+    if (d2 < rr * rr && d2 > 1e-4) { const d = Math.sqrt(d2), k = (rr - d) / d; camera.position.x += dx * k; camera.position.z += dz * k; }
+  }
+}
 const scopeEl = document.getElementById("scope"), crossEl = document.getElementById("cross");
 let bob = 0, recoilKick = 0, recoilVel = 0, vy = 0, jumpY = 0, curEye = EYE, sprayResetT = 0, lastFootstep = 0, wasGrounded = true, adsBlend = 0;
 let curSpeed = 0, mvLastX = 0, mvLastZ = 0, mvSprint = false;   // 移動加速度曲線(慣性,非瞬間滑冰) + 自動衝刺狀態
@@ -1769,6 +1782,7 @@ function updateFP(dt) {
     camera.position.addScaledVector(fwd, useZ * curSpeed * dt);
     camera.position.addScaledVector(right, useX * curSpeed * dt);
     resolveCollision();   // 碰撞:被建築/木箱 AABB 推出(不能走進空殼房屋或穿木箱)
+    resolveEnemyPush(); resolveVehiclePush();   // 不能穿過敵人 / 停著的載具+大炮
     clampBound(camera.position);   // 圓形邊界貼合圍籬,不再撞方形空氣牆
   } else mvSprint = false;
   // 跳躍重力
