@@ -355,56 +355,59 @@ for (const [tx, tz, ts] of [[27, 21, 1.5], [-26, 18, 1.4], [48, -10, 1.6], [-48,
 let cowTail = null, cowHead = null;
 (function buildCow() {
   const cx = -14, cz = 18;
-  const hide = mat(0xe8e3d6, { roughness: 0.92, envMapIntensity: 0.5 }), patch = mat(0x201f1b, { roughness: 0.95, envMapIntensity: 0.4 }), hoof = mat(0x17130f, { roughness: 0.96, envMapIntensity: 0.4 }), muz = mat(0xc7a097, { roughness: 0.84, envMapIntensity: 0.45 }), hornM = mat(0xd6c9a6, { roughness: 0.55, metalness: 0.04 });
+  const hide = mat(0xe9e1d2, { roughness: 0.95, envMapIntensity: 0.32 }), patch = mat(0x2c2823, { roughness: 0.96, envMapIntensity: 0.28 }), hoof = mat(0x191510, { roughness: 0.96 }), muz = mat(0xcea39a, { roughness: 0.82, envMapIntensity: 0.4 }), hornM = mat(0xcabf9e, { roughness: 0.6, metalness: 0.03 });
   const root = new THREE.Group(); root.position.set(cx, 0, cz); root.rotation.y = 0.55; ROOT.add(root);
-  const part = (geo, m, x, y, z, p) => { const e = new THREE.Mesh(geo, m); e.position.set(x, y, z); e.castShadow = e.receiveShadow = true; (p || root).add(e); return e; };
-  const body = part(new THREE.BoxGeometry(1.7, 0.92, 0.94), hide, 0, 1.06, 0);                       // 桶身(橫,略長)
-  part(new THREE.BoxGeometry(1.46, 0.34, 0.86), hide, 0, -0.5, 0, body);                              // 下垂肚腩
-  part(new THREE.BoxGeometry(0.88, 0.98, 0.98), hide, 0.78, 0.05, 0, body);                           // 肩胸(前段高寬)
-  part(new THREE.BoxGeometry(0.72, 0.64, 0.96), patch, 0.22, 0.2, 0, body);                           // 大黑斑(肩背)
-  part(new THREE.BoxGeometry(0.52, 0.6, 0.96), patch, -0.56, 0.02, 0, body);                          // 大黑斑(後)
-  part(new THREE.BoxGeometry(0.3, 0.5, 0.98), patch, -0.08, -0.12, 0, body);                          // 黑斑(腹側)
-  const neck = part(new THREE.BoxGeometry(0.6, 0.66, 0.64), hide, 0.98, 1.32, 0); neck.rotation.z = 0.3;   // 頸(往前上=抬頭)
-  cowHead = part(new THREE.BoxGeometry(0.62, 0.58, 0.52), hide, 1.42, 1.52, 0);                        // 頭(抬起前望,臉看得見)
-  part(new THREE.BoxGeometry(0.2, 0.42, 0.54), patch, 0.04, 0.1, 0, cowHead);                          // 額斑(白臉一道黑)
-  part(new THREE.BoxGeometry(0.42, 0.36, 0.48), muz, 0.38, -0.12, 0, cowHead);                         // 大口鼻(牛的招牌)
-  part(new THREE.BoxGeometry(0.44, 0.13, 0.5), patch, 0.42, -0.24, 0, cowHead);                        // 鼻孔上唇暗
+  const SPH = new THREE.SphereGeometry(0.5, 18, 14);   // 共用球,縮放成橢球=圓潤有機曲面(取代方塊機器牛)
+  const el = (m, x, y, z, sx, sy, sz, p) => { const e = new THREE.Mesh(SPH, m); e.position.set(x, y, z); e.scale.set(sx, sy, sz); e.castShadow = e.receiveShadow = true; (p || root).add(e); return e; };
+  const cyl = (m, x, y, z, rt, rb, h, p) => { const e = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, 10), m); e.position.set(x, y, z); e.castShadow = e.receiveShadow = true; (p || root).add(e); return e; };
+  el(hide, 0, 1.12, 0, 1.85, 0.98, 1.0);            // 桶身(橢球)
+  el(hide, -0.05, 0.86, 0, 1.6, 0.6, 0.92);         // 下垂肚腩
+  el(hide, 0.78, 1.16, 0, 1.05, 1.05, 1.04);        // 肩胸豐厚
+  el(patch, 0.34, 1.42, 0.28, 0.85, 0.6, 0.5);      // 黑白斑(扁橢球貼身,邊緣柔)
+  el(patch, -0.5, 1.2, -0.32, 0.78, 0.7, 0.5);
+  el(patch, -0.1, 0.98, 0.46, 0.55, 0.55, 0.4);
+  const neck = cyl(hide, 0.95, 1.46, 0, 0.27, 0.4, 0.78); neck.rotation.z = 0.55;   // 頸(錐台斜上=抬頭)
+  cowHead = new THREE.Group(); cowHead.position.set(1.46, 1.62, 0); root.add(cowHead);   // 頭=Group(乾淨子空間;idle 繞此旋轉/微抬,base y=1.62)
+  el(hide, 0, 0, 0, 0.62, 0.6, 0.54, cowHead);          // 頭橢球
+  el(patch, 0.06, 0.16, 0, 0.22, 0.5, 0.4, cowHead);    // 額斑(白臉一道黑)
+  el(muz, 0.36, -0.14, 0, 0.46, 0.4, 0.5, cowHead);     // 圓口鼻(牛招牌)
+  el(patch, 0.44, -0.2, 0.11, 0.09, 0.08, 0.09, cowHead); el(patch, 0.44, -0.2, -0.11, 0.09, 0.08, 0.09, cowHead);   // 鼻孔
   for (const s of [-1, 1]) {
-    const ear = part(new THREE.BoxGeometry(0.34, 0.1, 0.22), hide, -0.04, 0.02, 0.34 * s, cowHead); ear.rotation.x = 0.4 * s; ear.rotation.z = 0.15;   // 大垂耳
-    const horn = part(new THREE.CylinderGeometry(0.028, 0.075, 0.24, 7), hornM, 0.02, 0.34, 0.15 * s, cowHead); horn.rotation.z = -0.5 * s; horn.rotation.x = -0.25;   // 短角上彎
-    part(new THREE.SphereGeometry(0.055, 8, 6), patch, 0.24, 0.04, 0.21 * s, cowHead);                 // 眼
+    const ear = el(hide, -0.08, 0.12, 0.32 * s, 0.34, 0.13, 0.24, cowHead); ear.rotation.x = 0.5 * s; ear.rotation.z = 0.12;   // 大垂耳(扁橢球)
+    const horn = cyl(hornM, 0.06, 0.32, 0.14 * s, 0.025, 0.07, 0.26, cowHead); horn.rotation.z = -0.5 * s; horn.rotation.x = -0.22;   // 短角上彎
+    el(patch, 0.26, 0.04, 0.2 * s, 0.09, 0.11, 0.08, cowHead);   // 眼(圓)
   }
-  for (const [lx, lz] of [[0.64, 0.34], [0.64, -0.34], [-0.66, 0.34], [-0.66, -0.34]]) {
-    part(new THREE.BoxGeometry(0.21, 0.74, 0.21), hide, lx, 0.4, lz);                                  // 腿
-    part(new THREE.BoxGeometry(0.23, 0.14, 0.23), hoof, lx, 0.07, lz);                                 // 蹄
+  for (const [lx, lz] of [[0.62, 0.34], [0.62, -0.34], [-0.66, 0.34], [-0.66, -0.34]]) {
+    cyl(hide, lx, 0.42, lz, 0.11, 0.15, 0.76); cyl(hoof, lx, 0.08, lz, 0.16, 0.13, 0.16);   // 腿(圓柱)+ 蹄
   }
-  cowTail = part(new THREE.BoxGeometry(0.09, 0.66, 0.09), hide, -0.92, 0.96, 0); cowTail.rotation.z = 0.5;
-  part(new THREE.BoxGeometry(0.15, 0.17, 0.15), patch, 0, -0.38, 0, cowTail);                          // 尾穗
+  cowTail = cyl(hide, -0.95, 0.98, 0, 0.05, 0.07, 0.66); cowTail.rotation.z = 0.5;
+  el(patch, 0, -0.4, 0, 0.32, 0.4, 0.32, cowTail);   // 尾穗
+  OBSTACLES.push([cx - 1.5, cx + 1.1, cz - 1.0, cz + 1.0]);   // 牛碰撞(item 12:不可穿越)
 })();
 
 /* ───────── 夢中違和物件:反穿的學校外套(#3 名字藏起來;軍營裡一件學校外套=夢的錯位) ───────── */
 (function buildJacket() {
   const jx = 12, jz = 16;
-  const benchW = mat(0x5f4730, { roughness: 0.9 }), benchM = mat(0x4a3826, { roughness: 0.92 });
-  add(new THREE.BoxGeometry(1.5, 0.09, 0.46), benchW, jx, 0.45, jz);                                  // 椅板
-  add(new THREE.BoxGeometry(1.5, 0.4, 0.06), benchM, jx, 0.74, jz - 0.2);                             // 椅背(讓外套披掛)
-  for (const lx of [-0.64, 0.64]) for (const lz of [-0.16, 0.16]) add(new THREE.BoxGeometry(0.08, 0.45, 0.08), benchM, jx + lx, 0.22, jz + lz);  // 4 腿
-  const jOut = mat(0x232c46, { roughness: 0.95, envMapIntensity: 0.4 });   // 深藍校服(正面)
-  const jLin = mat(0x9097a3, { roughness: 0.92, envMapIntensity: 0.4 });    // 內裡(反穿朝外=名字藏住)
-  const root = new THREE.Group(); root.position.set(jx, 0, jz); root.rotation.y = 0.12; ROOT.add(root);
+  const postM = mat(0x6b5236, { roughness: 0.9 });
+  const root = new THREE.Group(); root.position.set(jx, 0, jz); root.rotation.y = -0.4; ROOT.add(root);   // 微轉,正面(敞開的前襟)朝操場那側的玩家
   const part = (geo, m, x, y, z, rx, rz) => { const e = new THREE.Mesh(geo, m); e.position.set(x, y, z); if (rx) e.rotation.x = rx; if (rz) e.rotation.z = rz; e.castShadow = true; root.add(e); return e; };
-  // 反穿校服外套披在椅背(內裡淺灰朝外=名字藏住;領/袖口翻出深藍)
-  part(new THREE.BoxGeometry(0.92, 0.18, 0.5), jLin, 0, 0.86, -0.18, 0.06, 0);                         // 肩線(搭椅背頂,略寬)
-  part(new THREE.BoxGeometry(0.84, 0.56, 0.1), jLin, 0, 0.52, -0.04, -0.06, 0);                        // 前襟身(垂椅背前,玩家側)
-  part(new THREE.BoxGeometry(0.84, 0.42, 0.1), jLin, 0, 0.58, -0.34, 0.08, 0);                         // 後背身(垂椅背後)
-  part(new THREE.BoxGeometry(0.62, 0.5, 0.42), jLin, 0, 0.28, 0.05, 0, 0);                             // 下襬堆在椅面(反面)
-  part(new THREE.BoxGeometry(0.52, 0.16, 0.2), jOut, 0, 0.96, -0.1, 0.32, 0);                          // 翻出的領(深藍)
-  part(new THREE.BoxGeometry(0.46, 0.05, 0.04), jOut, 0, 0.52, 0.02, -0.06, 0);                        // 前襟開線(深藍細條)
+  // 曬衣架/單槓:兩柱 + 一橫桿,外套掛在橫桿上(整件攤開=最像外套的剪影)
+  for (const s of [-1, 1]) part(new THREE.CylinderGeometry(0.06, 0.075, 2.3, 8), postM, s * 1.2, 1.15, 0, 0, 0);                   // 兩立柱
+  part(new THREE.CylinderGeometry(0.045, 0.045, 2.7, 8), postM, 0, 2.26, 0, 0, Math.PI / 2);                                       // 橫桿(單槓)
+  for (const s of [-1, 1]) part(new THREE.BoxGeometry(0.16, 0.1, 0.5), postM, s * 1.2, 2.18, 0);                                   // 柱頂托座
+  const jOut = mat(0x232c46, { roughness: 0.95, envMapIntensity: 0.4 });   // 深藍校服(正面/領/袖口)
+  const jLin = mat(0x9097a3, { roughness: 0.92, envMapIntensity: 0.4 });    // 內裡淺灰(反穿朝外=名字藏住)
+  // 反穿外套掛橫桿:寬肩搭桿、身整片垂下、兩袖自然下垂、領/袖口翻出深藍
+  part(new THREE.BoxGeometry(1.42, 0.18, 0.36), jLin, 0, 2.16, 0, 0, 0);                 // 肩線(跨橫桿,寬肩=外套輪廓最關鍵)
+  part(new THREE.BoxGeometry(1.2, 0.16, 0.2), jOut, 0, 2.31, -0.08, 0, 0);               // 翻出的領(深藍,肩後上緣)
+  part(new THREE.BoxGeometry(1.26, 1.12, 0.12), jLin, 0, 1.52, 0.05, 0, 0);              // 身(前襟敞開,灰內裡整片朝外垂下)
+  part(new THREE.BoxGeometry(1.32, 0.46, 0.12), jLin, 0, 0.78, 0.06, 0, 0);              // 下襬(略外擴成 A 形)
+  part(new THREE.BoxGeometry(0.06, 1.55, 0.14), jOut, 0, 1.46, 0.12, 0, 0);              // 前襟中線拉鍊(深藍細條,點出「正面」)
   for (const s of [-1, 1]) {
-    part(new THREE.BoxGeometry(0.17, 0.66, 0.17), jLin, 0.46 * s, 0.5, 0.04, -0.08, 0.16 * s);         // 上袖(從肩垂下,微外撇)
-    part(new THREE.BoxGeometry(0.16, 0.34, 0.16), jLin, 0.53 * s, 0.12, 0.12, 0.18, 0.04 * s);         // 下袖(垂到椅面前,微彎)
-    part(new THREE.BoxGeometry(0.18, 0.1, 0.18), jOut, 0.56 * s, -0.02, 0.16, 0, 0);                   // 袖口翻出(深藍)
+    part(new THREE.BoxGeometry(0.28, 1.0, 0.26), jLin, s * 0.7, 1.58, 0.0, 0, s * 0.14); // 袖(從肩端自然下垂,微外撇)
+    part(new THREE.BoxGeometry(0.3, 0.18, 0.28), jOut, s * 0.84, 1.06, 0.0, 0, s * 0.05); // 袖口翻出(深藍)
   }
+  OBSTACLES.push([jx - 1.35, jx + 1.35, jz - 0.4, jz + 0.4]);   // 衣架碰撞(item 12)
 })();
 
 /* ───────── 大兵日記(#4-④ 雋永連結:把拔親寫的韌性 + 連到 LM402/月台) ───────── */
@@ -1978,7 +1981,7 @@ function updateFP(dt) {
   for (const c of skyClouds) { c.position.x += dt * 0.5; if (c.position.x > 440) c.position.x -= 880; }   // 雲極慢側向飄:死貼圖變活氛圍
   if (skyHalo) skyHalo.material.opacity = 0.82 + 0.13 * Math.sin(realT * 0.34);   // 太陽光暈極輕呼吸
   if (cowTail) cowTail.rotation.z = 0.4 + Math.sin(realT * 2.1) * 0.26;   // 顧牛 idle:尾巴搖
-  if (cowHead) { cowHead.rotation.z = Math.sin(realT * 0.7) * 0.1; cowHead.position.y = 0.52 - Math.max(0, Math.sin(realT * 0.7)) * 0.08; }   // 低頭吃草微動(頭 base y=0.52)
+  if (cowHead) { cowHead.rotation.z = Math.sin(realT * 0.7) * 0.09; cowHead.position.y = 1.62 - Math.max(0, Math.sin(realT * 0.7)) * 0.06; }   // 抬頭微擺(頭 base y=1.62,對齊新模組)
   if (realT - lastShot > 0.12) { sprayPitch += (0 - sprayPitch) * Math.min(1, dt * 6); sprayYaw += (0 - sprayYaw) * Math.min(1, dt * 6); }
   if (muzzleLight.intensity > 0) muzzleLight.intensity = Math.max(0, muzzleLight.intensity - dt * (60 + Math.random() * 30));
   if ((sprayResetT -= dt) <= 0) sprayCount = 0;
