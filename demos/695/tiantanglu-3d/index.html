@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'none'; worker-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'none'; worker-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none';">
 <title>天堂路 · 時間裡的兩個妳</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -102,33 +102,40 @@
   /* ── 手機觸控操作 ── */
   #touch{position:fixed;inset:0;z-index:6;display:none;pointer-events:none;font-family:'Noto Sans TC',sans-serif;}
   #touch.on{display:block;}
+  /* 安全區(瀏海／Home Indicator)變數:觸控元件一律貼齊安全區,不被系統列蓋住,彼此也不重疊 */
+  body.touch{--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);--sal:env(safe-area-inset-left,0px);--sar:env(safe-area-inset-right,0px);}
   /* 左:移動拇指區 */
-  #tj{position:fixed;left:18px;bottom:100px;width:108px;height:108px;border-radius:50%;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.16);pointer-events:auto;touch-action:none;}
+  #tj{position:fixed;left:calc(var(--sal,0px) + 18px);bottom:calc(var(--sab,0px) + 100px);width:108px;height:108px;border-radius:50%;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.16);pointer-events:auto;touch-action:none;}
   #tj-knob{position:absolute;left:50%;top:50%;width:50px;height:50px;margin:-25px 0 0 -25px;border-radius:50%;background:rgba(255,220,170,.3);border:1.5px solid rgba(255,220,170,.5);}
   .tbtn{position:fixed;pointer-events:auto;touch-action:none;border-radius:50%;background:rgba(20,16,20,.42);border:1.5px solid rgba(255,220,170,.3);color:#f3e6d8;font-size:12px;letter-spacing:.04em;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;}
   .tbtn:active,.tbtn.act{background:rgba(255,220,170,.32);border-color:rgba(255,220,170,.7);}
   /* 右下:戰鬥拇指區(火力大鈕 + 環繞小鈕) */
-  #tb-fire{right:22px;bottom:30px;width:84px;height:84px;font-size:15px;}
-  #tb-jump{right:120px;bottom:34px;width:52px;height:52px;}
-  #tb-aim{right:28px;bottom:126px;width:54px;height:54px;}
-  #tb-reload{right:112px;bottom:114px;width:48px;height:48px;}
-  #tb-wpn{right:32px;bottom:182px;width:48px;height:48px;}
+  #tb-fire{right:calc(var(--sar,0px) + 22px);bottom:calc(var(--sab,0px) + 30px);width:84px;height:84px;font-size:15px;}
+  #tb-jump{right:calc(var(--sar,0px) + 120px);bottom:calc(var(--sab,0px) + 34px);width:52px;height:52px;}
+  #tb-aim{right:calc(var(--sar,0px) + 28px);bottom:calc(var(--sab,0px) + 126px);width:54px;height:54px;}
+  #tb-reload{right:calc(var(--sar,0px) + 112px);bottom:calc(var(--sab,0px) + 114px);width:48px;height:48px;}
+  #tb-wpn{right:calc(var(--sar,0px) + 32px);bottom:calc(var(--sab,0px) + 182px);width:48px;height:48px;}
   /* 左:蹲下/慢走切換(移動拇指右上,toggle 高亮) */
-  #tb-crouch{left:140px;bottom:148px;width:48px;height:48px;font-size:13px;}
-  #tb-walk{left:140px;bottom:92px;width:48px;height:48px;font-size:13px;}
-  /* 右緣直列:功能鍵(避開中央旗杆與標題) */
-  #tb-shop{right:13px;top:82px;width:46px;height:46px;}
-  #tb-act{right:13px;top:136px;width:46px;height:46px;}
-  #tb-arty{right:13px;top:190px;width:48px;height:48px;border-color:rgba(255,120,80,.5);}
-  #tb-disarm{left:50%;bottom:118px;transform:translateX(-50%);border-radius:40px;padding:13px 26px;font-size:15px;display:none;background:rgba(20,16,20,.62);}
+  #tb-crouch{left:calc(var(--sal,0px) + 140px);bottom:calc(var(--sab,0px) + 148px);width:48px;height:48px;font-size:13px;}
+  #tb-walk{left:calc(var(--sal,0px) + 140px);bottom:calc(var(--sab,0px) + 92px);width:48px;height:48px;font-size:13px;}
+  /* 右緣直列:功能鍵移到雷達「下方」(雷達高 92 + 頂距 8 → 底約 100,功能鍵從 110 起,三鈕等距,徹底不疊雷達) */
+  #tb-shop{right:calc(var(--sar,0px) + 12px);top:calc(var(--sat,0px) + 110px);width:48px;height:48px;}
+  #tb-act{right:calc(var(--sar,0px) + 12px);top:calc(var(--sat,0px) + 166px);width:48px;height:48px;font-size:13px;}
+  #tb-arty{right:calc(var(--sar,0px) + 12px);top:calc(var(--sat,0px) + 222px);width:48px;height:48px;border-color:rgba(255,120,80,.5);}
+  #tb-disarm{left:50%;bottom:calc(var(--sab,0px) + 118px);transform:translateX(-50%);border-radius:40px;padding:13px 26px;font-size:15px;display:none;background:rgba(20,16,20,.62);}
   #tb-disarm.on{display:flex;}
+  /* 放下槍那一刻=敵人已清,戰鬥拇指鈕無用且會疊到「放下槍」:此刻把戰鬥群組藏起,只留搖桿+放下槍,聚焦這個動作 */
+  body.disarm-active #tb-fire,body.disarm-active #tb-aim,body.disarm-active #tb-reload,body.disarm-active #tb-jump,body.disarm-active #tb-wpn,body.disarm-active #tb-arty,body.disarm-active #tb-crouch,body.disarm-active #tb-walk,body.disarm-active #tb-shop{display:none;}
   /* 手機:提示文字移到淨空帶(避免蓋住拇指鈕);準星上方留白 */
-  body.touch #hint{bottom:236px;font-size:12.5px;max-width:68vw;padding:8px 16px;}
-  /* 手機:HUD 數字縮小上移到頂部,把底部拇指帶完整讓給按鈕(避免血量/軍餉被跳/射擊鈕蓋住) */
-  body.touch .hud-box{bottom:auto;top:46px;}
-  body.touch #hud-left{left:12px;} body.touch #hud-right{right:68px;}
-  body.touch .hud-num{font-size:26px;}
-  body.touch .hud-lbl{font-size:9px;margin-bottom:3px;letter-spacing:.14em;}
+  body.touch #hint{bottom:calc(var(--sab,0px) + 236px);font-size:12.5px;max-width:68vw;padding:8px 16px;}
+  /* 手機:HUD 縮小貼齊安全區頂部;血量在左、武器/彈藥靠右但在雷達「左側」,彼此不疊 */
+  body.touch #gear{top:calc(var(--sat,0px) + 6px);left:calc(var(--sal,0px) + 10px);}
+  body.touch #wave{top:calc(var(--sat,0px) + 12px);font-size:16px;letter-spacing:.12em;max-width:42vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  body.touch .hud-box{bottom:auto;top:calc(var(--sat,0px) + 46px);}
+  body.touch #hud-left{left:calc(var(--sal,0px) + 12px);}
+  body.touch #hud-right{right:calc(var(--sar,0px) + 110px);}
+  body.touch .hud-num{font-size:24px;}
+  body.touch .hud-lbl{font-size:9px;margin-bottom:3px;letter-spacing:.12em;}
   body.touch .am-res{font-size:14px;margin-bottom:3px;}
   body.touch #hud-right .sep{height:20px;margin:0 5px 4px;}
   body.touch #wpn{font-size:12px !important;margin-bottom:3px !important;}
@@ -190,7 +197,7 @@
     font-family:"Noto Serif TC",serif;font-size:20px;letter-spacing:.22em;color:#ffce54;text-shadow:0 2px 12px rgba(0,0,0,.7);}
   #radar{position:fixed;top:18px;right:18px;z-index:4;width:148px;height:148px;border-radius:50%;border:1px solid rgba(255,220,170,.32);background:rgba(8,10,14,.5);box-shadow:0 2px 14px rgba(0,0,0,.45);pointer-events:none;display:none;}
   #radar.on{display:block;}
-  body.touch #radar{width:104px;height:104px;top:60px;right:10px;}
+  body.touch #radar{width:92px;height:92px;top:calc(var(--sat,0px) + 8px);right:calc(var(--sar,0px) + 8px);}
   #score .n2{font-size:22px;font-weight:700;color:#cfe3ef;line-height:.9;margin-top:8px;}
 
   /* ── 設定 ── */
@@ -208,6 +215,55 @@
   #settings input[type=color]{width:42px;height:26px;border:none;background:none;cursor:pointer;}
   #settings .close{margin-top:20px;text-align:center;font-size:15px;letter-spacing:.2em;color:#fdf3e2;
     background:rgba(255,255,255,.08);border:1px solid rgba(255,220,170,.35);border-radius:30px;padding:10px 24px;cursor:pointer;}
+  #settings .story-open{margin-top:8px;text-align:center;font-size:14px;letter-spacing:.12em;color:#ffe3b0;
+    border:1px solid rgba(255,206,84,.45);border-radius:30px;padding:11px;cursor:pointer;transition:background .3s;}
+  #settings .story-open:hover{background:rgba(255,206,84,.14);}
+
+  /* ── 故事選單(戰前/戰後/全部 42 集 + 飛回 LM402) ── */
+  #story{position:fixed;inset:0;z-index:11;display:none;align-items:center;justify-content:center;background:rgba(8,6,10,.92);padding:18px;}
+  #story.on{display:flex;}
+  #story .panel{max-width:620px;width:100%;max-height:90vh;display:flex;flex-direction:column;background:rgba(28,22,30,.98);border:1px solid rgba(255,220,170,.25);border-radius:16px;padding:22px 20px 16px;font-family:'Noto Serif TC',serif;color:#f3e6d8;}
+  #story h2{font-size:19px;letter-spacing:.2em;color:#ffce54;text-align:center;}
+  #story .story-sub{text-align:center;font-size:11.5px;letter-spacing:.12em;opacity:.55;margin:4px 0 14px;}
+  #story .story-tabs{display:flex;gap:7px;justify-content:center;margin-bottom:10px;}
+  #story .story-tabs button{flex:1;max-width:150px;font-family:'Noto Serif TC',serif;font-size:13px;letter-spacing:.06em;color:#e8dcc8;background:rgba(255,220,170,.06);border:1px solid rgba(255,220,170,.26);border-radius:30px;padding:9px 0;cursor:pointer;transition:background .2s;}
+  #story .story-tabs button.on{background:rgba(255,220,170,.22);color:#fff3e0;border-color:rgba(255,220,170,.6);}
+  #story .story-framing{font-size:13px;line-height:1.95;letter-spacing:.05em;opacity:.8;text-align:center;margin:0 6px 12px;color:#f0e0cf;min-height:1.95em;}
+  #story .story-lm402{display:block;text-decoration:none;text-align:center;font-size:14.5px;letter-spacing:.06em;color:#ffe3b0;border:1px solid rgba(255,206,84,.5);border-radius:12px;padding:12px;margin-bottom:12px;background:linear-gradient(180deg,rgba(80,60,30,.4),rgba(40,30,20,.3));transition:background .3s,transform .2s;}
+  #story .story-lm402:hover{background:linear-gradient(180deg,rgba(110,82,40,.55),rgba(56,42,26,.4));transform:translateY(-1px);}
+  #story .story-lm402 small{display:block;font-size:11px;opacity:.72;letter-spacing:.08em;margin-top:5px;}
+  #story-list{overflow-y:auto;flex:1;padding-right:3px;-webkit-overflow-scrolling:touch;}
+  #story-list .ep-row{display:block;width:100%;text-align:left;background:rgba(255,255,255,.02);border:1px solid rgba(255,220,170,.12);border-radius:10px;padding:11px 13px;margin:7px 0;cursor:pointer;font-family:'Noto Serif TC',serif;color:#f3e6d8;transition:background .2s,border-color .2s;}
+  #story-list .ep-row:hover{background:rgba(255,220,170,.08);border-color:rgba(255,220,170,.32);}
+  #story-list .ep-row .ep-t{font-size:14.5px;letter-spacing:.05em;}
+  #story-list .ep-row .ep-t b{color:#ffd98a;font-weight:400;margin-right:8px;font-family:"DIN Condensed","Oswald",sans-serif;letter-spacing:.05em;}
+  #story-list .ep-row .ep-i{font-size:12px;line-height:1.7;opacity:.62;margin-top:4px;letter-spacing:.01em;}
+  #story .close{margin-top:11px;text-align:center;font-size:14px;letter-spacing:.2em;color:#fdf3e2;border:1px solid rgba(255,220,170,.35);border-radius:40px;padding:10px;cursor:pointer;}
+  #story .close:hover{background:rgba(255,220,170,.12);}
+  /* 嵌入閱讀(同源 reader.html?embed=1#ep-N,離開戰場也不中斷音樂) */
+  #reader-embed{position:fixed;inset:0;z-index:12;display:none;flex-direction:column;background:#0a0c0e;}
+  #reader-embed.on{display:flex;}
+  #reader-embed .re-bar{flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;background:rgba(16,14,18,.96);border-bottom:1px solid rgba(255,220,170,.18);}
+  #reader-embed .re-bar button{font-family:'Noto Serif TC',serif;font-size:14px;letter-spacing:.06em;color:#fdf3e2;background:rgba(255,220,170,.1);border:1px solid rgba(255,220,170,.34);border-radius:30px;padding:8px 16px;cursor:pointer;}
+  #reader-embed .re-bar button:hover{background:rgba(255,220,170,.2);}
+  #reader-embed .re-bar span{font-family:'Noto Serif TC',serif;font-size:14px;letter-spacing:.08em;color:#ffd98a;}
+  #reader-embed iframe{flex:1;width:100%;border:0;background:#0a0c0e;}
+  /* 破關紀念(走完天堂路:不跳回開頭,音樂續播,邊聽邊看故事/再次挑戰) */
+  #clear{position:fixed;inset:0;z-index:10;display:none;align-items:center;justify-content:center;background:rgba(6,5,9,.84);padding:20px;}
+  #clear.on{display:flex;}
+  #clear .panel{max-width:560px;width:100%;max-height:92vh;overflow-y:auto;background:linear-gradient(180deg,rgba(34,26,30,.98),rgba(22,18,22,.98));border:1px solid rgba(255,206,84,.3);border-radius:18px;padding:28px 24px 22px;font-family:'Noto Serif TC',serif;color:#f3e6d8;text-align:center;}
+  #clear h2{font-size:22px;letter-spacing:.26em;color:#ffce54;margin-bottom:12px;}
+  #clear .clear-sub{font-size:13.5px;line-height:2;letter-spacing:.05em;opacity:.82;margin:0 4px 20px;}
+  #clear .clear-actions{display:flex;flex-direction:column;gap:10px;}
+  #clear .clear-actions button,#clear .clear-diff button{font-family:'Noto Serif TC',serif;font-size:15px;letter-spacing:.1em;color:#f4ece2;background:rgba(255,220,170,.08);border:1px solid rgba(255,220,170,.4);border-radius:40px;padding:14px;cursor:pointer;transition:background .25s,transform .2s;}
+  #clear .clear-actions button:hover,#clear .clear-diff button:hover{background:rgba(255,220,170,.2);transform:translateY(-1px);}
+  #clear .clear-actions button small{display:block;font-size:11px;opacity:.62;letter-spacing:.06em;margin-top:4px;}
+  #clear .clear-actions button.cta{border-color:rgba(255,206,84,.6);background:linear-gradient(180deg,rgba(90,66,32,.42),rgba(48,36,22,.32));}
+  #clear .clear-diff{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,220,170,.16);}
+  #clear .clear-diff .cd-q{font-size:12.5px;letter-spacing:.06em;opacity:.7;margin-bottom:11px;line-height:1.7;}
+  #clear .clear-diff .cd-row{display:flex;gap:8px;}
+  #clear .clear-diff .cd-row button{flex:1;font-size:14px;padding:13px 0;}
+  #clear .clear-diff .cd-row button .cd-d{display:block;font-size:10px;opacity:.55;margin-top:3px;letter-spacing:.02em;}
 </style>
 </head>
 <body>
@@ -241,6 +297,7 @@
   <div class="row"><label>準星間距</label><input type="range" id="set-chgap" min="0" max="14" step="1"></div>
   <div class="row"><label>準星粗細</label><input type="range" id="set-chthick" min="1" max="6" step="1"></div>
   <div class="row"><label>準星顏色</label><input type="color" id="set-chcolor"></div>
+  <div class="story-open" id="set-story">📖 戰前 · 戰後的故事</div>
   <div class="close" id="set-close">關閉 (Esc)</div>
 </div></div>
 
@@ -272,12 +329,12 @@
   <div class="sec"><b>移動</b>：WASD 走動，Shift 蹲下，Ctrl 慢步，空白跳躍。</div>
   <div class="sec"><b>戰鬥</b>：左鍵攻擊，右鍵瞄準/開鏡，1~9 換武器，R 換彈。近戰(鐵鎚/刺槍/小刀)無限使用。</div>
   <div class="sec"><b>視角與設定</b>：點畫面讓滑鼠控制視角。<b>ESC</b> 放開滑鼠(跳出視角控制)，<b>TAB</b> 開系統設定(難度／音量／準星)。</div>
-  <div class="sec"><b>砲兵連</b>：你是算彈最快的計算手。實戰中把準星對著<b>地面</b>，按 <b>G</b>(手機按「砲擊」鈕)呼叫天降砲擊，叢集砲彈會砸下來，28 秒冷卻一次。</div>
-  <div class="sec"><b>載具</b>：走近悍馬車／大砲／坦克按 <b>E</b> 上車，再按 <b>E</b> 下車。WASD 駕駛，左鍵開炮，撞擊能殲敵。實戰中油料／砲彈有限(軍械庫可補)，普通以上難度需先在軍械庫買使用權。</div>
-  <div class="sec"><b>軍營探索</b>：慢慢走。走近那頭牛、那件反穿的外套，按 <b>E</b>，夢會對你說一句話。</div>
-  <div class="sec"><b>進入實戰</b>：走到靶場(紅白標靶處)按 <b>E</b>，閉眼睜眼進入「實戰模擬練習」。</div>
+  <div class="sec"><b>砲兵連</b>：在那段日子裡，你是全連算彈著點最快的計算手。把準星對著<b>地面</b>，按 <b>G</b>(手機按「砲擊」鈕)呼叫天降砲擊，叢集砲彈會砸下來，28 秒才能再算一次。</div>
+  <div class="sec"><b>載具</b>：走近悍馬車／大砲／坦克按 <b>E</b>(手機按「使用」鈕)上車，再按一次下車。WASD 駕駛，左鍵／射擊鈕開炮，撞擊能殲敵。實戰中油料／砲彈有限(軍械庫可補)，普通以上難度需先在軍械庫買使用權。</div>
+  <div class="sec"><b>軍營探索</b>：慢慢走。走近那頭牛、那件反穿的外套，按 <b>E</b>(手機按「使用」鈕)，夢會對你說一句話。</div>
+  <div class="sec"><b>進入實戰</b>：走到靶場(紅白標靶處)按 <b>E</b>(手機按「使用」鈕)，閉眼睜眼進入「實戰模擬練習」。</div>
   <div class="sec"><b>目標</b>：撐過考驗後，畫面會提示你按 <b>H</b> 放下槍(手機按「放下槍」)。這不是要你變強，是撐到那一刻，終於可以放下。</div>
-  <div class="sec"><b>覺得難</b>：左上齒輪(或 <b>TAB</b>)可調難度，劇情模式血量彈藥最寬裕，最適合先看故事。</div>
+  <div class="sec"><b>覺得難</b>：左上齒輪(或 <b>TAB</b>)可隨時調難度，只想看故事就選劇情模式，血量彈藥最寬裕。不用逞強，這裡沒有人會對你說加油。</div>
   <div class="close" id="tut-close">走上天堂路</div>
 </div></div>
 <div id="shop"><div class="panel">
@@ -298,7 +355,7 @@
   <div class="d-link-hint">這條紅線，還牽著另外兩段時間</div>
   <a class="d-link" href="../../../lm402.html">走進 LM402 · 一眼瞬間</a>
   <a class="d-link" href="../../platform-run/index.html">月台上的狂奔</a>
-  <a class="d-link" href="../../../reader.html#ep-40" style="font-size:13px;opacity:.78;">回去讀他靠什麼撐過來 · EP40</a>
+  <div class="d-link" id="diary-story" style="cursor:pointer;">📖 戰前 · 戰後的故事 · 全 42 集</div>
   <div class="close" id="diary-close">闔上日記</div>
 </div></div>
 <div id="mask"></div>
@@ -308,16 +365,55 @@
   <button id="tb-jump" class="tbtn" type="button">跳</button>
   <button id="tb-aim" class="tbtn" type="button">瞄準</button>
   <button id="tb-reload" class="tbtn" type="button">換彈</button>
-  <button id="tb-wpn" class="tbtn" type="button">武器</button>
-  <button id="tb-act" class="tbtn" type="button">E</button>
-  <button id="tb-shop" class="tbtn" type="button">軍械</button>
+  <button id="tb-wpn" class="tbtn" type="button">換槍</button>
+  <button id="tb-act" class="tbtn" type="button">使用</button>
+  <button id="tb-shop" class="tbtn" type="button">軍械庫</button>
   <button id="tb-arty" class="tbtn" type="button">砲擊</button>
   <button id="tb-crouch" class="tbtn" type="button">蹲</button>
   <button id="tb-walk" class="tbtn" type="button">走</button>
   <button id="tb-disarm" class="tbtn" type="button">放下槍</button>
 </div>
 
+<div id="story"><div class="panel">
+  <h2>時間裡的兩個妳</h2>
+  <div class="story-sub">天堂路之前與之後 · EP0 到 EP41</div>
+  <div class="story-tabs">
+    <button data-sec="before" class="on" type="button">戰前的故事</button>
+    <button data-sec="after" type="button">戰後的故事</button>
+    <button data-sec="all" type="button">全部 42 集</button>
+  </div>
+  <div class="story-framing" id="story-framing"></div>
+  <a class="story-lm402" href="../../../lm402.html">從 EP0 開始 · 飛到一切的開始<small>走進 LM402 · 那一眼瞬間 · 當初有多浪漫，後來就有多揪心</small></a>
+  <div id="story-list"></div>
+  <div class="close" id="story-close">闔上</div>
+</div></div>
+
+<div id="reader-embed">
+  <div class="re-bar"><button id="re-back" type="button">‹ 回故事清單</button><span id="re-title"></span></div>
+  <iframe id="re-frame" title="故事閱讀" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin"></iframe>
+</div>
+
+<div id="clear"><div class="panel">
+  <h2>走完天堂路</h2>
+  <div class="clear-sub" id="clear-sub"></div>
+  <div class="clear-actions">
+    <button type="button" data-act="before" class="cta">戰前的故事<small>當初有多浪漫</small></button>
+    <button type="button" data-act="after" class="cta">戰後的故事<small>後來就有多揪心</small></button>
+    <button type="button" data-act="replay">再次挑戰天堂路<small>劇情 · 新手已走完，換你選更深的路</small></button>
+    <button type="button" data-act="hub">回到軍營走走</button>
+  </div>
+  <div class="clear-diff" id="clear-diff" hidden>
+    <div class="cd-q">劇情模式與新手模式已經走完。<br>這一次，選一條更深的路。</div>
+    <div class="cd-row">
+      <button type="button" data-diff="3">普通<span class="cd-d">正常熔爐</span></button>
+      <button type="button" data-diff="4">困難<span class="cd-d">敵人加倍</span></button>
+      <button type="button" data-diff="5">天堂路<span class="cd-d">蛙人 · 智能敵</span></button>
+    </div>
+  </div>
+</div></div>
+
 <script src="cold-open.js"></script>
+<script src="story-data.js"></script>
 <script type="module" src="scene.js"></script>
 </body>
 </html>
