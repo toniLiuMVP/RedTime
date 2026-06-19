@@ -14,8 +14,11 @@
 
   /* ── 準星 (可調 size/gap/thick/color) ── */
   :root{--ch-size:8px;--ch-gap:4px;--ch-thick:2px;--ch-color:#7dff8a;}
-  #cross{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;pointer-events:none;width:60px;height:60px;}
-  #cross i{position:absolute;background:var(--ch-color);box-shadow:0 0 2px rgba(0,0,0,.85);}
+  #cross{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;pointer-events:none;width:60px;height:60px;transition:transform .08s ease;}
+  #cross i{position:absolute;background:var(--ch-color);box-shadow:0 0 2px rgba(0,0,0,.85);transition:box-shadow .08s ease;}
+  /* 極克制命中確認(中性,非去爽違反:不加✕/數字/分數):打中那一拍準星微微一縮一亮,讓遠距離也知道「打中了」 */
+  #cross.confirm{transform:translate(-50%,-50%) scale(1.16);}
+  #cross.confirm i{box-shadow:0 0 5px rgba(255,255,255,.95);}
   #cross .h{width:var(--ch-size);height:var(--ch-thick);top:calc(50% - var(--ch-thick)/2);}
   #cross .h.l{right:calc(50% + var(--ch-gap));} #cross .h.r{left:calc(50% + var(--ch-gap));}
   #cross .v{width:var(--ch-thick);height:var(--ch-size);left:calc(50% - var(--ch-thick)/2);}
@@ -162,6 +165,9 @@
     font-family:"Noto Serif TC",serif;font-size:15px;letter-spacing:.12em;color:#fdf3e2;text-align:center;
     background:rgba(20,14,18,.5);border:1px solid rgba(255,220,170,.35);border-radius:30px;padding:9px 22px;
     opacity:0;transition:opacity .3s;backdrop-filter:blur(3px);}
+  /* 放下槍提示:呼吸脈動 + 暖光描邊,讓「按 H 放下槍／輕觸放下槍」更醒目(桌機也好發現) */
+  #hint.pulse{animation:hintBreath 1.8s ease-in-out infinite;border-color:rgba(255,206,84,.7);color:#fff3e0;font-size:16px;}
+  @keyframes hintBreath{0%,100%{box-shadow:0 0 0 0 rgba(255,206,84,0);}50%{box-shadow:0 0 18px 2px rgba(255,206,84,.35);}}
   /* ── 一眼瞬間 overlay(抽象光形 + 電影黑邊 + 連接句;放下槍後的非戰鬥高光) ── */
   #gaze{position:fixed;inset:0;z-index:9;display:none;background:#05040a;overflow:hidden;}
   #gaze.on{display:block;}
@@ -249,11 +255,13 @@
   #reader-embed .re-bar span{font-family:'Noto Serif TC',serif;font-size:14px;letter-spacing:.08em;color:#ffd98a;}
   #reader-embed iframe{flex:1;width:100%;border:0;background:#0a0c0e;}
   /* 破關紀念(走完天堂路:不跳回開頭,音樂續播,邊聽邊看故事/再次挑戰) */
-  #clear{position:fixed;inset:0;z-index:10;display:none;align-items:center;justify-content:center;background:rgba(6,5,9,.84);padding:20px;}
-  #clear.on{display:flex;}
+  #clear{position:fixed;inset:0;z-index:10;display:none;align-items:center;justify-content:center;background:rgba(6,5,9,.84);padding:20px;opacity:0;transition:opacity 1s ease;}
+  #clear.on{display:flex;opacity:1;}
+  #clear .panel{animation:clearPanelRise 1.2s .25s ease both;}
+  @keyframes clearPanelRise{from{transform:translateY(14px);opacity:0;}to{transform:translateY(0);opacity:1;}}
   #clear .panel{max-width:560px;width:100%;max-height:92vh;overflow-y:auto;background:linear-gradient(180deg,rgba(34,26,30,.98),rgba(22,18,22,.98));border:1px solid rgba(255,206,84,.3);border-radius:18px;padding:28px 24px 22px;font-family:'Noto Serif TC',serif;color:#f3e6d8;text-align:center;}
   #clear h2{font-size:22px;letter-spacing:.26em;color:#ffce54;margin-bottom:12px;}
-  #clear .clear-sub{font-size:13.5px;line-height:2;letter-spacing:.05em;opacity:.82;margin:0 4px 20px;}
+  #clear .clear-sub{font-size:13.5px;line-height:2;letter-spacing:.05em;opacity:.82;margin:0 4px 20px;white-space:pre-line;}
   #clear .clear-actions{display:flex;flex-direction:column;gap:10px;}
   #clear .clear-actions button,#clear .clear-diff button{font-family:'Noto Serif TC',serif;font-size:15px;letter-spacing:.1em;color:#f4ece2;background:rgba(255,220,170,.08);border:1px solid rgba(255,220,170,.4);border-radius:40px;padding:14px;cursor:pointer;transition:background .25s,transform .2s;}
   #clear .clear-actions button:hover,#clear .clear-diff button:hover{background:rgba(255,220,170,.2);transform:translateY(-1px);}
@@ -403,11 +411,11 @@
     <button type="button" data-act="hub">回到軍營走走</button>
   </div>
   <div class="clear-diff" id="clear-diff" hidden>
-    <div class="cd-q">劇情模式與新手模式已經走完。<br>這一次，選一條更深的路。</div>
+    <div class="cd-q">劇情模式與新手模式已經走完。<br>這一次，選一條更深的路。<br><span style="font-size:11px;opacity:.62;letter-spacing:.04em;">想邊打邊看故事 → 普通　·　CS 老兵推薦磨技術 → 困難 → 天堂路</span></div>
     <div class="cd-row">
-      <button type="button" data-diff="3">普通<span class="cd-d">正常熔爐</span></button>
-      <button type="button" data-diff="4">困難<span class="cd-d">敵人加倍</span></button>
-      <button type="button" data-diff="5">天堂路<span class="cd-d">蛙人 · 智能敵</span></button>
+      <button type="button" data-diff="3">普通<span class="cd-d">8 波 · 正常熔爐</span></button>
+      <button type="button" data-diff="4">困難<span class="cd-d">10 波 · 更準更痛</span></button>
+      <button type="button" data-diff="5">天堂路<span class="cd-d">10 波 · 蛙人地獄</span></button>
     </div>
   </div>
 </div></div>
