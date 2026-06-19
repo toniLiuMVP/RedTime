@@ -354,6 +354,14 @@
       body.reader-embed .episode.embed-hidden {
         display: none !important;
       }
+      /* embed(iframe)模式:停用 content-visibility lazy render。
+         iframe 下(載入時容器仍 display:none、或行動瀏覽器節流)content-visibility:auto 的
+         intersection 偵測常不觸發 → 整份文件不 paint(高度塌 0、畫面全黑)。embed 只顯示單一集
+         (其餘 display:none),沒有 lazy render 的效能需求,直接強制 visible + 給定 intrinsic-size。 */
+      body.reader-embed .episode {
+        content-visibility: visible !important;
+        contain-intrinsic-size: auto !important;
+      }
       /* P0-1:新讀者引路 button (redirect to index.html?tour=1) */
       .hero-newcomer {
         display: inline-flex;

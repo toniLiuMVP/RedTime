@@ -51,13 +51,13 @@
   #enter.hide{opacity:0;pointer-events:none;}
   #tut-btn{display:inline-block;margin-top:16px;font-size:13px;letter-spacing:.16em;color:#ffd9a8;background:rgba(255,220,170,.08);border:1px solid rgba(255,220,170,.35);border-radius:40px;padding:9px 22px;cursor:pointer;transition:background .3s;pointer-events:auto;}
   #tut-btn:hover{background:rgba(255,220,170,.18);}
-  #tutorial{position:fixed;inset:0;z-index:9;display:none;align-items:center;justify-content:center;background:rgba(8,6,10,.9);padding:24px;}
+  #tutorial{position:fixed;inset:0;z-index:9;display:none;align-items:center;justify-content:center;background:rgba(8,6,10,.92);padding:16px;}
   #tutorial.on{display:flex;}
-  #tutorial .panel{max-width:560px;background:rgba(28,22,30,.97);border:1px solid rgba(255,220,170,.25);border-radius:16px;padding:30px 34px;font-family:'Noto Serif TC',serif;color:#f3e6d8;}
-  #tutorial h2{font-size:20px;letter-spacing:.2em;color:#ffce54;margin-bottom:18px;text-align:center;}
-  #tutorial .sec{margin:13px 0;font-size:14px;line-height:1.9;letter-spacing:.04em;}
+  #tutorial .panel{max-width:560px;width:100%;max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;background:rgba(28,22,30,.98);border:1px solid rgba(255,220,170,.25);border-radius:16px;padding:0 22px 0;font-family:'Noto Serif TC',serif;color:#f3e6d8;}
+  #tutorial h2{font-size:19px;letter-spacing:.2em;color:#ffce54;text-align:center;position:sticky;top:0;background:rgba(28,22,30,.99);margin:0 -22px 12px;padding:18px 0 12px;z-index:1;border-bottom:1px solid rgba(255,220,170,.12);}
+  #tutorial .sec{margin:11px 0;font-size:13.5px;line-height:1.8;letter-spacing:.03em;}
   #tutorial .sec b{color:#ffd9a8;font-weight:700;}
-  #tutorial .close{margin-top:22px;text-align:center;font-size:14px;letter-spacing:.2em;color:#fdf3e2;border:1px solid rgba(255,220,170,.35);border-radius:40px;padding:11px;cursor:pointer;transition:background .3s;}
+  #tutorial .close{position:sticky;bottom:0;margin:14px -22px 0;text-align:center;font-size:14px;letter-spacing:.2em;color:#fdf3e2;border-top:1px solid rgba(255,220,170,.2);padding:14px;cursor:pointer;transition:background .3s;background:rgba(34,27,32,.99);}
   #tutorial .close:hover{background:rgba(255,220,170,.14);}
   /* 軍械庫(購買裝備) */
   #shop{position:fixed;inset:0;z-index:9;display:none;align-items:center;justify-content:center;background:rgba(8,6,10,.9);padding:24px;}
@@ -183,6 +183,23 @@
   #gaze-line.echo.show{opacity:.48;font-size:clamp(14px,2.1vw,18px);}   /* 一眼瞬間第二拍:首尾合龍,低亮度回返 */
   #gaze-line.cards{bottom:auto;top:50%;transform:translateY(-50%);white-space:pre-line;transition:opacity 1.1s ease;line-height:2.05;font-size:clamp(16px,2.5vw,22px);}   /* 結局文字卡:純黑居中逐句(融合呈現) */
   #gaze-line.cards.show{opacity:1;}
+  /* 結局末句後浮現的「閉上眼睛」按鈕(音樂不停);點了→淡黑→彩虹光→結局選單 */
+  #close-eyes{position:absolute;left:50%;bottom:18%;transform:translateX(-50%);z-index:4;display:none;opacity:0;transition:opacity 2.2s ease;
+    font-family:"Noto Serif TC",serif;font-size:clamp(15px,2.6vw,19px);letter-spacing:.22em;color:#f7ecd8;cursor:pointer;
+    background:rgba(20,16,22,.5);border:1px solid rgba(255,220,170,.5);border-radius:40px;padding:14px 34px;backdrop-filter:blur(3px);
+    box-shadow:0 0 0 0 rgba(255,206,84,0);animation:closeEyesBreath 2.6s ease-in-out infinite;}
+  #close-eyes.on{display:block;}
+  #close-eyes.on.in{opacity:1;}
+  @keyframes closeEyesBreath{0%,100%{box-shadow:0 0 0 0 rgba(255,206,84,0);}50%{box-shadow:0 0 22px 3px rgba(255,206,84,.3);}}
+  /* 閉上眼睛全暗 → 一陣彩虹光(音樂不停)→ 結局選單 */
+  #rainbow{position:absolute;inset:0;z-index:5;pointer-events:none;opacity:0;
+    background:radial-gradient(circle at 50% 52%,rgba(255,255,255,.9),rgba(255,120,140,.55) 22%,rgba(255,200,90,.5) 38%,rgba(120,230,150,.45) 55%,rgba(120,180,255,.45) 72%,rgba(190,140,255,.4) 86%,rgba(8,6,12,0) 100%);}
+  #rainbow.burst{animation:rainbowBurst 2.6s ease-out forwards;}
+  @keyframes rainbowBurst{0%{opacity:0;transform:scale(.4);}28%{opacity:1;transform:scale(1.05);}60%{opacity:.85;transform:scale(1.18);}100%{opacity:0;transform:scale(1.5);}}
+  /* 結局選單 / 嵌入閱讀:音樂開關(看故事時音樂續播,可關) */
+  #clear .clear-music{margin-top:14px;text-align:center;font-size:12px;letter-spacing:.08em;color:#cbb89c;cursor:pointer;opacity:.8;}
+  #clear .clear-music:hover{opacity:1;color:#ffd98a;}
+  #reader-embed .re-bar #re-music{margin-left:auto;flex:0 0 auto;font-size:16px;padding:6px 12px;}
   /* 進場閉眼睜眼眼皮(夢框:一遍一遍回到當兵第一天) */
   #eyelid{position:fixed;inset:0;z-index:11;pointer-events:none;}
   #eyelid .lid{position:absolute;left:0;right:0;height:0;background:#000;transition:height var(--lid-dur,.5s) cubic-bezier(.5,0,.3,1);}
@@ -201,6 +218,12 @@
   /* ── 波次 ── */
   #wave{position:fixed;top:22px;left:50%;transform:translateX(-50%);z-index:4;pointer-events:none;
     font-family:"Noto Serif TC",serif;font-size:20px;letter-spacing:.22em;color:#ffce54;text-shadow:0 2px 12px rgba(0,0,0,.7);}
+  /* 載具儀表(駕駛中油料/砲彈/車況):桌機手機都顯示在波數下方,不再埋進提示文字尾巴 */
+  #vehhud{position:fixed;top:54px;left:50%;transform:translateX(-50%);z-index:4;display:none;pointer-events:none;
+    font-family:"DIN Condensed","Oswald","Arial Narrow",sans-serif;font-size:18px;letter-spacing:.12em;color:#ffd98a;
+    background:rgba(20,16,20,.5);border:1px solid rgba(255,220,170,.3);border-radius:20px;padding:5px 16px;text-shadow:0 2px 8px rgba(0,0,0,.7);white-space:nowrap;}
+  #vehhud.on{display:block;}
+  body.touch #vehhud{top:calc(var(--sat,0px) + 44px);font-size:15px;padding:4px 12px;}
   #radar{position:fixed;top:18px;right:18px;z-index:4;width:148px;height:148px;border-radius:50%;border:1px solid rgba(255,220,170,.32);background:rgba(8,10,14,.5);box-shadow:0 2px 14px rgba(0,0,0,.45);pointer-events:none;display:none;}
   #radar.on{display:block;}
   body.touch #radar{width:92px;height:92px;top:calc(var(--sat,0px) + 8px);right:calc(var(--sar,0px) + 8px);}
@@ -247,13 +270,14 @@
   #story .close{margin-top:11px;text-align:center;font-size:14px;letter-spacing:.2em;color:#fdf3e2;border:1px solid rgba(255,220,170,.35);border-radius:40px;padding:10px;cursor:pointer;}
   #story .close:hover{background:rgba(255,220,170,.12);}
   /* 嵌入閱讀(同源 reader.html?embed=1#ep-N,離開戰場也不中斷音樂) */
-  #reader-embed{position:fixed;inset:0;z-index:12;display:none;flex-direction:column;background:#0a0c0e;}
-  #reader-embed.on{display:flex;}
-  #reader-embed .re-bar{flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;background:rgba(16,14,18,.96);border-bottom:1px solid rgba(255,220,170,.18);}
+  /* iOS Safari:flex:1 的 iframe 會塌成 0 高度→整片黑。改用 absolute 給 iframe 明確上下界(全平台都對) */
+  #reader-embed{position:fixed;inset:0;z-index:12;display:none;background:#0a0c0e;}
+  #reader-embed.on{display:block;}
+  #reader-embed .re-bar{position:absolute;top:0;left:0;right:0;height:calc(env(safe-area-inset-top,0px) + 54px);box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 9px) 16px 9px;background:rgba(16,14,18,.96);border-bottom:1px solid rgba(255,220,170,.18);z-index:1;}
   #reader-embed .re-bar button{font-family:'Noto Serif TC',serif;font-size:14px;letter-spacing:.06em;color:#fdf3e2;background:rgba(255,220,170,.1);border:1px solid rgba(255,220,170,.34);border-radius:30px;padding:8px 16px;cursor:pointer;}
   #reader-embed .re-bar button:hover{background:rgba(255,220,170,.2);}
   #reader-embed .re-bar span{font-family:'Noto Serif TC',serif;font-size:14px;letter-spacing:.08em;color:#ffd98a;}
-  #reader-embed iframe{flex:1;width:100%;border:0;background:#0a0c0e;}
+  #reader-embed iframe{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 54px);width:100%;height:calc(100% - env(safe-area-inset-top,0px) - 54px);border:0;background:#0a0c0e;}
   /* 破關紀念(走完天堂路:不跳回開頭,音樂續播,邊聽邊看故事/再次挑戰) */
   #clear{position:fixed;inset:0;z-index:10;display:none;align-items:center;justify-content:center;background:rgba(6,5,9,.84);padding:20px;opacity:0;transition:opacity 1s ease;}
   #clear.on{display:flex;opacity:1;}
@@ -272,6 +296,56 @@
   #clear .clear-diff .cd-row{display:flex;gap:8px;}
   #clear .clear-diff .cd-row button{flex:1;font-size:14px;padding:13px 0;}
   #clear .clear-diff .cd-row button .cd-d{display:block;font-size:10px;opacity:.55;margin-top:3px;letter-spacing:.02em;}
+
+  /* 設定面板的勾選列(高對比 / 震動) */
+  #settings .row-chk{align-items:center;}
+  #settings .row-chk input[type=checkbox]{width:20px;height:20px;flex:0 0 20px;accent-color:#ffce54;cursor:pointer;margin:0 4px;}
+  #settings .row-chk .chk-note{flex:1;font-size:11px;opacity:.5;letter-spacing:.02em;}
+
+  /* 建議先讀(故事選單頂端):3 個入口集數,點了直接讀 */
+  #story .story-rec{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin:0 4px 12px;}
+  #story .story-rec .rec-lbl{width:100%;text-align:center;font-size:11px;letter-spacing:.1em;opacity:.55;margin-bottom:2px;}
+  #story .story-rec .rec-chip{font-family:'Noto Serif TC',serif;font-size:12.5px;letter-spacing:.03em;color:#ffe1b0;background:rgba(255,206,84,.1);border:1px solid rgba(255,206,84,.4);border-radius:30px;padding:7px 14px;cursor:pointer;transition:background .2s,transform .15s;}
+  #story .story-rec .rec-chip:hover{background:rgba(255,206,84,.22);transform:translateY(-1px);}
+
+  /* ── 高對比模式(toni #8 選項3):不改版位,只增強可讀性 — 文字加黑描邊、HUD/面板底色加不透明、邊框加亮 ── */
+  body.hicon .hud-num{text-shadow:0 0 2px #000,0 0 5px #000,0 2px 3px #000 !important;}
+  body.hicon .hud-lbl{opacity:1 !important;color:#fff !important;text-shadow:0 1px 2px #000;}
+  body.hicon .hud-box{background:rgba(0,0,0,.66) !important;border:1px solid rgba(255,255,255,.5) !important;border-radius:8px;padding:5px 11px;}
+  body.hicon #wave{color:#fff !important;text-shadow:0 0 2px #000,0 1px 3px #000 !important;}
+  body.hicon #vehhud{background:rgba(0,0,0,.8) !important;border-color:rgba(255,255,255,.6) !important;color:#ffe9b8 !important;text-shadow:0 1px 2px #000 !important;}
+  body.hicon #hint{background:rgba(0,0,0,.74) !important;color:#fff !important;text-shadow:0 1px 2px #000 !important;}
+  body.hicon .tbtn{background:rgba(0,0,0,.6) !important;border-color:rgba(255,255,255,.78) !important;color:#fff !important;}
+  body.hicon .panel{border-color:rgba(255,255,255,.55) !important;}
+  body.hicon .panel h2,body.hicon #story .story-framing,body.hicon #story .story-sub{color:#fff !important;opacity:1 !important;}
+  body.hicon #story-list .ep-row{background:rgba(255,255,255,.06) !important;border-color:rgba(255,255,255,.4) !important;}
+  body.hicon #story-list .ep-row .ep-i{opacity:.88 !important;}
+
+  /* ── 手機橫拿(landscape):拇指在左下/右下角,戰鬥鍵靠右下、移動靠左下,少用功能鍵移右緣中段;短螢幕不上下擠成一團。
+       放在 CSS 最末:確保覆蓋前面所有 body.touch 直立版位(同 specificity 靠後者勝) ── */
+  @media (orientation: landscape) and (max-height: 540px) {
+    body.touch #radar{width:68px;height:68px;top:calc(var(--sat,0px) + 6px);right:calc(var(--sar,0px) + 6px);}
+    body.touch .hud-box{top:calc(var(--sat,0px) + 8px);}
+    body.touch #hud-left{left:calc(var(--sal,0px) + 44px);}
+    body.touch #hud-right{right:calc(var(--sar,0px) + 92px);}
+    body.touch .hud-num{font-size:19px;}
+    body.touch #wave{top:calc(var(--sat,0px) + 8px);font-size:14px;max-width:26vw;}
+    body.touch #vehhud{top:calc(var(--sat,0px) + 34px);font-size:13px;}
+    body.touch #gear{top:calc(var(--sat,0px) + 6px);left:calc(var(--sal,0px) + 8px);}
+    body.touch #tb-shop{top:calc(var(--sat,0px) + 84px);right:calc(var(--sar,0px) + 10px);left:auto;bottom:auto;width:44px;height:44px;}
+    body.touch #tb-act{top:calc(var(--sat,0px) + 136px);right:calc(var(--sar,0px) + 10px);left:auto;bottom:auto;width:44px;height:44px;}
+    body.touch #tj{left:calc(var(--sal,0px) + 16px);bottom:calc(var(--sab,0px) + 14px);width:94px;height:94px;}
+    body.touch #tb-crouch{left:calc(var(--sal,0px) + 120px);bottom:calc(var(--sab,0px) + 66px);width:46px;height:46px;}
+    body.touch #tb-walk{left:calc(var(--sal,0px) + 120px);bottom:calc(var(--sab,0px) + 14px);width:46px;height:46px;}
+    body.touch #tb-fire{right:calc(var(--sar,0px) + 14px);bottom:calc(var(--sab,0px) + 14px);width:76px;height:76px;}
+    body.touch #tb-aim{right:calc(var(--sar,0px) + 100px);bottom:calc(var(--sab,0px) + 16px);width:50px;height:50px;}
+    body.touch #tb-reload{right:calc(var(--sar,0px) + 20px);bottom:calc(var(--sab,0px) + 100px);width:46px;height:46px;}
+    body.touch #tb-wpn{right:calc(var(--sar,0px) + 100px);bottom:calc(var(--sab,0px) + 76px);width:46px;height:46px;}
+    body.touch #tb-jump{right:calc(var(--sar,0px) + 162px);bottom:calc(var(--sab,0px) + 14px);width:48px;height:48px;}
+    body.touch #tb-arty{right:calc(var(--sar,0px) + 158px);bottom:calc(var(--sab,0px) + 68px);width:46px;height:46px;border-color:rgba(255,120,80,.5);}
+    body.touch #tb-disarm{bottom:calc(var(--sab,0px) + 100px);}
+    body.touch #hint{bottom:calc(var(--sab,0px) + 152px);max-width:50vw;}
+  }
 </style>
 </head>
 <body>
@@ -287,10 +361,11 @@
 <div id="scope"><div class="lens"></div><div class="v"></div><div class="h"></div><div class="dot"></div></div>
 <div id="hitmark">✕</div>
 <div id="wave">準備</div>
+<div id="vehhud"></div>
 <canvas id="radar" width="296" height="296"></canvas>
 <div id="narr"></div>
 <div id="hint"></div>
-<div id="gaze"><canvas id="gaze-cv"></canvas><div class="lb lb-t"></div><div class="lb lb-b"></div><div id="gaze-line"></div></div>
+<div id="gaze"><canvas id="gaze-cv"></canvas><div class="lb lb-t"></div><div class="lb lb-b"></div><div id="gaze-line"></div><button id="close-eyes" type="button">閉上眼睛</button><div id="rainbow"></div></div>
 <div id="eyelid"><div class="lid lid-t"></div><div class="lid lid-b"></div></div>
 <!-- score HUD 移除:反 CS 計分,通關判定不是變強(雋永藍圖 + Codex 核實的 Tier-0.2 殘留 bug)。kills 仍內部計數供波數結算/死亡字幕 -->
 
@@ -305,6 +380,8 @@
   <div class="row"><label>準星間距</label><input type="range" id="set-chgap" min="0" max="14" step="1"></div>
   <div class="row"><label>準星粗細</label><input type="range" id="set-chthick" min="1" max="6" step="1"></div>
   <div class="row"><label>準星顏色</label><input type="color" id="set-chcolor"></div>
+  <div class="row row-chk"><label for="set-hicon">高對比模式</label><input type="checkbox" id="set-hicon"><span class="chk-note">文字 · 面板 · 準星加強對比</span></div>
+  <div class="row row-chk"><label for="set-haptic">震動回饋(手機)</label><input type="checkbox" id="set-haptic"><span class="chk-note">被擊中時手機震動</span></div>
   <div class="story-open" id="set-story">📖 戰前 · 戰後的故事</div>
   <div class="close" id="set-close">關閉 (Esc)</div>
 </div></div>
@@ -391,13 +468,14 @@
     <button data-sec="all" type="button">全部 42 集</button>
   </div>
   <div class="story-framing" id="story-framing"></div>
+  <div class="story-rec" id="story-rec"></div>
   <a class="story-lm402" href="../../../lm402.html">從 EP0 開始 · 飛到一切的開始<small>走進 LM402 · 那一眼瞬間 · 當初有多浪漫，後來就有多揪心</small></a>
   <div id="story-list"></div>
   <div class="close" id="story-close">闔上</div>
 </div></div>
 
 <div id="reader-embed">
-  <div class="re-bar"><button id="re-back" type="button">‹ 回故事清單</button><span id="re-title"></span></div>
+  <div class="re-bar"><button id="re-back" type="button">‹ 回故事清單</button><span id="re-title"></span><button id="re-music" type="button">🔊</button></div>
   <iframe id="re-frame" title="故事閱讀" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin"></iframe>
 </div>
 
@@ -405,11 +483,12 @@
   <h2>走完天堂路</h2>
   <div class="clear-sub" id="clear-sub"></div>
   <div class="clear-actions">
-    <button type="button" data-act="before" class="cta">戰前的故事<small>當初有多浪漫</small></button>
-    <button type="button" data-act="after" class="cta">戰後的故事<small>後來就有多揪心</small></button>
-    <button type="button" data-act="replay">再次挑戰天堂路<small>劇情 · 新手已走完，換你選更深的路</small></button>
-    <button type="button" data-act="hub">回到軍營走走</button>
+    <button type="button" data-act="before" class="cta">戰前的故事<small>當初有多浪漫 · 邊聽歌邊讀</small></button>
+    <button type="button" data-act="after" class="cta">戰後的故事<small>後來就有多揪心 · 邊聽歌邊讀</small></button>
+    <button type="button" data-act="replay">再次挑戰天堂路<small>換你選更深的路(音樂會停)</small></button>
+    <button type="button" data-act="allreader">回全集故事<small>EP0~EP41 完整閱讀(音樂會停)</small></button>
   </div>
+  <div class="clear-music" id="clear-music">🔊 音樂播放中 · 點此關閉</div>
   <div class="clear-diff" id="clear-diff" hidden>
     <div class="cd-q">劇情模式與新手模式已經走完。<br>這一次，選一條更深的路。<br><span style="font-size:11px;opacity:.62;letter-spacing:.04em;">想邊打邊看故事 → 普通　·　CS 老兵推薦磨技術 → 困難 → 天堂路</span></div>
     <div class="cd-row">
