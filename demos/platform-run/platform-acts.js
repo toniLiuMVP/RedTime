@@ -412,7 +412,7 @@
     const frame = document.createElement("iframe");
     frame.id = "pt-story-iframe";
     frame.title = "故事閱讀";
-    frame.style.cssText = "position:absolute;inset:0;width:100%;height:100%;border:0;background:#0a0c0e";
+    frame.style.cssText = "position:absolute;left:0;right:0;top:52px;bottom:0;width:100%;border:0;background:#0a0c0e";   // iframe 偏移到 bar(52px)下方不重疊:iOS full-size iframe 會自成合成層蓋掉返回列(toni #1),不重疊就一定看得到
     ov.appendChild(frame); ov.appendChild(bar);
     document.body.appendChild(ov);
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && ov.style.display === "block") closeStoryReader(); });
