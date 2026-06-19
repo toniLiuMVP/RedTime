@@ -216,13 +216,13 @@ let bgmMuted = false;
 let bgmStarted = false;
 
 dom.muteBtn.textContent = "\uD83D\uDD0A";
-dom.muteBtn.addEventListener("click", function() {
-  bgmMuted = !bgmMuted;
-  bgm.muted = bgmMuted;
-  dom.muteBtn.textContent = bgmMuted ? "\uD83D\uDD07" : "\uD83D\uDD0A";
-});
+function setMute(m) { bgmMuted = !!m; bgm.muted = bgmMuted; dom.muteBtn.textContent = bgmMuted ? "\uD83D\uDD07" : "\uD83D\uDD0A"; }
+dom.muteBtn.addEventListener("click", function() { setMute(!bgmMuted); });
 // P1-7 \u6A4B\u63A5\uFF1A\u8B93 vignette \u7684 SFX\uFF08\u6C34\u8072\u767D\u566A / \u5012\u5E36\u5347\u983B\uFF09\u5C0A\u91CD\u975C\u97F3\u9215\uFF08read-only getter\uFF09
 window.__PT_AUDIO_OK__ = function () { try { return !bgmMuted; } catch (e) { return true; } };
+// \u904A\u6232\u5167\u6545\u4E8B\u95B1\u8B80 overlay \u7684\u97F3\u6A02\u958B\u95DC\u7528(toni #1:\u8B80\u6545\u4E8B\u6642\u97F3\u6A02\u7E8C\u64AD\u3001\u53EF\u95DC);\u5171\u7528\u540C\u4E00 bgmMuted \u72C0\u614B
+window.__PT_MUSIC_TOGGLE__ = function () { setMute(!bgmMuted); return !bgmMuted; };
+window.__PT_MUSIC_ON__ = function () { return !bgmMuted; };
 
 /* ════════════════════════════════════════════════
    Three.js 初始化

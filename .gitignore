@@ -36,6 +36,9 @@ _Mac首次執行_先點我.command
 2005年學妹定稿/
 2025年學妹定稿/
 
+# Source music (composer originals, kept local; site uses its own committed tracks)
+/Music/
+
 # Placeholder / test fixtures
 .gitkeep
 assets/lm402-parallel/webgpu-test.html

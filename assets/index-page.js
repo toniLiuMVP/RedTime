@@ -90,7 +90,7 @@ saved = localStorage.getItem(SITE_KEY) || localStorage.getItem(LEGACY_KEY) || "m
 if (!LEVELS[saved]) saved = "medium";
   } catch {}
   applyScale(saved);
-  /* 折衷收合:首訪展開(長輩第一眼就看得到);選過字級或收合過 → 記憶收合成單顆「字」鈕 */
+  /* toni #2:預設收合成單顆「字」鈕(首訪即收起,不佔版面);玩家展開過(存 "0")才記住展開 */
   const FONTBAR_COLLAPSED_KEY = "redtime_fontbar_collapsed_v1";
   const _fontWidget = document.getElementById("site-font-widget");
   const _fontCollapseBtn = document.getElementById("site-font-collapse");
@@ -99,7 +99,7 @@ if (!LEVELS[saved]) saved = "medium";
     try { localStorage.setItem(FONTBAR_COLLAPSED_KEY, c ? "1" : "0"); } catch (e) {}
   }
   try {
-    if (_fontWidget && localStorage.getItem(FONTBAR_COLLAPSED_KEY) === "1") _fontWidget.classList.add("collapsed");
+    if (_fontWidget && localStorage.getItem(FONTBAR_COLLAPSED_KEY) !== "0") _fontWidget.classList.add("collapsed");   // 預設收合:null/"1" 皆收,只有曾展開("0")才展開
   } catch (e) {}
   if (_fontCollapseBtn) _fontCollapseBtn.addEventListener("click", function () {
     _setFontBarCollapsed(!_fontWidget.classList.contains("collapsed"));

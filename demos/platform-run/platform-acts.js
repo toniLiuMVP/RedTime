@@ -396,11 +396,19 @@
     bar.style.cssText = "position:absolute;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:2;background:linear-gradient(180deg,rgba(6,8,11,.96),rgba(6,8,11,0));pointer-events:none";
     const lbl = el("div", null, "故事 · 月台這一段");
     lbl.style.cssText = "color:#cdbfae;font-size:13px;letter-spacing:.14em";
+    const rightG = document.createElement("div");
+    rightG.style.cssText = "display:flex;align-items:center;gap:8px;pointer-events:none";
+    const music = el("button", null, "🔊");   // toni #1:讀故事時音樂續播,提供開關
+    music.id = "pt-story-music";
+    music.setAttribute("aria-label", "開關背景音樂");
+    music.style.cssText = "pointer-events:auto;background:rgba(20,14,10,.72);color:#f0d0a8;border:1px solid rgba(232,160,90,.5);border-radius:999px;font-family:inherit;font-size:15px;line-height:1;padding:7px 11px;cursor:pointer";
+    music.addEventListener("click", function () { try { const on = window.__PT_MUSIC_TOGGLE__ ? window.__PT_MUSIC_TOGGLE__() : true; music.textContent = on ? "🔊" : "🔇"; } catch (e) {} });
     const close = el("button", null, "✕ 回到月台");
     close.id = "pt-story-close";
     close.style.cssText = "pointer-events:auto;background:rgba(20,14,10,.72);color:#f0d0a8;border:1px solid rgba(232,160,90,.5);border-radius:999px;font-family:inherit;font-size:13px;letter-spacing:.06em;padding:8px 16px;cursor:pointer";
     close.addEventListener("click", closeStoryReader);
-    bar.appendChild(lbl); bar.appendChild(close);
+    rightG.appendChild(music); rightG.appendChild(close);
+    bar.appendChild(lbl); bar.appendChild(rightG);
     const frame = document.createElement("iframe");
     frame.id = "pt-story-iframe";
     frame.title = "故事閱讀";
@@ -419,6 +427,8 @@
     requestAnimationFrame(function () { ov.style.opacity = "1"; });
     if (!_storyPaused) { _storyPaused = true; _pause(1); }
     _storyReturnFocus = document.activeElement;
+    const music = document.getElementById("pt-story-music");
+    if (music) { try { music.textContent = (window.__PT_MUSIC_ON__ && window.__PT_MUSIC_ON__()) ? "🔊" : "🔇"; } catch (e) {} }   // 開啟時同步音樂鈕圖示(音樂在讀故事時不停)
     const close = document.getElementById("pt-story-close");
     if (close) requestAnimationFrame(function () { try { close.focus(); } catch (e) {} });
   }
@@ -507,9 +517,11 @@
     wrap.appendChild(row1); wrap.appendChild(row2);
     document.body.appendChild(wrap);
 
-    // title 畫面「先讀這段故事」也走遊戲內 overlay（不離開頁面）
-    const tr = document.getElementById("title-read-story");
-    if (tr && !tr._wired) { tr._wired = true; tr.addEventListener("click", function (e) { e.preventDefault(); openStoryReader(36); }); }
+    // 所有「讀這段 EP36」連結(含 title 的「先讀這段故事」)改走遊戲內 overlay(保留返回月台+音樂續播),不再 navigate-away 跳出頁面
+    document.querySelectorAll('a[href*="reader.html#ep-36"]').forEach(function (lk) {
+      if (lk._wiredEmbed) return; lk._wiredEmbed = true;
+      lk.addEventListener("click", function (e) { e.preventDefault(); openStoryReader(36); });
+    });
   }
   if (typeof document !== "undefined") {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", injectLauncher, { once: true });

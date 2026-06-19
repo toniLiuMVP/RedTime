@@ -122,15 +122,16 @@
   #tb-crouch{left:calc(var(--sal,0px) + 140px);bottom:calc(var(--sab,0px) + 148px);width:48px;height:48px;font-size:13px;}
   #tb-walk{left:calc(var(--sal,0px) + 140px);bottom:calc(var(--sab,0px) + 92px);width:48px;height:48px;font-size:13px;}
   /* 右緣直列:功能鍵移到雷達「下方」(雷達高 92 + 頂距 8 → 底約 100,功能鍵從 110 起,三鈕等距,徹底不疊雷達) */
-  #tb-shop{right:calc(var(--sar,0px) + 12px);top:calc(var(--sat,0px) + 110px);width:48px;height:48px;}
-  #tb-act{right:calc(var(--sar,0px) + 12px);top:calc(var(--sat,0px) + 166px);width:48px;height:48px;font-size:13px;}
-  #tb-arty{right:calc(var(--sar,0px) + 12px);top:calc(var(--sat,0px) + 222px);width:48px;height:48px;border-color:rgba(255,120,80,.5);}
+  /* toni #3:軍械庫/使用/砲擊 從右上直列移到「換槍戰鬥群正上方」橫排一列(離開上方劇情旁白帶、進拇指區,不再蓋字) */
+  #tb-arty{right:calc(var(--sar,0px) + 22px);bottom:calc(var(--sab,0px) + 240px);width:46px;height:46px;border-color:rgba(255,120,80,.5);}
+  #tb-act{right:calc(var(--sar,0px) + 76px);bottom:calc(var(--sab,0px) + 240px);width:46px;height:46px;font-size:13px;}
+  #tb-shop{right:calc(var(--sar,0px) + 130px);bottom:calc(var(--sab,0px) + 240px);width:46px;height:46px;}
   #tb-disarm{left:50%;bottom:calc(var(--sab,0px) + 118px);transform:translateX(-50%);border-radius:40px;padding:13px 26px;font-size:15px;display:none;background:rgba(20,16,20,.62);}
   #tb-disarm.on{display:flex;}
   /* 放下槍那一刻=敵人已清,戰鬥拇指鈕無用且會疊到「放下槍」:此刻把戰鬥群組藏起,只留搖桿+放下槍,聚焦這個動作 */
   body.disarm-active #tb-fire,body.disarm-active #tb-aim,body.disarm-active #tb-reload,body.disarm-active #tb-jump,body.disarm-active #tb-wpn,body.disarm-active #tb-arty,body.disarm-active #tb-crouch,body.disarm-active #tb-walk,body.disarm-active #tb-shop{display:none;}
   /* 手機:提示文字移到淨空帶(避免蓋住拇指鈕);準星上方留白 */
-  body.touch #hint{bottom:calc(var(--sab,0px) + 236px);font-size:12.5px;max-width:68vw;padding:8px 16px;}
+  body.touch #hint{bottom:calc(var(--sab,0px) + 300px);font-size:12.5px;max-width:68vw;padding:8px 16px;}   /* 抬到軍械庫/使用/砲擊 橫排(bottom 240-286)上方,避免提示文字被自己提到的按鈕蓋住 */
   /* 手機:HUD 縮小貼齊安全區頂部;血量在左、武器/彈藥靠右但在雷達「左側」,彼此不疊 */
   body.touch #gear{top:calc(var(--sat,0px) + 6px);left:calc(var(--sal,0px) + 10px);}
   body.touch #wave{top:calc(var(--sat,0px) + 12px);font-size:16px;letter-spacing:.12em;max-width:42vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -277,7 +278,8 @@
   #reader-embed .re-bar button{font-family:'Noto Serif TC',serif;font-size:14px;letter-spacing:.06em;color:#fdf3e2;background:rgba(255,220,170,.1);border:1px solid rgba(255,220,170,.34);border-radius:30px;padding:8px 16px;cursor:pointer;}
   #reader-embed .re-bar button:hover{background:rgba(255,220,170,.2);}
   #reader-embed .re-bar span{font-family:'Noto Serif TC',serif;font-size:14px;letter-spacing:.08em;color:#ffd98a;}
-  #reader-embed iframe{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 54px);width:100%;height:calc(100% - env(safe-area-inset-top,0px) - 54px);border:0;background:#0a0c0e;}
+  /* iframe 全填滿(對齊月台 platform-run 真機可運作版:inset:0 + 100%/100%,不用 top/height calc);bar 浮在最上層 */
+  #reader-embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#0a0c0e;}
   /* 破關紀念(走完天堂路:不跳回開頭,音樂續播,邊聽邊看故事/再次挑戰) */
   #clear{position:fixed;inset:0;z-index:10;display:none;align-items:center;justify-content:center;background:rgba(6,5,9,.84);padding:20px;opacity:0;transition:opacity 1s ease;}
   #clear.on{display:flex;opacity:1;}
@@ -346,6 +348,33 @@
     body.touch #tb-disarm{bottom:calc(var(--sab,0px) + 100px);}
     body.touch #hint{bottom:calc(var(--sab,0px) + 152px);max-width:50vw;}
   }
+
+  /* ── 難度選擇按鈕(toni #4:可選性按鈕列取代滑桿;劇情鈕特別紅線質感)── */
+  #settings .diff-row{align-items:flex-start;}
+  #settings .diff-btns{flex:1;display:flex;flex-wrap:wrap;gap:7px;}
+  #settings .diff-btn{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:62px;flex:1 1 62px;padding:8px 6px;cursor:pointer;
+    font-family:'Noto Serif TC',serif;color:#e9ddcf;background:rgba(255,220,170,.06);border:1px solid rgba(255,220,170,.28);border-radius:11px;transition:background .2s,border-color .2s,transform .15s;}
+  #settings .diff-btn:hover{background:rgba(255,220,170,.14);transform:translateY(-1px);}
+  #settings .diff-btn .db-n{font-size:14px;letter-spacing:.08em;}
+  #settings .diff-btn .db-d{font-size:9.5px;opacity:.55;letter-spacing:.02em;}
+  #settings .diff-btn.on{background:rgba(255,206,84,.2);border-color:rgba(255,206,84,.75);color:#fff3df;}
+  #settings .diff-btn.story{border-color:rgba(255,80,100,.5);}
+  #settings .diff-btn.story .db-n{color:#ffc2cc;}
+  #settings .diff-btn.story.on{background:rgba(255,60,90,.22);border-color:rgba(255,80,110,.85);}
+
+  /* ── 劇情模式解鎖提示(toni #4:絢麗紅線特效,5 秒後淡出)── */
+  #story-unlock{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .6s ease;
+    background:radial-gradient(circle at 50% 46%,rgba(40,4,12,.46),rgba(5,2,4,.84));}   /* 暗紅放射背幕:壓暗明亮軍營,紅線才絢麗跳出來 */
+  #story-unlock.on{opacity:1;}
+  #story-unlock .su-lines{position:absolute;inset:0;overflow:hidden;}
+  #story-unlock .su-line{position:absolute;left:-12%;width:124%;height:2.5px;top:calc(30% + var(--i) * 8%);transform:scaleX(0);transform-origin:0 50%;opacity:.95;
+    background:linear-gradient(90deg,transparent,rgba(255,60,90,0) 6%,#ff486a 46%,#ffd0d8 50%,#ff486a 54%,rgba(255,60,90,0) 94%,transparent);filter:drop-shadow(0 0 9px rgba(255,70,100,.95));}
+  #story-unlock.on .su-line{animation:suDraw 1.2s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(var(--i) * .13s);}
+  @keyframes suDraw{0%{transform:scaleX(0);opacity:.95;}55%{transform:scaleX(1);opacity:1;}100%{transform:scaleX(1);opacity:.7;}}
+  #story-unlock .su-card{position:relative;text-align:center;max-width:84vw;padding:26px 30px;background:rgba(26,8,14,.86);border:1px solid rgba(255,90,115,.7);border-radius:16px;box-shadow:0 0 60px rgba(255,50,80,.5),inset 0 0 24px rgba(255,60,90,.12);transform:translateY(14px) scale(.94);transition:transform .8s cubic-bezier(.2,.8,.2,1);}
+  #story-unlock.on .su-card{transform:translateY(0) scale(1);}
+  #story-unlock .su-title{font-family:'Noto Serif TC',serif;font-size:clamp(21px,4.8vw,27px);letter-spacing:.2em;color:#ffdde2;text-shadow:0 0 20px rgba(255,70,100,.9),0 0 4px rgba(255,90,115,.8);}
+  #story-unlock .su-sub{margin-top:12px;font-family:'Noto Serif TC',serif;font-size:clamp(13px,2.5vw,15px);line-height:1.95;letter-spacing:.04em;color:#f3dcd4;}
 </style>
 </head>
 <body>
@@ -373,7 +402,7 @@
 <div id="settings"><div class="panel">
   <h2>設定</h2>
   <div class="row"><label>畫質</label><input type="range" id="set-quality" min="1" max="5" step="1"><span id="set-quality-val" style="flex:0 0 44px;text-align:right;opacity:.8;color:#ffce54;"></span></div>
-  <div class="row"><label>難度</label><input type="range" id="set-diff" min="1" max="5" step="1"><span id="set-diff-val" style="flex:0 0 58px;text-align:right;opacity:.8;color:#ffce54;"></span></div>
+  <div class="row diff-row"><label>難度</label><div id="set-diff-btns" class="diff-btns"></div></div>
   <div class="row"><label>滑鼠靈敏度</label><input type="range" id="set-sens" min="0.4" max="2.5" step="0.05"></div>
   <div class="row"><label>音量</label><input type="range" id="set-vol" min="0" max="1" step="0.05"></div>
   <div class="row"><label>準星大小</label><input type="range" id="set-chsize" min="3" max="18" step="1"></div>
@@ -419,7 +448,7 @@
   <div class="sec"><b>軍營探索</b>：慢慢走。走近那頭牛、那件反穿的外套，按 <b>E</b>(手機按「使用」鈕)，夢會對你說一句話。</div>
   <div class="sec"><b>進入實戰</b>：走到靶場(紅白標靶處)按 <b>E</b>(手機按「使用」鈕)，閉眼睜眼進入「實戰模擬練習」。</div>
   <div class="sec"><b>目標</b>：撐過考驗後，畫面會提示你按 <b>H</b> 放下槍(手機按「放下槍」)。這不是要你變強，是撐到那一刻，終於可以放下。</div>
-  <div class="sec"><b>覺得難</b>：左上齒輪(或 <b>TAB</b>)可隨時調難度，只想看故事就選劇情模式，血量彈藥最寬裕。不用逞強，這裡沒有人會對你說加油。</div>
+  <div class="sec"><b>覺得難</b>：左上齒輪(或 <b>TAB</b>)可隨時調難度，預設新手最好上手。在軍營裡顧那頭牛、翻開大兵日記、看那件反穿的外套，會解鎖血量彈藥最寬裕的「劇情模式」。不用逞強，這裡沒有人會對你說加油。</div>
   <div class="close" id="tut-close">走上天堂路</div>
 </div></div>
 <div id="shop"><div class="panel">
@@ -476,7 +505,7 @@
 
 <div id="reader-embed">
   <div class="re-bar"><button id="re-back" type="button">‹ 回故事清單</button><span id="re-title"></span><button id="re-music" type="button">🔊</button></div>
-  <iframe id="re-frame" title="故事閱讀" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin"></iframe>
+  <iframe id="re-frame" title="故事閱讀" referrerpolicy="no-referrer"></iframe>
 </div>
 
 <div id="clear"><div class="panel">
@@ -490,7 +519,7 @@
   </div>
   <div class="clear-music" id="clear-music">🔊 音樂播放中 · 點此關閉</div>
   <div class="clear-diff" id="clear-diff" hidden>
-    <div class="cd-q">劇情模式與新手模式已經走完。<br>這一次，選一條更深的路。<br><span style="font-size:11px;opacity:.62;letter-spacing:.04em;">想邊打邊看故事 → 普通　·　CS 老兵推薦磨技術 → 困難 → 天堂路</span></div>
+    <div class="cd-q">這一關，你已經走完了。<br>這一次，選一條更深的路。<br><span style="font-size:11px;opacity:.62;letter-spacing:.04em;">想邊打邊看故事 → 普通　·　CS 老兵推薦磨技術 → 困難 → 天堂路</span></div>
     <div class="cd-row">
       <button type="button" data-diff="3">普通<span class="cd-d">8 波 · 正常熔爐</span></button>
       <button type="button" data-diff="4">困難<span class="cd-d">10 波 · 更準更痛</span></button>
