@@ -393,7 +393,7 @@
     ov.setAttribute("aria-label", "故事閱讀");
     ov.style.cssText = "position:fixed;inset:0;z-index:100001;background:rgba(6,8,11,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;opacity:0;transition:opacity .35s ease";
     const bar = document.createElement("div");
-    bar.style.cssText = "position:absolute;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:2;background:linear-gradient(180deg,rgba(6,8,11,.96),rgba(6,8,11,0));pointer-events:none";
+    bar.style.cssText = "position:absolute;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:5;background:linear-gradient(180deg,rgba(6,8,11,.98),rgba(6,8,11,.6) 60%,rgba(6,8,11,0));pointer-events:none";
     const lbl = el("div", null, "故事 · 月台這一段");
     lbl.style.cssText = "color:#cdbfae;font-size:13px;letter-spacing:.14em";
     const rightG = document.createElement("div");

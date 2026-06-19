@@ -346,7 +346,7 @@
         border-left: none !important;
         border-right: none !important;
         background: none !important;
-        padding: 12px clamp(16px, 4vw, 40px) 64px !important;
+        padding: calc(env(safe-area-inset-top, 0px) + 62px) clamp(16px, 4vw, 40px) 64px !important;   /* 上方留白給遊戲端浮動返回列(天堂路/月台 bar ~54px),正文首行不被蓋住 */
       }
       body.reader-embed .episode {
         border-bottom: none !important;

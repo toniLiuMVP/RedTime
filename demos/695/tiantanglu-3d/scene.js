@@ -644,6 +644,7 @@ const WEAPONS = [
   { name: "火箭砲", group: gRocket, type: "launcher", count: 4, rate: 1.2, adsFov: 62, moveMul: 0.7, base: gRocket.position.clone(), rot: gRocket.rotation.clone(), muzzle: rocketMuzzle, muzzleT: 0 },
 ];
 WEAPONS.forEach((w) => { if (w.reserve != null) w.baseReserve = w.reserve; if (w.count != null) w.baseCount = w.count; w.owned = (w.type === "melee" || w.name === "小槍"); });   // 難度套彈藥倍率基準 + 購買系統:近戰+小槍預設擁有,其餘要買
+{ const _h = WEAPONS.find((w) => w.name === "鐵鎚"); if (_h) { _h.hidden = true; _h.owned = false; } }   // toni #1:隱藏鐵鎚(不刪,設不可選/不入換槍循環);預設改小刀
 /* ── 5 段難度(toni:劇情/新手/正常/困難/天堂路) ── */
 const DIFF = {
   1: { name: "劇情", hp: 3, ammo: 3, enemyMul: 1, smart: false, loadoutMul: 1, diffIndex: 1 },
@@ -658,10 +659,13 @@ function applyDifficulty() {   // 進實戰/重新部署時套:玩家 HP、彈�
   WEAPONS.forEach((w) => { if (w.baseReserve != null) { w.ammo = w.mag; w.reserve = Math.round(w.baseReserve * curDiff.ammo); } if (w.baseCount != null) w.count = Math.round(w.baseCount * curDiff.ammo); });
   updateHUD();
 }
-let wi = 0; // 預設鐵鎚(slot 1)
+let wi = 2; // 預設小刀(鐵鎚已隱藏,toni #1)
 function updateHUD() {
   const w = WEAPONS[wi]; const am = document.getElementById("am"), ar = document.getElementById("amres"), nm = document.getElementById("wpn");
   if (nm) nm.textContent = w.name;
+  const _melee = w.type === "melee";   // toni #3:近戰(小刀/刺槍)射擊鍵顯示「攻擊」;模式2 雙側鈕用單字「攻/射」配窄鈕
+  const fb = document.getElementById("tb-fire"); if (fb) fb.textContent = _melee ? "攻擊" : "射擊";
+  const fl = document.getElementById("tb-firel"), fr = document.getElementById("tb-firer"); if (fl) fl.textContent = _melee ? "攻" : "射"; if (fr) fr.textContent = _melee ? "攻" : "射";
   if (w.type === "melee") { if (am) am.textContent = "∞"; if (ar) ar.textContent = ""; }
   else if (w.type === "throw" || w.type === "launcher") { if (am) am.textContent = w.count; if (ar) ar.textContent = ""; }
   else { if (am) am.textContent = w.ammo; if (ar) ar.textContent = w.reserve; }
@@ -704,7 +708,7 @@ function reloadCurve(name, rp) {   // 回 [dipY, rotX, rotZ];每把槍換彈動�
 
 /* ══════════════ Web Audio 音效 ══════════════ */
 let actx = null, masterGain = null, gunBus = null;   // gunBus:玩家槍聲乾聲 + slap-back 回聲匯流排(大操場遠處彈回)
-const settings = { sens: 1, vol: 0.8, chSize: 8, chGap: 4, chThick: 2, chColor: "#7dff8a", quality: 3, difficulty: 2, hicon: 0, haptic: 1 };   // 預設新手(toni #4);劇情模式預設隱藏,要完成牛+日記+外套三互動才解鎖。hicon=高對比模式 / haptic=手機被擊中震動
+const settings = { sens: 1, vol: 0.8, chSize: 8, chGap: 4, chThick: 2, chColor: "#7dff8a", quality: 3, difficulty: 2, hicon: 0, haptic: 1, uiMode: 1, uiScale: 1, uiPos: {} };   // 預設新手(toni #4)。uiMode 1=拖曳看視角/2=右下視角搖桿+雙側射擊鈕;uiScale=介面大小;uiPos=自訂按鈕位置(toni #2)
 try { Object.assign(settings, JSON.parse(localStorage.getItem("tiantanglu_settings_v1") || "{}")); } catch (e) { }
 (function sanitizeSettings() {   // 防 tampered localStorage:數值夾範圍 + chColor 必須 hex(擋 chColor → CSS 變數注入路徑)
   const num = (v, lo, hi, d) => { v = +v; return isFinite(v) ? Math.max(lo, Math.min(hi, v)) : d; };
@@ -714,6 +718,8 @@ try { Object.assign(settings, JSON.parse(localStorage.getItem("tiantanglu_settin
   settings.quality = Math.max(1, Math.min(5, Math.round(+settings.quality) || 3));
   settings.difficulty = Math.max(1, Math.min(5, Math.round(+settings.difficulty) || 3));
   settings.hicon = settings.hicon ? 1 : 0; settings.haptic = settings.haptic === 0 ? 0 : 1;   // 0/1 旗標
+  settings.uiMode = settings.uiMode === 2 ? 2 : 1; settings.uiScale = num(settings.uiScale, 0.8, 1.5, 1);   // toni #2
+  if (!settings.uiPos || typeof settings.uiPos !== "object" || Array.isArray(settings.uiPos)) settings.uiPos = {};
 })();
 function saveSettings() { try { localStorage.setItem("tiantanglu_settings_v1", JSON.stringify(settings)); } catch (e) { } }
 let cleared = false;   // 破關旗標(走完天堂路→一眼瞬間):持久化
@@ -736,6 +742,20 @@ function applyCrosshair() { const r = document.documentElement.style; r.setPrope
 applyCrosshair();
 function applyHicon() { document.body.classList.toggle("hicon", !!settings.hicon); }   // 高對比模式:全 UI 文字/面板/準星增強對比(報告無障礙建議,toni #8 選項3)
 applyHicon();
+const UI_MOVABLE = ["tj", "tj-look", "tb-fire", "tb-firel", "tb-firer", "tb-jump", "tb-aim", "tb-reload", "tb-wpn", "tb-act", "tb-shop", "tb-arty", "tb-crouch", "tb-walk"];   // toni #2:可自訂位置的觸控元件
+function applyUI() {   // toni #2:套用操作模式 / 全域大小 / 自訂位置
+  document.body.classList.toggle("uimode2", settings.uiMode === 2);
+  document.documentElement.style.setProperty("--uiscale", settings.uiScale || 1);
+  document.body.classList.toggle("uiscaled", (settings.uiScale || 1) !== 1);
+  const pos = settings.uiPos || {};
+  UI_MOVABLE.forEach((id) => {
+    const el = document.getElementById(id); if (!el) return;
+    const p = pos[id];
+    if (p && isFinite(p.l) && isFinite(p.t)) { const l = Math.max(0, Math.min(innerWidth - el.offsetWidth, p.l)), t = Math.max(0, Math.min(innerHeight - el.offsetHeight, p.t)); el.style.left = l + "px"; el.style.top = t + "px"; el.style.right = "auto"; el.style.bottom = "auto"; }   // 夾擠到當前視窗,旋轉/改尺寸後按鈕不跑出畫面外
+    else { el.style.left = ""; el.style.top = ""; el.style.right = ""; el.style.bottom = ""; }
+  });
+}
+applyUI();
 function haptic(ms) { if (isTouch && settings.haptic && navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) { } } }   // 手機被擊中震動回饋(toni #8 確認手機被擊中自動觸發;桌機無 vibrate→無作用)
 function ensureAudio() { if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); masterGain = actx.createGain(); masterGain.gain.value = settings.vol * 0.85; const comp = actx.createDynamicsCompressor(); comp.threshold.value = -10; comp.knee.value = 6; comp.ratio.value = 12; comp.attack.value = 0.003; comp.release.value = 0.18; masterGain.connect(comp); comp.connect(actx.destination); buildGunBus(); } catch (e) { } } if (actx && actx.state === "suspended") actx.resume(); startAmbient(); }   // 加總限制器(密集槍聲+多敵+爆炸不再硬切削峰)+ 0.85 headroom
 function buildGunBus() {   // 槍聲 slap-back:乾聲直送 + 一路 send 進延遲回授(遠處建物彈回的空曠回聲)
@@ -837,6 +857,7 @@ const isTouch = (window.matchMedia && window.matchMedia("(pointer: coarse)").mat
 if (isTouch && enterEl) { const _r = enterEl.querySelector(".ring"); if (_r) _r.textContent = "點一下開始"; const _s = enterEl.querySelector(".sub"); if (_s) _s.style.display = "none"; }   // 手機版不需要滑鼠/鍵盤提示(isTouch 宣告後才用,避免 TDZ)
 function actHint(suffix, sep) { return (isTouch ? "按「使用」鈕" : "按 E") + (sep != null ? sep : (isTouch ? "" : " ")) + suffix; }   // 互動鍵提示:桌機 E 鍵帶空格、手機「使用」鈕貼齊(對齊改名後的 tb-act 鈕);sep 給 · 分隔的提示用
 let touchActive = false, tjx = 0, tjz = 0, tCrouch = false, tWalk = false;   // tCrouch/tWalk:手機蹲下/慢走切換鍵狀態
+let lookJX = 0, lookJY = 0;   // toni #2:模式2 右下視角搖桿的當前偏移(-1..1),每幀套到 yaw/pitch
 function isActive() { return document.pointerLockElement === canvas || touchActive; }   // pointer lock(桌機)或 touchActive(手機)
 // 任一全螢幕 overlay(設定/軍械/日記/教學)開啟時為 true。手機輕觸常帶微小位移,touchmove 的 preventDefault 會吞掉 overlay 按鈕的 click,
 // 故 overlay 開時整組 touch-look/搖桿/遊戲鈕一律讓位,讓 overlay 自己的按鈕吃到原生 click(修「軍械庫關不掉」)。
@@ -878,7 +899,10 @@ if (isTouch) {
   addEventListener("touchend", lookEnd); addEventListener("touchcancel", lookEnd);
   // 按鈕
   const tbtn = (id, down, up) => { const el = document.getElementById(id); if (!el) return; el.addEventListener("touchstart", (e) => { e.preventDefault(); e.stopPropagation(); if (overlayOpen()) return; if (down) down(); }, { passive: false }); if (up) { el.addEventListener("touchend", (e) => { e.preventDefault(); up(); }); el.addEventListener("touchcancel", up); } };
-  tbtn("tb-fire", () => { mouseDown = true; if (WEAPONS[wi].type !== "auto") fire(); }, () => { mouseDown = false; });
+  let _fireHold = 0;   // 計數同時按住的射擊鈕(模式2 雙側鈕):放開一顆只在沒有其他鈕按住時才停火
+  const fireDown = () => { _fireHold++; mouseDown = true; if (WEAPONS[wi].type !== "auto") fire(); };
+  const fireUp = () => { _fireHold = Math.max(0, _fireHold - 1); if (_fireHold === 0) mouseDown = false; };
+  tbtn("tb-fire", fireDown, fireUp);
   tbtn("tb-jump", () => { keys.Space = 1; setTimeout(() => { keys.Space = 0; }, 60); });
   tbtn("tb-aim", () => { ads = !ads; });
   tbtn("tb-reload", () => reload());
@@ -889,6 +913,19 @@ if (isTouch) {
   tbtn("tb-arty", () => { callArtillery(); });
   tbtn("tb-crouch", () => { tCrouch = !tCrouch; const e = document.getElementById("tb-crouch"); if (e) e.classList.toggle("act", tCrouch); });   // 蹲下切換(再按起身)
   tbtn("tb-walk", () => { tWalk = !tWalk; const e = document.getElementById("tb-walk"); if (e) e.classList.toggle("act", tWalk); });   // 慢走/靜步切換
+  // toni #2:模式2 右下視角搖桿(右手大拇指控視角)
+  const tjLookEl = document.getElementById("tj-look"), tjLookKnob = document.getElementById("tj-look-knob");
+  if (tjLookEl && tjLookKnob) {
+    let tjLookId = null;
+    const luUpd = (t) => { const r = tjLookEl.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, max = r.width / 2 || 1; let dx = t.clientX - cx, dy = t.clientY - cy; const d = Math.hypot(dx, dy) || 1; if (d > max) { dx = dx / d * max; dy = dy / d * max; } tjLookKnob.style.transform = "translate(" + dx + "px," + dy + "px)"; lookJX = dx / max; lookJY = dy / max; };
+    tjLookEl.addEventListener("touchstart", (e) => { if (overlayOpen() || document.body.classList.contains("ui-edit")) return; tjLookId = e.changedTouches[0].identifier; luUpd(e.changedTouches[0]); e.preventDefault(); e.stopPropagation(); }, { passive: false });
+    tjLookEl.addEventListener("touchmove", (e) => { for (const t of e.changedTouches) if (t.identifier === tjLookId) { luUpd(t); e.preventDefault(); } }, { passive: false });
+    const luEnd = (e) => { for (const t of e.changedTouches) if (t.identifier === tjLookId) { tjLookId = null; lookJX = 0; lookJY = 0; tjLookKnob.style.transform = ""; } };
+    tjLookEl.addEventListener("touchend", luEnd); tjLookEl.addEventListener("touchcancel", luEnd);
+  }
+  // toni #2:模式2 螢幕中段雙側射擊鈕(左/右食指可點);共用 fireHold 計數避免放開一顆中斷另一顆連發
+  tbtn("tb-firel", fireDown, fireUp);
+  tbtn("tb-firer", fireDown, fireUp);
 }
 
 /* ── 設定選單 + 可調準星 + 結算重啟 ── */
@@ -1867,6 +1904,9 @@ function openEmbed(ep, title) {
   if (!reEl || !reFrame) return;
   reEl.classList.add("on");   // 先顯示容器:iframe 必須在「可見」狀態下載入,行動瀏覽器/content-visibility 才會正常 paint(否則整片黑,toni #1)
   if (reTitleEl) reTitleEl.textContent = "EP" + ep + (title ? " · " + title : "");
+  // toni #5:遊戲內讀故事要有音樂(一眼瞬間),沒在播就起一個 loop;bar 的 🔊 鈕(toggleGazeMusic)可關
+  try { if (!gazeMusic) { gazeMusic = new Audio(GAZE_MUSIC_URL); gazeMusic.loop = true; gazeMusic.volume = (settings.vol != null ? settings.vol : 0.8) * 0.4; gazeMusic.play().catch(() => { }); } else if (gazeMusic.paused) { gazeMusic.play().catch(() => { }); } } catch (e) { }
+  updateMusicToggleLabels();
   reFrame.onload = function () { try { var w = reFrame.contentWindow; if (w) { w.dispatchEvent(new Event("resize")); w.scrollTo(0, 0); } } catch (e) { } };   // 載入後踢一次 layout/scroll,逼節流的 iframe 完成 paint
   reFrame.src = "../../../reader.html?embed=1#ep-" + ep;   // 同源 iframe(frame-src 'self');遊戲端音樂照常播,讀完按返回回清單
 }
@@ -1884,6 +1924,41 @@ function closeEmbed() { if (reEl) reEl.classList.remove("on"); if (reFrame) reFr
 })();
 const _setStoryBtn = document.getElementById("set-story"); if (_setStoryBtn) _setStoryBtn.addEventListener("click", () => { closeSettings(); openStory("before"); });
 const _diaryStoryBtn = document.getElementById("diary-story"); if (_diaryStoryBtn) _diaryStoryBtn.addEventListener("click", () => { closeDiary(); openStory("before"); });
+/* ── toni #2:自訂 UI(操作模式切換 + 編輯模式:拖移/大小/重設)── */
+(function bindCustomUI() {
+  const box = document.getElementById("set-uimode-btns");
+  const MODES = { 1: { n: "拖曳看", d: "右側滑動控視角" }, 2: { n: "視角搖桿", d: "右下搖桿+雙側射擊" } };
+  function renderMode() {
+    if (!box) return;
+    while (box.firstChild) box.removeChild(box.firstChild);
+    [1, 2].forEach((m) => {
+      const b = document.createElement("button"); b.type = "button"; b.className = "diff-btn" + (settings.uiMode === m ? " on" : "");
+      const nm = document.createElement("span"); nm.className = "db-n"; nm.textContent = MODES[m].n;
+      const ds = document.createElement("span"); ds.className = "db-d"; ds.textContent = MODES[m].d;
+      b.appendChild(nm); b.appendChild(ds);
+      b.addEventListener("click", () => { settings.uiMode = m; saveSettings(); applyUI(); renderMode(); });
+      box.appendChild(b);
+    });
+  }
+  renderMode();
+  const customBtn = document.getElementById("set-customui");
+  if (customBtn) customBtn.addEventListener("click", () => { closeSettings(); document.body.classList.add("ui-edit"); lookJX = 0; lookJY = 0; const sc = document.getElementById("uep-scale"); if (sc) sc.value = settings.uiScale || 1; });
+  const doneBtn = document.getElementById("uep-done"); if (doneBtn) doneBtn.addEventListener("click", () => document.body.classList.remove("ui-edit"));
+  const scaleEl = document.getElementById("uep-scale"); if (scaleEl) scaleEl.addEventListener("input", () => { settings.uiScale = Math.max(0.8, Math.min(1.5, parseFloat(scaleEl.value) || 1)); saveSettings(); applyUI(); });
+  const resetBtn = document.getElementById("uep-reset"); if (resetBtn) resetBtn.addEventListener("click", () => { settings.uiPos = {}; settings.uiScale = 1; saveSettings(); applyUI(); if (scaleEl) scaleEl.value = 1; });
+  // 編輯模式拖移:capture 先攔截(stopPropagation 不觸發遊戲鈕),改用 left/top 定位並存 uiPos
+  let dragEl = null, dragId = null, offX = 0, offY = 0;
+  function pick(target) { let el = target; while (el && el !== document.body) { if (el.id && UI_MOVABLE.indexOf(el.id) >= 0) return el; el = el.parentElement; } return null; }
+  function dStart(x, y, target) { if (!document.body.classList.contains("ui-edit")) return false; const el = pick(target); if (!el) return false; dragEl = el; const r = el.getBoundingClientRect(); offX = x - r.left; offY = y - r.top; return true; }
+  function dMove(x, y) { if (!dragEl) return; const l = Math.max(0, Math.min(innerWidth - dragEl.offsetWidth, x - offX)), t = Math.max(0, Math.min(innerHeight - dragEl.offsetHeight, y - offY)); dragEl.style.left = l + "px"; dragEl.style.top = t + "px"; dragEl.style.right = "auto"; dragEl.style.bottom = "auto"; }
+  function dEnd() { if (!dragEl) return; settings.uiPos = settings.uiPos || {}; settings.uiPos[dragEl.id] = { l: Math.round(dragEl.offsetLeft), t: Math.round(dragEl.offsetTop) }; saveSettings(); dragEl = null; }   // 存版面盒座標(offsetLeft/Top)對齊 applyUI 的 style.left/top,縮放下重整不漂移
+  document.addEventListener("touchstart", (e) => { if (!document.body.classList.contains("ui-edit")) return; const t = e.changedTouches[0]; if (dStart(t.clientX, t.clientY, e.target)) { dragId = t.identifier; e.preventDefault(); e.stopPropagation(); } }, { passive: false, capture: true });
+  document.addEventListener("touchmove", (e) => { if (!dragEl) return; for (const t of e.changedTouches) if (t.identifier === dragId) { dMove(t.clientX, t.clientY); e.preventDefault(); } }, { passive: false, capture: true });
+  document.addEventListener("touchend", (e) => { if (!dragEl) return; for (const t of e.changedTouches) if (t.identifier === dragId) { dEnd(); dragId = null; } }, { capture: true });
+  document.addEventListener("mousedown", (e) => { if (!document.body.classList.contains("ui-edit")) return; if (dStart(e.clientX, e.clientY, e.target)) { e.preventDefault(); e.stopPropagation(); } }, true);
+  document.addEventListener("mousemove", (e) => { if (dragEl) dMove(e.clientX, e.clientY); });
+  document.addEventListener("mouseup", () => { if (dragEl) dEnd(); });
+})();
 if (storyEl) storyEl.querySelectorAll(".story-tabs button").forEach((b) => b.addEventListener("click", () => renderStory(b.getAttribute("data-sec"))));
 const _storyClose = document.getElementById("story-close"); if (_storyClose) _storyClose.addEventListener("click", closeStory);
 const _reBack = document.getElementById("re-back"); if (_reBack) _reBack.addEventListener("click", closeEmbed);
@@ -2256,6 +2331,7 @@ function addKick(name) { const k = WKICK[name]; if (!k) return; vmKick = Math.mi
 let drawT = 0, drawDur = 0.5, reloadT = 0, reloadDur = 2.4, reloadFilled = true, chSpread = 0;
 function updateFP(dt) {
   const w = WEAPONS[wi];
+  if ((lookJX || lookJY) && !overlayOpen() && !document.body.classList.contains("ui-edit")) { const s = dt * 2.6 * (settings.sens || 1) * (disarmT > 0 ? 0.22 : 1); yaw -= lookJX * s; pitch = Math.max(-1.2, Math.min(1.2, pitch - lookJY * s)); }   // toni #2:模式2 視角搖桿每幀轉 yaw/pitch(編輯模式不轉,避免拖按鈕時鏡頭飄)
   if (vehicle) {   // 駕駛載具:獨立路徑(驅動 + 追逐攝影機),仍更新世界
     updateVehicle(dt); updateWaves(dt); updateMusic(dt); updateAmbient(dt);
     updateProjectiles(dt); updateTargets(dt); updateEnemies(dt); updateEffects(dt);
@@ -2384,7 +2460,7 @@ function updateFP(dt) {
   updateMemShards(dt); updateTracers(dt); updateShells(dt); updateCasings(dt); updateMags(dt);   // 記憶光點 + CS 曳光 + 榴彈砲彈道 + 退殼 + 空彈匣
   updateListener();
 }
-showWeapon(0);
+showWeapon(2);   // 預設小刀(鐵鎚已隱藏,toni #1)
 
 /* ───────── 氣氛:霧 + 光塵 ───────── */
 scene.fog = new THREE.Fog(0xeacba8, 95, 280);
@@ -2485,7 +2561,7 @@ if (DEBUG) {
   window.__DBG__ = () => ({ enemies: enemies.length, alive: waveAlive, queue: spawnQueue, wave, score, kills, hp: playerHP, dead, gameOver, MODE, awaitDisarm }); // debug 狀態
   window.__GAZE__ = startGaze; // debug 觸發一眼瞬間
 }
-function onResize() { const w = window.innerWidth, h = window.innerHeight; renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); if (postfx) postfx.setSize(Math.round(w * renderer.getPixelRatio()), Math.round(h * renderer.getPixelRatio())); }
+function onResize() { const w = window.innerWidth, h = window.innerHeight; renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); if (postfx) postfx.setSize(Math.round(w * renderer.getPixelRatio()), Math.round(h * renderer.getPixelRatio())); if (typeof applyUI === "function") applyUI(); }   // 旋轉/改尺寸後重新夾擠自訂 UI 位置(toni #2)
 window.addEventListener("resize", onResize);
 setTimeout(() => document.getElementById("title").classList.add("show"), 600);
 if (isTouch) setTimeout(() => { const t = document.getElementById("title"); if (t) t.classList.remove("show"); }, 4600);   // 手機:標題只當開場 splash,讀完(~4.6s)淡出,把擁擠的頂部 HUD 帶完整讓給血量/彈藥/雷達(桌機標題在上方不擋,維持原樣)

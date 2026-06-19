@@ -2516,10 +2516,23 @@
         padding: 10px 12px;
         border-radius: 999px;
         border: 1px solid rgba(255, 255, 255, 0.1);
-        background: rgba(8, 10, 16, 0.82);
-        box-shadow: 0 18px 36px rgba(0, 0, 0, 0.28);
+        background: rgba(8, 10, 16, 0.5);   /* toni #6:半透明,不擋住下方內容 */
+        box-shadow: 0 18px 36px rgba(0, 0, 0, 0.2);
         -webkit-backdrop-filter: blur(18px);
         backdrop-filter: blur(18px);
+      }
+      /* toni #6:收合時整個容器縮成右下角單顆「字」鈕(不再 mobile 全寬黑塊擋內容);透明容器只露出 .site-font-collapse */
+      .site-font-widget.collapsed {
+        left: auto;
+        right: 16px;
+        width: auto;
+        padding: 0;
+        gap: 0;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
       }
       .site-font-widget-label {
         font-family: "DM Mono", monospace;
@@ -3035,14 +3048,16 @@
 /* 字級面板折衷收合 */
 .site-font-collapse {
   display: none;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 1px solid rgba(234, 230, 222, 0.25);
-  background: rgba(12, 14, 12, 0.82);
+  background: rgba(12, 14, 12, 0.5);   /* toni #6:半透明 */
   color: rgba(234, 230, 222, 0.85);
   font: 600 15px "Noto Serif TC", serif;
   cursor: pointer;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
 }
 .site-font-widget.collapsed .site-font-collapse {
   display: inline-flex;

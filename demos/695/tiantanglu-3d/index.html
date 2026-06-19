@@ -108,30 +108,54 @@
   /* 安全區(瀏海／Home Indicator)變數:觸控元件一律貼齊安全區,不被系統列蓋住,彼此也不重疊 */
   body.touch{--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);--sal:env(safe-area-inset-left,0px);--sar:env(safe-area-inset-right,0px);}
   /* 左:移動拇指區 */
-  #tj{position:fixed;left:calc(var(--sal,0px) + 18px);bottom:calc(var(--sab,0px) + 100px);width:108px;height:108px;border-radius:50%;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.16);pointer-events:auto;touch-action:none;}
+  #tj{position:fixed;left:calc(var(--sal,0px) + 22px);bottom:calc(var(--sab,0px) + 118px);width:104px;height:104px;border-radius:50%;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.16);pointer-events:auto;touch-action:none;}
   #tj-knob{position:absolute;left:50%;top:50%;width:50px;height:50px;margin:-25px 0 0 -25px;border-radius:50%;background:rgba(255,220,170,.3);border:1.5px solid rgba(255,220,170,.5);}
   .tbtn{position:fixed;pointer-events:auto;touch-action:none;border-radius:50%;background:rgba(20,16,20,.42);border:1.5px solid rgba(255,220,170,.3);color:#f3e6d8;font-size:12px;letter-spacing:.04em;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;}
   .tbtn:active,.tbtn.act{background:rgba(255,220,170,.32);border-color:rgba(255,220,170,.7);}
-  /* 右下:戰鬥拇指區(火力大鈕 + 環繞小鈕) */
-  #tb-fire{right:calc(var(--sar,0px) + 22px);bottom:calc(var(--sab,0px) + 30px);width:84px;height:84px;font-size:15px;}
-  #tb-jump{right:calc(var(--sar,0px) + 120px);bottom:calc(var(--sab,0px) + 34px);width:52px;height:52px;}
-  #tb-aim{right:calc(var(--sar,0px) + 28px);bottom:calc(var(--sab,0px) + 126px);width:54px;height:54px;}
-  #tb-reload{right:calc(var(--sar,0px) + 112px);bottom:calc(var(--sab,0px) + 114px);width:48px;height:48px;}
-  #tb-wpn{right:calc(var(--sar,0px) + 32px);bottom:calc(var(--sab,0px) + 182px);width:48px;height:48px;}
-  /* 左:蹲下/慢走切換(移動拇指右上,toggle 高亮) */
-  #tb-crouch{left:calc(var(--sal,0px) + 140px);bottom:calc(var(--sab,0px) + 148px);width:48px;height:48px;font-size:13px;}
-  #tb-walk{left:calc(var(--sal,0px) + 140px);bottom:calc(var(--sab,0px) + 92px);width:48px;height:48px;font-size:13px;}
-  /* 右緣直列:功能鍵移到雷達「下方」(雷達高 92 + 頂距 8 → 底約 100,功能鍵從 110 起,三鈕等距,徹底不疊雷達) */
-  /* toni #3:軍械庫/使用/砲擊 從右上直列移到「換槍戰鬥群正上方」橫排一列(離開上方劇情旁白帶、進拇指區,不再蓋字) */
-  #tb-arty{right:calc(var(--sar,0px) + 22px);bottom:calc(var(--sab,0px) + 240px);width:46px;height:46px;border-color:rgba(255,120,80,.5);}
-  #tb-act{right:calc(var(--sar,0px) + 76px);bottom:calc(var(--sab,0px) + 240px);width:46px;height:46px;font-size:13px;}
-  #tb-shop{right:calc(var(--sar,0px) + 130px);bottom:calc(var(--sab,0px) + 240px);width:46px;height:46px;}
+  /* 右下:戰鬥拇指區。射擊鍵加大(toni #1:拇指按射擊、食指控視角);瞄準/換彈/跳 環繞 */
+  #tb-fire{right:calc(var(--sar,0px) + 18px);bottom:calc(var(--sab,0px) + 26px);width:100px;height:100px;font-size:16px;}
+  #tb-aim{right:calc(var(--sar,0px) + 30px);bottom:calc(var(--sab,0px) + 138px);width:56px;height:56px;}
+  #tb-reload{right:calc(var(--sar,0px) + 126px);bottom:calc(var(--sab,0px) + 32px);width:50px;height:50px;}
+  #tb-jump{right:calc(var(--sar,0px) + 122px);bottom:calc(var(--sab,0px) + 130px);width:50px;height:50px;}
+  /* toni #1:右側功能直列(下→上)換槍→使用→砲擊→軍械庫 */
+  #tb-wpn{right:calc(var(--sar,0px) + 184px);bottom:calc(var(--sab,0px) + 30px);width:48px;height:48px;}
+  #tb-act{right:calc(var(--sar,0px) + 184px);bottom:calc(var(--sab,0px) + 86px);width:48px;height:48px;font-size:13px;}
+  #tb-arty{right:calc(var(--sar,0px) + 184px);bottom:calc(var(--sab,0px) + 142px);width:48px;height:48px;border-color:rgba(255,120,80,.5);}
+  #tb-shop{right:calc(var(--sar,0px) + 184px);bottom:calc(var(--sab,0px) + 198px);width:48px;height:48px;}
+  /* toni #1:蹲/走 移到方向搖桿下方(蹲左、走右) */
+  #tb-crouch{left:calc(var(--sal,0px) + 26px);bottom:calc(var(--sab,0px) + 52px);width:50px;height:50px;font-size:13px;}
+  #tb-walk{left:calc(var(--sal,0px) + 84px);bottom:calc(var(--sab,0px) + 52px);width:50px;height:50px;font-size:13px;}
   #tb-disarm{left:50%;bottom:calc(var(--sab,0px) + 118px);transform:translateX(-50%);border-radius:40px;padding:13px 26px;font-size:15px;display:none;background:rgba(20,16,20,.62);}
+  /* ── toni #2:自訂 UI / 操作模式 2(右下視角搖桿 + 雙側射擊鈕)+ 全域大小 + 編輯模式 ── */
+  #tj-look,#tb-firel,#tb-firer{display:none;}
+  body.touch.uimode2 #tb-fire{display:none;}   /* 模式2:雙側射擊鈕取代大射擊鈕,角落讓給視角搖桿 */
+  body.touch.uimode2 #tj-look{display:block;position:fixed;right:calc(var(--sar,0px) + 18px);bottom:calc(var(--sab,0px) + 26px);width:104px;height:104px;border-radius:50%;background:rgba(120,180,255,.07);border:1.5px solid rgba(160,200,255,.26);pointer-events:auto;touch-action:none;z-index:6;}
+  #tj-look-knob{position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;background:rgba(160,200,255,.32);border:1.5px solid rgba(160,200,255,.5);}
+  body.touch.uimode2 #tb-firel{display:flex;left:calc(var(--sal,0px) + 14px);top:46%;width:66px;height:66px;}
+  body.touch.uimode2 #tb-firer{display:flex;right:calc(var(--sar,0px) + 14px);top:46%;width:66px;height:66px;}
+  /* 全域 UI 大小(編輯模式滑桿);#tb-disarm 另含 translateX 故獨立 */
+  body.touch .tbtn:not(#tb-disarm){transform:scale(var(--uiscale,1));}
+  body.touch.uiscaled #tb-disarm{transform:translateX(-50%) scale(var(--uiscale,1));}
+  body.touch #tj,body.touch #tj-look{transform:scale(var(--uiscale,1));}
+  /* 編輯模式:虛線框 + 顯示全部可移動鈕 */
+  body.ui-edit .tbtn,body.ui-edit #tj,body.ui-edit #tj-look{outline:2px dashed rgba(255,206,84,.85);outline-offset:2px;}
+  body.ui-edit #tj-look{display:block !important;} body.ui-edit #tb-firel,body.ui-edit #tb-firer{display:flex !important;}
+  #ui-edit-panel{position:fixed;left:50%;top:calc(var(--sat,0px) + 12px);transform:translateX(-50%);z-index:30;display:none;
+    background:rgba(20,16,22,.93);border:1px solid rgba(255,206,84,.5);border-radius:14px;padding:12px 16px;backdrop-filter:blur(6px);
+    font-family:'Noto Serif TC',serif;color:#f3e6d8;width:min(90vw,360px);box-shadow:0 10px 40px rgba(0,0,0,.5);}
+  body.ui-edit #ui-edit-panel{display:block;}
+  #ui-edit-panel .uep-hint{font-size:12px;opacity:.7;text-align:center;margin-bottom:8px;letter-spacing:.06em;}
+  #ui-edit-panel .uep-row{display:flex;align-items:center;gap:12px;font-size:13px;margin:8px 0;}
+  #ui-edit-panel .uep-row input[type=range]{flex:1;accent-color:#ffce54;}
+  #ui-edit-panel .uep-btns{display:flex;gap:10px;margin-top:8px;}
+  #ui-edit-panel .uep-btns button{flex:1;font-family:inherit;font-size:14px;padding:10px;border-radius:30px;cursor:pointer;color:#f4ece2;background:rgba(255,220,170,.1);border:1px solid rgba(255,220,170,.4);}
+  #ui-edit-panel .uep-done{background:rgba(255,206,84,.22);border-color:rgba(255,206,84,.7);}
   #tb-disarm.on{display:flex;}
   /* 放下槍那一刻=敵人已清,戰鬥拇指鈕無用且會疊到「放下槍」:此刻把戰鬥群組藏起,只留搖桿+放下槍,聚焦這個動作 */
   body.disarm-active #tb-fire,body.disarm-active #tb-aim,body.disarm-active #tb-reload,body.disarm-active #tb-jump,body.disarm-active #tb-wpn,body.disarm-active #tb-arty,body.disarm-active #tb-crouch,body.disarm-active #tb-walk,body.disarm-active #tb-shop{display:none;}
   /* 手機:提示文字移到淨空帶(避免蓋住拇指鈕);準星上方留白 */
-  body.touch #hint{bottom:calc(var(--sab,0px) + 300px);font-size:12.5px;max-width:68vw;padding:8px 16px;}   /* 抬到軍械庫/使用/砲擊 橫排(bottom 240-286)上方,避免提示文字被自己提到的按鈕蓋住 */
+  body.touch #hint{top:calc(var(--sat,0px) + 92px);bottom:auto;font-size:12.5px;max-width:82vw;padding:8px 16px;}   /* toni #1:提示移到畫面上方(HUD 下方),不擋底部任何按鈕/搖桿 */
+  body.touch #narr{top:calc(var(--sat,0px) + 144px);padding:0 6vw;font-size:clamp(14px,2.3vw,18px);}   /* toni #1:劇情旁白也移到上方(在 #hint 下方堆疊),不再置中 */
   /* 手機:HUD 縮小貼齊安全區頂部;血量在左、武器/彈藥靠右但在雷達「左側」,彼此不疊 */
   body.touch #gear{top:calc(var(--sat,0px) + 6px);left:calc(var(--sal,0px) + 10px);}
   body.touch #wave{top:calc(var(--sat,0px) + 12px);font-size:16px;letter-spacing:.12em;max-width:42vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -258,7 +282,7 @@
   #story .story-tabs{display:flex;gap:7px;justify-content:center;margin-bottom:10px;}
   #story .story-tabs button{flex:1;max-width:150px;font-family:'Noto Serif TC',serif;font-size:13px;letter-spacing:.06em;color:#e8dcc8;background:rgba(255,220,170,.06);border:1px solid rgba(255,220,170,.26);border-radius:30px;padding:9px 0;cursor:pointer;transition:background .2s;}
   #story .story-tabs button.on{background:rgba(255,220,170,.22);color:#fff3e0;border-color:rgba(255,220,170,.6);}
-  #story .story-framing{font-size:13px;line-height:1.95;letter-spacing:.05em;opacity:.8;text-align:center;margin:0 6px 12px;color:#f0e0cf;min-height:1.95em;}
+  #story .story-framing{font-size:13px;line-height:1.95;letter-spacing:.05em;opacity:.8;text-align:center;margin:0 6px 14px;color:#f0e0cf;flex:0 0 auto;}   /* flex:0 0 auto:不被 flex 壓回 1 行高度→2 行文字不再溢出蓋住下方建議先讀(toni #4)*/
   #story .story-lm402{display:block;text-decoration:none;text-align:center;font-size:14.5px;letter-spacing:.06em;color:#ffe3b0;border:1px solid rgba(255,206,84,.5);border-radius:12px;padding:12px;margin-bottom:12px;background:linear-gradient(180deg,rgba(80,60,30,.4),rgba(40,30,20,.3));transition:background .3s,transform .2s;}
   #story .story-lm402:hover{background:linear-gradient(180deg,rgba(110,82,40,.55),rgba(56,42,26,.4));transform:translateY(-1px);}
   #story .story-lm402 small{display:block;font-size:11px;opacity:.72;letter-spacing:.08em;margin-top:5px;}
@@ -274,12 +298,12 @@
   /* iOS Safari:flex:1 的 iframe 會塌成 0 高度→整片黑。改用 absolute 給 iframe 明確上下界(全平台都對) */
   #reader-embed{position:fixed;inset:0;z-index:12;display:none;background:#0a0c0e;}
   #reader-embed.on{display:block;}
-  #reader-embed .re-bar{position:absolute;top:0;left:0;right:0;height:calc(env(safe-area-inset-top,0px) + 54px);box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 9px) 16px 9px;background:rgba(16,14,18,.96);border-bottom:1px solid rgba(255,220,170,.18);z-index:1;}
+  #reader-embed .re-bar{position:absolute;top:0;left:0;right:0;height:calc(env(safe-area-inset-top,0px) + 54px);box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 9px) 16px 9px;background:rgba(16,14,18,.96);border-bottom:1px solid rgba(255,220,170,.18);z-index:5;}   /* z-index:5 確保 bar 浮在 iframe 上(iOS iframe 會自成合成層蓋住 z-auto 的 bar→toni #5 看不到返回鈕)*/
   #reader-embed .re-bar button{font-family:'Noto Serif TC',serif;font-size:14px;letter-spacing:.06em;color:#fdf3e2;background:rgba(255,220,170,.1);border:1px solid rgba(255,220,170,.34);border-radius:30px;padding:8px 16px;cursor:pointer;}
   #reader-embed .re-bar button:hover{background:rgba(255,220,170,.2);}
   #reader-embed .re-bar span{font-family:'Noto Serif TC',serif;font-size:14px;letter-spacing:.08em;color:#ffd98a;}
   /* iframe 全填滿(對齊月台 platform-run 真機可運作版:inset:0 + 100%/100%,不用 top/height calc);bar 浮在最上層 */
-  #reader-embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#0a0c0e;}
+  #reader-embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#0a0c0e;z-index:1;}   /* 明確低 z,讓 bar(z:5)壓在上面 */
   /* 破關紀念(走完天堂路:不跳回開頭,音樂續播,邊聽邊看故事/再次挑戰) */
   #clear{position:fixed;inset:0;z-index:10;display:none;align-items:center;justify-content:center;background:rgba(6,5,9,.84);padding:20px;opacity:0;transition:opacity 1s ease;}
   #clear.on{display:flex;opacity:1;}
@@ -305,7 +329,7 @@
   #settings .row-chk .chk-note{flex:1;font-size:11px;opacity:.5;letter-spacing:.02em;}
 
   /* 建議先讀(故事選單頂端):3 個入口集數,點了直接讀 */
-  #story .story-rec{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin:0 4px 12px;}
+  #story .story-rec{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin:0 4px 12px;flex:0 0 auto;}
   #story .story-rec .rec-lbl{width:100%;text-align:center;font-size:11px;letter-spacing:.1em;opacity:.55;margin-bottom:2px;}
   #story .story-rec .rec-chip{font-family:'Noto Serif TC',serif;font-size:12.5px;letter-spacing:.03em;color:#ffe1b0;background:rgba(255,206,84,.1);border:1px solid rgba(255,206,84,.4);border-radius:30px;padding:7px 14px;cursor:pointer;transition:background .2s,transform .15s;}
   #story .story-rec .rec-chip:hover{background:rgba(255,206,84,.22);transform:translateY(-1px);}
@@ -323,6 +347,13 @@
   body.hicon #story-list .ep-row{background:rgba(255,255,255,.06) !important;border-color:rgba(255,255,255,.4) !important;}
   body.hicon #story-list .ep-row .ep-i{opacity:.88 !important;}
 
+  /* 窄螢幕直拿(≤374px:iPhone SE/mini 等):右側功能直列抬到走/蹲列上方,避免與左下走鈕在 x 重疊(toni #1 審查) */
+  @media (orientation: portrait) and (max-width: 374px) {
+    body.touch #tb-wpn{bottom:calc(var(--sab,0px) + 112px);}
+    body.touch #tb-act{bottom:calc(var(--sab,0px) + 168px);}
+    body.touch #tb-arty{bottom:calc(var(--sab,0px) + 224px);}
+    body.touch #tb-shop{bottom:calc(var(--sab,0px) + 280px);}
+  }
   /* ── 手機橫拿(landscape):拇指在左下/右下角,戰鬥鍵靠右下、移動靠左下,少用功能鍵移右緣中段;短螢幕不上下擠成一團。
        放在 CSS 最末:確保覆蓋前面所有 body.touch 直立版位(同 specificity 靠後者勝) ── */
   @media (orientation: landscape) and (max-height: 540px) {
@@ -346,7 +377,8 @@
     body.touch #tb-jump{right:calc(var(--sar,0px) + 162px);bottom:calc(var(--sab,0px) + 14px);width:48px;height:48px;}
     body.touch #tb-arty{right:calc(var(--sar,0px) + 158px);bottom:calc(var(--sab,0px) + 68px);width:46px;height:46px;border-color:rgba(255,120,80,.5);}
     body.touch #tb-disarm{bottom:calc(var(--sab,0px) + 100px);}
-    body.touch #hint{bottom:calc(var(--sab,0px) + 152px);max-width:50vw;}
+    body.touch #hint{top:calc(var(--sat,0px) + 40px);bottom:auto;max-width:56vw;}
+    body.touch #narr{top:calc(var(--sat,0px) + 78px);}
   }
 
   /* ── 難度選擇按鈕(toni #4:可選性按鈕列取代滑桿;劇情鈕特別紅線質感)── */
@@ -411,6 +443,8 @@
   <div class="row"><label>準星顏色</label><input type="color" id="set-chcolor"></div>
   <div class="row row-chk"><label for="set-hicon">高對比模式</label><input type="checkbox" id="set-hicon"><span class="chk-note">文字 · 面板 · 準星加強對比</span></div>
   <div class="row row-chk"><label for="set-haptic">震動回饋(手機)</label><input type="checkbox" id="set-haptic"><span class="chk-note">被擊中時手機震動</span></div>
+  <div class="row diff-row" id="set-uimode-row"><label>操作模式</label><div id="set-uimode-btns" class="diff-btns"></div></div>
+  <div class="story-open" id="set-customui">🎮 自訂介面位置 / 大小</div>
   <div class="story-open" id="set-story">📖 戰前 · 戰後的故事</div>
   <div class="close" id="set-close">關閉 (Esc)</div>
 </div></div>
@@ -486,6 +520,17 @@
   <button id="tb-crouch" class="tbtn" type="button">蹲</button>
   <button id="tb-walk" class="tbtn" type="button">走</button>
   <button id="tb-disarm" class="tbtn" type="button">放下槍</button>
+  <!-- toni #2 模式2:右下視角搖桿 + 螢幕中段左右各一射擊鈕(右手食指控視角、雙食指可射擊);預設隱藏,body.uimode2 才顯示 -->
+  <div id="tj-look"><div id="tj-look-knob"></div></div>
+  <button id="tb-firel" class="tbtn" type="button">射</button>
+  <button id="tb-firer" class="tbtn" type="button">射</button>
+</div>
+
+<!-- toni #2:自訂 UI 編輯模式面板(拖移按鈕 + 全域大小 + 重設) -->
+<div id="ui-edit-panel">
+  <div class="uep-hint">拖曳任一按鈕移動位置</div>
+  <div class="uep-row"><span>大小</span><input type="range" id="uep-scale" min="0.8" max="1.5" step="0.05"></div>
+  <div class="uep-btns"><button type="button" id="uep-reset">重設</button><button type="button" id="uep-done" class="uep-done">完成</button></div>
 </div>
 
 <div id="story"><div class="panel">
