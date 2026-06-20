@@ -391,9 +391,9 @@
     ov.id = "pt-story-overlay";
     ov.setAttribute("role", "dialog");
     ov.setAttribute("aria-label", "故事閱讀");
-    ov.style.cssText = "position:fixed;inset:0;z-index:100001;background:rgba(6,8,11,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;opacity:0;transition:opacity .35s ease";
+    ov.style.cssText = "position:fixed;inset:0;z-index:100001;background:rgba(6,8,11,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;opacity:0;overflow:hidden;transition:opacity .35s ease";
     const bar = document.createElement("div");
-    bar.style.cssText = "position:absolute;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:5;background:linear-gradient(180deg,rgba(6,8,11,.98),rgba(6,8,11,.6) 60%,rgba(6,8,11,0));pointer-events:none";
+    bar.style.cssText = "position:relative;height:calc(env(safe-area-inset-top,0px) + 52px);box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top,0px) + 6px) 16px 6px;background:rgba(6,8,11,.98);border-bottom:1px solid rgba(232,160,90,.22)";   // 正常文件流 bar(非絕對浮層):固定高 safe+52 與 iframe 的 dvh 扣減對齊,接在 iframe 上方不重疊,iOS iframe 合成層蓋不到(r15 真正解法)
     const lbl = el("div", null, "故事 · 月台這一段");
     lbl.style.cssText = "color:#cdbfae;font-size:13px;letter-spacing:.14em";
     const rightG = document.createElement("div");
@@ -412,8 +412,8 @@
     const frame = document.createElement("iframe");
     frame.id = "pt-story-iframe";
     frame.title = "故事閱讀";
-    frame.style.cssText = "position:absolute;left:0;right:0;top:52px;bottom:0;width:100%;border:0;background:#0a0c0e";   // iframe 偏移到 bar(52px)下方不重疊:iOS full-size iframe 會自成合成層蓋掉返回列(toni #1),不重疊就一定看得到
-    ov.appendChild(frame); ov.appendChild(bar);
+    frame.style.cssText = "position:relative;display:block;width:100%;height:calc(100dvh - 52px - env(safe-area-inset-top,0px));border:0;background:#0a0c0e";   // 流式區塊接 bar 下方,dvh 算高(非 absolute→iOS 合成層蓋不到;非 height:auto→不塌 150px)
+    ov.appendChild(bar); ov.appendChild(frame);   // bar 在前=文件流在上方;iframe 在後=下方填滿
     document.body.appendChild(ov);
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && ov.style.display === "block") closeStoryReader(); });
     return ov;
