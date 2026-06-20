@@ -346,7 +346,65 @@
         border-left: none !important;
         border-right: none !important;
         background: none !important;
-        padding: 12px clamp(16px, 4vw, 40px) 64px !important;   /* 遊戲端 iframe 已偏移到返回列下方,正文不需再額外留白 */
+        /* 上方留出空間給 reader 自身的內嵌返回列(固定在 iframe 頂端,含安全區);
+           正文才不會被返回列蓋住。返回列高約 48px + 安全區。 */
+        padding: calc(48px + env(safe-area-inset-top, 0px) + 14px) clamp(16px, 4vw, 40px) 64px !important;
+      }
+      /* 內嵌返回列:固定在 iframe 自身頂端,渲染在 reader 文件內 →
+         iOS Safari 不會被 iframe 合成層蓋掉(這是「遊戲端浮層被 iframe 遮住」的根治) */
+      #embed-bar {
+        display: none;
+      }
+      body.reader-embed #embed-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 2147483000;   /* 蓋過內嵌正文,確保永遠可見可點 */
+        box-sizing: border-box;
+        padding: calc(env(safe-area-inset-top, 0px) + 8px) clamp(12px, 4vw, 20px) 8px;
+        background: rgba(10, 12, 14, 0.86);
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid rgba(255, 217, 168, 0.18);
+        font-family: "DM Mono", monospace;
+      }
+      #embed-bar button {
+        -webkit-appearance: none;
+        appearance: none;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 217, 168, 0.28);
+        color: #f0e6d6;
+        border-radius: 10px;
+        font-family: inherit;
+        line-height: 1;
+        transition: background 0.2s, border-color 0.2s, transform 0.15s;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+      }
+      #embed-bar button:hover { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 217, 168, 0.5); }
+      #embed-bar button:active { transform: scale(0.96); }
+      #embed-bar .embed-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 9px 16px;
+        font-size: 14px;
+        letter-spacing: 0.06em;
+      }
+      #embed-bar .embed-mute {
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        padding: 0;
       }
       body.reader-embed .episode {
         border-bottom: none !important;
@@ -11761,6 +11819,68 @@
       if (params.get("embed") !== "1") return;
       document.body.classList.add("reader-embed");
       try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch (e) {}
+
+      /* 內嵌返回列:渲染在 reader 文件內(part of iframe)→ iOS Safari 不會被 iframe
+         合成層蓋掉(遊戲端浮在 iframe 之上的返回列在 iOS 永遠被遮 = 玩家被困住)。
+         全程 createElement + textContent + addEventListener,不用 innerHTML / inline onclick。
+         與遊戲父頁的通訊一律走 postMessage,targetOrigin 鎖 location.origin(同源)。 */
+      (function buildEmbedBar() {
+        if (!document.body.classList.contains("reader-embed")) return;
+
+        var muted = false;
+
+        var bar = document.createElement("div");
+        bar.id = "embed-bar";
+
+        var backBtn = document.createElement("button");
+        backBtn.type = "button";
+        backBtn.className = "embed-back";
+        backBtn.textContent = "‹ 回到遊戲";
+        backBtn.setAttribute("aria-label", "回到遊戲");
+        backBtn.addEventListener("click", function () {
+          try {
+            window.parent && window.parent.postMessage(
+              { source: "ttl-reader", action: "close" },
+              location.origin
+            );
+          } catch (e) {}
+        });
+
+        var muteBtn = document.createElement("button");
+        muteBtn.type = "button";
+        muteBtn.className = "embed-mute";
+        muteBtn.setAttribute("aria-label", "音樂開關");
+        function paintMute() {
+          muteBtn.textContent = muted ? "🔇" : "🔊";
+          muteBtn.setAttribute("aria-pressed", muted ? "true" : "false");
+        }
+        paintMute();
+        muteBtn.addEventListener("click", function () {
+          /* 樂觀切換本地圖示,實際靜音由父頁的遊戲音訊系統執行 */
+          muted = !muted;
+          paintMute();
+          try {
+            window.parent && window.parent.postMessage(
+              { source: "ttl-reader", action: "toggle-mute" },
+              location.origin
+            );
+          } catch (e) {}
+        });
+
+        bar.appendChild(backBtn);
+        bar.appendChild(muteBtn);
+        document.body.appendChild(bar);
+
+        /* 接收父頁(遊戲)的靜音狀態同步,讓圖示與遊戲真實狀態一致。同源檢查必過。 */
+        window.addEventListener("message", function (e) {
+          if (e.origin !== location.origin) return;
+          var d = e.data;
+          if (d && d.source === "ttl-game" && typeof d.muted === "boolean") {
+            muted = d.muted;
+            paintMute();
+          }
+        });
+      })();
       var m = (location.hash || "").match(/ep-(\d+)/);
       var ep = m ? parseInt(m[1], 10) : 0;
       // 先把 hash 拿掉:不然瀏覽器會原生捲到「42 集都在時」的 #ep-N 像素位置(很下面),

@@ -28,6 +28,9 @@
   /* ── HUD ── */
   #hud{position:fixed;inset:0;z-index:4;pointer-events:none;
     font-family:"DIN Condensed","Oswald","Arial Narrow",sans-serif;}
+  /* 撐過了那拍:把戰鬥數字(血/波/分)淡到極低,眼睛不被數字拉走,只留「撐過了」+ 旁白;戰鬥恢復即還原 */
+  #hud,#wave,#score{transition:opacity .9s ease;}
+  body.hud-dim #hud,body.hud-dim #wave,body.hud-dim #score{opacity:.08;}
   .hud-box{position:absolute;bottom:30px;display:flex;align-items:flex-end;gap:10px;
     text-shadow:0 2px 8px rgba(0,0,0,.7);}
   #hud-left{left:36px;} #hud-right{right:36px;}
@@ -200,9 +203,10 @@
     font-family:"Noto Serif TC",serif;font-size:clamp(15px,2.4vw,20px);letter-spacing:.12em;
     color:#f3e6d8;text-shadow:0 2px 18px rgba(0,0,0,.85);opacity:0;transition:opacity 1s;padding:0 8vw;line-height:1.7;}
   /* ── hub 互動提示(走到靶場按 E 進實戰模擬) ── */
+  /* toni #4:上方互動提示泡泡縮小 + 更透明(別太搶眼出戲);仍清楚可讀 */
   #hint{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);z-index:4;pointer-events:none;
-    font-family:"Noto Serif TC",serif;font-size:15px;letter-spacing:.12em;color:#fdf3e2;text-align:center;
-    background:rgba(20,14,18,.5);border:1px solid rgba(255,220,170,.35);border-radius:30px;padding:9px 22px;
+    font-family:"Noto Serif TC",serif;font-size:12.5px;letter-spacing:.1em;color:#fdf3e2;text-align:center;
+    background:rgba(20,14,18,.34);border:1px solid rgba(255,220,170,.22);border-radius:24px;padding:6px 15px;
     opacity:0;transition:opacity .3s;backdrop-filter:blur(3px);}
   /* 放下槍提示:呼吸脈動 + 暖光描邊,讓「按 H 放下槍／輕觸放下槍」更醒目(桌機也好發現) */
   #hint.pulse{animation:hintBreath 1.8s ease-in-out infinite;border-color:rgba(255,206,84,.7);color:#fff3e0;font-size:16px;}
@@ -238,7 +242,6 @@
   /* 結局選單 / 嵌入閱讀:音樂開關(看故事時音樂續播,可關) */
   #clear .clear-music{margin-top:14px;text-align:center;font-size:12px;letter-spacing:.08em;color:#cbb89c;cursor:pointer;opacity:.8;}
   #clear .clear-music:hover{opacity:1;color:#ffd98a;}
-  #reader-embed .re-bar #re-music{margin-left:auto;flex:0 0 auto;font-size:16px;padding:6px 12px;}
   /* 進場閉眼睜眼眼皮(夢框:一遍一遍回到當兵第一天) */
   #eyelid{position:fixed;inset:0;z-index:11;pointer-events:none;}
   #eyelid .lid{position:absolute;left:0;right:0;height:0;background:#000;transition:height var(--lid-dur,.5s) cubic-bezier(.5,0,.3,1);}
@@ -272,6 +275,13 @@
   #gear{position:fixed;top:18px;left:18px;z-index:6;cursor:pointer;font-size:20px;opacity:.55;
     line-height:1;padding:6px;}
   #gear:hover{opacity:.9;}
+  /* PC 專屬:齒輪下方一顆「TAB」鍵帽,提示按 TAB 開設定(手機隱藏) */
+  #gear-tab{position:fixed;top:50px;left:16px;z-index:6;cursor:pointer;pointer-events:auto;
+    font-family:"DIN Condensed","Oswald","Arial Narrow",sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;
+    color:#f3e6d8;opacity:.5;line-height:1;padding:3px 7px;border:1px solid rgba(255,220,170,.4);
+    border-bottom-width:2px;border-radius:5px;background:rgba(20,16,20,.42);text-align:center;}
+  #gear-tab:hover{opacity:.9;border-color:rgba(255,220,170,.7);}
+  body.touch #gear-tab{display:none;}
   #settings{position:fixed;inset:0;z-index:8;display:none;align-items:center;justify-content:center;background:rgba(10,8,12,.82);}
   #settings.on{display:flex;}
   #settings .panel{background:rgba(28,22,30,.97);border:1px solid rgba(255,220,170,.25);border-radius:16px;
@@ -315,13 +325,8 @@
   /* iOS Safari:flex:1 的 iframe 會塌成 0 高度→整片黑。改用 absolute 給 iframe 明確上下界(全平台都對) */
   #reader-embed{position:fixed;inset:0;z-index:12;display:none;background:#0a0c0e;overflow:hidden;}
   #reader-embed.on{display:block;}
-  #reader-embed .re-bar{position:relative;left:0;right:0;height:calc(env(safe-area-inset-top,0px) + 54px);box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 9px) 16px 9px;background:rgba(16,14,18,.96);border-bottom:1px solid rgba(255,220,170,.18);}   /* 正常文件流(非絕對浮層):bar 是 iframe 上方的流式區塊,不重疊→iOS iframe 合成層無從蓋住(連修 4 輪的真正解法,r15)*/
-  #reader-embed .re-bar button{font-family:'Noto Serif TC',serif;font-size:14px;letter-spacing:.06em;color:#fdf3e2;background:rgba(255,220,170,.1);border:1px solid rgba(255,220,170,.34);border-radius:30px;padding:8px 16px;cursor:pointer;}
-  #reader-embed .re-bar button:hover{background:rgba(255,220,170,.2);}
-  #reader-embed .re-bar span{font-family:'Noto Serif TC',serif;font-size:14px;letter-spacing:.08em;color:#ffd98a;}
-  /* iframe 全填滿(對齊月台 platform-run 真機可運作版:inset:0 + 100%/100%,不用 top/height calc);bar 浮在最上層 */
-  /* iframe 偏移到 bar「下方」(不重疊):iOS full-size iframe 會自成合成層蓋過 z 較低的兄弟 bar,光靠 z-index 壓不住;不重疊就一定看得到返回鈕(toni #1 連報多次)。sandbox 已移除→不黑屏 */
-  #reader-embed iframe{position:relative;display:block;width:100%;height:calc(100dvh - env(safe-area-inset-top,0px) - 54px);border:0;background:#0a0c0e;}   /* 流式區塊接在 bar 下方:用 dvh 算高(非 height:auto 會塌 150px、非 absolute 會被 iOS 合成層蓋)*/
+  /* toni #1:iframe 滿版填滿 #reader-embed(返回/音樂鈕改由 reader 在 iframe 內自畫,parent bar 已移除);對齊月台 platform-run 真機可運作版 inset:0 + 100%/100%,sandbox 已移除→不黑屏 */
+  #reader-embed iframe{position:absolute;inset:0;display:block;width:100%;height:100%;border:0;background:#0a0c0e;}
   /* 破關紀念(走完天堂路:不跳回開頭,音樂續播,邊聽邊看故事/再次挑戰) */
   #clear{position:fixed;inset:0;z-index:10;display:none;align-items:center;justify-content:center;background:rgba(6,5,9,.84);padding:20px;opacity:0;transition:opacity 1s ease;}
   #clear.on{display:flex;opacity:1;}
@@ -449,10 +454,13 @@
   #dreamwake .dw-text{font-family:'Noto Serif TC',serif;font-size:clamp(22px,5vw,36px);letter-spacing:.3em;color:#1a1620;opacity:.86;}
   #dreamwake .dw-btn{margin-top:42px;font-family:'Noto Serif TC',serif;font-size:clamp(15px,2.6vw,18px);letter-spacing:.26em;color:#2a2430;background:rgba(26,22,32,.06);border:1px solid rgba(26,22,32,.4);border-radius:40px;padding:14px 40px;cursor:pointer;transition:background .3s;}
   #dreamwake .dw-btn:hover{background:rgba(26,22,32,.14);}
-  /* 進入天堂路難度關卡的橫幅(不舉手夢中夢):清楚顯示關卡名 1 秒 */
-  #level-banner{position:fixed;left:0;right:0;top:36%;z-index:40;text-align:center;pointer-events:none;opacity:0;transition:opacity .5s ease;font-family:'Noto Serif TC',serif;font-size:clamp(22px,5.6vw,42px);letter-spacing:.16em;color:#ffe1c0;text-shadow:0 0 24px rgba(255,150,80,.6),0 3px 16px rgba(0,0,0,.92);}
-  #level-banner.in{opacity:1;}
-  #level-banner.out{opacity:0;}
+  /* 夢的碎片計數:軍營角落極低調(非任務清單);首次遇見一個探索點時亮一階再沉回 */
+  #shards{position:fixed;left:36px;top:calc(var(--sat,0px) + 22px);z-index:4;pointer-events:none;display:none;
+    font-family:'Noto Serif TC',serif;font-size:13px;letter-spacing:.22em;color:#ffd2c0;opacity:0;
+    text-shadow:0 1px 6px rgba(0,0,0,.8);transition:opacity 1.1s ease;}
+  #shards.on{display:block;opacity:.16;}
+  #shards.bump{opacity:.62;transition:opacity .25s ease;}
+  body.touch #shards{left:calc(var(--sal,0px) + 12px);top:calc(var(--sat,0px) + 40px);font-size:12px;}
 </style>
 </head>
 <body>
@@ -471,12 +479,14 @@
 <div id="vehhud"></div>
 <canvas id="radar" width="296" height="296"></canvas>
 <div id="narr"></div>
+<div id="shards">夢的碎片 0/3</div>
 <div id="hint"></div>
 <div id="gaze"><canvas id="gaze-cv"></canvas><div class="lb lb-t"></div><div class="lb lb-b"></div><div id="gaze-line"></div><button id="close-eyes" type="button">閉上眼睛</button><div id="rainbow"></div></div>
 <div id="eyelid"><div class="lid lid-t"></div><div class="lid lid-b"></div></div>
 <!-- score HUD 移除:反 CS 計分,通關判定不是變強(雋永藍圖 + Codex 核實的 Tier-0.2 殘留 bug)。kills 仍內部計數供波數結算/死亡字幕 -->
 
-<div id="gear" title="設定 (Esc)">⚙</div>
+<div id="gear" title="設定 (TAB)">⚙</div>
+<div id="gear-tab" title="按 TAB 開設定">TAB</div>
 <div id="hint-toggle" title="顯示／收合提示">?</div>
 <div id="settings"><div class="panel">
   <h2>設定</h2>
@@ -516,14 +526,14 @@
 
 <div id="enter">
   <div class="ring">點擊畫面任何地方，讓滑鼠控制視角</div>
-  <div class="sub">WASD 走動 · 左鍵射擊 · 右鍵瞄準 · Shift 蹲 · 空白跳 · 1~9 換武器 · R 換彈 · G 天降砲擊 · E 互動／上下車 · B 軍械庫 · TAB 設定 · ESC 放開滑鼠</div>
+  <div class="sub">WASD 走動 · 左鍵射擊 · 右鍵瞄準 · Shift 蹲 · 空白跳 · 1~9 換武器 · R 換彈 · G 天降砲擊 · E 互動／上下車 · B 軍械庫 · TAB 設定 · F1 放開滑鼠</div>
   <div id="tut-btn">📖 新手教學</div>
 </div>
 <div id="tutorial"><div class="panel">
   <h2>新手教學</h2>
   <div class="sec"><b>移動</b>：WASD 走動，Shift 蹲下，Ctrl 慢步，空白跳躍。</div>
   <div class="sec"><b>戰鬥</b>：左鍵攻擊，右鍵瞄準/開鏡，1~9 換武器，R 換彈。近戰(鐵鎚/刺槍/小刀)無限使用。</div>
-  <div class="sec"><b>視角與設定</b>：點畫面讓滑鼠控制視角。<b>ESC</b> 放開滑鼠(跳出視角控制)，<b>TAB</b> 開系統設定(難度／音量／準星)。</div>
+  <div class="sec"><b>視角與設定</b>：點畫面讓滑鼠控制視角。<b>F1</b> 放開滑鼠(跳出視角控制)，<b>TAB</b> 開系統設定(難度／音量／準星)。</div>
   <div class="sec"><b>砲兵連</b>：在那段日子裡，你是全連算彈著點最快的計算手。把準星對著<b>地面</b>，按 <b>G</b>(手機按「砲擊」鈕)呼叫天降砲擊，叢集砲彈會砸下來，28 秒才能再算一次。</div>
   <div class="sec"><b>載具</b>：走近悍馬車／大砲／坦克按 <b>E</b>(手機按「使用」鈕)上車，再按一次下車。WASD 駕駛，左鍵／射擊鈕開炮，撞擊能殲敵。實戰中油料／砲彈有限(軍械庫可補)，普通以上難度需先在軍械庫買使用權。</div>
   <div class="sec"><b>軍營探索</b>：慢慢走。走近那頭牛、那件反穿的外套，按 <b>E</b>(手機按「使用」鈕)，夢會對你說一句話。</div>
@@ -597,7 +607,7 @@
 </div></div>
 
 <div id="reader-embed">
-  <div class="re-bar"><button id="re-back" type="button">‹ 回故事清單</button><span id="re-title"></span><button id="re-music" type="button">🔊</button></div>
+  <!-- toni #1:返回鈕 + 音樂鈕由 reader 自己在 iframe 內畫(postMessage 通訊);此處只留滿版 iframe -->
   <iframe id="re-frame" title="故事閱讀" referrerpolicy="no-referrer"></iframe>
 </div>
 

@@ -391,29 +391,12 @@
     ov.id = "pt-story-overlay";
     ov.setAttribute("role", "dialog");
     ov.setAttribute("aria-label", "故事閱讀");
-    ov.style.cssText = "position:fixed;inset:0;z-index:100001;background:rgba(6,8,11,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;opacity:0;overflow:hidden;transition:opacity .35s ease";
-    const bar = document.createElement("div");
-    bar.style.cssText = "position:relative;height:calc(env(safe-area-inset-top,0px) + 52px);box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top,0px) + 6px) 16px 6px;background:rgba(6,8,11,.98);border-bottom:1px solid rgba(232,160,90,.22)";   // 正常文件流 bar(非絕對浮層):固定高 safe+52 與 iframe 的 dvh 扣減對齊,接在 iframe 上方不重疊,iOS iframe 合成層蓋不到(r15 真正解法)
-    const lbl = el("div", null, "故事 · 月台這一段");
-    lbl.style.cssText = "color:#cdbfae;font-size:13px;letter-spacing:.14em";
-    const rightG = document.createElement("div");
-    rightG.style.cssText = "display:flex;align-items:center;gap:8px;pointer-events:none";
-    const music = el("button", null, "🔊");   // toni #1:讀故事時音樂續播,提供開關
-    music.id = "pt-story-music";
-    music.setAttribute("aria-label", "開關背景音樂");
-    music.style.cssText = "pointer-events:auto;background:rgba(20,14,10,.72);color:#f0d0a8;border:1px solid rgba(232,160,90,.5);border-radius:999px;font-family:inherit;font-size:15px;line-height:1;padding:7px 11px;cursor:pointer";
-    music.addEventListener("click", function () { try { const on = window.__PT_MUSIC_TOGGLE__ ? window.__PT_MUSIC_TOGGLE__() : true; music.textContent = on ? "🔊" : "🔇"; } catch (e) {} });
-    const close = el("button", null, "✕ 回到月台");
-    close.id = "pt-story-close";
-    close.style.cssText = "pointer-events:auto;background:rgba(20,14,10,.72);color:#f0d0a8;border:1px solid rgba(232,160,90,.5);border-radius:999px;font-family:inherit;font-size:13px;letter-spacing:.06em;padding:8px 16px;cursor:pointer";
-    close.addEventListener("click", closeStoryReader);
-    rightG.appendChild(music); rightG.appendChild(close);
-    bar.appendChild(lbl); bar.appendChild(rightG);
+    ov.style.cssText = "position:fixed;inset:0;z-index:100001;background:#0a0c0e;display:none;opacity:0;overflow:hidden;transition:opacity .35s ease";
     const frame = document.createElement("iframe");
     frame.id = "pt-story-iframe";
     frame.title = "故事閱讀";
-    frame.style.cssText = "position:relative;display:block;width:100%;height:calc(100dvh - 52px - env(safe-area-inset-top,0px));border:0;background:#0a0c0e";   // 流式區塊接 bar 下方,dvh 算高(非 absolute→iOS 合成層蓋不到;非 height:auto→不塌 150px)
-    ov.appendChild(bar); ov.appendChild(frame);   // bar 在前=文件流在上方;iframe 在後=下方填滿
+    frame.style.cssText = "position:absolute;inset:0;width:100%;height:100%;border:0;background:#0a0c0e";   // r16:全屏 iframe,不再用父頁 bar(iOS 一定被 iframe 合成層蓋)。回到遊戲/音樂鈕改由 reader 端 in-iframe bar 經 postMessage 控制→一定看得到
+    ov.appendChild(frame);
     document.body.appendChild(ov);
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && ov.style.display === "block") closeStoryReader(); });
     return ov;
@@ -442,6 +425,20 @@
     _storyReturnFocus = null;
   }
   if (typeof window !== "undefined") window.__PT_READ_STORY__ = openStoryReader;
+  // r16 #1:接收 reader 端 in-iframe bar 的 postMessage(回到遊戲/音樂開關);同源檢查
+  if (typeof window !== "undefined" && !window.__PT_READER_MSG__) {
+    window.__PT_READER_MSG__ = true;
+    window.addEventListener("message", function (e) {
+      if (e.origin !== location.origin) return;
+      var d = e.data; if (!d || d.source !== "ttl-reader") return;
+      if (d.action === "close") closeStoryReader();
+      else if (d.action === "toggle-mute") {
+        var on = window.__PT_MUSIC_TOGGLE__ ? window.__PT_MUSIC_TOGGLE__() : true;   // on=切換後是否有聲
+        var f = document.getElementById("pt-story-iframe");
+        if (f && f.contentWindow) { try { f.contentWindow.postMessage({ source: "ttl-game", muted: !on }, location.origin); } catch (er) {} }
+      }
+    });
+  }
 
   // 自注入左上角按鈕。桌機：2×2 並列、下移避開倒數進度條。
   // 手機：兩排各收合成一顆（💭 回憶 / 🏠 飛回），點一下展開原本兩顆、再點收合。

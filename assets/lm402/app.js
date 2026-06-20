@@ -3207,23 +3207,11 @@ function ensureStoryOverlay() {
   ov.setAttribute("role", "dialog");
   ov.setAttribute("aria-label", "故事閱讀");
   ov.style.cssText = "position:fixed;inset:0;z-index:100000;background:rgba(6,8,11,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;opacity:0;transition:opacity .35s ease";
-  const bar = document.createElement("div");
-  bar.style.cssText = "position:absolute;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:2;background:linear-gradient(180deg,rgba(6,8,11,.96),rgba(6,8,11,0));pointer-events:none";
-  const lbl = document.createElement("div");
-  lbl.textContent = "故事 · 意識菜市場這一段";
-  lbl.style.cssText = "color:#cdbfae;font-size:13px;letter-spacing:.14em";
-  const close = document.createElement("button");
-  close.id = "lm402-story-close";
-  close.type = "button";
-  close.textContent = "✕ 回到教室";
-  close.style.cssText = "pointer-events:auto;background:rgba(8,11,16,.72);color:#cfe0f0;border:1px solid rgba(159,208,255,.5);border-radius:999px;font-family:inherit;font-size:13px;letter-spacing:.06em;padding:8px 16px;cursor:pointer";
-  close.addEventListener("click", closeStoryReader);
-  bar.appendChild(lbl); bar.appendChild(close);
   const frame = document.createElement("iframe");
   frame.id = "lm402-story-iframe";
   frame.title = "故事閱讀";
   frame.style.cssText = "position:absolute;inset:0;width:100%;height:100%;border:0;background:#0a0c0e";
-  ov.appendChild(frame); ov.appendChild(bar);
+  ov.appendChild(frame);   // r16:全屏 iframe,不再用父頁 bar(iOS 被 iframe 合成層蓋)。回到遊戲/音樂鈕改由 reader 端 in-iframe bar 經 postMessage 控制
   document.body.appendChild(ov);
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && ov.style.display === "block") closeStoryReader(); });
   return ov;
@@ -3232,14 +3220,13 @@ let _storyReturnFocus = null;
 function openStoryReader(ep) {
   const ov = ensureStoryOverlay();
   const frame = document.getElementById("lm402-story-iframe");
+  frame.onload = function () { try { if (frame.contentWindow) frame.contentWindow.postMessage({ source: "ttl-game", muted: !!window.__lm402Muted }, location.origin); } catch (e) {} };   // r16:載入後把目前靜音狀態同步給 reader 端 in-iframe bar 圖示(否則重開時 🔊 與實際不符)
   frame.src = "reader.html?embed=1#ep-" + (ep || 38);
   ov.style.display = "block";
   requestAnimationFrame(function () { ov.style.opacity = "1"; });
   state.storyPaused = true;
   try { if (document.exitPointerLock) document.exitPointerLock(); } catch (e) {} /* 讀故事時釋放指標鎖 */
-  _storyReturnFocus = document.activeElement; /* 記住觸發鈕，關閉後還焦點 */
-  const close = document.getElementById("lm402-story-close");
-  if (close) requestAnimationFrame(function () { try { close.focus(); } catch (e) {} });
+  _storyReturnFocus = document.activeElement; /* 記住觸發鈕，關閉後還焦點;回到遊戲/音樂鈕已移進 reader iframe */
 }
 function closeStoryReader() {
   const ov = document.getElementById("lm402-story-overlay");
@@ -3252,6 +3239,21 @@ function closeStoryReader() {
   _storyReturnFocus = null;
 }
 if (typeof window !== "undefined") window.__LM402_READ_STORY__ = openStoryReader;
+// r16 #1:接收 reader 端 in-iframe bar 的 postMessage(回到教室/音樂開關);同源檢查
+if (typeof window !== "undefined" && !window.__LM402_READER_MSG__) {
+  window.__LM402_READER_MSG__ = true;
+  window.addEventListener("message", function (e) {
+    if (e.origin !== location.origin) return;
+    var d = e.data; if (!d || d.source !== "ttl-reader") return;
+    if (d.action === "close") closeStoryReader();
+    else if (d.action === "toggle-mute") {
+      window.__lm402Muted = !window.__lm402Muted;
+      try { document.querySelectorAll("audio,video").forEach(function (a) { a.muted = !!window.__lm402Muted; }); } catch (er) {}
+      var f = document.getElementById("lm402-story-iframe");
+      if (f && f.contentWindow) { try { f.contentWindow.postMessage({ source: "ttl-game", muted: !!window.__lm402Muted }, location.origin); } catch (er2) {} }
+    }
+  });
+}
 
 function bindKeyboard() {
   window.addEventListener("keydown", (event) => {
