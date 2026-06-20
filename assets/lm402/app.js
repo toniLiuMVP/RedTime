@@ -172,6 +172,7 @@ const dom = {
   body: document.body,
   stage: document.getElementById("stage"),
   rotateLock: document.getElementById("rotate-lock"),
+  rotateContinueBtn: document.getElementById("rotate-continue-btn"),
   hud: document.getElementById("hud"),
   hudToggle: document.getElementById("hud-toggle"),
   pointerPill: document.getElementById("pointer-pill"),
@@ -394,7 +395,11 @@ function isMobileLayout() {
   return window.matchMedia("(max-width: 1080px)").matches || window.matchMedia("(pointer: coarse)").matches;
 }
 
+// 直向可遊玩：玩家在「請橫向」卡片點「維持直向繼續」後設為 true，
+// 之後 wantsLandscape() 在直向不再硬鎖，遊戲 UI 改用直向排版繼續。
+let portraitOptIn = false;
 function wantsLandscape() {
+  if (portraitOptIn) return false;
   return isMobileLayout() && window.innerHeight > window.innerWidth;
 }
 
@@ -3221,7 +3226,7 @@ function openStoryReader(ep) {
   const ov = ensureStoryOverlay();
   const frame = document.getElementById("lm402-story-iframe");
   frame.onload = function () { try { if (frame.contentWindow) frame.contentWindow.postMessage({ source: "ttl-game", muted: !!window.__lm402Muted }, location.origin); } catch (e) {} };   // r16:載入後把目前靜音狀態同步給 reader 端 in-iframe bar 圖示(否則重開時 🔊 與實際不符)
-  frame.src = "reader.html?embed=1#ep-" + (ep || 38);
+  frame.src = "reader.html?embed=1&from=lm402#ep-" + (ep || 38);
   ov.style.display = "block";
   requestAnimationFrame(function () { ov.style.opacity = "1"; });
   state.storyPaused = true;
@@ -3652,6 +3657,14 @@ function bindUI() {
       audioSystem.unlock();
       dom.introSkipBtn.hidden = true;
       finishIntro();
+    });
+  }
+  if (dom.rotateContinueBtn) {
+    dom.rotateContinueBtn.addEventListener("click", () => {
+      portraitOptIn = true;
+      audioSystem.unlock();
+      dom.rotateLock.hidden = true;
+      dom.body.classList.remove("landscape-prompt");
     });
   }
   dom.interactBtn.addEventListener("click", openActiveInteraction);

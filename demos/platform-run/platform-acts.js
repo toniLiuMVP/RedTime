@@ -405,7 +405,7 @@
   function openStoryReader(ep) {
     const ov = ensureStoryOverlay();
     const frame = document.getElementById("pt-story-iframe");
-    frame.src = "../../reader.html?embed=1#ep-" + (ep || 36);
+    frame.src = "../../reader.html?embed=1&from=platform#ep-" + (ep || 36);   // from=platform→返回鍵顯示「回到月台」
     ov.style.display = "block";
     requestAnimationFrame(function () { ov.style.opacity = "1"; });
     if (!_storyPaused) { _storyPaused = true; _pause(1); }

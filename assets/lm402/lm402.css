@@ -137,6 +137,32 @@ a {
   color: var(--muted);
   line-height: 1.72;
 }
+/* 直向也可遊玩：把「請橫向」改成建議而非硬鎖，點此維持直向繼續 */
+.rotate-continue-btn {
+  margin-top: 20px;
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(115, 208, 165, 0.4);
+  background: rgba(115, 208, 165, 0.14);
+  color: var(--jade);
+  font:
+    600 14px/1 "Noto Serif TC",
+    serif;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.18s ease;
+}
+.rotate-continue-btn:hover,
+.rotate-continue-btn:active {
+  background: rgba(115, 208, 165, 0.22);
+  border-color: rgba(115, 208, 165, 0.6);
+  transform: translateY(-1px);
+}
 .hud {
   position: fixed;
   top: var(--top-gap);
@@ -2305,6 +2331,35 @@ body.landscape-prompt .debug-panel {
     font-size: 11px;
     letter-spacing: 0.04em;
   }
+  /* 手機：頂部工具列展開的浮層（視角速度面板 / 音樂選單）夾在可視範圍內，
+     不再從邊緣溢出被裁切；過高就內部捲動。對齊各浮層改貼右邊界以免超出右側。 */
+  .speed-panel {
+    min-width: 0;
+    width: min(250px, calc(100vw - 20px));
+    max-width: calc(100vw - 20px);
+    max-height: calc(100dvh - 96px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  .song-selector {
+    min-width: 0;
+    width: min(220px, calc(100vw - 20px));
+    max-width: calc(100vw - 20px);
+    max-height: calc(100dvh - 96px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  /* 左欄浮層（速度面板）展開時往內收，避免在窄屏溢出右側 */
+  .speed-widget {
+    max-width: calc(100vw - 16px);
+  }
+  /* 右欄浮層（音樂選單）靠右對齊、向左展開，避免溢出右側被裁切 */
+  .audio-widget {
+    display: grid;
+    justify-items: end;
+  }
   .debug-panel {
     position: fixed;
     right: 10px;
@@ -2352,6 +2407,53 @@ body.landscape-prompt .debug-panel {
   .debug-panel {
     display: none;
   }
+  /* 直向手機：頂部工具列重排成「左欄 + 右欄 + 置中手錶」，避免單排擠成一團互相重疊 */
+  /* 左欄：字體大小（第一排）→ 視角速度（第二排） */
+  .font-widget {
+    top: max(8px, env(safe-area-inset-top));
+    left: max(8px, env(safe-area-inset-left));
+    right: auto;
+    z-index: 21;
+  }
+  .speed-widget {
+    top: max(54px, calc(env(safe-area-inset-top) + 46px));
+    left: max(8px, env(safe-area-inset-left));
+    right: auto;
+    z-index: 21;
+  }
+  /* 右欄：開啟音樂選單（第一排）→ 畫質（第二排） */
+  .audio-widget {
+    top: max(8px, env(safe-area-inset-top));
+    left: auto;
+    right: max(8px, env(safe-area-inset-right));
+    z-index: 21;
+  }
+  .quality-widget {
+    top: max(54px, calc(env(safe-area-inset-top) + 46px));
+    left: auto;
+    right: max(8px, env(safe-area-inset-right));
+    z-index: 21;
+  }
+  /* 時空手錶置中於最頂排，左右欄各空一塊不擠 */
+  .time-watch {
+    top: max(8px, env(safe-area-inset-top));
+    left: 50%;
+    right: auto;
+    transform: translate(-50%);
+    z-index: 20;
+  }
+  /* 教學重看 / 讀故事入口下移到第三排，避免疊到第二排工具 */
+  .council-replay,
+  .council-read-story,
+  .tutorial-replay {
+    top: max(100px, calc(env(safe-area-inset-top) + 92px));
+  }
+  /* 音樂提示卡也跟著左欄第三排，避免疊在工具列上 */
+  .music-prompt {
+    left: max(8px, env(safe-area-inset-left));
+    right: auto;
+    top: max(100px, calc(env(safe-area-inset-top) + 92px));
+  }
   .subtitle-box {
     max-height: 30vh;
     overflow-y: auto;
@@ -2393,16 +2495,39 @@ body.landscape-prompt .debug-panel {
   }
 }
 @media (max-width: 479px) and (orientation: portrait) {
-  /* 窄手機：quality-widget 在右側（時空手錶與音樂之間） */
-  .quality-widget {
-    top: max(8px, env(safe-area-inset-top));
-    left: auto;
-    right: calc(max(8px, env(safe-area-inset-right)) + 210px);
-    z-index: 20;
-  }
-  /* 窄手機：時空手錶下移一排，騰出頂排給音樂選單，兩者不再重疊 */
+  /* 窄手機：左右欄維持貼邊（沿用 portrait 主規則），手錶置中但略縮，避免壓到兩欄 */
   .time-watch {
-    top: max(58px, calc(env(safe-area-inset-top) + 52px));
+    top: max(8px, env(safe-area-inset-top));
+    padding: 3px 10px 4px;
+  }
+  .time-watch-display {
+    font-size: 15px;
+  }
+  /* 窄手機：兩支搖桿略縮，確保左右底角各放得下、拇指容易搆到、彼此不相撞 */
+  :root {
+    --joystick-size: 132px;
+    --joystick-thumb: 54px;
+    --action-size: 46px;
+  }
+  .control-cluster.left {
+    left: max(6px, env(safe-area-inset-left));
+  }
+  .control-cluster.right {
+    right: max(6px, env(safe-area-inset-right));
+  }
+  /* 窄手機頂排很擠：工具列收成精簡膠囊（隱藏冗長標籤），右欄音樂膠囊不再撞到置中手錶 */
+  .audio-toggle-label,
+  .speed-toggle-label,
+  .font-toggle-label,
+  .quality-toggle-label {
+    display: none;
+  }
+  .audio-toggle,
+  .speed-toggle,
+  .font-toggle,
+  .quality-toggle {
+    min-height: 36px;
+    padding: 8px 12px;
   }
 }
 @media (max-width: 1080px) and (orientation: landscape) {
