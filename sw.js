@@ -7,9 +7,9 @@
 
 // — Cache version 分離 —
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
-const STATIC_VERSION = 'static-v18-20260608';  // bumped: vendored 3D engine refreshed (cache-first → must re-fetch)
+const STATIC_VERSION = 'static-v19-20260621';  // r16: bump to invalidate all caches (clients were stuck on stale assets — must bump every deploy that changes assets)
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v140-20260613';
+const RUNTIME_VERSION = 'runtime-v141-20260621';   // r16:每次改 html/js/css 都要 bump,否則舊 client 卡在舊快取(r14-r16 漏 bump→toni 一直看到舊版)
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;

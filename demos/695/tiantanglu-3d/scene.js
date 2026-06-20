@@ -1345,6 +1345,7 @@ const enterEl = document.getElementById("enter");
 let ads = false, mouseDown = false, lastShot = 0;
 const isTouch = (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) || ("ontouchstart" in window) || navigator.maxTouchPoints > 0 || /[?&]touch\b/i.test(location.search || "");   // 手機觸控(可 ?touch 強制)
 if (isTouch) document.body.classList.add("touch");   // r16:觸控裝置一載入就加 touch class→桌機專屬「TAB」鍵帽(#gear-tab)開場前就隱藏(原本只在首次點擊才加,手機開場會閃一下)
+if ('serviceWorker' in navigator && navigator.serviceWorker.controller) { let _swR = false; navigator.serviceWorker.addEventListener('controllerchange', () => { if (!_swR) { _swR = true; location.reload(); } }); }   // r16:SW 更新後自動重載拿新資產
 if (isTouch && enterEl) { const _r = enterEl.querySelector(".ring"); if (_r) _r.textContent = "點一下開始"; const _s = enterEl.querySelector(".sub"); if (_s) _s.style.display = "none"; }   // 手機版不需要滑鼠/鍵盤提示(isTouch 宣告後才用,避免 TDZ)
 function actHint(suffix, sep) { return (isTouch ? "按「使用」鈕" : "按 E") + (sep != null ? sep : (isTouch ? "" : " ")) + suffix; }   // 互動鍵提示:桌機 E 鍵帶空格、手機「使用」鈕貼齊(對齊改名後的 tb-act 鈕);sep 給 · 分隔的提示用
 let touchActive = false, tjx = 0, tjz = 0, tCrouch = false, tWalk = false;   // tCrouch/tWalk:手機蹲下/慢走切換鍵狀態
