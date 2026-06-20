@@ -1926,7 +1926,7 @@ const SHRIMP_POS = new THREE.Vector3(1.3, 0, 27.2);  // C2 剝好的牡丹蝦互
 const WASH_POS = new THREE.Vector3(-14, 0, -8);      // C3 鏡子·純白的紙互動點(EP11 盥洗台鏡前的倒影)
 // 雋永鈎子低調信標:每個探索點上方暖光暈輕脈動,引玩家遇見那頭牛/那件外套/那本日記/電話/機車/轉角/終端機(不強迫,只在 hub)
 const beacons = [];
-for (const p of [COW_POS, JACKET_POS, DIARY_POS, RANGE_ENTRY, COUNSELOR_POS, COMMANDER_POS, PHONE_POS, MOTORBIKE_POS, CORNER_POS, TERMINAL_POS, SHRIMP_POS]) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: fireTex, color: 0xff3650, transparent: true, opacity: 0.42, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); s.position.set(p.x, 1.85, p.z); s.scale.set(0.55, 3.6, 1); s.raycast = () => { }; ROOT.add(s); beacons.push(s); }   // toni #2:紅線特效——可互動點(牛/外套/日記/靶場/輔導長/連長/電話/機車/牆角/終端/蝦)立一道脈動紅光柱;raycast no-op(不是射擊目標,且 Sprite.raycast 需 raycaster.camera→會 crash)。WASH(鏡子 C3)暫不列:其句為學妹口吻待 toni 改學長視角,nearWash() 以 isReal(mirrorA) 自動 gate,填了才整組啟用
+for (const p of [COW_POS, JACKET_POS, DIARY_POS, RANGE_ENTRY, COUNSELOR_POS, COMMANDER_POS, PHONE_POS, MOTORBIKE_POS, CORNER_POS, TERMINAL_POS, SHRIMP_POS, WASH_POS]) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: fireTex, color: 0xff3650, transparent: true, opacity: 0.42, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); s.position.set(p.x, 1.85, p.z); s.scale.set(0.55, 3.6, 1); s.raycast = () => { }; ROOT.add(s); beacons.push(s); }   // toni #2:紅線特效——可互動點(牛/外套/日記/靶場/輔導長/連長/電話/機車/牆角/終端/蝦/鏡)立一道脈動紅光柱;raycast no-op(不是射擊目標,且 Sprite.raycast 需 raycaster.camera→會 crash)。WASH 鏡子 C3 已由 toni 填學長視角句,nearWash() isReal(mirrorA) 自動啟用
 const waveEl = document.getElementById("wave"), scoreEl = document.getElementById("scoreval");
 function updateWaveHUD() { if (MODE !== "sim") { if (waveEl) waveEl.textContent = "軍營"; return; } const gw = goalWave(); if (waveEl) waveEl.textContent = inBreak ? (wave < 1 ? "準備" : "第 " + wave + " / " + gw + " 波" + (isTouch ? "" : " · 清空")) : "第 " + wave + " / " + gw + " 波"; if (scoreEl) scoreEl.textContent = score; }   // 顯示「第 N / 目標 波」讓撐到第幾波會停下變可見(目標感);手機省「· 清空」尾綴避免疊雷達
 function startWave() { wave++; inBreak = false; frogmenSpawned = false; frogmenActive = false; frogmenGhostCount = 0; const em = (curDiff ? curDiff.enemyMul : 1) * qEnemyCap; const n = Math.max(1, Math.min(Math.round(16 * em), Math.round((3 + wave * 1.7) * em))); spawnQueue = n; waveAlive = n; spawnTimer = 0; waveWeapons = buildWaveWeapons(wave, n); updateWaveHUD();
@@ -2199,7 +2199,7 @@ const NARR = {
   // C2 對面那個空座的連接句(scaffold,placeholder→不顯示,toni 填真句才生效;那份缺=空著的位子)
   shrimpEmpty: "［空座那份缺的連接句待填］",
   // ── C3 鏡子·純白的紙:EP11 白紙意象原句是「學妹口吻」(救贖我／學長＝他),與 toni #4「全學長視角」鐵則衝突 → 暫 ［-gate 不顯示,待 toni 寫成學長對鏡自照口吻(他想起她曾如此定義他)。EP11 原句供參:「但就是像一張白紙的他，才有機會成為『無數個七生七世』都可以救贖我的那個他。」／「學長那時不只一捏就爛，其實也是一碰就碎！」
-  mirrorA: "［鏡前·學長視角待填］",
+  mirrorA: "當我成為那個我的時候，妳才會變成那個妳，妳才是妳，我才是我。",   // toni 親寫(學長對鏡自照,他的口吻)
   mirrorB: "",
   // ── C1 華江橋下的告白(EP9 verbatim,逐字 canon):放下槍→reveal 前的那拍 payload ──
   bridgeFear: "「我不怕妳，我只是害怕失去妳！」",
