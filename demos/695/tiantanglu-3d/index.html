@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self'; worker-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self'; connect-src 'self' blob:; worker-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none';">
 <title>天堂路 · 時間裡的兩個妳</title>
 <meta name="color-scheme" content="dark" />
 <meta name="description" content="《時間裡的兩個妳》3D 第一人稱互動場景：天堂路。把拔夢回兩棲偵搜結訓的那條路。" />
@@ -74,8 +74,10 @@
     border:1px solid rgba(255,220,170,.4);border-radius:40px;padding:14px 30px;backdrop-filter:blur(4px);}
   #enter .sub{font-size:12px;letter-spacing:.18em;opacity:.6;margin-top:12px;}
   #enter.hide{opacity:0;pointer-events:none;}
-  #tut-btn{display:inline-block;margin-top:16px;font-size:13px;letter-spacing:.16em;color:#ffd9a8;background:rgba(255,220,170,.08);border:1px solid rgba(255,220,170,.35);border-radius:40px;padding:9px 22px;cursor:pointer;transition:background .3s;pointer-events:auto;}
-  #tut-btn:hover{background:rgba(255,220,170,.18);}
+  #tut-btn,#diary-btn{display:inline-block;margin-top:16px;font-size:13px;letter-spacing:.16em;color:#ffd9a8;background:rgba(255,220,170,.08);border:1px solid rgba(255,220,170,.35);border-radius:40px;padding:9px 22px;cursor:pointer;transition:background .3s;pointer-events:auto;}
+  #tut-btn:hover,#diary-btn:hover{background:rgba(255,220,170,.18);}
+  #diary-btn{margin-left:10px;color:#bcd4ff;background:rgba(150,190,255,.08);border-color:rgba(150,190,255,.4);}
+  #diary-btn:hover{background:rgba(150,190,255,.18);}
   #tutorial{position:fixed;inset:0;z-index:9;display:none;align-items:center;justify-content:center;background:rgba(8,6,10,.92);padding:16px;}
   #tutorial.on{display:flex;}
   #tutorial .panel{max-width:560px;width:100%;max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;background:rgba(28,22,30,.98);border:1px solid rgba(255,220,170,.25);border-radius:16px;padding:0 22px 0;font-family:'Noto Serif TC',serif;color:#f3e6d8;}
@@ -550,6 +552,7 @@
   <div class="ring">點擊畫面任何地方，讓滑鼠控制視角</div>
   <div class="sub">WASD 走動 · 左鍵開火 · 完整操作見下方「📖 新手教學」</div>
   <div id="tut-btn">📖 新手教學</div>
+  <div id="diary-btn">我只想讀大兵日記 ▸</div>
 </div>
 <div id="tutorial"><div class="panel">
   <h2>新手教學</h2>

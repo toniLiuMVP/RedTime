@@ -1523,6 +1523,9 @@ const restartBtnEl = document.getElementById("restart-btn"); if (restartBtnEl) r
   const btn = document.getElementById("tut-btn"), ov = document.getElementById("tutorial"), close = document.getElementById("tut-close");
   if (btn && ov) btn.addEventListener("click", (e) => { e.stopPropagation(); ov.classList.add("on"); });
   if (close && ov) close.addEventListener("click", (e) => { e.stopPropagation(); ov.classList.remove("on"); });
+  // 「我只想讀大兵日記」零技巧入口:非玩家也能直達 EP40 大兵日記(不進戰鬥);stopPropagation 不觸發進場 pointerLock/touch
+  const dbtn = document.getElementById("diary-btn");
+  if (dbtn) dbtn.addEventListener("click", (e) => { e.stopPropagation(); openDiary(); });
 })();
 
 /* ── 軍械庫(購買裝備系統):軍餉 1000 起 / 近戰+小槍免費 / 撐過每波 +150 / 軍營或波間按 B ── */

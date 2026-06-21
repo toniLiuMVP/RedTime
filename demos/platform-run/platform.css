@@ -15,6 +15,10 @@ canvas{display:block;width:100%;height:100%}
 .title-main{font-size:clamp(28px,5vw,56px);color:#e8d5b8;font-weight:700;letter-spacing:0.15em;opacity:0;animation:fadeUp 1.5s 1s forwards}
 .title-sub{font-size:clamp(14px,2.5vw,22px);color:#9f8e7d;margin-top:16px;opacity:0;animation:fadeUp 1.5s 1.5s forwards}
 .title-start{font-size:clamp(12px,1.8vw,16px);color:#b8956a;margin-top:48px;opacity:0;animation:fadeUp 1.5s 2.2s forwards,pulse 2s 3s infinite}
+/* 「點擊開始 / 我只想讀這一段」等權並列:讓不玩遊戲的人有同等份量的純閱讀入口(非玩家文學讀者審核共識) */
+.title-choices{display:flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:48px}
+.title-choices .title-start{margin-top:0}
+.title-choices #title-read-story{margin-top:0;font-size:clamp(13px,1.7vw,15px);padding:11px 24px}
 .title-read{margin-top:22px;font-size:clamp(11px,1.6vw,14px);color:#9fd0ff;text-decoration:none;letter-spacing:.1em;border:1px solid rgba(159,208,255,.4);border-radius:999px;padding:8px 18px;opacity:0;animation:fadeUp 1.5s 2.6s forwards;transition:background .25s,color .25s}
 .title-read:hover{background:rgba(159,208,255,.12);color:#cfe7ff}
 .title-best{font-size:clamp(11px,1.5vw,14px);color:#8a7560;letter-spacing:0.18em;margin-top:14px;opacity:0;animation:fadeUp 1.5s 2.4s forwards}

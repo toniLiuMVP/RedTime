@@ -96,5 +96,6 @@ document.addEventListener("DOMContentLoaded", function () {
   _wire(".pt-btn-prev", function (e) { ptTourPrev(e); });
   _wire(".pt-btn-next", function (e) { ptTourNext(e); });
   _wire(".pt-skip", function () { location.href = "../../reader.html#ep-36"; });
-  _wire(".title-read", function (e) { e.stopPropagation(); });
+  // 守所有 .title-read(閱讀入口 + 回首頁):點它們只導航,絕不冒泡到 #title-screen 觸發開跑
+  document.querySelectorAll(".title-read").forEach(function (el) { el.addEventListener("click", function (e) { e.stopPropagation(); }); });
 })();

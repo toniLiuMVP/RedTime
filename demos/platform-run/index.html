@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="dark" />
 <meta name="referrer" content="strict-origin-when-cross-origin" />
 <!-- Defense-in-depth CSP（最佳做法仍是 HTTP header，但 GitHub Pages 無法設 header，故以 meta 作為最低防線） -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; media-src 'self'; connect-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self';" />
 <script src="../../assets/frame-guard.js"></script>
 <script src="../../assets/load-fonts.js" data-href="../../fonts/fonts.css"></script>
 <script src="./a11y-patch.js" defer></script>
@@ -85,10 +85,12 @@
   <div class="title-year">2018 年 台中火車站</div>
   <div class="title-main">月台上的狂奔</div>
   <div class="title-sub">每一次，都要趕上</div>
-  <div class="title-start">點擊或按 Enter 開始</div>
+  <div class="title-choices">
+    <div class="title-start">點擊或按 Enter 開始</div>
+    <a class="title-read" id="title-read-story" href="../../reader.html#ep-36">我只想讀這一段 →</a>
+  </div>
   <div class="title-best" id="title-best"></div>
-  <a class="title-read" id="title-read-story" href="../../reader.html#ep-36">📖 先讀這段故事 · EP36</a>
-  <a class="title-read" href="../../index.html">← 回首頁</a>
+  <a class="title-read" id="title-read-home" href="../../index.html">← 回首頁</a>
   <div class="title-legal">
     普遍級 · 本作為文學創作，部分取材自真實經歷並經改編虛構，如有雷同純屬巧合<br />
     © toni · 版權所有 ·
