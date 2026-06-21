@@ -1258,7 +1258,7 @@ function syncDockState() {
 function setHudCollapsed(collapsed) {
   dom.hud.classList.toggle("collapsed", collapsed);
   dom.hudToggle.setAttribute("aria-expanded", String(!collapsed));
-  dom.hudToggle.querySelector(".hud-toggle-label").textContent = collapsed ? "展開任務" : "縮起資訊";
+  dom.hudToggle.querySelector(".hud-toggle-label").textContent = collapsed ? "展開這一段路" : "收起這段路";
   dom.hudToggle.querySelector(".hud-toggle-icon").textContent = collapsed ? "+" : "−";
 }
 
@@ -1287,7 +1287,7 @@ function toggleObjectivePrompt() {
 
 function updateObjective(expand = false) {
   const phase = PHASES.find((item) => item.id === state.phase);
-  dom.objectiveKicker.textContent = state.phase === "eye_contact" ? "最後一幕" : "目前任務";
+  dom.objectiveKicker.textContent = state.phase === "eye_contact" ? "最後一幕" : "此刻";
   dom.objectiveTitle.textContent = phase.title;
 
   let copy = phase.copy;
