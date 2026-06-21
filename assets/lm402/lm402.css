@@ -2102,10 +2102,7 @@ body.landscape-prompt .debug-panel {
   }
   .ambience-box {
     position: fixed !important;
-    bottom: calc(var(--controls-clearance) + 102px + var(--bottom-gap) + 58px) !important;
-    left: 50% !important;
-    transform: translateX(-50%);
-    width: min(380px, calc(100vw - 24px)) !important;   /* 修:原扣左右搖桿安全區(168+224>390)→負寬塌成直書「場景提示」;此卡浮在搖桿上方,整寬置中即可 */
+    width: min(380px, calc(100vw - 24px)) !important;   /* 修:原扣左右搖桿安全區(168+224>390)→負寬塌成直書「場景提示」;此卡浮在搖桿上方,整寬即可 */
     min-width: min(220px, calc(100vw - 24px));
     max-height: 22vh;
     overflow-y: auto;
@@ -2119,14 +2116,13 @@ body.landscape-prompt .debug-panel {
     pointer-events: auto;
     word-break: break-word;
   }
-  .subtitle-box {
-    position: fixed !important;
-    top: auto !important;
-    bottom: calc(
-      var(--controls-clearance) + 102px + var(--bottom-gap) + 6px
-    ) !important;
+  .ambience-box:not(.ui-has-pos) {   /* 預設置中浮在搖桿上方;玩家一旦自訂拖移(.ui-has-pos)就讓 inline left/top 接管,不被 !important 蓋掉 */
+    bottom: calc(var(--controls-clearance) + 102px + var(--bottom-gap) + 58px) !important;
     left: 50% !important;
     transform: translateX(-50%);
+  }
+  .subtitle-box {
+    position: fixed !important;
     width: min(420px, calc(100vw - 20px)) !important;   /* 同 ambience:不扣搖桿安全區,避免窄機(<392px 可用)塌寬 */
     min-height: max(48px, calc(var(--rail-min-height) + 2px));
     max-height: 30vh;
@@ -2144,6 +2140,14 @@ body.landscape-prompt .debug-panel {
     z-index: 9999;
     pointer-events: auto;
     word-break: break-word;
+  }
+  .subtitle-box:not(.ui-has-pos) {   /* 同 ambience:拖移後讓 inline 位置接管 */
+    top: auto !important;
+    bottom: calc(
+      var(--controls-clearance) + 102px + var(--bottom-gap) + 6px
+    ) !important;
+    left: 50% !important;
+    transform: translateX(-50%);
   }
   .subtitle-box .dock-kicker {
     font-size: 9px;
