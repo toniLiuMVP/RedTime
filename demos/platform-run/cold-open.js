@@ -2,12 +2,11 @@
 // toni 2026-06-03：月台其實是女兒飛回過去回頭看的視角（倒敘）。點「開始」前先放鈎子，
 // 讓沒讀過故事的人也懂：他為什麼跑、為什麼永遠不會放棄。融入 EP16「我現在都叫你一聲爸」。
 // 純 DOM（createElement + textContent、零 innerHTML）、iOS-safe、零破折號。文案逐字對齊 reader.html EP36 + EP16。
-// 在標題畫面之上播一層；首次進站 only（localStorage）；隨時可「跳過」。播完淡出 → 露出既有標題畫面。
+// 在標題畫面之上播一層；每次進站都播放（?cold=0 可關）；隨時可「跳過」。播完淡出 → 露出既有標題畫面。
 (function () {
   "use strict";
   if (typeof document === "undefined" || typeof window === "undefined") return;
 
-  var SEEN_KEY = "pt_coldopen_seen_v1";
   try {
     // 每次進站都預設播放（toni 紀律）；只有 ?cold=0 可強制不播。播放中隨時可「快速飛過」。
     if (new URL(location.href).searchParams.get("cold") === "0") return;
@@ -137,7 +136,6 @@
 
     function finish() {
       if (done) return; done = true;
-      try { localStorage.setItem(SEEN_KEY, "1"); } catch (e) {}
       if (autoTimer) clearTimeout(autoTimer);
       clearHint();
       ov.removeEventListener("click", onTap);

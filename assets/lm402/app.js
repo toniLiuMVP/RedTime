@@ -408,16 +408,15 @@ function isMobileLandscape() {
 }
 
 function currentDensityTier() {
-  if (!isMobileLandscape()) {
+  const shortSide = Math.min(window.innerWidth, window.innerHeight);
+  if (isMobileLandscape()) {
+    if (shortSide <= 360) return "tight";
+    if (shortSide <= 400) return "compact";
     return "regular";
   }
-  const shortSide = Math.min(window.innerWidth, window.innerHeight);
-  if (shortSide <= 360) {
-    return "tight";
-  }
-  if (shortSide <= 400) {
-    return "compact";
-  }
+  // 直向窄機也要縮搖桿:原本一律 regular,但 handleResize 寫的 inline preset 會蓋掉 CSS @media(max-width:479px portrait) 的縮小規則→窄機控制鈕擠在一起。直向時短邊=寬度,依它給 tier。
+  if (shortSide <= 360) return "tight";
+  if (shortSide <= 479) return "compact";
   return "regular";
 }
 
@@ -605,6 +604,7 @@ const state = {
   hudMode: "chip",
   subtitleMode: "full",
   storyPaused: false,
+  councilPaused: false,
   transcriptExpanded: false,
   transcriptMaximized: false,
   pointerLockState: "free",
@@ -1578,12 +1578,13 @@ function applyEffect(effect) {
     return;
   }
   if (effect === "collect_aunt_market") {
-    collectMemory("aunt_market");
-    closeDialogue();
+    closeDialogue();   // 移除死碼 collectMemory("aunt_market"):MEMORY_FRAGMENTS 無此 key,只會 console.warn;意識菜市場的回饋由下方 council + 字幕提供
     if (window.__COUNCIL__ && state.mode === "play" && !state.flags.councilSeen) {
       state.flags.councilSeen = true;
+      state.councilPaused = true;   // council overlay 期間凍結 sim/phaseClock(dt=0):避免 phaseClock>=60「11:00 前門來電」自動轉場在 overlay 底下偷偷觸發、音效字幕重疊
       try { if (window.__TWIN_BALANCE__) window.__TWIN_BALANCE__("mid"); } catch (e) {}
       window.__COUNCIL__.start(function (res) {
+        state.councilPaused = false;
         try { if (window.__TWIN_BALANCE__) window.__TWIN_BALANCE__("off"); } catch (e) {}
         saveCouncilSeen();
         if (dom.councilReplay) dom.councilReplay.hidden = false;
@@ -1703,7 +1704,9 @@ function applyEffect(effect) {
       setSubtitle("女兒", "在她說出口之前，我先飛進她腦海裡那座『意識菜市場』。", 3.6);
       safeTimeout(function () {
         if (state.mode !== "play") { proceedToRear(); return; }
+        state.councilPaused = true;   // council overlay 期間凍結 sim/phaseClock
         window.__COUNCIL__.start(function (res) {
+          state.councilPaused = false;
           try { if (window.__TWIN_BALANCE__) window.__TWIN_BALANCE__("off"); } catch (e) {}
           saveCouncilSeen();
           if (dom.councilReplay) dom.councilReplay.hidden = false;
@@ -2261,13 +2264,11 @@ function dismissEnding() {
   if (!dom.endingOverlay) return;
   dom.endingOverlay.hidden = true;
   dom.body.classList.remove("ending-open");
-  /* missed 後不清狀態會卡死互動（F 鍵與指標鎖定都被 state.ending 擋住）；
-     關卡回後門等待，玩家可立刻再試一次 */
-  if (state.ending === "missed") {
-    state.ending = null;
-    state.endingSequence = null;
-    setPhase("rear_wait");
-  }
+  /* 所有結局都清 state（不清的話 F 互動 + 右鍵指標鎖定都被 state.ending 擋住,宣稱的「回頭再看一眼」對 perfect_eye/restrain/secret_heart/canon/memory 都壞掉）;
+     只有 missed 把玩家移回後門等待重試,其他結局保留在最終場景位置,讓玩家轉視角再看那一秒 */
+  if (state.ending === "missed") setPhase("rear_wait");
+  state.ending = null;
+  state.endingSequence = null;
 }
 
 function resetScene() {
@@ -2756,7 +2757,7 @@ function updatePhaseLogic(dt) {
 
     state.cinematicGlow = smoothstep(CINEMATIC_TIMELINE.successWindow[0], CINEMATIC_TIMELINE.successWindow[1], state.phaseClock);
     updateOneGlanceCinema(state.cinematicGlow);
-    if (state.phaseClock >= CINEMATIC_TIMELINE.lockWindow && !state.endingSequence) {
+    if (state.phaseClock >= CINEMATIC_TIMELINE.lockWindow && !state.endingSequence && !state.flags.backdoorAnchored) {   // 選了「站在後門」=要走完整 gaze→13幕戀愛弧→perfect_eye,別讓 4.1s 自動結局搶先(4.1<4.2 race)把它吃掉成一張普通卡
       if (aligned) {
         startEnding(state.memories.size >= 4 ? "memory" : "canon");
       } else {
@@ -3141,7 +3142,7 @@ function tick(now) {
     }
     let dt = Math.min((now - tick.last) / 1000, 0.033);
     tick.last = now;
-    if (state.storyPaused) dt = 0; /* 遊戲內讀故事：凍結時間與模擬，仍續 render，不跳出遊戲 */
+    if (state.storyPaused || state.councilPaused) dt = 0; /* 遊戲內讀故事 / 意識菜市場 council overlay 期間：凍結時間與模擬，仍續 render，不跳出遊戲 */
     state.time += dt;
 
     dom.rotateLock.hidden = !wantsLandscape();
@@ -3623,7 +3624,9 @@ function bindUI() {
       if (!window.__COUNCIL__ || state.mode !== "play") return;
       if (window.__COUNCIL__.isActive && window.__COUNCIL__.isActive()) return;
       try { if (window.__TWIN_BALANCE__) window.__TWIN_BALANCE__("mid"); } catch (e) {}
+      state.councilPaused = true;   // 重看意識菜市場期間也凍結 sim
       window.__COUNCIL__.start(() => {
+        state.councilPaused = false;
         try { if (window.__TWIN_BALANCE__) window.__TWIN_BALANCE__("off"); } catch (e) {}
         setSubtitle("女兒", "再走一次意識菜市場。不同年紀的阿姨，還是在替她把那句話練穩。", 4.5);
       });
@@ -3875,7 +3878,7 @@ window.__lm402Ready = true;
 
 /* ── 結局收集 X / N（回訪記憶；data.js 早已預留 endingsCompleted key，這裡正式接上）── */
 (function setupEndingCollection() {
-  const ALL_ENDINGS = Object.keys(ENDINGS); // 全部可收集結局
+  const ALL_ENDINGS = Object.keys(ENDINGS).filter((k) => k !== "perfect"); // 可達結局(perfect 與 perfect_eye 共用同一 canon 句、無 live trigger,排除在收集分母外,否則 7/7 永遠到不了=收集卡 100%)
   function load() {
     try {
       const arr = JSON.parse(localStorage.getItem(STORAGE_KEYS.endingsCompleted) || "[]");

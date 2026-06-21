@@ -1183,10 +1183,10 @@ scene.add(platformFill);
         if (typeof window !== 'undefined') window.__PLATFORM_TWIN_UPGRADE_STATS__ = stats;
       }
       if (tries < maxTries) {
-        setTimeout(tryUpgrade, upgraded > 0 ? 2000 : 600);
+        safeSetTimeout(tryUpgrade, upgraded > 0 ? 2000 : 600);
       }
     }
-    setTimeout(tryUpgrade, 600);
+    safeSetTimeout(tryUpgrade, 600);
   })();
 
   /* 5. DOM lightweight postfx(對齊 r38 batch 1 vignette 已有,本次補 grain)*/
@@ -3668,8 +3668,9 @@ let audioCtx = null;
 let nextBeat = 0;
 
 function initAudio() {
-  if (audioCtx) return;
+  if (audioCtx) { if (audioCtx.state === "suspended" && audioCtx.resume) audioCtx.resume(); return; }   // 已建立但被 iOS 背景化重新 suspend → 在下次手勢叫 initAudio 時 resume,SFX 不會整局靜音(對齊 cold-open.js / platform-acts.js)
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === "suspended" && audioCtx.resume) audioCtx.resume();
 }
 
 function playHeartbeat() {
@@ -4219,7 +4220,7 @@ dom.joystickArea.addEventListener("touchstart", function(e) {
 dom.joystickArea.addEventListener("touchmove", function(e) {
   e.preventDefault();
   if (!joyActive) return;
-  const t = e.touches[0];
+  const t = e.targetTouches[0]; if (!t) return;   // 只取在搖桿上開始的觸點(targetTouches),先按住衝刺/跳/必殺那根手指不會被當搖桿手指→把拔不再亂飄
   const dx = t.clientX - joyCenter.x;
   const dy = t.clientY - joyCenter.y;
   const maxR = 50;
@@ -4237,7 +4238,7 @@ dom.sprintBtn.addEventListener("touchstart", function(e) { e.preventDefault(); t
 dom.sprintBtn.addEventListener("touchend",   function() { touchSprinting = false; });
 dom.sprintBtn.addEventListener("touchcancel", function() { touchSprinting = false; });
 
-dom.jumpBtn.addEventListener("touchstart", function(e) { e.preventDefault(); triggerJump(); }, { passive: false });
+dom.jumpBtn.addEventListener("touchstart", function(e) { e.preventDefault(); initAudio(); triggerJump(); }, { passive: false });   // 跳是遊玩中最頻繁手勢:順手把被背景化 suspend 的 AudioContext 救回(initAudio 已 idempotent + resume)
 
 dom.ultimateBtn.addEventListener("touchstart", function(e) { e.preventDefault(); activateUltimate(); }, { passive: false });
 

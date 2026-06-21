@@ -2117,7 +2117,7 @@ body.landscape-prompt .debug-panel {
     word-break: break-word;
   }
   .ambience-box:not(.ui-has-pos) {   /* 預設置中浮在搖桿上方;玩家一旦自訂拖移(.ui-has-pos)就讓 inline left/top 接管,不被 !important 蓋掉 */
-    bottom: calc(var(--controls-clearance) + 102px + var(--bottom-gap) + 58px) !important;
+    bottom: calc(var(--controls-clearance) + 102px + var(--bottom-gap) + 88px) !important;   /* +58→+88:兩行場景提示(~72px 高)才不會壓到下方女兒字幕框(兩框底邊原本只差 52px) */
     left: 50% !important;
     transform: translateX(-50%);
   }
@@ -2521,7 +2521,7 @@ body.landscape-prompt .debug-panel {
     left: max(6px, env(safe-area-inset-left));
   }
   .control-cluster.right {
-    right: max(6px, env(safe-area-inset-right));
+    right: calc(max(6px, env(safe-area-inset-right)) + var(--action-size) * 0.28);   /* 把整個右搖桿群往左推一個 east「互」鈕的外凸量,避免互鈕超出右邊界被切 ~7px */
   }
   /* 窄手機頂排很擠：工具列收成精簡膠囊（隱藏冗長標籤），右欄音樂膠囊不再撞到置中手錶 */
   .audio-toggle-label,

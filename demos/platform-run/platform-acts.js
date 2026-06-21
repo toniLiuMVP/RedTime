@@ -88,7 +88,8 @@
       ensure();
       b = Math.max(0, Math.min(1, b));
       wrap.style.opacity = (0.30 + Math.pow(b, 1.3) * 0.62).toFixed(2);
-      if (!_labelShown && b > 0.02 && label) { _labelShown = true; label.style.opacity = "1"; setTimeout(function () { if (label) label.style.opacity = "0"; }, 3200); }
+      if (b <= 0.02) { _labelShown = false; }   // 紅線回到最遠(新一局/重玩,__PT_BOND__ 歸 0)→重新 arm,點題句下一局再陪他跑時會再出現(原本一個 page session 只出現一次)
+      else if (!_labelShown && label) { _labelShown = true; label.style.opacity = "1"; setTimeout(function () { if (label) label.style.opacity = "0"; }, 3200); }
       var hue = ((354 + b * 20) % 360).toFixed(0);   // 354 深紅(遠) → 14 暖金(近)
       var col = "hsl(" + hue + ",85%," + (46 + b * 18).toFixed(0) + "%)";
       line.style.background = col;
