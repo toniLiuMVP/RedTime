@@ -7916,12 +7916,12 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             const facePos = heroAnchor.face;
             const eyeY = heroAnchor.eyes.y > Co.position.y + 1.0 ? heroAnchor.eyes.y : Co.position.y + 1.52;
             const fwd = new e.Vector3(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y));
-            q.position.set(
-              Co.position.x + fwd.x * 0.9,
-              eyeY,
-              Co.position.z + fwd.z * 0.9
-            );
-            q.fov = 36;
+            const et = t.endingSequence?.time ?? 0;
+            const arr = e.MathUtils.smoothstep(et, 0, 1.0);   // 0~1s 緩入抵達(導演:結局別硬切)
+            const faceShot = new e.Vector3(Co.position.x + fwd.x * 0.9, eyeY + 3e-4 * Math.sin(0.5 * et), Co.position.z + fwd.z * 0.9);
+            const fromShot = new e.Vector3(Co.position.x + fwd.x * 1.55, eyeY + 0.22, Co.position.z + fwd.z * 1.55);
+            q.position.copy(fromShot.lerp(faceShot, arr));
+            q.fov = e.MathUtils.lerp(44, 36, arr);          // 微推近,終值仍是 36° 拍臉
             q.updateProjectionMatrix();
             const lookY = facePos.y > Co.position.y + 1.0 ? facePos.y : Co.position.y + 1.53;
             q.lookAt(facePos.x, lookY, facePos.z);
@@ -7937,12 +7937,12 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             const facePos = heroAnchor.face;
             const eyeY = heroAnchor.eyes.y > Co.position.y + 1.0 ? heroAnchor.eyes.y : Co.position.y + 1.52;
             const fwd = new e.Vector3(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y));
-            q.position.set(
-              Co.position.x + fwd.x * 0.9,
-              eyeY,
-              Co.position.z + fwd.z * 0.9
-            );
-            q.fov = 36;
+            const et2 = t.endingSequence?.time ?? 0;
+            const arr2 = e.MathUtils.smoothstep(et2, 0, 1.0);   // 0~1s 緩入抵達(導演:結局別硬切)
+            const faceShot2 = new e.Vector3(Co.position.x + fwd.x * 0.9, eyeY + 3e-4 * Math.sin(0.5 * et2), Co.position.z + fwd.z * 0.9);
+            const fromShot2 = new e.Vector3(Co.position.x + fwd.x * 1.55, eyeY + 0.22, Co.position.z + fwd.z * 1.55);
+            q.position.copy(fromShot2.lerp(faceShot2, arr2));
+            q.fov = e.MathUtils.lerp(44, 36, arr2);
             q.updateProjectionMatrix();
             const lookY2 = facePos.y > Co.position.y + 1.0 ? facePos.y : Co.position.y + 1.53;
             q.lookAt(facePos.x, lookY2, facePos.z);
