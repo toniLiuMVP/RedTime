@@ -251,6 +251,24 @@ if (preset.fog) {
   scene.fog = null;
 }
 
+/* ── Blender 寫實道具(非阻塞 dynamic import,失敗只 warn;raycast 關閉不擋遊戲) ── */
+import("./props-loader.js").then((m) => m.loadSceneProps(THREE, scene, scene, { base: "./props/", items: [
+  { file: "station_sign",    pos: [ 0,   3.4, -120], rot: 0 },
+  { file: "station_sign",    pos: [ 0,   3.4,    0], rot: 0 },
+  { file: "station_sign",    pos: [ 0,   3.4,  120], rot: 0 },
+  { file: "departure_board", pos: [ 2.6, 3.0, -190], rot: -1.57 },
+  { file: "departure_board", pos: [ 2.6, 3.0,  190], rot: -1.57 },
+  { file: "vending_machine", pos: [ 3.4, 0,   -60], rot: -1.57 },
+  { file: "vending_machine", pos: [ 3.4, 0,    60], rot: -1.57 },
+  { file: "ticket_gate",     pos: [-3.4, 0,     0], rot: 0 },
+  { file: "info_pillar",     pos: [-3.6, 0,  -150], rot: 0 },
+  { file: "info_pillar",     pos: [-3.6, 0,   150], rot: 0 },
+  { file: "timetable_stand", pos: [ 3.6, 0,  -190], rot: -1.57 },
+  { file: "timetable_stand", pos: [ 3.6, 0,   190], rot: -1.57 },
+  { file: "luggage_bag",     pos: [ 1.6, 0,  -380], rot: 0.5 },
+  { file: "luggage_bag",     pos: [ 2.1, 0,  -378], rot: -0.3 },
+] })).catch((e) => { console.warn("[props] module load failed:", e && e.message); });
+
 const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 500);
 camera.position.set(0, 12, PLATFORM_LEN / 2 + 20);
 camera.lookAt(0, 0, 0);

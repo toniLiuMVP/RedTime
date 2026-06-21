@@ -137,15 +137,37 @@ function add(geo, m, x, y, z, parent) { const b = new THREE.Mesh(geo, m); b.posi
 
 /* ── Blender 寫實道具(非阻塞 dynamic import,失敗只 warn 不影響場景;raycast 關閉不擋射擊) ── */
 import("./props-loader.js").then((m) => m.loadSceneProps(THREE, ROOT, { base: "./props/", items: [
+  // 天堂路 咾咕石路(南緣,沿 X 鋪 ~32m)
+  { file: "coral_path",      pos: [-12, 0, -48], rot: 0 },
+  { file: "coral_path",      pos: [ -4, 0, -48], rot: 0 },
+  { file: "coral_path",      pos: [  4, 0, -48], rot: 0 },
+  { file: "coral_path",      pos: [ 12, 0, -48], rot: 0 },
+  { file: "sandbag_wall",    pos: [-16, 0, -44], rot: 0 },
+  { file: "sandbag_wall",    pos: [ 24, 0,   3], rot: 1.5 },
+  // 南營區(bivouac)
   { file: "field_tent",      pos: [-30, 0, -42], rot:  0.2 },
   { file: "field_tent",      pos: [-19, 0, -46], rot: -0.3 },
+  { file: "weapon_rack",     pos: [-26, 0, -34], rot:  1.2 },
+  // NE 補給platform
   { file: "ammo_crate",      pos: [ 30, 0,   4], rot:  0.1 },
   { file: "ammo_crate",      pos: [ 32, 0,   7], rot:  0.5 },
   { file: "ammo_crate",      pos: [ 29, 0,  10], rot: -0.2 },
-  { file: "weapon_rack",     pos: [-26, 0, -34], rot:  1.2 },
+  { file: "ammo_crate",      pos: [ 34, 0,   2], rot:  0.8 },
+  { file: "fuel_barrel",     pos: [ 33, 0,  14], rot:  0 },
+  { file: "fuel_barrel",     pos: [ 35, 0,  16], rot:  0 },
+  { file: "fuel_barrel",     pos: [ 31, 0,  18], rot:  0 },
+  // 東閱兵場
   { file: "command_podium",  pos: [ 20, 0, -10], rot: -1.57 },
+  // 西周界(哨塔 + 鐵絲網)
+  { file: "watchtower",      pos: [-60, 0, -20], rot:  0.8 },
+  { file: "barbed_wire",     pos: [-55, 0, -10], rot:  1.57 },
+  { file: "barbed_wire",     pos: [-55, 0,  -2], rot:  1.57 },
+  { file: "barbed_wire",     pos: [-55, 0,   6], rot:  1.57 },
+  // 障礙場
   { file: "obstacle_wall",   pos: [-12, 0, -16], rot:  0 },
   { file: "balance_log",     pos: [ -6, 0, -14], rot:  0 },
+  { file: "barrier_hedgehog",pos: [ 33, 0,  30], rot:  0 },
+  { file: "barrier_hedgehog",pos: [ 30, 0,  28], rot:  0.5 },
 ] })).catch((e) => { console.warn("[props] module load failed:", e && e.message); });
 
 /* ───────── 地面 + 操場 + 道路 ───────── */
