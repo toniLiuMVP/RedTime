@@ -2286,6 +2286,15 @@ function createGuards() {
         leftLeg: _ll,
         rightLeg: _rl
       };
+      /* de-clone(QA):±7% 身高差 + 逐警衛膚色微差(clone 非共享材質,正常 dispose 不違反 SHARED_GUARD_MATS) */
+      var _ghs = 0.93 + Math.random() * 0.14;
+      guard.scale.set(_ghs, _ghs, _ghs);
+      guard.userData.hs = _ghs;
+      var _gSkin = MAT_guardSkin.clone();
+      _gSkin.color.offsetHSL(0, (Math.random() - 0.5) * 0.05, (Math.random() - 0.5) * 0.09);
+      guard.traverse(function (o) { if (o.isMesh && o.material === MAT_guardSkin) o.material = _gSkin; });
+      /* 逐警衛步頻差(破除整排同步擺) */
+      guard.userData.gaitMul = 0.85 + Math.random() * 0.3;
       scene.add(guard);
       guards.push(guard);
     }
@@ -2339,7 +2348,7 @@ function updateGuards(dt) {
 
     /* 警衛巡邏走路動畫 */
     if (!d.walkPhase) d.walkPhase = Math.random() * Math.PI * 2;
-    d.walkPhase += d.patrolSpeed * dt * 5;
+    d.walkPhase += d.patrolSpeed * dt * 5 * (d.gaitMul || 1);   // 逐警衛步頻差,不整排同步擺
     var gSwing = Math.sin(d.walkPhase) * 0.3;
     if (d.leftLeg) d.leftLeg.rotation.x = gSwing;
     if (d.rightLeg) d.rightLeg.rotation.x = -gSwing;
@@ -4715,7 +4724,7 @@ function updateGame(dt) {
     fatherLeftArm.rotation.x = -0.2;
     fatherRightArm.rotation.x = -0.2;
   } else if (isMoving) {
-    const legSwing = Math.sin(state.clock * bobFreq) * 0.5;
+    const legSwing = Math.sin(state.clock * bobFreq) * (state.sprinting ? 0.68 : 0.5);   // 衝刺擺幅更大=拼命跑的體感(EP36)
     fatherLeftLeg.rotation.x = legSwing;
     fatherRightLeg.rotation.x = -legSwing;
     fatherLeftArm.rotation.x = -legSwing * 0.7;
