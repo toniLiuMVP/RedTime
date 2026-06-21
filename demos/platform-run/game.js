@@ -5580,7 +5580,7 @@ function updateCamera(dt) {
     state.grabOrbit = (state.grabOrbit || 0) + dt;
     const gk = Math.min(1, state.grabOrbit / 1.6);
     const gEase = gk * gk * (3 - 2 * gk);
-    const gAng = -Math.PI / 4 + gEase * (Math.PI * 0.75);
+    const gAng = -Math.PI / 4 + gEase * (Math.PI * 0.85);   // 掃到偏前(原 0.75π 停側面 → 0.85π,配合把拔轉臉)
     const gR = 2.8 - 1.1 * gEase;
     camPos.set(
       father.position.x + Math.sin(gAng) * gR,
@@ -5589,8 +5589,14 @@ function updateCamera(dt) {
     );
     camera.position.lerp(camPos, dt * 3.2);
     camera.lookAt(father.position.x, 1 + 0.2 * gEase, father.position.z);
+    // M1(導演):抱起女兒那一拍,把拔轉向鏡頭 →「我趕上了」的笑給到正臉(EP36 全書最揪心一句的峰值)
+    const faceAng = Math.atan2(camera.position.x - father.position.x, camera.position.z - father.position.z);
+    let dA = faceAng - father.rotation.y;
+    while (dA > Math.PI) dA -= 2 * Math.PI; while (dA < -Math.PI) dA += 2 * Math.PI;
+    father.rotation.y += dA * Math.min(1, dt * 5) * gEase;
   } else if (state.grabOrbit) {
     state.grabOrbit = 0;
+    father.rotation.y = 0;
   }
 
   if (state.phase === "victory") {
