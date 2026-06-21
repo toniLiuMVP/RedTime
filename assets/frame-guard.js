@@ -5,6 +5,10 @@
 (function () {
   try {
     if (window.self !== window.top) {
+      /* 例外：遊戲內故事閱讀器是「同源、刻意」用 ?embed=1 嵌在遊戲 iframe 裡的(回到天堂路/月台/LM402 的 bar + postMessage 都靠它)。
+         不可把這個合法嵌入彈出去,否則一開閱讀就把玩家踢出遊戲、毀掉遊戲狀態。
+         跨來源攻擊者即使框 reader.html?embed=1 也撈不到好處:embed 模式只顯示單一集公開故事文(本就公開),且跨來源讀 top.location 會 throw → 落到 catch 把內容藏掉。 */
+      if (new URLSearchParams(window.location.search).get("embed") === "1") return;
       window.top.location = window.self.location.href;
     }
   } catch (e) {
