@@ -2206,7 +2206,7 @@ for (const p of [COW_POS, JACKET_POS, DIARY_POS, RANGE_ENTRY, COUNSELOR_POS, COM
   const ring = new THREE.Mesh(beaconRingGeo, new THREE.MeshBasicMaterial({ color: 0xff5a4a, transparent: true, opacity: 0.16, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, side: THREE.DoubleSide })); ring.position.set(p.x, 0.04, p.z); ring.rotation.x = -Math.PI / 2; ring.raycast = () => { }; ROOT.add(ring); s.userData.ring = ring;   // 站位光暈環(平貼地面,微抬避 z-fighting);脈動/近距增亮在 update 處理
 }
 const waveEl = document.getElementById("wave"), scoreEl = document.getElementById("scoreval");
-function updateWaveHUD() { if (MODE !== "sim") { if (waveEl) waveEl.textContent = "軍營"; return; } const gw = goalWave(); if (waveEl) waveEl.textContent = inBreak ? (wave < 1 ? "準備" : "第 " + wave + " / " + gw + " 波" + (isTouch ? "" : " · 清空")) : "第 " + wave + " / " + gw + " 波"; if (scoreEl) scoreEl.textContent = score; }   // 顯示「第 N / 目標 波」讓撐到第幾波會停下變可見(目標感);手機省「· 清空」尾綴避免疊雷達
+function updateWaveHUD() { if (MODE !== "sim") { if (waveEl) waveEl.textContent = "軍營"; return; } const gw = goalWave(); if (waveEl) waveEl.textContent = inBreak ? (wave < 1 ? "站上起點" : "第 " + wave + " / " + gw + " 波" + (isTouch ? "" : " · 清空")) : "第 " + wave + " / " + gw + " 波"; if (scoreEl) scoreEl.textContent = score; }   // 顯示「第 N / 目標 波」讓撐到第幾波會停下變可見(目標感);手機省「· 清空」尾綴避免疊雷達
 function startWave() { wave++; inBreak = false; frogmenSpawned = false; frogmenActive = false; frogmenGhostCount = 0; const em = (curDiff ? curDiff.enemyMul : 1) * qEnemyCap; const n = Math.max(1, Math.min(Math.round(13 * em), Math.round((3 + wave * 1.7) * em))); spawnQueue = n; waveAlive = n; spawnTimer = 0; waveWeapons = buildWaveWeapons(wave, n); updateWaveHUD();
   // B3:硬關(困難/天堂路 或 接近目標波)生成一張光碟,每場最多一次;進新一波先清掉上一波殘留的光碟
   clearDisc();
@@ -2831,7 +2831,7 @@ function stopGazeMusic() { if (gazeMusic) { try { gazeMusic.pause(); } catch (e)
 function toggleGazeMusic() { if (!gazeMusic) return; if (gazeMusic.paused) { gazeMusic.play().catch(() => { }); gazeMusic.volume = (settings.vol != null ? settings.vol : 0.8) * 0.45; } else gazeMusic.pause(); updateMusicToggleLabels(); }   // 看故事時可關/開音樂
 function openClear() {
   if (!clearEl) return;
-  if (clearSubEl) clearSubEl.textContent = "整整十五年，他靠的不是變強，是相信。\n你撐過來了。坐下來，邊聽歌邊讀讀，當初有多浪漫，後來就有多揪心。";
+  if (clearSubEl) clearSubEl.textContent = "整整十五年的等待，他靠的不是變強，是相信。\n你撐過來了。坐下來，邊聽歌邊讀讀，當初有多浪漫，後來就有多揪心。";
   if (clearDiffEl) clearDiffEl.hidden = true;
   const _rb = clearEl.querySelector('[data-act="replay"]'); if (_rb) _rb.hidden = (clearedHard || settings.difficulty >= 5);   // 破過天堂路就不再給「再次挑戰」(toni #8);未破最難仍保留讓玩家挑戰更深的路
   clearEl.classList.add("on");
@@ -3530,7 +3530,7 @@ function updateFP(dt) {
   swayX = Math.max(-0.045, Math.min(0.045, swayX)); swayY = Math.max(-0.045, Math.min(0.045, swayY));
   // 拔槍/換彈位移:拔槍由低處 ease-out 升起;換彈正弦下沉+傾斜
   let drawDipY = 0, drawDipZ = 0, drawRotX = 0, rlDipY = 0, rlRotX = 0, rlRotZ = 0, disDipY = 0, disRotX = 0;
-  if (disarmT > 0) { disarmT -= dt; if (disarmT < 0) disarmT = 0; const e = 1 - disarmT / 0.85, s = e * e; disDipY = -s * 0.75; disRotX = s * 1.15; pitch += (-0.34 - pitch) * Math.min(1, dt * 3.5); if (disarmT === 0) disarmHoldT = 0.4; }   // 放下槍:槍垂下+槍口下傾(ease-in)+ 鏡頭順勢低頭看放下的手(韓劇運鏡),到底→先在「手空了」空鏡停 0.4s
+  if (disarmT > 0) { disarmT -= dt; if (disarmT < 0) disarmT = 0; const e = 1 - disarmT / 0.85, s = e * e; disDipY = -s * 0.75; disRotX = s * 1.15; pitch += (-0.34 - pitch) * Math.min(1, dt * 3.5); if (disarmT === 0) disarmHoldT = 0.8; }   // 放下槍:槍垂下+槍口下傾(ease-in)+ 鏡頭順勢低頭看放下的手(韓劇運鏡),到底→先在「手空了」空鏡停 0.8s(失重多沉一拍再進一眼瞬間)
   else if (disarmHoldT > 0) { disarmHoldT -= dt; disDipY = -0.75; disRotX = 1.15; pitch += (-0.34 - pitch) * Math.min(1, dt * 3.5); if (disarmHoldT <= 0) { disarmHoldT = 0; startGaze(); } }   // 「手空了」空鏡:槍維持垂下到底的姿勢停 0.4s(失重感落地),再進一眼瞬間
   if (drawT > 0) { const dp = 1 - drawT / drawDur, e = 1 - (1 - dp) * (1 - dp); drawDipY = -(1 - e) * 0.4; drawDipZ = (1 - e) * 0.12; drawRotX = (1 - e) * 1.0; }
   if (reloadT > 0) { const rp = 1 - reloadT / reloadDur, rc = reloadCurve(WEAPONS[wi].name, rp); rlDipY = rc[0]; rlRotX = rc[1]; rlRotZ = rc[2]; }
