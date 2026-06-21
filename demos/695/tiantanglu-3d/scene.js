@@ -179,9 +179,9 @@ import("./props-loader.js").then((m) => m.loadSceneProps(THREE, ROOT, {
 (function terrain() {
   // 大地(泥土草)
   const g = add(new THREE.BoxGeometry(360, 1, 360), matT(0x8a7c5e, T.ground, 40, 40, { roughness: 1 }), 0, -0.5, -30);
-  g.castShadow = false;
+  g.castShadow = false; g.receiveShadow = true;   // 地面收陰影=士兵/物件的腳在地上有影=踩在地上不再飄(導演最高槓桿:落地感)
   // 操場混凝土
-  add(new THREE.BoxGeometry(56, 0.14, 46), matT(0xd0c7ae, T.concrete, 10, 8, { roughness: 0.95 }), 0, 0.0, -6).castShadow = false;   // 操場混凝土:top 0.07(與柏油道 0.03/地面 0/白線 0.1 各自錯開,避免共面 z-fighting 雜訊;純視覺不影響站位)
+  const opg = add(new THREE.BoxGeometry(56, 0.14, 46), matT(0xd0c7ae, T.concrete, 10, 8, { roughness: 0.95 }), 0, 0.0, -6); opg.castShadow = false; opg.receiveShadow = true;   // 操場混凝土收陰影(士兵在操場戰鬥=有影落地)
   // 操場白漆邊線 + 中線
   const line = mat(0xe8e2cf, { roughness: 0.85 });
   const ln = (w, d, x, z) => { const m = add(new THREE.BoxGeometry(w, 0.05, d), line, x, 0.1, z); m.castShadow = false; };   // 白漆線壓低貼齊新混凝土面
@@ -1001,14 +1001,15 @@ const gRifle = new THREE.Group();
 P(gRifle, new THREE.BoxGeometry(0.12, 0.14, 0.64), gunMetal, 0, 0, -0.1);
 P(gRifle, new THREE.BoxGeometry(0.12, 0.05, 0.22), gunMetal, 0, 0.04, 0.06);
 P(gRifle, new THREE.BoxGeometry(0.06, 0.055, 0.46), gunPoly, 0, 0.10, -0.06);
-P(gRifle, new THREE.BoxGeometry(0.075, 0.07, 0.10), gunMetal, 0, 0.155, -0.04);
-P(gRifle, new THREE.CylinderGeometry(0.04, 0.045, 0.10, 14), gunMetal, 0, 0.18, -0.04, Math.PI / 2, 0, 0);
+P(gRifle, new THREE.BoxGeometry(0.06, 0.022, 0.46), gunMetal, 0, 0.085, -0.06);
+P(gRifle, new THREE.BoxGeometry(0.045, 0.05, 0.045), gunMetal, 0, 0.12, 0.05);
+P(gRifle, new THREE.BoxGeometry(0.03, 0.07, 0.03), gunMetal, 0, 0.125, -0.48);
 P(gRifle, new THREE.CylinderGeometry(0.028, 0.028, 0.52, 14), gunMetal, 0, 0.0, -0.52, Math.PI / 2, 0, 0);
 P(gRifle, new THREE.CylinderGeometry(0.05, 0.05, 0.12, 14), gunMetal, 0, 0.0, -0.82, Math.PI / 2, 0, 0);
 P(gRifle, new THREE.BoxGeometry(0.10, 0.10, 0.30), gunPoly, 0, -0.01, -0.34);
 P(gRifle, new THREE.BoxGeometry(0.09, 0.26, 0.14), gunMag, 0, -0.18, 0.0, 0.1, 0, 0);     // T65K2/T91 近直 STANAG 彈匣(非 AK 香蕉彎匣;海陸老兵一眼看穿)
 P(gRifle, new THREE.BoxGeometry(0.085, 0.16, 0.135), gunMag, 0, -0.33, 0.02, 0.16, 0, 0);  // 下段僅微彎
-P(gRifle, new THREE.BoxGeometry(0.10, 0.13, 0.20), gunPoly, 0, 0.0, 0.30);
+P(gRifle, new THREE.BoxGeometry(0.085, 0.12, 0.15), gunPoly, 0, 0.0, 0.27);   // T91 較短伸縮槍托(非 M16 固定長托)
 P(gRifle, new THREE.BoxGeometry(0.07, 0.15, 0.10), gunPoly, 0, -0.13, 0.14, -0.32, 0, 0);
 P(gRifle, new THREE.BoxGeometry(0.025, 0.05, 0.02), gunMetal, 0, 0.13, -0.56);
 P(gRifle, new THREE.CylinderGeometry(0.05, 0.055, 0.34, 12), camoMat, 0.0, -0.17, -0.2, 0.7, 0, 0.18);
