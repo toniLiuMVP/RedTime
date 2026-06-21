@@ -5163,6 +5163,17 @@ function advanceToNextLevel() {
   /* Grant +1 ultimate charge per level */
   state.ultimateCharges++;
 
+  /* toni r17d:主線關鍵點自動浮現一段完整的把拔回憶 — 進第 2 關=父親節注音(tracing,小時候)、進第 5 關=不能穿越(cantTravel,長大後的距離)。
+     各一次/局(resetGame 重置旗標),原本這 5 段只有手動點「💭 把拔的回憶」才看得到,主線永遠播不到。runChain 自帶暫停+逃生 watchdog,不會卡死。 */
+  try {
+    var _vig = { 2: "tracing", 5: "cantTravel" }[state.currentLevel];
+    state._vigPlayed = state._vigPlayed || {};
+    if (_vig && !state._vigPlayed[_vig] && window.__PACTS__ && window.__PACTS__.runChain) {
+      state._vigPlayed[_vig] = true;
+      safeSetTimeout(function () { try { window.__PACTS__.runChain([_vig], function () { }); } catch (e) { } }, 900);
+    }
+  } catch (e) { }
+
   /* Reset per-level state but keep carry-overs */
   state.phase = "title";
   if (window.__LEVEL_MECHANICS__) window.__LEVEL_MECHANICS__.deactivate();
@@ -5875,6 +5886,7 @@ function init() {
 
 function resetGame(keepCarryState) {
   state.transitionFreeze = false; // 防卡：重置遊戲一定解凍
+  if (keepCarryState !== "level") state._vigPlayed = {};   // 從第 1 關重來(新局 / 全破重啟)就重置自動回憶旗標,讓主線回憶下次再播;失敗重拚同關不重播
   /* Level system reset */
   if (keepCarryState === "level") {
     /* 失敗重試：保留關卡與已存進度，重拚本關（不再整場歸零） */
