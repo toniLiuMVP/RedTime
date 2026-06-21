@@ -117,6 +117,7 @@ assets/sw-register.js
 !/demos/695/tiantanglu-3d/scene.js
 !/demos/695/tiantanglu-3d/cold-open.js
 !/demos/695/tiantanglu-3d/story-data.js
+!/demos/695/tiantanglu-3d/props-loader.js
 !/demos/695/tiantanglu-3d/props/
 !/demos/695/tiantanglu-3d/props/*
 /demos/platform-run-OLD/
@@ -145,3 +146,6 @@ assets/sw-register.js
 /*.jpeg
 
 /assets/index.css
+
+# local planning notes (not for visitors)
+/.planning/
