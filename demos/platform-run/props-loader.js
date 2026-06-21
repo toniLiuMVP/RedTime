@@ -35,6 +35,12 @@ export function loadSceneProps(THREE, scene, parent, opts) {
       }
     });
     group.add(o);
+    try {   // 自動托起貼地:最低點沉到 groundY(預設 0)以下就上移
+      o.updateWorldMatrix(true, true);
+      const box = new THREE.Box3().setFromObject(o);
+      const sink = box.min.y - (it.groundY || 0);
+      if (sink < -0.01) o.position.y -= sink;
+    } catch (e) {}
     loaded.push(o);
   }
   let i = 0;

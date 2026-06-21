@@ -135,13 +135,18 @@ const matT = (col, t, rx, ry, o = {}) => { const m = t.clone(); m.needsUpdate = 
 const ROOT = new THREE.Group(); scene.add(ROOT);
 function add(geo, m, x, y, z, parent) { const b = new THREE.Mesh(geo, m); b.position.set(x, y, z); b.castShadow = b.receiveShadow = true; (parent || ROOT).add(b); return b; }
 
-/* ── Blender 寫實道具(非阻塞 dynamic import,失敗只 warn 不影響場景;raycast 關閉不擋射擊) ── */
-import("./props-loader.js").then((m) => m.loadSceneProps(THREE, ROOT, { base: "./props/", items: [
-  // 天堂路 咾咕石路(南緣,沿 X 鋪 ~32m)
-  { file: "coral_path",      pos: [-12, 0, -48], rot: 0 },
-  { file: "coral_path",      pos: [ -4, 0, -48], rot: 0 },
-  { file: "coral_path",      pos: [  4, 0, -48], rot: 0 },
-  { file: "coral_path",      pos: [ 12, 0, -48], rot: 0 },
+/* ── Blender 寫實道具(非阻塞 dynamic import,失敗只 warn 不影響場景)──
+   onPlaced:每個道具載完算世界 AABB 推進 OBSTACLES → 玩家/敵人不可穿越(實體碰撞);
+   loader 內另有「自動托起貼地」修沉入地板。咾咕石路標 walkable(地面路徑,不擋走)。 */
+import("./props-loader.js").then((m) => m.loadSceneProps(THREE, ROOT, {
+  base: "./props/",
+  onPlaced: (box) => { OBSTACLES.push([box.minX, box.maxX, box.minZ, box.maxZ]); },
+  items: [
+  // 天堂路 咾咕石路(南緣,沿 X 鋪 ~32m;walkable=可走上去的地面路徑,不擋)
+  { file: "coral_path",      pos: [-12, 0, -48], rot: 0, walkable: true },
+  { file: "coral_path",      pos: [ -4, 0, -48], rot: 0, walkable: true },
+  { file: "coral_path",      pos: [  4, 0, -48], rot: 0, walkable: true },
+  { file: "coral_path",      pos: [ 12, 0, -48], rot: 0, walkable: true },
   { file: "sandbag_wall",    pos: [-16, 0, -44], rot: 0 },
   { file: "sandbag_wall",    pos: [ 24, 0,   3], rot: 1.5 },
   // 南營區(bivouac)
