@@ -1246,18 +1246,20 @@ const MAT = {
   roof:       new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.5, transparent: true, opacity: 0.6 }),
   window:     new THREE.MeshStandardMaterial({ color: 0x3a6a8a, roughness: 0.1, metalness: 0.5 }),
   door:       new THREE.MeshStandardMaterial({ color: 0xbbbbbb, roughness: 0.3, metalness: 0.4 }),
-  skin:       new THREE.MeshStandardMaterial({ color: 0xdeb887, roughness: 0.8 }),
-  fatherBody: new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.7 }),
+  skin:       new THREE.MeshStandardMaterial({ color: 0xe0b48c, roughness: 0.62, envMapIntensity: 0.4 }),   // 軟膚:降 roughness + env rim,不再像撞球扁平
+  fatherBody: new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.55, envMapIntensity: 0.3 }),   // 衣料:微 sheen,接月台天光軟邊
   pink:       new THREE.MeshStandardMaterial({ color: 0xff69b4, roughness: 0.6 }),
   bench:      new THREE.MeshStandardMaterial({ color: 0x8b7355, roughness: 0.8 }),
   hair:       new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.9 }),
   pants:      new THREE.MeshStandardMaterial({ color: 0x2a2a3a, roughness: 0.7 }),
   shoe:       new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.8 }),
-  pinkDress:  new THREE.MeshStandardMaterial({ color: 0xffb6c1, roughness: 0.6 }),
-  pinkBag:    new THREE.MeshStandardMaterial({ color: 0xff69b4, roughness: 0.6 }),
+  pinkDress:  new THREE.MeshStandardMaterial({ color: 0xffb6c1, roughness: 0.45, envMapIntensity: 0.35 }),   // 洋裝:柔緞光,接月台天光
+  pinkBag:    new THREE.MeshStandardMaterial({ color: 0xff69b4, roughness: 0.5, envMapIntensity: 0.35 }),
 };
 
 /* Father-specific materials */
+// EP36 把拔退伍約 11 年=平民,衣著不該是迷彩(只有「迷彩包包」是 canon 的留念);腿改平民休閒短褲色
+const MAT_fatherShorts = new THREE.MeshStandardMaterial({ color: 0x6b6f63, roughness: 0.7, envMapIntensity: 0.35 });
 const MAT_whiteSneaker = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.5 });
 const MAT_glasses      = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3 });
 const MAT_fauxHawk     = new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 0.9 });
@@ -2482,7 +2484,7 @@ function buildFather() {
   father.add(glassesGroup);
 
   /* Torso（更自然的體型） */
-  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 0.5, 6, 12), MAT.fatherBody);
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 0.5, 12, 24), MAT.fatherBody);   // 12×24:AgX 下更圓的桶身,不再有刻面
   torso.position.y = 1.05;
   torso.castShadow = true;
   father.add(torso);
@@ -2504,11 +2506,20 @@ function buildFather() {
   collar.position.set(0, 1.32, -0.08);
   father.add(collar);
 
-  /* Belly */
-  const belly = new THREE.Mesh(new THREE.SphereGeometry(0.32, 12, 12), MAT.fatherBody);
-  belly.position.set(0, 0.85, -0.2);
+  /* Belly — EP36「大肚子 / 肚子有一點圓」:上窄下圓的尊嚴圓肚(非一顆球黏上去);臉/正面在 -Z,肚子往 -Z 凸 */
+  const belly = new THREE.Mesh(new THREE.SphereGeometry(0.30, 16, 16), MAT.fatherBody);
+  belly.scale.set(1.08, 0.95, 1.0);
+  belly.position.set(0, 0.88, -0.14);
   belly.castShadow = true;
   father.add(belly);
+  const bellyLow = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 14), MAT.fatherBody);   // 下半圓,讓肚子是梨形不是球
+  bellyLow.position.set(0, 0.70, -0.08);
+  bellyLow.castShadow = true;
+  father.add(bellyLow);
+  const bellyWaist = new THREE.Mesh(new THREE.SphereGeometry(0.27, 14, 14), MAT.fatherBody);   // 腰部連接,軀幹→肚子接成一個柔軟桶身
+  bellyWaist.scale.set(1.0, 0.7, 1.0);
+  bellyWaist.position.set(0, 0.97, -0.06);
+  father.add(bellyWaist);
 
   /* Left arm */
   const armL = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.06, 0.55, 6), MAT.skin);
@@ -2535,7 +2546,7 @@ function buildFather() {
   father.add(fatherRightArm);
 
   /* Left leg */
-  const upperLegL = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.085, 0.25, 6), MAT_camo);
+  const upperLegL = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.088, 0.25, 12), MAT_fatherShorts);
   upperLegL.position.set(0, -0.1, 0);
   fatherLeftLeg.add(upperLegL);
   const calfL = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.065, 0.25, 6), MAT.skin);
@@ -2548,7 +2559,7 @@ function buildFather() {
   father.add(fatherLeftLeg);
 
   /* Right leg */
-  const upperLegR = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.085, 0.25, 6), MAT_camo);
+  const upperLegR = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.088, 0.25, 12), MAT_fatherShorts);
   upperLegR.position.set(0, -0.1, 0);
   fatherRightLeg.add(upperLegR);
   const calfR = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.065, 0.25, 6), MAT.skin);
