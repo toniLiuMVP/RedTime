@@ -2144,7 +2144,8 @@ function spawnEnemy(x, z, hp, opts) {
   const skin = jitterMat(eSkin, (Math.random() - 0.5) * 0.04, (Math.random() - 0.5) * 0.1, (Math.random() - 0.5) * 0.22);
   const ms = [];
   const eb = (w, h, d, m, px, py, pz) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(px, py, pz); ms.push(b); return b; };
-  eb(0.5, 0.74, 0.3, frog ? skin : body, 0, 1.16, 0);                  // 軀幹(蛙人裸膚)
+  const ec = (r, len, m, px, py, pz) => { const b = new THREE.Mesh(new THREE.CapsuleGeometry(r, len, 4, 12), m); b.position.set(px, py, pz); ms.push(b); return b; };   // capsule 版:圓潤身體/四肢(軟身體 + 硬裝具的對比,不再 Roblox 方塊)
+  ec(0.21, 0.34, frog ? skin : body, 0, 1.16, 0);                      // 軀幹(圓潤胸背,取代方塊;y=1.16 中心不動,爆頭/裝具對位不變)
   if (!frog) { eb(0.56, 0.5, 0.36, eGear, 0, 1.2, 0.01); eb(0.2, 0.16, 0.1, eGear, 0, 1.32, 0.19); eb(0.09, 0.52, 0.08, eBoot, -0.16, 1.2, 0.19); eb(0.09, 0.52, 0.08, eBoot, 0.16, 1.2, 0.19); eb(0.18, 0.15, 0.1, eBoot, -0.2, 1.04, 0.21); eb(0.14, 0.13, 0.1, eBoot, 0.21, 1.06, 0.21); }   // 防彈背心 + 彈匣袋 + 胸前背帶×2 + 側掛彈袋(寫實裝具,蛙人沒有)
   eb(0.46, 0.36, 0.3, frog ? FROG_TRUNK : eGear, 0, 0.68, 0);          // 臀 / 蛙人紅短褲
   eb(0.12, 0.12, 0.12, skin, 0, 1.57, 0);                              // 頸
@@ -2156,10 +2157,10 @@ function spawnEnemy(x, z, hp, opts) {
   const legs = [];
   for (const sx of [-1, 1]) {
     const legG = new THREE.Group(); legG.position.set(sx * 0.13, 0.71, 0);                                                                            // 髖關節樞紐:腿從髖擺,不繞中點
-    const thigh = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.62, 0.22), frog ? skin : eGear); thigh.position.set(0, -0.31, 0); thigh.castShadow = true; legG.add(thigh);   // 腿(蛙人裸膚)
+    const thigh = new THREE.Mesh(new THREE.CapsuleGeometry(0.1, 0.42, 4, 10), frog ? skin : eGear); thigh.position.set(0, -0.31, 0); thigh.castShadow = true; legG.add(thigh);   // 腿(圓潤;長軸 Y 對齊,legG 髖樞紐 rotation.x 走路擺動不受幾何替換影響)
     const boot = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.12, 0.3), frog ? skin : eBoot); boot.position.set(0, -0.65, 0.04); boot.castShadow = true; legG.add(boot);        // 靴(蛙人赤腳)
     g.add(legG); legs.push(legG);
-    eb(0.14, 0.5, 0.16, frog ? skin : body, sx * 0.27, 1.18, 0.02);    // 上臂(蛙人裸膚;持槍備姿,不擺)
+    ec(0.075, 0.36, frog ? skin : body, sx * 0.27, 1.18, 0.02);        // 上臂(圓潤;持槍備姿不擺,純幾何替換)
   }
   // 武器(胸前) + 前臂 + 握把手
   const gunPivot = new THREE.Group(); gunPivot.position.set(0.1, weapon === "knife" ? 1.12 : 1.16, 0.03);   // 槍托樞紐:後座只抬槍口(不繞中點 see-saw)
@@ -2172,7 +2173,7 @@ function spawnEnemy(x, z, hp, opts) {
     eb(gv.mag ? 0.09 : 0.07, gv.mag ? 0.22 : 0.16, gv.mag ? 0.13 : 0.12, gunMag, 0.1, gv.mag ? 0.98 : 1.04, -0.12);   // 彈匣(機槍更大)
   }
   ms.push(gunPivot);
-  eb(0.14, 0.34, 0.14, frog ? skin : body, 0.18, 1.0, -0.18);               // 前臂(蛙人裸膚)
+  ec(0.07, 0.2, frog ? skin : body, 0.18, 1.0, -0.18);                     // 前臂(圓潤)
   const hand = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), skin); hand.position.set(0.1, 1.12, -0.08); ms.push(hand);   // 握把手:膚色球,槍是握著不是浮空
   const upper = new THREE.Group(); ms.forEach((m) => { m.castShadow = true; upper.add(m); }); g.add(upper);   // 上半身容器:走路起伏/側擺驅動在這(不動 g,g 被 yaw/flinch/death 佔用)
   g.scale.setScalar(type.scale);
