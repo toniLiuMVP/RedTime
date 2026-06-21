@@ -210,27 +210,32 @@
 
   function tick(t) {
     if (!active) return;
-    if (!lastTick) lastTick = t;
-    const dt = Math.min((t - lastTick) / 1000, 0.05); // W2：切分頁回來不會時間暴衝、提早結算
-    clock += dt;
-    lastTick = t;
-    // 活的七嘴八舌:沒被安撫的聲音持續變激動，並把 skew 往自己的 lean 拉
-    let drift = 0;
-    for (let k = 0; k < VOICES.length; k++) {
-      agit[k] = Math.min(1, (agit[k] || 0) + dt * 0.18); // 聲音變激動更快,2x 節奏下不單調
-      drift += agit[k] * VOICES[k].lean;
+    try {
+      if (!lastTick) lastTick = t;
+      const dt = Math.min((t - lastTick) / 1000, 0.05); // W2：切分頁回來不會時間暴衝、提早結算
+      clock += dt;
+      lastTick = t;
+      // 活的七嘴八舌:沒被安撫的聲音持續變激動，並把 skew 往自己的 lean 拉
+      let drift = 0;
+      for (let k = 0; k < VOICES.length; k++) {
+        agit[k] = Math.min(1, (agit[k] || 0) + dt * 0.18); // 聲音變激動更快,2x 節奏下不單調
+        drift += agit[k] * VOICES[k].lean;
+      }
+      skew += drift * dt * 0.2;
+      skew = Math.max(-6, Math.min(6, skew));
+      // 穩定:半場時間下加倍累積速率，主動調節仍贏得了
+      steady += (Math.abs(skew) <= 1.5 ? dt * 9.5 : -dt * 5);
+      steady = Math.max(0, Math.min(100, steady));
+      if (breathCd > 0) breathCd = Math.max(0, breathCd - dt);
+      render();
+      const mm = Math.min(60, Math.floor((clock / CLOCK_MAX) * 20) + 40);
+      watchEl.textContent = mm >= 60 ? "11:00" : "10:" + mm;
+      if (clock >= CLOCK_MAX) { finish(); return; }
+      raf = requestAnimationFrame(tick);
+    } catch (e) {
+      // tick 任何例外都 force-finish:保證 onDone 觸發 → app.js 解除 councilPaused,不會 sim 永久凍結
+      try { finish(); } catch (e2) {}
     }
-    skew += drift * dt * 0.2;
-    skew = Math.max(-6, Math.min(6, skew));
-    // 穩定:半場時間下加倍累積速率，主動調節仍贏得了
-    steady += (Math.abs(skew) <= 1.5 ? dt * 9.5 : -dt * 5);
-    steady = Math.max(0, Math.min(100, steady));
-    if (breathCd > 0) breathCd = Math.max(0, breathCd - dt);
-    render();
-    const mm = Math.min(60, Math.floor((clock / CLOCK_MAX) * 20) + 40);
-    watchEl.textContent = mm >= 60 ? "11:00" : "10:" + mm;
-    if (clock >= CLOCK_MAX) { finish(); return; }
-    raf = requestAnimationFrame(tick);
   }
 
   function finish() {

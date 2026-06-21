@@ -2281,6 +2281,7 @@ function resetScene() {
   state.time = 0;
   state.ending = null;
   state.endingSequence = null;
+  state.councilPaused = false;   // 防 reset 發生在 council overlay 開著時,councilPaused 卡 true → sim 永久凍結
   state.dialogue = null;
   state.flags = createInitialFlags();
   state.player = {
