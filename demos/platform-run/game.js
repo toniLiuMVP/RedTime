@@ -252,7 +252,8 @@ if (preset.fog) {
 }
 
 /* ── Blender 寫實道具(非阻塞 dynamic import,失敗只 warn;raycast 關閉不擋遊戲) ── */
-import("./props-loader.js").then((m) => m.loadSceneProps(THREE, scene, scene, { base: "./props/", items: [
+/* 低/順暢檔(quality 0/1)跳過寫實道具,省低階機貼圖上傳;預設手機(3)/桌機(4)照載 */
+if (state.quality >= 2) import("./props-loader.js").then((m) => m.loadSceneProps(THREE, scene, scene, { base: "./props/", items: [
   { file: "station_sign",    pos: [ 0,   3.4, -120], rot: 0 },
   { file: "station_sign",    pos: [ 0,   3.4,    0], rot: 0 },
   { file: "station_sign",    pos: [ 0,   3.4,  120], rot: 0 },
@@ -2054,6 +2055,8 @@ const MAT_guardBelt = new THREE.MeshStandardMaterial({ color: 0x111111, roughnes
 const MAT_guardShoe = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.5 });
 const MAT_reflective = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.1, metalness: 0.6, emissive: 0xcccccc, emissiveIntensity: 0.15 });
 const MAT_whistle = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.2, metalness: 0.8 });
+// 共享 module-level 材質:換關 dispose 時必須跳過,否則第 2 關起整批警衛變黑(disposed 共享 GPU program)
+const SHARED_GUARD_MATS = new Set([MAT_guardVest, MAT_guardSkin, MAT_guardPants, MAT_guardHat, MAT_guardShirt, MAT_guardBelt, MAT_guardShoe, MAT_reflective, MAT_whistle]);
 
 function createGuards() {
   /* fix-7 (r33):換關時 clear 所有 pending timers,避免舊 callback 改 state/DOM */
@@ -2066,7 +2069,7 @@ function createGuards() {
     if (g.parent) scene.remove(g);
     g.traverse(function(child){
       if (child.geometry) child.geometry.dispose();
-      if (child.material && child.material.dispose) child.material.dispose();
+      if (child.material && child.material.dispose && !SHARED_GUARD_MATS.has(child.material)) child.material.dispose();   // 跳過共享材質(per-guard inline 材質仍 dispose)
     });
   }
   guards.length = 0;
@@ -2623,7 +2626,7 @@ function buildFather() {
 
 function buildDaughter() {
   /* 精緻小女孩膚色 */
-  var childSkinMat = new THREE.MeshStandardMaterial({ color: 0xf0c8a0, roughness: 0.75 });
+  var childSkinMat = new THREE.MeshStandardMaterial({ color: 0xf0c8a0, roughness: 0.62, envMapIntensity: 0.4 });   // 軟膚對齊把拔,擁抱貼臉那拍同一材質語言
 
   /* Head（更高面數、更圓潤可愛） */
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.17, 16, 16), childSkinMat);
@@ -2697,7 +2700,7 @@ function buildDaughter() {
   daughter.add(hairTie);
 
   /* 粉色洋裝（更精緻） */
-  var dressMat = new THREE.MeshStandardMaterial({ color: 0xffb6c1, roughness: 0.55 });
+  var dressMat = new THREE.MeshStandardMaterial({ color: 0xffb6c1, roughness: 0.45, envMapIntensity: 0.35 });   // 柔緞洋裝(實際使用的是這顆 local 材質,非 MAT.pinkDress)
   const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.14, 0.25, 6, 12), dressMat);
   body.position.y = 0.45;
   body.castShadow = true;
@@ -6173,6 +6176,8 @@ function startGameFromTitle() {
 }
 dom.title.addEventListener("click", startGameFromTitle);
 dom.title.addEventListener("keydown", function(e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); startGameFromTitle(); } });
+/* 閱讀入口/回首頁的點擊不可冒泡到 title→開跑(與 pt-c3.js 重複但不依賴它載入成功,load-order 無關) */
+document.querySelectorAll(".title-read").forEach(function (el) { el.addEventListener("click", function (e) { e.stopPropagation(); }); });
 dom.title.setAttribute("role", "button");
 dom.title.setAttribute("tabindex", "0");
 dom.title.setAttribute("aria-label", "點擊或按 Enter 開始月台上的狂奔");
