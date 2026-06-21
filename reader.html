@@ -292,6 +292,9 @@
         text-align: center;
         text-wrap: pretty;
       }
+      /* 跳到內容 skip-link：鍵盤 Tab 第一個焦點＝直接跳到正文，不用 Tab 過整個 chrome（長篇 42 集閱讀頁最需要） */
+      .skip-link { position:absolute; left:-9999px; top:8px; z-index:99999; padding:10px 18px; background:#0a0c0e; color:#d8c9a8; border:1px solid #d8c9a8; border-radius:3px; font-size:13px; letter-spacing:.15em; text-decoration:none; }
+      .skip-link:focus, .skip-link:focus-visible { left:8px; outline:2px solid #d8c9a8; outline-offset:2px; }
       /* 遊戲內嵌讀模式（?embed=1）：藏掉所有 chrome，只留單一集的故事正文，給遊戲 iframe 用 */
       body.reader-embed #hero,
       body.reader-embed #sidebar,
@@ -5327,6 +5330,7 @@
     </style>
   </head>
   <body data-fs="md" data-width="default">
+    <a href="#main-col" class="skip-link">跳到內容</a>
     <svg class="ui-sprite" aria-hidden="true" focusable="false">
       <defs>
         <symbol
@@ -6022,7 +6026,7 @@
               style="font-size:11px;text-decoration:none;font-weight:700">LM402</a>
             <a class="nav-btn" href="demos/695/tiantanglu-3d/index.html"
               style="font-size:11px;text-decoration:none;font-weight:700">天堂路</a>
-            <a class="nav-btn" href="demos/platform-run/index.html"
+            <a class="nav-btn" href="demos/platform-run/index.html" aria-label="月台上的狂奔"
               style="font-size:14px;text-decoration:none">🏃</a>
           </div>
         </div>
@@ -6043,7 +6047,7 @@
       <div class="ip-head">
         <span class="ip-title">時間地圖</span>
         <button class="ip-expand" id="ip-expand" onclick="toggleInfoWide()" aria-label="放大檢視時間地圖" title="放大檢視（時空穿越圖一次看全）">⛶ 放大</button>
-        <button class="ip-close" onclick="closeInfo()">✕</button>
+        <button class="ip-close" onclick="closeInfo()" aria-label="關閉">✕</button>
       </div>
       <div class="ip-tabs">
         <div class="ip-tab active" onclick="switchInfoTab(0, this)">
@@ -6065,7 +6069,7 @@
       <div class="jp-handle"></div>
       <div class="jp-head">
         <span class="jp-title">跳至章節</span
-        ><button class="jp-close" onclick="closeJump()">✕</button>
+        ><button class="jp-close" onclick="closeJump()" aria-label="關閉">✕</button>
       </div>
       <div class="jp-filter">
         <button class="jp-filter-btn active" onclick="filterJump('all', this)">

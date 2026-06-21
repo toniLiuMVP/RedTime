@@ -463,21 +463,32 @@ mixed: { name: "複合視角", sub: "多線交織", ep: RECOMMENDED_ENTRIES.mixe
   function norm(s) { return (s || "").toString().toLowerCase().replace(/[\s　，,。.、:：;；!！?？「」『』（）()]/g, ""); }
   function go(url) { try { window.location.href = url; } catch (e) {} }
 
-  var _bd = null, _autoCloseT = null;
-  function closeModal() { if (_autoCloseT) { clearTimeout(_autoCloseT); _autoCloseT = null; } if (!_bd) return; var bd = _bd; _bd = null; bd.classList.remove("show"); try { document.body.style.overflow = ""; } catch (e) {} setTimeout(function () { if (bd.parentNode) bd.parentNode.removeChild(bd); }, 460); document.removeEventListener("keydown", onKey); }
-  function onKey(e) { if (e.key === "Escape") closeModal(); }
+  var _bd = null, _autoCloseT = null, _prevFocus = null;
+  function closeModal() { if (_autoCloseT) { clearTimeout(_autoCloseT); _autoCloseT = null; } if (!_bd) return; var bd = _bd; _bd = null; bd.classList.remove("show"); try { document.body.style.overflow = ""; } catch (e) {} setTimeout(function () { if (bd.parentNode) bd.parentNode.removeChild(bd); }, 460); document.removeEventListener("keydown", onKey); try { if (_prevFocus && _prevFocus.focus) _prevFocus.focus(); } catch (e) {} _prevFocus = null; }
+  function onKey(e) {
+    if (e.key === "Escape") { closeModal(); return; }
+    if (e.key === "Tab" && _bd) {   // 焦點陷阱:Tab 不跑出對話框(自動每次進站都彈,鍵盤/讀屏使用者不會迷路在背景)
+      var card = _bd.querySelector(".ob-card"); if (!card) return;
+      var f = Array.prototype.filter.call(card.querySelectorAll('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])'), function (el) { return el.offsetParent !== null && !el.disabled; });
+      if (!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  }
   function openModal() {
 try { var _nt = document.getElementById("newcomer-tour"); if (_nt && !_nt.hidden) { _nt.hidden = true; _nt.setAttribute("aria-hidden", "true"); } } catch (e) {} // 互斥：開導覽 modal 前先關新手教學，避免雙層捲動鎖
 var stale = document.querySelectorAll(".ob-backdrop");
 for (var s = 0; s < stale.length; s++) { if (stale[s].parentNode) stale[s].parentNode.removeChild(stale[s]); }
 _bd = null; document.removeEventListener("keydown", onKey);
-var bd = ce("div", "ob-backdrop"); bd.setAttribute("role", "dialog"); bd.setAttribute("aria-modal", "true");
+_prevFocus = document.activeElement;   // 記住開啟前的焦點,關閉後還原(自動彈出對話框 a11y)
+var bd = ce("div", "ob-backdrop"); bd.setAttribute("role", "dialog"); bd.setAttribute("aria-modal", "true"); bd.setAttribute("aria-label", "進站導覽");
 var card = ce("div", "ob-card");
 var x = ce("button", "ob-close", "×"); x.setAttribute("aria-label", "關閉"); x.addEventListener("click", closeModal);
 card.appendChild(x); bd.appendChild(card); document.body.appendChild(bd);
 bd.addEventListener("click", function (e) { if (e.target === bd) closeModal(); });
 document.addEventListener("keydown", onKey);
-requestAnimationFrame(function () { bd.classList.add("show"); });
+requestAnimationFrame(function () { bd.classList.add("show"); try { x.focus(); } catch (e) {} });   // 開啟後把焦點移進對話框(否則焦點留在被遮住的背景)
 try { document.body.style.overflow = "hidden"; } catch (e) {}
 _bd = bd; return card;
   }

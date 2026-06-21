@@ -37,6 +37,7 @@ ul { margin: 0 0 14px; padding-left: 22px; color: #c4c4c4; }
 li { margin-bottom: 6px; }
 a { color: #ff8fa0; text-decoration: none; border-bottom: 1px solid rgba(255, 143, 160, 0.35); }
 a:hover { color: #fff; border-bottom-color: #ff8fa0; }
+a:focus-visible, .back:focus-visible { outline: 2px solid #ffd9a8; outline-offset: 3px; border-radius: 3px; }   /* 鍵盤焦點可見指示(法律頁三頁共用) */
 .back {
   display: inline-block;
   margin-top: 40px;
