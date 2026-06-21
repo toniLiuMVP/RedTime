@@ -50,6 +50,24 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://toniliumvp.github.io/RedTime/demos/695/tiantanglu-3d/index.html</loc>
+    <lastmod>2026-06-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://toniliumvp.github.io/RedTime/terms.html</loc>
+    <lastmod>2026-06-08</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  <url>
+    <loc>https://toniliumvp.github.io/RedTime/credits.html</loc>
+    <lastmod>2026-06-08</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  <url>
     <loc>https://toniliumvp.github.io/RedTime/ep/0.html</loc>
     <lastmod>2026-06-08</lastmod>
     <changefreq>monthly</changefreq>

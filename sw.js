@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v19-20260621';  // r16: bump to invalidate all caches (clients were stuck on stale assets — must bump every deploy that changes assets)
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v148-20260621';   // bump every deploy that changes html/js/css; auto-reload then delivers the fix to clients still on the prior worker
+const RUNTIME_VERSION = 'runtime-v149-20260621';   // bump every deploy that changes html/js/css; auto-reload then delivers the fix to clients still on the prior worker
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
@@ -32,9 +32,11 @@ const RUNTIME_PRECACHE_URLS = [
   '/RedTime/',
   '/RedTime/index.html',
   '/RedTime/reader.html',
-  // 對外只服務雙時空B 兩個遊戲入口
+  '/RedTime/manifest.json',
+  // 三個公開遊戲入口(LM402 / 月台 / 天堂路)— 都要離線可用
   '/RedTime/lm402.html',
   '/RedTime/demos/platform-run/index.html',
+  '/RedTime/demos/695/tiantanglu-3d/index.html',
 ];
 
 // — 路徑分流規則 —
