@@ -150,9 +150,9 @@ import("./props-loader.js").then((m) => m.loadSceneProps(THREE, ROOT, {
   { file: "sandbag_wall",    pos: [-16, 0, -44], rot: 0 },
   { file: "sandbag_wall",    pos: [ 24, 0,   3], rot: 1.5 },
   // 南營區(bivouac)
-  { file: "field_tent",      pos: [-30, 0, -42], rot:  0.2 },
-  { file: "field_tent",      pos: [-19, 0, -46], rot: -0.3 },
-  { file: "weapon_rack",     pos: [-26, 0, -34], rot:  1.2 },
+  { file: "field_tent",      pos: [-30, 0, -42], rot: 0 },
+  { file: "field_tent",      pos: [-19, 0, -46], rot: 0 },
+  { file: "weapon_rack",     pos: [-26, 0, -34], rot: 1.5708 },
   // NE 補給platform
   { file: "ammo_crate",      pos: [ 30, 0,   4], rot:  0.1 },
   { file: "ammo_crate",      pos: [ 32, 0,   7], rot:  0.5 },
@@ -189,6 +189,19 @@ import("./props-loader.js").then((m) => m.loadSceneProps(THREE, ROOT, {
   // 主幹道(柏油)
   add(new THREE.BoxGeometry(10, 0.12, 120), matT(0x57534d, T.asphalt, 2, 22, { roughness: 0.85 }), 34, -0.03, -20).castShadow = false;   // 幹道 top 0.03(低於操場混凝土 0.07,重疊處被操場蓋住不 z-fight)
   add(new THREE.BoxGeometry(80, 0.12, 9), matT(0x57534d, T.asphalt, 16, 2, { roughness: 0.85 }), 0, -0.03, 18).castShadow = false;   // 橫向幹道 top 0.03
+})();
+/* 集合場焦點 + 天堂路通道化(軍事專家:司令台 + 把「天堂路」做成定義通道) */
+(function campFocal() {
+  const con = mat(0xb8ad90, { roughness: 0.9 });
+  // 司令台:操場頭(z=-22 後緣)面向集合區的高台 + 前階(集合格線 line 188 已在)
+  var sp = add(new THREE.BoxGeometry(6, 0.5, 2.4), con, 0, 0.25, -22); sp.castShadow = true; sp.receiveShadow = true;
+  add(new THREE.BoxGeometry(6.4, 0.18, 0.6), con, 0, 0.09, -20.5).receiveShadow = true;   // 前階
+  add(new THREE.BoxGeometry(0.16, 1.4, 0.16), mat(0x6f6453, { roughness: 0.7 }), 2.4, 1.2, -22);   // 司令台旗桿
+  // 天堂路通道化:咾咕石路(z=-48)兩側珊瑚礁矮牆夾成通道 + 膝高鐵絲網逼匍匐(視覺符號,不擋走)
+  const coral = matT(0xa89878, T.concrete, 3, 6, { roughness: 0.96 });
+  for (const sx of [-1, 1]) { var bm = add(new THREE.BoxGeometry(0.7, 0.55, 28), coral, sx * 15, 0.27, -48); bm.castShadow = true; bm.receiveShadow = true; }
+  const wireM = mat(0x6a6256, { roughness: 0.6, metalness: 0.3 });
+  for (const wz of [-58, -48, -38]) { add(new THREE.BoxGeometry(28, 0.035, 0.035), wireM, 0, 0.46, wz).castShadow = false; for (const px of [-13, 0, 13]) add(new THREE.BoxGeometry(0.05, 0.52, 0.05), wireM, px, 0.26, wz); }
 })();
 
 /* ───────── 地面大尺度變化(破除平坦感:走出來的夯實泥路 / 礫石沙斑 / 晨露水漬) ───────── */
