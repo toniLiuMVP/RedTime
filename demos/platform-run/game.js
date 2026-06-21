@@ -2029,11 +2029,11 @@ function buildTrain(group, color, stripe, hasDoors) {
 }
 
 function setupTrains() {
-  buildTrain(trainSouth, 0x2c5f8a, 0x1a3a6a, false);
+  buildTrain(trainSouth, 0xc4c7cb, 0x123a6e, false);   // EMU500:裸不鏽鋼銀 + 深藍帶(TRA 寫實,取代原通用藍)
   trainSouth.position.set(-(PLATFORM_W / 2 + 3), -0.45, PLATFORM_LEN);
   scene.add(trainSouth);
 
-  buildTrain(trainNorth, 0xcc6622, 0xe88833, true);
+  buildTrain(trainNorth, 0xc6c9cd, 0x1656a4, true);   // EMU800 微笑號:裸不鏽鋼銀 + 藍帶(TRA 寫實,取代原橙色錯誤)
   trainNorth.position.set(PLATFORM_W / 2 + 3, -0.45, -PLATFORM_LEN);
   scene.add(trainNorth);
 }

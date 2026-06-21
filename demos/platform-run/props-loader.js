@@ -20,6 +20,23 @@ export function loadSceneProps(THREE, scene, parent, opts) {
   group.visible = !opts || opts.visible !== false;
   try { parent.add(group); } catch (e) { console.warn("[props] parent.add failed:", e && e.message); return { loaded }; }
 
+  const cache = {};                                 // 同檔只抓一次,重複的用 clone
+  function place(template, it) {
+    const o = template.clone(true);
+    o.position.set(it.pos[0], it.pos[1], it.pos[2]);
+    if (typeof it.rot === "number") o.rotation.y = it.rot;
+    o.scale.setScalar(it.scale || 1);
+    o.traverse((c) => {
+      if (c.isMesh) {
+        c.castShadow = true;
+        c.receiveShadow = true;
+        c.raycast = () => {};
+        if (c.material) c.material.envMapIntensity = 1.0;
+      }
+    });
+    group.add(o);
+    loaded.push(o);
+  }
   let i = 0;
   function next() {
     if (i >= items.length) return;
@@ -28,25 +45,12 @@ export function loadSceneProps(THREE, scene, parent, opts) {
     if (it.replace && scene) {
       try { const old = scene.getObjectByName(it.replace); if (old) old.visible = false; } catch (e) {}
     }
+    if (cache[it.file]) { try { place(cache[it.file], it); } catch (e) { console.warn("[props] place failed", it.file, e && e.message); } next(); return; }
     loader.load(
       base + it.file + ".glb",
       (gltf) => {
-        try {
-          const o = gltf.scene;
-          o.position.set(it.pos[0], it.pos[1], it.pos[2]);
-          if (typeof it.rot === "number") o.rotation.y = it.rot;
-          o.scale.setScalar(it.scale || 1);
-          o.traverse((c) => {
-            if (c.isMesh) {
-              c.castShadow = true;
-              c.receiveShadow = true;
-              c.raycast = () => {};
-              if (c.material) c.material.envMapIntensity = 1.0;
-            }
-          });
-          group.add(o);
-          loaded.push(o);
-        } catch (e) { console.warn("[props] place failed", it.file, e && e.message); }
+        try { cache[it.file] = gltf.scene; place(gltf.scene, it); }
+        catch (e) { console.warn("[props] place failed", it.file, e && e.message); }
         next();
       },
       undefined,

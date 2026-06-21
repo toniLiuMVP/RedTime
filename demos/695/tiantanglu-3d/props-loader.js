@@ -20,29 +20,33 @@ export function loadSceneProps(THREE, parent, opts) {
   group.visible = !opts || opts.visible !== false;
   try { parent.add(group); } catch (e) { console.warn("[props] parent.add failed:", e && e.message); return { loaded }; }
 
+  const cache = {};                                 // 同檔只抓一次,重複的用 clone(咾咕石×4 只抓 1 次)
+  function place(template, it) {
+    const o = template.clone(true);
+    o.position.set(it.pos[0], it.pos[1], it.pos[2]);
+    if (typeof it.rot === "number") o.rotation.y = it.rot;
+    o.scale.setScalar(it.scale || 1);
+    o.traverse((c) => {
+      if (c.isMesh) {
+        c.castShadow = true;
+        c.receiveShadow = true;
+        c.raycast = () => {};                       // 裝飾:不擋射擊/互動/碰撞
+        if (c.material) c.material.envMapIntensity = 1.0;
+      }
+    });
+    group.add(o);
+    loaded.push(o);
+  }
   let i = 0;
   function next() {
     if (i >= items.length) return;
     const it = items[i++];
+    if (cache[it.file]) { try { place(cache[it.file], it); } catch (e) { console.warn("[props] place failed", it.file, e && e.message); } next(); return; }
     loader.load(
       base + it.file + ".glb",
       (gltf) => {
-        try {
-          const o = gltf.scene;
-          o.position.set(it.pos[0], it.pos[1], it.pos[2]);
-          if (typeof it.rot === "number") o.rotation.y = it.rot;
-          o.scale.setScalar(it.scale || 1);
-          o.traverse((c) => {
-            if (c.isMesh) {
-              c.castShadow = true;
-              c.receiveShadow = true;
-              c.raycast = () => {};                 // 裝飾:不擋射擊/互動/碰撞
-              if (c.material) c.material.envMapIntensity = 1.0;
-            }
-          });
-          group.add(o);
-          loaded.push(o);
-        } catch (e) { console.warn("[props] place failed", it.file, e && e.message); }
+        try { cache[it.file] = gltf.scene; place(gltf.scene, it); }
+        catch (e) { console.warn("[props] place failed", it.file, e && e.message); }
         next();                                     // 鏈式:一個載完才載下一個(溫和不爆量)
       },
       undefined,
