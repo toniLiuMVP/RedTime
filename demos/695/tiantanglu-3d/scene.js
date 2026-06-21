@@ -2182,7 +2182,7 @@ function spawnEnemy(x, z, hp, opts) {
   const upper = new THREE.Group(); ms.forEach((m) => { m.castShadow = true; upper.add(m); }); g.add(upper);   // 上半身容器:走路起伏/側擺驅動在這(不動 g,g 被 yaw/flinch/death 佔用)
   g.scale.setScalar(type.scale * (0.93 + Math.random() * 0.14));   // 每兵 ±7% 身高差:破除「同高複製人」(色差之外再加體型差);腳在原點 y=0,縮放不沉地
   const ew = ENEMY_WEAPONS[weapon] || ENEMY_WEAPONS.pistol;
-  g.userData.kind = "enemy"; g.userData.hp = Math.round((hp || 100) * type.hpMul); g.userData.speedMul = type.speedMul; g.userData.etype = type.key; g.userData.dead = false; g.userData.deadT = 0; g.userData.fireT = 1 + Math.random() * 2; g.userData.flinch = 0; g.userData.strafe = Math.random() < 0.5 ? 1 : -1; g.userData.strafeT = 1 + Math.random() * 2; g.userData.state = "chase"; g.userData.grenadeT = 6 + Math.random() * 8; g.userData.spawn = new THREE.Vector3(x, 0, z); g.userData.stepT = Math.random() * 0.4; g.userData.alertT = 0; g.userData.sawPlayer = false; g.userData.body = body; g.userData.skin = skin; g.userData.lastSeen = new THREE.Vector3(0, 0, -6); g.userData.everSeen = false;   // 存克隆材質供死亡回收(防記憶體洩漏);lastSeen=最後已知玩家位置(預設操場中心當推進目標,看不到玩家時朝這走,不偷看即時座標)
+  g.userData.kind = "enemy"; g.userData.hp = Math.round((hp || 100) * type.hpMul); g.userData.speedMul = type.speedMul; g.userData.etype = type.key; g.userData.dead = false; g.userData.deadT = 0; g.userData.fireT = 1 + Math.random() * 2; g.userData.flinch = 0; g.userData.strafe = Math.random() < 0.5 ? 1 : -1; g.userData.strafeT = 1 + Math.random() * 2; g.userData.state = "chase"; g.userData.grenadeT = 6 + Math.random() * 8; g.userData.spawn = new THREE.Vector3(x, 0, z); g.userData.stepT = Math.random() * 0.4; g.userData.alertT = 0; g.userData.sawPlayer = false; g.userData.body = body; g.userData.skin = skin; g.userData.faceMat = faceMat; g.userData.lastSeen = new THREE.Vector3(0, 0, -6); g.userData.everSeen = false;   // 存克隆材質供死亡回收(防記憶體洩漏);lastSeen=最後已知玩家位置(預設操場中心當推進目標,看不到玩家時朝這走,不偷看即時座標)
   g.userData.weapon = weapon; g.userData.ammo = ew.ammo || 0; g.userData.grenadesLeft = opts.grenades || 0; g.userData.frog = frog; g.userData.meleeT = 0; g.userData.ramCD = 0; g.userData.rammedHalf = false;   // item5:武器/有限彈藥(耗盡換刺刀)/手榴彈數;item6:蛙人;item3:被載具撞擊冷卻/悍馬撞過半血標記
   g.userData.legs = legs; g.userData.gun = gunPivot; g.userData.upper = upper; g.userData.escale = type.scale; g.userData.walkPh = Math.random() * 6.28; g.userData.gunKick = 0; g.userData.bearing = Math.random() * 6.2832;   // 腿擺 / 槍托後座 / 上半身起伏 / 死亡縮放 / 圍攻方位
   g.userData.gaitAmp = 0.55 + Math.random() * 0.18; g.userData.leanT = 0.07 + Math.random() * 0.07; g.userData.cadJit = 0.85 + Math.random() * 0.3;   // 逐兵步幅/前傾/步頻差(破除整排同步走;phase 已隨機,再加振幅/節奏差)
@@ -2243,7 +2243,7 @@ function updateApparition(g, u, dt, i) {   // 幻影蛙人:朝海狂奔穿過一
   if (u.upper) u.upper.position.y = Math.abs(Math.sin(u.walkPh)) * 0.05;
   if (d < 5 || u.appT > 9 || g.position.z > 90) {   // 跑到海邊/逾時 → 淡出
     u.fadeT += dt; g.scale.multiplyScalar(Math.max(0.02, 1 - dt * 3.2));
-    if (u.fadeT > 0.45) { ROOT.remove(g); if (u.body) u.body.dispose(); if (u.skin) u.skin.dispose(); enemies.splice(i, 1); frogmenGhostCount = Math.max(0, frogmenGhostCount - 1); if (frogmenGhostCount <= 0) frogmenActive = false; }
+    if (u.fadeT > 0.45) { ROOT.remove(g); if (u.body) u.body.dispose(); if (u.skin) u.skin.dispose(); if (u.faceMat) u.faceMat.dispose(); enemies.splice(i, 1); frogmenGhostCount = Math.max(0, frogmenGhostCount - 1); if (frogmenGhostCount <= 0) frogmenActive = false; }
   }
 }
 function endWarmup() { if (warmupActive) { warmupActive = false; warmupT = 0; betweenT = Math.min(betweenT, 1.2); if (hintEl) hintEl.style.opacity = "0"; } }   // 暖身結束(倒數到 or 玩家略過):接回正常波間倒數,很快開打
@@ -2335,7 +2335,7 @@ function updateEnemies(dt) {
       g.rotation.z += ((u.deathLean || 0) - g.rotation.z) * Math.min(1, dt * 5);
       g.rotation.y += ((u.deathYaw || g.rotation.y) - g.rotation.y) * Math.min(1, dt * 4);   // 輕微側轉,死法不雷同
       if (u.deadT > 0.8) { const k = Math.min(1, (u.deadT - 0.8) / 1.0); g.scale.setScalar(Math.max(0.0001, (u.escale || 1) * (1 - k * 0.85))); g.position.y = -k * 0.5; }   // 0.8s 後沉地+縮小,化成上升的記憶光(碎成她的話語,不留屍)
-      if (u.deadT > 1.8) { ROOT.remove(g); if (u.body) u.body.dispose(); if (u.skin) u.skin.dispose(); enemies.splice(i, 1); }   // 敵人掛在 ROOT(非 scene),用 ROOT.remove 才真的移除;移除時 dispose 每隻 clone 的軍服/膚色材質(共享幾何不動)
+      if (u.deadT > 1.8) { ROOT.remove(g); if (u.body) u.body.dispose(); if (u.skin) u.skin.dispose(); if (u.faceMat) u.faceMat.dispose(); enemies.splice(i, 1); }   // 敵人掛在 ROOT(非 scene),用 ROOT.remove 才真的移除;移除時 dispose 每隻 clone 的軍服/膚色材質(共享幾何不動)
       continue;
     }
     const dx = camera.position.x - g.position.x, dz = camera.position.z - g.position.z, dist = Math.hypot(dx, dz) || 1;
