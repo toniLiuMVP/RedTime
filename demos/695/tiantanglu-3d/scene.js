@@ -2086,7 +2086,7 @@ let trI = 0;
 function tracer(fx, fy, fz, tx, ty, tz, color, opacity) { const tr = tracers[trI = (trI + 1) % tracers.length]; const p = tr.ln.geometry.attributes.position; p.setXYZ(0, fx, fy, fz); p.setXYZ(1, tx, ty, tz); p.needsUpdate = true; if (color != null) tr.ln.material.color.setHex(color); tr.op = opacity != null ? opacity : 0.8; tr.ln.material.opacity = tr.op; tr.ln.visible = true; tr.on = true; tr.t = 0; }
 function updateTracers(dt) { for (const tr of tracers) { if (!tr.on) continue; tr.t += dt; if (tr.t > 0.08) { tr.on = false; tr.ln.visible = false; continue; } tr.ln.material.opacity = tr.op * (1 - tr.t / 0.08); } }   // 曳光彈拖尾稍長更可見
 const eBody = new THREE.MeshStandardMaterial({ map: camoTex, color: 0xc8c4a8, roughness: 0.72, envMapIntensity: 0.6 });   // 軍服貼既有 camoTex 迷彩(軍事+玩家審核 ceiling push:原本扁平單色橄欖);淺底讓迷彩讀得出,jitterMat clone 仍逐兵變色
-const eGear = new THREE.MeshStandardMaterial({ color: 0x5b5538, roughness: 0.78, envMapIntensity: 0.5 });   // 提亮到中間調(原 0x35351f 在黎明光下=近黑剪影,把圓潤幾何/裝具全吃掉=5/7 審核共識最大可讀性傷害)
+const eGear = new THREE.MeshStandardMaterial({ color: 0x5b5538, roughness: 0.5, envMapIntensity: 1.0 });   // 提亮中間調(原近黑吃掉幾何)+ 降 roughness 升 env=裝具/織帶有 sheen,黎明邊緣讀得出(導演:硬裝具不該全 matte)
 const eSkin = new THREE.MeshStandardMaterial({ color: 0xbf926a, roughness: 0.6, envMapIntensity: 0.45 });   // 膚色暖一點、柔一點
 const WDMG = { 鐵鎚: 75, 刺槍: 60, 小刀: 58, 小槍: 34, 步槍: 36, 機關槍: 32, 狙擊槍: 120 };
 const WIMPACT = { 小槍: 0.7, 步槍: 1.0, 機關槍: 1.0, 狙擊槍: 1.9, 刺槍: 1.2, 小刀: 0.9, 鐵鎚: 1.5 };   // 命中點火花/揚塵量倍率:狙擊一炸 / 小槍一抹
@@ -2146,10 +2146,14 @@ function spawnEnemy(x, z, hp, opts) {
   const eb = (w, h, d, m, px, py, pz) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(px, py, pz); ms.push(b); return b; };
   const ec = (r, len, m, px, py, pz) => { const b = new THREE.Mesh(new THREE.CapsuleGeometry(r, len, 4, 12), m); b.position.set(px, py, pz); ms.push(b); return b; };   // capsule 版:圓潤身體/四肢(軟身體 + 硬裝具的對比,不再 Roblox 方塊)
   ec(0.21, 0.34, frog ? skin : body, 0, 1.16, 0).scale.set(1.06, 1, 0.72);   // 軀幹(圓潤;壓扁前後=人形軀幹寬>深,深度≈0.3 不戳穿防彈背心[Codex 抓];y=1.16 中心不動,爆頭/裝具對位不變)
-  if (!frog) { eb(0.56, 0.5, 0.36, eGear, 0, 1.2, 0.01); eb(0.2, 0.16, 0.1, eGear, 0, 1.32, 0.19); eb(0.09, 0.52, 0.08, eBoot, -0.16, 1.2, 0.19); eb(0.09, 0.52, 0.08, eBoot, 0.16, 1.2, 0.19); eb(0.18, 0.15, 0.1, eBoot, -0.2, 1.04, 0.21); eb(0.14, 0.13, 0.1, eBoot, 0.21, 1.06, 0.21); }   // 防彈背心 + 彈匣袋 + 胸前背帶×2 + 側掛彈袋(寫實裝具,蛙人沒有)
+  if (!frog) { eb(0.56, 0.5, 0.36, eGear, 0, 1.2, 0.01); eb(0.2, 0.16, 0.1, eGear, 0, 1.32, 0.19); eb(0.09, 0.52, 0.08, eBoot, -0.16, 1.2, 0.19); eb(0.09, 0.52, 0.08, eBoot, 0.16, 1.2, 0.19); eb(0.18, 0.15, 0.1, eBoot, -0.2, 1.04, 0.21); eb(0.14, 0.13, 0.1, eBoot, 0.21, 1.06, 0.21); eb(0.055, 0.05, 0.42, eGear, -0.13, 1.42, 0); eb(0.055, 0.05, 0.42, eGear, 0.13, 1.42, 0); eb(0.5, 0.07, 0.34, eBoot, 0, 0.96, 0); const cant = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.13, 8), eGear); cant.position.set(0.23, 0.86, -0.1); ms.push(cant); }   // 防彈背心 + 彈匣袋 + 胸前背帶 + 側掛彈袋 + H帶具肩帶×2 + 腰帶 + 右臀水壺(軍事專家:寫實負重裝具,蛙人沒有)
   eb(0.46, 0.36, 0.3, frog ? FROG_TRUNK : eGear, 0, 0.68, 0);          // 臀 / 蛙人紅短褲
   eb(0.12, 0.12, 0.12, skin, 0, 1.57, 0);                              // 頸
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.15, 14, 12), skin); head.position.y = 1.68; head.userData.head = true; ms.push(head);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 14), skin); head.position.y = 1.68; head.scale.set(1, 0.92, 1.06); head.userData.head = true; ms.push(head);   // 壓扁=頭不是球
+  // 臉部給形(導演+玩家:最近一槍的球頭=最廉價的讀):眉骨帶 + 凹眼窩(深色,不貼圖維持符號;面朝 -Z 敵人前方)
+  const faceMat = jitterMat(eSkin, 0, -0.1, -0.34);   // 比膚色深的眉/眼影(逐兵跟膚色連動)
+  eb(0.19, 0.03, 0.05, faceMat, 0, 1.71, -0.15);
+  for (const ex of [-0.055, 0.055]) { const eye = new THREE.Mesh(new THREE.SphereGeometry(0.024, 8, 6), faceMat); eye.position.set(ex, 1.675, -0.145); eye.scale.set(1, 0.85, 0.6); ms.push(eye); }
   if (frog) eb(0.32, 0.07, 0.32, eBoot, 0, 1.78, 0).userData.head = true;   // 蛙人:平頭短髮(深色),無鋼盔
   else if (type.cap) { eb(0.34, 0.12, 0.34, eGear, 0, 1.79, 0).userData.head = true; eb(0.42, 0.04, 0.16, eGear, 0, 1.75, 0.18); }   // 突擊兵:軟帽 + 帽簷
   else { const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.18, 14, 10, 0, 6.3, 0, 1.6), eGear); helmet.position.y = 1.72; helmet.userData.head = true; ms.push(helmet); eb(0.4, 0.05, 0.4, eGear, 0, 1.64, 0); }   // 鋼盔 + 盔簷
@@ -2181,6 +2185,7 @@ function spawnEnemy(x, z, hp, opts) {
   g.userData.kind = "enemy"; g.userData.hp = Math.round((hp || 100) * type.hpMul); g.userData.speedMul = type.speedMul; g.userData.etype = type.key; g.userData.dead = false; g.userData.deadT = 0; g.userData.fireT = 1 + Math.random() * 2; g.userData.flinch = 0; g.userData.strafe = Math.random() < 0.5 ? 1 : -1; g.userData.strafeT = 1 + Math.random() * 2; g.userData.state = "chase"; g.userData.grenadeT = 6 + Math.random() * 8; g.userData.spawn = new THREE.Vector3(x, 0, z); g.userData.stepT = Math.random() * 0.4; g.userData.alertT = 0; g.userData.sawPlayer = false; g.userData.body = body; g.userData.skin = skin; g.userData.lastSeen = new THREE.Vector3(0, 0, -6); g.userData.everSeen = false;   // 存克隆材質供死亡回收(防記憶體洩漏);lastSeen=最後已知玩家位置(預設操場中心當推進目標,看不到玩家時朝這走,不偷看即時座標)
   g.userData.weapon = weapon; g.userData.ammo = ew.ammo || 0; g.userData.grenadesLeft = opts.grenades || 0; g.userData.frog = frog; g.userData.meleeT = 0; g.userData.ramCD = 0; g.userData.rammedHalf = false;   // item5:武器/有限彈藥(耗盡換刺刀)/手榴彈數;item6:蛙人;item3:被載具撞擊冷卻/悍馬撞過半血標記
   g.userData.legs = legs; g.userData.gun = gunPivot; g.userData.upper = upper; g.userData.escale = type.scale; g.userData.walkPh = Math.random() * 6.28; g.userData.gunKick = 0; g.userData.bearing = Math.random() * 6.2832;   // 腿擺 / 槍托後座 / 上半身起伏 / 死亡縮放 / 圍攻方位
+  g.userData.gaitAmp = 0.55 + Math.random() * 0.18; g.userData.leanT = 0.07 + Math.random() * 0.07; g.userData.cadJit = 0.85 + Math.random() * 0.3;   // 逐兵步幅/前傾/步頻差(破除整排同步走;phase 已隨機,再加振幅/節奏差)
   ROOT.add(g); enemies.push(g);
   return g;
 }
@@ -2360,15 +2365,16 @@ function updateEnemies(dt) {
     const ml = Math.hypot(mvx, mvz);
     if (u.legs) {   // 跑步腿擺(髖樞紐)+ 前擺腳離地=踏步(不再貼地滑行如鬼魂);停步腿回正貼地
       if (ml > 0.01) {
-        u.walkPh += dt * sp * (u.speedMul || 1) * 4.2;
+        u.walkPh += dt * sp * (u.speedMul || 1) * 4.2 * (u.cadJit || 1);   // 步頻含逐兵差
         const s0 = Math.sin(u.walkPh);
-        u.legs[0].rotation.x = s0 * 0.62; u.legs[1].rotation.x = -s0 * 0.62;     // 加大擺幅=明確跨步
+        const gA = u.gaitAmp || 0.62;
+        u.legs[0].rotation.x = s0 * gA; u.legs[1].rotation.x = -s0 * gA;     // 逐兵步幅=明確跨步,不整排同步
         u.legs[0].position.y = 0.71 + Math.max(0, s0) * 0.1;                     // 抬腳:前擺那隻腳離地 10cm,後撐腳貼地(y=0.71)→ 真踏步不滑
         u.legs[1].position.y = 0.71 + Math.max(0, -s0) * 0.1;
       } else { const k = Math.min(1, dt * 8); u.legs[0].rotation.x *= 1 - k; u.legs[1].rotation.x *= 1 - k; u.legs[0].position.y += (0.71 - u.legs[0].position.y) * k; u.legs[1].position.y += (0.71 - u.legs[1].position.y) * k; }
     }
     if (u.upper) {   // 上半身:加大垂直彈跳(體重感)+ 前傾(跑姿)+ 微側擺(破除飄浮鬼魂);停步回正
-      if (ml > 0.01) { u.upper.position.y = Math.abs(Math.sin(u.walkPh)) * 0.06; u.upper.rotation.z = Math.sin(u.walkPh) * 0.04; u.upper.rotation.x += (0.1 - u.upper.rotation.x) * Math.min(1, dt * 6); }
+      if (ml > 0.01) { u.upper.position.y = Math.abs(Math.sin(u.walkPh)) * 0.06; u.upper.rotation.z = Math.sin(u.walkPh) * 0.04; u.upper.rotation.x += ((u.leanT || 0.1) - u.upper.rotation.x) * Math.min(1, dt * 6); }
       else { const k = Math.min(1, dt * 8); u.upper.position.y *= 1 - k; u.upper.rotation.z *= 1 - k; u.upper.rotation.x += (0 - u.upper.rotation.x) * k; }
     }
     if (u.gun) { u.gunKick *= 1 - Math.min(1, dt * 9); u.gun.rotation.x = u.gunKick; }   // 開火後座衰減:槍托樞紐抬槍口彈回(+gunKick=槍口上揚,因樞紐在槍托、槍口在 -z)
