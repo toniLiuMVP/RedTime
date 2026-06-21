@@ -31,7 +31,7 @@ export function loadSceneProps(THREE, scene, parent, opts) {
         c.castShadow = true;
         c.receiveShadow = true;
         c.raycast = () => {};
-        if (c.material) c.material.envMapIntensity = 1.0;
+        if (c.material) { const ms = Array.isArray(c.material) ? c.material : [c.material]; for (const m of ms) if (m) m.envMapIntensity = 1.0; }   // 多材質 GLB:c.material 可能是陣列,要逐一寫(否則反射全失=扁平)
       }
     });
     group.add(o);

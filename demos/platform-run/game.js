@@ -260,7 +260,7 @@ import("./props-loader.js").then((m) => m.loadSceneProps(THREE, scene, scene, { 
   { file: "departure_board", pos: [ 2.6, 3.0,  190], rot: -1.57 },
   { file: "vending_machine", pos: [ 3.4, 0,   -60], rot: -1.57 },
   { file: "vending_machine", pos: [ 3.4, 0,    60], rot: -1.57 },
-  { file: "ticket_gate",     pos: [-3.4, 0,     0], rot: 0 },
+  { file: "ticket_gate",     pos: [-3.4, 0,    14], rot: 0 },
   { file: "info_pillar",     pos: [-3.6, 0,  -150], rot: 0 },
   { file: "info_pillar",     pos: [-3.6, 0,   150], rot: 0 },
   { file: "timetable_stand", pos: [ 3.6, 0,  -190], rot: -1.57 },
@@ -1880,7 +1880,7 @@ const trainSouth = new THREE.Group();
 const trainNorth = new THREE.Group();
 const northDoors = [];
 
-function buildTrain(group, color, stripe, hasDoors) {
+function buildTrain(group, color, stripe, hasDoors, facingLeft) {
   var bodyMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.25, metalness: 0.35 });
   var stripeMat = new THREE.MeshStandardMaterial({ color: stripe, roughness: 0.3, metalness: 0.2 });
   var bottomMat = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.5, metalness: 0.3 });
@@ -1949,8 +1949,9 @@ function buildTrain(group, color, stripe, hasDoors) {
         var doorMatL = new THREE.MeshStandardMaterial({ color: 0xbbbbbb, roughness: 0.2, metalness: 0.5 });
         var doorL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 2.2, 0.7), doorMatL);
         var doorR = new THREE.Mesh(new THREE.BoxGeometry(0.06, 2.2, 0.7), doorMatL.clone());
-        doorL.position.set(1.61, 1.1, cz + dz - 0.35);
-        doorR.position.set(1.61, 1.1, cz + dz + 0.35);
+        var doorX = facingLeft ? -1.61 : 1.61;   // 北車在月台右側 → 門開在面月台的左側(EP36:把拔要衝進門口,不是撞上不鏽鋼牆)
+        doorL.position.set(doorX, 1.1, cz + dz - 0.35);
+        doorR.position.set(doorX, 1.1, cz + dz + 0.35);
         /* 門上小窗 */
         var doorWinMat = new THREE.MeshStandardMaterial({ color: 0x4488aa, roughness: 0.05, metalness: 0.6, transparent: true, opacity: 0.6 });
         var doorWinL = new THREE.Mesh(new THREE.PlaneGeometry(0.45, 0.5), doorWinMat);
@@ -2033,7 +2034,7 @@ function setupTrains() {
   trainSouth.position.set(-(PLATFORM_W / 2 + 3), -0.45, PLATFORM_LEN);
   scene.add(trainSouth);
 
-  buildTrain(trainNorth, 0xc6c9cd, 0x1656a4, true);   // EMU800 微笑號:裸不鏽鋼銀 + 藍帶(TRA 寫實,取代原橙色錯誤)
+  buildTrain(trainNorth, 0xc6c9cd, 0x1656a4, true, true);   // EMU800 微笑號:裸不鏽鋼銀 + 藍帶(TRA 寫實);facingLeft=門開在面月台側(EP36 把拔衝進門口)
   trainNorth.position.set(PLATFORM_W / 2 + 3, -0.45, -PLATFORM_LEN);
   scene.add(trainNorth);
 }
@@ -4782,7 +4783,7 @@ function updateGame(dt) {
       showNarrative("\u5FEB\uFF01\u5317\u4E0A\u81EA\u5F37\u865F\u7684\u9580\u8981\u95DC\u4E86\uFF01", 2.5);
       ptVibe([20, 80, 20, 80, 20]); // \u95DC\u9580\u8B66\u793A\u9234\u65B7\u7E8C\u50AC\u4FC3,\u628A\u7DCA\u8FEB\u5F9E\u807D\u89BA\u5EF6\u4F38\u5230\u8EAB\u9AD4
       if (audioCtx) playDoorChime();
-    }, 1500);
+    }, 1650);   // 對齊 1.6s 環繞鏡頭:讓抱起女兒的收尾幀拍滿再切相位(EP36:擁抱要抱滿,別在最貼那格被推走)
     return;
   }
 
