@@ -1434,7 +1434,7 @@ if (gearEl) gearEl.addEventListener("click", openSettings);
 const gearTabEl = document.getElementById("gear-tab"); if (gearTabEl) gearTabEl.addEventListener("click", openSettings);   // #3:齒輪下「TAB」鍵帽也可點開設定(PC 提示按 TAB)
 const setCloseEl = document.getElementById("set-close"); if (setCloseEl) setCloseEl.addEventListener("click", closeSettings);
 addEventListener("keydown", (e) => { if (e.code === "Tab") { e.preventDefault(); if (settingsEl && settingsEl.classList.contains("on")) closeSettings(); else openSettings(); } });   // 系統設定 TAB 開關
-addEventListener("keydown", (e) => { if (e.code === "F1") { e.preventDefault(); if (document.pointerLockElement === canvas && document.exitPointerLock) document.exitPointerLock(); } }, { capture: true });   // #13:放開滑鼠改用 F1(ESC 會被瀏覽器吃掉=退出全螢幕/縮小);preventDefault 擋瀏覽器說明頁。注:真正按 Esc 瀏覽器仍會在底層自動解除 pointer-lock,無法攔截
+addEventListener("keydown", (e) => { if (e.code === "F1" || e.code === "KeyP" || e.code === "Backquote") { e.preventDefault(); if (document.pointerLockElement === canvas && document.exitPointerLock) document.exitPointerLock(); } }, { capture: true });   // #13:放開滑鼠 = F1 / P / ` (Mac 的 F1 預設是亮度媒體鍵,網頁收不到 keydown,故補 P 與 ` 兩個跨平台可靠鍵);preventDefault 擋瀏覽器說明頁。注:真正按 Esc 瀏覽器仍會在底層自動解除 pointer-lock,無法攔截
 function bindSetting(id, key, isColor, fn) { const el = document.getElementById(id); if (!el) return; el.value = settings[key]; el.addEventListener("input", () => { settings[key] = isColor ? el.value : parseFloat(el.value); saveSettings(); if (fn) fn(); }); }
 bindSetting("set-sens", "sens", false);
 bindSetting("set-vol", "vol", false, () => { applyMasterVol(); });   // 與 ensureAudio 一致的 0.85 headroom(配合限制器避免削峰);靜音時 applyMasterVol 自動鎖 0
