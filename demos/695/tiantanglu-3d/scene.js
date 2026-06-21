@@ -580,8 +580,8 @@ function roomBuilding(cx, cz, ry, label, signText) {
   const W = 9, H = 3.6, D = 7, TH = 0.3, DOOR = 2.6;   // DOOR 門洞寬(>2.2,含 PLAYER_R 走得過)
   const wallM = matT(0xb9ac8c, T.wall, 2.4, 1, { roughness: 0.93 });   // 軍綠偏卡其風化牆(同 barracks 調性)
   const trimM = mat(0x6f6453, { roughness: 0.72 });
-  // 地板(室內,壓低)
-  add(new THREE.BoxGeometry(W, 0.12, D), matT(0x8d8064, T.concrete, 2, 2, { roughness: 0.95 }), 0, 0.06, 0, g).castShadow = false;
+  // 地板(室內):頂面齊地面 y=0,讓站在裡面的 NPC/陳設(腳在 y≈0)踩在地板上,不再陷進地板
+  add(new THREE.BoxGeometry(W, 0.12, D), matT(0x8d8064, T.concrete, 2, 2, { roughness: 0.95 }), 0, -0.06, 0, g).castShadow = false;
   // 後牆(整片)+ 左右側牆(整片)
   add(new THREE.BoxGeometry(W, H, TH), wallM, 0, H / 2, -D / 2, g);
   for (const sx of [-1, 1]) add(new THREE.BoxGeometry(TH, H, D), wallM, sx * (W / 2 - TH / 2), H / 2, 0, g);
@@ -592,7 +592,7 @@ function roomBuilding(cx, cz, ry, label, signText) {
   // 平頂(略外伸)+ 屋脊封簷
   add(new THREE.BoxGeometry(W + 0.5, 0.3, D + 0.5), matT(0x8f8470, T.wall, 3, 2, { roughness: 0.9 }), 0, H + 0.1, 0, g);
   add(new THREE.BoxGeometry(W + 0.7, 0.18, 0.18), trimM, 0, H + 0.02, D / 2 + 0.25, g).castShadow = false;
-  add(new THREE.BoxGeometry(W + 0.4, 0.6, D + 0.4), mat(0xbcae8c), 0, 0.32, 0, g).receiveShadow = true;   // 牆基
+  add(new THREE.BoxGeometry(W + 0.4, 0.6, D + 0.4), mat(0xbcae8c), 0, -0.3, 0, g).receiveShadow = true;   // 牆基
   // 窗(框 + 可破玻璃):後牆兩扇 + 兩側牆各一扇
   const fm = mat(0x8a8170, { roughness: 0.8 });
   function win(lx, ly, lz, rot) {
@@ -659,7 +659,7 @@ function diningHall(cx, cz, signText) {
   const W = 18, H = 4.0, D = 14, TH = 0.3, DOOR = 2.8;   // 大食堂:前(+Z)後(-Z)各一門洞
   const wallM = matT(0xb9ac8c, T.wall, 4.5, 1.1, { roughness: 0.93 });
   const trimM = mat(0x6f6453, { roughness: 0.72 });
-  add(new THREE.BoxGeometry(W, 0.12, D), matT(0x8d8064, T.concrete, 4, 3, { roughness: 0.95 }), 0, 0.06, 0, g).castShadow = false;   // 地板
+  add(new THREE.BoxGeometry(W, 0.12, D), matT(0x8d8064, T.concrete, 4, 3, { roughness: 0.95 }), 0, -0.06, 0, g).castShadow = false;   // 地板(頂面齊地面 y=0,室內陳設/NPC 不陷地板)
   // 左右側牆(整片)
   for (const sx of [-1, 1]) add(new THREE.BoxGeometry(TH, H, D), wallM, sx * (W / 2 - TH / 2), H / 2, 0, g);
   // 前牆(+Z)與後牆(-Z)各切兩段留門洞
@@ -668,7 +668,7 @@ function diningHall(cx, cz, signText) {
   for (const sz of [-1, 1]) add(new THREE.BoxGeometry(DOOR + 0.4, 0.5, TH + 0.1), trimM, 0, H - 0.25, sz * (D / 2 - TH / 2), g);   // 前後門楣
   // 平頂 + 牆基
   add(new THREE.BoxGeometry(W + 0.5, 0.3, D + 0.5), matT(0x8f8470, T.wall, 5, 4, { roughness: 0.9 }), 0, H + 0.1, 0, g);
-  add(new THREE.BoxGeometry(W + 0.4, 0.6, D + 0.4), mat(0xbcae8c), 0, 0.32, 0, g).receiveShadow = true;
+  add(new THREE.BoxGeometry(W + 0.4, 0.6, D + 0.4), mat(0xbcae8c), 0, -0.3, 0, g).receiveShadow = true;
   for (const sz of [-1, 1]) add(new THREE.BoxGeometry(W + 0.7, 0.18, 0.18), trimM, 0, H + 0.02, sz * (D / 2 + 0.25), g).castShadow = false;   // 前後封簷
   // 側牆窗(框 + 可破玻璃,各兩扇)
   const fm = mat(0x8a8170, { roughness: 0.8 });
@@ -727,13 +727,13 @@ function buildBunkRoom(cx, cz, signText) {
   const W = 26, H = 4.0, D = 9, TH = 0.3, DOOR = 2.6;
   const wallM = matT(0xb9ac8c, T.wall, 6, 1.1, { roughness: 0.93 });
   const trimM = mat(0x6f6453, { roughness: 0.72 });
-  add(new THREE.BoxGeometry(W, 0.12, D), matT(0x8d8064, T.concrete, 5, 2, { roughness: 0.95 }), 0, 0.06, 0, g).castShadow = false;   // 地板
+  add(new THREE.BoxGeometry(W, 0.12, D), matT(0x8d8064, T.concrete, 5, 2, { roughness: 0.95 }), 0, -0.06, 0, g).castShadow = false;   // 地板(頂面齊地面 y=0,室內陳設/NPC 不陷地板)
   for (const sx of [-1, 1]) add(new THREE.BoxGeometry(TH, H, D), wallM, sx * (W / 2 - TH / 2), H / 2, 0, g);   // 左右端牆(整片)
   const segW = (W - DOOR) / 2;
   for (const sz of [-1, 1]) for (const sx of [-1, 1]) add(new THREE.BoxGeometry(segW, H, TH), wallM, sx * (DOOR / 2 + segW / 2), H / 2, sz * (D / 2 - TH / 2), g);   // 前後牆各兩段(留門洞)
   for (const sz of [-1, 1]) add(new THREE.BoxGeometry(DOOR + 0.4, 0.5, TH + 0.1), trimM, 0, H - 0.25, sz * (D / 2 - TH / 2), g);   // 前後門楣
   add(new THREE.BoxGeometry(W + 0.5, 0.3, D + 0.5), matT(0x8f8470, T.wall, 6, 3, { roughness: 0.9 }), 0, H + 0.1, 0, g);   // 平頂
-  add(new THREE.BoxGeometry(W + 0.4, 0.6, D + 0.4), mat(0xbcae8c), 0, 0.32, 0, g).receiveShadow = true;   // 牆基
+  add(new THREE.BoxGeometry(W + 0.4, 0.6, D + 0.4), mat(0xbcae8c), 0, -0.3, 0, g).receiveShadow = true;   // 牆基
   for (const sz of [-1, 1]) add(new THREE.BoxGeometry(W + 0.7, 0.18, 0.18), trimM, 0, H + 0.02, sz * (D / 2 + 0.25), g).castShadow = false;
   // 側牆窗(前後牆段上的小窗:框 + 可破玻璃,各兩扇)
   const fm = mat(0x8a8170, { roughness: 0.8 });
@@ -2358,13 +2358,18 @@ function updateEnemies(dt) {
     if (!smart && Math.random() < 0.4 * dt) u.strafe *= -1;   // 低機率隨機翻轉,破除整群同步左右平移
     if (sees && dist < 42 && !melee) { const sw = smart ? 1.3 : u.etype === "heavy" ? 0 : u.etype === "scout" ? 1.15 : 0.8; mvx += rx * u.strafe * sw; mvz += rz * u.strafe * sw; }   // 重裝直線壓上不平移,突擊兵繞側更多;近戰直衝不平移
     const ml = Math.hypot(mvx, mvz);
-    if (u.legs) {   // 走路腿擺(髖樞紐 sin,破除滑行雕像);停步腿回正
-      if (ml > 0.01) { u.walkPh += dt * sp * (u.speedMul || 1) * 4.2; u.legs[0].rotation.x = Math.sin(u.walkPh) * 0.5; u.legs[1].rotation.x = -Math.sin(u.walkPh) * 0.5; }   // 步頻隨實際地速(含 speedMul):重裝慢踏/突擊兵快跑,腳不打滑
-      else { const k = Math.min(1, dt * 8); u.legs[0].rotation.x *= 1 - k; u.legs[1].rotation.x *= 1 - k; }
+    if (u.legs) {   // 跑步腿擺(髖樞紐)+ 前擺腳離地=踏步(不再貼地滑行如鬼魂);停步腿回正貼地
+      if (ml > 0.01) {
+        u.walkPh += dt * sp * (u.speedMul || 1) * 4.2;
+        const s0 = Math.sin(u.walkPh);
+        u.legs[0].rotation.x = s0 * 0.62; u.legs[1].rotation.x = -s0 * 0.62;     // 加大擺幅=明確跨步
+        u.legs[0].position.y = 0.71 + Math.max(0, s0) * 0.1;                     // 抬腳:前擺那隻腳離地 10cm,後撐腳貼地(y=0.71)→ 真踏步不滑
+        u.legs[1].position.y = 0.71 + Math.max(0, -s0) * 0.1;
+      } else { const k = Math.min(1, dt * 8); u.legs[0].rotation.x *= 1 - k; u.legs[1].rotation.x *= 1 - k; u.legs[0].position.y += (0.71 - u.legs[0].position.y) * k; u.legs[1].position.y += (0.71 - u.legs[1].position.y) * k; }
     }
-    if (u.upper) {   // 上半身隨步伐起伏 + 微側擺(破除「人偶」感:腿擺但軀幹凍結);停步回正
-      if (ml > 0.01) { u.upper.position.y = Math.abs(Math.sin(u.walkPh)) * 0.025; u.upper.rotation.z = Math.sin(u.walkPh) * 0.03; }
-      else { const k = Math.min(1, dt * 8); u.upper.position.y *= 1 - k; u.upper.rotation.z *= 1 - k; }
+    if (u.upper) {   // 上半身:加大垂直彈跳(體重感)+ 前傾(跑姿)+ 微側擺(破除飄浮鬼魂);停步回正
+      if (ml > 0.01) { u.upper.position.y = Math.abs(Math.sin(u.walkPh)) * 0.06; u.upper.rotation.z = Math.sin(u.walkPh) * 0.04; u.upper.rotation.x += (0.1 - u.upper.rotation.x) * Math.min(1, dt * 6); }
+      else { const k = Math.min(1, dt * 8); u.upper.position.y *= 1 - k; u.upper.rotation.z *= 1 - k; u.upper.rotation.x += (0 - u.upper.rotation.x) * k; }
     }
     if (u.gun) { u.gunKick *= 1 - Math.min(1, dt * 9); u.gun.rotation.x = u.gunKick; }   // 開火後座衰減:槍托樞紐抬槍口彈回(+gunKick=槍口上揚,因樞紐在槍托、槍口在 -z)
     if (ml > 0.01) {
