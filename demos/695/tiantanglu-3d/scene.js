@@ -2145,7 +2145,7 @@ function spawnEnemy(x, z, hp, opts) {
   const ms = [];
   const eb = (w, h, d, m, px, py, pz) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(px, py, pz); ms.push(b); return b; };
   const ec = (r, len, m, px, py, pz) => { const b = new THREE.Mesh(new THREE.CapsuleGeometry(r, len, 4, 12), m); b.position.set(px, py, pz); ms.push(b); return b; };   // capsule 版:圓潤身體/四肢(軟身體 + 硬裝具的對比,不再 Roblox 方塊)
-  ec(0.21, 0.34, frog ? skin : body, 0, 1.16, 0);                      // 軀幹(圓潤胸背,取代方塊;y=1.16 中心不動,爆頭/裝具對位不變)
+  ec(0.21, 0.34, frog ? skin : body, 0, 1.16, 0).scale.set(1.06, 1, 0.72);   // 軀幹(圓潤;壓扁前後=人形軀幹寬>深,深度≈0.3 不戳穿防彈背心[Codex 抓];y=1.16 中心不動,爆頭/裝具對位不變)
   if (!frog) { eb(0.56, 0.5, 0.36, eGear, 0, 1.2, 0.01); eb(0.2, 0.16, 0.1, eGear, 0, 1.32, 0.19); eb(0.09, 0.52, 0.08, eBoot, -0.16, 1.2, 0.19); eb(0.09, 0.52, 0.08, eBoot, 0.16, 1.2, 0.19); eb(0.18, 0.15, 0.1, eBoot, -0.2, 1.04, 0.21); eb(0.14, 0.13, 0.1, eBoot, 0.21, 1.06, 0.21); }   // 防彈背心 + 彈匣袋 + 胸前背帶×2 + 側掛彈袋(寫實裝具,蛙人沒有)
   eb(0.46, 0.36, 0.3, frog ? FROG_TRUNK : eGear, 0, 0.68, 0);          // 臀 / 蛙人紅短褲
   eb(0.12, 0.12, 0.12, skin, 0, 1.57, 0);                              // 頸
