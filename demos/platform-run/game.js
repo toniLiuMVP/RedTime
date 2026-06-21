@@ -265,8 +265,8 @@ import("./props-loader.js").then((m) => m.loadSceneProps(THREE, scene, scene, { 
   { file: "info_pillar",     pos: [-3.6, 0,   150], rot: 0 },
   { file: "timetable_stand", pos: [ 3.6, 0,  -190], rot: -1.57 },
   { file: "timetable_stand", pos: [ 3.6, 0,   190], rot: -1.57 },
-  { file: "luggage_bag",     pos: [ 1.6, 0,  -168], rot: 0.5 },
-  { file: "luggage_bag",     pos: [ 2.1, 0,  -165], rot: -0.3 },
+  // (移除終點區的裝飾行李:與會減速的程序行李長一樣卻穿透 → 信任破裂;裝飾行李改放遠離跑道的月台邊)
+  { file: "luggage_bag",     pos: [ 4.2, 0,   60], rot: 0.5 },
 ] })).catch((e) => { console.warn("[props] module load failed:", e && e.message); });
 
 const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 500);
@@ -2346,7 +2346,7 @@ function updateGuards(dt) {
     var dz = father.position.z - g.position.z;
     var dist = Math.sqrt(dx * dx + dz * dz);
     if (dist < 1.0 && state.guardSlowTimer <= 0) {
-      state.guardSlowTimer = 5;
+      state.guardSlowTimer = 1.8;   // 5s→1.8s:原本 5s×0.1x=14% 賽程沒了,rage-quit 級;對齊行李階
       showNarrative("\u300C\u8ACB\u52FF\u8DE8\u8D8A\u9EC3\u7DDA\u3002\u300D", 2);
       playGuardWhistle();
     }
@@ -4203,6 +4203,8 @@ function triggerJump() {
     state.isJumping = true;
     state.jumpVel = JUMP_VELOCITY;
     playJumpLaunch();
+  } else if (state.isJumping && (state.phase === "running" || state.phase === "sprint2")) {
+    state.jumpBuffer = 0.13;   // 空中按跳→緩衝 130ms,落地自動補跳(防「早按一格被吃掉」的 cheap death)
   }
 }
 
@@ -4553,6 +4555,7 @@ function updateBuffIndicators() {
    跳躍物理更新
    ════════════════════════════════════════════════ */
 function updateJump(dt) {
+  if (state.jumpBuffer > 0) state.jumpBuffer = Math.max(0, state.jumpBuffer - dt);
   if (state.isJumping) {
     state.jumpVel += JUMP_GRAVITY * dt;
     state.jumpY += state.jumpVel * dt;
@@ -4562,6 +4565,12 @@ function updateJump(dt) {
       state.isJumping = false;
       /* Play land sound */
       playJumpLand();
+      if (state.jumpBuffer > 0) {   // 落地時有緩衝的跳 → 立刻再跳(input buffer)
+        state.jumpBuffer = 0;
+        state.isJumping = true;
+        state.jumpVel = JUMP_VELOCITY;
+        playJumpLaunch();
+      }
     }
   }
 }
@@ -4611,7 +4620,7 @@ function updateGame(dt) {
   if (state.ultimateTimer > 0) { speedMult *= 2; drainMult *= 0.5; }
   if (state.collisionSlowTimer > 0) speedMult *= 0.5;
   if (state.luggageSlowTimer > 0) speedMult *= 0.3;
-  if (state.guardSlowTimer > 0) speedMult *= 0.1;
+  if (state.guardSlowTimer > 0) speedMult *= 0.45;   // 0.1x→0.45x:踉蹌而非定身,不被連鎖鎖死
 
   /* Sprint only works when moving forward */
   if (state.sprinting && moveZ < 0 && state.sprint > 0) {
@@ -4792,14 +4801,15 @@ function updateGame(dt) {
     for (const d of northDoors) {
       const doorWorldZ = trainNorth.position.z + d.z;
       const dz = Math.abs(father.position.z - doorWorldZ);
-      if (father.position.x > 2 && dz < 5) {
+      if (father.position.x > 0.5 && dz < 6) {   // 放寬:手機搖桿難精準推到 x>2;抱到女兒後到車門附近就算趕上
         victory();
         return;
       }
     }
   }
 
-  if (state.timeLeft <= 0) {
+  // EP36 canon「每一次都趕上」:抱到女兒後不再失敗 — 最後一段衝刺只是緊張,不是處罰
+  if (state.timeLeft <= 0 && !state.gotDaughter) {
     failure();
   }
 }
