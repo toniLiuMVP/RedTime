@@ -1619,11 +1619,18 @@ function applyEffect(effect) {
             try { window.__RIM_LIGHT__ && window.__RIM_LIGHT__(1.2, "#ff9a4f"); } catch (e) {}
             try { window.__CATCHLIGHT__ && window.__CATCHLIGHT__(3, 0.8); } catch (e) {}
             try { audioSystem.unlockSong && audioSystem.unlockSong("one_gaze_song"); } catch (e) {}
+            // 運鏡:這一秒鏡頭也要動 — 輕推 dolly + 信箱框 + 極微呼吸(溫柔不是驚悚,strength 壓低);信箱框在愛情弧開場前收回
+            try { window.__LETTERBOX__ && window.__LETTERBOX__(2.2, 600); } catch (e) {}
+            try { window.__DOLLY_ZOOM__ && window.__DOLLY_ZOOM__(0.32, 1400); } catch (e) {}
+            try { window.__CAMERA_BREATH__ && window.__CAMERA_BREATH__(0.005, 0.4); } catch (e) {}
           }
           setSubtitle("女兒", (res && res.ok)
             ? "我親眼看著那一眼，整個人被釘在原地。這就是那條紅線的起點。"
             : "就算只是餘光，他們也已經開始了。", 5.0);
           safeTimeout(() => {
+            // 一眼瞬間定格後,信箱框與微呼吸收回,鏡頭回到平穩,讓愛情弧自然展開
+            try { window.__LETTERBOX_OFF__ && window.__LETTERBOX_OFF__(900); } catch (e) {}
+            try { window.__CAMERA_BREATH_OFF__ && window.__CAMERA_BREATH_OFF__(); } catch (e) {}
             if (state.mode === "play" && window.__ACTS__) {
               window.__ACTS__.runChain(["standStill", "hug", "msn", "redthread", "phoneCall", "sevenEleven", "riverbank", "infinite", "believe", "train1163", "knowingVsBelieving", "carnation", "threehearts"], function () {
                 setSubtitle("女兒", "我把他們的一輩子，都收進了時空口袋裡。原來相信，就是這樣撐過來的。", 6.0);

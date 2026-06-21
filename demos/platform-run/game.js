@@ -265,8 +265,8 @@ import("./props-loader.js").then((m) => m.loadSceneProps(THREE, scene, scene, { 
   { file: "info_pillar",     pos: [-3.6, 0,   150], rot: 0 },
   { file: "timetable_stand", pos: [ 3.6, 0,  -190], rot: -1.57 },
   { file: "timetable_stand", pos: [ 3.6, 0,   190], rot: -1.57 },
-  { file: "luggage_bag",     pos: [ 1.6, 0,  -380], rot: 0.5 },
-  { file: "luggage_bag",     pos: [ 2.1, 0,  -378], rot: -0.3 },
+  { file: "luggage_bag",     pos: [ 1.6, 0,  -168], rot: 0.5 },
+  { file: "luggage_bag",     pos: [ 2.1, 0,  -165], rot: -0.3 },
 ] })).catch((e) => { console.warn("[props] module load failed:", e && e.message); });
 
 const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 500);
@@ -394,11 +394,12 @@ window.__TRAIN_SHAKE__ = function(amplitude, durationMs) {
 };
 
 /* A5 月台蒸汽 / 火車到站 steam particle */
-let _steam = null;
+let _steam = null, _steamRaf = null;
 window.__STEAM__ = function(count, intensity) {
   if (count === undefined) count = 150;
   if (intensity === undefined) intensity = 0.7;
   if (_steam) scene.remove(_steam);
+  if (_steamRaf) { cancelAnimationFrame(_steamRaf); _steamRaf = null; }   // 防重複呼叫疊出兩個 RAF 迴圈(QA fix)
   var geo = new THREE.BufferGeometry();
   var positions = new Float32Array(count * 3), velocities = new Float32Array(count * 3);
   for (var i = 0; i < count; i++) {
@@ -425,12 +426,13 @@ window.__STEAM__ = function(count, intensity) {
       if (p[i*3+1] > 6) { p[i*3+1] = 0.2; }
     }
     _steam.geometry.attributes.position.needsUpdate = true;
-    requestAnimationFrame(tick);
+    _steamRaf = requestAnimationFrame(tick);
   };
   tick();
   console.info('[__STEAM__] ' + count + ' particles intensity=' + intensity);
 };
 window.__STEAM_OFF__ = function() {
+  if (_steamRaf) { cancelAnimationFrame(_steamRaf); _steamRaf = null; }
   if (_steam) { scene.remove(_steam); _steam = null; }
   console.info('[__STEAM__] off');
 };
