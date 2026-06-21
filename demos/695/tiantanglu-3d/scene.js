@@ -135,6 +135,19 @@ const matT = (col, t, rx, ry, o = {}) => { const m = t.clone(); m.needsUpdate = 
 const ROOT = new THREE.Group(); scene.add(ROOT);
 function add(geo, m, x, y, z, parent) { const b = new THREE.Mesh(geo, m); b.position.set(x, y, z); b.castShadow = b.receiveShadow = true; (parent || ROOT).add(b); return b; }
 
+/* ── Blender 寫實道具(非阻塞 dynamic import,失敗只 warn 不影響場景;raycast 關閉不擋射擊) ── */
+import("./props-loader.js").then((m) => m.loadSceneProps(THREE, ROOT, { base: "./props/", items: [
+  { file: "field_tent",      pos: [-30, 0, -42], rot:  0.2 },
+  { file: "field_tent",      pos: [-19, 0, -46], rot: -0.3 },
+  { file: "ammo_crate",      pos: [ 30, 0,   4], rot:  0.1 },
+  { file: "ammo_crate",      pos: [ 32, 0,   7], rot:  0.5 },
+  { file: "ammo_crate",      pos: [ 29, 0,  10], rot: -0.2 },
+  { file: "weapon_rack",     pos: [-26, 0, -34], rot:  1.2 },
+  { file: "command_podium",  pos: [ 20, 0, -10], rot: -1.57 },
+  { file: "obstacle_wall",   pos: [-12, 0, -16], rot:  0 },
+  { file: "balance_log",     pos: [ -6, 0, -14], rot:  0 },
+] })).catch((e) => { console.warn("[props] module load failed:", e && e.message); });
+
 /* ───────── 地面 + 操場 + 道路 ───────── */
 (function terrain() {
   // 大地(泥土草)
