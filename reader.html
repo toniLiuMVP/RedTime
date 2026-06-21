@@ -73,7 +73,8 @@
     <link rel="preload" href="fonts/fonts.css" as="style" />
     <!-- LCP 優化：preload 首屏 hero-title 使用的 Cormorant Garamond 300 latin -->
     <link rel="preload" href="fonts/co3bmX5slCNuHLi8bLeY9MK7whWMhyjYqXtKky2F7g.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="stylesheet" href="fonts/fonts.css" />
+    <script src="assets/load-fonts.js" data-href="fonts/fonts.css"></script><!-- F6:826KB 字型 CSS 改非阻塞載入(已 preload,font-display:swap),小說正文不必等字型 CSS 才顯示 -->
+    <noscript><link rel="stylesheet" href="fonts/fonts.css" /></noscript>
     <style>
       /* ── Variables ─── */
       :root {
