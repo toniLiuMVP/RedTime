@@ -406,7 +406,7 @@ for (const [tx, tz, ts] of [[27, 21, 1.5], [-26, 18, 1.4], [48, -10, 1.6], [-48,
 let cowTail = null, cowHead = null;
 (function buildCow() {
   const cx = -14, cz = 18;
-  const hide = mat(0xe9e1d2, { roughness: 0.95, envMapIntensity: 0.32 }), patch = mat(0x2c2823, { roughness: 0.96, envMapIntensity: 0.28 }), hoof = mat(0x191510, { roughness: 0.96 }), muz = mat(0xcea39a, { roughness: 0.82, envMapIntensity: 0.4 }), hornM = mat(0xcabf9e, { roughness: 0.6, metalness: 0.03 });
+  const hide = mat(0xe9e1d2, { roughness: 0.92, envMapIntensity: 0.42 }), patch = mat(0x2c2823, { roughness: 0.96, envMapIntensity: 0.3 }), hoof = mat(0x191510, { roughness: 0.96 }), muz = mat(0xcea39a, { roughness: 0.72, envMapIntensity: 0.42 }), hornM = mat(0xcabf9e, { roughness: 0.6, metalness: 0.03 });   // 寫實沉穩:牛皮微 env rim、濕鼻頭低 roughness
   const root = new THREE.Group(); root.position.set(cx, 0, cz); root.rotation.y = 0.55; ROOT.add(root);
   const SPH = new THREE.SphereGeometry(0.5, 18, 14);   // 共用球,縮放成橢球=圓潤有機曲面(取代方塊機器牛)
   const el = (m, x, y, z, sx, sy, sz, p) => { const e = new THREE.Mesh(SPH, m); e.position.set(x, y, z); e.scale.set(sx, sy, sz); e.castShadow = e.receiveShadow = true; (p || root).add(e); return e; };
@@ -887,7 +887,7 @@ function buildOfficer(pos, torsoCol, role) {   // 寫實國軍軍官立姿(primi
   const o = role || {};                        // o.commander=連長(較高階較嚴肅) / 否則輔導長(較親和、夾板)
   const isCmd = !!o.commander;
   const g = new THREE.Group(); g.position.copy(pos); g.rotation.y = 0; ROOT.add(g);   // 面 +Z 朝門口(玩家從門口 +Z 側進來對到正面)
-  const skin = mat(0xc69a78, { roughness: 0.7 }), torso = mat(torsoCol, { roughness: 0.85 });
+  const skin = mat(0xc89c7a, { roughness: 0.65, envMapIntensity: 0.4 }), torso = mat(torsoCol, { roughness: 0.78, envMapIntensity: 0.5 });   // 寫實沉穩:膚色軟一點、軍服微 sheen
   const legs = mat(0x3a4a2c, { roughness: 0.9 }), boot = mat(0x141210, { roughness: 0.6, metalness: 0.15 });
   const dark = mat(0x14130f, { roughness: 0.8 }), belt = mat(0x20180f, { roughness: 0.5, metalness: 0.25 });
   const capCol = mat(isCmd ? 0x232a18 : 0x2c3320, { roughness: 0.78 });                // 連長帽色更深(較肅)
@@ -2085,9 +2085,9 @@ for (let i = 0; i < 16; i++) { const geo = new THREE.BufferGeometry().setFromPoi
 let trI = 0;
 function tracer(fx, fy, fz, tx, ty, tz, color, opacity) { const tr = tracers[trI = (trI + 1) % tracers.length]; const p = tr.ln.geometry.attributes.position; p.setXYZ(0, fx, fy, fz); p.setXYZ(1, tx, ty, tz); p.needsUpdate = true; if (color != null) tr.ln.material.color.setHex(color); tr.op = opacity != null ? opacity : 0.8; tr.ln.material.opacity = tr.op; tr.ln.visible = true; tr.on = true; tr.t = 0; }
 function updateTracers(dt) { for (const tr of tracers) { if (!tr.on) continue; tr.t += dt; if (tr.t > 0.08) { tr.on = false; tr.ln.visible = false; continue; } tr.ln.material.opacity = tr.op * (1 - tr.t / 0.08); } }   // 曳光彈拖尾稍長更可見
-const eBody = new THREE.MeshStandardMaterial({ color: 0x55502f, roughness: 0.85, envMapIntensity: 0.7 });
-const eGear = new THREE.MeshStandardMaterial({ color: 0x35351f, roughness: 0.82 });
-const eSkin = new THREE.MeshStandardMaterial({ color: 0xb98c63, roughness: 0.72 });
+const eBody = new THREE.MeshStandardMaterial({ color: 0x55502f, roughness: 0.72, envMapIntensity: 0.6 });   // 軍服布料微 sheen 接夢中天光,不再撞球扁平
+const eGear = new THREE.MeshStandardMaterial({ color: 0x35351f, roughness: 0.78, envMapIntensity: 0.5 });
+const eSkin = new THREE.MeshStandardMaterial({ color: 0xbf926a, roughness: 0.6, envMapIntensity: 0.45 });   // 膚色暖一點、柔一點
 const WDMG = { 鐵鎚: 75, 刺槍: 60, 小刀: 58, 小槍: 34, 步槍: 36, 機關槍: 32, 狙擊槍: 120 };
 const WIMPACT = { 小槍: 0.7, 步槍: 1.0, 機關槍: 1.0, 狙擊槍: 1.9, 刺槍: 1.2, 小刀: 0.9, 鐵鎚: 1.5 };   // 命中點火花/揚塵量倍率:狙擊一炸 / 小槍一抹
 const eBoot = new THREE.MeshStandardMaterial({ color: 0x1c1a16, roughness: 0.7 });
@@ -2140,8 +2140,8 @@ function spawnEnemy(x, z, hp, opts) {
   const weapon = opts.weapon || (frog ? "knife" : "pistol");
   const g = new THREE.Group(); g.position.set(x, 0, z);
   const type = frog ? { key: "frogman", scale: 1.0, hpMul: 0.55, speedMul: 3.0, cap: false, pack: false } : pickEnemyType();
-  const body = frog ? jitterMat(eSkin, (Math.random() - 0.5) * 0.03, (Math.random() - 0.5) * 0.06, (Math.random() - 0.5) * 0.12) : jitterMat(eBody, (Math.random() - 0.5) * 0.05, (Math.random() - 0.5) * 0.1, (Math.random() - 0.5) * 0.14);
-  const skin = jitterMat(eSkin, (Math.random() - 0.5) * 0.03, (Math.random() - 0.5) * 0.08, (Math.random() - 0.5) * 0.16);
+  const body = frog ? jitterMat(eSkin, (Math.random() - 0.5) * 0.04, (Math.random() - 0.5) * 0.08, (Math.random() - 0.5) * 0.18) : jitterMat(eBody, (Math.random() - 0.5) * 0.08, (Math.random() - 0.5) * 0.16, (Math.random() - 0.5) * 0.24);   // 加大色差:16 個敵兵不再像複製人(toni 拍板)
+  const skin = jitterMat(eSkin, (Math.random() - 0.5) * 0.04, (Math.random() - 0.5) * 0.1, (Math.random() - 0.5) * 0.22);
   const ms = [];
   const eb = (w, h, d, m, px, py, pz) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(px, py, pz); ms.push(b); return b; };
   eb(0.5, 0.74, 0.3, frog ? skin : body, 0, 1.16, 0);                  // 軀幹(蛙人裸膚)
