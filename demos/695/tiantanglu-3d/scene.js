@@ -2176,7 +2176,7 @@ function spawnEnemy(x, z, hp, opts) {
   ec(0.07, 0.2, frog ? skin : body, 0.18, 1.0, -0.18);                     // 前臂(圓潤)
   const hand = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), skin); hand.position.set(0.1, 1.12, -0.08); ms.push(hand);   // 握把手:膚色球,槍是握著不是浮空
   const upper = new THREE.Group(); ms.forEach((m) => { m.castShadow = true; upper.add(m); }); g.add(upper);   // 上半身容器:走路起伏/側擺驅動在這(不動 g,g 被 yaw/flinch/death 佔用)
-  g.scale.setScalar(type.scale);
+  g.scale.setScalar(type.scale * (0.93 + Math.random() * 0.14));   // 每兵 ±7% 身高差:破除「同高複製人」(色差之外再加體型差);腳在原點 y=0,縮放不沉地
   const ew = ENEMY_WEAPONS[weapon] || ENEMY_WEAPONS.pistol;
   g.userData.kind = "enemy"; g.userData.hp = Math.round((hp || 100) * type.hpMul); g.userData.speedMul = type.speedMul; g.userData.etype = type.key; g.userData.dead = false; g.userData.deadT = 0; g.userData.fireT = 1 + Math.random() * 2; g.userData.flinch = 0; g.userData.strafe = Math.random() < 0.5 ? 1 : -1; g.userData.strafeT = 1 + Math.random() * 2; g.userData.state = "chase"; g.userData.grenadeT = 6 + Math.random() * 8; g.userData.spawn = new THREE.Vector3(x, 0, z); g.userData.stepT = Math.random() * 0.4; g.userData.alertT = 0; g.userData.sawPlayer = false; g.userData.body = body; g.userData.skin = skin; g.userData.lastSeen = new THREE.Vector3(0, 0, -6); g.userData.everSeen = false;   // 存克隆材質供死亡回收(防記憶體洩漏);lastSeen=最後已知玩家位置(預設操場中心當推進目標,看不到玩家時朝這走,不偷看即時座標)
   g.userData.weapon = weapon; g.userData.ammo = ew.ammo || 0; g.userData.grenadesLeft = opts.grenades || 0; g.userData.frog = frog; g.userData.meleeT = 0; g.userData.ramCD = 0; g.userData.rammedHalf = false;   // item5:武器/有限彈藥(耗盡換刺刀)/手榴彈數;item6:蛙人;item3:被載具撞擊冷卻/悍馬撞過半血標記
