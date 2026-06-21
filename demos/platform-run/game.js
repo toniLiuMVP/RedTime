@@ -4696,9 +4696,13 @@ function updateGame(dt) {
   const bobAmt = (state.isJumping || !isMoving) ? 0 : (Math.abs(Math.sin(state.clock * bobFreq)) * 0.035);
   father.position.y = FATHER_BASE_Y + bobAmt + state.jumpY;
   father.rotation.z = (state.isJumping || !isMoving) ? 0 : (Math.sin(state.clock * bobFreq * 0.5) * 0.05);
-  /* 接觸陰影釘地:抵銷 bob+跳躍位移(否則影子黏腳跟著飛);跳越高影子越小越淡 */
+  /* 跑步前傾(EP36「很胖卻跑得很快」用力衝的體感,不再直挺挺飄):衝刺傾更多,停步回正 */
+  const _runLean = (state.isJumping || !isMoving) ? 0 : (state.sprinting ? 0.15 : 0.09);
+  father.rotation.x += (_runLean - father.rotation.x) * 0.14;
+  /* 接觸陰影釘地:抵銷 bob+跳躍位移(否則影子黏腳跟著飛);跳越高影子越小越淡;抵銷父體前傾保持影子平貼 */
   if (fatherContactShadow) {
     fatherContactShadow.position.y = 0.02 - bobAmt - state.jumpY;
+    fatherContactShadow.rotation.x = -Math.PI / 2 - father.rotation.x;
     const csK = Math.max(0.5, 1 - state.jumpY * 0.4);
     fatherContactShadow.scale.setScalar(csK);
     fatherContactShadow.material.opacity = Math.max(0.3, 1 - state.jumpY * 0.5);
@@ -4717,11 +4721,11 @@ function updateGame(dt) {
     fatherLeftArm.rotation.x = -legSwing * 0.7;
     fatherRightArm.rotation.x = legSwing * 0.7;
   } else {
-    /* Idle pose */
-    fatherLeftLeg.rotation.x = 0;
-    fatherRightLeg.rotation.x = 0;
-    fatherLeftArm.rotation.x = 0;
-    fatherRightArm.rotation.x = 0;
+    /* Idle pose:阻尼回正(不再單幀彈回=破除停步/落地的 pop) */
+    fatherLeftLeg.rotation.x += (0 - fatherLeftLeg.rotation.x) * 0.18;
+    fatherRightLeg.rotation.x += (0 - fatherRightLeg.rotation.x) * 0.18;
+    fatherLeftArm.rotation.x += (0 - fatherLeftArm.rotation.x) * 0.18;
+    fatherRightArm.rotation.x += (0 - fatherRightArm.rotation.x) * 0.18;
   }
 
   /* Father glow during ultimate */

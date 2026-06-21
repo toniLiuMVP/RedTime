@@ -2085,12 +2085,12 @@ for (let i = 0; i < 16; i++) { const geo = new THREE.BufferGeometry().setFromPoi
 let trI = 0;
 function tracer(fx, fy, fz, tx, ty, tz, color, opacity) { const tr = tracers[trI = (trI + 1) % tracers.length]; const p = tr.ln.geometry.attributes.position; p.setXYZ(0, fx, fy, fz); p.setXYZ(1, tx, ty, tz); p.needsUpdate = true; if (color != null) tr.ln.material.color.setHex(color); tr.op = opacity != null ? opacity : 0.8; tr.ln.material.opacity = tr.op; tr.ln.visible = true; tr.on = true; tr.t = 0; }
 function updateTracers(dt) { for (const tr of tracers) { if (!tr.on) continue; tr.t += dt; if (tr.t > 0.08) { tr.on = false; tr.ln.visible = false; continue; } tr.ln.material.opacity = tr.op * (1 - tr.t / 0.08); } }   // 曳光彈拖尾稍長更可見
-const eBody = new THREE.MeshStandardMaterial({ color: 0x55502f, roughness: 0.72, envMapIntensity: 0.6 });   // 軍服布料微 sheen 接夢中天光,不再撞球扁平
-const eGear = new THREE.MeshStandardMaterial({ color: 0x35351f, roughness: 0.78, envMapIntensity: 0.5 });
+const eBody = new THREE.MeshStandardMaterial({ map: camoTex, color: 0xc8c4a8, roughness: 0.72, envMapIntensity: 0.6 });   // 軍服貼既有 camoTex 迷彩(軍事+玩家審核 ceiling push:原本扁平單色橄欖);淺底讓迷彩讀得出,jitterMat clone 仍逐兵變色
+const eGear = new THREE.MeshStandardMaterial({ color: 0x5b5538, roughness: 0.78, envMapIntensity: 0.5 });   // 提亮到中間調(原 0x35351f 在黎明光下=近黑剪影,把圓潤幾何/裝具全吃掉=5/7 審核共識最大可讀性傷害)
 const eSkin = new THREE.MeshStandardMaterial({ color: 0xbf926a, roughness: 0.6, envMapIntensity: 0.45 });   // 膚色暖一點、柔一點
 const WDMG = { 鐵鎚: 75, 刺槍: 60, 小刀: 58, 小槍: 34, 步槍: 36, 機關槍: 32, 狙擊槍: 120 };
 const WIMPACT = { 小槍: 0.7, 步槍: 1.0, 機關槍: 1.0, 狙擊槍: 1.9, 刺槍: 1.2, 小刀: 0.9, 鐵鎚: 1.5 };   // 命中點火花/揚塵量倍率:狙擊一炸 / 小槍一抹
-const eBoot = new THREE.MeshStandardMaterial({ color: 0x1c1a16, roughness: 0.7 });
+const eBoot = new THREE.MeshStandardMaterial({ color: 0x2e2a22, roughness: 0.7 });   // 提離 1% 亮度近黑,靴子讀得出形
 // 夢中天堂路的對手:三兵種(標準步兵 / 重裝 / 突擊),體型 + 血量 + 移速 + 頭盔各異
 const ENEMY_TYPES = [
   { key: "rifleman", weight: 5, scale: 1.0, hpMul: 1.0, speedMul: 1.0, cap: false, pack: false },
