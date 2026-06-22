@@ -2166,8 +2166,10 @@ function spawnEnemy(x, z, hp, opts) {
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 14), skin); head.position.y = 1.68; head.scale.set(1, 0.92, 1.06); head.userData.head = true; ms.push(head);   // 壓扁=頭不是球
   // 臉部給形(導演+玩家:最近一槍的球頭=最廉價的讀):眉骨帶 + 凹眼窩(深色,不貼圖維持符號;面朝 -Z 敵人前方)
   const faceMat = jitterMat(eSkin, 0, -0.1, -0.34);   // 比膚色深的眉/眼影(逐兵跟膚色連動)
-  eb(0.19, 0.03, 0.05, faceMat, 0, 1.71, -0.15);
-  for (const ex of [-0.055, 0.055]) { const eye = new THREE.Mesh(new THREE.SphereGeometry(0.024, 8, 6), faceMat); eye.position.set(ex, 1.675, -0.145); eye.scale.set(1, 0.85, 0.6); ms.push(eye); }
+  if (settings.quality > 2) {   // 臉部細節(眉骨+凹眼窩 3 mesh)在手機低畫質(q<=2)是 sub-pixel,省 draw call
+    eb(0.19, 0.03, 0.05, faceMat, 0, 1.71, -0.15);
+    for (const ex of [-0.055, 0.055]) { const eye = new THREE.Mesh(new THREE.SphereGeometry(0.024, 8, 6), faceMat); eye.position.set(ex, 1.675, -0.145); eye.scale.set(1, 0.85, 0.6); ms.push(eye); }
+  }
   if (frog) eb(0.32, 0.07, 0.32, eBoot, 0, 1.78, 0).userData.head = true;   // 蛙人:平頭短髮(深色),無鋼盔
   else if (type.cap) { eb(0.34, 0.12, 0.34, eGear, 0, 1.79, 0).userData.head = true; eb(0.42, 0.04, 0.16, eGear, 0, 1.75, 0.18); }   // 突擊兵:軟帽 + 帽簷
   else { const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.18, 14, 10, 0, 6.3, 0, 1.6), eGear); helmet.position.y = 1.72; helmet.userData.head = true; ms.push(helmet); eb(0.4, 0.05, 0.4, eGear, 0, 1.64, 0); }   // 鋼盔 + 盔簷
@@ -2194,11 +2196,12 @@ function spawnEnemy(x, z, hp, opts) {
   ec(0.07, 0.2, frog ? skin : body, 0.18, 1.0, -0.18);                     // 前臂(圓潤)
   const hand = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), skin); hand.position.set(0.1, 1.12, -0.08); ms.push(hand);   // 握把手:膚色球,槍是握著不是浮空
   const upper = new THREE.Group(); ms.forEach((m) => { m.castShadow = true; upper.add(m); }); g.add(upper);   // 上半身容器:走路起伏/側擺驅動在這(不動 g,g 被 yaw/flinch/death 佔用)
-  g.scale.setScalar(type.scale * (0.93 + Math.random() * 0.14));   // 每兵 ±7% 身高差:破除「同高複製人」(色差之外再加體型差);腳在原點 y=0,縮放不沉地
+  const _escale = type.scale * (0.93 + Math.random() * 0.14);   // 每兵 ±7% 身高差:破除「同高複製人」;腳在原點 y=0 縮放不沉地
+  g.scale.setScalar(_escale);
   const ew = ENEMY_WEAPONS[weapon] || ENEMY_WEAPONS.pistol;
   g.userData.kind = "enemy"; g.userData.hp = Math.round((hp || 100) * type.hpMul); g.userData.speedMul = type.speedMul; g.userData.etype = type.key; g.userData.dead = false; g.userData.deadT = 0; g.userData.fireT = 1 + Math.random() * 2; g.userData.flinch = 0; g.userData.strafe = Math.random() < 0.5 ? 1 : -1; g.userData.strafeT = 1 + Math.random() * 2; g.userData.state = "chase"; g.userData.grenadeT = 6 + Math.random() * 8; g.userData.spawn = new THREE.Vector3(x, 0, z); g.userData.stepT = Math.random() * 0.4; g.userData.alertT = 0; g.userData.sawPlayer = false; g.userData.body = body; g.userData.skin = skin; g.userData.faceMat = faceMat; g.userData.lastSeen = new THREE.Vector3(0, 0, -6); g.userData.everSeen = false;   // 存克隆材質供死亡回收(防記憶體洩漏);lastSeen=最後已知玩家位置(預設操場中心當推進目標,看不到玩家時朝這走,不偷看即時座標)
   g.userData.weapon = weapon; g.userData.ammo = ew.ammo || 0; g.userData.grenadesLeft = opts.grenades || 0; g.userData.frog = frog; g.userData.meleeT = 0; g.userData.ramCD = 0; g.userData.rammedHalf = false;   // item5:武器/有限彈藥(耗盡換刺刀)/手榴彈數;item6:蛙人;item3:被載具撞擊冷卻/悍馬撞過半血標記
-  g.userData.legs = legs; g.userData.gun = gunPivot; g.userData.upper = upper; g.userData.escale = type.scale; g.userData.walkPh = Math.random() * 6.28; g.userData.gunKick = 0; g.userData.bearing = Math.random() * 6.2832;   // 腿擺 / 槍托後座 / 上半身起伏 / 死亡縮放 / 圍攻方位
+  g.userData.legs = legs; g.userData.gun = gunPivot; g.userData.upper = upper; g.userData.escale = _escale; g.userData.walkPh = Math.random() * 6.28; g.userData.gunKick = 0; g.userData.bearing = Math.random() * 6.2832;   // 腿擺 / 槍托後座 / 上半身起伏 / 死亡縮放 / 圍攻方位
   g.userData.gaitAmp = 0.55 + Math.random() * 0.18; g.userData.leanT = 0.07 + Math.random() * 0.07; g.userData.cadJit = 0.85 + Math.random() * 0.3;   // 逐兵步幅/前傾/步頻差(破除整排同步走;phase 已隨機,再加振幅/節奏差)
   ROOT.add(g); enemies.push(g);
   return g;
@@ -2230,7 +2233,7 @@ for (const p of [COW_POS, JACKET_POS, DIARY_POS, RANGE_ENTRY, COUNSELOR_POS, COM
 }
 const waveEl = document.getElementById("wave"), scoreEl = document.getElementById("scoreval");
 function updateWaveHUD() { if (MODE !== "sim") { if (waveEl) waveEl.textContent = "軍營"; return; } const gw = goalWave(); if (waveEl) waveEl.textContent = inBreak ? (wave < 1 ? "站上起點" : "第 " + wave + " / " + gw + " 波" + (isTouch ? "" : " · 清空")) : "第 " + wave + " / " + gw + " 波"; if (scoreEl) scoreEl.textContent = score; }   // 顯示「第 N / 目標 波」讓撐到第幾波會停下變可見(目標感);手機省「· 清空」尾綴避免疊雷達
-function startWave() { wave++; inBreak = false; frogmenSpawned = false; frogmenActive = false; frogmenGhostCount = 0; const em = (curDiff ? curDiff.enemyMul : 1) * qEnemyCap; const n = Math.max(1, Math.min(Math.round(13 * em), Math.round((3 + wave * 1.7) * em))); spawnQueue = n; waveAlive = n; spawnTimer = 0; waveWeapons = buildWaveWeapons(wave, n); updateWaveHUD();
+function startWave() { wave++; inBreak = false; frogmenSpawned = false; frogmenActive = false; frogmenGhostCount = 0; const em = (curDiff ? curDiff.enemyMul : 1) * qEnemyCap; const n = Math.max(1, Math.min(isTouch ? 16 : 99, Math.round(13 * em), Math.round((3 + wave * 1.7) * em))); spawnQueue = n; waveAlive = n;   // 手機絕對上限 16(困難/天堂路 ×2 本會到 26,~28 mesh/兵=draw call 爆量) spawnTimer = 0; waveWeapons = buildWaveWeapons(wave, n); updateWaveHUD();
   // B3:硬關(困難/天堂路 或 接近目標波)生成一張光碟,每場最多一次;進新一波先清掉上一波殘留的光碟
   clearDisc();
   if (!_b3Said) { const dIdx = (curDiff && curDiff.diffIndex) || 3; if (dIdx >= 4 || wave >= goalWave() - 2) spawnDisc(); }
@@ -2273,7 +2276,7 @@ function updateWaves(dt) {
 
   if (waveAlive <= 0 && spawnQueue <= 0) {
     if (!frogmenSpawned) { frogmenSpawned = true; const sq = frogmenSquads(wave); if (sq > 0) { spawnFrogmen(sq); showNarr("兩棲蛙人部隊朝海的方向狂奔而過 · 打不到也不必打", 4.2); return; } }   // item6:普通敵清完→蛙人幻影狂奔穿過(非戰鬥,功能描述不代筆 canon),跑過/消失才算過關
-    if (frogmenActive) { if (realT >= frogmenDeadline) { for (let k = enemies.length - 1; k >= 0; k--) { const e = enemies[k]; if (e.userData.apparition) { ROOT.remove(e); if (e.userData.body) e.userData.body.dispose(); if (e.userData.skin) e.userData.skin.dispose(); enemies.splice(k, 1); } } frogmenActive = false; frogmenGhostCount = 0; } else return; }   // 幻影還在穿越,等跑過/淡出;逾時保險強制清空不卡關
+    if (frogmenActive) { if (realT >= frogmenDeadline) { for (let k = enemies.length - 1; k >= 0; k--) { const e = enemies[k]; if (e.userData.apparition) { ROOT.remove(e); if (e.userData.body) e.userData.body.dispose(); if (e.userData.skin) e.userData.skin.dispose(); if (e.userData.faceMat) e.userData.faceMat.dispose(); enemies.splice(k, 1); } } frogmenActive = false; frogmenGhostCount = 0; } else return; }   // 幻影還在穿越,等跑過/淡出;逾時保險強制清空不卡關
     if (wave >= goalWave()) { awaitDisarm = true; survivedAt = realT; inBreak = true; if (vehicle) exitVehicle(); stopMusic(); for (const e of enemies) ROOT.remove(e); enemies.length = 0; if (waveEl) waveEl.textContent = "撐過了"; showNarr(NARR.survived, 5.5); }   // survivedAt:讓「撐過了」旁白先獨處,放下槍提示稍後才浮現(不稀釋轉折)   // B1:撐過 GOAL_WAVE → 停波+清殘敵 + 強制下車(放下槍是徒手身體動作,不能在車上) + 戰鬥曲淡出 + 放下槍旁白;保護高潮
     else { inBreak = true; money += Math.round((200 + wave * 80) * (curDiff ? curDiff.enemyMul : 1)); updateMoneyHUD(); updateWaveHUD(); if (wave === 1 || wave % 5 === 0) showNarr(NARR.wave, 3.4); openShopPause();
       // B4:波間的安靜(第2波後)一次 — 等待也算在約會的時間裡(EP6 verbatim)。延後一拍,不和 NARR.wave 撞;每場一次
