@@ -16,7 +16,7 @@ import * as THREE from "./vendor-three.module.js";
 
 const EXPECTED_COLORS = {
   Go: { name: "學長",       legs: "#3d5c8a", torso: "#f8f8f8", skin: "#f2d8c8", hair: "#1a1214" },
-  Co: { name: "學妹 29 歲", legs: "#1c2e46", torso: "#f6f4f0", skin: "#fce4d4", hair: "#7a5842" },
+  Co: { name: "學妹 29 歲", legs: "#1c2e46", torso: "#f6f4f0", skin: "#fce4d4", hair: "#2a1d15" },
   Bo: { name: "父親回聲",   legs: "#ffe9d5", torso: "#f2c49e", skin: "#f0c7ab", hair: "#533f3c" },
   ko: { name: "阿姨回聲",   legs: "#ffd8e4", torso: "#???",    skin: "#???",    hair: "#???"    },
 };
