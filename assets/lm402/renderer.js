@@ -865,7 +865,8 @@ function S(t) {
     })(),
     !t.female)) {
     // 牛仔褲 box 尺寸必須完整包覆膚色 capsule 腿(S/z, 直徑 0.144 / Y span -0.072~0.752)
-    const t = new e.Mesh(new e.BoxGeometry(0.165, 0.72, 0.19), i);
+    // 加大至 0.18×0.82×0.22:深度補足背面(原 0.19 太淺露膚)、高度涵蓋整條 capsule
+    const t = new e.Mesh(new e.BoxGeometry(0.18, 0.82, 0.22), i);
     t.position.set(-0.095, 0.37, 0.008);
     const a = t.clone();
     a.position.x = 0.095;
