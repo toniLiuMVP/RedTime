@@ -6702,7 +6702,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       torsoAccent: "#faf8f4",
       legs: "#1c2e46",
       skin: "#fce4d4",
-      hair: "#7a5842",
+      hair: "#2a1d15",
       shoes: "#f6f6f4",
       iris: "#7a5a42",
       female: !0,
