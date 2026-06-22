@@ -2240,7 +2240,7 @@ function startWave() { wave++; inBreak = false; frogmenSpawned = false; frogmenA
 }   // 困難/天堂路:每波敵人 ×2;低畫質 enemyCap 砍半救手機;依模式+波次配置敵人武器池
 const FROG_ESCAPE = new THREE.Vector3(0, 0, 94);   // 蛙人狂奔的方向:朝場外遠方(海)消失
 function spawnFrogmen(squads) {   // 兩棲蛙人=非戰鬥幻影(item 6 canon:他沒走的那條路):從邊緣狂奔穿過場景朝海,打不到也擋不住,不計 waveAlive
-  const total = squads * 6;
+  const total = isTouch ? Math.min(squads * 6, 12) : squads * 6;   // 手機封頂 12(天堂路 3隊=18 蛙人 bypass qEnemyCap;蛙人輕量但仍封峰值)
   frogmenActive = true; frogmenGhostCount = total; frogmenDeadline = realT + 12;   // 保險:12s 內若沒全跑完強制清,避免任何情況卡關
   for (let i = 0; i < total; i++) {
     const p = SPAWN_PTS[(Math.random() * SPAWN_PTS.length) | 0];
