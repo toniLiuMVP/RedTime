@@ -364,7 +364,7 @@
     const bloom = el("div"); bloom.style.cssText = "position:absolute;inset:0;background:radial-gradient(circle at 50% 55%,rgba(255,240,210,.5),rgba(255,200,150,.1) 45%,transparent 72%)";
     const top = el("div"); top.style.cssText = "position:absolute;top:0;left:0;right:0;height:clamp(28px,5vh,52px);background:#06050a;transform:scaleY(0);transform-origin:top;transition:transform .6s cubic-bezier(.7,0,.3,1)";
     const bot = el("div"); bot.style.cssText = "position:absolute;bottom:0;left:0;right:0;height:clamp(28px,5vh,52px);background:#06050a;transform:scaleY(0);transform-origin:bottom;transition:transform .6s cubic-bezier(.7,0,.3,1)";
-    const line = el("div", null, "我，趕上了。"); line.style.cssText = "position:relative;color:#fff6e8;font-size:clamp(20px,4vw,34px);letter-spacing:.14em;text-shadow:0 0 26px rgba(255,200,150,.85);transform:scale(1.1);transition:transform 1.4s ease";
+    const line = el("div", null, "「我趕上了。」"); line.style.cssText = "position:relative;color:#fff6e8;font-size:clamp(20px,4vw,34px);letter-spacing:.14em;text-shadow:0 0 26px rgba(255,200,150,.85);transform:scale(1.1);transition:transform 1.4s ease";
     ov.appendChild(bloom); ov.appendChild(top); ov.appendChild(bot); ov.appendChild(line);
     document.body.appendChild(ov);
     requestAnimationFrame(function () { ov.style.opacity = "1"; top.style.transform = "scaleY(1)"; bot.style.transform = "scaleY(1)"; line.style.transform = "scale(1)"; });
