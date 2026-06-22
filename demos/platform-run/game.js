@@ -4719,8 +4719,10 @@ function updateGame(dt) {
 
   /* Leg animation */
   if (state.isJumping) {
-    fatherLeftLeg.rotation.x = 0.3;
-    fatherRightLeg.rotation.x = 0.3;
+    /* 上升=收腿蓄力(膝抬),下降=伸腿準備落地(預示著地,不再整段同姿) */
+    var jLeg = state.jumpVel > 0 ? 0.34 : -0.14;
+    fatherLeftLeg.rotation.x += (jLeg - fatherLeftLeg.rotation.x) * 0.2;
+    fatherRightLeg.rotation.x += (jLeg - fatherRightLeg.rotation.x) * 0.2;
     fatherLeftArm.rotation.x = -0.2;
     fatherRightArm.rotation.x = -0.2;
   } else if (isMoving) {
