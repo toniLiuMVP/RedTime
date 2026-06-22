@@ -59,7 +59,7 @@ const LUGGAGE_COLLISION_RADIUS = 0.5;
 const LUGGAGE_CLEAR_HEIGHT = 0.3;
 
 /* Barrier constants */
-const BARRIER_CLEAR_HEIGHT = 0.3;
+const BARRIER_CLEAR_HEIGHT = 0.28;   // 略低於行李上緣(~0.25),搭配 strict< → 低跳峰頂剛好清得過(修高速衝刺穿幫)
 const BARRIER_COLLISION_RADIUS = 0.8;
 
 /* Quality presets */
@@ -2271,8 +2271,8 @@ function createGuards() {
         side: side,
         lineX: lineX,
         baseZ: baseZ,
-        patrolMin: baseZ - patrolRange,
-        patrolMax: baseZ + patrolRange,
+        patrolMin: Math.max(baseZ - patrolRange, -(PLATFORM_LEN / 2 - 2)),   // 巡邏界限夾進可走 Z,否則月台端的警衛卡在位置 clamp 上原地抖
+        patrolMax: Math.min(baseZ + patrolRange, PLATFORM_LEN / 2 - 2),
         patrolSpeed: 1.0 + Math.random() * 1.2,
         patrolDir: Math.random() > 0.5 ? 1 : -1,
         /* X wander: scales with level */
@@ -3255,9 +3255,9 @@ function checkBarrierCollisions() {
   for (const bw of barrierWalls) {
     const dz = father.position.z - bw.z;
     /* Only block when approaching from the running direction (positive z going negative) */
-    if (dz > -1.5 && dz < 1.5) {
+    if (dz > -2.0 && dz < 2.0) {   // 偵測窗加寬(高速衝刺一幀可移 0.4,±1.5 會跳過)
       if (father.position.x >= bw.xMin - 0.5 && father.position.x <= bw.xMax + 0.5) {
-        if (state.jumpY <= BARRIER_CLEAR_HEIGHT) {
+        if (state.jumpY < BARRIER_CLEAR_HEIGHT) {   // strict<:剛好到清越高度就放行(原 <= 會在峰頂卡住)
           /* STOP: clamp position to not pass through */
           if (dz > 0) {
             father.position.z = bw.z + 1.5;
@@ -6085,8 +6085,8 @@ function resetGame(keepCarryState) {
     var patrolRange = 10 + Math.random() * 20;
     g.position.z = g.userData.baseZ;
     g.position.x = g.userData.lineX;
-    g.userData.patrolMin = g.userData.baseZ - patrolRange;
-    g.userData.patrolMax = g.userData.baseZ + patrolRange;
+    g.userData.patrolMin = Math.max(g.userData.baseZ - patrolRange, -(PLATFORM_LEN / 2 - 2));
+    g.userData.patrolMax = Math.min(g.userData.baseZ + patrolRange, PLATFORM_LEN / 2 - 2);
     g.userData.patrolDir = Math.random() > 0.5 ? 1 : -1;
     g.userData.wanderX = 0;
     g.userData.wanderTarget = 0;
