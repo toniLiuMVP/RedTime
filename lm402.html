@@ -749,6 +749,9 @@
     <link rel="stylesheet" href="lm402-page.css" />
     <div id="lm402-polaroid-flash" aria-hidden="true"></div>
 <script src="assets/lm402/page-c7.js"></script>
+    <!-- 實驗性 clean 角色一眼瞬間 overlay：休眠模組，預設不執行任何事（訪客零影響）；
+         需從 console 主動 window.__CLEAN_CHARS__.enable() 才建立獨立 overlay。不碰主場景。 -->
+<script src="assets/lm402/clean-chars.js"></script>
     <!-- 五個 narrative module 改成 idle 載入：學妹靜止場景渲染先穩，main thread 閒下來才載
          requestIdleCallback fallback 用 setTimeout(2000) 兜底（Safari < 17 沒這 API） -->
 <script type="module" src="lm402-mod2.js"></script>
