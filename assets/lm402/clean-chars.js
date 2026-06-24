@@ -133,7 +133,7 @@
         if (rig.boy) rig.boy.quaternion.copy(rig.boyB).multiply(qa(AX_X, -0.45 * (1 - ss(0.40, 0.62, ct))));
         var bf = ss(0.55, 0.84, ct);
         rig.blush.forEach(function (o) { o.scale.copy(o.userData.s0).multiplyScalar(1 + 0.42 * bf); var em = o.userData.m.emissive; if (em) em.setRGB(0.6 * bf, 0.2 * bf, 0.17 * bf); });
-        var KF = [[0.0, 0.75, 0.12, 4.0, 0, 1.10], [0.42, 0.95, 0.05, 2.3, 0, 1.35], [0.68, 0.88, 0.02, 1.7, 0.14, 1.5], [1.0, 0.86, 0.02, 1.5, 0.16, 1.5]];
+        var KF = [[0.0, 0.75, 0.12, 4.0, 0, 1.10], [0.42, 0.95, 0.05, 2.2, 0, 1.40], [0.68, 0.98, 0.04, 1.6, 0.0, 1.48], [1.0, 1.02, 0.04, 1.22, 0.0, 1.50]];
         var ki = 0; while (ki < KF.length - 1 && ct > KF[ki + 1][0]) ki++;
         var ka = KF[ki], kb = KF[Math.min(ki + 1, KF.length - 1)], ku = ss(ka[0], kb[0], ct);
         az = ka[1] + (kb[1] - ka[1]) * ku; el = ka[2] + (kb[2] - ka[2]) * ku; dist = ka[3] + (kb[3] - ka[3]) * ku;
