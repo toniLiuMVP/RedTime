@@ -87,6 +87,8 @@
     scene.add(sun, sun.target);
     scene.add(new THREE.HemisphereLight(0xeaf0ff, 0x8e887e, 0.72));
     var fill = new THREE.PointLight(0xfff4ea, 7, 6, 2); fill.position.set(0.15, 1.62, 0.85); scene.add(fill);
+    // canon 走廊逆光：冷白背光從窗/走廊側打進來，給角色逆光輪廓 + 把地板照得過分地亮
+    var back = new THREE.DirectionalLight(0xf2f7ff, 5.2); back.position.set(-7, 3.5, -2.5); back.target.position.set(0.1, 1.3, 0); scene.add(back, back.target);
     var AX_Y = new THREE.Vector3(0, 1, 0), AX_X = new THREE.Vector3(1, 0, 0);
     var qa = function (ax, a) { return new THREE.Quaternion().setFromAxisAngle(ax, a); };
 
@@ -126,11 +128,11 @@
       var ph = rig.blink, open = ph < 0.5 ? 1 - ph / 0.5 : (ph - 0.5) / 0.5, lid = 0.12 + 0.88 * open;
       rig.eyes.forEach(function (o) { o.scale.y = o.userData.sy0 * lid; });
       if (rig.look >= 0) {
-        rig.look += dt; var DUR = 6.5, ct = Math.min(1, rig.look / DUR);
+        rig.look += dt; var DUR = 7.8, ct = Math.min(1, rig.look / DUR);
         var ss = function (a0, b0, x) { var u = Math.max(0, Math.min(1, (x - a0) / (b0 - a0))); return u * u * (3 - 2 * u); };
         // 拍2 學妹頭先回 → 拍3 學長後抬頭 → 拍4 臉紅墊底 → 運鏡廣角推近
-        if (rig.girl) rig.girl.quaternion.copy(rig.girlB).multiply(qa(AX_Y, -0.9 * (1 - ss(0.15, 0.44, ct))));
-        if (rig.boy) rig.boy.quaternion.copy(rig.boyB).multiply(qa(AX_X, -0.45 * (1 - ss(0.40, 0.62, ct))));
+        if (rig.girl) rig.girl.quaternion.copy(rig.girlB).multiply(qa(AX_Y, -0.9 * (1 - ss(0.12, 0.52, ct))));
+        if (rig.boy) rig.boy.quaternion.copy(rig.boyB).multiply(qa(AX_X, -0.45 * (1 - ss(0.46, 0.76, ct))));
         var bf = ss(0.55, 0.84, ct);
         rig.blush.forEach(function (o) { o.scale.copy(o.userData.s0).multiplyScalar(1 + 0.42 * bf); var em = o.userData.m.emissive; if (em) em.setRGB(0.6 * bf, 0.2 * bf, 0.17 * bf); });
         var KF = [[0.0, 0.75, 0.12, 4.0, 0, 1.10], [0.42, 0.95, 0.05, 2.2, 0, 1.40], [0.68, 0.98, 0.04, 1.6, 0.0, 1.48], [1.0, 1.02, 0.04, 1.22, 0.0, 1.50]];
