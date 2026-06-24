@@ -109,7 +109,7 @@
     rig.eyes = byMat(g.scene, /_(w|lash|i|p|hi)(\.\d+)?$/);   // 容忍前綴(z_/y_/f_)+ GLB 尾碼(.001)
     rig.eyes.forEach(function (o) { o.userData.sy0 = o.scale.y; });
     rig.blush = byMat(g.scene, /_blush(\.\d+)?$/);
-    rig.blush.forEach(function (o) { var girl = /^xc_/.test(o.material.name || ''); o.material = o.material.clone(); o.userData.s0 = o.scale.clone(); o.userData.m = o.material; o.userData.girl = girl; });
+    rig.blush.forEach(function (o) { var girl = /^xc_/.test(o.material.name || ''); o.material = o.material.clone(); o.userData.s0 = o.scale.clone(); o.userData.m = o.material; o.userData.girl = girl; o.userData.py0 = o.position.y; });
     var heads = [];
     g.scene.updateWorldMatrix(true, true);
     g.scene.traverse(function (o) { if (o.isBone && /^head(\b|[_.]|$)/.test(o.name)) heads.push(o); });
@@ -142,7 +142,9 @@
         if (rig.girl) rig.girl.quaternion.copy(rig.girlB).multiply(qa(AX_Y, -0.45 * (1 - ss(0.12, 0.52, ct))));   // 學妹早已等待，只微回頭（非『被叫才轉』）；主動抬頭看見留給學長
         if (rig.boy) rig.boy.quaternion.copy(rig.boyB).multiply(qa(AX_X, -0.45 * (1 - ss(0.46, 0.76, ct))));
         var bf = ss(0.55, 0.84, ct);
-        rig.blush.forEach(function (o) { var f = o.userData.girl ? 1.0 : 0.55; o.scale.copy(o.userData.s0).multiplyScalar(1 + 0.42 * bf * f); var em = o.userData.m.emissive; if (em) em.setRGB(0.6 * bf * f, 0.2 * bf * f, 0.17 * bf * f); });   // 學妹臉紅較重（她『被光點亮』的時刻），學長淡一點
+        var sm = ss(0.62, 0.92, ct);   // 克制微笑：墊在臉紅之後的情緒落點，眼睛笑(微瞇)+ 顴骨上提，嘴不咧開=『克制』
+        rig.blush.forEach(function (o) { var f = o.userData.girl ? 1.0 : 0.55; o.scale.copy(o.userData.s0).multiplyScalar(1 + 0.42 * bf * f + 0.18 * sm); var em = o.userData.m.emissive; if (em) em.setRGB(0.6 * bf * f, 0.2 * bf * f, 0.17 * bf * f); if (o.userData.py0 != null) o.position.y = o.userData.py0 + 0.012 * sm; });   // 學妹臉紅較重 + 顴骨蘋果上提
+        if (sm > 0) rig.eyes.forEach(function (o) { o.scale.y *= (1 - 0.20 * sm); });   // 眼睛微瞇 = 眼睛笑(Duchenne 真笑在眼)
         var KF = [[0.0, 0.75, 0.12, 4.0, 0, 1.10], [0.42, 0.95, 0.05, 2.2, 0, 1.40], [0.68, 0.98, 0.04, 1.6, 0.0, 1.48], [1.0, 1.02, 0.04, 1.22, 0.0, 1.50]];
         var ki = 0; while (ki < KF.length - 1 && ct > KF[ki + 1][0]) ki++;
         var ka = KF[ki], kb = KF[Math.min(ki + 1, KF.length - 1)], ku = ss(ka[0], kb[0], ct);
