@@ -31,8 +31,12 @@
 
   function disable() {
     state.enabled = false;
+    state.token = null;
+    disarm();   // 關閉一併清乾淨 MutationObserver（disarm 內有 null 檢查，no-op 安全）
     if (state.raf) { cancelAnimationFrame(state.raf); state.raf = 0; }
     if (state.ac) { try { state.ac.abort(); } catch (e) {} state.ac = null; }   // 一次移除所有 window listener
+    // dispose GLB geometry/material/texture（forceContextLoss 兜底，但重複 enable/disable 會在 JS heap 累積場景物件圖）
+    if (state.scene) { try { state.scene.traverse(function (o) { if (o.geometry) o.geometry.dispose(); if (o.material) { (Array.isArray(o.material) ? o.material : [o.material]).forEach(function (m) { for (var k in m) { var v = m[k]; if (v && v.isTexture) v.dispose(); } if (m.dispose) m.dispose(); }); } }); } catch (e) {} state.scene = null; }
     if (state.renderer) { try { state.renderer.dispose(); state.renderer.forceContextLoss && state.renderer.forceContextLoss(); } catch (e) {} state.renderer = null; }
     if (state.root && state.root.parentNode) state.root.parentNode.removeChild(state.root);
     state.root = null;
@@ -42,6 +46,7 @@
   async function enable(opts) {
     if (state.enabled) { console.warn('[clean-chars] 已啟用'); return; }
     state.enabled = true;
+    var myToken = {}; state.token = myToken;   // 本輪 enable 的身分；await 回來只認自己這輪（防快速 disable→enable 疊兩層）
     var ac = new AbortController(); state.ac = ac; var sig = ac.signal;
 
     var THREE, GLTFLoader;
@@ -71,6 +76,8 @@
       var a = e.target && e.target.getAttribute('data-a');
       if (a === 'look') rig.look = 0; else if (a === 'close') disable();
     }, { signal: sig });
+    // WebGL context lost（弱機雙 context 顯存壓力時可能發生）→ 優雅拆除，不讓 loop 對死 context 噴錯洗版
+    cv.addEventListener('webglcontextlost', function (e) { e.preventDefault(); console.warn('[clean-chars] WebGL context lost — overlay 自動關閉'); disable(); }, { signal: sig });
 
     // 行動裝置自適應：降 pixelRatio + 陰影圖，減 GPU 負載（兩個 three.js 場景疊在手機上很吃）
     var mobile = (typeof matchMedia === 'function' && matchMedia('(pointer:coarse)').matches) || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
@@ -79,7 +86,7 @@
     renderer.setPixelRatio(Math.min(mobile ? 1.5 : 2, devicePixelRatio));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.3;
-    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.enabled = !mobile;   // 行動裝置關陰影：與主場景並存的第二個 WebGL context 已很吃 GPU
     var scene = new THREE.Scene(); scene.background = new THREE.Color(0xe6e7e2);
     var camera = new THREE.PerspectiveCamera(46, 1, 0.05, 200);
     var sun = new THREE.DirectionalLight(0xfdfbf4, 5.0); sun.position.set(-6, 4, 3.5); sun.target.position.set(0.3, 1.2, 0); sun.castShadow = true; sun.shadow.mapSize.set(mobile ? 1024 : 2048, mobile ? 1024 : 2048);
@@ -95,13 +102,14 @@
     var g;
     try { g = await new GLTFLoader().loadAsync(SCENE_URL); }
     catch (e) { console.error('[clean-chars] GLB 載入失敗（assets/lm402/characters/onelook_scene.glb）:', e); disable(); return; }
-    if (!state.enabled) return;  // disable() 在 await 期間被呼叫
+    if (state.token !== myToken) return;  // disable() 或新的 enable() 在 await 期間發生 → 放棄這一輪
+    state.scene = scene;   // 供 disable() dispose
     scene.add(g.scene);
     g.scene.traverse(function (o) { if (o.isMesh) { o.castShadow = !(o.material && o.material.transparent); o.receiveShadow = true; } });
     rig.eyes = byMat(g.scene, /_(w|lash|i|p|hi)(\.\d+)?$/);   // 容忍前綴(z_/y_/f_)+ GLB 尾碼(.001)
     rig.eyes.forEach(function (o) { o.userData.sy0 = o.scale.y; });
     rig.blush = byMat(g.scene, /_blush(\.\d+)?$/);
-    rig.blush.forEach(function (o) { o.material = o.material.clone(); o.userData.s0 = o.scale.clone(); o.userData.m = o.material; });
+    rig.blush.forEach(function (o) { var girl = /^xc_/.test(o.material.name || ''); o.material = o.material.clone(); o.userData.s0 = o.scale.clone(); o.userData.m = o.material; o.userData.girl = girl; });
     var heads = [];
     g.scene.updateWorldMatrix(true, true);
     g.scene.traverse(function (o) { if (o.isBone && /^head(\b|[_.]|$)/.test(o.name)) heads.push(o); });
@@ -131,10 +139,10 @@
         rig.look += dt; var DUR = 7.8, ct = Math.min(1, rig.look / DUR);
         var ss = function (a0, b0, x) { var u = Math.max(0, Math.min(1, (x - a0) / (b0 - a0))); return u * u * (3 - 2 * u); };
         // 拍2 學妹頭先回 → 拍3 學長後抬頭 → 拍4 臉紅墊底 → 運鏡廣角推近
-        if (rig.girl) rig.girl.quaternion.copy(rig.girlB).multiply(qa(AX_Y, -0.9 * (1 - ss(0.12, 0.52, ct))));
+        if (rig.girl) rig.girl.quaternion.copy(rig.girlB).multiply(qa(AX_Y, -0.45 * (1 - ss(0.12, 0.52, ct))));   // 學妹早已等待，只微回頭（非『被叫才轉』）；主動抬頭看見留給學長
         if (rig.boy) rig.boy.quaternion.copy(rig.boyB).multiply(qa(AX_X, -0.45 * (1 - ss(0.46, 0.76, ct))));
         var bf = ss(0.55, 0.84, ct);
-        rig.blush.forEach(function (o) { o.scale.copy(o.userData.s0).multiplyScalar(1 + 0.42 * bf); var em = o.userData.m.emissive; if (em) em.setRGB(0.6 * bf, 0.2 * bf, 0.17 * bf); });
+        rig.blush.forEach(function (o) { var f = o.userData.girl ? 1.0 : 0.55; o.scale.copy(o.userData.s0).multiplyScalar(1 + 0.42 * bf * f); var em = o.userData.m.emissive; if (em) em.setRGB(0.6 * bf * f, 0.2 * bf * f, 0.17 * bf * f); });   // 學妹臉紅較重（她『被光點亮』的時刻），學長淡一點
         var KF = [[0.0, 0.75, 0.12, 4.0, 0, 1.10], [0.42, 0.95, 0.05, 2.2, 0, 1.40], [0.68, 0.98, 0.04, 1.6, 0.0, 1.48], [1.0, 1.02, 0.04, 1.22, 0.0, 1.50]];
         var ki = 0; while (ki < KF.length - 1 && ct > KF[ki + 1][0]) ki++;
         var ka = KF[ki], kb = KF[Math.min(ki + 1, KF.length - 1)], ku = ss(ka[0], kb[0], ct);
