@@ -6,8 +6,8 @@
  *  - 只有從 console 主動呼叫 window.__CLEAN_CHARS__.enable() 才會建立一個獨立的全螢幕
  *    overlay（自己的 canvas + three.js 場景），載入 clean 綁骨角色一眼瞬間。
  *  - 完全不觸碰 minified renderer.js / 主場景；overlay 疊在最上層，可 disable() 拆除。
- *  - GLB 目前指向本機開發路徑 tools/blender/（gitignored，未部署）。正式部署（Stage 5）
- *    才會把 GLB 搬進已追蹤的 assets/ 並改下方 SCENE_URL。
+ *  - GLB 在 assets/lm402/characters/onelook_scene.glb（已追蹤、會部署）；flag 仍預設 OFF，
+ *    訪客零影響，GLB 只在 enable() / ?cleanchars 時才 lazy fetch（.glb 走 STATIC cache-first）。
  *  - enable() 任一步失敗（含 production 上 GLB 不存在）→ 一律走 disable() 完整拆除，
  *    不留卡死 overlay；所有 window listener 用 AbortController 綁，disable() 一次清掉。
  */
@@ -15,7 +15,7 @@
   'use strict';
   if (window.__CLEAN_CHARS__) return;
 
-  var SCENE_URL = 'tools/blender/onelook_scene.glb'; // Stage 5 部署時改 assets/lm402/
+  var SCENE_URL = 'assets/lm402/characters/onelook_scene.glb'; // 部署版場景（refined 角色一眼瞬間）
   var state = { enabled: false, root: null, raf: 0, renderer: null, ac: null, observer: null };
 
   function byMat(obj, re) {
@@ -92,7 +92,7 @@
 
     var g;
     try { g = await new GLTFLoader().loadAsync(SCENE_URL); }
-    catch (e) { console.error('[clean-chars] GLB 載入失敗（部署前 GLB 仍在 gitignored tools/，production 預期失敗）:', e); disable(); return; }
+    catch (e) { console.error('[clean-chars] GLB 載入失敗（assets/lm402/characters/onelook_scene.glb）:', e); disable(); return; }
     if (!state.enabled) return;  // disable() 在 await 期間被呼叫
     scene.add(g.scene);
     g.scene.traverse(function (o) { if (o.isMesh) { o.castShadow = !(o.material && o.material.transparent); o.receiveShadow = true; } });
