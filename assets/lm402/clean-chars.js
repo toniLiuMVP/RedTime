@@ -78,15 +78,15 @@
     state.renderer = renderer;
     renderer.setPixelRatio(Math.min(mobile ? 1.5 : 2, devicePixelRatio));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.18;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.3;
     renderer.shadowMap.enabled = true;
-    var scene = new THREE.Scene(); scene.background = new THREE.Color(0xb3a79c);
+    var scene = new THREE.Scene(); scene.background = new THREE.Color(0xe6e7e2);
     var camera = new THREE.PerspectiveCamera(46, 1, 0.05, 200);
-    var sun = new THREE.DirectionalLight(0xffcd86, 4.2); sun.position.set(-6, 4, 3.5); sun.target.position.set(0.3, 1.2, 0); sun.castShadow = true; sun.shadow.mapSize.set(mobile ? 1024 : 2048, mobile ? 1024 : 2048);
+    var sun = new THREE.DirectionalLight(0xfdfbf4, 5.0); sun.position.set(-6, 4, 3.5); sun.target.position.set(0.3, 1.2, 0); sun.castShadow = true; sun.shadow.mapSize.set(mobile ? 1024 : 2048, mobile ? 1024 : 2048);
     var sc = sun.shadow.camera; sc.left = -4; sc.right = 4; sc.top = 4; sc.bottom = -1; sc.near = 0.5; sc.far = 20;
     scene.add(sun, sun.target);
-    scene.add(new THREE.HemisphereLight(0xffe6c4, 0x4a4038, 0.55));
-    var fill = new THREE.PointLight(0xffd9b0, 7, 6, 2); fill.position.set(0.15, 1.62, 0.85); scene.add(fill);
+    scene.add(new THREE.HemisphereLight(0xeaf0ff, 0x8e887e, 0.72));
+    var fill = new THREE.PointLight(0xfff4ea, 7, 6, 2); fill.position.set(0.15, 1.62, 0.85); scene.add(fill);
     var AX_Y = new THREE.Vector3(0, 1, 0), AX_X = new THREE.Vector3(1, 0, 0);
     var qa = function (ax, a) { return new THREE.Quaternion().setFromAxisAngle(ax, a); };
 
