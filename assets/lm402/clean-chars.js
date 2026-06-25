@@ -124,7 +124,7 @@
       var shadowTex = (function () {
         var c = document.createElement('canvas'); c.width = c.height = 128; var x2 = c.getContext('2d');
         var rg = x2.createRadialGradient(64, 64, 3, 64, 64, 62);
-        rg.addColorStop(0, 'rgba(16,14,12,0.5)'); rg.addColorStop(0.55, 'rgba(16,14,12,0.2)'); rg.addColorStop(1, 'rgba(16,14,12,0)');
+        rg.addColorStop(0, 'rgba(14,12,10,0.66)'); rg.addColorStop(0.5, 'rgba(14,12,10,0.34)'); rg.addColorStop(1, 'rgba(14,12,10,0)');
         x2.fillStyle = rg; x2.fillRect(0, 0, 128, 128);
         var t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
       })();
@@ -132,7 +132,7 @@
       [rig.boy, rig.girl].forEach(function (b) {
         if (!b) return;
         var wp = new THREE.Vector3(); b.getWorldPosition(wp);
-        var sh = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.34), new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false, toneMapped: false }));
+        var sh = new THREE.Mesh(new THREE.PlaneGeometry(0.56, 0.4), new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false, toneMapped: false }));
         sh.rotation.x = -Math.PI / 2; sh.position.set(wp.x, floorY + 0.01, wp.z);
         scene.add(sh);
       });
