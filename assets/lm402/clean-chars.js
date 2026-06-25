@@ -49,10 +49,11 @@
     var myToken = {}; state.token = myToken;   // 本輪 enable 的身分；await 回來只認自己這輪（防快速 disable→enable 疊兩層）
     var ac = new AbortController(); state.ac = ac; var sig = ac.signal;
 
-    var THREE, GLTFLoader;
+    var THREE, GLTFLoader, DRACOLoader;
     try {
       THREE = await import('./vendor-three.module.js');
       GLTFLoader = (await import('./GLTFLoader.js')).GLTFLoader;
+      DRACOLoader = (await import('./DRACOLoader.js')).DRACOLoader;   // onelook GLB 已 Draco 壓縮，需解碼器
     } catch (e) { console.error('[clean-chars] three.js 模組載入失敗:', e); disable(); return; }
     if (state.token !== myToken) return;  // disable() 在模組 import await 期間發生 → 放棄這一輪（防孤兒 context/DOM）
 
@@ -103,7 +104,11 @@
     var qa = function (ax, a) { return new THREE.Quaternion().setFromAxisAngle(ax, a); };
 
     var g;
-    try { g = await new GLTFLoader().loadAsync(SCENE_URL); }
+    try {
+      var _gl = new GLTFLoader();
+      var _draco = new DRACOLoader(); _draco.setDecoderPath('assets/lm402/draco/'); _gl.setDRACOLoader(_draco);   // classical script 不能用 import.meta，用頁面相對路徑
+      g = await _gl.loadAsync(SCENE_URL);
+    }
     catch (e) { console.error('[clean-chars] GLB 載入失敗（assets/lm402/characters/onelook_scene.glb）:', e); disable(); return; }
     if (state.token !== myToken) return;  // disable() 或新的 enable() 在 await 期間發生 → 放棄這一輪
     state.scene = scene;   // 供 disable() dispose
