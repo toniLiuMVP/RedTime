@@ -7,9 +7,9 @@
 
 // — Cache version 分離 —
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
-const STATIC_VERSION = 'static-v38-20260625';  // bump: LM402 prop GLBs Draco-compressed (1.16MB->0.58MB) overwrite cached originals
+const STATIC_VERSION = 'static-v39-20260625';  // bump: vendor engine build
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v199-20260625';   // bump every deploy that changes html/js/css; auto-reload then delivers the fix to clients still on the prior worker
+const RUNTIME_VERSION = 'runtime-v200-20260625';   // bump every deploy that changes html/js/css; auto-reload then delivers the fix to clients still on the prior worker
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
@@ -17,8 +17,13 @@ const ALL_CURRENT_CACHES = new Set([STATIC_CACHE, RUNTIME_CACHE]);
 
 // — 大型不變 asset:STATIC_CACHE —
 const STATIC_PRECACHE_URLS = [
-  // 月台奔跑共用 three.module(單一副本,platform-run 使用)
+  // three.js engine build (shared vendor module + core)
   '/RedTime/demos/_vendor/three.module.js',
+  '/RedTime/assets/lm402/vendor-three.module.js',
+  '/RedTime/assets/lm402/three.core.js',
+  // Draco geometry decoder (shared)
+  '/RedTime/assets/lm402/draco/draco_wasm_wrapper.js',
+  '/RedTime/assets/lm402/draco/draco_decoder.wasm',
   // 共用 assets
   '/RedTime/fonts/fonts.css',
   '/RedTime/assets/og-image.jpg',

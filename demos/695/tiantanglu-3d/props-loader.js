@@ -1,18 +1,24 @@
 /* ──────────────────────────────────────────────────────────────────────────
    Blender 寫實道具載入器(天堂路)
-   - decoder-free GLB → 用 plain GLTFLoader,不需 DRACOLoader
+   - Draco 壓縮 GLB → GLTFLoader + DRACOLoader(decoder 共用 assets/lm402/draco/)
    - 非阻塞:dynamic import + 逐一鏈式載入,任何失敗只 console.warn,不影響場景
    - raycast 關閉:道具是裝飾,不擋射擊/互動/碰撞
    - 預設開;window.__SCENE_PROPS__.show(false) 可隱藏,.list() 看已載入
    ────────────────────────────────────────────────────────────────────────── */
 import { GLTFLoader } from "../../_vendor/GLTFLoader.js";
+import { DRACOLoader } from "../../_vendor/DRACOLoader.js";
 
 export function loadSceneProps(THREE, parent, opts) {
   const base = (opts && opts.base) || "./props/";
   const items = (opts && opts.items) || [];
   const loaded = [];
   let loader;
-  try { loader = new GLTFLoader(); }
+  try {
+    loader = new GLTFLoader();
+    const draco = new DRACOLoader();
+    draco.setDecoderPath(new URL("../../../assets/lm402/draco/", import.meta.url).href);
+    loader.setDRACOLoader(draco);
+  }
   catch (e) { console.warn("[props] GLTFLoader init failed:", e && e.message); return { loaded }; }
 
   const group = new THREE.Group();

@@ -1,18 +1,24 @@
 /* ──────────────────────────────────────────────────────────────────────────
    Blender 寫實道具載入器(月台上的狂奔)
-   - decoder-free GLB → plain GLTFLoader,不需 DRACOLoader
+   - Draco 壓縮 GLB → GLTFLoader + DRACOLoader(decoder 共用 assets/lm402/draco/)
    - 非阻塞 dynamic import;失敗只 warn,不影響場景
    - 可選 replace:隱藏同名程序物件,用 GLB 取代(非破壞,只切 visible)
    - 預設開;window.__SCENE_PROPS__.show(false) 可隱藏
    ────────────────────────────────────────────────────────────────────────── */
 import { GLTFLoader } from "../_vendor/GLTFLoader.js";
+import { DRACOLoader } from "../_vendor/DRACOLoader.js";
 
 export function loadSceneProps(THREE, scene, parent, opts) {
   const base = (opts && opts.base) || "./props/";
   const items = (opts && opts.items) || [];
   const loaded = [];
   let loader;
-  try { loader = new GLTFLoader(); }
+  try {
+    loader = new GLTFLoader();
+    const draco = new DRACOLoader();
+    draco.setDecoderPath(new URL("../../assets/lm402/draco/", import.meta.url).href);
+    loader.setDRACOLoader(draco);
+  }
   catch (e) { console.warn("[props] GLTFLoader init failed:", e && e.message); return { loaded }; }
 
   const group = new THREE.Group();
