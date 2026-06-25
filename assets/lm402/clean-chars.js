@@ -54,6 +54,7 @@
       THREE = await import('./vendor-three.module.js');
       GLTFLoader = (await import('./GLTFLoader.js')).GLTFLoader;
     } catch (e) { console.error('[clean-chars] three.js 模組載入失敗:', e); disable(); return; }
+    if (state.token !== myToken) return;  // disable() 在模組 import await 期間發生 → 放棄這一輪（防孤兒 context/DOM）
 
     // 全螢幕 overlay（z-index 拉滿蓋掉 live 頁面文字層）
     var host = document.createElement('div');
@@ -89,7 +90,7 @@
     renderer.shadowMap.enabled = !mobile;   // 行動裝置關陰影：與主場景並存的第二個 WebGL context 已很吃 GPU
     var scene = new THREE.Scene(); scene.background = new THREE.Color(0xe6e7e2);
     var camera = new THREE.PerspectiveCamera(46, 1, 0.05, 200);
-    var sun = new THREE.DirectionalLight(0xfdfbf4, 5.0); sun.position.set(-6, 4, 3.5); sun.target.position.set(0.3, 1.2, 0); sun.castShadow = true; sun.shadow.mapSize.set(mobile ? 1024 : 2048, mobile ? 1024 : 2048);
+    var sun = new THREE.DirectionalLight(0xfdfbf4, 5.0); sun.position.set(-6, 4, 3.5); sun.target.position.set(0.3, 1.2, 0); sun.castShadow = true; sun.shadow.mapSize.set(mobile ? 512 : 1024, mobile ? 512 : 1024);
     var sc = sun.shadow.camera; sc.left = -4; sc.right = 4; sc.top = 4; sc.bottom = -1; sc.near = 0.5; sc.far = 20;
     scene.add(sun, sun.target);
     scene.add(new THREE.HemisphereLight(0xeaf0ff, 0x8e887e, 0.72));
