@@ -7,9 +7,9 @@
 
 // — Cache version 分離 —
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
-const STATIC_VERSION = 'static-v29-20260625';  // bump: junior vertex-color facial depth (nose/philtrum/eye corners) overwrites cached original
+const STATIC_VERSION = 'static-v30-20260625';  // bump: senior all-out facial detail pass overwrites cached original
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v188-20260625';   // bump every deploy that changes html/js/css; auto-reload then delivers the fix to clients still on the prior worker
+const RUNTIME_VERSION = 'runtime-v189-20260625';   // bump every deploy that changes html/js/css; auto-reload then delivers the fix to clients still on the prior worker
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
