@@ -142,6 +142,7 @@ assets/sw-register.js
 /demos/platform-run-parallel/
 /demos/platform-run-time.html
 /demos/platform-run/three.module.js
+/demos/_vendor/three.core.js
 
 # Local iteration screenshots
 /*.jpeg
