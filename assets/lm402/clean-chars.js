@@ -119,6 +119,25 @@
     heads.sort(function (a, b) { return a.userData.wx - b.userData.wx; });
     if (heads.length >= 2) { rig.boy = heads[0]; rig.girl = heads[heads.length - 1]; rig.boyB = rig.boy.quaternion.clone(); rig.girlB = rig.girl.quaternion.clone(); }
 
+    // 接觸陰影：每位角色腳下一片 radial 柔影 plane（落地感，非浮空）。加到 scene → disable() 一併 dispose，零洩漏。
+    try {
+      var shadowTex = (function () {
+        var c = document.createElement('canvas'); c.width = c.height = 128; var x2 = c.getContext('2d');
+        var rg = x2.createRadialGradient(64, 64, 3, 64, 64, 62);
+        rg.addColorStop(0, 'rgba(16,14,12,0.5)'); rg.addColorStop(0.55, 'rgba(16,14,12,0.2)'); rg.addColorStop(1, 'rgba(16,14,12,0)');
+        x2.fillStyle = rg; x2.fillRect(0, 0, 128, 128);
+        var t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+      })();
+      var floorY = new THREE.Box3().setFromObject(g.scene).min.y;
+      [rig.boy, rig.girl].forEach(function (b) {
+        if (!b) return;
+        var wp = new THREE.Vector3(); b.getWorldPosition(wp);
+        var sh = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.34), new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false, toneMapped: false }));
+        sh.rotation.x = -Math.PI / 2; sh.position.set(wp.x, floorY + 0.01, wp.z);
+        scene.add(sh);
+      });
+    } catch (e) { console.warn('[clean-chars] 接觸陰影建立失敗（忽略）:', e); }
+
     var az = 0.95, el = 0.04, dist = 2.3, target = new THREE.Vector3(0, 1.35, 0);
     function applyCam() { camera.position.set(target.x + dist * Math.cos(el) * Math.sin(az), target.y + dist * Math.sin(el), target.z + dist * Math.cos(el) * Math.cos(az)); camera.lookAt(target); }
     var drag = false, px = 0, py = 0;
