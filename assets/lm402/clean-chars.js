@@ -95,7 +95,7 @@
     scene.add(new THREE.HemisphereLight(0xeaf0ff, 0x8e887e, 0.72));
     var fill = new THREE.PointLight(0xfff4ea, 7, 6, 2); fill.position.set(0.15, 1.62, 0.85); scene.add(fill);
     // canon 走廊逆光：冷白背光從窗/走廊側打進來，給角色逆光輪廓 + 把地板照得過分地亮
-    var back = new THREE.DirectionalLight(0xf2f7ff, 5.2); back.position.set(-7, 3.5, -2.5); back.target.position.set(0.1, 1.3, 0); scene.add(back, back.target);
+    var back = new THREE.DirectionalLight(0xf2f7ff, 5.8); back.position.set(-7, 3.5, -2.5); back.target.position.set(0.1, 1.3, 0); scene.add(back, back.target);
     // canon「那光的年紀是十八歲／把地板照得過分地亮」：朝地冷白補光，走廊側地板過曝發亮
     var floorGlow = new THREE.DirectionalLight(0xf4f8ff, 2.0); floorGlow.position.set(-3, 3, -1.5); floorGlow.target.position.set(-1.0, 0, -0.5); scene.add(floorGlow, floorGlow.target);
     var AX_Y = new THREE.Vector3(0, 1, 0), AX_X = new THREE.Vector3(1, 0, 0);
