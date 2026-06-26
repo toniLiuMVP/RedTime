@@ -47,6 +47,19 @@ function getViewportBucket() {
     : "mobile_portrait";
 }
 
+/* 手機直立採「遊戲小說」版面:對話卡不走浮動/拖曳面板,改由 CSS 釘成
+   固定底部 sheet(滿版、不透明、選項常駐可見),3D 當沉浸背景。 */
+const VN_DOCK_PANELS = new Set(["dialogue"]);
+function isVnDock(panel) {
+  // 閘門對齊 .dialogue-card.vn-docked 的 CSS media query(max-width:1080 + portrait),
+  // 而非 800px bucket — 否則 800~1080px 直立(iPad/折疊機)rotate-lock 已移除卻
+  // 沒套 bottom sheet,對話掉回浮動卡(選項又被切)。JS 閘 == CSS 閘 = 零落差。
+  return (
+    VN_DOCK_PANELS.has(panel.id) &&
+    window.matchMedia("(max-width: 1080px) and (orientation: portrait)").matches
+  );
+}
+
 function readStore() {
   try {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
@@ -353,6 +366,17 @@ function toggleTranscriptMaximize(id = "transcript") {
 
 function applyPanelLayout(panel) {
   if (!panel?.el) return;
+  /* 手機直立:對話卡釘成固定底部 sheet,清掉浮動 inline 樣式交給 CSS。
+     旋轉回橫向/桌面時 isVnDock 變 false,下面照常套用浮動版面。 */
+  if (isVnDock(panel)) {
+    panel.el.classList.add("vn-docked");
+    panel.el.classList.remove("ui-has-pos");
+    const s = panel.el.style;
+    s.position = s.left = s.top = s.right = s.bottom = "";
+    s.width = s.height = s.maxWidth = s.maxHeight = s.transform = "";
+    return;
+  }
+  panel.el.classList.remove("vn-docked");
   /* 非可縮放的提示藥丸（focus/hint/objective 等）：使用者沒拖曳過就維持
      CSS 排版。初始化時這些元素還是 0 尺寸，generic fallback 會把它們
      釘到視窗左上 (pad,pad) 蓋住設定選單，並被 saveLayouts 持久化。 */
@@ -496,6 +520,7 @@ function attachGlobalPointerCleanup() {
 
 function beginGesture(panel, event, mode) {
   if (!panel?.el || event.button > 0) return;
+  if (isVnDock(panel)) return;   // 手機直立對話卡固定底部,不可拖曳
   if (event.target.closest("button")) return;
   activeGesture.panelId = panel.id;
   activeGesture.pointerId = event.pointerId;

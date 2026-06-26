@@ -3678,6 +3678,14 @@ function bindUI() {
       dom.body.classList.remove("landscape-prompt");
     });
   }
+  // req 2:手機直立 = 完整可玩的遊戲小說,預設自動維持直向(不再用全屏卡片硬鎖
+  //   隱藏 UI)。橫向建議改成入口的一行細提示(page-c1.js 於 DOMContentLoaded 顯示);
+  //   內建瀏覽器→原生瀏覽器提示交給 inapp-banner.js(可關閉橫幅)。
+  if (isMobileLayout()) {
+    portraitOptIn = true;
+    dom.body.classList.remove("landscape-prompt");
+    if (dom.rotateLock) dom.rotateLock.hidden = true;
+  }
   dom.interactBtn.addEventListener("click", openActiveInteraction);
   dom.inspectBtn.addEventListener("click", () => {
     if (state.activeHotspot) {

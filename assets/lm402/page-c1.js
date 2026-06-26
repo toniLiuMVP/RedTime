@@ -33,4 +33,18 @@ document.addEventListener("visibilitychange", function () {
 window.addEventListener("pagehide", stopAllAudio);
 // beforeunload：再保險一道
 window.addEventListener("beforeunload", stopAllAudio);
+
+// req 2:手機直立時,入口畫面顯示一行「建議橫向」細提示（溫和、不阻擋；
+//   直立本身已是完整可玩的遊戲小說體驗）。
+document.addEventListener("DOMContentLoaded", function () {
+  try {
+    var coarseOrSmall =
+      window.matchMedia("(max-width: 1080px)").matches ||
+      window.matchMedia("(pointer: coarse)").matches;
+    if (coarseOrSmall && window.innerHeight > window.innerWidth) {
+      var gateHint = document.getElementById("gate-portrait-hint");
+      if (gateHint) gateHint.hidden = false;
+    }
+  } catch (e) {}
+});
 })();

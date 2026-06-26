@@ -2407,6 +2407,10 @@ body.landscape-prompt .debug-panel {
   .debug-panel {
     display: none;
   }
+  /* req 2:入口橫向細提示(由 app.js 在直立時取消 hidden);溫和不阻擋 */
+  .gate-portrait-hint {
+    font-size: 12.5px;
+  }
   /* 直向手機：頂部工具列重排成「左欄 + 右欄 + 置中手錶」，避免單排擠成一團互相重疊 */
   /* 左欄：字體大小（第一排）→ 視角速度（第二排） */
   .font-widget {
@@ -2484,6 +2488,63 @@ body.landscape-prompt .debug-panel {
   .dialogue-card {
     max-height: 85vh;
     overflow-y: auto;
+  }
+  /* ── 遊戲小說 (visual novel) 底部 sheet ──
+     對話卡釘在底部、滿版、近不透明,劇情文字當主角清楚可讀;
+     copy 區內捲、choices 永遠固定可見可點(修「看不到互動選項」bug)。
+     3D 場景從上方透出當沉浸背景。.vn-docked 由 ui-panels.js 在 mobile_portrait 加。 */
+  .dialogue-card.vn-docked {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    transform: none;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: min(74vh, 74dvh);
+    border-radius: 22px 22px 0 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    padding: 16px 18px calc(16px + env(safe-area-inset-bottom));
+    background: #080b12f7;
+    box-shadow: 0 -18px 44px -14px #000c;
+    cursor: default;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .dialogue-card.vn-docked .dialogue-title {
+    font-size: 30px;
+    margin-top: 2px;
+  }
+  .dialogue-card.vn-docked .dialogue-copy {
+    max-height: none;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    font-size: 1.06rem;
+  }
+  .dialogue-card.vn-docked .dialogue-choices {
+    flex: 0 0 auto;
+    margin-top: 12px;
+  }
+  .dialogue-card.vn-docked .dialogue-close {
+    top: 12px;
+    right: 12px;
+  }
+  /* VN:對話開啟時不整屏模糊,3D 透出當背景,只底部漸暗襯托 sheet */
+  .dialogue-sheet .dialogue-scrim {
+    background: linear-gradient(
+      to bottom,
+      #03050800 36%,
+      #030508a6 76%,
+      #030508cc 100%
+    );
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
   .transcript-box {
     max-height: 50vh;
