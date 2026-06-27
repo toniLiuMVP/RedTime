@@ -4241,6 +4241,50 @@
       }
       body.day-mode .tl-readout b { color: #9a5a1a; }
       body.day-mode .tl-honest { color: #56716e; }
+      /* 提案3 相對論情書彩蛋:預設藏起來,拖到世界的中心才 .revealed */
+      .tl-egg {
+        display: none;
+        margin-top: 12px;
+        padding: 13px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(232, 150, 120, 0.34);
+        background: linear-gradient(180deg, rgba(232, 150, 120, 0.09), rgba(232, 150, 120, 0.02));
+      }
+      .tl-egg.revealed {
+        display: block;
+        animation: tleFade 1.1s ease both;
+      }
+      @keyframes tleFade {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .tle-mark {
+        font: 600 11.5px/1.5 "Noto Sans TC", sans-serif;
+        color: #e8a07a;
+        margin-bottom: 9px;
+        letter-spacing: 0.02em;
+      }
+      .tle-body {
+        font: 400 13.5px/2.05 "Noto Serif TC", serif;
+        color: #f0d9c8;
+      }
+      .tle-foot {
+        margin-top: 10px;
+        font-size: 11px;
+        line-height: 1.7;
+        color: #b98e76;
+        font-style: italic;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .tl-egg.revealed { animation: none; }
+      }
+      body.day-mode .tl-egg {
+        border-color: rgba(180, 90, 50, 0.32);
+        background: linear-gradient(180deg, rgba(180, 90, 50, 0.07), rgba(180, 90, 50, 0.02));
+      }
+      body.day-mode .tle-mark { color: #b5572a; }
+      body.day-mode .tle-body { color: #4a3225; }
+      body.day-mode .tle-foot { color: #8a5a3a; }
       /* per-EP 科普小單元（mirrors .ep-granny with teal） */
       .ep-science {
         margin-bottom: 16px;
@@ -10124,6 +10168,11 @@
           + '<div class="tl-scale"><span>遠遠看著</span><span>世界的中心</span></div>'
           + '<div class="tl-readout">外面過了 <b>1 秒</b>，這一眼裡，也只是 <b>1 秒</b></div>'
           + '<div class="tl-honest">誠實說：人的質量太小，靠近誰都不會真的讓時鐘變慢。這裡是<b>主觀心理時間</b>的文學比喻，借一條真定律，說一個「一眼只有一秒，卻用了二十年」的真心。</div>'
+          + '<div class="tl-egg" aria-live="polite">'
+          + '<div class="tle-mark">💌 一張只在「世界的中心」才會出現的紙條（這是情書，不是論文）</div>'
+          + '<div class="tle-body">設妳是我參考系的原點。<br>由重力時間膨脹，妳的質量讓我這一端的時間變慢，<br>所以和妳在一起，一秒鐘可以過得比一輩子還長。<br>又由 E＝mc²，妳在我心裡的質量很大，<br>而光速是宇宙的極限，<br>我對妳的能量因此大到沒有上限。<br>故得證：我愛妳，而且這份愛沒有上界。∎</div>'
+          + '<div class="tle-foot">每一步都不符合物理，但每一步都是真的。</div>'
+          + '</div>'
           + '</div>';
       }
       function updateTimeLab(slider) {
@@ -10135,6 +10184,8 @@
         else if (t >= 0.97) feel = '二十年';
         else feel = Math.pow(20, t).toFixed(1) + ' 年';
         out.innerHTML = '外面過了 <b>1 秒</b>，這一眼裡，過了 <b>' + feel + '</b>';
+        // 提案3 彩蛋:拖到「世界的中心」(t≈1)解鎖相對論情書,解鎖後常駐
+        if (t >= 0.97) { var egg = lab.querySelector('.tl-egg'); if (egg) egg.classList.add('revealed'); }
       }
       function buildScience(s) {
         /* render 1-2 博士 badges (中英對照 via title tooltip) */
