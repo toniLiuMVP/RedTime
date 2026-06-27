@@ -8521,28 +8521,13 @@
       function resumeReading() {
         const saved = Number(loadPref(PREF_KEYS.progress));
         if (Number.isNaN(saved)) return;
-        goToEp(saved);
-        // 章內續讀:落到該集後,前進 ratio×集高,回到上次離開的章內位置(只在比例屬於同一集才套用)
+        // 章內續讀:把比例直接交給 goToEp,由它同一條校正迴圈把落點釘在 top+ratio×集高
+        // (舊版另起 poll 套用會與 goToEp 校正迴圈互搶、且手機 window.scrollBy 打不到 scroller→落章首)
         var raw = ""; try { raw = localStorage.getItem("redtime_ep_ratio_v1") || ""; } catch (e) {}
         var parts = raw.split(":");
         var rEp = parseInt(parts[0], 10);
         var ratio = parseFloat(parts[1] || "0");
-        if (rEp === saved && ratio > 0.03) {
-          var tries = 0;
-          var apply = function () {
-            tries++;
-            var sec = document.getElementById("ep-" + saved);
-            if (sec && (typeof currentEpNum === "undefined" || currentEpNum === saved || tries >= 8)) {
-              var host = _liveScrollHost(); // 視窗捲動版面回傳 null
-              var extra = ratio * sec.offsetHeight;
-              if (host) host.scrollTop = host.scrollTop + extra;
-              else window.scrollBy(0, extra);
-              return;
-            }
-            if (tries < 12) setTimeout(apply, 220);
-          };
-          setTimeout(apply, 750); // 等 goToEp 的多階校正先落定
-        }
+        goToEp(saved, (rEp === saved && ratio > 0.03) ? ratio : 0);
       }
       // 章內續讀:debounced 存「當前章節:章內捲動比例」。content-visibility lazy-render 下絕對 scrollTop
       // 跨 session 不可靠(冷載各集用 intrinsic-size 估高),故改存相對該集的比例,resume 時前進 ratio×真實集高。
@@ -9963,7 +9948,7 @@
           if (cur !== h) history.replaceState(null, '', location.pathname + location.search + h);
         } catch (e) {}
       }
-      function goToEp(n) {
+      function goToEp(n, ratio) {
         const target = document.getElementById("ep-" + n);
         if (!target) return;
         _syncEpHash(n);
@@ -9986,10 +9971,12 @@
         const host = _liveScrollHost();
         const rectTop = () => target.getBoundingClientRect().top;
         const baseTop = () => (host ? host.getBoundingClientRect().top : 0);
+        // 章內續讀:ratio>0 時落點往下推 ratio×集高(reading line 落在該集 ratio 處,而非集頂);校正迴圈同步用此目標
+        const xtra = () => (ratio || 0) * target.offsetHeight;
         if (host) {
           _instantScroll(
             host,
-            Math.max(0, rectTop() - baseTop() + host.scrollTop - topOffset - 8),
+            Math.max(0, rectTop() - baseTop() + host.scrollTop - topOffset - 8 + xtra()),
           );
         } else {
           _instantScroll(
@@ -9997,7 +9984,8 @@
             (window.scrollY || document.documentElement.scrollTop || 0) +
               rectTop() -
               topOffset -
-              8,
+              8 +
+              xtra(),
           );
         }
         function correction(onDone) {
@@ -10006,7 +9994,7 @@
           function step() {
             if (gen !== _jumpGen) { document.body.classList.remove("hash-jumping"); return; }
             corr++;
-            const delta = rectTop() - (baseTop() + topOffset + 8);
+            const delta = rectTop() - (baseTop() + topOffset + 8) + xtra();
             if (Math.abs(delta) <= 3) stable++;
             else {
               stable = 0;
