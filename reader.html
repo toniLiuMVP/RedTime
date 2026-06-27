@@ -2695,6 +2695,41 @@
         margin-bottom: 6px;
       }
       body.day-mode .lit-src { color: rgba(122, 100, 80, 0.55); }
+      /* 機車紙條彩蛋 */
+      .moto-note-egg {
+        margin: 18px 0 6px;
+        padding: 13px 15px;
+        border-radius: 12px;
+        border: 1px dashed rgba(232, 150, 120, 0.4);
+        background: linear-gradient(180deg, rgba(232, 150, 120, 0.08), rgba(232, 150, 120, 0.02));
+      }
+      .mne-lead {
+        font: 500 12.5px/1.7 "Noto Sans TC", sans-serif;
+        color: rgba(232, 160, 122, 0.95);
+        margin-bottom: 9px;
+      }
+      .mne-links { display: flex; flex-wrap: wrap; gap: 7px; }
+      .mne-link {
+        padding: 3px 11px;
+        border-radius: 8px;
+        border: 1px solid rgba(232, 150, 120, 0.4);
+        background: rgba(232, 150, 120, 0.1);
+        color: rgba(240, 180, 150, 0.95);
+        font: 600 11.5px/1 "DM Mono", monospace;
+        cursor: pointer;
+        transition: background 0.18s;
+      }
+      .mne-link:hover { background: rgba(232, 150, 120, 0.24); }
+      body.day-mode .moto-note-egg {
+        border-color: rgba(180, 90, 50, 0.34);
+        background: linear-gradient(180deg, rgba(180, 90, 50, 0.07), rgba(180, 90, 50, 0.02));
+      }
+      body.day-mode .mne-lead { color: #a85a30; }
+      body.day-mode .mne-link {
+        border-color: rgba(180, 90, 50, 0.4);
+        background: rgba(180, 90, 50, 0.1);
+        color: #8a4520;
+      }
       .lit-comment {
         font-family: "Noto Sans TC", sans-serif;
         font-size: 12.6px;
@@ -8924,6 +8959,7 @@
         const bd = document.createElement("div");
         bd.className = "ep-body";
         bd.innerHTML = ep.html;
+        _injectMotoNote(bd, ep.ep); /* 機車紙條彩蛋:在紙條段落後注入「同一張紙條」跨集連結(不改故事正文) */
         sec.querySelector(".ep-body-wrap").appendChild(bd);
         cont.appendChild(sec);
         // 跨媒介連接:特定集數結尾 → 對應 3D 場景(純 DOM 導航,零 innerHTML,不動故事 html)
@@ -9358,6 +9394,38 @@
           document.body.appendChild(ta); ta.select();
           document.execCommand('copy'); document.body.removeChild(ta);
         } catch (e) {}
+      }
+      // 機車紙條彩蛋:同一張「我走了，你要好好照顧自己」的紙條逐字出現在 EP2/12/24/26/40 故事正文。
+      // 渲染後在紙條段落「之後」插入一條跨集連結(不觸碰故事 HTML 本身)。
+      function _injectMotoNote(bd, epNum) {
+        var NOTE_EPS = [2, 12, 24, 26, 40];
+        if (NOTE_EPS.indexOf(epNum) === -1 || !bd) return;
+        var nodes = bd.querySelectorAll("p, div");
+        var target = null;
+        for (var i = 0; i < nodes.length; i++) {
+          if (nodes[i].textContent.indexOf("你要好好照顧自己") !== -1) {
+            if (!target || nodes[i].textContent.length < target.textContent.length) target = nodes[i];
+          }
+        }
+        if (!target) return;
+        var ann = document.createElement("div");
+        ann.className = "moto-note-egg";
+        var lead = document.createElement("div");
+        lead.className = "mne-lead";
+        lead.textContent = "✦ 同一張機車紙條 · 它在故事裡反覆被看見，也在這幾集出現：";
+        ann.appendChild(lead);
+        var links = document.createElement("div");
+        links.className = "mne-links";
+        NOTE_EPS.forEach(function (n) {
+          if (n === epNum) return;
+          var a = document.createElement("button");
+          a.type = "button"; a.className = "mne-link";
+          a.textContent = "EP" + n;
+          a.onclick = function () { goToEp(n); };
+          links.appendChild(a);
+        });
+        ann.appendChild(links);
+        target.parentNode.insertBefore(ann, target.nextSibling);
       }
       function renderBookmarkBar() {
         var bar = document.getElementById("jp-bookmarks");
