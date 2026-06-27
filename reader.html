@@ -9675,8 +9675,9 @@
         return d;
       }
       // 單人模式：隨機 1-10 位文人的名句／評語
-      // 外國作者:其名句多為中文譯本,譯者另享著作權 → 顯示譯本標示(出處欄)
-      var FOREIGN_AUTHORS = new Set(['聶魯達', '葉慈', '泰戈爾', '聖修伯里', '里爾克', '紀伯倫', '普希金', '莎士比亞', '狄金森', '濟慈', '歌德', '雨果', '波特萊爾', '惠特曼', '海涅']);
+      // 外國作者:其名句多為中文譯本,譯者另享著作權 → 顯示譯本標示。
+      // 以 era 的外國地區/流派標記判定(自動涵蓋新增作者與譯名變體,且不誤判中文朝代)
+      var FOREIGN_ERA = /英國|美國|法國|德國|俄國|俄羅斯|義大利|西班牙|葡萄牙|智利|阿根廷|印度|愛爾蘭|蘇格蘭|黎巴嫩|希臘|波蘭|奧地利|捷克|丹麥|挪威|瑞典|荷蘭|匈牙利|德語|浪漫主義|文藝復興|維多利亞|現代主義/;
       function _renderSolo(body, ep, pool) {
         const count = Math.min(pool.length, Math.floor(Math.random() * 10) + 1);
         const picks = _sampleLiterati(pool, count);
@@ -9686,7 +9687,7 @@
           card.appendChild(_litDiv("lit-who", (stDisplayName(e.who) || "佚名") + (e.era ? "　·　" + e.era : "")));
           if (e.kind === "quote" && e.quote) {
             card.appendChild(_litDiv("lit-quote", "「" + e.quote + "」"));
-            if (FOREIGN_AUTHORS.has(e.who)) card.appendChild(_litDiv("lit-src", "中文譯本 · 譯者著作權歸各譯者"));
+            if (FOREIGN_ERA.test(e.era || "")) card.appendChild(_litDiv("lit-src", "中文譯本 · 譯者著作權歸各譯者"));
           }
           if (e.comment) card.appendChild(_litDiv("lit-comment", e.comment));
           body.appendChild(card);
