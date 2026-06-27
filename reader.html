@@ -607,11 +607,23 @@
         border-color: rgba(22, 168, 100, 0.82);
         box-shadow: 0 0 24px rgba(22, 168, 100, 0.12);
       }
-      /* hero 狀態感知:回訪者隱藏新手引導、「翻開第一頁」退為次要,讓「繼續閱讀」卡成為主動作 */
+      /* hero 狀態感知:回訪者隱藏新手引導、把兩顆綠 CTA 降為 outline 次要(去掉填色綠、縮小),
+         讓置頂的「繼續閱讀」卡成為唯一視覺主動作。 */
       body.rt-returning .hero-newcomer,
       body.rt-returning .hero-reading-tip { display: none; }
-      body.rt-returning .hero-cta { opacity: 0.8; }
-      body.rt-returning #resume-card { margin-top: 4px; }
+      body.rt-returning .hero-cta {
+        opacity: 0.92;
+        background: transparent;
+        border-color: rgba(22, 168, 100, 0.32);
+        color: rgba(124, 229, 178, 0.82);
+        font-size: 0.86em;
+        padding: 12px 0;
+        box-shadow: none;
+      }
+      body.rt-returning #resume-card {
+        margin-top: 2px;
+        border-color: rgba(255, 217, 168, 0.34);
+      }
       .hero-reading-tip {
         margin-top: 16px;
         margin-left: auto;
@@ -8323,7 +8335,50 @@
         const saved = Number(loadPref(PREF_KEYS.progress));
         if (Number.isNaN(saved)) return;
         goToEp(saved);
+        // 章內續讀:落到該集後,前進 ratio×集高,回到上次離開的章內位置(只在比例屬於同一集才套用)
+        var raw = ""; try { raw = localStorage.getItem("redtime_ep_ratio_v1") || ""; } catch (e) {}
+        var parts = raw.split(":");
+        var rEp = parseInt(parts[0], 10);
+        var ratio = parseFloat(parts[1] || "0");
+        if (rEp === saved && ratio > 0.03) {
+          var tries = 0;
+          var apply = function () {
+            tries++;
+            var sec = document.getElementById("ep-" + saved);
+            if (sec && (typeof currentEpNum === "undefined" || currentEpNum === saved || tries >= 8)) {
+              var host = _liveScrollHost(); // 視窗捲動版面回傳 null
+              var extra = ratio * sec.offsetHeight;
+              if (host) host.scrollTop = host.scrollTop + extra;
+              else window.scrollBy(0, extra);
+              return;
+            }
+            if (tries < 12) setTimeout(apply, 220);
+          };
+          setTimeout(apply, 750); // 等 goToEp 的多階校正先落定
+        }
       }
+      // 章內續讀:debounced 存「當前章節:章內捲動比例」。content-visibility lazy-render 下絕對 scrollTop
+      // 跨 session 不可靠(冷載各集用 intrinsic-size 估高),故改存相對該集的比例,resume 時前進 ratio×真實集高。
+      function saveEpRatio() {
+        try {
+          if (typeof currentEpNum === "undefined" || currentEpNum < 0) return;
+          var sec = document.getElementById("ep-" + currentEpNum);
+          if (!sec) return;
+          var host = _liveScrollHost();
+          var hostTop = host ? host.getBoundingClientRect().top : 0;
+          var topOffset = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--top-offset"), 10) || 84;
+          var into = (hostTop + topOffset) - sec.getBoundingClientRect().top;
+          var ratio = Math.max(0, Math.min(1, into / Math.max(1, sec.offsetHeight)));
+          localStorage.setItem("redtime_ep_ratio_v1", currentEpNum + ":" + ratio.toFixed(3));
+        } catch (e) {}
+      }
+      (function () {
+        var t = null;
+        var sched = function () { clearTimeout(t); t = setTimeout(saveEpRatio, 450); };
+        var mc = document.getElementById("main-col");
+        if (mc) mc.addEventListener("scroll", sched, { passive: true });
+        window.addEventListener("scroll", sched, { passive: true });
+      })();
 
       // ── Font size cycle ──
       // 6 階字體 — 加 xxl 超大 + xxxl 超特大(長輩友善)
@@ -8929,6 +8984,17 @@
         36: { url: "demos/platform-run/index.html", eyebrow: "走進月台上的狂奔", label: "再陪把拔跑一次月台" },
         40: { url: "demos/695/tiantanglu-3d/index.html", eyebrow: "走進天堂路", label: "走一段他的天堂路" },
       };
+      // 每集 canon 金句:取自 EGGS 已策劃的引文。在 episode render 前先建好,供下一集預告(spoiler-safe)+ 分享共用。
+      var SHARE_LINES = {};
+      (function () {
+        if (typeof EGGS === "undefined") return;
+        EGGS.forEach(function (g) {
+          (g.quotes || []).forEach(function (q) {
+            var m = /EP(\d+)/.exec(q.ep || "");
+            if (m && q.text && !SHARE_LINES[+m[1]]) SHARE_LINES[+m[1]] = q.text;
+          });
+        });
+      })();
       EPISODES.forEach((ep, idx) => {
         const arc = ep.arc;
         const ann = ANNOTATIONS[String(ep.ep)] || ["", ""];
@@ -8958,8 +9024,10 @@
         let tH = "";
         if (idx < EPISODES.length - 1) {
           const nx = EPISODES[idx + 1];
-          const pv = stripHtml(nx.html).substring(0, 90).trim();
-          tH = `<div class="ep-teaser" onclick="goToEp(${nx.ep})"><div class="et-label">下一集</div><div class="et-num">${fmtEp(nx.ep)} · ${escapeHtml(ARC_LBL[nx.arc] || nx.arc)}</div><div class="et-text">${escapeHtml(pv)}…</div><div class="et-arrow">繼續閱讀 →</div></div>`;
+          // 預告改用該集策劃 canon 金句(spoiler-safe),不再抓下一集正文前 90 字(會半句截斷+爆雷);無金句則只留標題+視角
+          var pv = (typeof SHARE_LINES !== "undefined" && SHARE_LINES[nx.ep]) ? SHARE_LINES[nx.ep] : "";
+          if (pv.length > 60) pv = pv.slice(0, 60) + "…";
+          tH = `<div class="ep-teaser" onclick="goToEp(${nx.ep})"><div class="et-label">下一集</div><div class="et-num">${fmtEp(nx.ep)} · ${escapeHtml(ARC_LBL[nx.arc] || nx.arc)}</div>${pv ? `<div class="et-text">${escapeHtml(pv)}</div>` : ""}<div class="et-arrow">繼續閱讀 →</div></div>`;
         } else {
           // 完讀收束卡：讀到最後一集不該斷在灰按鈕，把終點變成新一圈的起點
           tH = `<div class="ep-finale"><div class="ef-kicker">你走完了 1991 → 2026，整條紅線</div><div class="ef-title">「我也相信。」</div><div class="ef-sub">四十二集，三十五年，都為了那一眼瞬間。接下來，換你決定怎麼再走一次。</div><div class="ef-actions"><button type="button" class="ef-btn ef-btn-main" onclick="if(window.__FAN_QUIZ__)window.__FAN_QUIZ__.open()">★ 鐵粉測驗 · 看你記得多少</button><button type="button" class="ef-btn" onclick="goToEp(0)">☆ 回 EP0 · 再走一次紅線</button><a class="ef-btn" href="lm402.html">↗ 走進 LM402 · 親眼看那一眼</a><a class="ef-btn" href="demos/platform-run/index.html">🏃 再陪把拔跑一次月台</a></div></div>`;
@@ -8973,7 +9041,7 @@
             ? `<button class="ep-nav-btn" onclick="goToEp(${EPISODES[idx + 1].ep})"><span>${fmtEp(EPISODES[idx + 1].ep)}</span>${renderIcon("arrow-right", "btn-icon")}</button>`
             : `<button class="ep-nav-btn disabled"><span>連載持續中</span>${renderIcon("arrow-right", "btn-icon")}</button>`;
         const sec = document.createElement("section");
-        sec.className = "episode arc-" + arc;
+        sec.className = "episode arc-" + sanitizeClassToken(arc);
         sec.id = "ep-" + ep.ep;
         const granny = GRANNY.find((g) => g.ep === ep.ep) || null;
         const grannyH = granny ? buildGranny(granny) : "";
@@ -9410,17 +9478,6 @@
         renderBookmarkBar();
       }
       // 分享這一集:優先系統分享,否則複製連結;按鈕標籤暫顯「已複製」回報。
-      // 每集 canon 金句:取自 EGGS 已策劃的引文,分享時帶上,在傳播當下直接打中陌生人的心
-      var SHARE_LINES = {};
-      (function () {
-        if (typeof EGGS === 'undefined') return;
-        EGGS.forEach(function (g) {
-          (g.quotes || []).forEach(function (q) {
-            var m = /EP(\d+)/.exec(q.ep || '');
-            if (m && q.text && !SHARE_LINES[+m[1]]) SHARE_LINES[+m[1]] = q.text;
-          });
-        });
-      })();
       function shareEp(n, btn) {
         var url = location.origin + location.pathname + '#ep-' + n;
         var ep = (typeof EPISODES !== 'undefined') ? EPISODES.find(function (e) { return e.ep === n; }) : null;
@@ -10130,7 +10187,7 @@
           var cur = curN === ep.ep;
           var mins = (typeof readMins === 'function') ? readMins(ep.html) : '';
           var title = (typeof shortEpisodeTitle === 'function') ? shortEpisodeTitle(ep) : ('EP' + ep.ep);
-          var arc = ep.arc || 'mixed';
+          var arc = sanitizeClassToken(ep.arc || 'mixed');
           var arcLbl = (typeof ARC_LBL !== 'undefined' && ARC_LBL[arc]) ? ARC_LBL[arc].replace('視角', '') : '';
           rows += '<button type="button" class="gtoc-row arc-' + arc + (cur ? ' current' : '') + (read ? ' read' : '') + '" onclick="closeCuration();goToEp(' + ep.ep + ')">'
             + '<span class="gtoc-ep">EP' + ep.ep + '</span>'
