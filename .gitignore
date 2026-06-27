@@ -44,6 +44,9 @@ _Mac首次執行_先點我.command
 .gitkeep
 assets/lm402-parallel/webgpu-test.html
 
+# Local-only runtime overrides (kept on local backup, not for site)
+reader-st-names.js
+
 # Backup / archive
 Backup/
 *.original.js
