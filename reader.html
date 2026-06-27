@@ -8943,6 +8943,16 @@
           var _epn = ep.ep;
           _bm.addEventListener("click", function () { toggleBookmark(_epn); });
           _navEl.insertBefore(_bm, _navEl.children.length > 1 ? _navEl.children[1] : null);
+          // 分享：複製/系統分享這一集的 #ep-N 連結
+          var _sh = document.createElement("button");
+          _sh.type = "button";
+          _sh.className = "ep-bookmark-btn ep-share-btn";
+          _sh.setAttribute("aria-label", "分享這一集的連結");
+          var _shi = document.createElement("span"); _shi.className = "bm-ic"; _shi.textContent = "↗";
+          var _shl = document.createElement("span"); _shl.className = "bm-lb"; _shl.textContent = "分享";
+          _sh.append(_shi, _shl);
+          _sh.addEventListener("click", function () { shareEp(_epn, _sh); });
+          _navEl.insertBefore(_sh, _bm.nextSibling);
         }
       });
 
@@ -9299,6 +9309,40 @@
         var j = document.getElementById("jp-btn-" + n); if (j) j.classList.toggle("bookmarked", _bookmarks.has(n));
         updateBookmarkBtn(n);
         renderBookmarkBar();
+      }
+      // 分享這一集:優先系統分享,否則複製連結;按鈕標籤暫顯「已複製」回報。
+      function shareEp(n, btn) {
+        var url = location.origin + location.pathname + '#ep-' + n;
+        var ep = (typeof EPISODES !== 'undefined') ? EPISODES.find(function (e) { return e.ep === n; }) : null;
+        var title = '時間裡的兩個妳';
+        var text = ep ? (title + ' EP' + n + ' · ' + shortEpisodeTitle(ep)) : (title + ' EP' + n);
+        if (navigator.share) {
+          navigator.share({ title: title, text: text, url: url }).catch(function () {});
+          return;
+        }
+        var done = function () { _shareCopied(btn); };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(done).catch(function () { _legacyCopy(url); done(); });
+        } else { _legacyCopy(url); done(); }
+      }
+      function _shareCopied(btn) {
+        if (!btn) return;
+        var lb = btn.querySelector('.bm-lb'); if (!lb) return;
+        var old = lb.getAttribute('data-old') || lb.textContent;
+        lb.setAttribute('data-old', old);
+        lb.textContent = '已複製';
+        btn.classList.add('active');
+        clearTimeout(btn._shTimer);
+        btn._shTimer = setTimeout(function () { lb.textContent = old; btn.classList.remove('active'); }, 1500);
+      }
+      function _legacyCopy(text) {
+        try {
+          var ta = document.createElement('textarea');
+          ta.value = text; ta.setAttribute('readonly', '');
+          ta.style.position = 'fixed'; ta.style.left = '-9999px'; ta.style.opacity = '0';
+          document.body.appendChild(ta); ta.select();
+          document.execCommand('copy'); document.body.removeChild(ta);
+        } catch (e) {}
       }
       function renderBookmarkBar() {
         var bar = document.getElementById("jp-bookmarks");
@@ -10090,17 +10134,19 @@
         var box = document.getElementById("search-results");
         if (!box) return;
         q = (q || "").trim();
-        if (q.length < 1) { _searchHint(box, "想找哪一句、哪一個場景？打進來，42 集的正文和科普，我幫你一頁一頁翻。", "search-hint"); return; }
+        if (q.length < 1) { _searchHint(box, "想找哪一句、哪一個場景？打進來，42 集的正文、科普、說書人、文人說與論辯，我幫你一頁一頁翻。", "search-hint"); return; }
         var ql = q.toLowerCase();
         var hits = [];
-        // 工具：在一段文字裡找關鍵字並擷取前後文片段
-        function collectHits(text, ep, sci, maxPer) {
+        var CAP = 80;
+        // 工具：在一段文字裡找關鍵字並擷取前後文片段。src: story/sci/st/lit/debate
+        function collectHits(text, ep, src, maxPer) {
+          if (!text) return;
           var lc = text.toLowerCase();
           var from = 0, idx, count = 0;
-          while ((idx = lc.indexOf(ql, from)) >= 0 && count < maxPer) {
+          while ((idx = lc.indexOf(ql, from)) >= 0 && count < maxPer && hits.length < CAP) {
             var s = Math.max(0, idx - 28), e = Math.min(text.length, idx + q.length + 42);
             hits.push({
-              ep: ep, sci: sci,
+              ep: ep, src: src,
               before: (s > 0 ? "…" : "") + text.slice(s, idx),
               match: text.slice(idx, idx + q.length),
               after: text.slice(idx + q.length, e) + (e < text.length ? "…" : "")
@@ -10109,29 +10155,44 @@
           }
         }
         // 1) 故事正文
-        for (var i = 0; i < EPISODES.length && hits.length < 50; i++) {
-          collectHits(stripHtml(EPISODES[i].html || ""), EPISODES[i].ep, false, 3);
+        for (var i = 0; i < EPISODES.length && hits.length < CAP; i++) {
+          collectHits(stripHtml(EPISODES[i].html || ""), EPISODES[i].ep, 'story', 3);
         }
-        // 2) 科普小單元（topic + body）
-        for (var j = 0; j < SCIENCE.length && hits.length < 65; j++) {
-          collectHits((SCIENCE[j].topic || "") + "：" + (SCIENCE[j].body || ""), SCIENCE[j].ep, true, 2);
+        // 2) 科普（topic + body）
+        for (var j = 0; j < SCIENCE.length && hits.length < CAP; j++) {
+          collectHits((SCIENCE[j].topic || "") + "：" + (SCIENCE[j].body || ""), SCIENCE[j].ep, 'sci', 2);
         }
+        // 3) 說書人 4) 文人說 5) 論辯（導讀資料，每集每則各取 1 個片段避免洗版）
+        var _sk;
+        if (typeof STORYTELLERS !== 'undefined') for (_sk in STORYTELLERS) { if (hits.length >= CAP) break; (STORYTELLERS[_sk] || []).forEach(function (s) { collectHits(s.text || '', +_sk, 'st', 1); }); }
+        if (typeof LITERATI !== 'undefined') for (_sk in LITERATI) { if (hits.length >= CAP) break; (LITERATI[_sk] || []).forEach(function (e2) { collectHits((e2.quote || '') + ' ' + (e2.comment || ''), +_sk, 'lit', 1); }); }
+        if (typeof LITERATI_DEBATES !== 'undefined') for (_sk in LITERATI_DEBATES) { if (hits.length >= CAP) break; (LITERATI_DEBATES[_sk] || []).forEach(function (d) { collectHits(d.topic || '', +_sk, 'debate', 1); (d.turns || []).forEach(function (t) { if (hits.length < CAP) collectHits(t.say || '', +_sk, 'debate', 1); }); }); }
         if (!hits.length) { _searchHint(box, "找不到「" + q + "」。換個說法，我再幫你翻一次。", "search-empty"); return; }
         box.textContent = "";
+        var SRC_LBL = { story: '', sci: '科普', st: '說書人', lit: '文人說', debate: '論辯' };
         hits.forEach(function (h) {
-          var b = document.createElement("button"); b.className = "search-res" + (h.sci ? " search-res-sci" : ""); b.type = "button";
-          var epd = document.createElement("div"); epd.className = "search-res-ep"; epd.textContent = fmtEp(h.ep) + (h.sci ? " · 科普" : "");
+          var b = document.createElement("button"); b.className = "search-res" + (h.src === 'sci' ? " search-res-sci" : ""); b.type = "button";
+          var epd = document.createElement("div"); epd.className = "search-res-ep"; epd.textContent = fmtEp(h.ep) + (SRC_LBL[h.src] ? " · " + SRC_LBL[h.src] : "");
           var sn = document.createElement("div"); sn.className = "search-res-snip";
-          // 純 DOM 節點建 highlight：textNode + <mark>，零 innerHTML，內容源自編譯期 EPISODES/SCIENCE
+          // 純 DOM 節點建 highlight：textNode + <mark>，零 innerHTML，內容源自編譯期常數
           sn.appendChild(document.createTextNode(h.before));
           var mk = document.createElement("mark"); mk.textContent = h.match; sn.appendChild(mk);
           sn.appendChild(document.createTextNode(h.after));
           b.append(epd, sn);
-          b.addEventListener("click", h.sci
-            ? function () { closeSearch(); goToScience(h.ep); }
-            : function () { closeSearch(); goToEp(h.ep); });
+          b.addEventListener("click", function () { closeSearch(); _searchJump(h.ep, h.src); });
           box.appendChild(b);
         });
+      }
+      // 搜尋結果跳轉:科普直接展開科普;說書人/文人說/論辯跳到該集並打開導讀區
+      function _searchJump(ep, src) {
+        if (src === 'sci') { if (typeof goToScience === 'function') goToScience(ep); return; }
+        goToEp(ep);
+        if (src === 'st' || src === 'lit' || src === 'debate') {
+          setTimeout(function () {
+            var sec = document.getElementById('ep-' + ep);
+            if (sec) { var comp = sec.querySelector('.ep-companion'); if (comp) comp.classList.add('open'); }
+          }, 360);
+        }
       }
 
       // ── Eggs ──
