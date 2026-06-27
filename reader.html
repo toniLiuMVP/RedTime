@@ -10734,13 +10734,30 @@
         return `<div class="ep-science"><div class="ep-science-toggle" onclick="toggleScience(this)" role="button" tabindex="0" aria-expanded="false" aria-controls="science-body-${s.ep}"><div class="es-avatar"><span aria-hidden="true">${avatarIcon}</span></div><span class="es-label">科普 · <span style="font-size:10px;opacity:.7;letter-spacing:.08em">${escapeHtml(s.topic.split('。')[0].split('—')[0].split('/')[0].trim())}</span></span><span class="es-arrow">▾</span></div><div class="ep-science-body" id="science-body-${s.ep}"><div class="es-kicker">EP${s.ep} · 科普小單元</div><div class="es-frame">讓懂物理的人補一句：定律是真的，拿來比喻紅線的部分，是文學。</div>${expertsHTML ? '<div class="es-experts">' + expertsHTML + '</div>' : ''}<div class="es-title">${_sciGlossTitle(s.topic)}</div>${scienceTermChips(s.body)}<div class="es-text es-notebook">${formatScienceBody(s.body)}</div>${s.ep === 11 ? buildTimeLab(s.ep) : ''}${scienceThreadFooter(s.ep)}</div></div>`;
       }
       /* 桌面搜尋快捷鍵:/ 或 Cmd+K (Mac) / Ctrl+K (Windows);輸入框聚焦時不攔 */
+      // 任一阻擋式 modal 開啟時(策展/彩蛋架/鐵粉測驗/跳章抽屜)不觸發全域 J/K 導覽
+      function _anyModalOpen() {
+        if (document.body.classList.contains("cur-open")) return true;
+        var blk = [["modal", "open"], ["fanQuizOverlay", "show"], ["jump-panel", "open"]];
+        for (var i = 0; i < blk.length; i++) {
+          var el = document.getElementById(blk[i][0]);
+          if (el && el.classList.contains(blk[i][1])) return true;
+        }
+        return false;
+      }
       document.addEventListener("keydown", (e) => {
-        const tag = (document.activeElement || {}).tagName;
-        if (tag === "INPUT" || tag === "TEXTAREA") return;
+        const ae = document.activeElement || {};
+        const tag = ae.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || ae.isContentEditable) return;
         const k = e.key;
         if (k === "/" || ((e.metaKey || e.ctrlKey) && (k === "k" || k === "K"))) {
           e.preventDefault();
           if (typeof openSearch === "function") openSearch();
+          return;
+        }
+        /* J/K 逐集導覽(vim 風):無修飾鍵、無開啟中的阻擋式 modal 時 */
+        if (!e.metaKey && !e.ctrlKey && !e.altKey && !_anyModalOpen() && typeof navEp === "function") {
+          if (k === "j" || k === "J") { e.preventDefault(); navEp(1); }
+          else if (k === "k" || k === "K") { e.preventDefault(); navEp(-1); }
         }
       });
       function toggleScience(h) {
