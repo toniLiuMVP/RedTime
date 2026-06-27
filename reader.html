@@ -16,7 +16,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <meta name="apple-mobile-web-app-title" content="時間裡的兩個妳" />
-    <!-- Defense-in-depth CSP（最佳做法仍是 HTTP header，但 GitHub Pages 無法設 header，故以 meta 作為最低防線） -->
+    <!-- Defense-in-depth CSP（最佳做法仍是 HTTP header，但 GitHub Pages 無法設 header，故以 meta 作為最低防線）。
+         script-src 'unsafe-inline' 是 inline scripts + on* handlers 的依賴，僅在「每個 innerHTML 寫入都是編譯期常數 + 過 escapeHtml」前提下安全；
+         未來引入任何 fetch/API/CMS 來源的 HTML，必須先撤 'unsafe-inline' 並加 sanitization（如 DOMPurify）。 -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none';" />
     <script src="assets/frame-guard.js"></script>
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
@@ -139,6 +141,19 @@
         overflow-x: hidden;
         transition: background-color 0.4s ease, color 0.4s ease;
       }
+      /* 深連 #ep-N 冷載暖色底:遮住 1.7MB 文件 build 期的純黑閃現,settle 後淡出移除 */
+      #deeplink-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 99998;
+        pointer-events: none;
+        background:
+          radial-gradient(ellipse 100% 56% at 50% 22%, rgba(255, 80, 88, 0.06), transparent 60%),
+          radial-gradient(ellipse 130% 80% at 50% 30%, #21141a 0%, var(--bg) 64%);
+        opacity: 1;
+        transition: opacity 0.5s ease;
+      }
+      #deeplink-splash.gone { opacity: 0; }
       a,
       button,
       [role="button"],
@@ -5674,6 +5689,21 @@
     </style>
   </head>
   <body data-fs="md" data-width="default">
+    <script>
+      /* 深連 #ep-N:在 body 一開頭就鋪暖色 splash,蓋住文件 build 期黑屏;jump settle 或 2.6s 後移除 */
+      try {
+        if (/^#ep-\d+$/.test(location.hash) && new URLSearchParams(location.search).get("embed") !== "1") {
+          var _sp = document.createElement("div");
+          _sp.id = "deeplink-splash";
+          document.body.appendChild(_sp);
+          window.__rmSplash__ = function () {
+            var el = document.getElementById("deeplink-splash");
+            if (el) { el.classList.add("gone"); setTimeout(function () { el.remove(); }, 520); }
+          };
+          setTimeout(window.__rmSplash__, 2600);
+        }
+      } catch (e) {}
+    </script>
     <a href="#main-col" class="skip-link">跳到內容</a>
     <svg class="ui-sprite" aria-hidden="true" focusable="false">
       <defs>
@@ -9128,6 +9158,7 @@
                 // 重新塌陷會位移 target），於最終 layout 跑 Pass 2 重新對齊，避免遠/近集都殘留偏移。
                 runCorrection(function () {
                   document.body.classList.remove('hash-jumping');
+                  if (window.__rmSplash__) window.__rmSplash__(); /* 內容已落點,淡出深連暖色 splash */
                   requestAnimationFrame(function () { requestAnimationFrame(function () {
                     runCorrection(function (c2) {
                       if (typeof currentEpNum !== 'undefined') currentEpNum = targetN;
@@ -9352,9 +9383,11 @@
           updateBookmarkBtn(Number(b.getAttribute("data-ep")));
         });
       }
+      // 觸覺回饋(漸進增強;iOS Safari 靜默忽略,Android 有感):有意義的狀態變化才震,routine 動作不震
+      function buzz(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) {} }
       function toggleBookmark(n) {
         if (n === undefined || n === null || !_bookmarks) return;
-        if (_bookmarks.has(n)) _bookmarks.delete(n); else _bookmarks.add(n);
+        if (_bookmarks.has(n)) _bookmarks.delete(n); else { _bookmarks.add(n); buzz(6); }
         try { localStorage.setItem("redtime_bookmarks_v1", JSON.stringify(Array.from(_bookmarks))); } catch (e) {}
         var s = document.getElementById("sb-item-" + n); if (s) s.classList.toggle("bookmarked", _bookmarks.has(n));
         var j = document.getElementById("jp-btn-" + n); if (j) j.classList.toggle("bookmarked", _bookmarks.has(n));
@@ -9786,7 +9819,7 @@
         });
         body.appendChild(_litDiv("lit-intro", "模擬辯論 · 假設是" + (names.join("、") || "幾位文人") + "讀到這一段，他們會怎麼想？以下為模擬，非本人言論。"));
         const wrap = _litDiv("lit-debate");
-        if (d.topic) wrap.appendChild(_litDiv("lit-debate-topic", "⚔️ " + d.topic));
+        if (d.topic) wrap.appendChild(_litDiv("lit-debate-topic", "他們吵的是：" + d.topic));
         (d.turns || []).forEach(function (turn, i) {
           const row = _litDiv("lit-debate-turn" + (i % 2 ? " alt" : ""));
           row.appendChild(_litDiv("lit-who", (stDisplayName(turn.who) || "佚名") + (turn.era ? "　·　" + turn.era : "")));
@@ -9812,13 +9845,13 @@
         const actions = _litDiv("lit-actions");
         const reroll = document.createElement("button");
         reroll.type = "button"; reroll.className = "lit-reroll";
-        reroll.textContent = "🎲 換一批文人";
+        reroll.textContent = "再聽幾位";
         reroll.onclick = function () { renderLiterati(ep, "auto"); };
         actions.appendChild(reroll);
         if (debates.length) {
           const dbtn = document.createElement("button");
           dbtn.type = "button"; dbtn.className = "lit-reroll lit-reroll-debate";
-          dbtn.textContent = showDebate ? "📜 改聽文人說名句" : "⚔️ 看文人辯論";
+          dbtn.textContent = showDebate ? "回到名句" : "聽他們吵一場";
           dbtn.onclick = function () { renderLiterati(ep, showDebate ? "solo" : "debate"); };
           actions.appendChild(dbtn);
         }
@@ -9864,7 +9897,7 @@
         actions.className = 'lit-actions';
         const reroll = document.createElement('button');
         reroll.type = 'button'; reroll.className = 'lit-reroll';
-        reroll.textContent = '🎲 換第三位說書人';
+        reroll.textContent = '換第三位說書人';
         reroll.onclick = function () { renderStoryteller(ep, idx); };
         actions.appendChild(reroll);
         const duetBtn = document.createElement('button');
@@ -9913,7 +9946,7 @@
         actions.className = 'lit-actions';
         const reroll = document.createElement('button');
         reroll.type = 'button'; reroll.className = 'lit-reroll';
-        reroll.textContent = '🎲 換一組對位';
+        reroll.textContent = '換一組對位';
         reroll.onclick = function () { renderStorytellerDuet(ep, ri); };
         const back = document.createElement('button');
         back.type = 'button'; back.className = 'lit-reroll';
@@ -10330,6 +10363,7 @@
           egg.sub,
         );
         document.getElementById("toast").classList.add("show");
+        buzz(10);
         clearTimeout(toastTimer);
         // toni 要求 — 彩蛋跳窗只顯示 1 秒(原 7500ms 太久)
         toastTimer = setTimeout(
@@ -12512,6 +12546,7 @@
     if (judge(ans, q.a)) {
       qInBlock += 1;
       streakInBlock += 1;
+      buzz(8);
       saveBestStreak(streakInBlock + loadCleared().length * BLOCK_SIZE);
       if (qInBlock >= BLOCK_SIZE) {
         markCleared(currentBlock);
