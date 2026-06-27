@@ -1408,12 +1408,6 @@
             rgba(255, 255, 255, 0.008)
           );
         }
-        body[data-width="default"] {
-          --measure: 39em;
-        }
-        body[data-width="wide"] {
-          --measure: 43em;
-        }
       }
       @media (min-width: 1280px) {
         #info-panel {
@@ -3248,6 +3242,43 @@
         letter-spacing: 0.12em;
         cursor: pointer;
       }
+      /* 紅線旅程儀表板(完讀卡開啟,變數驅動隨主題自適應) */
+      #journey-pop {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483001;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.5);
+        -webkit-tap-highlight-color: transparent;
+      }
+      #journey-pop.show { display: flex; }
+      #journey-pop .jr-card {
+        background: var(--bg2);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 24px 22px;
+        width: min(88vw, 340px);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.42);
+      }
+      .jr-title {
+        font-size: 16px;
+        color: var(--t1);
+        text-align: center;
+        letter-spacing: 0.08em;
+        margin-bottom: 14px;
+      }
+      .jr-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        padding: 11px 2px;
+        border-bottom: 1px solid var(--line2);
+      }
+      .jr-row:last-child { border-bottom: none; }
+      .jr-lbl { font-size: 12.5px; color: var(--t3); letter-spacing: 0.08em; }
+      .jr-val { font-size: 14.5px; color: var(--amber); font-family: "DM Mono", monospace; }
       /* 新訪一次性工具提示:輕指底部工具列 */
       #reader-coach {
         position: fixed;
@@ -3663,7 +3694,7 @@
         --measure: 34em;
       }
       body[data-width="wide"] {
-        --measure: 38em;
+        --measure: 42em;
       }
 
       /* ═══════ TOAST ════════════════════════════ */
@@ -6865,6 +6896,13 @@
         <button type="button" class="cp-close" onclick="closeComfort()">完成</button>
       </div>
     </div>
+    <div id="journey-pop" role="dialog" aria-modal="true" aria-label="我的紅線旅程" onclick="if(event.target===this)closeJourney()">
+      <div class="jr-card">
+        <div class="jr-title">🧭 我的紅線旅程</div>
+        <div id="journey-body"></div>
+        <button type="button" class="cp-close" onclick="closeJourney()">完成</button>
+      </div>
+    </div>
     <div id="reader-coach" aria-hidden="true"><span class="rc-text">工具都收在這裡，需要時再點。</span><span class="rc-arrow">▾</span></div>
     <div id="toast" onclick="openFromToast()">
       <div id="toast-glyph">
@@ -9190,7 +9228,7 @@
           tH = breathH + `<div class="ep-teaser" onclick="goToEp(${nx.ep})"><div class="et-label">下一集</div><div class="et-num">${fmtEp(nx.ep)} · ${escapeHtml(ARC_LBL[nx.arc] || nx.arc)}</div>${pv ? `<div class="et-text">${escapeHtml(pv)}</div>` : ""}<div class="et-arrow">繼續閱讀 →</div></div>`;
         } else {
           // 完讀收束卡：讀到最後一集不該斷在灰按鈕，把終點變成新一圈的起點
-          tH = `<div class="ep-finale"><div class="ef-kicker">你走完了 1991 → 2026，整條紅線</div><div class="ef-title">「我也相信。」</div><div class="ef-sub">四十二集，三十五年，都為了那一眼瞬間。接下來，換你決定怎麼再走一次。</div><div class="ef-actions"><button type="button" class="ef-btn ef-btn-main" onclick="if(window.__FAN_QUIZ__)window.__FAN_QUIZ__.open()">★ 鐵粉測驗 · 看你記得多少</button><button type="button" class="ef-btn" onclick="goToEp(0)">☆ 回 EP0 · 再走一次紅線</button><a class="ef-btn" href="lm402.html">↗ 走進 LM402 · 親眼看那一眼</a><a class="ef-btn" href="demos/platform-run/index.html">🏃 再陪把拔跑一次月台</a></div></div>`;
+          tH = `<div class="ep-finale"><div class="ef-kicker">你走完了 1991 → 2026，整條紅線</div><div class="ef-title">「我也相信。」</div><div class="ef-sub">四十二集，三十五年，都為了那一眼瞬間。接下來，換你決定怎麼再走一次。</div><div class="ef-actions"><button type="button" class="ef-btn ef-btn-main" onclick="openJourney()">🧭 看我走過的紅線旅程</button><button type="button" class="ef-btn" onclick="if(window.__FAN_QUIZ__)window.__FAN_QUIZ__.open()">★ 鐵粉測驗 · 看你記得多少</button><button type="button" class="ef-btn" onclick="goToEp(0)">☆ 回 EP0 · 再走一次紅線</button><a class="ef-btn" href="lm402.html">↗ 走進 LM402 · 親眼看那一眼</a><a class="ef-btn" href="demos/platform-run/index.html">🏃 再陪把拔跑一次月台</a></div></div>`;
         }
         const pvBtn =
           idx > 0
@@ -10464,6 +10502,38 @@
       }
       function closeComfort() {
         var p = document.getElementById("comfort-pop");
+        if (p) p.classList.remove("show");
+      }
+      // 紅線旅程儀表板:開啟時即時彙整已讀 / 彩蛋 / 書籤 / 鐵粉稱號(全取自既有 localStorage,零故事改動)
+      function openJourney() {
+        var p = document.getElementById("journey-pop");
+        if (!p) return;
+        var read = (typeof _readEps !== "undefined" && _readEps) ? _readEps.size : 0;
+        var total = EPISODES.length;
+        var pct = total ? Math.round((read / total) * 100) : 0;
+        var maxRead = (typeof _readEps !== "undefined" && _readEps && _readEps.size) ? Math.max.apply(null, Array.from(_readEps)) : -1;
+        var eggT = (typeof EGGS !== "undefined") ? EGGS.length : 0;
+        var eggN = (typeof EGGS !== "undefined") ? EGGS.filter(function (g) { return maxRead >= g.triggerEp; }).length : 0;
+        var bms = (typeof _bookmarks !== "undefined" && _bookmarks) ? _bookmarks.size : 0;
+        var title = ""; try { title = localStorage.getItem("redtime_fan_title") || ""; } catch (e) {}
+        var best = 0; try { best = parseInt(localStorage.getItem("redtime_fan_best_streak") || "0", 10) || 0; } catch (e) {}
+        var rows = [
+          ["已讀章節", read + " / " + total + "　·　紅線 " + pct + "%"],
+          ["解鎖彩蛋", eggN + " / " + eggT],
+          ["收藏書籤", String(bms)],
+        ];
+        if (title && title !== "尚未啟程") rows.push(["鐵粉稱號", title]);
+        if (best > 0) rows.push(["最佳連對", best + " 題"]);
+        var body = document.getElementById("journey-body");
+        if (body) {
+          body.innerHTML = rows.map(function (r) {
+            return '<div class="jr-row"><span class="jr-lbl">' + escapeHtml(r[0]) + '</span><span class="jr-val">' + escapeHtml(r[1]) + '</span></div>';
+          }).join("");
+        }
+        p.classList.add("show");
+      }
+      function closeJourney() {
+        var p = document.getElementById("journey-pop");
         if (p) p.classList.remove("show");
       }
       // 保留:他處若仍呼叫 toggleDay,維持快速 night/day 切換
