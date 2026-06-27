@@ -7563,22 +7563,22 @@
             {
               icon: "🔢",
               title: "14,000,606",
-              body: "EP1 提到奇異博士預看「1千4百萬種結果」，到了 EP4 又出現 14,000,606 這個數字，前後兩處彼此呼應。",
+              body: "奇異博士看了一千四百萬種未來。這故事多算了一種，編號 14,000,606，是他們終於沒有錯過的那一種。",
             },
             {
               icon: "🎵",
               title: "20:57",
-              body: "2005年09月22日20:57 反覆出現在故事裡，是重要的時間坐標。",
+              body: "她把整個宇宙的誤差，折進這一分鐘。早一秒她還沒到，晚一秒，電話就斷了。",
             },
             {
               icon: "🪡",
               title: "命定的紅線",
-              body: "「命運不是命定！但紅線，是命中注定。」這句話把兩人的牽引說得很清楚。",
+              body: "「命運不是命定！但紅線，是命中注定。」綁著兩頭的人隔了十七年，誰都沒鬆開手。",
             },
             {
               icon: "👧",
               title: "第三個視角",
-              body: "女兒的視角把過去與現在放到同一條閱讀路線上，也讓把拔與阿姨的故事再次被看見。",
+              body: "女兒閉上眼，就飛進你們的故事。她什麼都不能改，只能記得。讀到這裡，你也記得了。",
             },
           ],
         },
@@ -8955,7 +8955,7 @@
         const litH = litPool.length
           ? `<div class="ep-note ep-literati"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleLiterati(this, ${ep.ep})">▸ 文人說</div><div class="ep-note-body hidden" id="lit-body-${ep.ep}"></div></div>`
           : "";
-        sec.innerHTML = `<div class="ep-bg-num">${fmtEp(ep.ep).replace("EP", "")}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${escapeHtml(ARC_LBL[arc] || arc)}</span></div><div class="ep-title">${escapeHtml(cT)}</div><div class="ep-meta-row"><span>${readMins(ep.html)} 分鐘</span><span class="ep-meta-dot"></span><span>${escapeHtml(ep.chars || "")} 字</span></div></div><div class="ep-companion"><div class="ep-companion-tag" role="button" tabindex="0" onclick="toggleCompanion(this)"><span class="ec-line"></span><span class="ec-lbl"><span class="ec-arrow">▸</span> 導讀區<span class="ec-count"></span> · 點開陪你讀</span><span class="ec-line"></span></div><div class="ep-companion-body">${stH}${vis.length === 0 ? "" : `<div class="ep-info-strip"><div class="ep-info-head" role="button" tabindex="0" onclick="toggleEpInfo(this)"><span class="eih-icon">${renderIcon("guide")}</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-arc-legend"><span class="tal-chip" style="color:var(--jade)">● 把拔</span><span class="tal-chip" style="color:var(--silver)">● 學長</span><span class="tal-chip" style="color:var(--f3,#ff4858)">● 學妹</span><span class="tal-chip" style="color:var(--amber)">● 女兒</span><span class="tal-chip" style="color:var(--ember)">● 複合</span></div><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>`}${tline ? `<div class="ep-tline-wrap"><div class="ep-tline-toggle" role="button" tabindex="0" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${escapeHtml(tline)}</span></div></div>` : ""}${note ? `<div class="ep-note"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${linkifyEpRefs(note)}</div></div>` : ""}${cluesH}${grannyH}${scienceH}${litH}</div></div><div class="ep-story-divider" aria-hidden="true"><span class="esd-line"></span><span class="esd-mark">✦ 故事正文</span><span class="esd-line"></span></div><div class="ep-body-wrap"></div>${tH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
+        sec.innerHTML = `<div class="ep-bg-num">${fmtEp(ep.ep).replace("EP", "")}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${escapeHtml(ARC_LBL[arc] || arc)}</span></div><div class="ep-title">${escapeHtml(cT)}</div><div class="ep-meta-row"><span>${readMins(ep.html)} 分鐘</span><span class="ep-meta-dot"></span><span>${escapeHtml(ep.chars || "")} 字</span></div></div><div class="ep-companion"><div class="ep-companion-tag" role="button" tabindex="0" aria-label="導讀區，點開展開賞析" onclick="toggleCompanion(this)"><span class="ec-line"></span><span class="ec-lbl"><span class="ec-arrow">▸</span> 紅線經過這裡，有人停下來等你<span class="ec-count"></span></span><span class="ec-line"></span></div><div class="ep-companion-body">${stH}${vis.length === 0 ? "" : `<div class="ep-info-strip"><div class="ep-info-head" role="button" tabindex="0" onclick="toggleEpInfo(this)"><span class="eih-icon">${renderIcon("guide")}</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-arc-legend"><span class="tal-chip" style="color:var(--jade)">● 把拔</span><span class="tal-chip" style="color:var(--silver)">● 學長</span><span class="tal-chip" style="color:var(--f3,#ff4858)">● 學妹</span><span class="tal-chip" style="color:var(--amber)">● 女兒</span><span class="tal-chip" style="color:var(--ember)">● 複合</span></div><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>`}${tline ? `<div class="ep-tline-wrap"><div class="ep-tline-toggle" role="button" tabindex="0" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${escapeHtml(tline)}</span></div></div>` : ""}${note ? `<div class="ep-note"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${linkifyEpRefs(note)}</div></div>` : ""}${cluesH}${grannyH}${scienceH}${litH}</div></div><div class="ep-story-divider" aria-hidden="true"><span class="esd-line"></span><span class="esd-mark">✦ 故事正文</span><span class="esd-line"></span></div><div class="ep-body-wrap"></div>${tH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
         const bd = document.createElement("div");
         bd.className = "ep-body";
         bd.innerHTML = ep.html;
@@ -9362,11 +9362,24 @@
         renderBookmarkBar();
       }
       // 分享這一集:優先系統分享,否則複製連結;按鈕標籤暫顯「已複製」回報。
+      // 每集 canon 金句:取自 EGGS 已策劃的引文,分享時帶上,在傳播當下直接打中陌生人的心
+      var SHARE_LINES = {};
+      (function () {
+        if (typeof EGGS === 'undefined') return;
+        EGGS.forEach(function (g) {
+          (g.quotes || []).forEach(function (q) {
+            var m = /EP(\d+)/.exec(q.ep || '');
+            if (m && q.text && !SHARE_LINES[+m[1]]) SHARE_LINES[+m[1]] = q.text;
+          });
+        });
+      })();
       function shareEp(n, btn) {
         var url = location.origin + location.pathname + '#ep-' + n;
         var ep = (typeof EPISODES !== 'undefined') ? EPISODES.find(function (e) { return e.ep === n; }) : null;
         var title = '時間裡的兩個妳';
-        var text = ep ? (title + ' EP' + n + ' · ' + shortEpisodeTitle(ep)) : (title + ' EP' + n);
+        var line = SHARE_LINES[n];
+        var text = line ? (line + '\n《' + title + '》EP' + n)
+                        : (ep ? (title + ' EP' + n + ' · ' + shortEpisodeTitle(ep)) : (title + ' EP' + n));
         if (navigator.share) {
           navigator.share({ title: title, text: text, url: url }).catch(function () {});
           return;
@@ -9412,7 +9425,7 @@
         ann.className = "moto-note-egg";
         var lead = document.createElement("div");
         lead.className = "mne-lead";
-        lead.textContent = "✦ 同一張機車紙條 · 它在故事裡反覆被看見，也在這幾集出現：";
+        lead.textContent = "✦ 同一張紙條。她不只貼過一次。";
         ann.appendChild(lead);
         var links = document.createElement("div");
         links.className = "mne-links";
@@ -10696,9 +10709,9 @@
       // 物理上是誤用(人質量微不足道),只能當主觀心理時間的文學比喻,故明確誠實註記。
       function buildTimeLab(ep) {
         return '<div class="time-lab" role="group" aria-label="時間實驗室互動">'
-          + '<div class="tl-head">⏳ 時間實驗室 · 越靠近，時間越慢</div>'
+          + '<div class="tl-head">⏳ 越靠近一個人，那一秒就越長</div>'
           + '<div class="tl-real"><b>真科學</b>：重力越強，時間真的越慢。GPS 衛星重力較弱，每天比地表的鐘快約 <b>38 微秒</b>，原子鐘已證實（衛星出廠先把頻率調慢成 10.22999999543 MHz，升空後剛好對準地表的 10.23 MHz）。</div>'
-          + '<div class="tl-exp-lbl">文學隱喻：把所愛的人當成你<b>世界的中心</b>，越靠近，那一眼的一秒，心裡就膨脹成好多年。拖拖看：</div>'
+          + '<div class="tl-exp-lbl">文學隱喻：把所愛的人當成你<b>世界的中心</b>，越靠近，那一眼的一秒，心裡就膨脹成好多年。把滑桿推向她：</div>'
           + '<input type="range" min="0" max="100" value="0" class="tl-slider" oninput="updateTimeLab(this)" aria-label="距離世界中心：遠到近">'
           + '<div class="tl-scale"><span>遠遠看著</span><span>世界的中心</span></div>'
           + '<div class="tl-readout">外面過了 <b>1 秒</b>，這一眼裡，也只是 <b>1 秒</b></div>'
