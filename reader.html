@@ -3248,6 +3248,30 @@
         letter-spacing: 0.12em;
         cursor: pointer;
       }
+      /* 新訪一次性工具提示:輕指底部工具列 */
+      #reader-coach {
+        position: fixed;
+        left: 50%;
+        bottom: calc(112px + env(safe-area-inset-bottom, 0px));
+        transform: translateX(-50%) translateY(8px);
+        z-index: 1800;
+        background: var(--ember, #b5503c);
+        color: #fff;
+        padding: 11px 18px;
+        border-radius: 22px;
+        font-size: 13px;
+        letter-spacing: 0.04em;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.42);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.45s ease, transform 0.45s ease;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        max-width: 88vw;
+      }
+      #reader-coach.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+      .rc-arrow { font-size: 12px; opacity: 0.82; }
       /* 結局留白:EP3/EP40 正文後、預告前的呼吸標記 */
       .ep-breath {
         display: flex;
@@ -6841,6 +6865,7 @@
         <button type="button" class="cp-close" onclick="closeComfort()">完成</button>
       </div>
     </div>
+    <div id="reader-coach" aria-hidden="true"><span class="rc-text">工具都收在這裡，需要時再點。</span><span class="rc-arrow">▾</span></div>
     <div id="toast" onclick="openFromToast()">
       <div id="toast-glyph">
         <span class="ui-glyph" data-ui-icon="starburst"></span>
@@ -9574,6 +9599,40 @@
           if (rc && nc && rc.parentNode === nc.parentNode) nc.parentNode.insertBefore(rc, nc);
         } catch (e) {}
       })();
+
+      // 新訪一次性工具提示:只對全新讀者(無已讀)、未看過、且滑進第一集後,輕指底部工具列一次
+      (function () {
+        try {
+          if (!_readEps || _readEps.size > 0) return;
+          if (localStorage.getItem("redtime_coach_seen_v1")) return;
+          var ep0 = document.getElementById("ep-0");
+          if (!ep0 || typeof IntersectionObserver === "undefined") return;
+          var fired = false;
+          var io = new IntersectionObserver(function (entries) {
+            for (var i = 0; i < entries.length; i++) {
+              if (entries[i].isIntersecting && !fired) { fired = true; io.disconnect(); _showCoach(); }
+            }
+          }, { threshold: 0.12 });
+          io.observe(ep0);
+        } catch (e) {}
+      })();
+      function _showCoach() {
+        var c = document.getElementById("reader-coach");
+        if (!c) return;
+        c.classList.add("show");
+        c.setAttribute("aria-hidden", "false");
+        var done = false;
+        var dismiss = function () {
+          if (done) return; done = true;
+          c.classList.remove("show");
+          c.setAttribute("aria-hidden", "true");
+          try { localStorage.setItem("redtime_coach_seen_v1", "1"); } catch (e) {}
+          document.removeEventListener("pointerdown", dismiss, true);
+          setTimeout(function () { if (c.parentNode) c.remove(); }, 500);
+        };
+        setTimeout(function () { document.addEventListener("pointerdown", dismiss, true); }, 200); // 任何點擊即關
+        setTimeout(dismiss, 6500); // 或 6.5 秒後自動關
+      }
 
       // ── 回訪書籤：手動收藏章節，側欄/跳章選單以 🔖 標示 + 跳章面板頂部「我的書籤」快速列（localStorage，不上傳）──
       var _bookmarks = (function () {
