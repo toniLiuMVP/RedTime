@@ -3183,6 +3183,27 @@
         background-clip: text;
         border: 1px solid rgba(255, 72, 88, 0.25);
       }
+      /* 結局留白:EP3/EP40 正文後、預告前的呼吸標記 */
+      .ep-breath {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin: 52px 8px 30px;
+        opacity: 0.6;
+      }
+      .eb-line {
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(184, 156, 144, 0.3), transparent);
+      }
+      .eb-text {
+        font-style: italic;
+        font-size: 12.5px;
+        letter-spacing: 0.1em;
+        color: var(--t3);
+        white-space: nowrap;
+      }
+      body.day-mode .eb-line { background: linear-gradient(90deg, transparent, rgba(122, 100, 80, 0.32), transparent); }
       /* Next teaser */
       .ep-teaser {
         margin-top: 32px;
@@ -8995,6 +9016,10 @@
           });
         });
       })();
+      // 結局留白:EP3(一眼瞬間)/EP40(終局前)在下一集預告前插入呼吸標記,並抑制預告文字,讓聖地有沉澱的留白
+      var SILENCE_EPS = [3, 40];
+      // 章節專屬導讀標籤:高潮與結尾用專屬語,其餘沿用預設
+      var COMPANION_LABELS = { 3: "這裡是那一眼。先聽聽，當時其他人怎麼看？", 40: "紅線快到盡頭，有人停下來陪你走完。", 41: "紅線到了盡頭，也有人停下來，陪你回頭看。" };
       EPISODES.forEach((ep, idx) => {
         const arc = ep.arc;
         const ann = ANNOTATIONS[String(ep.ep)] || ["", ""];
@@ -9024,10 +9049,12 @@
         let tH = "";
         if (idx < EPISODES.length - 1) {
           const nx = EPISODES[idx + 1];
-          // 預告改用該集策劃 canon 金句(spoiler-safe),不再抓下一集正文前 90 字(會半句截斷+爆雷);無金句則只留標題+視角
-          var pv = (typeof SHARE_LINES !== "undefined" && SHARE_LINES[nx.ep]) ? SHARE_LINES[nx.ep] : "";
+          var isSilence = SILENCE_EPS.indexOf(ep.ep) !== -1;
+          // 聖地(EP3 一眼瞬間 / EP40 終局前)先給呼吸標記再接預告,且不預覽下一集,讓這一秒沉澱;其餘集用 spoiler-safe canon 金句
+          var breathH = isSilence ? `<div class="ep-breath" aria-hidden="true"><span class="eb-line"></span><span class="eb-text">讓這一段，先停在這裡。</span><span class="eb-line"></span></div>` : "";
+          var pv = isSilence ? "" : ((typeof SHARE_LINES !== "undefined" && SHARE_LINES[nx.ep]) ? SHARE_LINES[nx.ep] : "");
           if (pv.length > 60) pv = pv.slice(0, 60) + "…";
-          tH = `<div class="ep-teaser" onclick="goToEp(${nx.ep})"><div class="et-label">下一集</div><div class="et-num">${fmtEp(nx.ep)} · ${escapeHtml(ARC_LBL[nx.arc] || nx.arc)}</div>${pv ? `<div class="et-text">${escapeHtml(pv)}</div>` : ""}<div class="et-arrow">繼續閱讀 →</div></div>`;
+          tH = breathH + `<div class="ep-teaser" onclick="goToEp(${nx.ep})"><div class="et-label">下一集</div><div class="et-num">${fmtEp(nx.ep)} · ${escapeHtml(ARC_LBL[nx.arc] || nx.arc)}</div>${pv ? `<div class="et-text">${escapeHtml(pv)}</div>` : ""}<div class="et-arrow">繼續閱讀 →</div></div>`;
         } else {
           // 完讀收束卡：讀到最後一集不該斷在灰按鈕，把終點變成新一圈的起點
           tH = `<div class="ep-finale"><div class="ef-kicker">你走完了 1991 → 2026，整條紅線</div><div class="ef-title">「我也相信。」</div><div class="ef-sub">四十二集，三十五年，都為了那一眼瞬間。接下來，換你決定怎麼再走一次。</div><div class="ef-actions"><button type="button" class="ef-btn ef-btn-main" onclick="if(window.__FAN_QUIZ__)window.__FAN_QUIZ__.open()">★ 鐵粉測驗 · 看你記得多少</button><button type="button" class="ef-btn" onclick="goToEp(0)">☆ 回 EP0 · 再走一次紅線</button><a class="ef-btn" href="lm402.html">↗ 走進 LM402 · 親眼看那一眼</a><a class="ef-btn" href="demos/platform-run/index.html">🏃 再陪把拔跑一次月台</a></div></div>`;
@@ -9057,7 +9084,8 @@
         const litH = litPool.length
           ? `<div class="ep-note ep-literati"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleLiterati(this, ${ep.ep})">▸ 文人說</div><div class="ep-note-body hidden" id="lit-body-${ep.ep}"></div></div>`
           : "";
-        sec.innerHTML = `<div class="ep-bg-num">${fmtEp(ep.ep).replace("EP", "")}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${escapeHtml(ARC_LBL[arc] || arc)}</span></div><div class="ep-title">${escapeHtml(cT)}</div><div class="ep-meta-row"><span>${readMins(ep.html)} 分鐘</span><span class="ep-meta-dot"></span><span>${escapeHtml(ep.chars || "")} 字</span></div></div><div class="ep-companion"><div class="ep-companion-tag" role="button" tabindex="0" aria-label="導讀區，點開展開賞析" onclick="toggleCompanion(this)"><span class="ec-line"></span><span class="ec-lbl"><span class="ec-arrow">▸</span> 紅線經過這裡，有人停下來等你<span class="ec-count"></span></span><span class="ec-line"></span></div><div class="ep-companion-body">${stH}${vis.length === 0 ? "" : `<div class="ep-info-strip"><div class="ep-info-head" role="button" tabindex="0" onclick="toggleEpInfo(this)"><span class="eih-icon">${renderIcon("guide")}</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-arc-legend"><span class="tal-chip" style="color:var(--jade)">● 把拔</span><span class="tal-chip" style="color:var(--silver)">● 學長</span><span class="tal-chip" style="color:var(--f3,#ff4858)">● 學妹</span><span class="tal-chip" style="color:var(--amber)">● 女兒</span><span class="tal-chip" style="color:var(--ember)">● 複合</span></div><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>`}${tline ? `<div class="ep-tline-wrap"><div class="ep-tline-toggle" role="button" tabindex="0" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${escapeHtml(tline)}</span></div></div>` : ""}${note ? `<div class="ep-note"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${linkifyEpRefs(note)}</div></div>` : ""}${cluesH}${grannyH}${scienceH}${litH}</div></div><div class="ep-story-divider" aria-hidden="true"><span class="esd-line"></span><span class="esd-mark">✦ 故事正文</span><span class="esd-line"></span></div><div class="ep-body-wrap"></div>${tH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
+        const compLabel = COMPANION_LABELS[ep.ep] || "紅線經過這裡，有人停下來等你";
+        sec.innerHTML = `<div class="ep-bg-num">${fmtEp(ep.ep).replace("EP", "")}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${escapeHtml(ARC_LBL[arc] || arc)}</span></div><div class="ep-title">${escapeHtml(cT)}</div><div class="ep-meta-row"><span>${readMins(ep.html)} 分鐘</span><span class="ep-meta-dot"></span><span>${escapeHtml(ep.chars || "")} 字</span></div></div><div class="ep-companion"><div class="ep-companion-tag" role="button" tabindex="0" aria-label="導讀區，點開展開賞析" onclick="toggleCompanion(this)"><span class="ec-line"></span><span class="ec-lbl"><span class="ec-arrow">▸</span> ${escapeHtml(compLabel)}<span class="ec-count"></span></span><span class="ec-line"></span></div><div class="ep-companion-body">${stH}${vis.length === 0 ? "" : `<div class="ep-info-strip"><div class="ep-info-head" role="button" tabindex="0" onclick="toggleEpInfo(this)"><span class="eih-icon">${renderIcon("guide")}</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-arc-legend"><span class="tal-chip" style="color:var(--jade)">● 把拔</span><span class="tal-chip" style="color:var(--silver)">● 學長</span><span class="tal-chip" style="color:var(--f3,#ff4858)">● 學妹</span><span class="tal-chip" style="color:var(--amber)">● 女兒</span><span class="tal-chip" style="color:var(--ember)">● 複合</span></div><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>`}${tline ? `<div class="ep-tline-wrap"><div class="ep-tline-toggle" role="button" tabindex="0" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${escapeHtml(tline)}</span></div></div>` : ""}${note ? `<div class="ep-note"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${linkifyEpRefs(note)}</div></div>` : ""}${cluesH}${grannyH}${scienceH}${litH}</div></div><div class="ep-story-divider" aria-hidden="true"><span class="esd-line"></span><span class="esd-mark">✦ 故事正文</span><span class="esd-line"></span></div><div class="ep-body-wrap"></div>${tH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
         const bd = document.createElement("div");
         bd.className = "ep-body";
         bd.innerHTML = ep.html;
