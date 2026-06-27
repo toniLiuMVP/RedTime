@@ -607,6 +607,11 @@
         border-color: rgba(22, 168, 100, 0.82);
         box-shadow: 0 0 24px rgba(22, 168, 100, 0.12);
       }
+      /* hero 狀態感知:回訪者隱藏新手引導、「翻開第一頁」退為次要,讓「繼續閱讀」卡成為主動作 */
+      body.rt-returning .hero-newcomer,
+      body.rt-returning .hero-reading-tip { display: none; }
+      body.rt-returning .hero-cta { opacity: 0.8; }
+      body.rt-returning #resume-card { margin-top: 4px; }
       .hero-reading-tip {
         margin-top: 16px;
         margin-left: auto;
@@ -960,8 +965,7 @@
         .search-res-snip { font-size: 14px; line-height: 1.75; }
         .search-res-snip mark { background: rgba(255,72,88,.32); color: #fff; padding: 0 2px; border-radius: 2px; }
       /* ↑↑↑ 全域區塊結束 ↑↑↑ */
-      /* 隱藏手機工具列的「放大鏡」（桌機 #btn-magnify 不受影響）— 字體鈕已可調整大小 */
-      .fab-main-row .fab-item[onclick="magnifyFont()"] { display: none; }
+      /* 手機工具列的「放大鏡」(一鍵跳最大字、長輩友善)恢復顯示;工具列改 5×2 容納 10 項,順帶放大每顆觸控目標 */
       @media (min-width: 768px) {
         body {
           overflow-x: hidden;
@@ -3370,9 +3374,9 @@
       }
       .fab-main-row {
         display: grid;
-        /* 9 個可見項 → 9 欄一列 (mobile, >390px) */
-        grid-template-columns: repeat(9, minmax(0, 1fr));
-        gap: 4px;
+        /* 10 個可見項(含放大鏡)→ 5×2,觸控目標比舊 9 欄一列大得多 */
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 4px 6px;
       }
       .fab-nav-row {
         display: grid;
@@ -5611,9 +5615,9 @@
           font-size: 10.5px;
         }
         .fab-main-row {
-          /* 9 項 → 3×3，整除無空白欄位(4 欄會留 4+4+1 孤行) */
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 6px 8px;
+          /* 10 項(含放大鏡)→ 5×2,整除無孤行 */
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+          gap: 6px 6px;
         }
         #toast {
           bottom: calc(132px + env(safe-area-inset-bottom, 0px));
@@ -9355,6 +9359,17 @@
       window.__READ_PROGRESS__ = { mark: markEpRead, count: function () { return _readEps.size; }, reset: function () { _readEps.clear(); try { localStorage.removeItem("redtime_read_eps_v1"); } catch (e) {} document.querySelectorAll(".sb-ep-item.read,.jp-ep-btn.read").forEach(function (el) { el.classList.remove("read"); }); updateReadProgress(); } };
       applyReadMarks(); // 初次套用已讀標記（側欄已於 buildSidebar 建好）
       updateReadProgress(); // 初次顯示已讀完成度
+      // hero 狀態感知:回訪者(有已讀)隱藏新手引導,並把「繼續閱讀」卡提到最前(resume-first);
+      // 新訪客維持「翻開第一頁」一道主門 + 既有引導。消除首屏多磁鐵的選擇癱瘓。
+      (function () {
+        try {
+          if (!_readEps || _readEps.size === 0) return;
+          document.body.classList.add("rt-returning");
+          var rc = document.getElementById("resume-card");
+          var nc = document.querySelector(".hero-newcomer");
+          if (rc && nc && rc.parentNode === nc.parentNode) nc.parentNode.insertBefore(rc, nc);
+        } catch (e) {}
+      })();
 
       // ── 回訪書籤：手動收藏章節，側欄/跳章選單以 🔖 標示 + 跳章面板頂部「我的書籤」快速列（localStorage，不上傳）──
       var _bookmarks = (function () {
