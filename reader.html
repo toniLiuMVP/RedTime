@@ -2880,6 +2880,51 @@
       body.day-mode .st-name {
         color: rgba(146, 104, 36, 0.95);
       }
+      /* 提案4 雙說書人對位:手機堆疊、寬螢幕並排 */
+      .st-duet-title {
+        font: 600 12px/1.5 "Noto Sans TC", sans-serif;
+        color: rgba(233, 196, 142, 0.85);
+        margin: 4px 0 12px;
+        text-align: center;
+        letter-spacing: 0.06em;
+      }
+      .st-duet {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        align-items: start;
+      }
+      .st-duet-card {
+        padding: 12px 13px;
+        border-radius: 11px;
+        border: 1px solid rgba(196, 164, 132, 0.22);
+        background: rgba(196, 164, 132, 0.05);
+      }
+      .st-duet-vs {
+        align-self: center;
+        justify-self: center;
+        font: 600 10.5px/1 "Noto Sans TC", sans-serif;
+        color: rgba(233, 196, 142, 0.72);
+        letter-spacing: 0.1em;
+        padding: 3px 10px;
+        border: 1px solid rgba(196, 164, 132, 0.32);
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+      @media (min-width: 620px) {
+        .st-duet {
+          grid-template-columns: 1fr auto 1fr;
+          gap: 14px;
+        }
+      }
+      body.day-mode .st-duet-card {
+        border-color: rgba(146, 104, 36, 0.25);
+        background: rgba(146, 104, 36, 0.05);
+      }
+      body.day-mode .st-duet-title,
+      body.day-mode .st-duet-vs {
+        color: rgba(146, 104, 36, 0.85);
+      }
       .lit-reroll:hover,
       .lit-reroll:focus-visible {
         background: rgba(196, 164, 132, 0.16);
@@ -9563,6 +9608,60 @@
         reroll.textContent = '🎲 換第三位說書人';
         reroll.onclick = function () { renderStoryteller(ep, idx); };
         actions.appendChild(reroll);
+        const duetBtn = document.createElement('button');
+        duetBtn.type = 'button'; duetBtn.className = 'lit-reroll';
+        duetBtn.textContent = '⇄ 兩位對位讀';
+        duetBtn.onclick = function () { renderStorytellerDuet(ep); };
+        actions.appendChild(duetBtn);
+        body.appendChild(actions);
+      }
+      // 提案4 雙說書人對位:同一段開場,左 pool[0] 對右隨機一位,風格並排對照
+      function renderStorytellerDuet(ep, rightExclude) {
+        const body = document.getElementById('st-body-' + ep);
+        if (!body) return;
+        const pool = (typeof STORYTELLERS !== 'undefined' && STORYTELLERS[String(ep)]) || [];
+        if (pool.length < 2) return;
+        while (body.firstChild) body.removeChild(body.firstChild);
+        const rights = pool.slice(1);
+        let ri = Math.floor(Math.random() * rights.length);
+        if (rights.length > 1 && ri === rightExclude) ri = (ri + 1) % rights.length;
+        const pair = [pool[0], rights[ri]];
+        const title = document.createElement('div');
+        title.className = 'st-duet-title';
+        title.textContent = '同一段開場，兩種說法';
+        body.appendChild(title);
+        const duet = document.createElement('div');
+        duet.className = 'st-duet';
+        pair.forEach(function (s, i) {
+          if (!s) return;
+          const col = document.createElement('div');
+          col.className = 'st-duet-card';
+          col.innerHTML = '<div class="st-head"><span class="st-name">' + escapeHtml(stDisplayName(s.name)) + '</span><span class="st-era">' + escapeHtml(s.era) + '</span></div><div class="st-text">' + escapeHtml(s.text) + '</div>';
+          duet.appendChild(col);
+          if (i === 0) {
+            const vs = document.createElement('div');
+            vs.className = 'st-duet-vs';
+            vs.textContent = '對位';
+            duet.appendChild(vs);
+          }
+        });
+        body.appendChild(duet);
+        const note = document.createElement('div');
+        note.className = 'st-note';
+        note.textContent = '本段為以該文人筆法擬寫之致敬，非其真實著作或言論';
+        body.appendChild(note);
+        const actions = document.createElement('div');
+        actions.className = 'lit-actions';
+        const reroll = document.createElement('button');
+        reroll.type = 'button'; reroll.className = 'lit-reroll';
+        reroll.textContent = '🎲 換一組對位';
+        reroll.onclick = function () { renderStorytellerDuet(ep, ri); };
+        const back = document.createElement('button');
+        back.type = 'button'; back.className = 'lit-reroll';
+        back.textContent = '↩ 回到三人說書';
+        back.onclick = function () { renderStoryteller(ep); };
+        actions.appendChild(reroll);
+        actions.appendChild(back);
         body.appendChild(actions);
       }
       /* 時間地圖寬版檢視:360px 抽屜 ↔ 92vw 大畫布(時空穿越圖整張一次顯示) */
