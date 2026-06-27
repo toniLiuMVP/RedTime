@@ -4162,6 +4162,85 @@
       .ep-granny-body.open {
         display: block;
       }
+      /* 提案1 時間實驗室互動(真科學 + 文學隱喻分區) */
+      .time-lab {
+        margin-top: 14px;
+        padding: 14px 14px 12px;
+        border-radius: 14px;
+        border: 1px solid rgba(74, 168, 165, 0.28);
+        background: linear-gradient(180deg, rgba(74, 168, 165, 0.08), rgba(74, 168, 165, 0.02));
+      }
+      .tl-head {
+        font: 600 14.5px/1.4 "Noto Serif TC", serif;
+        color: #8fd3d0;
+        margin-bottom: 9px;
+      }
+      .tl-real {
+        font-size: 13px;
+        line-height: 1.85;
+        color: #cfe6e4;
+        margin-bottom: 13px;
+      }
+      .tl-real b,
+      .tl-honest b,
+      .tl-exp-lbl b {
+        color: #aee4e0;
+      }
+      .tl-exp-lbl {
+        font-size: 13px;
+        line-height: 1.8;
+        color: #e6ddcf;
+        margin-bottom: 8px;
+      }
+      .tl-slider {
+        width: 100%;
+        accent-color: #4aa8a5;
+        margin: 4px 0;
+        cursor: pointer;
+      }
+      .tl-scale {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        opacity: 0.62;
+        margin-bottom: 11px;
+      }
+      .tl-readout {
+        text-align: center;
+        font: 500 15px/1.6 "Noto Serif TC", serif;
+        color: #ffe7c4;
+        padding: 9px 8px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.2);
+        margin-bottom: 12px;
+      }
+      .tl-readout b {
+        color: #ffd9a0;
+        font-size: 17px;
+      }
+      .tl-honest {
+        font-size: 11.5px;
+        line-height: 1.78;
+        color: #9bb8b5;
+        border-top: 1px dashed rgba(74, 168, 165, 0.26);
+        padding-top: 9px;
+      }
+      body.day-mode .time-lab {
+        border-color: rgba(28, 120, 116, 0.35);
+        background: linear-gradient(180deg, rgba(28, 120, 116, 0.08), rgba(28, 120, 116, 0.02));
+      }
+      body.day-mode .tl-head { color: #1c7874; }
+      body.day-mode .tl-real { color: #2c4a48; }
+      body.day-mode .tl-real b,
+      body.day-mode .tl-honest b,
+      body.day-mode .tl-exp-lbl b { color: #166460; }
+      body.day-mode .tl-exp-lbl { color: #3a4a48; }
+      body.day-mode .tl-readout {
+        color: #7a4a18;
+        background: rgba(28, 120, 116, 0.08);
+      }
+      body.day-mode .tl-readout b { color: #9a5a1a; }
+      body.day-mode .tl-honest { color: #56716e; }
       /* per-EP 科普小單元（mirrors .ep-granny with teal） */
       .ep-science {
         margin-bottom: 16px;
@@ -9944,6 +10023,30 @@
           return '<span class="es-chip">' + escapeHtml(c) + (zh ? '<span class="es-chip-zh">' + escapeHtml(zh) + "</span>" : "") + "</span>";
         }).join("") + "</div>";
       }
+      // 提案1 時間實驗室:真科學(重力時間膨脹/GPS)與文學隱喻(心理時間)分開標示。
+      // 物理框法經 Gemini 查證:重力時間膨脹是真的(GPS 每天+38µs),但「靠近所愛=時間慢」
+      // 物理上是誤用(人質量微不足道),只能當主觀心理時間的文學比喻,故明確誠實註記。
+      function buildTimeLab(ep) {
+        return '<div class="time-lab" role="group" aria-label="時間實驗室互動">'
+          + '<div class="tl-head">⏳ 時間實驗室 · 越靠近，時間越慢</div>'
+          + '<div class="tl-real"><b>真科學</b>：重力越強，時間真的越慢。GPS 衛星重力較弱，每天比地表的鐘快約 <b>38 微秒</b>，原子鐘已證實（衛星出廠先把頻率調慢成 10.22999999543 MHz，升空後剛好對準地表的 10.23 MHz）。</div>'
+          + '<div class="tl-exp-lbl">文學隱喻：把所愛的人當成你<b>世界的中心</b>，越靠近，那一眼的一秒，心裡就膨脹成好多年。拖拖看：</div>'
+          + '<input type="range" min="0" max="100" value="0" class="tl-slider" oninput="updateTimeLab(this)" aria-label="距離世界中心：遠到近">'
+          + '<div class="tl-scale"><span>遠遠看著</span><span>世界的中心</span></div>'
+          + '<div class="tl-readout">外面過了 <b>1 秒</b>，這一眼裡，也只是 <b>1 秒</b></div>'
+          + '<div class="tl-honest">誠實說：人的質量太小，靠近誰都不會真的讓時鐘變慢。這裡是<b>主觀心理時間</b>的文學比喻，借一條真定律，說一個「一眼只有一秒，卻用了二十年」的真心。</div>'
+          + '</div>';
+      }
+      function updateTimeLab(slider) {
+        var t = Math.max(0, Math.min(1, (slider.value || 0) / 100));
+        var lab = slider.closest('.time-lab'); if (!lab) return;
+        var out = lab.querySelector('.tl-readout'); if (!out) return;
+        var feel;
+        if (t < 0.04) feel = '1 秒';
+        else if (t >= 0.97) feel = '二十年';
+        else feel = Math.pow(20, t).toFixed(1) + ' 年';
+        out.innerHTML = '外面過了 <b>1 秒</b>，這一眼裡，過了 <b>' + feel + '</b>';
+      }
       function buildScience(s) {
         /* render 1-2 博士 badges (中英對照 via title tooltip) */
         const expertKeys = EP_EXPERTS[s.ep] || [];
@@ -9952,7 +10055,7 @@
           return '<span class="es-expert" title="' + escapeHtml(e.zh) + ' · ' + escapeHtml(e.en) + '">' + e.icon + ' ' + escapeHtml(e.zh) + '<span class="es-expert-en">' + escapeHtml(e.en) + '</span></span>';
         }).join('');
         const avatarIcon = (experts[0] && experts[0].icon) || '⚛';
-        return `<div class="ep-science"><div class="ep-science-toggle" onclick="toggleScience(this)" role="button" tabindex="0" aria-expanded="false" aria-controls="science-body-${s.ep}"><div class="es-avatar"><span aria-hidden="true">${avatarIcon}</span></div><span class="es-label">科普 · <span style="font-size:10px;opacity:.7;letter-spacing:.08em">${escapeHtml(s.topic.split('。')[0].split('—')[0].split('/')[0].trim())}</span></span><span class="es-arrow">▾</span></div><div class="ep-science-body" id="science-body-${s.ep}"><div class="es-kicker">EP${s.ep} · 科普小單元</div><div class="es-frame">讓懂物理的人補一句：定律是真的，拿來比喻紅線的部分，是文學。</div>${expertsHTML ? '<div class="es-experts">' + expertsHTML + '</div>' : ''}<div class="es-title">${_sciGlossTitle(s.topic)}</div>${scienceTermChips(s.body)}<div class="es-text es-notebook">${formatScienceBody(s.body)}</div>${scienceThreadFooter(s.ep)}</div></div>`;
+        return `<div class="ep-science"><div class="ep-science-toggle" onclick="toggleScience(this)" role="button" tabindex="0" aria-expanded="false" aria-controls="science-body-${s.ep}"><div class="es-avatar"><span aria-hidden="true">${avatarIcon}</span></div><span class="es-label">科普 · <span style="font-size:10px;opacity:.7;letter-spacing:.08em">${escapeHtml(s.topic.split('。')[0].split('—')[0].split('/')[0].trim())}</span></span><span class="es-arrow">▾</span></div><div class="ep-science-body" id="science-body-${s.ep}"><div class="es-kicker">EP${s.ep} · 科普小單元</div><div class="es-frame">讓懂物理的人補一句：定律是真的，拿來比喻紅線的部分，是文學。</div>${expertsHTML ? '<div class="es-experts">' + expertsHTML + '</div>' : ''}<div class="es-title">${_sciGlossTitle(s.topic)}</div>${scienceTermChips(s.body)}<div class="es-text es-notebook">${formatScienceBody(s.body)}</div>${s.ep === 11 ? buildTimeLab(s.ep) : ''}${scienceThreadFooter(s.ep)}</div></div>`;
       }
       /* 桌面搜尋快捷鍵:/ 或 Cmd+K (Mac) / Ctrl+K (Windows);輸入框聚焦時不攔 */
       document.addEventListener("keydown", (e) => {
