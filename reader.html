@@ -3183,6 +3183,71 @@
         background-clip: text;
         border: 1px solid rgba(255, 72, 88, 0.25);
       }
+      /* 閱讀設定面板(主題 + 行寬),變數驅動故隨主題自適應 */
+      #comfort-pop {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483001;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.5);
+        -webkit-tap-highlight-color: transparent;
+      }
+      #comfort-pop.show { display: flex; }
+      #comfort-pop .cp-card {
+        background: var(--bg2);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 22px 20px;
+        width: min(86vw, 320px);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.42);
+      }
+      .cp-title {
+        font-size: 15px;
+        color: var(--t1);
+        margin-bottom: 6px;
+        text-align: center;
+        letter-spacing: 0.1em;
+      }
+      .cp-row-lbl {
+        font-size: 11.5px;
+        color: var(--t3);
+        margin: 14px 0 7px;
+        letter-spacing: 0.12em;
+      }
+      .cp-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+      .cp-row button {
+        padding: 11px 0;
+        border-radius: 9px;
+        border: 1px solid var(--line);
+        background: var(--bg3);
+        color: var(--t2);
+        font-size: 13.5px;
+        cursor: pointer;
+        transition: border-color 0.16s, color 0.16s, background 0.16s;
+      }
+      .cp-row button.active {
+        border-color: var(--amber);
+        color: var(--amber);
+        background: rgba(122, 80, 0, 0.12);
+      }
+      .cp-close {
+        margin-top: 18px;
+        width: 100%;
+        padding: 11px 0;
+        border-radius: 9px;
+        border: none;
+        background: var(--amber);
+        color: #fff;
+        font-size: 13px;
+        letter-spacing: 0.12em;
+        cursor: pointer;
+      }
       /* 結局留白:EP3/EP40 正文後、預告前的呼吸標記 */
       .ep-breath {
         display: flex;
@@ -4020,6 +4085,18 @@
         --ember: #7a3018;
         --silver: #605c54;
       }
+      /* 暖色/羊皮紙閱讀模式:沿用 day-mode 的淺色元件規則,再把基底變數覆寫成更深、更暖、低對比的紙色(久讀友善)。
+         JS 同時掛 day-mode + sepia-mode,故此處只覆寫變數即可,不必補 138 條等價規則。 */
+      body.sepia-mode {
+        --bg: #e6d4af;
+        --bg2: #ddc99f;
+        --bg3: #d3bd8f;
+        --line: rgba(60, 40, 12, 0.14);
+        --line2: rgba(60, 40, 12, 0.09);
+        --t1: #33240f;
+        --t2: #574019;
+        --t3: #755b30;
+      }
       body.day-mode #hero {
         background:
           radial-gradient(
@@ -4032,6 +4109,13 @@
             #e8d8f0 0%,
             transparent 52%
           ),
+          var(--bg);
+      }
+      /* sepia 同掛 day-mode,故覆寫 hero 漸層為暖琥珀(否則 day 的淺綠/淺紫 radial 疊在琥珀底會發濁) */
+      body.sepia-mode #hero {
+        background:
+          radial-gradient(ellipse 120% 60% at 50% 18%, #e4d0a2 0%, transparent 60%),
+          radial-gradient(ellipse 80% 80% at 82% 82%, #dcc492 0%, transparent 54%),
           var(--bg);
       }
       body.day-mode #hero-canvas {
@@ -6403,7 +6487,7 @@
           <button class="dsk-btn" onclick="openSearch()" id="btn-search" aria-label="全文搜尋 · 找場景、台詞、伏筆" title="全文搜尋（/ 或 Cmd+K）">
             🔍 搜尋
           </button>
-          <button class="dsk-btn" onclick="toggleDay()">
+          <button class="dsk-btn" onclick="openComfort()" aria-label="閱讀設定 · 主題與行寬">
             <span class="ui-glyph btn-icon" data-ui-icon="sun"></span
             ><span>燈光</span>
           </button>
@@ -6704,7 +6788,7 @@
           <span class="fab-icon">🔍</span
           ><span class="fab-label">放大鏡</span>
         </button>
-        <button class="fab-item" type="button" onclick="toggleDay()" aria-label="切換深色 / 淺色閱讀模式">
+        <button class="fab-item" type="button" onclick="openComfort()" aria-label="閱讀設定 · 主題與行寬">
           <span class="fab-icon" data-ui-icon="sun"></span
           ><span class="fab-label">燈光</span>
         </button>
@@ -6739,6 +6823,24 @@
     </div>
 
     <!-- TOAST -->
+    <div id="comfort-pop" role="dialog" aria-modal="true" aria-label="閱讀設定" onclick="if(event.target===this)closeComfort()">
+      <div class="cp-card">
+        <div class="cp-title">閱讀設定</div>
+        <div class="cp-row-lbl">主題</div>
+        <div class="cp-row">
+          <button type="button" data-theme="night" onclick="setTheme('night')">暗</button>
+          <button type="button" data-theme="sepia" onclick="setTheme('sepia')">暖</button>
+          <button type="button" data-theme="day" onclick="setTheme('day')">亮</button>
+        </div>
+        <div class="cp-row-lbl">行寬</div>
+        <div class="cp-row">
+          <button type="button" data-width="narrow" onclick="setWidth('narrow')">窄</button>
+          <button type="button" data-width="default" onclick="setWidth('default')">標準</button>
+          <button type="button" data-width="wide" onclick="setWidth('wide')">寬</button>
+        </div>
+        <button type="button" class="cp-close" onclick="closeComfort()">完成</button>
+      </div>
+    </div>
     <div id="toast" onclick="openFromToast()">
       <div id="toast-glyph">
         <span class="ui-glyph" data-ui-icon="starburst"></span>
@@ -8066,6 +8168,7 @@
         font: "redtime-font-size",
         theme: "redtime-theme",
         progress: "redtime-progress",
+        width: "redtime-width",
       };
       const TL_ICON_MAP = {
         "👨": "person",
@@ -8466,7 +8569,12 @@
           fsIdx = FS_LEVELS.indexOf(savedFont);
           document.body.setAttribute("data-fs", savedFont);
         }
-        document.body.classList.toggle("day-mode", savedTheme === "day");
+        document.body.classList.toggle("day-mode", savedTheme === "day" || savedTheme === "sepia");
+        document.body.classList.toggle("sepia-mode", savedTheme === "sepia");
+        const savedWidth = loadPref(PREF_KEYS.width);
+        if (savedWidth === "narrow" || savedWidth === "wide" || savedWidth === "default") {
+          document.body.setAttribute("data-width", savedWidth);
+        }
         if (!Number.isNaN(savedProgress)) {
           updateResumeCard(savedProgress);
           updateDesktopRailContext(savedProgress);
@@ -10273,12 +10381,35 @@
       }
       // a11y：章節展開鈕(role=button)的 Enter/Space 鍵盤激活已由下方 div[onclick] 統一 patch 提供
       // （見「A11y patch」段），此處不再另設委派，避免同一鍵兩個 listener 雙觸發互相抵消。
+      // 閱讀設定面板:主題(暗/暖/亮,暖=sepia 同掛 day-mode+sepia-mode)+ 行寬(窄/標/寬)
+      function setTheme(t) {
+        document.body.classList.toggle("day-mode", t === "day" || t === "sepia");
+        document.body.classList.toggle("sepia-mode", t === "sepia");
+        savePref(PREF_KEYS.theme, t);
+        _syncComfortActive();
+      }
+      function setWidth(w) {
+        document.body.setAttribute("data-width", w);
+        savePref(PREF_KEYS.width, w);
+        _syncComfortActive();
+      }
+      function _syncComfortActive() {
+        var t = document.body.classList.contains("sepia-mode") ? "sepia" : (document.body.classList.contains("day-mode") ? "day" : "night");
+        var w = document.body.getAttribute("data-width") || "default";
+        document.querySelectorAll("#comfort-pop [data-theme]").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-theme") === t); });
+        document.querySelectorAll("#comfort-pop [data-width]").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-width") === w); });
+      }
+      function openComfort() {
+        var p = document.getElementById("comfort-pop");
+        if (p) { p.classList.add("show"); _syncComfortActive(); }
+      }
+      function closeComfort() {
+        var p = document.getElementById("comfort-pop");
+        if (p) p.classList.remove("show");
+      }
+      // 保留:他處若仍呼叫 toggleDay,維持快速 night/day 切換
       function toggleDay() {
-        document.body.classList.toggle("day-mode");
-        savePref(
-          PREF_KEYS.theme,
-          document.body.classList.contains("day-mode") ? "day" : "night",
-        );
+        setTheme(document.body.classList.contains("day-mode") ? "night" : "day");
       }
 
       // ── Info panel (⏳ 一鍵收合) ──
