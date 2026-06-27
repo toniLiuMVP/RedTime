@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v66-20260625';  // bump: subset webfonts to the in-use glyph set
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v217-20260627';   // bump every deploy that changes html/js/css; auto-reload then delivers the fix to clients still on the prior worker
+const RUNTIME_VERSION = 'runtime-v218-20260627';   // bump every deploy that changes html/js/css; auto-reload then delivers the fix to clients still on the prior worker
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
@@ -149,6 +149,14 @@ self.addEventListener('fetch', event => {
         }
         return response;
       })
-      .catch(() => caches.match(request))    // match() 自動跨所有 cache 找
+      .catch(() => caches.match(request).then(cached => {
+        if (cached) return cached;
+        // 離線且未快取的「導覽請求」(分享深連 / 帶 utm 的 URL / 未 precache 的路徑)
+        // → 回退到快取的 app shell,讓 PWA 真正離線可用,而非瀏覽器錯誤頁。
+        if (request.mode === 'navigate') {
+          return caches.match('/RedTime/reader.html').then(s => s || caches.match('/RedTime/'));
+        }
+        return undefined;
+      }))
   );
 });

@@ -2163,14 +2163,18 @@
           clamp(42px, 7vw, 50px);
         border-bottom: 1px solid var(--line2);
         position: relative;
-        opacity: 0;
-        transform: translateY(18px);
         transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
         scroll-margin-top: var(--top-offset);
         content-visibility: auto;
         contain-intrinsic-size: auto 800px;
       }
-      .episode.visible {
+      /* 淡入只在 JS 就緒(reveal observer 已接好)後才套 opacity:0;若 JS 中途出錯，
+         body.js-ready 不會被加，章節維持可見 → 內容優先，不會整篇隱形 */
+      body.js-ready .episode {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+      body.js-ready .episode.visible {
         opacity: 1;
         transform: none;
       }
@@ -9172,6 +9176,9 @@
         revealObs.observe(el);
         obs.observe(el);
       });
+      /* reveal observer 已接好 → 啟用淡入(opacity:0 gate)。同步執行,單次 paint 無閃爍;
+         若上方任一步驟 throw,此行不會執行,章節維持可見(內容優先 fallback) */
+      document.body.classList.add("js-ready");
       applyCompanionPref(); /* 章節建構完才有 .ep-companion 可套偏好與計數 */
       buildTimelinePanel(0);
       buildTraversePanel(0);
@@ -10844,6 +10851,8 @@
         let W,
           H,
           pts = [];
+        let _heroRAF = 0, _heroVis = true, _heroReduce = false;
+        try { _heroReduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
         const C = [
           "#16a864",
           "#a8a49c",
@@ -10872,11 +10881,9 @@
         }
         for (let i = 0; i < 110; i++) pts.push(mkP());
         function draw() {
-          /* 當 hero 完全滾出視野時暫停繪製，節省 CPU/電池 */
-          if (cvs.getBoundingClientRect().bottom < 0) {
-            requestAnimationFrame(draw);
-            return;
-          }
+          _heroRAF = 0;
+          /* 完全滾出視野 → 真正停止 loop(IntersectionObserver 重新進場時 restart)，不再空轉 rAF 耗電 */
+          if (!_heroVis) return;
           ctx.clearRect(0, 0, W, H);
           pts = pts.filter((p) => {
             p.x += p.vx;
@@ -10894,11 +10901,21 @@
           });
           while (pts.length < 110) pts.push(mkP());
           ctx.globalAlpha = 1;
-          requestAnimationFrame(draw);
+          _heroRAF = requestAnimationFrame(draw);
         }
+        function _startHero() { if (!_heroRAF && _heroVis && !_heroReduce) _heroRAF = requestAnimationFrame(draw); }
+        function _drawHeroStatic() {
+          ctx.clearRect(0, 0, W, H);
+          pts.forEach((p) => { ctx.globalAlpha = p.a; ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill(); });
+          ctx.globalAlpha = 1;
+        }
+        try {
+          const _heroIO = new IntersectionObserver((es) => { _heroVis = es[0].isIntersecting; if (_heroVis && !_heroReduce) _startHero(); });
+          _heroIO.observe(cvs);
+        } catch (e) { _heroVis = true; }
         window.addEventListener("resize", resize, { passive: true });
         resize();
-        draw();
+        if (_heroReduce) _drawHeroStatic(); else _startHero();
       })();
 
       // ── AUTO SCROLL ──────────────────────────────────
