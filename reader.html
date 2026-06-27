@@ -4250,23 +4250,35 @@
       .cd-who { font: 500 11px/1.4 "Noto Sans TC", sans-serif; color: rgba(233, 196, 142, 0.72); margin-bottom: 5px; }
       .cd-bubble { font: 400 14.5px/1.95 "Noto Serif TC", serif; color: rgba(240, 228, 206, 0.95); padding: 10px 14px; border-radius: 13px; background: rgba(196, 164, 132, 0.08); border: 1px solid rgba(196, 164, 132, 0.2); display: inline-block; text-align: left; }
       .cd-turn.right .cd-bubble { background: rgba(120, 150, 170, 0.1); border-color: rgba(120, 150, 170, 0.24); }
-      .gm-legend { display: flex; gap: 16px; margin-bottom: 14px; font: 400 11.5px/1 "Noto Sans TC", sans-serif; color: rgba(233, 224, 200, 0.6); }
-      .gm-legend span { display: inline-flex; align-items: center; gap: 5px; }
-      .gm-d { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
-      .gm-sci { background: #6fb3b0; }
-      .gm-st { background: #e8a07a; }
-      .gm-lit { background: #c8a0e8; }
-      .gm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: 7px; }
-      .gm-cell { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 4px 7px; border-radius: 9px; border: 1px solid rgba(196, 164, 132, 0.18); background: rgba(196, 164, 132, 0.03); cursor: pointer; transition: all 0.15s; }
-      .gm-cell:hover { border-color: rgba(233, 196, 142, 0.55); background: rgba(233, 196, 142, 0.1); }
-      .gm-cell.d2 { background: rgba(233, 196, 142, 0.05); }
-      .gm-cell.d3 { background: rgba(233, 196, 142, 0.09); }
-      .gm-ep { font: 600 12px/1 "DM Mono", monospace; color: rgba(233, 224, 200, 0.85); }
-      .gm-dots { display: flex; gap: 3px; min-height: 7px; }
+      /* 目錄(原導讀地圖):每集 標題+分鐘+已讀,左色條=視角線(複用既有 .arc-*::before 漸層) */
+      .gtoc-head { font: 600 12px/1.5 "Noto Sans TC", sans-serif; color: rgba(233, 196, 142, 0.8); margin-bottom: 12px; letter-spacing: 0.04em; }
+      .gtoc-list { display: flex; flex-direction: column; }
+      .gtoc-row { position: relative; display: flex; align-items: baseline; gap: 10px; width: 100%; padding: 11px 8px 11px 18px; background: none; border: none; border-bottom: 1px dashed rgba(196, 164, 132, 0.14); color: rgba(240, 228, 206, 0.92); cursor: pointer; text-align: left; font-family: "Noto Serif TC", serif; transition: background 0.15s; }
+      .gtoc-row::before { content: ''; position: absolute; left: 5px; top: 9px; bottom: 9px; width: 3px; border-radius: 2px; opacity: 0.9; }
+      .gtoc-row:hover { background: rgba(196, 164, 132, 0.07); }
+      .gtoc-row.read { opacity: 0.6; }
+      .gtoc-row.current, .gtoc-row.read.current { opacity: 1; background: rgba(233, 196, 142, 0.1); }
+      .gtoc-ep { flex: 0 0 auto; min-width: 38px; font: 600 11px/1.6 "DM Mono", monospace; color: rgba(233, 196, 142, 0.85); }
+      .gtoc-title { flex: 1 1 auto; font-size: 14px; line-height: 1.5; }
+      .gtoc-arc { flex: 0 0 auto; font: 500 10.5px/1.6 "Noto Sans TC", sans-serif; white-space: nowrap; opacity: 0.85; }
+      .gtoc-arc-father { color: var(--jade); }
+      .gtoc-arc-male { color: var(--silver); }
+      .gtoc-arc-female { color: var(--f3, #ff4858); }
+      .gtoc-arc-daughter { color: var(--amber); }
+      .gtoc-arc-mixed { color: var(--ember); }
+      .gtoc-mins { flex: 0 0 auto; font: 400 11px/1.6 "Noto Sans TC", sans-serif; color: rgba(233, 224, 200, 0.5); white-space: nowrap; }
+      .gtoc-tick { flex: 0 0 auto; width: 16px; text-align: center; font-size: 13px; color: rgba(140, 206, 150, 0.9); }
+      .gtoc-row.current .gtoc-tick { color: rgba(233, 196, 142, 0.95); }
+      body.day-mode .gtoc-head { color: #8a5a1a; }
+      body.day-mode .gtoc-row { color: #2a2418; border-bottom-color: rgba(146, 104, 36, 0.16); }
+      body.day-mode .gtoc-ep { color: #8a5a1a; }
+      body.day-mode .gtoc-mins { color: #6a5a40; }
+      body.day-mode .gtoc-row.current { background: rgba(146, 104, 36, 0.1); }
+      body.day-mode .gtoc-tick { color: #3a7a40; }
       body.day-mode #curation-panel { background: #f7f2e8; border-color: rgba(146, 104, 36, 0.25); }
       body.day-mode .cur-title, body.day-mode .cur-tab.active, body.day-mode .cur-result-head, body.day-mode .cd-who { color: #8a5a1a; }
-      body.day-mode .cqc-quote, body.day-mode .cd-bubble, body.day-mode .gm-ep { color: #2a2418; }
-      body.day-mode .cur-intro, body.day-mode .cqc-meta, body.day-mode .gm-legend, body.day-mode .cur-tab { color: #6a5a40; }
+      body.day-mode .cqc-quote, body.day-mode .cd-bubble { color: #2a2418; }
+      body.day-mode .cur-intro, body.day-mode .cqc-meta, body.day-mode .cur-tab { color: #6a5a40; }
       body.day-mode .cur-chip, body.day-mode .cur-chip2 { color: #5a4a30; border-color: rgba(146, 104, 36, 0.3); }
       body.day-mode .cd-bubble { background: rgba(146, 104, 36, 0.06); border-color: rgba(146, 104, 36, 0.18); }
       body.day-mode .cd-turn.right .cd-bubble { background: rgba(70, 100, 130, 0.08); border-color: rgba(70, 100, 130, 0.2); }
@@ -6361,7 +6373,7 @@
       <div class="cur-tabs" role="tablist">
         <button class="cur-tab active" type="button" role="tab" onclick="switchCurTab(0,this)">主題選讀</button>
         <button class="cur-tab" type="button" role="tab" onclick="switchCurTab(1,this)">跨時空對話</button>
-        <button class="cur-tab" type="button" role="tab" onclick="switchCurTab(2,this)">導讀地圖</button>
+        <button class="cur-tab" type="button" role="tab" onclick="switchCurTab(2,this)">目錄</button>
       </div>
       <div class="cur-body">
         <div class="cur-panel active" id="cur-panel-0"></div>
@@ -6586,7 +6598,7 @@
           <span class="fab-icon" id="egg-icon" data-ui-icon="egg"></span
           ><span class="fab-label">彩蛋</span>
         </button>
-        <button class="fab-item fab-curation" type="button" onclick="openCuration()" aria-label="選讀策展 · 按主題橫向讀文人說、跨時空對話、導讀地圖">
+        <button class="fab-item fab-curation" type="button" onclick="openCuration()" aria-label="選讀策展 · 按主題橫向讀文人說、跨時空對話、目錄">
           <span class="fab-icon" aria-hidden="true">✦</span
           ><span class="fab-label">選讀</span>
         </button>
@@ -9895,27 +9907,33 @@
           box.appendChild(turn);
         });
       }
-      // #10 導讀地圖:全 42 集陪讀功能密度總覽
+      // #10 目錄:每集標題 + 約略分鐘 + 已讀勾(視角著色)。不快取,每次開都反映最新已讀。
       function renderGuideMap() {
         var panel = document.getElementById('cur-panel-2');
-        if (!panel || _curCache[2]) return;
-        var cells = '';
-        for (var ep = 0; ep <= 41; ep++) {
-          var sci = (typeof SCIENCE !== 'undefined' && SCIENCE.some(function (s) { return s.ep === ep; })) ? 1 : 0;
-          var st = (typeof STORYTELLERS !== 'undefined' && STORYTELLERS[String(ep)]) ? STORYTELLERS[String(ep)].length : 0;
-          var lit = (typeof LITERATI !== 'undefined' && LITERATI[String(ep)]) ? LITERATI[String(ep)].length : 0;
-          var density = sci + (st ? 1 : 0) + (lit ? 1 : 0);
-          var labels = (sci ? '科普 ' : '') + (st ? ('說書人×' + st + ' ') : '') + (lit ? ('文人說×' + lit) : '');
-          var tip = 'EP' + ep + (labels ? ('：' + labels) : '');
-          cells += '<button type="button" class="gm-cell d' + density + '" onclick="closeCuration();goToEp(' + ep + ')" title="' + tip + '">'
-            + '<span class="gm-ep">' + ep + '</span>'
-            + '<span class="gm-dots">' + (sci ? '<i class="gm-d gm-sci"></i>' : '') + (st ? '<i class="gm-d gm-st"></i>' : '') + (lit ? '<i class="gm-d gm-lit"></i>' : '') + '</span>'
+        if (!panel) return;
+        var eps = (typeof EPISODES !== 'undefined' && EPISODES) ? EPISODES : [];
+        var hasRead = (typeof _readEps !== 'undefined' && _readEps);
+        var readCount = hasRead ? eps.filter(function (e) { return _readEps.has(e.ep); }).length : 0;
+        var curN = (typeof currentEpNum !== 'undefined') ? currentEpNum : -1;
+        var rows = '';
+        eps.forEach(function (ep) {
+          var read = hasRead && _readEps.has(ep.ep);
+          var cur = curN === ep.ep;
+          var mins = (typeof readMins === 'function') ? readMins(ep.html) : '';
+          var title = (typeof shortEpisodeTitle === 'function') ? shortEpisodeTitle(ep) : ('EP' + ep.ep);
+          var arc = ep.arc || 'mixed';
+          var arcLbl = (typeof ARC_LBL !== 'undefined' && ARC_LBL[arc]) ? ARC_LBL[arc].replace('視角', '') : '';
+          rows += '<button type="button" class="gtoc-row arc-' + arc + (cur ? ' current' : '') + (read ? ' read' : '') + '" onclick="closeCuration();goToEp(' + ep.ep + ')">'
+            + '<span class="gtoc-ep">EP' + ep.ep + '</span>'
+            + '<span class="gtoc-title">' + escapeHtml(title) + '</span>'
+            + '<span class="gtoc-arc gtoc-arc-' + arc + '">' + escapeHtml(arcLbl) + '</span>'
+            + '<span class="gtoc-mins">' + mins + ' 分鐘</span>'
+            + '<span class="gtoc-tick">' + (cur ? '◉' : (read ? '✓' : '')) + '</span>'
             + '</button>';
-        }
-        panel.innerHTML = '<div class="cur-intro">全 42 集的陪讀總覽：每一集都配了科普、說書人、文人說三種「陪讀」，亮點顏色對應下方圖例。點任一格，直接跳到那一集。</div>'
-          + '<div class="gm-legend"><span><i class="gm-d gm-sci"></i>科普</span><span><i class="gm-d gm-st"></i>說書人</span><span><i class="gm-d gm-lit"></i>文人說</span></div>'
-          + '<div class="gm-grid">' + cells + '</div>';
-        _curCache[2] = true;
+        });
+        panel.innerHTML = '<div class="cur-intro">全 42 集目錄：看每一章是什麼、多長，再決定要不要點進去。左側色條是視角線（把拔／學長／學妹／女兒／混合），已讀打勾、目前所在標 ◉。</div>'
+          + '<div class="gtoc-head">已讀 ' + readCount + ' / ' + eps.length + '</div>'
+          + '<div class="gtoc-list">' + rows + '</div>';
       }
       /* 時間地圖寬版檢視:360px 抽屜 ↔ 92vw 大畫布(時空穿越圖整張一次顯示) */
       function toggleInfoWide() {
