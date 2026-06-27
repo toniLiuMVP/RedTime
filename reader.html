@@ -9112,6 +9112,7 @@
             const n = parseInt(e.target.id.replace("ep-", ""), 10);
             if (isNaN(n)) return;
             currentEpNum = n;
+            _syncEpHash(n);
             const ep = EPISODES.find((x) => x.ep === n);
             if (ep) {
               const cT = shortEpisodeTitle(ep);
@@ -9472,9 +9473,22 @@
         }
         requestAnimationFrame(pin);
       }
+      // 提案:把目前章節同步進網址 hash(#ep-N),讓 URL 可分享、深連可落點。
+      // 用 replaceState 不污染歷史;略過嵌入模式與非 #ep- 的既有 hash(如 #fanquiz)。
+      function _syncEpHash(n) {
+        try {
+          if (typeof location === 'undefined') return;
+          if (new URLSearchParams(location.search).get('embed') === '1') return;
+          var cur = location.hash;
+          if (cur && cur.indexOf('#ep-') !== 0) return;
+          var h = '#ep-' + n;
+          if (cur !== h) history.replaceState(null, '', location.pathname + location.search + h);
+        } catch (e) {}
+      }
       function goToEp(n) {
         const target = document.getElementById("ep-" + n);
         if (!target) return;
+        _syncEpHash(n);
         const gen = ++_jumpGen;
         document.body.classList.add("hash-jumping");
         EPISODES.forEach((ep) => {
