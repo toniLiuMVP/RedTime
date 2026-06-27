@@ -3308,7 +3308,7 @@
       }
       .fab-main-row {
         display: grid;
-        /* +鐵粉 → 9 cols 一列 (mobile) */
+        /* 9 個可見項 → 9 欄一列 (mobile, >390px) */
         grid-template-columns: repeat(9, minmax(0, 1fr));
         gap: 4px;
       }
@@ -5537,7 +5537,8 @@
           font-size: 10.5px;
         }
         .fab-main-row {
-          grid-template-columns: repeat(4, minmax(0, 1fr));
+          /* 9 項 → 3×3，整除無空白欄位(4 欄會留 4+4+1 孤行) */
+          grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 6px 8px;
         }
         #toast {
@@ -6312,6 +6313,8 @@
               style="font-size:11px;text-decoration:none;font-weight:700">天堂路</a>
             <a class="nav-btn" href="demos/platform-run/index.html" aria-label="月台上的狂奔"
               style="font-size:14px;text-decoration:none">🏃</a>
+            <button type="button" class="nav-btn" onclick="openSearch()" aria-label="全文搜尋 · 找場景、台詞、伏筆"
+              style="font-size:18px;-webkit-appearance:none;appearance:none">⌕</button>
           </div>
         </div>
         <!-- Story Progress Slider (desktop only) -->
@@ -6574,10 +6577,6 @@
         <button class="fab-item" type="button" onclick="magnifyFont()" aria-label="放大鏡 · 一鍵切換到最大字體（長輩友善）">
           <span class="fab-icon">🔍</span
           ><span class="fab-label">放大鏡</span>
-        </button>
-        <button class="fab-item" type="button" onclick="openSearch()" aria-label="全文搜尋 · 找場景、台詞、伏筆">
-          <span class="fab-icon">⌕</span
-          ><span class="fab-label">搜尋</span>
         </button>
         <button class="fab-item" type="button" onclick="toggleDay()" aria-label="切換深色 / 淺色閱讀模式">
           <span class="fab-icon" data-ui-icon="sun"></span
