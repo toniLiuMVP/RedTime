@@ -4496,8 +4496,60 @@
         font-size: 10px;
         letter-spacing: 0.05em;
         color: rgba(120, 196, 198, 0.95);
-        cursor: help;
-        user-select: text;
+        cursor: pointer;
+        line-height: 1.5;
+        -webkit-appearance: none;
+        appearance: none;
+        transition: background 0.2s, border-color 0.2s;
+      }
+      .ep-science .es-expert:hover,
+      .ep-science .es-expert.lens-on {
+        background: rgba(120, 196, 198, 0.22);
+        border-color: rgba(120, 196, 198, 0.7);
+      }
+      /* 提案2 博士視角跨集索引面板 */
+      .es-lens-panel {
+        flex-basis: 100%;
+        margin-top: 6px;
+        padding: 9px 11px;
+        border-radius: 10px;
+        background: rgba(120, 196, 198, 0.07);
+        border: 1px dashed rgba(120, 196, 198, 0.32);
+      }
+      .elp-head {
+        font: 500 12px/1.6 "Noto Sans TC", sans-serif;
+        color: rgba(150, 214, 214, 0.95);
+        margin-bottom: 7px;
+      }
+      .elp-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .elp-link {
+        padding: 3px 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(120, 196, 198, 0.4);
+        background: rgba(120, 196, 198, 0.12);
+        color: rgba(150, 214, 214, 0.95);
+        font: 600 11.5px/1 "DM Mono", monospace;
+        cursor: pointer;
+        transition: background 0.18s;
+      }
+      .elp-link:hover {
+        background: rgba(120, 196, 198, 0.28);
+      }
+      body.day-mode .es-lens-panel {
+        background: rgba(40, 120, 130, 0.06);
+        border-color: rgba(40, 120, 130, 0.3);
+      }
+      body.day-mode .elp-head {
+        color: rgba(20, 90, 95, 0.9);
+      }
+      body.day-mode .elp-link {
+        border-color: rgba(40, 120, 130, 0.4);
+        background: rgba(40, 120, 130, 0.1);
+        color: rgba(20, 90, 95, 0.9);
       }
       .ep-science .es-expert .es-expert-en {
         font-family: "DM Mono", monospace;
@@ -9912,6 +9964,43 @@
         });
         return parts.join('');
       }
+      // 提案2 博士視角:點科普裡的博士 badge → 展開這位博士在哪些集出沒(跨集索引,跟著一個視角讀整部)
+      function showLensEpisodes(key, curEp, btn) {
+        var row = btn.parentElement;
+        var open = row.querySelector('.es-lens-panel');
+        var wasThis = open && open.getAttribute('data-key') === key;
+        Array.prototype.forEach.call(row.querySelectorAll('.es-lens-panel'), function (p) { p.remove(); });
+        Array.prototype.forEach.call(row.querySelectorAll('.es-expert.lens-on'), function (b) { b.classList.remove('lens-on'); });
+        if (wasThis) return;
+        btn.classList.add('lens-on');
+        var eps = [];
+        for (var ep in EP_EXPERTS) {
+          if (Object.prototype.hasOwnProperty.call(EP_EXPERTS, ep) && EP_EXPERTS[ep].indexOf(key) !== -1 && +ep !== +curEp) eps.push(+ep);
+        }
+        eps.sort(function (a, b) { return a - b; });
+        var lab = EXPERT_LABELS[key] || { zh: key, icon: '' };
+        var panel = document.createElement('div');
+        panel.className = 'es-lens-panel';
+        panel.setAttribute('data-key', key);
+        var head = document.createElement('div');
+        head.className = 'elp-head';
+        head.textContent = lab.icon + ' ' + lab.zh + (eps.length ? ' 的視角也出沒在這幾集，跟著讀：' : ' 只在這一集出沒。');
+        panel.appendChild(head);
+        if (eps.length) {
+          var links = document.createElement('div');
+          links.className = 'elp-links';
+          eps.forEach(function (ep) {
+            var a = document.createElement('button');
+            a.type = 'button';
+            a.className = 'elp-link';
+            a.textContent = 'EP' + ep;
+            a.onclick = function () { goToScience(ep); };
+            links.appendChild(a);
+          });
+          panel.appendChild(links);
+        }
+        row.appendChild(panel);
+      }
       function goToScience(ep) {
         goToEp(ep);
         setTimeout(function () {
@@ -10051,8 +10140,9 @@
         /* render 1-2 博士 badges (中英對照 via title tooltip) */
         const expertKeys = EP_EXPERTS[s.ep] || [];
         const experts = expertKeys.map(function (k) { return EXPERT_LABELS[k]; }).filter(Boolean);
-        const expertsHTML = experts.map(function (e) {
-          return '<span class="es-expert" title="' + escapeHtml(e.zh) + ' · ' + escapeHtml(e.en) + '">' + e.icon + ' ' + escapeHtml(e.zh) + '<span class="es-expert-en">' + escapeHtml(e.en) + '</span></span>';
+        const expertsHTML = expertKeys.map(function (k) {
+          var e = EXPERT_LABELS[k]; if (!e) return '';
+          return '<button type="button" class="es-expert" title="' + escapeHtml(e.zh) + ' · ' + escapeHtml(e.en) + '｜點開看這位博士在哪些集出沒" onclick="showLensEpisodes(\'' + k + '\',' + s.ep + ',this)">' + e.icon + ' ' + escapeHtml(e.zh) + '<span class="es-expert-en">' + escapeHtml(e.en) + '</span></button>';
         }).join('');
         const avatarIcon = (experts[0] && experts[0].icon) || '⚛';
         return `<div class="ep-science"><div class="ep-science-toggle" onclick="toggleScience(this)" role="button" tabindex="0" aria-expanded="false" aria-controls="science-body-${s.ep}"><div class="es-avatar"><span aria-hidden="true">${avatarIcon}</span></div><span class="es-label">科普 · <span style="font-size:10px;opacity:.7;letter-spacing:.08em">${escapeHtml(s.topic.split('。')[0].split('—')[0].split('/')[0].trim())}</span></span><span class="es-arrow">▾</span></div><div class="ep-science-body" id="science-body-${s.ep}"><div class="es-kicker">EP${s.ep} · 科普小單元</div><div class="es-frame">讓懂物理的人補一句：定律是真的，拿來比喻紅線的部分，是文學。</div>${expertsHTML ? '<div class="es-experts">' + expertsHTML + '</div>' : ''}<div class="es-title">${_sciGlossTitle(s.topic)}</div>${scienceTermChips(s.body)}<div class="es-text es-notebook">${formatScienceBody(s.body)}</div>${s.ep === 11 ? buildTimeLab(s.ep) : ''}${scienceThreadFooter(s.ep)}</div></div>`;
