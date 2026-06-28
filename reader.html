@@ -4623,8 +4623,20 @@
       .cur-head { display: flex; align-items: center; justify-content: space-between; padding: 4px 18px 10px; }
       .cur-title { font: 700 15px/1.4 "Noto Serif TC", serif; color: rgba(233, 196, 142, 0.95); letter-spacing: 0.06em; }
       .cur-close { background: none; border: none; color: rgba(233, 196, 142, 0.7); font-size: 18px; cursor: pointer; padding: 4px 8px; }
-      .cur-tabs { display: flex; gap: 4px; padding: 0 14px; border-bottom: 1px solid rgba(196, 164, 132, 0.14); }
-      .cur-tab { background: none; border: none; border-bottom: 2px solid transparent; color: rgba(233, 224, 200, 0.58); font: 600 13px/1 "Noto Sans TC", sans-serif; padding: 10px 12px; cursor: pointer; }
+      .cur-tabs { display: flex; gap: 4px; padding: 0 14px; border-bottom: 1px solid rgba(196, 164, 132, 0.14); overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .cur-tab { background: none; border: none; border-bottom: 2px solid transparent; color: rgba(233, 224, 200, 0.58); font: 600 13px/1 "Noto Sans TC", sans-serif; padding: 10px 12px; cursor: pointer; flex-shrink: 0; white-space: nowrap; }
+      /* N7 那一眼·五視角導覽 */
+      .og-grid { display: flex; flex-direction: column; gap: 9px; }
+      .og-card { display: flex; flex-direction: column; gap: 5px; text-align: left; width: 100%; padding: 13px 15px; border: 1px solid var(--line); border-left-width: 3px; border-radius: 8px; background: rgba(255, 255, 255, 0.012); cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+      .og-card:hover { background: rgba(255, 255, 255, 0.03); }
+      .og-card.arc-male { border-left-color: var(--silver); }
+      .og-card.arc-female { border-left-color: var(--f3, #ff4858); }
+      .og-card.arc-daughter { border-left-color: var(--amber); }
+      .og-card.arc-father { border-left-color: var(--jade); }
+      .og-card.arc-mixed { border-left-color: var(--ember); }
+      .og-card .og-arc { font: 600 9.5px/1 "Noto Sans TC", sans-serif; letter-spacing: 0.16em; color: var(--t3); }
+      .og-card .og-line { font-size: 14px; line-height: 1.55; color: var(--t1); }
+      .og-card .og-go { font: italic 11px "Cormorant Garamond", serif; color: var(--amber); letter-spacing: 0.04em; }
       .cur-tab.active { color: rgba(233, 196, 142, 0.95); border-bottom-color: rgba(233, 196, 142, 0.8); }
       .cur-body { overflow-y: auto; padding: 16px 18px 28px; -webkit-overflow-scrolling: touch; }
       .cur-panel { display: none; }
@@ -4657,6 +4669,12 @@
       .gtoc-year-head .gyh-n { font-family: "Noto Sans TC", sans-serif; font-style: normal; font-size: 10.5px; color: rgba(233,196,142,.45); }
       body.day-mode .gtoc-mode-btn.active { color: #8a5a1a; border-color: rgba(146,104,36,.5); }
       body.day-mode .gtoc-year-head { color: #8a5a1a; }
+      /* N1 回讀線索索引 */
+      .motif-list { display: flex; flex-direction: column; gap: 11px; }
+      .motif-row { display: flex; gap: 10px; align-items: baseline; }
+      .motif-row .motif-ep { flex-shrink: 0; background: none; border: 1px solid rgba(233, 196, 142, 0.3); color: rgba(233, 196, 142, 0.85); border-radius: 4px; padding: 1px 7px; font: italic 11px "Cormorant Garamond", serif; cursor: pointer; }
+      .motif-row .motif-ep:hover { border-color: var(--amber); }
+      .motif-row .motif-text { font-size: 13px; line-height: 1.62; color: var(--t2); }
       .gtoc-list { display: flex; flex-direction: column; }
       .gtoc-row { position: relative; display: flex; align-items: baseline; gap: 10px; width: 100%; padding: 11px 8px 11px 18px; background: none; border: none; border-bottom: 1px dashed rgba(196, 164, 132, 0.14); color: rgba(240, 228, 206, 0.92); cursor: pointer; text-align: left; font-family: "Noto Serif TC", serif; transition: background 0.15s; }
       .gtoc-row::before { content: ''; position: absolute; left: 5px; top: 9px; bottom: 9px; width: 3px; border-radius: 2px; opacity: 0.9; }
@@ -6794,11 +6812,15 @@
         <button class="cur-tab active" type="button" role="tab" onclick="switchCurTab(0,this)">主題選讀</button>
         <button class="cur-tab" type="button" role="tab" onclick="switchCurTab(1,this)">跨時空對話</button>
         <button class="cur-tab" type="button" role="tab" onclick="switchCurTab(2,this)">目錄</button>
+        <button class="cur-tab" type="button" role="tab" onclick="switchCurTab(3,this)">回讀線索</button>
+        <button class="cur-tab" type="button" role="tab" onclick="switchCurTab(4,this)">那一眼</button>
       </div>
       <div class="cur-body">
         <div class="cur-panel active" id="cur-panel-0"></div>
         <div class="cur-panel" id="cur-panel-1"></div>
         <div class="cur-panel" id="cur-panel-2"></div>
+        <div class="cur-panel" id="cur-panel-3"></div>
+        <div class="cur-panel" id="cur-panel-4"></div>
       </div>
     </div>
 
@@ -10646,6 +10668,55 @@
         if (i === 0) renderThemeCuration();
         else if (i === 1) renderTimeDialogue();
         else if (i === 2) renderGuideMap();
+        else if (i === 3) renderMotifIndex();
+        else if (i === 4) renderOneGlance();
+      }
+      // N7 那一眼·五視角導覽：同一秒(2005 後門那一眼)在 5 集各演一次，用既有 canon 金句做並排卡片+跳轉。
+      // 不摘錄/不重排正文(保留聖地留白)，只給「五道門」。導覽版。
+      function renderOneGlance() {
+        var panel = document.getElementById('cur-panel-4');
+        if (!panel) return;
+        var EPS = [3, 12, 32, 35, 38];
+        var cards = EPS.map(function (n) {
+          var ep = EPISODES.find(function (e) { return e.ep === n; });
+          if (!ep) return '';
+          var arc = sanitizeClassToken(ep.arc || 'mixed');
+          var arcLbl = (typeof ARC_LBL !== 'undefined' && ARC_LBL[ep.arc]) ? ARC_LBL[ep.arc] : ep.arc;
+          var _oa = (typeof ANNOTATIONS !== 'undefined' && ANNOTATIONS[String(n)]) || [];
+          var line = _oa[0] ? _oa[0]
+            : ((typeof SHARE_LINES !== 'undefined' && SHARE_LINES[n]) ? SHARE_LINES[n]
+            : ((typeof shortEpisodeTitle === 'function') ? shortEpisodeTitle(ep) : ('EP' + n)));
+          return '<button type="button" class="og-card arc-' + arc + '" onclick="closeCuration();goToEp(' + n + ')">'
+            + '<span class="og-arc">' + escapeHtml(arcLbl) + '</span>'
+            + '<span class="og-line">' + escapeHtml(line) + '</span>'
+            + '<span class="og-go">讀這個視角 · ' + fmtEp(n) + ' →</span>'
+            + '</button>';
+        }).join('');
+        panel.innerHTML = '<div class="cur-intro">2005 年，後門的那一眼。同一秒鐘，這幾個人各自看見了它——學長、學妹、女兒，站在不同的位置。挑一道門走進去，那一秒的全貌，得你自己拼起來。</div><div class="og-grid">' + cards + '</div>';
+      }
+      // N1 安全後向母題索引：把「已讀集數」的重讀線索（ANNOTATIONS clue，含回指 EP 連結）收成一處。
+      // 只列讀過的集數 → 不爆雷（後向）；沿用既有 linkifyEpRefs 安全模型，不新增母題詮釋。不快取，每次反映最新已讀。
+      function renderMotifIndex() {
+        var panel = document.getElementById('cur-panel-3');
+        if (!panel) return;
+        // 後向：只列「實際已讀」集數（_readEps）的線索；沒讀過半集就不顯示任何條目（不爆雷）。
+        var readSet = (typeof _readEps !== 'undefined' && _readEps && _readEps.size) ? _readEps : null;
+        var rows = '';
+        if (readSet) {
+          EPISODES.forEach(function (ep) {
+            if (!readSet.has(ep.ep)) return;
+            var ann = (typeof ANNOTATIONS !== 'undefined' && ANNOTATIONS[String(ep.ep)]) || ['', ''];
+            var clues = ann.slice(2).filter(Boolean);
+            clues.forEach(function (c) {
+              rows += '<div class="motif-row"><button type="button" class="motif-ep" onclick="closeCuration();goToEp(' + ep.ep + ')">' + fmtEp(ep.ep) + '</button><span class="motif-text">' + linkifyEpRefs(c) + '</span></div>';
+            });
+          });
+        }
+        if (!rows) {
+          panel.innerHTML = '<div class="cur-intro">往下讀，紅線埋下的伏筆與回指會慢慢浮現——讀過越多集，這裡能回看的就越多。</div>';
+          return;
+        }
+        panel.innerHTML = '<div class="cur-intro">把你讀過的集數裡，那些「再讀一次才看得懂」的伏筆與回指收在一起。只顯示你已讀到的，不爆雷。點集數或句中的 EP 都能跳回去。</div><div class="motif-list">' + rows + '</div>';
       }
       // #8 主題選讀:文人句子按主題橫向排列
       function renderThemeCuration() {
