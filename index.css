@@ -363,6 +363,52 @@
         margin: 10px 0 2px;
         letter-spacing: 0.04em;
       }
+      /* N15：三道試煉 · 忍 · 追 · 熬 */
+      .trials-frame {
+        flex-basis: 100%;
+        margin: 6px 0 2px;
+        border: 1px solid var(--seam);
+        border-radius: 8px;
+        padding: 12px 14px;
+        background: rgba(255, 255, 255, 0.012);
+      }
+      .trials-title {
+        text-align: center;
+        font-family: "Noto Serif TC", serif;
+        font-size: 13px;
+        letter-spacing: 0.16em;
+        color: rgba(234, 230, 222, 0.82);
+        margin-bottom: 10px;
+      }
+      .trial-game {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding: 9px 8px;
+        border-radius: 6px;
+        text-decoration: none;
+        color: inherit;
+        transition: background 0.2s;
+      }
+      .trial-game + .trial-game { border-top: 1px solid rgba(255, 255, 255, 0.05); }
+      .trial-game:hover { background: rgba(255, 255, 255, 0.03); }
+      .trial-game .tg-motif {
+        flex-shrink: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(232, 200, 122, 0.4);
+        border-radius: 50%;
+        font-family: "Noto Serif TC", serif;
+        font-size: 15px;
+        color: #e8c87a;
+      }
+      .trial-game .tg-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+      .trial-game .tg-name { font-size: 13.5px; font-weight: 500; color: var(--parchment); }
+      .trial-game .tg-line { font-size: 12px; line-height: 1.6; color: rgba(234, 230, 222, 0.6); }
+      .trial-game .tg-ep { color: #e8c87a; margin-left: 6px; white-space: nowrap; }
       .hero-side-stack {
         display: grid;
         gap: 18px;

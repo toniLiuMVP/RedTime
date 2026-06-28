@@ -4622,6 +4622,15 @@
       .cd-turn.right .cd-bubble { background: rgba(120, 150, 170, 0.1); border-color: rgba(120, 150, 170, 0.24); }
       /* 目錄(原導讀地圖):每集 標題+分鐘+已讀,左色條=視角線(複用既有 .arc-*::before 漸層) */
       .gtoc-head { font: 600 12px/1.5 "Noto Sans TC", sans-serif; color: rgba(233, 196, 142, 0.8); margin-bottom: 12px; letter-spacing: 0.04em; }
+      /* N6 依集數/依年份切換 + 年份分組標題 */
+      .gtoc-modes { display: flex; gap: 6px; margin-bottom: 12px; }
+      .gtoc-mode-btn { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.1); color: rgba(233,196,142,.55); border-radius: 4px; padding: 4px 12px; font: 500 12px "Noto Sans TC", sans-serif; cursor: pointer; transition: color .2s, border-color .2s; }
+      .gtoc-mode-btn.active { color: rgba(233,196,142,.95); border-color: rgba(233,196,142,.45); }
+      .gtoc-year-head { font: 600 12.5px "Cormorant Garamond", serif; font-style: italic; color: rgba(233,196,142,.85); margin: 16px 0 6px; padding-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,.06); display: flex; justify-content: space-between; align-items: baseline; }
+      .gtoc-year-head:first-child { margin-top: 0; }
+      .gtoc-year-head .gyh-n { font-family: "Noto Sans TC", sans-serif; font-style: normal; font-size: 10.5px; color: rgba(233,196,142,.45); }
+      body.day-mode .gtoc-mode-btn.active { color: #8a5a1a; border-color: rgba(146,104,36,.5); }
+      body.day-mode .gtoc-year-head { color: #8a5a1a; }
       .gtoc-list { display: flex; flex-direction: column; }
       .gtoc-row { position: relative; display: flex; align-items: baseline; gap: 10px; width: 100%; padding: 11px 8px 11px 18px; background: none; border: none; border-bottom: 1px dashed rgba(196, 164, 132, 0.14); color: rgba(240, 228, 206, 0.92); cursor: pointer; text-align: left; font-family: "Noto Serif TC", serif; transition: background 0.15s; }
       .gtoc-row::before { content: ''; position: absolute; left: 5px; top: 9px; bottom: 9px; width: 3px; border-radius: 2px; opacity: 0.9; }
@@ -10588,6 +10597,33 @@
         });
       }
       // #10 目錄:每集標題 + 約略分鐘 + 已讀勾(視角著色)。不快取,每次開都反映最新已讀。
+      // N6：可切「依集數 / 依年份」— 因為集數順序 ≠ 故事時序（1991→2026 來回跳）。
+      var _guideMode = 'all';
+      function setGuideMode(m, el) {
+        _guideMode = (m === 'year') ? 'year' : 'all';
+        renderGuideMap();
+      }
+      function _guideRowHTML(ep, hasRead, curN) {
+        var read = hasRead && _readEps.has(ep.ep);
+        var cur = curN === ep.ep;
+        var mins = (typeof readMins === 'function') ? readMins(ep.html) : '';
+        var title = (typeof shortEpisodeTitle === 'function') ? shortEpisodeTitle(ep) : ('EP' + ep.ep);
+        var arc = sanitizeClassToken(ep.arc || 'mixed');
+        var arcLbl = (typeof ARC_LBL !== 'undefined' && ARC_LBL[arc]) ? ARC_LBL[arc].replace('視角', '') : '';
+        return '<button type="button" class="gtoc-row arc-' + arc + (cur ? ' current' : '') + (read ? ' read' : '') + '" onclick="closeCuration();goToEp(' + ep.ep + ')">'
+          + '<span class="gtoc-ep">EP' + ep.ep + '</span>'
+          + '<span class="gtoc-title">' + escapeHtml(title) + '</span>'
+          + '<span class="gtoc-arc gtoc-arc-' + arc + '">' + escapeHtml(arcLbl) + '</span>'
+          + '<span class="gtoc-mins">' + mins + ' 分鐘</span>'
+          + '<span class="gtoc-tick">' + (cur ? '◉' : (read ? '✓' : '')) + '</span>'
+          + '</button>';
+      }
+      function _guideYearKey(ep) {
+        var ann = (typeof ANNOTATIONS !== 'undefined' && ANNOTATIONS[String(ep.ep)]) || ['', ''];
+        var tl = ann[1] || '';
+        var ym = tl.match(/(\d{4})\s*[-–~]\s*(\d{4})/) || tl.match(/(\d{4})/);
+        return ym ? (ym[2] ? ym[1] + '–' + ym[2] : ym[1]) : '未標定年份';
+      }
       function renderGuideMap() {
         var panel = document.getElementById('cur-panel-2');
         if (!panel) return;
@@ -10595,25 +10631,33 @@
         var hasRead = (typeof _readEps !== 'undefined' && _readEps);
         var readCount = hasRead ? eps.filter(function (e) { return _readEps.has(e.ep); }).length : 0;
         var curN = (typeof currentEpNum !== 'undefined') ? currentEpNum : -1;
-        var rows = '';
-        eps.forEach(function (ep) {
-          var read = hasRead && _readEps.has(ep.ep);
-          var cur = curN === ep.ep;
-          var mins = (typeof readMins === 'function') ? readMins(ep.html) : '';
-          var title = (typeof shortEpisodeTitle === 'function') ? shortEpisodeTitle(ep) : ('EP' + ep.ep);
-          var arc = sanitizeClassToken(ep.arc || 'mixed');
-          var arcLbl = (typeof ARC_LBL !== 'undefined' && ARC_LBL[arc]) ? ARC_LBL[arc].replace('視角', '') : '';
-          rows += '<button type="button" class="gtoc-row arc-' + arc + (cur ? ' current' : '') + (read ? ' read' : '') + '" onclick="closeCuration();goToEp(' + ep.ep + ')">'
-            + '<span class="gtoc-ep">EP' + ep.ep + '</span>'
-            + '<span class="gtoc-title">' + escapeHtml(title) + '</span>'
-            + '<span class="gtoc-arc gtoc-arc-' + arc + '">' + escapeHtml(arcLbl) + '</span>'
-            + '<span class="gtoc-mins">' + mins + ' 分鐘</span>'
-            + '<span class="gtoc-tick">' + (cur ? '◉' : (read ? '✓' : '')) + '</span>'
-            + '</button>';
-        });
-        panel.innerHTML = '<div class="cur-intro">全 42 集目錄：看每一章是什麼、多長，再決定要不要點進去。左側色條是視角線（把拔／學長／學妹／女兒／混合），已讀打勾、目前所在標 ◉。</div>'
+        var body;
+        if (_guideMode === 'year') {
+          var buckets = {}, order = [];
+          eps.forEach(function (ep) {
+            var key = _guideYearKey(ep);
+            if (!buckets[key]) { buckets[key] = []; order.push(key); }
+            buckets[key].push(ep);
+          });
+          order.sort(function (a, b) {
+            if (a === '未標定年份') return 1;
+            if (b === '未標定年份') return -1;
+            return parseInt(a, 10) - parseInt(b, 10);
+          });
+          body = order.map(function (key) {
+            return '<div class="gtoc-year-head">' + escapeHtml(key) + '<span class="gyh-n">' + buckets[key].length + ' 集</span></div>'
+              + buckets[key].map(function (ep) { return _guideRowHTML(ep, hasRead, curN); }).join('');
+          }).join('');
+        } else {
+          body = eps.map(function (ep) { return _guideRowHTML(ep, hasRead, curN); }).join('');
+        }
+        var intro = _guideMode === 'year'
+          ? '依「故事年份」重排（同一年的章節聚在一起）。因為集數順序並不等於故事發生的時序 — 故事在 1991 到 2026 之間來回跳。'
+          : '全 42 集目錄：看每一章是什麼、多長，再決定要不要點進去。左側色條是視角線（把拔／學長／學妹／女兒／混合），已讀打勾、目前所在標 ◉。';
+        panel.innerHTML = '<div class="cur-intro">' + intro + '</div>'
+          + '<div class="gtoc-modes"><button type="button" class="gtoc-mode-btn' + (_guideMode === 'all' ? ' active' : '') + '" onclick="setGuideMode(\'all\',this)">依集數</button><button type="button" class="gtoc-mode-btn' + (_guideMode === 'year' ? ' active' : '') + '" onclick="setGuideMode(\'year\',this)">依年份</button></div>'
           + '<div class="gtoc-head">已讀 ' + readCount + ' / ' + eps.length + '</div>'
-          + '<div class="gtoc-list">' + rows + '</div>';
+          + '<div class="gtoc-list">' + body + '</div>';
       }
       /* 時間地圖寬版檢視:360px 抽屜 ↔ 92vw 大畫布(時空穿越圖整張一次顯示) */
       function toggleInfoWide() {
