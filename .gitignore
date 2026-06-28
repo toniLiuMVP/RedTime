@@ -154,3 +154,6 @@ assets/sw-register.js
 
 # local planning notes (not for visitors)
 /.planning/
+
+# unminified source for the minified tiantanglu engine (local dev reference; rebuild via terser)
+demos/695/tiantanglu-3d/scene.src.js
