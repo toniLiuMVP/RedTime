@@ -650,6 +650,37 @@
         font: 300 11.5px / 1.7 "Noto Sans TC", sans-serif;
         color: rgba(234, 230, 222, 0.5);
       }
+      /* A2 直接落地 reader 的新讀者:無雷「誰是誰」+ 迷你辭典(文案複用 index 的 canon 對照,native details 零 JS) */
+      .hero-whois {
+        margin: 12px auto 0;
+        max-width: 300px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        text-align: left;
+        overflow: hidden;
+      }
+      .hero-whois > summary {
+        list-style: none;
+        cursor: pointer;
+        padding: 10px 14px;
+        font: 500 11.5px "Noto Sans TC", sans-serif;
+        letter-spacing: 0.04em;
+        color: var(--amber);
+        opacity: 0.82;
+      }
+      .hero-whois > summary::-webkit-details-marker { display: none; }
+      .hero-whois > summary::before { content: "＋ "; opacity: 0.55; }
+      .hero-whois[open] > summary::before { content: "－ "; }
+      .hero-whois[open] > summary { opacity: 1; }
+      .whois-body { padding: 2px 14px 13px; }
+      .whois-row { margin: 0 0 8px; font: 300 12px/1.6 "Noto Sans TC", sans-serif; color: rgba(234, 230, 222, 0.78); }
+      .whois-row b { color: rgba(236, 231, 218, 0.96); font-weight: 600; }
+      .whois-row span { display: block; font-size: 11px; opacity: 0.6; margin-top: 1px; }
+      .whois-gloss { margin: 11px 0 0; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.06); display: flex; flex-direction: column; gap: 6px; }
+      .whois-gloss div { display: flex; gap: 8px; font: 300 11px/1.55 "Noto Sans TC", sans-serif; }
+      .whois-gloss dt { flex-shrink: 0; min-width: 52px; color: var(--amber); opacity: 0.82; font-weight: 500; }
+      .whois-gloss dd { margin: 0; color: rgba(234, 230, 222, 0.66); }
       .hero-scene-link {
         display: inline-flex;
         align-items: center;
@@ -6622,6 +6653,21 @@
               <span class="reading-tip-label">閱讀建議</span>
               <span class="reading-tip-text">第一次讀建議按順序走（EP0→EP41），拼圖會自己亮起來。也可以從側欄按角色篩選，只跟著一個人的光往前。</span>
             </div>
+            <details class="hero-whois">
+              <summary>先看懂「誰是誰」· 無雷</summary>
+              <div class="whois-body">
+                <p class="whois-row"><b>學妹</b> ＝ <b>阿姨</b><span>同一個女人，橫跨二十年的兩個稱呼</span></p>
+                <p class="whois-row"><b>把拔</b> ＝ <b>學長</b><span>同一個男人，橫跨二十年——年輕時是學妹的學長，後來成了女兒的把拔</span></p>
+                <p class="whois-row"><b>女兒</b> 是把拔的女兒，她飛遍所有時間線，卻被禁止干預</p>
+                <dl class="whois-gloss">
+                  <div><dt>LM402</dt><dd>2005 年那間教室的編號；「那一眼」就發生在這裡。</dd></div>
+                  <div><dt>那一眼</dt><dd>鐘響後，學長走到後門，與站在那裡的學妹對上的那一秒；全書的時空原點。</dd></div>
+                  <div><dt>後門</dt><dd>學妹被叫去站著等的位置。「難的，是站好。」</dd></div>
+                  <div><dt>紅線</dt><dd>牽引兩人、貫穿全書的命運意象。</dd></div>
+                  <div><dt>20:57</dt><dd>一個被反覆記住的分鐘（學長精準打電話來的那一刻）。</dd></div>
+                </dl>
+              </div>
+            </details>
             <button
               class="hero-resume"
               id="resume-card"

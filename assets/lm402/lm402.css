@@ -129,7 +129,7 @@ a {
 .rotate-card h1 {
   margin: 12px 0 10px;
   font:
-    600 46px/1 Cormorant Garamond,
+    600 46px/1.1 "Cormorant Garamond", "Noto Serif TC",
     serif;
 }
 .rotate-card p {
@@ -223,7 +223,7 @@ a {
 .hud-title {
   margin-top: 8px;
   font:
-    600 48px/1 Cormorant Garamond,
+    600 48px/1.1 "Cormorant Garamond", "Noto Serif TC",
     serif;
   letter-spacing: 0.05em;
 }
@@ -920,7 +920,7 @@ body[data-ui-preset="ending"] #scene-canvas {
 .objective-title {
   margin-top: 8px;
   font:
-    600 34px/1 Cormorant Garamond,
+    600 34px/1.1 "Cormorant Garamond", "Noto Serif TC",
     serif;
 }
 .objective-copy {
@@ -1360,7 +1360,7 @@ body[data-ui-preset="ending"] #scene-canvas {
 .panel-title {
   margin-top: 8px;
   font:
-    600 34px/1 Cormorant Garamond,
+    600 34px/1.1 "Cormorant Garamond", "Noto Serif TC",
     serif;
 }
 .panel-objective {
@@ -1722,7 +1722,7 @@ body[data-ui-preset="ending"] #scene-canvas {
 .ending-title {
   margin-top: 8px;
   font:
-    600 42px/1 Cormorant Garamond,
+    600 42px/1.1 "Cormorant Garamond", "Noto Serif TC",
     serif;
 }
 .dialogue-copy {
