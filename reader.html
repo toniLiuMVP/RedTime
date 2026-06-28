@@ -1297,6 +1297,17 @@
         .sb-ep-item.has-egg .sb-ep-star {
           display: block;
         }
+        /* WCAG 1.4.1：側欄卷別字符（把/長/妹/女/合）— 顏色之外的第二重視覺線索（側欄為桌面 only，故留在此 media query 內）*/
+        .sb-ep-arc {
+          font-family: "Noto Sans TC", sans-serif;
+          font-size: 9px;
+          line-height: 1;
+          color: var(--t2);
+          opacity: 0.5;
+          flex-shrink: 0;
+          width: 12px;
+          text-align: center;
+        }
         /* Desktop info panel — right drawer */
         #info-panel {
           position: fixed;
@@ -1756,6 +1767,16 @@
       }
       .jp-ep-btn.has-egg .jp-ep-star {
         display: block;
+      }
+      /* WCAG 1.4.1：跳章格卷別字符（全尺寸可見，含手機，故為 global 規則，不可只放 desktop media query）*/
+      .jp-ep-arc {
+        font-family: "Noto Sans TC", sans-serif;
+        font-size: 9px;
+        line-height: 1;
+        color: var(--t2);
+        opacity: 0.5;
+        flex-shrink: 0;
+        text-align: center;
       }
 
       /* ═══════ INFO PANEL ═══════════════════════ */
@@ -2313,6 +2334,20 @@
         font-size: 11px;
         color: var(--t3);
         letter-spacing: 0.16em;
+      }
+      /* N8 時空定錨：標題列常駐年份 chip（非線性閱讀的因果安全帶）*/
+      .ep-time-chip {
+        font-family: "Cormorant Garamond", serif;
+        font-style: italic;
+        font-size: 11px;
+        color: var(--t3);
+        letter-spacing: 0.08em;
+        opacity: 0.9;
+      }
+      .ep-time-chip::before {
+        content: "⏱ ";
+        font-style: normal;
+        opacity: 0.6;
       }
       .arc-badge {
         font-family: "Noto Sans TC", sans-serif;
@@ -3288,6 +3323,55 @@
       }
       body.day-mode .eb-line { background: linear-gradient(90deg, transparent, rgba(122, 100, 80, 0.32), transparent); }
       /* Next teaser */
+      /* N9 前情提要 recap chip */
+      .ep-recap {
+        max-width: var(--measure);
+        margin: 0 auto 12px;
+        padding: 7px 13px;
+        border-left: 2px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.015);
+        border-radius: 0 4px 4px 0;
+        cursor: pointer;
+        font-size: 12.5px;
+        line-height: 1.55;
+        color: var(--t3);
+        transition: border-color 0.2s, color 0.2s;
+      }
+      .ep-recap:hover,
+      .ep-recap:focus-visible {
+        border-left-color: var(--amber);
+        color: var(--t2);
+        outline: none;
+      }
+      .ep-recap .er-lbl {
+        color: var(--t2);
+        font-weight: 500;
+        margin-right: 8px;
+        white-space: nowrap;
+      }
+      .ep-recap .er-text { opacity: 0.82; }
+      /* 靜讀模式：淡化導讀裝飾，保留正文與 emoji（可逆，hover/focus 喚回） */
+      body.quiet-read .ep-bg-num { opacity: 0.04; }
+      body.quiet-read .ep-recap,
+      body.quiet-read .ep-companion,
+      body.quiet-read .ep-tline-wrap,
+      body.quiet-read .ep-note,
+      body.quiet-read .ep-teaser {
+        opacity: 0.26;
+        transition: opacity 0.25s ease;
+      }
+      body.quiet-read .ep-recap:hover,
+      body.quiet-read .ep-recap:focus-visible,
+      body.quiet-read .ep-companion:hover,
+      body.quiet-read .ep-companion:focus-within,
+      body.quiet-read .ep-tline-wrap:hover,
+      body.quiet-read .ep-tline-wrap:focus-within,
+      body.quiet-read .ep-note:hover,
+      body.quiet-read .ep-note:focus-within,
+      body.quiet-read .ep-teaser:hover,
+      body.quiet-read .ep-teaser:focus-within {
+        opacity: 1;
+      }
       .ep-teaser {
         margin-top: 32px;
         padding: 16px 17px;
@@ -6856,6 +6940,11 @@
           <button type="button" data-width="default" onclick="setWidth('default')">標準</button>
           <button type="button" data-width="wide" onclick="setWidth('wide')">寬</button>
         </div>
+        <div class="cp-row-lbl">靜讀（淡化導讀、保留正文）</div>
+        <div class="cp-row">
+          <button type="button" data-quiet="0" onclick="setQuiet(false)">標準</button>
+          <button type="button" data-quiet="1" onclick="setQuiet(true)">靜讀</button>
+        </div>
         <button type="button" class="cp-close" onclick="closeComfort()">完成</button>
       </div>
     </div>
@@ -8159,6 +8248,14 @@
         daughter: "女兒視角",
         mixed: "複合視角",
       };
+      // WCAG 1.4.1：五色卷別的非顏色第二線索（色覺障礙者也能辨識的字符）
+      const ARC_TAG = {
+        father: "把",
+        male: "長",
+        female: "妹",
+        daughter: "女",
+        mixed: "合",
+      };
       const ARC_DS = {
         father:
           "border-color:rgba(22,168,100,.42);color:var(--jade);background:linear-gradient(180deg,rgba(22,168,100,.13),rgba(22,168,100,.03))",
@@ -8188,6 +8285,7 @@
         theme: "redtime-theme",
         progress: "redtime-progress",
         width: "redtime-width",
+        quiet: "redtime-quiet",
       };
       const TL_ICON_MAP = {
         "👨": "person",
@@ -8579,6 +8677,9 @@
         if (savedWidth === "narrow" || savedWidth === "wide" || savedWidth === "default") {
           document.body.setAttribute("data-width", savedWidth);
         }
+        if (loadPref(PREF_KEYS.quiet) === "1") {
+          document.body.classList.add("quiet-read");
+        }
         if (!Number.isNaN(savedProgress)) {
           updateResumeCard(savedProgress);
           updateDesktopRailContext(savedProgress);
@@ -8639,8 +8740,19 @@
           const star = document.createElement("span");
           star.className = "sb-ep-star";
           star.textContent = "✦";
-          item.append(dot, num, name, star);
+          const arcTag = document.createElement("span"); // WCAG 1.4.1：非顏色卷別線索
+          arcTag.className = "sb-ep-arc";
+          arcTag.textContent = ARC_TAG[ep.arc] || "";
+          arcTag.setAttribute("aria-hidden", "true");
+          item.append(dot, arcTag, num, name, star);
+          // sb-ep-item 用 .onclick property（非 onclick 屬性）→ 不被全域 div[onclick] patch 涵蓋，自補語意 + 鍵盤 + aria
+          item.setAttribute("role", "button");
+          item.setAttribute("tabindex", "0");
+          item.setAttribute("aria-label", fmtEp(ep.ep) + " " + nm + "（" + (ARC_LBL[ep.arc] || ep.arc) + "）");
           item.onclick = () => goToEp(ep.ep);
+          item.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); item.click(); }
+          });
           list.appendChild(item);
         });
         if (typeof applyReadMarks === "function") applyReadMarks(); // 已讀灰階：重建側欄後套回已讀標記
@@ -8687,7 +8799,11 @@
           const star = document.createElement("span");
           star.className = "jp-ep-star";
           star.textContent = "✦";
-          btn.append(dot, num, name, star);
+          const arcTag = document.createElement("span"); // WCAG 1.4.1：非顏色卷別線索
+          arcTag.className = "jp-ep-arc";
+          arcTag.textContent = ARC_TAG[ep.arc] || "";
+          arcTag.setAttribute("aria-hidden", "true");
+          btn.append(dot, arcTag, num, name, star);
           // A11Y-04：jp-ep-btn 用 .onclick 屬性建立，不被全域 div[onclick] patch 涵蓋 → 自補語意 + 鍵盤 + 弧名
           btn.setAttribute("role", "button");
           btn.setAttribute("tabindex", "0");
@@ -9198,7 +9314,22 @@
           ? `<div class="ep-note ep-literati"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleLiterati(this, ${ep.ep})">▸ 文人說</div><div class="ep-note-body hidden" id="lit-body-${ep.ep}"></div></div>`
           : "";
         const compLabel = COMPANION_LABELS[ep.ep] || "紅線經過這裡，有人停下來等你";
-        sec.innerHTML = `<div class="ep-bg-num">${fmtEp(ep.ep).replace("EP", "")}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${escapeHtml(ARC_LBL[arc] || arc)}</span></div><div class="ep-title">${escapeHtml(cT)}</div><div class="ep-meta-row"><span>${readMins(ep.html)} 分鐘</span><span class="ep-meta-dot"></span><span>${escapeHtml(ep.chars || "")} 字</span></div></div><div class="ep-companion"><div class="ep-companion-tag" role="button" tabindex="0" aria-label="導讀區，點開展開賞析" onclick="toggleCompanion(this)"><span class="ec-line"></span><span class="ec-lbl"><span class="ec-arrow">▸</span> ${escapeHtml(compLabel)}<span class="ec-count"></span></span><span class="ec-line"></span></div><div class="ep-companion-body">${stH}${vis.length === 0 ? "" : `<div class="ep-info-strip"><div class="ep-info-head" role="button" tabindex="0" onclick="toggleEpInfo(this)"><span class="eih-icon">${renderIcon("guide")}</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-arc-legend"><span class="tal-chip" style="color:var(--jade)">● 把拔</span><span class="tal-chip" style="color:var(--silver)">● 學長</span><span class="tal-chip" style="color:var(--f3,#ff4858)">● 學妹</span><span class="tal-chip" style="color:var(--amber)">● 女兒</span><span class="tal-chip" style="color:var(--ember)">● 複合</span></div><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>`}${tline ? `<div class="ep-tline-wrap"><div class="ep-tline-toggle" role="button" tabindex="0" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${escapeHtml(tline)}</span></div></div>` : ""}${note ? `<div class="ep-note"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${linkifyEpRefs(note)}</div></div>` : ""}${cluesH}${grannyH}${scienceH}${litH}</div></div><div class="ep-story-divider" aria-hidden="true"><span class="esd-line"></span><span class="esd-mark">✦ 故事正文</span><span class="esd-line"></span></div><div class="ep-body-wrap"></div>${tH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
+        // N8 時空定錨：從時間軸說明(tline)機械抽出年份，做成標題列常駐 chip。只取年份，不推算角色年齡(避免破壞 canon)。
+        const _ym = tline ? (tline.match(/(\d{4})\s*[-–~]\s*(\d{4})/) || tline.match(/(\d{4})/)) : null;
+        const yearChip = _ym ? `<span class="ep-time-chip" title="${escapeHtml(tline)}">${_ym[2] ? _ym[1] + "–" + _ym[2] : _ym[1]}</span>` : "";
+        // N9 前情提要(機械版)：往回找同視角上一集，用它的 logline(ANNOTATIONS[0]) 做「這條線上次」recap，降低中段切入門檻。零新資料、不爆雷。
+        let recapH = "";
+        for (let j = idx - 1; j >= 0; j--) {
+          if (EPISODES[j].arc === arc) {
+            const _pa = ANNOTATIONS[String(EPISODES[j].ep)];
+            const _pLog = _pa && _pa[0] ? _pa[0] : "";
+            if (_pLog) {
+              recapH = `<div class="ep-recap" onclick="goToEp(${EPISODES[j].ep})" role="button" tabindex="0" aria-label="回顧同視角上一集 ${fmtEp(EPISODES[j].ep)}"><span class="er-lbl">這條線上次 · ${fmtEp(EPISODES[j].ep)}</span><span class="er-text">${escapeHtml(_pLog)}</span></div>`;
+            }
+            break;
+          }
+        }
+        sec.innerHTML = `${recapH}<div class="ep-bg-num">${fmtEp(ep.ep).replace("EP", "")}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${escapeHtml(ARC_LBL[arc] || arc)}</span>${yearChip}</div><div class="ep-title">${escapeHtml(cT)}</div><div class="ep-meta-row"><span>${readMins(ep.html)} 分鐘</span><span class="ep-meta-dot"></span><span>${escapeHtml(ep.chars || "")} 字</span></div></div><div class="ep-companion"><div class="ep-companion-tag" role="button" tabindex="0" aria-label="導讀區，點開展開賞析" onclick="toggleCompanion(this)"><span class="ec-line"></span><span class="ec-lbl"><span class="ec-arrow">▸</span> ${escapeHtml(compLabel)}<span class="ec-count"></span></span><span class="ec-line"></span></div><div class="ep-companion-body">${stH}${vis.length === 0 ? "" : `<div class="ep-info-strip"><div class="ep-info-head" role="button" tabindex="0" onclick="toggleEpInfo(this)"><span class="eih-icon">${renderIcon("guide")}</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-arc-legend"><span class="tal-chip" style="color:var(--jade)">● 把拔</span><span class="tal-chip" style="color:var(--silver)">● 學長</span><span class="tal-chip" style="color:var(--f3,#ff4858)">● 學妹</span><span class="tal-chip" style="color:var(--amber)">● 女兒</span><span class="tal-chip" style="color:var(--ember)">● 複合</span></div><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>`}${tline ? `<div class="ep-tline-wrap"><div class="ep-tline-toggle" role="button" tabindex="0" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${escapeHtml(tline)}</span></div></div>` : ""}${note ? `<div class="ep-note"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${linkifyEpRefs(note)}</div></div>` : ""}${cluesH}${grannyH}${scienceH}${litH}</div></div><div class="ep-story-divider" aria-hidden="true"><span class="esd-line"></span><span class="esd-mark">✦ 故事正文</span><span class="esd-line"></span></div><div class="ep-body-wrap"></div>${tH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
         const bd = document.createElement("div");
         bd.className = "ep-body";
         bd.innerHTML = ep.html;
@@ -10435,11 +10566,19 @@
         savePref(PREF_KEYS.width, w);
         _syncComfortActive();
       }
+      // 靜讀模式：淡化導讀裝飾（說書人/注解/時間線/teaser）、保留正文與 emoji（可逆）
+      function setQuiet(on) {
+        document.body.classList.toggle("quiet-read", !!on);
+        savePref(PREF_KEYS.quiet, on ? "1" : "0");
+        _syncComfortActive();
+      }
       function _syncComfortActive() {
         var t = document.body.classList.contains("sepia-mode") ? "sepia" : (document.body.classList.contains("day-mode") ? "day" : "night");
         var w = document.body.getAttribute("data-width") || "default";
+        var q = document.body.classList.contains("quiet-read") ? "1" : "0";
         document.querySelectorAll("#comfort-pop [data-theme]").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-theme") === t); });
         document.querySelectorAll("#comfort-pop [data-width]").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-width") === w); });
+        document.querySelectorAll("#comfort-pop [data-quiet]").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-quiet") === q); });
       }
       function openComfort() {
         var p = document.getElementById("comfort-pop");

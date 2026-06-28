@@ -14,23 +14,23 @@
     "node": ">=18"
   },
   "scripts": {
-    "audit": "echo \"All deps are vendored — no dynamic install. Three.js r179 in assets/lm402*/three.core.js\"",
+    "audit": "echo \"All deps are vendored — no dynamic install. Three.js r184 in assets/lm402/three.core.js\"",
     "backup": "bash backup.sh both",
     "go": "bash backup.sh go",
     "all": "bash backup.sh all"
   },
-  "dependenciesNote": "All runtime deps are vendored (Three.js r179, GLTFLoader r179) under assets/lm402*/ — no npm install needed for serving. This file exists so npm audit / Dependabot / security scanners have a manifest to read.",
+  "dependenciesNote": "All runtime deps are vendored (Three.js r184, GLTFLoader r184) under assets/lm402/ — no npm install needed for serving. This file exists so npm audit / Dependabot / security scanners have a manifest to read.",
   "vendoredLibraries": [
     {
       "name": "three",
-      "version": "r179",
-      "path": "assets/lm402/three.core.js, assets/lm402/vendor-three.module.js (+ twin/parallel copies)",
+      "version": "r184",
+      "path": "assets/lm402/three.core.js, assets/lm402/vendor-three.module.js",
       "license": "MIT"
     },
     {
       "name": "GLTFLoader",
-      "version": "r179",
-      "path": "assets/lm402/GLTFLoader.js (+ twin/parallel copies)",
+      "version": "r184",
+      "path": "assets/lm402/GLTFLoader.js",
       "license": "MIT"
     }
   ]
