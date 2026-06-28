@@ -9217,6 +9217,23 @@
             }
           }
         }
+        /* N20：那一眼瞬間(2005)= 全書時空原點，加一個獨特金色標記。canon-safe(一眼=2005 無關係歧義)；靜態無動畫(reduced-motion 友善)。確切視覺/位置待 toni 真機驗收微調。 */
+        (function markOneGlance() {
+          var gx = yearX(2005);
+          var core = new THREE.Mesh(
+            new THREE.SphereGeometry(0.07, 16, 16),
+            new THREE.MeshBasicMaterial({ color: 0xffe2a0 }),
+          );
+          core.position.set(gx, 0, 0);
+          scene.add(core);
+          var halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex, color: 0xffd479, transparent: true, opacity: 0.85, depthWrite: false, blending: THREE.AdditiveBlending }));
+          halo.scale.set(0.55, 0.55, 1);
+          halo.position.set(gx, 0, 0);
+          scene.add(halo);
+          var lbl = textSprite("✦ 那一眼", "#ffe2a0", 0.28);
+          lbl.position.set(gx, 0.42, 0);
+          scene.add(lbl);
+        })();
         const arcsGroup = new THREE.Group();
         scene.add(arcsGroup);
         const TYPE_C = { traverse: 0xff4858, push: 0x4da6ff, dream: 0xb78aff, superpose: 0xffd479 };
