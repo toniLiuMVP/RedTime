@@ -8591,7 +8591,8 @@
          - 動手前完整列舉數量＋類別，要求明確確認
          - 全程不連網、不上傳，資料本就只存在這台裝置 */
       function _collectMyDataKeys() {
-        var PREFIXES = ["redtime", "lm402", "platformrun"];
+        // ⚠️ 與 assets/clear-data.js 的 PREFIXES 必須保持一致（改一邊兩邊都要改）
+        var PREFIXES = ["redtime", "lm402", "platformrun", "tiantanglu"];
         var keys = [];
         try {
           for (var i = 0; i < localStorage.length; i++) {
@@ -8612,7 +8613,7 @@
           + "· 閱讀進度與已讀章節\n"
           + "· 書籤與已解鎖彩蛋\n"
           + "· 鐵粉測驗成績與稱號\n"
-          + "· LM402／月台遊戲紀錄與設定\n"
+          + "· LM402／月台／天堂路遊戲紀錄與設定\n"
           + "· 字級與日夜模式偏好\n\n"
           + "這些資料只存在你這台裝置、從未上傳，清除後無法復原。確定要清除嗎？";
         if (!window.confirm(msg)) return;
