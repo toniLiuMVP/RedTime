@@ -3350,6 +3350,32 @@
         white-space: nowrap;
       }
       .ep-recap .er-text { opacity: 0.82; }
+      /* N3：正文編碼母題詞 inline 解碼 */
+      .decode-term {
+        border-bottom: 1px dashed var(--amber);
+        cursor: help;
+        color: inherit;
+      }
+      .decode-term:hover,
+      .decode-term:focus-visible {
+        color: var(--amber);
+        outline: none;
+      }
+      #decode-pop {
+        position: fixed;
+        z-index: 9999;
+        display: none;
+        max-width: 250px;
+        padding: 8px 12px;
+        background: rgba(20, 18, 16, 0.97);
+        border: 1px solid var(--amber);
+        border-radius: 6px;
+        font-size: 12.5px;
+        line-height: 1.6;
+        color: var(--t1);
+        pointer-events: auto;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+      }
       /* 靜讀模式：淡化導讀裝飾，保留正文與 emoji（可逆，hover/focus 喚回） */
       body.quiet-read .ep-bg-num { opacity: 0.04; }
       body.quiet-read .ep-recap,
@@ -8358,6 +8384,12 @@
         daughter: "女兒線",
         mixed: "複合線",
       };
+      // N3：正文內「編碼母題詞」inline 解碼。defs 沿用已核可的辭典文字(canon-safe)。
+      // 必須在 render loop 之前定義(const 無 hoisting，放後面會 TDZ 壞)。
+      const GLOSSARY_DECODE = {
+        "1163": "南下火車的車次——一則用心編碼、卻被照字面讀的訊息。",
+        "20:57": "學長會精準打電話來的那一分鐘。",
+      };
       const ARC_DS = {
         father:
           "border-color:rgba(22,168,100,.42);color:var(--jade);background:linear-gradient(180deg,rgba(22,168,100,.13),rgba(22,168,100,.03))",
@@ -9448,6 +9480,7 @@
         bd.className = "ep-body";
         bd.innerHTML = ep.html;
         _injectMotoNote(bd, ep.ep); /* 機車紙條彩蛋:在紙條段落後注入「同一張紙條」跨集連結(不改故事正文) */
+        _injectDecodeTerms(bd); /* N3:把編碼母題詞(1163/20:57)在正文裡做成可懸停解碼(只 wrap text node,不改故事正文) */
         sec.querySelector(".ep-body-wrap").appendChild(bd);
         cont.appendChild(sec);
         // 跨媒介連接:特定集數結尾 → 對應 3D 場景(純 DOM 導航,零 innerHTML,不動故事 html)
@@ -9935,6 +9968,90 @@
       }
       // 機車紙條彩蛋:同一張「我走了，你要好好照顧自己」的紙條逐字出現在 EP2/12/24/26/40 故事正文。
       // 渲染後在紙條段落「之後」插入一條跨集連結(不觸碰故事 HTML 本身)。
+      // N3：在已 render 的 ep-body DOM 裡，把編碼母題詞(1163/20:57)的 text node 切開、wrap 成可懸停/可聚焦的 decode-term span。
+      // ⚠️ 絕不用 innerHTML 重組正文(對齊 §安全不變式)；只 TreeWalker 切 text node。不改 EPISODES 來源。
+      function _injectDecodeTerms(bd) {
+        if (!bd || typeof GLOSSARY_DECODE !== "object") return;
+        var TERMS = Object.keys(GLOSSARY_DECODE);
+        if (!TERMS.length) return;
+        var esc = function (s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); };
+        var re = new RegExp("(" + TERMS.map(esc).join("|") + ")", "g");
+        var walker = document.createTreeWalker(bd, NodeFilter.SHOW_TEXT, {
+          acceptNode: function (node) {
+            var p = node.parentNode;
+            while (p && p !== bd) {
+              var tag = p.nodeName;
+              if (tag === "BUTTON" || tag === "A" || tag === "ABBR") return NodeFilter.FILTER_REJECT;
+              if (p.classList && p.classList.contains("decode-term")) return NodeFilter.FILTER_REJECT;
+              p = p.parentNode;
+            }
+            re.lastIndex = 0;
+            return re.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+          },
+        });
+        var targets = [], n;
+        while ((n = walker.nextNode())) targets.push(n);
+        targets.forEach(function (textNode) {
+          var text = textNode.nodeValue, frag = document.createDocumentFragment(), last = 0, m;
+          re.lastIndex = 0;
+          while ((m = re.exec(text))) {
+            var idx = m.index, term = m[1];
+            var before = idx > 0 ? text.charAt(idx - 1) : "";
+            var after = text.charAt(idx + term.length) || "";
+            // 邊界守衛:避免把 1163/20:57 切在更大的數字串裡(如 120:57、11630)
+            if (/[\d:：]/.test(before) || /[\d:：]/.test(after)) continue;
+            if (idx > last) frag.appendChild(document.createTextNode(text.slice(last, idx)));
+            var span = document.createElement("span");
+            span.className = "decode-term";
+            span.textContent = term;
+            span.setAttribute("data-def", GLOSSARY_DECODE[term]);
+            span.setAttribute("tabindex", "0");
+            span.setAttribute("role", "button");
+            span.setAttribute("aria-label", term + "：" + GLOSSARY_DECODE[term]);
+            frag.appendChild(span);
+            last = idx + term.length;
+          }
+          if (last > 0) {
+            if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+            textNode.parentNode.replaceChild(frag, textNode);
+          }
+        });
+      }
+      // N3：共用浮窗(hover 桌機 / tap 手機 / focus 鍵盤)，事件委派，一次掛載。
+      (function setupDecodePop() {
+        if (typeof document === "undefined" || !document.body) return;
+        var pop = document.createElement("div");
+        pop.id = "decode-pop";
+        pop.setAttribute("role", "tooltip");
+        document.body.appendChild(pop);
+        var cur = null, hideTimer = null;
+        function cancelHide() { if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; } }
+        function show(el) {
+          var def = el.getAttribute("data-def"); if (!def) return;
+          cancelHide();
+          pop.textContent = def;
+          pop.style.display = "block";
+          var r = el.getBoundingClientRect(), pr = pop.getBoundingClientRect();
+          var top = r.top - pr.height - 8;
+          if (top < 8) top = r.bottom + 8;
+          var left = r.left + r.width / 2 - pr.width / 2;
+          left = Math.max(8, Math.min(left, window.innerWidth - pr.width - 8));
+          pop.style.top = top + "px";
+          pop.style.left = left + "px";
+          cur = el;
+        }
+        function hide() { pop.style.display = "none"; cur = null; }
+        function scheduleHide() { cancelHide(); hideTimer = setTimeout(hide, 160); }
+        var pick = function (e) { return e.target && e.target.closest ? e.target.closest(".decode-term") : null; };
+        document.addEventListener("mouseover", function (e) { var t = pick(e); if (t) show(t); });
+        document.addEventListener("mouseout", function (e) { var t = pick(e); if (t && t === cur) scheduleHide(); });
+        pop.addEventListener("mouseenter", cancelHide); // 滑進浮窗不關（可讀/可選文字）
+        pop.addEventListener("mouseleave", scheduleHide);
+        document.addEventListener("focusin", function (e) { var t = pick(e); if (t) show(t); });
+        document.addEventListener("focusout", function (e) { var t = pick(e); if (t && t === cur) hide(); });
+        document.addEventListener("click", function (e) { var t = pick(e); if (t) { e.preventDefault(); if (cur === t) hide(); else show(t); } else if (cur && !pop.contains(e.target)) hide(); });
+        document.addEventListener("keydown", function (e) { if (e.key === "Escape" && cur) hide(); });
+      })();
       function _injectMotoNote(bd, epNum) {
         var NOTE_EPS = [2, 12, 24, 26, 40];
         if (NOTE_EPS.indexOf(epNum) === -1 || !bd) return;
