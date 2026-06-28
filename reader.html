@@ -10583,7 +10583,8 @@
         { label: '思念', kw: ['相思', '思', '憶', '夢', '魂', '腸斷'] },
         { label: '離別', kw: ['離', '別', '送', '歸', '萍', '天涯'] }
       ];
-      var _curCache = { 0: false, 1: false, 2: false };
+      // 0/1/4 是編譯期靜態內容 → 建一次即快取；tab 2(目錄)/3(回讀線索)依「已讀狀態」每次重算，刻意不快取（故無對應 key）。
+      var _curCache = { 0: false, 1: false, 4: false };
       // 攤平所有 LITERATI 真句(kind:quote),帶 ep;voice 擬寫不取(避去識別風險,也較難引)
       function _litQuotes() {
         var out = [];
@@ -10641,7 +10642,7 @@
       // 不摘錄/不重排正文(保留聖地留白)，只給「五道門」。導覽版。
       function renderOneGlance() {
         var panel = document.getElementById('cur-panel-4');
-        if (!panel) return;
+        if (!panel || _curCache[4]) return;   // 靜態 5 卡，建一次即可
         var EPS = [3, 12, 32, 35, 38];
         var cards = EPS.map(function (n) {
           var ep = EPISODES.find(function (e) { return e.ep === n; });
@@ -10659,6 +10660,7 @@
             + '</button>';
         }).join('');
         panel.innerHTML = '<div class="cur-intro">2005 年，後門的那一眼。同一秒鐘，這幾個人各自看見了它——學長、學妹、女兒，站在不同的位置。挑一道門走進去，那一秒的全貌，得你自己拼起來。</div><div class="og-grid">' + cards + '</div>';
+        _curCache[4] = true;
       }
       // N1 安全後向母題索引：把「已讀集數」的重讀線索（ANNOTATIONS clue，含回指 EP 連結）收成一處。
       // 只列讀過的集數 → 不爆雷（後向）；沿用既有 linkifyEpRefs 安全模型，不新增母題詮釋。不快取，每次反映最新已讀。
