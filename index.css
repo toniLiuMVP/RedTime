@@ -3209,6 +3209,15 @@ a.tl-event:focus-visible {
   color: rgba(232, 200, 122, 0.55);
   transition: color 0.25s ease;
 }
+/* N28 首頁紅移留痕：已讀節點的 CTA 偏黃「紅移」+ 留痕標記 */
+.tl-event.tl-read .tl-event-go {
+  color: #f0a058;
+}
+.tl-event.tl-read .tl-event-go::after {
+  content: " ✦ 讀過";
+  font-size: 10px;
+  opacity: 0.85;
+}
 
 /* 引言區點擊導流（mid-echo EP28 / end-echo EP41）：整塊可點，hover 才亮提示 */
 a.echo-link {

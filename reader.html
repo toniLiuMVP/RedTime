@@ -3522,6 +3522,91 @@
         margin-left: auto;
         margin-right: auto;
       }
+      /* N2 沿紅線：同視角 mini-nav */
+      .ep-arc-nav {
+        max-width: var(--measure);
+        margin: 0 auto 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+      }
+      .ep-arc-nav .ean-btn {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--t2);
+        border-radius: 4px;
+        padding: 4px 13px;
+        cursor: pointer;
+        font-size: 12px;
+        font-family: "Noto Sans TC", sans-serif;
+        transition: border-color 0.2s, color 0.2s;
+      }
+      .ep-arc-nav .ean-btn:hover:not(:disabled) {
+        border-color: var(--amber);
+        color: var(--t1);
+      }
+      .ep-arc-nav .ean-btn:disabled {
+        opacity: 0.3;
+        cursor: default;
+      }
+      .ep-arc-nav .ean-mid {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        line-height: 1.3;
+      }
+      .ep-arc-nav .ean-line {
+        color: var(--t2);
+        font-weight: 500;
+        font-size: 12px;
+      }
+      .ep-arc-nav .ean-pos {
+        color: var(--t3);
+        font-size: 10.5px;
+        font-family: "Cormorant Garamond", serif;
+        font-style: italic;
+      }
+      /* N38 紅線留痕 */
+      .redline-trace {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px 16px;
+        margin-bottom: 14px;
+        background: rgba(255, 255, 255, 0.012);
+      }
+      .redline-trace .rlt-lead {
+        font-size: 13px;
+        color: var(--t1);
+        letter-spacing: 0.04em;
+        margin-bottom: 10px;
+      }
+      .redline-trace .rlt-rows { display: flex; flex-direction: column; gap: 7px; }
+      .redline-trace .rlt-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-size: 13px;
+      }
+      .redline-trace .rlt-k { color: var(--t2); }
+      .redline-trace .rlt-v {
+        color: var(--amber);
+        font-family: "Cormorant Garamond", serif;
+        font-style: italic;
+        font-size: 14px;
+      }
+      .redline-trace .rlt-note {
+        margin-top: 11px;
+        font-size: 11px;
+        color: var(--t3);
+        line-height: 1.5;
+      }
+      .rlt-eggs-lead, .rlt-empty {
+        font-size: 12px;
+        color: var(--t3);
+        margin: 4px 0 9px;
+        letter-spacing: 0.03em;
+      }
       .ep-nav-btn {
         flex: 1;
         padding: 11px 0;
@@ -8256,6 +8341,14 @@
         daughter: "女",
         mixed: "合",
       };
+      // N2 沿紅線：同視角(arc)的「線」標籤
+      const ARC_LINE = {
+        father: "把拔線",
+        male: "學長線",
+        female: "學妹線",
+        daughter: "女兒線",
+        mixed: "複合線",
+      };
       const ARC_DS = {
         father:
           "border-color:rgba(22,168,100,.42);color:var(--jade);background:linear-gradient(180deg,rgba(22,168,100,.13),rgba(22,168,100,.03))",
@@ -9248,6 +9341,9 @@
       var SILENCE_EPS = [3, 40];
       // 章節專屬導讀標籤:高潮與結尾用專屬語,其餘沿用預設
       var COMPANION_LABELS = { 3: "這裡是那一眼。先聽聽，當時其他人怎麼看？", 40: "紅線快到盡頭，有人停下來陪你走完。", 41: "紅線到了盡頭，也有人停下來，陪你回頭看。" };
+      // N2 沿紅線：建 arc → [ep 升序] 索引（EPISODES 已依 ep 序），驅動同視角連續導覽
+      const ARC_SEQ = {};
+      EPISODES.forEach((e) => { (ARC_SEQ[e.arc] = ARC_SEQ[e.arc] || []).push(e.ep); });
       EPISODES.forEach((ep, idx) => {
         const arc = ep.arc;
         const ann = ANNOTATIONS[String(ep.ep)] || ["", ""];
@@ -9329,7 +9425,16 @@
             break;
           }
         }
-        sec.innerHTML = `${recapH}<div class="ep-bg-num">${fmtEp(ep.ep).replace("EP", "")}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${escapeHtml(ARC_LBL[arc] || arc)}</span>${yearChip}</div><div class="ep-title">${escapeHtml(cT)}</div><div class="ep-meta-row"><span>${readMins(ep.html)} 分鐘</span><span class="ep-meta-dot"></span><span>${escapeHtml(ep.chars || "")} 字</span></div></div><div class="ep-companion"><div class="ep-companion-tag" role="button" tabindex="0" aria-label="導讀區，點開展開賞析" onclick="toggleCompanion(this)"><span class="ec-line"></span><span class="ec-lbl"><span class="ec-arrow">▸</span> ${escapeHtml(compLabel)}<span class="ec-count"></span></span><span class="ec-line"></span></div><div class="ep-companion-body">${stH}${vis.length === 0 ? "" : `<div class="ep-info-strip"><div class="ep-info-head" role="button" tabindex="0" onclick="toggleEpInfo(this)"><span class="eih-icon">${renderIcon("guide")}</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-arc-legend"><span class="tal-chip" style="color:var(--jade)">● 把拔</span><span class="tal-chip" style="color:var(--silver)">● 學長</span><span class="tal-chip" style="color:var(--f3,#ff4858)">● 學妹</span><span class="tal-chip" style="color:var(--amber)">● 女兒</span><span class="tal-chip" style="color:var(--ember)">● 複合</span></div><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>`}${tline ? `<div class="ep-tline-wrap"><div class="ep-tline-toggle" role="button" tabindex="0" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${escapeHtml(tline)}</span></div></div>` : ""}${note ? `<div class="ep-note"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${linkifyEpRefs(note)}</div></div>` : ""}${cluesH}${grannyH}${scienceH}${litH}</div></div><div class="ep-story-divider" aria-hidden="true"><span class="esd-line"></span><span class="esd-mark">✦ 故事正文</span><span class="esd-line"></span></div><div class="ep-body-wrap"></div>${tH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
+        // N2 沿紅線：同視角(arc)連續閱讀 mini-nav（同視角上一/下一集 + 這條線的位置）
+        const _seq = ARC_SEQ[arc] || [ep.ep];
+        const _apos = _seq.indexOf(ep.ep);
+        const _aprev = _apos > 0 ? _seq[_apos - 1] : null;
+        const _anext = _apos < _seq.length - 1 ? _seq[_apos + 1] : null;
+        const _aline = ARC_LINE[arc] || ARC_LBL[arc] || arc;
+        const arcNavH = _seq.length > 1
+          ? `<div class="ep-arc-nav" aria-label="沿紅線 · 同視角導覽"><button type="button" class="ean-btn" ${_aprev === null ? "disabled" : `onclick="goToEp(${_aprev})"`} aria-label="同視角上一集">‹ 上一段</button><span class="ean-mid"><span class="ean-line">${escapeHtml(_aline)}</span><span class="ean-pos">${_apos + 1} / ${_seq.length}</span></span><button type="button" class="ean-btn" ${_anext === null ? "disabled" : `onclick="goToEp(${_anext})"`} aria-label="同視角下一集">沿著紅線 ›</button></div>`
+          : "";
+        sec.innerHTML = `${recapH}<div class="ep-bg-num">${fmtEp(ep.ep).replace("EP", "")}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${escapeHtml(ARC_LBL[arc] || arc)}</span>${yearChip}</div><div class="ep-title">${escapeHtml(cT)}</div><div class="ep-meta-row"><span>${readMins(ep.html)} 分鐘</span><span class="ep-meta-dot"></span><span>${escapeHtml(ep.chars || "")} 字</span></div></div><div class="ep-companion"><div class="ep-companion-tag" role="button" tabindex="0" aria-label="導讀區，點開展開賞析" onclick="toggleCompanion(this)"><span class="ec-line"></span><span class="ec-lbl"><span class="ec-arrow">▸</span> ${escapeHtml(compLabel)}<span class="ec-count"></span></span><span class="ec-line"></span></div><div class="ep-companion-body">${stH}${vis.length === 0 ? "" : `<div class="ep-info-strip"><div class="ep-info-head" role="button" tabindex="0" onclick="toggleEpInfo(this)"><span class="eih-icon">${renderIcon("guide")}</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-arc-legend"><span class="tal-chip" style="color:var(--jade)">● 把拔</span><span class="tal-chip" style="color:var(--silver)">● 學長</span><span class="tal-chip" style="color:var(--f3,#ff4858)">● 學妹</span><span class="tal-chip" style="color:var(--amber)">● 女兒</span><span class="tal-chip" style="color:var(--ember)">● 複合</span></div><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>`}${tline ? `<div class="ep-tline-wrap"><div class="ep-tline-toggle" role="button" tabindex="0" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${escapeHtml(tline)}</span></div></div>` : ""}${note ? `<div class="ep-note"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${linkifyEpRefs(note)}</div></div>` : ""}${cluesH}${grannyH}${scienceH}${litH}</div></div><div class="ep-story-divider" aria-hidden="true"><span class="esd-line"></span><span class="esd-mark">✦ 故事正文</span><span class="esd-line"></span></div><div class="ep-body-wrap"></div>${tH}${arcNavH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
         const bd = document.createElement("div");
         bd.className = "ep-body";
         bd.innerHTML = ep.html;
@@ -10797,36 +10902,44 @@
         // 顯示缺口（n / 6）讓老粉知道還差幾顆，是回訪尋寶的拉力
         if (de) setLabeledButton(de, "egg", "彩蛋 " + cnt + " / " + total);
       }
+      // N38 紅線留痕：溫柔版收藏總覽（不計分、不排名、不把真實創傷做成成就徽章）
+      function _redlineTraceHTML() {
+        var readN = (typeof _readEps !== "undefined" && _readEps && _readEps.size) || 0;
+        var totalEps = (typeof EPISODES !== "undefined" && EPISODES.length) || 42;
+        var eggN = eggShelfList.length;
+        var eggTotal = (typeof EGGS !== "undefined" && EGGS.length) || eggN;
+        var bmN = (typeof _bookmarks !== "undefined" && _bookmarks && _bookmarks.size) || 0;
+        var rows = [
+          ["你走過的紅線", readN + " / " + totalEps + " 集"],
+          ["紅線留給你的東西", eggN + " / " + eggTotal + " 個彩蛋"],
+        ];
+        if (bmN) rows.push(["你停下來收藏的", bmN + " 集"]);
+        try {
+          var lb = JSON.parse(localStorage.getItem("platformRunLeaderboard_v2") || "[]");
+          if (lb && lb.length) rows.push(["你陪把拔跑過月台", "留下了紀錄"]);
+        } catch (e) {}
+        return '<div class="redline-trace"><div class="rlt-lead">紅線經過的地方，留下的東西</div><div class="rlt-rows">'
+          + rows.map(function (r) { return '<div class="rlt-row"><span class="rlt-k">' + escapeHtml(r[0]) + '</span><span class="rlt-v">' + escapeHtml(r[1]) + "</span></div>"; }).join("")
+          + '</div><div class="rlt-note">這裡不計分、也不排名 — 只是紅線陪你走到哪了。</div></div>';
+      }
       function openEggShelf() {
-        if (!eggShelfList.length) {
-          showToast({
-            glyph: "🔒",
-            title: "彩蛋尚未解鎖",
-            sub: "往下走，紅線經過的地方，會留東西給你。",
-            id: 0,
-            triggerEp: 999,
-          });
-          return;
-        }
-        if (eggShelfList.length === 1) {
-          openModal(eggShelfList[0]);
-          return;
-        }
-        document.getElementById("modal-eyebrow").textContent = "已解鎖彩蛋";
+        document.getElementById("modal-eyebrow").textContent = "紅線留痕";
         document.getElementById("modal-glyph").innerHTML = eggGlyphMarkup("✦");
-        document.getElementById("modal-title").textContent =
-          "已解鎖 " + eggShelfList.length + " 個彩蛋";
+        document.getElementById("modal-title").textContent = "紅線經過的地方";
         document.getElementById("modal-tabs").innerHTML = "";
         const c = document.getElementById("modal-content");
         c.innerHTML = "";
         const p = document.createElement("div");
         p.className = "mpanel active";
-        p.innerHTML = eggShelfList
-          .map(
-            (e) =>
-              `<div style="display:flex;align-items:center;gap:14px;padding:13px 15px;border:1px solid var(--line);border-radius:8px;margin-bottom:9px;cursor:pointer;background:rgba(255,255,255,.012)" onclick="openModal(EGGS.find(x=>x.id===${Number(e.id)}))"><span style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--amber)">${eggGlyphMarkup(e.glyph)}</span><div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:.2em;text-transform:uppercase;margin-bottom:3px">${escapeHtml(e.eyebrow)}</div><div style="font-size:14px;color:var(--t1)">${escapeHtml(e.title)}</div></div><span style="margin-left:auto;color:var(--t3);font-size:12px">→</span></div>`,
-          )
-          .join("");
+        const eggsHTML = eggShelfList.length
+          ? '<div class="rlt-eggs-lead">紅線留給你的彩蛋</div>' + eggShelfList
+              .map(
+                (e) =>
+                  `<div style="display:flex;align-items:center;gap:14px;padding:13px 15px;border:1px solid var(--line);border-radius:8px;margin-bottom:9px;cursor:pointer;background:rgba(255,255,255,.012)" onclick="openModal(EGGS.find(x=>x.id===${Number(e.id)}))"><span style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--amber)">${eggGlyphMarkup(e.glyph)}</span><div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:.2em;text-transform:uppercase;margin-bottom:3px">${escapeHtml(e.eyebrow)}</div><div style="font-size:14px;color:var(--t1)">${escapeHtml(e.title)}</div></div><span style="margin-left:auto;color:var(--t3);font-size:12px">→</span></div>`,
+              )
+              .join("")
+          : '<div class="rlt-empty">往下走，紅線經過的地方，會留東西給你。</div>';
+        p.innerHTML = _redlineTraceHTML() + eggsHTML;
         c.appendChild(p);
         document.getElementById("modal").classList.add("open");
       }

@@ -725,6 +725,15 @@ el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key ===
   var path = track.querySelector(".tl-thread-path");
   var events = Array.prototype.slice.call(track.querySelectorAll(".tl-event"));
   if (!path && !events.length) return;
+  // N28 首頁紅移留痕：已讀的時間軸節點染上偏黃「紅移」，呼應 EP41「我跟把拔的紅線，有點偏黃色」。唯讀 localStorage、靜態 class，不受 reduced-motion 影響。
+  try {
+    var _readEpsHome = new Set(JSON.parse(localStorage.getItem("redtime_read_eps_v1") || "[]"));
+    events.forEach(function (e) {
+      var _href = e.getAttribute("href") || "";
+      var _m = _href.match(/#ep-(\d+)/);
+      if (_m && _readEpsHome.has(parseInt(_m[1], 10))) e.classList.add("tl-read");
+    });
+  } catch (_e) {}
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
   function setFull() {
     if (path) path.style.strokeDashoffset = "0";
