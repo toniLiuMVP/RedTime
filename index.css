@@ -3186,6 +3186,22 @@
   color: rgba(234, 230, 222, 0.62);
   text-align: center;
 }
+/* T21 點破：EP0 依序 vs EP3 直接看那一眼，緊貼主 CTA 下方 */
+.cta-hint {
+  margin: 8px 0 2px;
+  font: 300 11.5px/1.7 "Noto Sans TC", sans-serif;
+  letter-spacing: 0.04em;
+  color: rgba(234, 230, 222, 0.42);
+  text-align: center;
+}
+.cta-hint a {
+  color: rgba(240, 200, 144, 0.82);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(240, 200, 144, 0.3);
+}
+.cta-hint a:hover {
+  border-bottom-color: rgba(240, 200, 144, 0.8);
+}
 /* 字級面板折衷收合 */
 .site-font-collapse {
   display: none;
