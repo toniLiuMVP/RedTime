@@ -3884,7 +3884,7 @@
         --measure: 30em;
       }
       body[data-width="default"] {
-        --measure: 34em;
+        --measure: 32em;
       }
       body[data-width="wide"] {
         --measure: 42em;
@@ -10692,7 +10692,7 @@
       function renderOneGlance() {
         var panel = document.getElementById('cur-panel-4');
         if (!panel || _curCache[4]) return;   // 靜態 5 卡，建一次即可
-        var EPS = [3, 12, 32, 35, 38];
+        var EPS = [3, 12, 32, 35, 38, 28];
         var cards = EPS.map(function (n) {
           var ep = EPISODES.find(function (e) { return e.ep === n; });
           if (!ep) return '';
@@ -10708,7 +10708,7 @@
             + '<span class="og-go">讀這個視角 · ' + fmtEp(n) + ' →</span>'
             + '</button>';
         }).join('');
-        panel.innerHTML = '<div class="cur-intro">2005 年，後門的那一眼。同一秒鐘，這幾個人各自看見了它——學長、學妹、女兒，站在不同的位置。挑一道門走進去，那一秒的全貌，得你自己拼起來。</div><div class="og-grid">' + cards + '</div>';
+        panel.innerHTML = '<div class="cur-intro">2005 年，後門的那一眼。同一秒鐘，學長、學妹、女兒各自在不同的位置看見了它——而這一秒會被走過很多遍，每一遍的看見、忍住、伸手都不一樣。最後一道門，是學長多年後，回頭再看這一眼。挑一道走進去，全貌得你自己拼。</div><div class="og-grid">' + cards + '</div>';
         _curCache[4] = true;
       }
       // N1 安全後向母題索引：把「已讀集數」的重讀線索（ANNOTATIONS clue，含回指 EP 連結）收成一處。
