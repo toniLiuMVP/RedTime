@@ -1130,6 +1130,9 @@
           grid-template-columns: 1fr;
           margin-left: auto;   /* 手機回到置中單欄,不偏移 */
         }
+        .about-right {
+          margin-top: 0;   /* 手機堆疊時取消編輯式下移,避免多餘間距 */
+        }
       }
 
       .about-quote {
@@ -1582,6 +1585,11 @@
         letter-spacing: 0.028em;
         max-width: 34em;
         text-wrap: pretty;
+      }
+      @media (max-width: 768px) {
+        .tl-intro {
+          margin-top: 0;   /* 手機堆疊時取消編輯式下移,避免多餘間距(置於 base 之後以蓋過 clamp) */
+        }
       }
       .tl-track {
         position: relative;
