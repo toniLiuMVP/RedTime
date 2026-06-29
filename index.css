@@ -896,26 +896,25 @@
         background: rgba(255, 255, 255, 0.06);
       }
       .btn-primary {
-        padding: 16px 36px;
-        background: rgba(22, 168, 100, 0.13);
-        border: 1px solid rgba(22, 168, 100, 0.58);
-        color: #7ce5b2;
-        font-family: "DM Mono", monospace;
-        font-size: 11px;
-        letter-spacing: 0.27em;
-        text-transform: uppercase;
-        border-radius: 3px;
+        padding: 14px 34px;
+        background: rgba(22, 168, 100, 0.09);
+        border: 1px solid rgba(22, 168, 100, 0.42);
+        color: #8fe9c0;
+        font-family: "Noto Serif TC", serif;
+        font-size: 15px;
+        font-weight: 400;
+        letter-spacing: 0.08em;
+        border-radius: 2px;
         cursor: pointer;
         text-decoration: none;
-        transition: background 0.22s, border-color 0.22s, color 0.22s, box-shadow 0.22s;
+        transition: background 0.25s, border-color 0.25s, color 0.25s;
         display: inline-flex;
         align-items: center;
         gap: 10px;
       }
       .btn-primary:hover {
-        background: rgba(22, 168, 100, 0.24);
-        border-color: rgba(22, 168, 100, 0.86);
-        box-shadow: 0 0 28px rgba(22, 168, 100, 0.14);
+        background: rgba(22, 168, 100, 0.16);
+        border-color: rgba(22, 168, 100, 0.66);
       }
 
       /* 回訪繼續閱讀條 — 紅線色，僅在有閱讀進度時由 JS 顯示 */
@@ -970,25 +969,25 @@
         color: var(--amber);
       }
 .btn-ghost {
-        padding: 16px 36px;
-        background: rgba(255, 255, 255, 0.015);
-        border: 1px solid rgba(234, 230, 222, 0.24);
-        color: rgba(234, 230, 222, 0.86);
-        font-family: "DM Mono", monospace;
-        font-size: 11px;
-        letter-spacing: 0.27em;
-        text-transform: uppercase;
-        border-radius: 3px;
+        padding: 14px 34px;
+        background: rgba(255, 255, 255, 0.012);
+        border: 1px solid rgba(234, 230, 222, 0.2);
+        color: rgba(234, 230, 222, 0.84);
+        font-family: "Noto Serif TC", serif;
+        font-size: 15px;
+        font-weight: 400;
+        letter-spacing: 0.08em;
+        border-radius: 2px;
         cursor: pointer;
         text-decoration: none;
-        transition: background 0.22s, border-color 0.22s, color 0.22s, box-shadow 0.22s;
+        transition: background 0.25s, border-color 0.25s, color 0.25s;
         display: inline-flex;
         align-items: center;
         gap: 10px;
       }
       .btn-ghost:hover {
-        border-color: rgba(234, 230, 222, 0.48);
-        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(234, 230, 222, 0.44);
+        background: rgba(255, 255, 255, 0.035);
         color: var(--parchment);
       }
       .hero-scroll {
@@ -1889,16 +1888,16 @@
 
       /* P0-1:新讀者引路按鈕 + modal tour */
       .btn-newcomer {
-        background: linear-gradient(135deg, rgba(232, 90, 58, 0.18), rgba(200, 144, 16, 0.10));
-        border: 1px solid rgba(232, 90, 58, 0.55);
+        background: rgba(232, 90, 58, 0.09);
+        border: 1px solid rgba(232, 90, 58, 0.42);
         color: #f0b070;
-        font-family: "DM Mono", monospace;
-        font-size: 11px;
-        letter-spacing: 0.27em;
-        padding: 16px 36px;
-        border-radius: 4px;
+        font-family: "Noto Serif TC", serif;
+        font-size: 15px;
+        letter-spacing: 0.08em;
+        padding: 14px 34px;
+        border-radius: 2px;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: background 0.25s, border-color 0.25s, color 0.25s;
         display: inline-flex;
         align-items: center;
         gap: 10px;
@@ -1906,9 +1905,8 @@
         font-weight: 400;
       }
       .btn-newcomer:hover {
-        background: linear-gradient(135deg, rgba(232, 90, 58, 0.30), rgba(200, 144, 16, 0.18));
-        box-shadow: 0 0 28px rgba(232, 90, 58, 0.18);
-        transform: translateY(-1px);
+        background: rgba(232, 90, 58, 0.17);
+        border-color: rgba(232, 90, 58, 0.62);
       }
       .btn-newcomer-icon {
         font-size: 13px;
