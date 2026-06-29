@@ -1632,6 +1632,34 @@
       .tl-event.lit .tl-event-year {
         color: var(--rose);
       }
+      /* T15：那一眼 = 全書時空原點，在時間軸做金色視覺重音（恆亮，不依賴 .lit） */
+      .tl-event.tl-pivot .tl-dot {
+        border-color: rgba(240, 200, 144, 0.9);
+        box-shadow:
+          0 12px 28px rgba(0, 0, 0, 0.22),
+          0 0 0 4px rgba(240, 200, 144, 0.1),
+          0 0 22px 5px rgba(240, 160, 88, 0.42),
+          inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      }
+      .tl-event.tl-pivot .tl-event-year {
+        border-color: rgba(240, 200, 144, 0.4);
+        background: rgba(240, 200, 144, 0.07);
+        color: rgba(240, 200, 144, 0.95);
+      }
+      .tl-event.tl-pivot .tl-event-label {
+        color: rgba(255, 233, 200, 1);
+        text-shadow: 0 0 20px rgba(240, 160, 88, 0.45);
+      }
+      .tl-pivot-tag {
+        display: block;
+        margin-top: 5px;
+        font-family: "Noto Sans TC", sans-serif;
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.14em;
+        color: rgba(240, 200, 144, 0.78);
+        text-shadow: none;
+      }
       .tl-event {
         position: relative;
         display: flex;
