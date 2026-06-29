@@ -3111,6 +3111,10 @@
 .is-5 > .reveal:first-child .is-7 {
   box-shadow: 0 0 0 1px rgba(240, 200, 144, 0.22), 0 18px 50px -12px rgba(240, 160, 88, 0.3);
 }
+@media (max-width: 640px) {
+  /* 窄螢幕：影像區堆疊（微電影在上、原聲帶在下），避免兩欄擠成小方塊 */
+  .is-5 { grid-template-columns: 1fr; gap: 20px; }
+}
 .is-5 > .reveal:first-child .is-6 {
   color: rgba(240, 200, 144, 0.85);
 }
