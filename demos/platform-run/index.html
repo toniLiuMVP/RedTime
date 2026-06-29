@@ -9,6 +9,8 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' data: blob:; media-src 'self'; connect-src 'self' blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self';" />
 <link rel="modulepreload" href="../_vendor/three.module.js">
 <link rel="modulepreload" href="./game.js">
+<!-- T11：場景初始化即載的最大 prop，preload 讓瀏覽器 parse JS 前就並行抓 -->
+<link rel="preload" href="props/train_emu800.glb" as="fetch" crossorigin="anonymous">
 <script src="../../assets/frame-guard.js"></script>
 <script src="../../assets/clear-data.js"></script>
 <script src="../../assets/load-fonts.js" data-href="../../fonts/fonts.css"></script>
