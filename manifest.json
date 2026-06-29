@@ -7,7 +7,7 @@
   "display": "standalone",
   "background_color": "#121212",
   "theme_color": "#121212",
-  "lang": "zh-TW",
+  "lang": "zh-Hant-TW",
   "icons": [
     {
       "src": "assets/pwa-icon-192.png",
