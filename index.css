@@ -137,7 +137,7 @@
       .nav-link {
         font-family: "DM Mono", monospace;
         font-size: 9.5px;
-        letter-spacing: 0.28em;
+        letter-spacing: 0.15em;
         text-transform: uppercase;
         color: var(--mist);
         text-decoration: none;
@@ -148,15 +148,14 @@
         color: var(--parchment);
       }
       .nav-cta {
-        padding: 7px 16px;
-        border: 1px solid rgba(22, 168, 100, 0.4);
+        padding: 7px 18px;
+        border: 1px solid rgba(22, 168, 100, 0.36);
         color: var(--jade);
-        border-radius: 3px;
-        background: rgba(22, 168, 100, 0.06);
-        font-family: "DM Mono", monospace;
-        font-size: 9.5px;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
+        border-radius: 2px;
+        background: rgba(22, 168, 100, 0.05);
+        font-family: "Noto Serif TC", serif;
+        font-size: 13px;
+        letter-spacing: 0.06em;
         text-decoration: none;
         transition:
           background 0.18s,
