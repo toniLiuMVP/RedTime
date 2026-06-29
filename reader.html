@@ -6681,12 +6681,12 @@
               <summary>先看懂「誰是誰」· 無雷</summary>
               <div class="whois-body">
                 <p class="whois-row"><b>學妹</b> ＝ <b>阿姨</b><span>同一個女人，橫跨二十年的兩個稱呼</span></p>
-                <p class="whois-row"><b>把拔</b> ＝ <b>學長</b><span>同一個男人，橫跨二十年——年輕時是學妹的學長，後來成了女兒的把拔</span></p>
+                <p class="whois-row"><b>把拔</b> ＝ <b>學長</b><span>同一個男人，橫跨二十年。年輕時是學妹的學長，後來成了女兒的把拔</span></p>
                 <p class="whois-row"><b>女兒</b> 是把拔的女兒，她飛遍所有時間線，卻被禁止干預</p>
                 <dl class="whois-gloss">
                   <div><dt>LM402</dt><dd>2005 年那間教室的編號；「那一眼」就發生在這裡。</dd></div>
                   <div><dt>那一眼</dt><dd>鐘響後，學長走到後門，與站在那裡的學妹對上的那一秒；全書的時空原點。</dd></div>
-                  <div><dt>後門</dt><dd>學妹被叫去站著等的位置。「難的，是站好。」</dd></div>
+                  <div><dt>後門</dt><dd>學妹叫學長走過去的地方。她在電話裡說「你走到後門」，自己也走過去站好，等他走過那段走廊。難的，是站好。</dd></div>
                   <div><dt>紅線</dt><dd>牽引兩人、貫穿全書的命運意象。</dd></div>
                   <div><dt>20:57</dt><dd>一個被反覆記住的分鐘（學長精準打電話來的那一刻）。</dd></div>
                 </dl>
@@ -8491,7 +8491,7 @@
       // N3：正文內「編碼母題詞」inline 解碼。defs 沿用已核可的辭典文字(canon-safe)。
       // 必須在 render loop 之前定義(const 無 hoisting，放後面會 TDZ 壞)。
       const GLOSSARY_DECODE = {
-        "1163": "南下火車的車次——一則用心編碼、卻被照字面讀的訊息。",
+        "1163": "南下火車的車次，一則用心編碼、卻被照字面讀的訊息。",
         "20:57": "學長會精準打電話來的那一分鐘。",
       };
       const ARC_DS = {
@@ -9196,22 +9196,32 @@
         const Y0 = 1991, Y1 = 2026;
         const yearX = (y) => -3.4 + ((y - Y0) / (Y1 - Y0)) * 6.8;
         const LANE = { female: { z: -1.15, c: 0xff4858 }, time: { z: 0, c: 0xa8a49c }, daughter: { z: 1.15, c: 0xc89010 } };
+        const isNarrow = W < 560;
+        const LBL = isNarrow ? 1.55 : 1.12;   /* 標籤整體放大;手機更大,讀得清楚(toni 真機回饋:電腦/手機都要很清楚) */
         function textSprite(text, color, size) {
-          /* 高解析標籤(512×128 + 56px + 微光暈),遠看不糊 */
+          /* 高解析標籤:畫布寬度隨字長(長標籤不再被擠扁/裁切)，粗體 + 深色描邊(任何背景都讀得清，不糊不疊) */
+          const fontPx = 112;
+          const mc = document.createElement("canvas").getContext("2d");
+          mc.font = "700 " + fontPx + "px 'Noto Sans TC',sans-serif";
+          const tw = Math.ceil(mc.measureText(text).width);
           const c = document.createElement("canvas");
-          c.width = 512; c.height = 128;
+          c.width = tw + 96; c.height = 200;
           const x = c.getContext("2d");
-          x.font = "600 56px 'Noto Sans TC',sans-serif";
-          x.fillStyle = color;
+          x.font = "700 " + fontPx + "px 'Noto Sans TC',sans-serif";
           x.textAlign = "center";
           x.textBaseline = "middle";
-          x.shadowColor = color;
-          x.shadowBlur = 14;
-          x.fillText(text, 256, 64);
+          x.lineWidth = 16;
+          x.lineJoin = "round";
+          x.strokeStyle = "rgba(8,6,4,0.85)";
+          x.strokeText(text, c.width / 2, 104);
+          x.fillStyle = color;
+          x.fillText(text, c.width / 2, 104);
           const t = new THREE.CanvasTexture(c);
-          t.anisotropy = 4;
+          t.anisotropy = 8;
+          t.minFilter = THREE.LinearFilter;
           const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, depthWrite: false }));
-          s.scale.set(size * 4, size, 1);
+          const aspect = c.width / c.height;
+          s.scale.set(size * LBL * aspect, size * LBL, 1);
           return s;
         }
         /* 端點光暈貼圖(共用一張,radial gradient) */
@@ -9253,12 +9263,11 @@
           laneGlow.rotation.z = Math.PI / 2;
           laneGlow.position.set(0, 0, l.z);
           scene.add(laneGlow);
-          const lbl = textSprite(k === "female" ? "學妹線" : k === "time" ? "時間軸" : "女兒線", "#" + l.c.toString(16).padStart(6, "0"), 0.3);
-          lbl.position.set(-3.95, 0.18, l.z);
-          scene.add(lbl);
+          /* 軌道名(學妹線/時間軸/女兒線)改由底部固定圖例標示:在 3D 透視裡無論放遠端(收斂疊字)或近端(手機被裁切)都不清楚,移除後場景只剩「年份+那一眼+光弧」反而最清楚、最雋永。 */
         });
         /* 逐年細刻(1991-2026)+主要年大球與標籤+故事關鍵年月份微刻 */
         const MAJOR_Y = [1991, 1994, 2005, 2006, 2018, 2022, 2026];
+        const LABEL_Y = [1991, 2005, 2018, 2026];   /* 只標彼此分得開的錨點年,避免相鄰年(2005/2006)標籤疊字 */
         const KEY_Y = [2005, 2018, 2025, 2026];
         for (let y = Y0; y <= Y1; y++) {
           const major = MAJOR_Y.includes(y);
@@ -9268,9 +9277,9 @@
           );
           tick.position.set(yearX(y), 0, 0);
           scene.add(tick);
-          if (major) {
-            const lbl = textSprite(String(y), "rgba(220,205,180,.6)", 0.26);
-            lbl.position.set(yearX(y), -0.34, 0);
+          if (LABEL_Y.includes(y)) {
+            const lbl = textSprite(String(y), "rgba(236,224,200,.95)", 0.3);
+            lbl.position.set(yearX(y), -0.44, 0);
             scene.add(lbl);
           }
           if (KEY_Y.includes(y) && y < Y1) {
@@ -9325,9 +9334,7 @@
           railLine.rotation.z = Math.PI / 2;
           railLine.position.set(0, 0, railZ);
           arcsGroup.add(railLine);
-          const railLbl = textSprite("集數軸 · 點節點跳該集", "rgba(220,205,180,.55)", 0.22);
-          railLbl.position.set(-3.0, 0.22, railZ);
-          arcsGroup.add(railLbl);
+          /* 集數軸標籤同樣移到底部圖例(「集數軸（點節點或弧頂標籤可跳到該集）」),3D 場景保持乾淨。 */
           EPISODES.forEach((e2, i2) => {
             const read = e2.ep <= maxEp;
             const dot2 = new THREE.Mesh(
@@ -10739,7 +10746,7 @@
             + '<span class="og-go">讀這個視角 · ' + fmtEp(n) + ' →</span>'
             + '</button>';
         }).join('');
-        panel.innerHTML = '<div class="cur-intro">2005 年，後門的那一眼。同一秒鐘，學長、學妹、女兒各自在不同的位置看見了它——而這一秒會被走過很多遍，每一遍的看見、忍住、伸手都不一樣。最後一道門，是學長多年後，回頭再看這一眼。挑一道走進去，全貌得你自己拼。</div><div class="og-grid">' + cards + '</div>';
+        panel.innerHTML = '<div class="cur-intro">2005 年，後門的那一眼。同一秒鐘，學長、學妹、女兒各自在不同的位置看見了它。而這一秒會被走過很多遍，每一遍的看見、忍住、伸手都不一樣。最後一道門，是學長多年後，回頭再看這一眼。挑一道走進去，全貌得你自己拼。</div><div class="og-grid">' + cards + '</div>';
         _curCache[4] = true;
       }
       // N1 安全後向母題索引：把「已讀集數」的重讀線索（ANNOTATIONS clue，含回指 EP 連結）收成一處。
@@ -10761,7 +10768,7 @@
           });
         }
         if (!rows) {
-          panel.innerHTML = '<div class="cur-intro">往下讀，紅線埋下的伏筆與回指會慢慢浮現——讀過越多集，這裡能回看的就越多。</div>';
+          panel.innerHTML = '<div class="cur-intro">往下讀，紅線埋下的伏筆與回指會慢慢浮現。讀過越多集，這裡能回看的就越多。</div>';
           return;
         }
         panel.innerHTML = '<div class="cur-intro">把你讀過的集數裡，那些「再讀一次才看得懂」的伏筆與回指收在一起。只顯示你已讀到的，不爆雷。點集數或句中的 EP 都能跳回去。</div><div class="motif-list">' + rows + '</div>';

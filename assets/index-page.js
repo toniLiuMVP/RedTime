@@ -633,7 +633,7 @@ function summary() {
     ? { t: "☆ 男主角 ☆", m: "你是不是 toni 本人？連「也太像徐若瑄了吧」都答得出來，那一眼你也被釘了二十年。" }
     : (correct >= 4
       ? { t: "☆ 紅線時空者 ☆", m: "謝謝你也喜歡。你記得的「等待的時候，也算在約會的時間裡」，都是最戳心的那幾段。" }
-      : { t: "☆ 紅線新手 ☆", m: "紅線剛牽上你。「我說我走了，但我從沒離開過」——剛剛答錯那幾題，回去把那集讀一遍就懂了，第一次來都這樣。" });
+      : { t: "☆ 紅線新手 ☆", m: "紅線剛牽上你。「我說我走了，但我從沒離開過」。剛剛答錯那幾題，回去把那集讀一遍就懂了，第一次來都這樣。" });
   card.appendChild(ce("div", "ob-progress", "你答對了 " + correct + " / " + QUIZ.length + " 題"));
   card.appendChild(ce("div", "ob-title", tier.t));
   card.appendChild(ce("div", "ob-sub", tier.m));
