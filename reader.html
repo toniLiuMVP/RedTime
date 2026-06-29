@@ -1131,6 +1131,28 @@
           border-color: rgba(255, 255, 255, 0.24);
           color: var(--t1);
         }
+        /* T20：次要功能（展開/自動/彩蛋/三遊戲）收進「更多」下拉，頂欄第一眼只剩讀相關 */
+        .dsk-more-wrap { position: relative; display: inline-flex; }
+        .dsk-more {
+          position: absolute;
+          top: calc(100% + 8px);
+          right: 0;
+          display: none;
+          flex-direction: column;
+          gap: 5px;
+          min-width: 170px;
+          padding: 8px;
+          background: rgba(18, 18, 18, 0.97);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          border: 1px solid var(--line2);
+          border-radius: 8px;
+          box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
+          z-index: 320;
+        }
+        .dsk-more-wrap.open .dsk-more { display: flex; }
+        .dsk-more .dsk-btn { width: 100%; justify-content: flex-start; }
+        .dsk-more-wrap.open .dsk-more-btn { border-color: rgba(255, 255, 255, 0.24); color: var(--t1); }
         .dsk-btn.active {
           border-color: var(--amber);
           color: var(--amber);
@@ -6753,22 +6775,6 @@
             <span class="ui-glyph btn-icon" data-ui-icon="guide"></span
             ><span>故事導覽</span>
           </button>
-          <button
-            class="dsk-btn dsk-btn-toggle"
-            onclick="toggleAllSections()"
-            id="dsk-toggle-all"
-          >
-            <span class="ui-glyph btn-icon" data-ui-icon="grid-plus"></span
-            ><span>一鍵展開</span>
-          </button>
-          <button
-            class="dsk-btn dsk-auto-btn"
-            onclick="toggleAutoMode()"
-            id="dsk-auto-btn"
-          >
-            <span class="ui-glyph btn-icon" data-ui-icon="play"></span
-            ><span>自動模式</span>
-          </button>
           <button class="dsk-btn" onclick="cycleFont()" id="btn-font" aria-label="切換字體大小">
             字 A
           </button>
@@ -6786,20 +6792,45 @@
             <span class="ui-glyph btn-icon" data-ui-icon="menu"></span
             ><span>跳章</span>
           </button>
-          <button class="dsk-btn" onclick="openEggShelf()" id="dsk-egg-btn">
-            <span class="ui-glyph btn-icon" data-ui-icon="egg"></span
-            ><span>彩蛋</span>
-          </button>
-          <a class="dsk-btn dsk-home-btn" href="lm402.html"
-            ><span>LM402</span></a
-          >
-          <a class="dsk-btn dsk-home-btn" href="demos/695/tiantanglu-3d/index.html"
-            ><span>天堂路</span></a
-          >
-          <a class="dsk-btn dsk-home-btn" href="demos/platform-run/index.html"
-            ><span>🏃</span
-            ><span>月台上的狂奔</span></a
-          >
+          <div class="dsk-more-wrap">
+            <button class="dsk-btn dsk-more-btn" onclick="toggleDskMore(this)" id="dsk-more-btn" aria-expanded="false" aria-haspopup="true" aria-label="更多功能與遊戲">
+              ⋯ 更多
+            </button>
+            <div class="dsk-more" id="dsk-more" role="menu">
+              <button
+                class="dsk-btn dsk-btn-toggle"
+                onclick="toggleAllSections()"
+                id="dsk-toggle-all"
+                role="menuitem"
+              >
+                <span class="ui-glyph btn-icon" data-ui-icon="grid-plus"></span
+                ><span>一鍵展開</span>
+              </button>
+              <button
+                class="dsk-btn dsk-auto-btn"
+                onclick="toggleAutoMode()"
+                id="dsk-auto-btn"
+                role="menuitem"
+              >
+                <span class="ui-glyph btn-icon" data-ui-icon="play"></span
+                ><span>自動模式</span>
+              </button>
+              <button class="dsk-btn" onclick="openEggShelf()" id="dsk-egg-btn" role="menuitem">
+                <span class="ui-glyph btn-icon" data-ui-icon="egg"></span
+                ><span>彩蛋</span>
+              </button>
+              <a class="dsk-btn dsk-home-btn" href="lm402.html" role="menuitem"
+                ><span>LM402</span></a
+              >
+              <a class="dsk-btn dsk-home-btn" href="demos/695/tiantanglu-3d/index.html" role="menuitem"
+                ><span>天堂路</span></a
+              >
+              <a class="dsk-btn dsk-home-btn" href="demos/platform-run/index.html" role="menuitem"
+                ><span>🏃</span
+                ><span>月台上的狂奔</span></a
+              >
+            </div>
+          </div>
         </div>
         <!-- Mobile top nav -->
         <div id="topnav-mobile" role="navigation" aria-label="閱讀導覽（手機版）">
@@ -10970,6 +11001,31 @@
       function toggleInfoPanel() {
         infoPanelOpen ? closeInfo() : openInfo();
       }
+      // T20：頂欄「更多」下拉開關（次要功能/遊戲外連收納；點外面或 Esc 關閉）
+      function toggleDskMore(btn) {
+        var wrap = btn.closest('.dsk-more-wrap');
+        if (!wrap) return;
+        var open = wrap.classList.toggle('open');
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      }
+      document.addEventListener('click', function (e) {
+        var open = document.querySelector('.dsk-more-wrap.open');
+        if (open && !open.contains(e.target)) {
+          open.classList.remove('open');
+          var b = open.querySelector('#dsk-more-btn');
+          if (b) b.setAttribute('aria-expanded', 'false');
+        }
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+          var open = document.querySelector('.dsk-more-wrap.open');
+          if (open) {
+            open.classList.remove('open');
+            var b = open.querySelector('#dsk-more-btn');
+            if (b) { b.setAttribute('aria-expanded', 'false'); b.focus(); }
+          }
+        }
+      });
       function openInfo() {
         buildTimelinePanel(maxEpReached);
         buildTraversePanel(maxEpReached);
