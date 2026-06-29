@@ -4361,6 +4361,14 @@ body.side-panel-collapsed .game-shell {
   letter-spacing: 0.34em;
   text-transform: uppercase;
 }
+/* T19：全站共同的紅線記號，三個遊戲開場一致 */
+.cinematic-gate-rl {
+  width: 110px;
+  height: 1px;
+  margin: 16px auto;
+  background: linear-gradient(90deg, transparent, #e85a3a 30%, #f0a058 70%, transparent);
+  opacity: 0.6;
+}
 .cinematic-gate-quote {
   font: 300 clamp(15px, 1.85vw, 20px) / 1.95 "Noto Serif TC", serif;
   color: rgba(238, 232, 222, 0.7);
