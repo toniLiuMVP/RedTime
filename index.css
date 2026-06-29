@@ -1116,15 +1116,19 @@
       }
       .about-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: clamp(40px, 6vw, 100px);
-        align-items: center;
-        max-width: 1100px;
+        grid-template-columns: 1.16fr 0.84fr;   /* 左欄(大標題/引言)為主,右欄(正文)較窄 */
+        gap: clamp(44px, 6vw, 104px);
+        align-items: start;   /* 上對齊 + 右欄下移 = 編輯式不對稱留白(樣本) */
+        max-width: 1080px;
         margin: 0 auto;
+      }
+      .about-right {
+        margin-top: clamp(0px, 5vw, 72px);   /* 正文欄往下錯落,讓大標題先說話,右上方留白 */
       }
       @media (max-width: 768px) {
         .about-grid {
           grid-template-columns: 1fr;
+          margin-left: auto;   /* 手機回到置中單欄,不偏移 */
         }
       }
 
@@ -1559,9 +1563,9 @@
       }
       .tl-header {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1.16fr 0.84fr;
         gap: 40px;
-        align-items: end;
+        align-items: start;   /* 與「關於」一致的編輯式不對稱:標題先說話,引言往下右錯落 */
         margin-bottom: 60px;
       }
       @media (max-width: 768px) {
@@ -1570,6 +1574,7 @@
         }
       }
       .tl-intro {
+        margin-top: clamp(0px, 4vw, 58px);   /* 引言往下錯落,呼應「關於」區的不對稱留白 */
         font-size: 14.8px;
         font-weight: 300;
         line-height: 1.92;
