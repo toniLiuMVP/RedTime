@@ -10713,10 +10713,10 @@
         var ov = document.getElementById('curation-overlay');
         var p = document.getElementById('curation-panel');
         if (ov) ov.classList.remove('show');
-        if (p) {
-          p.classList.remove('show');
-          void p.offsetHeight;           // force the panel to actually slide back out (not stay stuck on screen)
-        }
+        // removing .show lets the panel slide out via its CSS transition; the
+        // #curation-panel:not(.show){pointer-events:none} rule guarantees it can
+        // never tap-trap the reading even if a frame lingers.
+        if (p) p.classList.remove('show');
         document.body.classList.remove('cur-open');
       }
       function switchCurTab(i, el) {
