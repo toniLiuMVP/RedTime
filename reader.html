@@ -224,6 +224,19 @@
         will-change: transform;
         pointer-events: none;
       }
+      /* ── 揪心·浪漫 呈現增補 ── */
+      /* 命運線三個結:EP3 一眼瞬間 / EP36 月台 / EP41 結局,走過才亮 */
+      #prog-knots { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 1001; pointer-events: none; }
+      .prog-knot { position: absolute; top: -1px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--thread-4, rgba(214,50,64,0.95)); opacity: 0.18; transition: opacity 0.4s ease; }
+      .prog-knot.lit { opacity: 1; }
+      /* 結局留白:「我也相信」先落定,過一拍按鈕才安靜出現 */
+      .ep-finale .ef-sub, .ep-finale .ef-actions { opacity: 0; transition: opacity 0.9s ease; }
+      .ep-finale.ef-in .ef-sub, .ep-finale.ef-in .ef-actions { opacity: 1; transition-delay: 1.6s; }
+      /* 那一眼之前先靜下來:EP3 的呼吸標記多給一段留白 */
+      .ep-breath.ep-breath-held { margin-top: 84px; }
+      @media (prefers-reduced-motion: reduce) {
+        .ep-finale .ef-sub, .ep-finale .ef-actions { opacity: 1; transition: none; }
+      }
 
       /* ═══════ HERO ══════════════════════════════ */
       #hero {
@@ -6654,6 +6667,7 @@
       </defs>
     </svg>
     <div id="prog-bar"></div>
+    <div id="prog-knots" aria-hidden="true"></div>
 
     <!-- HERO -->
     <section id="hero">
@@ -9512,7 +9526,7 @@
           const nx = EPISODES[idx + 1];
           var isSilence = SILENCE_EPS.indexOf(ep.ep) !== -1;
           // 聖地(EP3 一眼瞬間 / EP40 終局前)先給呼吸標記再接預告,且不預覽下一集,讓這一秒沉澱;其餘集用 spoiler-safe canon 金句
-          var breathH = isSilence ? `<div class="ep-breath" aria-hidden="true"><span class="eb-line"></span><span class="eb-text">讓這一段，先停在這裡。</span><span class="eb-line"></span></div>` : "";
+          var breathH = isSilence ? `<div class="ep-breath${ep.ep === 3 ? ' ep-breath-held' : ''}" aria-hidden="true"><span class="eb-line"></span><span class="eb-text">讓這一段，先停在這裡。</span><span class="eb-line"></span></div>` : "";
           // 預告文字優先序:該集策劃 canon 金句 → toni 親寫的下一集導讀 synopsis(mood-not-plot,無爆雷) → 無(只剩標題)
           var pv = isSilence ? "" : ((typeof SHARE_LINES !== "undefined" && SHARE_LINES[nx.ep]) ? SHARE_LINES[nx.ep] : ((ANNOTATIONS[String(nx.ep)] && ANNOTATIONS[String(nx.ep)][0]) || ""));
           if (pv.length > 60) pv = pv.slice(0, 60) + "…";
@@ -9834,6 +9848,49 @@
          若上方任一步驟 throw,此行不會執行,章節維持可見(內容優先 fallback) */
       document.body.classList.add("js-ready");
       applyCompanionPref(); /* 章節建構完才有 .ep-companion 可套偏好與計數 */
+
+      /* 揪心:結局卡留白 — 觀察結局卡本身(它在最後一集底部,整集 .visible 太早觸發);進場後「我也相信」先落定,過一拍 ef-sub/ef-actions 才安靜淡入(CSS .ef-in) */
+      (function () {
+        var fin = document.querySelector(".ep-finale");
+        if (!fin) return;
+        if (!("IntersectionObserver" in window)) { fin.classList.add("ef-in"); return; }
+        var finObs = new IntersectionObserver(function (es) {
+          es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("ef-in"); finObs.unobserve(e.target); } });
+        }, { threshold: 0.35 });
+        finObs.observe(fin);
+      })();
+
+      /* 揪心:命運線三個結 — EP3 一眼瞬間 / EP36 月台 / EP41 結局;位置=各集捲動分數,走過才亮 */
+      var KNOT_EPS = [3, 36, 41];
+      var _knots = [];
+      function litProgKnots(frac) {
+        if (!_knots || !_knots.length) return;
+        for (var i = 0; i < _knots.length; i++) {
+          if (frac >= _knots[i].frac - 0.001) _knots[i].el.classList.add("lit");
+        }
+      }
+      function buildProgKnots() {
+        var box = document.getElementById("prog-knots");
+        if (!box) return;
+        var dh = (typeof getDesktopScrollHost === "function") ? getDesktopScrollHost() : null;
+        var host = dh || document.documentElement;
+        var total = host.scrollHeight - host.clientHeight;
+        if (total <= 0) { box.innerHTML = ""; _knots = []; return; }
+        var hostTop = dh ? dh.getBoundingClientRect().top : 0;
+        var hostScroll = dh ? dh.scrollTop : (window.scrollY || document.documentElement.scrollTop || 0);
+        box.innerHTML = ""; _knots = [];
+        KNOT_EPS.forEach(function (n) {
+          var sec = document.getElementById("ep-" + n);
+          if (!sec) return;
+          var pos = sec.getBoundingClientRect().top - hostTop + hostScroll;
+          var frac = Math.min(1, Math.max(0, pos / total));
+          var k = document.createElement("span");
+          k.className = "prog-knot";
+          k.style.left = (frac * 100).toFixed(2) + "%";
+          box.appendChild(k);
+          _knots.push({ el: k, frac: frac });
+        });
+      }
       buildTimelinePanel(0);
       buildTraversePanel(0);
       syncMobileNav();
@@ -9865,18 +9922,10 @@
       function syncProgressBar() {
         const bar = document.getElementById("prog-bar");
         if (!bar) return;
-        const desktopHost = getDesktopScrollHost();
-        if (desktopHost) {
-          bar.style.transform =
-            "scaleX(" +
-            (desktopHost.scrollTop /
-              (desktopHost.scrollHeight - desktopHost.clientHeight) || 0) +
-            ")";
-          return;
-        }
-        const d = document.documentElement;
-        bar.style.transform =
-          "scaleX(" + (d.scrollTop / (d.scrollHeight - d.clientHeight) || 0) + ")";
+        const host = getDesktopScrollHost() || document.documentElement;
+        const frac = host.scrollTop / (host.scrollHeight - host.clientHeight) || 0;
+        bar.style.transform = "scaleX(" + frac + ")";
+        if (typeof litProgKnots === "function") litProgKnots(frac);
       }
       window.addEventListener("scroll", syncProgressBar, { passive: true });
       document
@@ -9884,6 +9933,10 @@
         ?.addEventListener("scroll", syncProgressBar, { passive: true });
       window.addEventListener("resize", syncProgressBar, { passive: true });
       syncProgressBar();
+      /* 命運線三個結:在捲動主機就緒(_mqDesktop 已初始化)後再建,避免 TDZ;load 後重算位置 */
+      buildProgKnots();
+      window.addEventListener("resize", buildProgKnots, { passive: true });
+      window.addEventListener("load", function () { setTimeout(buildProgKnots, 300); }, { once: true });
 
       function syncMobileChrome() {
         if (!_mqMobile.matches) {
