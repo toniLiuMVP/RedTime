@@ -272,9 +272,10 @@
         opacity: 0;
         animation: fadeUp 1.2s 0.45s forwards;
       }
+      /* 十一點的光:暖光偏左上一度斜射(樓梯間下來的硬日光),只讓強度呼吸、方向固定;冷綠維持置中環境光 */
       @keyframes titleBreathe {
-        0%, 100% { text-shadow: 0 0 60px rgba(214,50,64,0.06), 0 0 120px rgba(214,50,64,0.03); }
-        50% { text-shadow: 0 0 80px rgba(214,50,64,0.14), 0 0 160px rgba(214,50,64,0.06), 0 0 40px rgba(22,168,100,0.05); }
+        0%, 100% { text-shadow: -0.05em -0.08em 60px rgba(214,50,64,0.06), -0.06em -0.1em 120px rgba(214,50,64,0.03); }
+        50% { text-shadow: -0.05em -0.08em 80px rgba(214,50,64,0.14), -0.06em -0.1em 160px rgba(214,50,64,0.06), 0 0 40px rgba(22,168,100,0.05); }
       }
       .hero-title {
         font-family: "Cormorant Garamond", serif;
@@ -318,9 +319,11 @@
         text-wrap: pretty;
         max-width: 29em;
         margin: 0 auto 22px;
-        opacity: 0;
-        animation: fadeUp 1.2s 1.3s forwards;
       }
+      /* 兩行各自進場:第二行刻意晚一拍、慢一點才浮現 — 中間多的那一拍留白,就是那二十年 */
+      .ht-line { display: inline-block; opacity: 0; }
+      .ht-line-1 { animation: fadeUp 1.2s 1.3s forwards; }
+      .ht-line-2 { animation: fadeUp 1.8s 2.6s forwards; }
       .hero-proof {
         display: flex;
         flex-wrap: wrap;
