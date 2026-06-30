@@ -49,3 +49,8 @@ a:focus-visible, .back:focus-visible { outline: 2px solid #ffd9a8; outline-offse
 }
 .back:hover { background: rgba(255, 217, 168, 0.1); border-bottom: 1px solid rgba(255, 217, 168, 0.4); }
 .muted { color: #8a8a94; font-size: 13px; }
+/* 版權頁 colophon 卷末落款(外部化,CSP style-src 'self' 安全) */
+.colophon{margin:52px auto 10px;max-width:30em;text-align:center}
+.colophon-rule{display:block;width:48px;height:1px;margin:0 auto 20px;background:linear-gradient(90deg,transparent,rgba(214,50,64,.5),transparent)}
+.colophon-line{font-family:"Noto Serif TC",serif;font-size:13px;line-height:2.05;color:rgba(234,230,222,.5);letter-spacing:.04em;margin:0}
+.colophon-seal{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;margin-left:8px;vertical-align:-6px;font-family:"Noto Serif TC",serif;font-size:13px;color:rgba(245,237,226,.94);background:#b22f37;border-radius:2px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.22),inset 0 0 7px rgba(60,0,0,.28);opacity:.9}

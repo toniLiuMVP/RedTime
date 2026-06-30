@@ -402,3 +402,8 @@ body.lm402-page #cinematic-gate .cinematic-gate-kicker {
               text-align: center;
               text-decoration: none }
 .ls-15 { display:block;font-size:11px;opacity:.7;margin-top:3px;font-weight:400 }
+/* 紅線繫回記號(外部化,CSP 安全) */
+.thread-tie{display:flex;align-items:center;justify-content:center;margin:8px auto 18px}
+.thread-tie .ttl{width:28px;height:1px;background:linear-gradient(90deg,transparent,rgba(214,50,64,.55))}
+.thread-tie .ttk{width:4px;height:4px;border-radius:50%;background:rgba(214,50,64,.85);margin:0 2px}
+.thread-tie .ttr{width:28px;height:1px;background:linear-gradient(90deg,rgba(214,50,64,.55),transparent)}

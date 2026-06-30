@@ -311,3 +311,8 @@ body:has(#title-screen.hide) .pt-tutorial-trigger { display: none !important; }
 /* 標題畫面法律資訊(虛構聲明/版權/連結) */
 .title-legal{margin-top:18px;font-size:11px;line-height:1.7;opacity:.5;}
 .title-legal a{color:inherit;text-decoration:underline;}
+/* 紅線繫回記號(外部化,CSP style-src 'self' 安全) */
+.thread-tie{display:flex;align-items:center;justify-content:center;margin:24px auto 8px}
+.thread-tie .ttl{width:28px;height:1px;background:linear-gradient(90deg,transparent,rgba(214,50,64,.55))}
+.thread-tie .ttk{width:4px;height:4px;border-radius:50%;background:rgba(214,50,64,.85);margin:0 2px}
+.thread-tie .ttr{width:28px;height:1px;background:linear-gradient(90deg,rgba(214,50,64,.55),transparent)}
