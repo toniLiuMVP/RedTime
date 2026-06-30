@@ -942,16 +942,15 @@
         display: none;
       }
       .btn-continue-lbl {
-        font-family: "DM Mono", monospace;
-        font-size: 9px;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
+        font-family: "Noto Serif TC", serif;
+        font-size: 11px;
+        letter-spacing: 0.08em;
         color: rgba(255, 150, 160, 0.88);
       }
       .btn-continue-main {
-        font-family: "DM Mono", monospace;
-        font-size: 12px;
-        letter-spacing: 0.18em;
+        font-family: "Noto Serif TC", serif;
+        font-size: 14px;
+        letter-spacing: 0.08em;
         color: #ffd0d6;
       }
 
