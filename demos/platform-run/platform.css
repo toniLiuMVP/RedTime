@@ -91,7 +91,7 @@ canvas{display:block;width:100%;height:100%}
 .result-text::after{content:"";display:block;width:clamp(200px,32vw,360px);height:1px;margin:clamp(18px,2.4vh,30px) auto clamp(6px,1vh,12px);background:linear-gradient(90deg,transparent,rgba(217,179,106,0.6),transparent)}
 .result-sub{position:relative;z-index:3;color:#c8b89a;font-size:clamp(14px,2.1vw,19px);margin-top:clamp(14px,2vh,22px);line-height:2.1;font-weight:300;letter-spacing:0.12em;text-align:center;max-width:560px;opacity:0;animation:fadeUp 1s 1.2s forwards;text-shadow:0 1px 8px rgba(0,0,0,0.7)}
 .result-sub > div:empty::before{content:"\00a0"}
-.result-retry{position:relative;z-index:3;color:#e8c988;font-size:clamp(13px,1.7vw,16px);letter-spacing:0.32em;text-indent:0.32em;padding:12px 32px;margin-top:clamp(28px,4vh,46px);border:1px solid rgba(217,179,106,0.45);background:rgba(217,179,106,0.05);border-radius:2px;cursor:pointer;pointer-events:auto;text-transform:uppercase;font-family:"Cormorant Garamond",Georgia,serif;opacity:0;animation:fadeUp 0.7s 0.9s forwards;transition:color 0.35s ease,background 0.35s ease,border-color 0.35s ease,box-shadow 0.35s ease,letter-spacing 0.35s ease}
+.result-retry{position:relative;z-index:3;color:#e8c988;font-size:clamp(13px,1.7vw,16px);letter-spacing:0.32em;text-indent:0.32em;padding:12px 32px;margin-top:clamp(28px,4vh,46px);border:1px solid rgba(217,179,106,0.45);background:rgba(217,179,106,0.05);border-radius:2px;cursor:pointer;pointer-events:auto;text-transform:uppercase;font-family:"Cormorant Garamond",Georgia,serif;opacity:0;animation:fadeUp 0.7s 2s forwards;transition:color 0.35s ease,background 0.35s ease,border-color 0.35s ease,box-shadow 0.35s ease,letter-spacing 0.35s ease}
 .result-retry:hover{color:#f6e4b5;background:rgba(217,179,106,0.16);border-color:#d9b36a;box-shadow:0 0 24px rgba(217,179,106,0.28);letter-spacing:0.36em}
 
 /* ── 排行榜 ── */
@@ -113,6 +113,10 @@ canvas{display:block;width:100%;height:100%}
 .result-link::after{content:"";position:absolute;left:0;bottom:0;width:0;height:1px;background:#d9b36a;transition:width 0.4s ease}
 .result-link:hover{color:#e8c988}
 .result-link:hover::after{width:100%}
+/* 揪心:紅線不會在門口斷掉 — 通往下一段的連結,hover 時一截紅線伸向它 */
+.result-link::before{content:"";position:absolute;right:100%;bottom:0;margin-right:7px;width:0;height:1px;background:rgba(214,50,64,0.85);transition:width 0.5s ease}
+.result-link:hover::before{width:15px}
+@media (prefers-reduced-motion:reduce){.result-link::before{transition:none}}
 /* ── 名字輸入（勝利後）── */
 #name-input-wrap{position:relative;z-index:3;margin-top:clamp(22px,3vh,32px);opacity:0;text-align:center;display:none}
 #name-input-wrap.show{display:block;animation:fadeUp 1s 0.3s forwards}
