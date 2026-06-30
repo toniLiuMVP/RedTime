@@ -6663,7 +6663,7 @@
             <div class="hero-updated" style="font-size:.76em;color:#8a8a94;letter-spacing:.06em;margin:4px 0 10px">全集更新於 <time datetime="2026-06-08">2026 年 6 月 8 日</time></div>
             <div class="hero-divider"></div>
             <a class="hero-newcomer" href="index.html?tour=1" aria-label="新讀者引路 · 第一次來的指引">
-              <span class="hero-newcomer-icon" aria-hidden="true">☆</span>
+              <span class="hero-newcomer-icon" aria-hidden="true">✦</span>
               <span>你是第一次來嗎？</span>
             </a>
             <button class="hero-cta" onclick="goToEp(0)">
@@ -6721,7 +6721,7 @@
           <div class="sb-sub">EP0 至 EP41 · 全集</div>
           <!-- 鋼鐵粉絲稱號 sidebar display -->
           <div class="sb-fan-title" id="sbFanTitle" role="status" aria-live="polite">
-            <span class="sft-icon" aria-hidden="true">☆</span>
+            <span class="sft-icon" aria-hidden="true">✦</span>
             <span class="sft-text" id="sbFanTitleText"></span>
             <span class="sft-num" id="sbFanTitleNum"></span>
           </div>
@@ -6754,7 +6754,7 @@
         </div>
         <!-- 鐵粉常駐 sidebar (desktop), 從 floating FAB 移入 -->
         <button id="sb-fan-btn" class="sb-fan-btn" type="button" onclick="window.__FAN_QUIZ__ && window.__FAN_QUIZ__.open()" aria-label="鐵粉挑戰 · 連續答對">
-          <span class="sfb-icon" aria-hidden="true">☆</span>
+          <span class="sfb-icon" aria-hidden="true">✦</span>
           <span class="sfb-label">鐵粉</span>
           <span class="sfb-num" id="sb-fan-btn-num"></span>
         </button>
@@ -6825,7 +6825,7 @@
                 ><span>天堂路</span></a
               >
               <a class="dsk-btn dsk-home-btn" href="demos/platform-run/index.html" role="menuitem"
-                ><span>🏃</span
+                ><span></span
                 ><span>月台上的狂奔</span></a
               >
             </div>
@@ -6843,7 +6843,7 @@
             <a class="nav-btn" href="demos/695/tiantanglu-3d/index.html"
               style="font-size:11px;text-decoration:none;font-weight:700">天堂路</a>
             <a class="nav-btn" href="demos/platform-run/index.html" aria-label="月台上的狂奔"
-              style="font-size:14px;text-decoration:none">🏃</a>
+              style="font-size:14px;text-decoration:none"></a>
             <button type="button" class="nav-btn" onclick="openSearch()" aria-label="全文搜尋 · 找場景、台詞、伏筆"
               style="font-size:18px;-webkit-appearance:none;appearance:none">⌕</button>
           </div>
@@ -7127,7 +7127,7 @@
         </button>
         <!-- 鐵粉 (從 floating fanQuizFab 移進工具列, 不擋 UI) -->
         <button class="fab-item fab-fan" type="button" onclick="window.__FAN_QUIZ__ && window.__FAN_QUIZ__.open()" aria-label="鐵粉挑戰 · 連續答對">
-          <span class="fab-icon" id="fab-fan-icon" aria-hidden="true">☆</span
+          <span class="fab-icon" id="fab-fan-icon" aria-hidden="true">✦</span
           ><span class="fab-label">鐵粉</span>
         </button>
       </div>
@@ -8015,7 +8015,7 @@
               icon: "🌙",
               text: "十三歲那夜，他一個人在城市裡流浪，把名字藏起來",
             },
-            { icon: "🏃", text: "後來的他，也會說自己是海軍陸戰隊。" },
+            { icon: "", text: "後來的他，也會說自己是海軍陸戰隊。" },
             { icon: "🧠", text: "後來的他，已經跟國中生「交手」了17年。" },
             { icon: "👁", text: "他總想提前避開女兒青春期會遇到的難題。" },
           ],
@@ -9515,7 +9515,7 @@
           tH = breathH + `<div class="ep-teaser" onclick="goToEp(${nx.ep})"><div class="et-label">下一集</div><div class="et-num">${fmtEp(nx.ep)} · ${escapeHtml(ARC_LBL[nx.arc] || nx.arc)}</div>${pv ? `<div class="et-text">${escapeHtml(pv)}</div>` : ""}<div class="et-arrow">繼續閱讀 →</div></div>`;
         } else {
           // 完讀收束卡：讀到最後一集不該斷在灰按鈕，把終點變成新一圈的起點
-          tH = `<div class="ep-finale"><div class="ef-kicker">你走完了 1991 → 2026，整條紅線</div><div class="ef-title">「我也相信。」</div><div class="ef-sub">四十二集，三十五年，都為了那一眼瞬間。接下來，換你決定怎麼再走一次。</div><div class="ef-actions"><button type="button" class="ef-btn ef-btn-main" onclick="if(window.__FAN_QUIZ__)window.__FAN_QUIZ__.open()">★ 鐵粉測驗 · 看你記得多少</button><button type="button" class="ef-btn" onclick="goToEp(0)">☆ 回 EP0 · 再走一次紅線</button><a class="ef-btn" href="lm402.html">↗ 走進 LM402 · 親眼看那一眼</a><a class="ef-btn" href="demos/platform-run/index.html">🏃 再陪把拔跑一次月台</a></div></div>`;
+          tH = `<div class="ep-finale"><div class="ef-kicker">你走完了 1991 → 2026，整條紅線</div><div class="ef-title">「我也相信。」</div><div class="ef-sub">四十二集，三十五年，都為了那一眼瞬間。接下來，換你決定怎麼再走一次。</div><div class="ef-actions"><button type="button" class="ef-btn ef-btn-main" onclick="if(window.__FAN_QUIZ__)window.__FAN_QUIZ__.open()">✦ 鐵粉測驗 · 看你記得多少</button><button type="button" class="ef-btn" onclick="goToEp(0)">✦ 回 EP0 · 再走一次紅線</button><a class="ef-btn" href="lm402.html">↗ 走進 LM402 · 親眼看那一眼</a><a class="ef-btn" href="demos/platform-run/index.html">再陪把拔跑一次月台</a></div></div>`;
         }
         const pvBtn =
           idx > 0
@@ -12328,7 +12328,7 @@
 
 <!-- 鋼鐵粉絲 100 題 quiz mode () -->
 <button id="fanQuizFab" type="button" aria-label="鋼鐵粉絲挑戰" title="鋼鐵粉絲挑戰">
-  <span aria-hidden="true">☆</span>
+  <span aria-hidden="true">✦</span>
   <span class="fq-badge" id="fanQuizBadge" hidden></span>
 </button>
 <div id="fanQuizOverlay" role="dialog" aria-modal="true" aria-label="鋼鐵粉絲挑戰">
@@ -13422,7 +13422,7 @@
     const tier = currentTitle(cleared.length);
     body.appendChild(makeDiv('fq-progress', '🏆 月台 ' + (currentBlock + 1) + ' · 全 ' + BLOCK_SIZE + ' 題通過 🏆'));
     const res = makeDiv('fq-result');
-    res.appendChild(makeDiv('fq-final-title', '☆ ' + tier.title + ' ☆'));
+    res.appendChild(makeDiv('fq-final-title', '✦ ' + tier.title + ' ✦'));
     res.appendChild(makeDiv('fq-final-msg', tier.msg));
     res.appendChild(makeDiv('fq-final-score', '已通過：' + cleared.length + ' / ' + TARGET_BLOCKS + ' 月台'));
 
@@ -13454,7 +13454,7 @@
   function renderAllCleared(body) {
     body.appendChild(makeDiv('fq-progress', '🌹 全 ' + TARGET_BLOCKS + ' 月台通過 🌹'));
     const res = makeDiv('fq-result');
-    res.appendChild(makeDiv('fq-final-title', '☆ 時間裡的兩個妳 ☆'));
+    res.appendChild(makeDiv('fq-final-title', '✦ 時間裡的兩個妳 ✦'));
     res.appendChild(makeDiv('fq-final-msg', '你就是 toni。 紅線是妳。 妳就是紅線。'));
     res.appendChild(makeDiv('fq-final-score', '紀錄：' + TARGET_BLOCKS + ' / ' + TARGET_BLOCKS + ' 月台 全通過'));
 

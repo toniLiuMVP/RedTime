@@ -955,7 +955,7 @@
         transform: translateX(-50%);
         font-family: "DM Mono", monospace;
         font-size: 8.5px;
-        letter-spacing: 0.35em;
+        letter-spacing: 0.18em;
         text-transform: uppercase;
         color: var(--mist);
         display: flex;
@@ -991,7 +991,7 @@
       .section-label {
         font-family: "DM Mono", monospace;
         font-size: 9px;
-        letter-spacing: 0.45em;
+        letter-spacing: 0.18em;
         text-transform: uppercase;
         color: var(--mist);
         margin-bottom: 20px;
@@ -1728,7 +1728,7 @@
       .sample-label {
         font-family: "Noto Sans TC", sans-serif;
         font-size: 12px;
-        letter-spacing: 0.32em;
+        letter-spacing: 0.18em;
         color: var(--amber);
         margin-bottom: 14px;
         text-indent: 0.32em;
