@@ -229,6 +229,8 @@
       #prog-knots { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 1001; pointer-events: none; }
       .prog-knot { position: absolute; top: -1px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--thread-4, rgba(214,50,64,0.95)); opacity: 0.18; transition: opacity 0.4s ease; }
       .prog-knot.lit { opacity: 1; }
+      body.day-mode .prog-knot { opacity: 0.28; }
+      body.day-mode .prog-knot.lit { opacity: 1; }
       /* 結局留白:「我也相信」先落定,過一拍按鈕才安靜出現 */
       .ep-finale .ef-sub, .ep-finale .ef-actions { opacity: 0; visibility: hidden; transition: opacity 0.9s ease, visibility 0s; }
       .ep-finale.ef-in .ef-sub, .ep-finale.ef-in .ef-actions { opacity: 1; visibility: visible; transition-delay: 1.6s; }
@@ -356,7 +358,7 @@
         text-decoration: none; color: #f0e6d6; text-align: center;
         transition: border-color 0.3s, background 0.3s, transform 0.2s;
       }
-      .ep-game-bridge:hover { border-color: rgba(255, 217, 168, 0.6); background: linear-gradient(180deg, rgba(56, 44, 34, 0.6), rgba(34, 28, 24, 0.45)); transform: translateY(-2px); }
+      .ep-game-bridge:hover { border-color: rgba(255, 217, 168, 0.6); background: linear-gradient(180deg, rgba(56, 44, 34, 0.6), rgba(34, 28, 24, 0.45)); }
       .ep-game-bridge .egb-eyebrow { font-family: "DM Mono", monospace; font-size: 10px; letter-spacing: 0.34em; text-transform: uppercase; color: rgba(255, 217, 168, 0.66); }
       .ep-game-bridge .egb-label { font-family: "Noto Serif TC", serif; font-size: 17px; letter-spacing: 0.08em; }
       .ep-game-bridge .egb-arrow { color: rgba(255, 217, 168, 0.7); font-size: 13px; margin-top: 2px; }
@@ -1012,7 +1014,7 @@
         .search-box { max-width: 680px; margin: 0 auto; background: #161620; border: 1px solid var(--line, #3a3a44); border-radius: 14px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
         .search-head { display: flex; gap: 8px; padding: 14px; border-bottom: 1px solid var(--line2, #2c2c34); }
         #search-input { flex: 1; background: rgba(255,255,255,.04); border: 1px solid var(--line2, #2c2c34); border-radius: 8px; color: #e0e0e0; font-size: 16px; padding: 10px 14px; font-family: inherit; }
-        #search-input:focus { outline: 2px solid #ff4858; outline-offset: 1px; }
+        #search-input:focus { outline: 2px solid rgba(22, 168, 100, 0.78); outline-offset: 2px; }
         .search-close { background: transparent; border: 0; color: #9a9a9a; font-size: 22px; cursor: pointer; padding: 0 10px; }
         .search-results { max-height: 72vh; overflow-y: auto; padding: 4px; }
         .search-hint, .search-empty { color: #8a8a94; font-size: 14px; padding: 20px; text-align: center; line-height: 1.8; }
