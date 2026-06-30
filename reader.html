@@ -6694,7 +6694,7 @@
             </button>
             <div class="hero-reading-tip">
               <span class="reading-tip-label">閱讀建議</span>
-              <span class="reading-tip-text">第一次讀建議按順序走（EP0→EP41），拼圖會自己亮起來。也可以從側欄按角色篩選，只跟著一個人的光往前。</span>
+              <span class="reading-tip-text">第一次讀建議按順序走（EP0→EP41），拼圖會自己亮起來。也可以用搜尋或章節導覽挑某個人的集數，只跟著一個人的光往前。</span>
             </div>
             <details class="hero-whois">
               <summary>先看懂「誰是誰」· 無雷</summary>
@@ -6816,6 +6816,10 @@
               ⋯ 更多
             </button>
             <div class="dsk-more" id="dsk-more" role="menu">
+              <button class="dsk-btn" onclick="openCuration()" role="menuitem">
+                <span class="btn-icon" aria-hidden="true">✦</span
+                ><span>選讀策展</span>
+              </button>
               <button
                 class="dsk-btn dsk-btn-toggle"
                 onclick="toggleAllSections()"
@@ -8444,11 +8448,11 @@
         {"ep": 17, "topic": "解離性失憶 (Dissociative Amnesia)。學妹的 2006-2-7", "body": "EP17 學妹「眼睛睜開看到天花板上的燈光是七盞白光」「想到學長時眼淚就會湧出來」「心裡好像一直住著一個人」。 解離性失憶 (DSM-5 300.12) 是創傷後 selective memory loss， 對特定情境性記憶 (episodic) 失去存取， 但情感記憶 (procedural / emotional) 保留。完全符合學妹「不記得電話號碼但聽到聲音會哭」。 神經機制涉及海馬迴 + ACC + 內側前額葉皮質的 dissociation。"},
         {"ep": 18, "topic": "神經科學。將死記憶高速回放", "body": "EP18 學長半夜遇到警匪追逐撞車， 「人生跑馬燈跑了 10 秒鐘」。 神經科學研究（如 Greyson 1983, van Lommel 2001 ）發現， 瀕死或極端壓力下大腦會出現「life review」現象： 海馬迴與顳葉皮層在短時間內以異常高速度重播長期記憶。 主觀上時間被拉長， 是因為大腦在單位時間內處理了異常密集的資訊。 學長 10 秒回憶了「跟學妹的一生」， 是這個神經機制的文學描寫。"},
         {"ep": 19, "topic": "婚姻承諾的進化心理學。「21 歲就下定決心要守護妳的餘生」", "body": "EP19 學長 2024 求婚， 21 歲就下定決心。 進化心理學 (Buss 1989 cross-cultural mate preferences) 顯示 commitment 是男性 mate value 的 top-3 signal。 神經學上， monogamous bond formation 涉及 vasopressin V1aR receptor + oxytocin OXTR receptor 的協同。 prairie vole (草原田鼠) 的單偶性研究 (Young et al. 1999) 顯示 V1aR 變異就能改變終身單偶性。 學長那「17 年的等待」是 oxytocin / vasopressin pair-bonding neural circuit 持續活化的極端例。"},
-        {"ep": 20, "topic": "彩虹的折射物理。「彩虹會散」「我就是妳那道彩虹」", "body": "EP20 學妹「彩虹會散」「你說『我就是妳那道彩虹』」。 彩虹是陽光經雨滴折射 + 反射形成的視覺現象 (Descartes 1637 first explained)。 主彩虹 (primary rainbow) 出現在反日點 42° 仰角， 副彩虹在 51° 仰角。 物理上彩虹「會散」是因為太陽角度變化或雨滴蒸發。平均壽命 1-30 分鐘。 學妹的精算「彩虹會消失」是物理事實， 學長的反駁「我就是那道」 是把無常承諾成「持續供應雨滴」。用熱力學第二定律對抗自然散逸。"},
+        {"ep": 20, "topic": "彩虹的折射物理。「我就是妳那道彩虹」(EP20)與「彩虹會消失」(EP29 學妹精算)", "body": "EP20「我就是妳那道彩虹」起念；學妹以會計系精算「彩虹會消失」的反駁在 EP29。 彩虹是陽光經雨滴折射 + 反射形成的視覺現象 (Descartes 1637 first explained)。 主彩虹 (primary rainbow) 出現在反日點 42° 仰角， 副彩虹在 51° 仰角。 物理上彩虹「會散」是因為太陽角度變化或雨滴蒸發。平均壽命 1-30 分鐘。 學妹的精算「彩虹會消失」是物理事實， 學長的反駁「我就是那道」 是把無常承諾成「持續供應雨滴」。用熱力學第二定律對抗自然散逸。"},
         {"ep": 21, "topic": "自由意志 vs 決定論。命運阿嬤的悖論", "body": "EP21 命運阿嬤說「不能干預任何事件， 也不能和任何人有互動」。 這對應到哲學上的「自由意志 vs 決定論」千年辯論： 如果未來已存在（block universe）， 那「選擇」是否還有意義？ 命運阿嬤的規則是相容論（compatibilism）的一種敘事化版本： 觀察者可以看見全部時間線， 但不能改變因果鏈， 因為改變會撕裂讓觀察者得以存在的那條線（grandfather paradox）。 這條規則在物理學裡有個名字： 諾維科夫自洽原則（Novikov self-consistency principle， Igor Novikov 在 1980 年代提出）， 時間旅行不會製造悖論， 因為唯一能真正存在的時間線， 本來就是自洽的那一條； 任何會撕裂自己的事件， 發生機率為零。 女兒「在劇本上做記號」， 但不能「改劇本」， 就是這個悖論的縫合方式。"},
         {"ep": 22, "topic": "量子糾纏 (Quantum Entanglement)。紅線的物理對位", "body": "EP22 命運阿嬤說「紅線代表命中注定」。在物理學中最接近這個概念的是「量子糾纏」：兩個粒子在一起製備之後，會共享同一個量子態，即使後來相距百萬光年，只要測量其中一個，另一個的測量結果就會與它嚴格相關。愛因斯坦不安地稱它「鬼魅般的超距作用」，但 Bell 不等式（1964）加上 Aspect 等人的實驗，到 2022 年諾貝爾物理獎（Clauser、Aspect、Zeilinger），已證實這份相依是物理真實。只是糾纏不能用來傳遞訊息（不可傳信定理）。所以紅線只能記得，不能傳話。學妹說不出口，把拔也接不到，兩個人卻在被命運看著的那一刻，狀態總是合奏。她要親自穿越十七年，不是為了傳訊息，是為了讓那條只會記得的線，終於被看見一次。"},
         {"ep": 23, "topic": "量子糾纏 explicit。EPR 與心的版本", "body": "EP23 女兒說「把拔和阿姨就是一種量子糾纏」。 1935 年 EPR 論文（Einstein-Podolsky-Rosen）提出這個假想實驗試圖反駁量子力學完備性， 結果反而開啟了量子訊息理論。 EP23 把這個延伸成「只要把拔一個心碎， 阿姨就會在遠方加倍難過」。在物理上， 糾纏粒子的測量結果是相關的（correlated）， 不是因果的（causal）。 你不能「讓」對方難過， 但兩人狀態在被觀察時總是合奏。 女兒「就是兩顆悲傷的心裡， 唯一會發亮的光點」， 是把糾纏關係的觀察者效應放進親情。"},
-        {"ep": 24, "topic": "時空黑洞 vs 心理時間黑洞。急診室的七盞白光", "body": "EP24 學妹 2006 小年夜在急診室看到「天花板的七盞白光」， 17 年後 2022 同一夜「秒針一直在顫抖」。 物理學上， 黑洞奇異點時間方向終結， 任何進入 event horizon 的物體都無法返回。 心理學上的「時間黑洞」是 dissociative episode (DSM-5 308.3)， 在極度創傷下意識會出現 time perception distortion： 主觀時間被拉長或凍結。 學妹 17 年內主觀只「等了一晚」。這是真實的 chronopathology。"},
+        {"ep": 24, "topic": "時空黑洞 vs 心理時間黑洞。急診室的七盞白光", "body": "EP24 學妹 2006 小年夜在急診室看到「天花板的七盞白光」， 17 年後 2022 同一夜「秒針一直在顫抖」。 物理學上， 黑洞奇異點時間方向終結， 任何進入 event horizon 的物體都無法返回。 心理學上的「時間黑洞」是一種解離發作（dissociative episode）， 在極度創傷下意識會出現 time perception distortion： 主觀時間被拉長或凍結。 學妹 17 年內主觀只「等了一晚」。這是真實的 chronopathology。"},
         {"ep": 25, "topic": "iCloud 2.2TB + NAS 44TB。數位永恆性", "body": "EP25 把拔有 iCloud 2.2TB + NAS 44TB + 不斷電 + 鏡像備份， 為了保留女兒的成長紀錄。 資訊熵 (Shannon 1948) 角度： 一張 12MP iPhone 照片約 4MB， 44TB 可存 1100 萬張。 女兒從 0-18 歲一天 100 張也只用 660GB。 把拔的儲存配置遠超工程必要。是 redundancy as love language。 神經科學上， 父母對孩子的視覺記憶被海馬迴選擇性編碼， 數位備份等於把生物記憶 externalize 到矽基儲存， 對抗 entropy 的私人戰爭。"},
         {"ep": 26, "topic": "颱風眼的氣象學 vs 情緒颱風。「阿姨心裡像颱風眼」", "body": "EP26 女兒飛進阿姨心裡「就被情緒的旋渦捲住」「整個人被困在她的傷心裡動彈不得」。 氣象學上， 颱風 (tropical cyclone) 中央的「眼」是異常寧靜區， 直徑 20-50 公里， 而眼牆 (eyewall) 風速最強。 心理學上的「情緒颱風」對應 emotional flooding (Gottman 1994)： 自主神經系統超載， 心率 > 100 bpm， 認知會被淹沒。 阿姨的心是 emotional eyewall + dissociative eye 並存。中心安靜不是無情， 是 fight-or-flight 已過載到 freeze 狀態。"},
         {"ep": 27, "topic": "辣味與痛覺受體。來來水餃 25 顆韭菜 + 大碗酸辣湯", "body": "EP27 南機場夜市來來水餃， 學妹臉上汗珠亮晶晶， 學長「妳的口味真的超級重鹹」。 辣味不是味覺， 是 TRPV1 痛覺受體 (capsaicin receptor, Caterina et al. 1997, 2021 諾貝爾醫學獎) 被觸發。 大腦會釋放 endorphin 對抗痛覺， 造成「辣食愉悅」(masochism foodie phenomenon)。 學妹「我熱到融化了」 同時對應重力膨脹 metaphor (EP11)， 是學長對學妹的雙重「融化」。一個是辣椒素誘發， 一個是 oxytocin 誘發。"},
@@ -8465,7 +8469,7 @@
         {"ep": 38, "topic": "多重自我 / 意識菜市場。心理學的對位", "body": "EP38 學妹 29 歲身體裡承載 18 歲意識， 同時「菜市場」裡擠進 29/33/39/49 歲的「我」。 心理學上對應「多重自我」（multiple selves theory, Pronin & Ross 2006）： 同一個人對不同時間點的自己， 會像對待陌生人。 在決策心理學上， 「未來自我折扣」（future self discounting）解釋為什麼我們對 1 個月後的自己比 10 年後的自己更友善。因為意識上他比較像「我」。 EP38 把這四個未來自我同時拉進當下， 對 18 歲說「不要逃， 也不要做奇怪的事情」， 是把多重自我問題具象化成「會議室」。而且 18 歲還是有最終決定權。"},
         {"ep": 39, "topic": "「潮水退了， 就會知道誰醒誰睡」。倖存者偏差與認知謙遜", "body": "EP39 2025 秋 7-11 門口， 學長對學妹說「會不會我一直都沒有睡？ 潮水退了， 就會知道到底誰是醒誰是睡」。 這句直接致敬 Warren Buffett 1992 致股東信「Only when the tide goes out do you discover who's been swimming naked」。投資界用來描述「順風時人人看似精明， 逆風時才暴露真功夫」。 行為經濟學上， 對應到「倖存者偏差」(survivorship bias, Wald 1943 飛機彈孔分析) 跟「認知謙遜」(epistemic humility)。 學長 17 年痛苦熬過的「相信」， 不是樂觀偏誤 (optimism bias, Sharot 2011 演化適應)， 而是已經「裸泳過」的人才講得出來的話。退潮見底， 自己當年是裸泳但沒被沖走， 才有資格說「我沒有在賭， 我只是相信『相信的力量』」。 學妹「會不會你只是還沒醒」是 epistemological challenge， 學長「我又不是死會計系」是用一句玩笑收下挑戰但不正面交鋒。因為他知道， 認知謙遜的人不需要證明自己醒著。"},
         {"ep": 40, "topic": "「相信『相信的力量』」。Self-fulfilling Prophecy 與 Hardiness Theory", "body": "EP40 學長 2007 提早入伍進海軍陸戰隊， 三千公尺 / 凌晨夜哨 / 三分鐘冷水戰鬥澡， 「我相信三年， 相信五年。 雖然最後等到的， 是 2022 年。 整整十五年」。 這對應到 Robert Merton 1948 「self-fulfilling prophecy」 (自我實現預言)： 一個對未來的 belief 可以實質改變 outcome， 不是純粹 placebo， 是 motivation × persistence × cognitive bias 三因素的合成。 心理學上同時對應「hardiness theory」(Kobasa 1979) 的 3C: commitment / control / challenge。在 controlled stress 下重建 sense of agency。 軍事訓練的 cortisol-adaptation 機制 (Sapolsky 1994 Why Zebras Don't Get Ulcers) 顯示反覆 stress + recovery cycle 可提升 stress tolerance baseline。 大兵日記寫「如果是你， 承受得了周芷若那一劍嗎？」 是 expressive writing therapy (Pennebaker 1986)： 寫出創傷可降低 cortisol 26% (4 個月 follow-up)。 「相信『相信的力量』」是 meta-belief: 信念本身會強化信念， 神經迴路上對應 default mode network 的 self-narrative loop 加固。 學長那 15 年熬過來的不是 stoicism， 是 active self-narrative construction。"},
-        {"ep": 41, "topic": "「網路風暴」與「知道沒有用。我也相信」。資訊串級、 童話敘事與 Will to Believe", "body": "EP41 keystone。 阿姨七天哭泣壓縮成 LINE「1163」 (車次號) 給把拔， 把拔讀作「號碼」但阿姨寫進整顆心。這是 lossy compression of grief (Pennebaker 1993 narrative therapy)。 阿姨同一句「你什麼時候要聯絡我」一直重複問， 把拔腦中觸發 information cascade (Bikhchandani et al. 1992) → 「網路風暴」。同訊息重複會塞滿同一條神經迴路， 大腦進入 freeze response 答不出來。 阿姨那句「你對我又沒什麼幫助， 我一直都覺得是一個人」打中把拔， 同時觸發小時候「你對家裡已經沒什麼貢獻了」的早期 trauma。這是 emotional reactivation through linguistic priming (Crowder 1976)， 同一語素重新點燃舊神經迴路。 女兒戴時空耳機飛過七天看完， 然後「我把『知道』放下， 跟把拔做同一件事。 我也相信」。這對應 William James 1896 「The Will to Believe」: 在沒有證據的情況下， 選擇相信本身是 act of will， 不是 epistemic failure。 EP41 標題「這不是童話故事」 是 narratological turn: 童話故事在風暴頁翻過時會有人敲門 (Propp Morphology of the Folktale 1928 第 16 號功能「the hero is recognized」)， 但女兒「我不能敲門， 因為我不能干預， 因為我住在台中你住在桃園」。中斷童話敘事學的 deus ex machina， 用「願意相信」取代「被解救」。 EP21 命運阿嬤那條「做記號但不能改劇本」的規則， 在這裡終於有了名字： 諾維科夫自洽原則（Novikov self-consistency principle）， 能存在的時間線只有自洽的那一條。 所以女兒不能敲門， 所以「願意相信」不是徒勞， 而是這條自洽迴圈裡， 本來就該由她落下的那一筆。 EP21 命運阿嬤「命運不是命定， 但紅線是命中注定」 的最終答案在這裡。自由意志藏在「願意相信」這個 act of will 裡。 EP40 學長的「相信」與 EP41 女兒的「相信」 在 EP41 末尾的康乃馨場景收束。把拔半夜放康乃馨在媽媽家「謝謝妳從來都沒有放棄過我」。跨三代的「相信彼此不會被放棄」 是這個 autofiction 的真正 keystone。"},
+        {"ep": 41, "topic": "「網路風暴」與「知道沒有用。我也相信」。資訊串級、 童話敘事與 Will to Believe", "body": "EP41 keystone。 阿姨七天哭泣壓縮成 LINE「1163」 (車次號) 給把拔， 把拔讀作「號碼」但阿姨寫進整顆心。這是 lossy compression of grief (Pennebaker 1993 narrative therapy)。 阿姨同一句「你什麼時候要聯絡我」一直重複問， 把拔腦中觸發 information cascade (Bikhchandani et al. 1992) → 「網路風暴」。同訊息重複會塞滿同一條神經迴路， 大腦進入 freeze response 答不出來。 阿姨那句「你對我又沒什麼幫助， 我一直都覺得是一個人」打中把拔， 同時觸發小時候「你對家裡已經沒什麼貢獻了」的早期 trauma。這是 emotional reactivation through linguistic priming (Crowder 1976)， 同一語素重新點燃舊神經迴路。 女兒戴時空耳機飛過七天看完， 然後「我把『知道』放下， 跟把拔做同一件事。 我也相信」。這對應 William James 1896 「The Will to Believe」: 在沒有證據的情況下， 選擇相信本身是 act of will， 不是 epistemic failure。 EP41 標題「這不是童話故事」 是 narratological turn: 童話故事在風暴頁翻過時會有人敲門 (Propp Morphology of the Folktale 1928 第 27 號功能（XXVII）「the hero is recognized」)， 但女兒「我不能敲門， 因為我不能干預， 因為我住在台中你住在桃園」。中斷童話敘事學的 deus ex machina， 用「願意相信」取代「被解救」。 EP21 命運阿嬤那條「做記號但不能改劇本」的規則， 在這裡終於有了名字： 諾維科夫自洽原則（Novikov self-consistency principle）， 能存在的時間線只有自洽的那一條。 所以女兒不能敲門， 所以「願意相信」不是徒勞， 而是這條自洽迴圈裡， 本來就該由她落下的那一筆。 EP21 命運阿嬤「命運不是命定， 但紅線是命中注定」 的最終答案在這裡。自由意志藏在「願意相信」這個 act of will 裡。 EP40 學長的「相信」與 EP41 女兒的「相信」 在 EP41 末尾的康乃馨場景收束。把拔半夜放康乃馨在媽媽家「謝謝妳從來都沒有放棄過我」。跨三代的「相信彼此不會被放棄」 是這個 autofiction 的真正 keystone。"},
       ];
 
       // 科普物理線索引常數（須早於 EPISODES build loop，避免 scienceThreadFooter 讀到 TDZ）
@@ -13520,11 +13524,12 @@
   }
 
   function renderAllCleared(body) {
-    body.appendChild(makeDiv('fq-progress', '🌹 全 ' + TARGET_BLOCKS + ' 月台通過 🌹'));
+    var _done = maxAvailableBlock();
+    body.appendChild(makeDiv('fq-progress', '🌹 全 ' + _done + ' 月台通過 🌹'));
     const res = makeDiv('fq-result');
     res.appendChild(makeDiv('fq-final-title', '✦ 時間裡的兩個妳 ✦'));
     res.appendChild(makeDiv('fq-final-msg', '你就是 toni。 紅線是妳。 妳就是紅線。'));
-    res.appendChild(makeDiv('fq-final-score', '紀錄：' + TARGET_BLOCKS + ' / ' + TARGET_BLOCKS + ' 月台 全通過'));
+    res.appendChild(makeDiv('fq-final-score', '紀錄：' + _done + ' / ' + _done + ' 月台 全通過'));
 
     const actions = makeDiv('fq-actions');
     actions.appendChild(makeBtn('fq-btn fq-btn-ghost', '回月台', function () { mode = 'lobby'; renderBody(); }));
