@@ -6855,17 +6855,12 @@
         <div id="topnav-mobile" role="navigation" aria-label="閱讀導覽（手機版）">
           <div class="nav-title" id="nav-ep-title">時間裡的兩個妳</div>
           <div class="nav-actions">
-            <a class="nav-btn nav-home-btn" href="index.html" aria-label="回到首頁"
-              ><span class="ui-glyph nav-icon" data-ui-icon="home"></span
-            ></a>
             <a class="nav-btn" href="lm402.html"
               style="font-size:11px;text-decoration:none;font-weight:700">LM402</a>
             <a class="nav-btn" href="demos/695/tiantanglu-3d/index.html"
               style="font-size:11px;text-decoration:none;font-weight:700">天堂路</a>
             <a class="nav-btn" href="demos/platform-run/index.html" aria-label="月台上的狂奔"
               style="font-size:11px;text-decoration:none;font-weight:700">月台</a>
-            <button type="button" class="nav-btn" onclick="openSearch()" aria-label="全文搜尋 · 找場景、台詞、伏筆"
-              style="font-size:18px;-webkit-appearance:none;appearance:none">⌕</button>
           </div>
         </div>
         <!-- Story Progress Slider (desktop only) -->
@@ -7097,6 +7092,10 @@
           <span class="fab-icon" data-ui-icon="menu"></span
           ><span class="fab-label">章節</span>
         </button>
+        <button class="fab-item" type="button" onclick="openSearch()" aria-label="全文搜尋 · 找場景、台詞、伏筆">
+          <span class="fab-icon" aria-hidden="true">⌕</span
+          ><span class="fab-label">搜尋</span>
+        </button>
         <button
           class="fab-item fab-auto"
           type="button"
@@ -7150,6 +7149,10 @@
           <span class="fab-icon" id="fab-fan-icon" aria-hidden="true">✦</span
           ><span class="fab-label">鐵粉</span>
         </button>
+        <a class="fab-item" href="index.html" aria-label="回到首頁">
+          <span class="fab-icon" data-ui-icon="home"></span
+          ><span class="fab-label">首頁</span>
+        </a>
       </div>
       <div class="fab-nav-row">
         <button class="fab-nav-btn" id="fab-prev" onclick="navEp(-1)">
