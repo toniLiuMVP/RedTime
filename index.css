@@ -347,7 +347,7 @@
         width: 7px;
         height: 7px;
         border-radius: 999px;
-        background: linear-gradient(90deg, var(--jade), #f0ce7f);
+        background: rgba(200, 144, 16, 0.72);
       }
       .hero-actions {
         display: flex;
@@ -1617,8 +1617,9 @@
       .tl-event.tl-pivot .tl-dot {
         border-color: rgba(240, 200, 144, 0.9);
         box-shadow:
+          0 0 0 2px rgba(214, 50, 64, 0.55),
           0 12px 28px rgba(0, 0, 0, 0.22),
-          0 0 0 4px rgba(240, 200, 144, 0.1),
+          0 0 0 5px rgba(240, 200, 144, 0.12),
           0 0 22px 5px rgba(240, 160, 88, 0.42),
           inset 0 1px 0 rgba(255, 255, 255, 0.08);
       }
