@@ -357,6 +357,16 @@
         opacity: 0;
         animation: fadeUp 1.2s 1.55s forwards;
       }
+      /* hero 第一屏收斂後,次要入口移到 hero 之後;沿用置中 flex 排版 */
+      .hero-more {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 14px;
+        max-width: 720px;
+        margin: 8px auto 64px;
+        padding: 0 24px;
+      }
       .hero-scene-bridge {
         flex-basis: 100%;
         max-width: 560px;
