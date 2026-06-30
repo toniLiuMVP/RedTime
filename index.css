@@ -3,6 +3,7 @@
         --ink: #121212;
         --ink2: #1e1e1e;
         --ink3: #262626;
+        /* index.css 自有 token 名(--warm/--mist/--seam/--seam2);reader.html 用 --t2/--t3/--line/--line2,兩檔勿互相複製規則 */
         --seam: #323232;
         --seam2: #2a2a2a;
         --parchment: #e0e0e0;
