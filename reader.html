@@ -6849,7 +6849,6 @@
                 ><span>天堂路</span></a
               >
               <a class="dsk-btn dsk-home-btn" href="demos/platform-run/index.html" role="menuitem"
-                ><span></span
                 ><span>月台上的狂奔</span></a
               >
             </div>
@@ -7683,7 +7682,7 @@
         38: [
           "2005年10月17日上午10:40，LM402 教室裡的那一刻被重新打開。",
           "過去時間線，2005年10月17日，LM402",
-          "29 歲的身體裡是 18 歲的意識，但同時還有 33／39／49 歲的自己在意識裡七嘴八舌 ── 五個年紀的學妹同時在場。",
+          "29 歲的身體裡是 18 歲的意識，但同時還有 33／39／49 歲的自己在意識裡七嘴八舌：五個年紀的學妹同時在場。",
           "「妳不用往前門衝。妳只要站在後門，等他轉身走過那段走廊。」EP3 的學長視角到這裡終於有了學妹視角的鏡像對位。",
           "「以後某一天，在某個很難熬的夜晚，妳會非常想回到今天這條走廊，謝謝這個沒有往前多跨一步的自己。」39 歲對 18 歲說的這句話，提前 21 年劇透了 EP41 的「款款的」那七天。",
         ],
@@ -8173,12 +8172,12 @@
             {
               icon: "🚪",
               title: "敲門",
-              body: "「童話故事裡，痛的人翻過一頁，就會有人來敲門。我這裡，沒有辦法敲門。」女兒能飛、能看、能聽，但她不能敲門 ── 因為她不能干預，也因為她住在台中，把拔住在桃園。",
+              body: "「童話故事裡，痛的人翻過一頁，就會有人來敲門。我這裡，沒有辦法敲門。」女兒能飛、能看、能聽，但她不能敲門。因為她不能干預，也因為她住在台中，把拔住在桃園。",
             },
             {
               icon: "🌸",
               title: "康乃馨",
-              body: "EP41 結尾把拔在「再七天前」回到媽媽家地下室，在餐桌放一朵康乃馨，說「謝謝妳從來都沒有放棄過我。」這朵康乃馨呼應 footer 右下角的康乃馨 SVG icon ── toni 在網站結構藏的母題彩蛋。",
+              body: "EP41 結尾把拔在「再七天前」回到媽媽家地下室，在餐桌放一朵康乃馨，說「謝謝妳從來都沒有放棄過我。」這朵康乃馨呼應 footer 右下角的康乃馨 SVG icon，是 toni 在網站結構藏的母題彩蛋。",
             },
           ],
         },
@@ -9447,6 +9446,7 @@
           });
         }
         let yaw = 0.5, pitch = 0.42, dist = 6.4, dragging = false, px = 0, py = 0;
+        const _tlReduce = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
         function applyCam() {
           const cy = Math.max(0.08, Math.min(1.35, pitch));
           camera.position.set(
@@ -9478,7 +9478,7 @@
           requestAnimationFrame(frame);
           const panel = document.getElementById("ip-panel-2");
           if (!panel || !panel.classList.contains("active")) return;
-          if (!dragging) yaw += 0.0012;
+          if (!dragging && !_tlReduce) yaw += 0.0012;
           applyCam();
           renderer.render(scene, camera);
         }
@@ -9610,7 +9610,7 @@
         const arcNavH = _seq.length > 1
           ? `<div class="ep-arc-nav" aria-label="沿紅線 · 同視角導覽"><button type="button" class="ean-btn" ${_aprev === null ? "disabled" : `onclick="goToEp(${_aprev})"`} aria-label="同視角上一集">‹ 上一段</button><span class="ean-mid"><span class="ean-line">${escapeHtml(_aline)}</span><span class="ean-pos">${_apos + 1} / ${_seq.length}</span></span><button type="button" class="ean-btn" ${_anext === null ? "disabled" : `onclick="goToEp(${_anext})"`} aria-label="同視角下一集">沿著紅線 ›</button></div>`
           : "";
-        sec.innerHTML = `${recapH}<div class="ep-bg-num">${fmtEp(ep.ep).replace("EP", "")}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${escapeHtml(ARC_LBL[arc] || arc)}</span>${yearChip}</div><div class="ep-title">${escapeHtml(cT)}</div><div class="ep-meta-row"><span>${readMins(ep.html)} 分鐘</span><span class="ep-meta-dot"></span><span>${escapeHtml(ep.chars || "")} 字</span></div></div><div class="ep-companion"><div class="ep-companion-tag" role="button" tabindex="0" aria-label="導讀區，點開展開賞析" onclick="toggleCompanion(this)"><span class="ec-line"></span><span class="ec-lbl"><span class="ec-arrow">▸</span> ${escapeHtml(compLabel)}<span class="ec-count"></span></span><span class="ec-line"></span></div><div class="ep-companion-body">${stH}${vis.length === 0 ? "" : `<div class="ep-info-strip"><div class="ep-info-head" role="button" tabindex="0" onclick="toggleEpInfo(this)"><span class="eih-icon">${renderIcon("guide")}</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-arc-legend"><span class="tal-chip" style="color:var(--jade)">● 把拔</span><span class="tal-chip" style="color:var(--silver)">● 學長</span><span class="tal-chip" style="color:var(--f3,#ff4858)">● 學妹</span><span class="tal-chip" style="color:var(--amber)">● 女兒</span><span class="tal-chip" style="color:var(--ember)">● 複合</span></div><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>`}${tline ? `<div class="ep-tline-wrap"><div class="ep-tline-toggle" role="button" tabindex="0" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${escapeHtml(tline)}</span></div></div>` : ""}${note ? `<div class="ep-note"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${linkifyEpRefs(note)}</div></div>` : ""}${cluesH}${grannyH}${scienceH}${litH}</div></div><div class="ep-story-divider" aria-hidden="true"><span class="esd-line"></span><span class="esd-mark">✦ 故事正文</span><span class="esd-line"></span></div><div class="ep-body-wrap"></div>${tH}${arcNavH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
+        sec.innerHTML = `${recapH}<div class="ep-bg-num">${fmtEp(ep.ep).replace("EP", "")}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${escapeHtml(ARC_LBL[arc] || arc)}</span>${yearChip}</div><div class="ep-title">${escapeHtml(cT)}</div></div><div class="ep-companion"><div class="ep-companion-tag" role="button" tabindex="0" aria-label="導讀區，點開展開賞析" onclick="toggleCompanion(this)"><span class="ec-line"></span><span class="ec-lbl"><span class="ec-arrow">▸</span> ${escapeHtml(compLabel)}<span class="ec-count"></span></span><span class="ec-line"></span></div><div class="ep-companion-body">${stH}${vis.length === 0 ? "" : `<div class="ep-info-strip"><div class="ep-info-head" role="button" tabindex="0" onclick="toggleEpInfo(this)"><span class="eih-icon">${renderIcon("guide")}</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-arc-legend"><span class="tal-chip" style="color:var(--jade)">● 把拔</span><span class="tal-chip" style="color:var(--silver)">● 學長</span><span class="tal-chip" style="color:var(--f3,#ff4858)">● 學妹</span><span class="tal-chip" style="color:var(--amber)">● 女兒</span><span class="tal-chip" style="color:var(--ember)">● 複合</span></div><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>`}${tline ? `<div class="ep-tline-wrap"><div class="ep-tline-toggle" role="button" tabindex="0" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${escapeHtml(tline)}</span></div></div>` : ""}${note ? `<div class="ep-note"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${linkifyEpRefs(note)}</div></div>` : ""}${cluesH}${grannyH}${scienceH}${litH}</div></div><div class="ep-story-divider" aria-hidden="true"><span class="esd-line"></span><span class="esd-mark">✦ 故事正文</span><span class="esd-line"></span></div><div class="ep-body-wrap"></div>${tH}${arcNavH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
         const bd = document.createElement("div");
         bd.className = "ep-body";
         bd.innerHTML = ep.html;
