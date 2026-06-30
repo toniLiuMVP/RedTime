@@ -365,7 +365,7 @@
         color: rgba(234, 230, 222, 0.5);
         letter-spacing: 0.04em;
       }
-      /* N15：三道試煉 · 忍 · 追 · 熬 */
+      /* N15：三道試煉 · 忍 · 熬 · 追 */
       .trials-frame {
         flex-basis: 100%;
         margin: 6px 0 2px;
@@ -2871,8 +2871,8 @@
           width: 100%;
           justify-content: center;
           padding: 15px 20px;
-          font-size: 10px;
-          letter-spacing: 0.22em;
+          font-size: 14px;
+          letter-spacing: 0.08em;
         }
         .hero-scroll {
           bottom: 24px;

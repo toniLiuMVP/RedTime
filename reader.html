@@ -10913,7 +10913,7 @@
           body = eps.map(function (ep) { return _guideRowHTML(ep, hasRead, curN); }).join('');
         }
         var intro = _guideMode === 'year'
-          ? '依「故事年份」重排（同一年的章節聚在一起）。因為集數順序並不等於故事發生的時序 — 故事在 1991 到 2026 之間來回跳。'
+          ? '依「故事年份」重排（同一年的章節聚在一起）。因為集數順序並不等於故事發生的時序，故事在 1991 到 2026 之間來回跳。'
           : '全 42 集目錄：看每一章是什麼、多長，再決定要不要點進去。左側色條是視角線（把拔／學長／學妹／女兒／混合），已讀打勾、目前所在標 ◉。';
         panel.innerHTML = '<div class="cur-intro">' + intro + '</div>'
           + '<div class="gtoc-modes"><button type="button" class="gtoc-mode-btn' + (_guideMode === 'all' ? ' active' : '') + '" onclick="setGuideMode(\'all\',this)">依集數</button><button type="button" class="gtoc-mode-btn' + (_guideMode === 'year' ? ' active' : '') + '" onclick="setGuideMode(\'year\',this)">依年份</button></div>'
@@ -11250,7 +11250,7 @@
         } catch (e) {}
         return '<div class="redline-trace"><div class="rlt-lead">紅線經過的地方，留下的東西</div><div class="rlt-rows">'
           + rows.map(function (r) { return '<div class="rlt-row"><span class="rlt-k">' + escapeHtml(r[0]) + '</span><span class="rlt-v">' + escapeHtml(r[1]) + "</span></div>"; }).join("")
-          + '</div><div class="rlt-note">這裡不計分、也不排名 — 只是紅線陪你走到哪了。</div></div>';
+          + '</div><div class="rlt-note">這裡不計分、也不排名，只是紅線陪你走到哪了。</div></div>';
       }
       function openEggShelf() {
         document.getElementById("modal-eyebrow").textContent = "紅線留痕";

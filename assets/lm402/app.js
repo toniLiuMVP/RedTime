@@ -3321,7 +3321,13 @@ function bindKeyboard() {
 }
 
 function attemptOrientationLock() {
-  if (isMobileLayout() && screen.orientation?.lock) {
+  // 只在使用者已處於橫向時鎖定方向，不從直向強制旋轉，與「直向就能完整遊玩」一致
+  if (
+    isMobileLayout() &&
+    !portraitOptIn &&
+    window.innerWidth >= window.innerHeight &&
+    screen.orientation?.lock
+  ) {
     screen.orientation.lock("landscape").catch(() => {});
   }
 }
