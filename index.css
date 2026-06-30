@@ -1026,6 +1026,28 @@
           opacity 1.3s ease,
           transform 1.3s ease;
       }
+      /* 接縫紅線:一條極淡的紅線沿左側安全邊距穿過整頁,把長卷縫起來 */
+      .page-seam {
+        position: fixed;
+        left: clamp(10px, 3.2vw, 46px);
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: linear-gradient(
+          180deg,
+          transparent,
+          rgba(214, 50, 64, 0.13) 12%,
+          rgba(214, 50, 64, 0.13) 88%,
+          transparent
+        );
+        pointer-events: none;
+        z-index: 1;
+      }
+      @media (max-width: 860px) {
+        .page-seam {
+          display: none;
+        }
+      }
 
       /* YouTube facade：縮圖 + 播放鈕佔位，點擊前不連 Google */
       .yt-facade {
