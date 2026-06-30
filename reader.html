@@ -4676,6 +4676,8 @@
         box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.5);
       }
       #curation-panel.show { transform: translate(-50%, 0); }
+      /* 安全網:未開啟時面板不可攔截點擊,即使視覺殘留也不會擋住「回到閱讀」 */
+      #curation-panel:not(.show) { pointer-events: none; }
       .cur-handle { width: 40px; height: 4px; border-radius: 2px; background: rgba(196, 164, 132, 0.3); margin: 9px auto 4px; }
       .cur-head { display: flex; align-items: center; justify-content: space-between; padding: 4px 18px 10px; }
       .cur-title { font: 700 15px/1.4 "Noto Serif TC", serif; color: rgba(233, 196, 142, 0.95); letter-spacing: 0.06em; }
@@ -10698,18 +10700,22 @@
         var ov = document.getElementById('curation-overlay');
         var p = document.getElementById('curation-panel');
         if (!ov || !p) return;
-        ov.classList.add('show');
-        p.classList.add('show');
-        document.body.classList.add('cur-open');
         var active = p.querySelector('.cur-tab.active');
         var idx = active ? Array.prototype.indexOf.call(active.parentElement.children, active) : 0;
         renderCurTab(idx);
+        ov.classList.add('show');
+        void p.offsetHeight;             // force reflow so the slide-in transition reliably fires
+        p.classList.add('show');
+        document.body.classList.add('cur-open');
       }
       function closeCuration() {
         var ov = document.getElementById('curation-overlay');
         var p = document.getElementById('curation-panel');
         if (ov) ov.classList.remove('show');
-        if (p) p.classList.remove('show');
+        if (p) {
+          p.classList.remove('show');
+          void p.offsetHeight;           // force the panel to actually slide back out (not stay stuck on screen)
+        }
         document.body.classList.remove('cur-open');
       }
       function switchCurTab(i, el) {
