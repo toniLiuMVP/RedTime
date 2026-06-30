@@ -854,46 +854,6 @@
         text-transform: uppercase;
         color: var(--mist);
       }
-      .hero-side-link {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex: 1;
-        min-width: 0;
-        padding: 14px 16px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 999px;
-        background: linear-gradient(
-          180deg,
-          rgba(255, 233, 185, 0.1),
-          rgba(255, 255, 255, 0.02)
-        );
-        font-family: "DM Mono", monospace;
-        font-size: 10px;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        color: rgba(255, 245, 226, 0.84);
-        text-decoration: none;
-        transition:
-          border-color 0.18s,
-          background 0.18s,
-          transform 0.18s;
-      }
-      .hero-side-link:hover {
-        border-color: rgba(255, 233, 185, 0.28);
-        background: linear-gradient(
-          180deg,
-          rgba(255, 233, 185, 0.16),
-          rgba(255, 255, 255, 0.03)
-        );
-        transform: translateY(-1px);
-      }
-      .hero-side-link.secondary {
-        background: rgba(255, 255, 255, 0.026);
-      }
-      .hero-side-link.secondary:hover {
-        background: rgba(255, 255, 255, 0.06);
-      }
       .btn-primary {
         padding: 14px 34px;
         background: rgba(22, 168, 100, 0.09);
@@ -2127,9 +2087,9 @@
       .tour-final-secondary {
         padding: 12px 20px;
         border-radius: 4px;
-        font-family: "DM Mono", monospace;
-        font-size: 11px;
-        letter-spacing: 0.2em;
+        font-family: "Noto Serif TC", serif;
+        font-size: 14px;
+        letter-spacing: 0.08em;
         text-decoration: none;
         display: inline-block;
         transition: all 0.3s;
