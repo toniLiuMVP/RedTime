@@ -9273,18 +9273,34 @@
         ground.renderOrder = -1; /* 先畫:transparent 排序若後畫會把更低處的年份標籤壓暗 */
         scene.add(ground);
         Object.entries(LANE).forEach(([k, l]) => {
-          /* 發光軌道:實心管 + 加法光暈伴管 */
-          const laneGeo = new THREE.CylinderGeometry(0.024, 0.024, 6.9, 10);
-          const lane = new THREE.Mesh(
-            laneGeo,
-            new THREE.MeshBasicMaterial({ color: l.c, transparent: true, opacity: 0.85 }),
-          );
+          /* 發光軌道:實心管 + 加法光暈伴管。學妹線=彩虹漸層管(沿時間軸 f1~f5),因為她同時帶著好幾個年紀的自己;也讓她的線自然脫離紅色穿越弧 */
+          let laneGeo = new THREE.CylinderGeometry(0.024, 0.024, 6.9, 10);
+          let laneMat = new THREE.MeshBasicMaterial({ color: l.c, transparent: true, opacity: 0.85 });
+          let glowColor = l.c;
+          if (k === 'female') {
+            laneGeo = new THREE.CylinderGeometry(0.024, 0.024, 6.9, 10, 96);
+            const stops = [0xff4858, 0xff7820, 0xe8cc10, 0x30c850, 0x3880ff].map(function (h) { return new THREE.Color(h); });
+            const posAttr = laneGeo.attributes.position;
+            const cols = new Float32Array(posAttr.count * 3);
+            const cc = new THREE.Color();
+            for (let vi = 0; vi < posAttr.count; vi++) {
+              const t = Math.min(1, Math.max(0, (posAttr.getY(vi) + 3.45) / 6.9));
+              const seg = t * (stops.length - 1);
+              const i0 = Math.floor(seg), i1 = Math.min(stops.length - 1, i0 + 1);
+              cc.copy(stops[i0]).lerp(stops[i1], seg - i0);
+              cols[vi * 3] = cc.r; cols[vi * 3 + 1] = cc.g; cols[vi * 3 + 2] = cc.b;
+            }
+            laneGeo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+            laneMat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9 });
+            glowColor = 0xe8cc10;
+          }
+          const lane = new THREE.Mesh(laneGeo, laneMat);
           lane.rotation.z = Math.PI / 2;
           lane.position.set(0, 0, l.z);
           scene.add(lane);
           const laneGlow = new THREE.Mesh(
             new THREE.CylinderGeometry(0.07, 0.07, 6.9, 10),
-            new THREE.MeshBasicMaterial({ color: l.c, transparent: true, opacity: 0.14, blending: THREE.AdditiveBlending, depthWrite: false }),
+            new THREE.MeshBasicMaterial({ color: glowColor, transparent: true, opacity: 0.14, blending: THREE.AdditiveBlending, depthWrite: false }),
           );
           laneGlow.rotation.z = Math.PI / 2;
           laneGlow.position.set(0, 0, l.z);
