@@ -2583,6 +2583,27 @@
         color: var(--mist);
         letter-spacing: 0.12em;
       }
+      /* 朱印落款 — 紅線收筆於一枚印；陽刻白字、刻邊內陰影、微磨損(非扁平紅塊) */
+      .author-seal {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 21px;
+        height: 21px;
+        margin-left: 9px;
+        vertical-align: -6px;
+        font-family: "Noto Serif TC", serif;
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1;
+        color: rgba(245, 237, 226, 0.94);
+        background: #b22f37;
+        border-radius: 2px;
+        box-shadow:
+          inset 0 0 0 1px rgba(0, 0, 0, 0.22),
+          inset 0 0 7px rgba(60, 0, 0, 0.28);
+        opacity: 0.9;
+      }
       .foot-links {
         display: flex;
         gap: 20px;
