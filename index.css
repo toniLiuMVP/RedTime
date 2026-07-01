@@ -1169,22 +1169,18 @@
         background: var(--seam);
       }
       .stat-box {
-        background: linear-gradient(
-          180deg,
-          rgba(255, 255, 255, 0.02),
-          rgba(255, 255, 255, 0.008)
-        );
-        padding: 24px 20px;
+        background: rgba(255, 255, 255, 0.012);
+        padding: 22px 20px;
         text-align: center;
       }
       .stat-n {
         font-family: "Cormorant Garamond", serif;
         font-style: italic;
-        font-size: 40px;
+        font-size: 31px;
         line-height: 1;
-        color: var(--parchment);
+        color: var(--mist);
         display: block;
-        margin-bottom: 6px;
+        margin-bottom: 8px;
       }
       .stat-l {
         font-family: "DM Mono", monospace;
