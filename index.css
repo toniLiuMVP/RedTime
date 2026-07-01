@@ -283,7 +283,7 @@
         font-weight: 400;        /* C3 中文 300→400 補回字重 */
         font-size: clamp(62px, 15vw, 110px);
         line-height: 0.98;
-        letter-spacing: -0.01em; /* C3 中文書法「字緊行寬」紀律 — 0.06em→-0.01em */
+        letter-spacing: -0.01em; /* tighter CJK letter-spacing */
         color: var(--parchment);
         margin-bottom: 36px;
         opacity: 0;
@@ -1009,7 +1009,7 @@
         font-weight: 400;        /* C3 中文 300→400 補回字重 */
         font-size: clamp(28px, 5vw, 52px);
         line-height: 1.15;
-        letter-spacing: 0.02em;  /* C3 0.06em→0.02em 中文書法字緊紀律 */
+        letter-spacing: 0.02em;  /* tighter CJK letter-spacing */
         color: var(--parchment);
       }
       .reveal {
@@ -1482,6 +1482,9 @@
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+      }
+      @media (forced-colors: active) {
+        .arc-female .arc-card-name { -webkit-text-fill-color: CanvasText; color: CanvasText; }
       }
       .arc-daughter .arc-card-name {
         color: var(--amber);
