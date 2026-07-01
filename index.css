@@ -358,7 +358,7 @@
         animation: fadeUp 1.2s 1.55s forwards;
       }
       /* hero 第一屏收斂後,次要入口移到 hero 之後;沿用置中 flex 排版 */
-      /* 拍 II · 門口一口痛 */
+      /* 入口痛味卡 */
       .ache {
         max-width: 620px;
         margin: 0 auto;
@@ -1768,6 +1768,19 @@
         color: var(--warm);
         line-height: 1.9;
         font-weight: 300;
+      }
+      /* 灰色暗節點：中段那段路，紅線是灰的 */
+      .tl-event.tl-dark .tl-dot.is-dark {
+        border-color: rgba(140, 138, 136, 0.55);
+        color: var(--mist);
+      }
+      .tl-event.tl-dark .tl-event-label {
+        color: var(--mist);
+        font-style: italic;
+      }
+      .tl-event.tl-dark .tl-event-desc {
+        color: var(--mist);
+        opacity: 0.92;
       }
 
       /* ─── READ SECTION ─── */
