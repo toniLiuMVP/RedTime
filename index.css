@@ -386,6 +386,87 @@
         color: var(--mist);
         margin: 0;
       }
+      /* 情緒導演模式：跟著紅線走一次 */
+      .redline-path {
+        max-width: 640px;
+        margin: 8px auto 72px;
+        padding: 0 24px;
+      }
+      .rp-head {
+        text-align: center;
+        margin-bottom: 26px;
+      }
+      .rp-title {
+        font-family: "Cormorant Garamond", serif;
+        font-size: 26px;
+        font-weight: 300;
+        color: var(--parchment);
+        letter-spacing: 0.04em;
+      }
+      .rp-sub {
+        font-size: 13px;
+        color: var(--mist);
+        margin-top: 8px;
+        line-height: 1.9;
+      }
+      .rp-nodes {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        position: relative;
+      }
+      .rp-nodes::before {
+        content: "";
+        position: absolute;
+        left: 8px;
+        top: 14px;
+        bottom: 14px;
+        width: 1px;
+        background: linear-gradient(180deg, var(--thread-2), var(--thread-3), var(--thread-2));
+      }
+      .rp-node {
+        position: relative;
+        padding-left: 30px;
+      }
+      .rp-node::before {
+        content: "";
+        position: absolute;
+        left: 4px;
+        top: 18px;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--thread-3);
+        border: 2px solid var(--ink);
+      }
+      .rp-node a {
+        display: block;
+        padding: 11px 14px;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: background 0.2s;
+      }
+      .rp-node a:hover,
+      .rp-node a:focus-visible {
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .rp-n {
+        display: block;
+        font-family: "DM Mono", monospace;
+        font-size: 12.5px;
+        color: rgba(233, 196, 142, 0.9);
+        letter-spacing: 0.06em;
+        margin-bottom: 4px;
+      }
+      .rp-play .rp-n {
+        color: rgba(120, 196, 198, 0.9);
+      }
+      .rp-why {
+        display: block;
+        font-size: 13px;
+        color: var(--warm);
+        line-height: 1.75;
+      }
       .hero-more {
         display: flex;
         flex-wrap: wrap;
