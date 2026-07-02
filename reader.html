@@ -232,12 +232,12 @@
       body.day-mode .prog-knot { opacity: 0.28; }
       body.day-mode .prog-knot.lit { opacity: 1; }
       /* 結局留白:「我也相信」先落定,過一拍按鈕才安靜出現 */
-      .ep-finale .ef-sub, .ep-finale .ef-actions { opacity: 0; visibility: hidden; transition: opacity 0.9s ease, visibility 0s; }
-      .ep-finale.ef-in .ef-sub, .ep-finale.ef-in .ef-actions { opacity: 1; visibility: visible; transition-delay: 1.6s; }
+      .ep-finale .ef-stones, .ep-finale .ef-sub, .ep-finale .ef-actions { opacity: 0; visibility: hidden; transition: opacity 0.9s ease, visibility 0s; }
+      .ep-finale.ef-in .ef-stones, .ep-finale.ef-in .ef-sub, .ep-finale.ef-in .ef-actions { opacity: 1; visibility: visible; transition-delay: 1.6s; }
       /* 那一眼之前先靜下來:EP3 的呼吸標記多給一段留白 */
       .ep-breath.ep-breath-held { margin-top: 84px; }
       @media (prefers-reduced-motion: reduce) {
-        .ep-finale .ef-sub, .ep-finale .ef-actions { opacity: 1; visibility: visible; transition: none; }
+        .ep-finale .ef-stones, .ep-finale .ef-sub, .ep-finale .ef-actions { opacity: 1; visibility: visible; transition: none; }
       }
 
       /* ═══════ HERO ══════════════════════════════ */
@@ -2903,6 +2903,7 @@
       }
       @media (forced-colors: active) {
         .m3l-female-rainbow { -webkit-text-fill-color: LinkText; color: LinkText; }
+        .arc-badge.female, .arc-female .ep-body .viewpoint, .qcard-text.rainbow-txt, .char-name.female { -webkit-text-fill-color: CanvasText; color: CanvasText; }
       }
       /* ── 導讀區 vs 故事正文 視覺區隔 ──
          導讀(說書人/時間線/注解/阿嬤/科普/文人說)收進低溫青色容器,
@@ -3530,6 +3531,42 @@
         color: rgba(220, 214, 204, 0.78);
         margin-bottom: 20px;
       }
+      /* 雙基石：結尾並置兩句拱心句 */
+      .ef-stones {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-width: 34em;
+        margin: 0 auto 20px;
+        text-align: left;
+      }
+      @media (min-width: 520px) {
+        .ef-stones { flex-direction: row; }
+        .ef-stone { flex: 1; }
+      }
+      .ef-stone {
+        border: 1px solid rgba(255, 72, 88, 0.24);
+        border-radius: 8px;
+        padding: 14px 16px;
+        background: rgba(255, 72, 88, 0.05);
+      }
+      .efs-tag {
+        font-family: "DM Mono", monospace;
+        font-size: 9px;
+        letter-spacing: 0.2em;
+        color: rgba(255, 150, 160, 0.82);
+        margin-bottom: 8px;
+      }
+      .efs-quote {
+        font-family: "Noto Serif TC", serif;
+        font-size: 16px;
+        line-height: 1.85;
+        color: rgba(238, 232, 222, 0.94);
+        margin: 0;
+      }
+      body.day-mode .ef-stone { border-color: rgba(214, 51, 65, 0.32); background: rgba(214, 51, 65, 0.06); }
+      body.day-mode .efs-tag { color: #c0392b; }
+      body.day-mode .efs-quote { color: #2a2620; }
       .ef-actions {
         display: flex;
         flex-direction: column;
@@ -9284,7 +9321,7 @@
         if (_map3dLoading) return;
         _map3dLoading = true;
         p.innerHTML =
-          '<div class="ip-section-note">三條軌道是三條時間線，跨軌的光弧是穿越。拖曳旋轉 · 滾輪縮放 · 你讀到哪，光弧亮到哪。</div><div id="map3d-wrap" style="width:100%;height:320px;border-radius:14px;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,#171310,#0a0807);touch-action:none"></div><div class="map3d-legend"><span class="m3l-title">軌道</span><span class="m3l-chip m3l-female-rainbow">━ 學妹線</span><span class="m3l-chip" style="color:#a8a49c">━ 時間軸</span><span class="m3l-chip" style="color:#c89010">━ 女兒線</span><span class="m3l-sep">｜</span><span class="m3l-title">光弧</span><span class="m3l-chip" style="color:#ff4858">⌒ 穿越</span><span class="m3l-chip" style="color:#4da6ff">⌒ 推回</span><span class="m3l-chip" style="color:#b78aff">⌒ 夢境</span><span class="m3l-chip" style="color:#ffd479">⌒ 疊合</span><span class="m3l-sep">｜</span><span class="m3l-chip" style="color:rgba(220,205,180,.8)">● 集數軸（點節點或弧頂標籤可跳到該集）</span></div><div id="map3d-status" style="font-size:11px;opacity:.5;padding:8px 2px">3D 模組載入中…</div>';
+          '<div class="ip-section-note">三條軌道是三條時間線，跨軌的光弧是穿越。拖曳旋轉 · 滾輪縮放 · 你讀到哪，光弧亮到哪。</div><div id="map3d-wrap" style="width:100%;height:320px;border-radius:14px;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,#171310,#0a0807);touch-action:none"></div><div class="map3d-legend"><span class="m3l-title">軌道</span><span class="m3l-chip m3l-female-rainbow">━ 學妹線</span><span class="m3l-chip" style="color:#a8a49c">━ 時間軸</span><span class="m3l-chip" style="color:#c89010">━ 女兒線</span><span class="m3l-sep">｜</span><span class="m3l-title">光弧</span><span class="m3l-chip" style="color:#ff4858">⌒ 穿越</span><span class="m3l-chip" style="color:#4da6ff">⤺ 推回</span><span class="m3l-chip" style="color:#b78aff">∿ 夢境</span><span class="m3l-chip" style="color:#ffd479">⊚ 疊合</span><span class="m3l-sep">｜</span><span class="m3l-chip" style="color:rgba(220,205,180,.8)">● 集數軸（點節點或弧頂標籤可跳到該集）</span></div><div id="map3d-status" style="font-size:11px;opacity:.5;padding:8px 2px">3D 模組載入中…</div>';
         try {
           const THREE = await import("./assets/lm402/vendor-three.module.js");
           _map3d = initMap3D(THREE, document.getElementById("map3d-wrap"));
@@ -9650,7 +9687,7 @@
           tH = breathH + `<div class="ep-teaser" onclick="goToEp(${nx.ep})"><div class="et-label">下一集</div><div class="et-num">${fmtEp(nx.ep)} · ${escapeHtml(ARC_LBL[nx.arc] || nx.arc)}</div>${pv ? `<div class="et-text">${escapeHtml(pv)}</div>` : ""}<div class="et-arrow">繼續閱讀 →</div></div>`;
         } else {
           // 完讀收束卡：讀到最後一集不該斷在灰按鈕，把終點變成新一圈的起點
-          tH = `<div class="ep-finale"><div class="ef-kicker">你走完了 1991 → 2026，整條紅線</div><div class="ef-title">「我也相信。」</div><div class="ef-sub">四十二集，三十五年，都為了那一眼瞬間。接下來，換你決定怎麼再走一次。</div><div class="ef-actions"><button type="button" class="ef-btn ef-btn-main" onclick="goToEp(0)">✦ 回 EP0 · 再走一次紅線</button><a class="ef-btn" href="lm402.html">↗ 走進 LM402 · 親眼看那一眼</a><a class="ef-btn" href="demos/platform-run/index.html">再陪把拔跑一次月台</a><button type="button" class="ef-btn" onclick="if(window.__FAN_QUIZ__)window.__FAN_QUIZ__.open()">✦ 鐵粉測驗 · 看你記得多少</button></div></div>`;
+          tH = `<div class="ep-finale"><div class="ef-kicker">你走完了 1991 → 2026，整條紅線</div><div class="ef-title">「我也相信。」</div><div class="ef-stones"><div class="ef-stone"><div class="efs-tag">拱心石一 · 相信</div><p class="efs-quote">我不是因為「我看過了」才相信。<br>我是因為「我願意相信」，所以相信。<br>就跟把拔一樣。</p></div><div class="ef-stone"><div class="efs-tag">拱心石二 · 沒有放棄</div><p class="efs-quote">「謝謝妳從來都沒有放棄過我。」</p></div></div><div class="ef-sub">兩塊基石，跨了三十五年，才對上同一句話。接下來，換你決定怎麼再走一次。</div><div class="ef-actions"><button type="button" class="ef-btn ef-btn-main" onclick="goToEp(0)">✦ 回 EP0 · 再走一次紅線</button><a class="ef-btn" href="lm402.html">↗ 走進 LM402 · 親眼看那一眼</a><a class="ef-btn" href="demos/platform-run/index.html">再陪把拔跑一次月台</a><button type="button" class="ef-btn" onclick="if(window.__FAN_QUIZ__)window.__FAN_QUIZ__.open()">✦ 鐵粉測驗 · 看你記得多少</button></div></div>`;
         }
         const pvBtn =
           idx > 0
