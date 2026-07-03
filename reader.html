@@ -22,6 +22,7 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none';" />
     <script src="assets/frame-guard.js"></script>
     <script defer src="assets/clear-data.js"></script><!-- 清除本機資料:共用模組,單一來源(PREFIXES 白名單只在此維護) -->
+    <script src="assets/finished-state.js"></script><!-- 完讀判定:單一判準模組,只設 window.__REDTIME_FINISHED__;不碰 DOM,刻意同步載入,確保早於 body inline script 的首次渲染 -->
 
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <meta
@@ -579,12 +580,12 @@
         #reread-hint { transition: opacity 0.3s ease; transform: none; }
       }
       /* 結局留白:「我也相信」先落定,過一拍按鈕才安靜出現 */
-      .ep-finale .ef-stones, .ep-finale .ef-sub, .ep-finale .ef-actions { opacity: 0; visibility: hidden; transition: opacity 0.9s ease, visibility 0s; }
-      .ep-finale.ef-in .ef-stones, .ep-finale.ef-in .ef-sub, .ep-finale.ef-in .ef-actions { opacity: 1; visibility: visible; transition-delay: 1.6s; }
+      .ep-finale .ef-stones, .ep-finale .ef-sub, .ep-finale .ef-actions, .ep-finale .ef-stamp { opacity: 0; visibility: hidden; transition: opacity 0.9s ease, visibility 0s; }
+      .ep-finale.ef-in .ef-stones, .ep-finale.ef-in .ef-sub, .ep-finale.ef-in .ef-actions, .ep-finale.ef-in .ef-stamp { opacity: 1; visibility: visible; transition-delay: 1.6s; }
       /* 那一眼之前先靜下來:EP3 的呼吸標記多給一段留白 */
       .ep-breath.ep-breath-held { margin-top: 84px; }
       @media (prefers-reduced-motion: reduce) {
-        .ep-finale .ef-stones, .ep-finale .ef-sub, .ep-finale .ef-actions { opacity: 1; visibility: visible; transition: none; }
+        .ep-finale .ef-stones, .ep-finale .ef-sub, .ep-finale .ef-actions, .ep-finale .ef-stamp { opacity: 1; visibility: visible; transition: none; }
       }
 
       /* ═══════ HERO ══════════════════════════════ */
@@ -4052,6 +4053,23 @@
         background: rgba(255, 72, 88, 0.2);
         border-color: rgba(255, 72, 88, 0.78);
       }
+      /* 完讀日期戳:結局卡上的一行安靜小字,不搶「我也相信」的視線 */
+      .ef-stamp {
+        margin: 14px auto 2px;
+        font-size: 11.5px;
+        letter-spacing: 0.06em;
+        color: var(--t3);
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        align-items: center;
+      }
+      .ef-stamp .ef-stamp-quote {
+        color: var(--t2);
+        font-size: 12px;
+      }
+      body.day-mode .ef-stamp { color: #6a6254; }
+      body.day-mode .ef-stamp .ef-stamp-quote { color: #4a4438; }
       body.day-mode .ep-finale {
         border-color: rgba(214, 51, 65, 0.4);
         background: radial-gradient(120% 140% at 50% 0%, rgba(214, 51, 65, 0.08), rgba(0, 0, 0, 0.012));
@@ -4195,6 +4213,63 @@
         color: var(--t3);
         line-height: 1.5;
       }
+      .redline-trace .rlt-seals {
+        margin-top: 12px;
+        padding-top: 11px;
+        border-top: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+      .redline-trace .rlt-seals-lead {
+        font-size: 10px;
+        color: var(--t3);
+        letter-spacing: 0.18em;
+        margin-bottom: 2px;
+      }
+      .redline-trace .rlt-seal {
+        display: flex;
+        align-items: baseline;
+        gap: 9px;
+        font-size: 13px;
+      }
+      .redline-trace .rlt-seal-glyph {
+        flex: 0 0 auto;
+        width: 21px;
+        height: 21px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        align-self: center;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        font-size: 12px;
+        color: var(--t3);
+      }
+      .redline-trace .rlt-seal.lit .rlt-seal-glyph {
+        color: var(--amber);
+        border-color: rgba(200, 144, 16, 0.55);
+      }
+      .redline-trace .rlt-seal-name { color: var(--t2); }
+      .redline-trace .rlt-seal-state {
+        margin-left: auto;
+        text-align: right;
+        color: var(--t3);
+        font-size: 12px;
+      }
+      .redline-trace .rlt-seal.lit .rlt-seal-state {
+        color: var(--amber);
+        font-size: 13px;
+      }
+      /* 日期戳:留痕裡的安靜小字 */
+      .redline-trace .rlt-stamp {
+        margin-top: 10px;
+        font-size: 11.5px;
+        letter-spacing: 0.05em;
+        color: var(--t3);
+      }
+      .redline-trace .rlt-stamp + .rlt-stamp { margin-top: 4px; }
+      .redline-trace .rlt-stamp-quote { color: var(--t2); }
       .rlt-eggs-lead, .rlt-empty {
         font-size: 12px;
         color: var(--t3);
@@ -7711,6 +7786,13 @@
           <button type="button" id="cp-offline-btn" onclick="startOfflinePack()">下載離線內容</button>
         </div>
         <div class="cp-offline-status" id="cp-offline-status" role="status" aria-live="polite"></div>
+        <div class="cp-row-lbl">紅線信物（你的閱讀腳印，只存在這台裝置；可以帶走，也可以接回來）</div>
+        <div class="cp-row">
+          <button type="button" id="cp-keepsake-export" onclick="exportKeepsake()">匯出信物</button>
+          <button type="button" id="cp-keepsake-import" onclick="var f=document.getElementById('cp-keepsake-file');if(f)f.click()">匯入信物</button>
+        </div>
+        <input type="file" id="cp-keepsake-file" accept=".json,application/json" hidden aria-hidden="true" tabindex="-1" onchange="importKeepsake(this)" />
+        <div class="cp-offline-status" id="cp-keepsake-status" role="status" aria-live="polite"></div>
         <button type="button" class="cp-close" onclick="closeComfort()">完成</button>
       </div>
     </div>
@@ -8173,6 +8255,7 @@
           "過去時間線，2008-2010年，學長長大",
           "EP19 學長「2006年在妳家附近的7-11，等了無數的夜晚，感覺著妳存在過的空氣」這份無人知曉的守候，後來在 EP29 又被他自己回望一次「我在無數個 7-11 的夜晚逗留，只為呼吸妳走過的空氣」，也在 EP26 由女兒沿著那條紅線飛近，才在阿姨心底聽見那句「我走了，但我從沒離開過」。",
           "EP19 開篇「21歲就下定決心要守護妳的餘生」這句年輕到近乎莽撞的誓言，正是 EP40 學長「相信『相信的力量』」的雛形，也是他日後在大兵日記裡寫下「要當個不倒人，打不倒的自信、敲不碎的心」的那份初心；而讓他「因為心受傷了，提早入伍，進入海軍陸戰隊，還自願加入兩棲蛙人部隊」的起點，早在 EP12 就由阿姨心疼地說了出來。",
+          "「你根本不知道什麼是『愛』！」2005 年她很生氣地說過這一句，學長記了很多年，還記下「謝謝妳真心為我好的教我這一切」；到 EP26，同一個問題會換一個問法回來，由女兒沿著紅線再聽一次。",
         ],
         20: [
           "學妹再一次把時間錯位說出來，也讓她看見後來的學長。",
@@ -8203,6 +8286,7 @@
           "三條時間線開始並列",
           "「後一秒已經看到那天花板的七盞白光」這一閃而過的畫面，其實接回 EP25 那個 2006 小年夜阿姨守在急診室天花板下的同一盞盞白光，也接回 EP17 她再一次睜開眼睛、看見同樣七盞白光的那個清晨。七盞白光從此成了她藏在時間裡最深的一道傷。",
           "「為什麼同一個時間，阿姨第一次是哭著貼，第二次貼是笑著貼？」這個女兒問出的疑惑，要到 EP26 順著那條專屬於把拔與阿姨的紅線、一路飛進阿姨從未進去過的心底深處，才慢慢有了答案，也才真正讀懂 EP12 那張留在 125 機車上的紙條，為什麼會說「我走了，但我從沒離開過」。",
+          "「這裡是時空黑洞。」命運阿嬤說出口的這個詞，在整條線上不只出現一次：EP14 阿姨說她一直在 2022 年的時空黑洞等你，EP29 學長的訊號「掉進了時間的黑洞」；到 EP30，命運阿嬤會把黑洞的另一面說完。",
         ],
         25: [
           "現實、回憶與夢境在這一集裡一起出現。",
@@ -8215,12 +8299,14 @@
           "女兒夢境時間線，沿紅線往更深處飛去",
           "把拔煮的那碗「什麼都沒有加」的烏龍麵，它的來歷藏在 EP30，那是十三歲的把拔反穿外套、把名字藏進衣服裡離家的一夜，被大姨婆一句「肚子會餓嗎」的溫柔輕輕救回來的味道；而更早的 EP33，是他第一次練習把名字翻進衣服、第一次說出口「我要走了」，離家還沒學會，先學會了把自己藏起來。",
           "阿姨在這裡輕輕說「我走了，但我從沒離開過」，正是她在 EP12 留在機車上那張紙條的另一面；同一張紙條，也在 EP24 被長大後的女兒重新讀懂，原來離開從來不是不夠愛，是太愛了才撐不下去。",
+          "「你知道什麼是『愛』嗎？」這句 2005 年底的質疑，學長自己在 EP19 就先記過一次，那裡它是更重的「你根本不知道什麼是『愛』！」，後面還跟著一句「謝謝妳真心為我好的教我這一切」。同一個問題，兩集各聽一次。",
         ],
         27: [
           "二十年後，學長重新回頭看這段關係與她當年的離開。",
           "現在時間線，二十年後回望",
           "這一碗酸辣湯的重鹹口味，和 2005 年那個讓我「一眼瞬間」的妳一模一樣，把二十年後的餐桌接回 EP3 那個在利瑪竇大樓後門第一眼就看見妳的瞬間，原來他從第一眼認出妳開始，連舌尖都記著她一輩子。",
           "她笑著、眼眶卻在融化的這一刻，正是女兒在 EP22 從把拔心底聽見的那句「曾經滄海難為水」的注解，二十年的重鹹裡藏著的，是再也換不了第二個人的意思。",
+          "「女神果然永遠年輕！」他笑著問妳「到底為什麼不會變老？」，這個玩笑其實有一個真的答案；到 EP35，會有一道光把年紀輕輕說出來。",
         ],
         28: [
           "學長回看自己如何一步步追上她當年看見的那個未來。",
@@ -8233,12 +8319,14 @@
           "現在時間線，失去之後的回望",
           "「等待的時候，也算在約會的時間裡」這句話，其實早在 EP6 就出現過，那時他寫下「是從妳先等我開始」，等的人是妳；到了這一集，同一句話又回來了，這回換妳從十五點半一路等到十九點。等待的人換過來，又換了回去，二十年裡你們就這樣輪流替對方守著時間。",
           "「可是彩虹會消失。」學妹的這句遲疑，接的是她在 EP8 說起自己那個灰濛濛世界的心事；而他這一集回她的「彩虹會散，妳一直都在」，是二十年來一直沒說完的答案。",
+          "「所有訊號都掉進了時間的黑洞」，這個黑洞在 EP14 阿姨那頭也有一個，她說「我一直在2022年的時空黑洞等你」；EP24 女兒穿過的，也叫時空黑洞。同一段斷聯的歲月，兩邊各守著一個洞，EP30 有一句話會把它們一起照亮。",
         ],
         30: [
           "女兒飛到 1997 年，看見十三歲的把拔。",
           "女兒夢境時間線，1997年，把拔十三歲的那一夜",
           "「把拔把學校運動外套反穿，把名字翻進裡面」這個把自己藏起來的動作，其實在 EP33 那個更小的國一夜裡就先演練過一次，那晚他只學會了藏名字，還沒學會離家；到了這一集，他才真的走到更遠、更冷的地方睡著。",
           "大姨婆那句「肚子會餓嗎？」不責備、不追問，就是把少年帶回家的那句溫柔；後來把拔難過的女兒時，也總先問「要不要吃點烏龍麵？」而那碗麵，正是 EP26 裡女兒記得的、把拔煮的「什麼都沒有加」的烏龍麵。原來我們，都是被同一份溫柔帶回家。",
+          "「有些黑洞，不必解釋，陪著就會亮。」命運阿嬤這句話，往回看會多一層：EP14 阿姨說她一直在 2022 年的時空黑洞等你，EP24 女兒穿過的時空黑洞，EP29 學長的訊號掉進的時間黑洞。同一個詞走了好幾集，在這裡被輕輕說亮。",
         ],
         31: [
           "學長夢見阿Q，也想起那句「學長自己照顧自己，我先暫停一下。」",
@@ -8269,6 +8357,7 @@
           "現在時間線，2025年，二段前讀到〈背影〉",
           "女兒讀〈背影〉時想起「小時候把拔抱著自己來回踱步、在他步伐裡睡著」的身影，這個「抱」正呼應 EP0 裡把拔那句「我會照顧妳一輩子」的守護，也在 EP36 化成月台上他為了趕上她、在車門關上前兩秒把她整個抱進車廂的那個擁抱。",
           "這一集才點破「那光的年紀，是十八歲」，把拔 2005 年一眼看見的其實是 1994 年、十八歲的她，這正是 EP38 從學妹視角攤開的「29 歲身體裡的 18 歲」，也是 EP3 那場一眼瞬間真正的謎底。",
+          "「那光的年紀，是十八歲」這一句，也接住了 EP27 學長在來來水餃店笑著問的那句「到底為什麼不會變老？」。同一個謎，一集用玩笑問，一集用光回答。",
         ],
         36: [
           "台中的夜裡，女兒看著把拔傳來的「妳真的很棒欸😊」，也想像如果國中跟把拔一起住會怎樣。",
@@ -8288,6 +8377,7 @@
           "29 歲的身體裡是 18 歲的意識，但同時還有 33／39／49 歲的自己在意識裡七嘴八舌：五個年紀的學妹同時在場。",
           "「妳不用往前門衝。妳只要站在後門，等他轉身走過那段走廊。」EP3 的學長視角到這裡終於有了學妹視角的鏡像對位。",
           "「以後某一天，在某個很難熬的夜晚，妳會非常想回到今天這條走廊，謝謝這個沒有往前多跨一步的自己。」39 歲對 18 歲說的這句話，提前 21 年劇透了 EP41 的「款款的」那七天。",
+          "「如果命中注定遇見那個人，他現在在哪裡?」她在這裡說出第一次穿越的起點：1994 年畢業典禮那天，訓導處外面的一個念頭。同一秒鐘，EP32 由女兒在旁邊看過一次：「她把指尖貼在脈搏上，像在搜尋命運密碼：如果命中注定會遇見那個人，他現在在哪裡？」同一句話，兩集各記一次。",
         ],
         39: [
           "二十年後，學長終於把那些一直沒說完的話說出口。",
@@ -9358,6 +9448,10 @@
       }
       function updateResumeCard(epNum) {
         const ep = EPISODES.find((item) => item.ep === epNum);
+        /* 完讀者誠實分支:整條線都走過的讀者,「繼續」是假話,換成再走一次的語彙 */
+        const _rtFinished =
+          typeof window.__REDTIME_FINISHED__ === "function" &&
+          window.__REDTIME_FINISHED__();
         [
           {
             card: document.getElementById("resume-card"),
@@ -9377,9 +9471,17 @@
             card.classList.remove("show");
             return;
           }
-          title.textContent =
-            "從 " + fmtEp(ep.ep) + " · " + shortEpisodeTitle(ep) + " 繼續";
-          sub.textContent = "你上次停在這。紅線還記得，接著走吧。";
+          if (_rtFinished) {
+            title.textContent = "再走一次 · 挑你最想再看一眼的那天";
+            sub.textContent = "整條線你都走過了。這次不用怕迷路。";
+            var eb = card.querySelector(".resume-eyebrow");
+            if (eb) eb.textContent = "再走一次";
+            card.setAttribute("aria-label", "再走一次 · 回到你上次看的那天");
+          } else {
+            title.textContent =
+              "從 " + fmtEp(ep.ep) + " · " + shortEpisodeTitle(ep) + " 繼續";
+            sub.textContent = "你上次停在這。紅線還記得，接著走吧。";
+          }
           card.classList.add("show");
         });
       }
@@ -9827,8 +9929,13 @@
         }
         if (_map3dLoading) return;
         _map3dLoading = true;
+        // 走完全程的讀者,引導讓給正文開口(EP41 原句,兩個靜態字面量擇一,不經任何外部資料)
+        const _m3Note =
+          typeof window.__REDTIME_FINISHED__ === "function" && window.__REDTIME_FINISHED__()
+            ? "「我早就知道結局，所以飛去那些日子，是很安全的。」（EP41）"
+            : "三條軌道是三條時間線，跨軌的光弧是穿越。拖曳旋轉 · 滾輪縮放 · 你讀到哪，光弧亮到哪。";
         p.innerHTML =
-          '<div class="ip-section-note">三條軌道是三條時間線，跨軌的光弧是穿越。拖曳旋轉 · 滾輪縮放 · 你讀到哪，光弧亮到哪。</div><div id="map3d-wrap" style="width:100%;height:320px;border-radius:14px;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,#171310,#0a0807);touch-action:none"></div><div class="map3d-legend"><span class="m3l-title">軌道</span><span class="m3l-chip m3l-female-rainbow">━ 學妹線</span><span class="m3l-chip" style="color:#a8a49c">━ 時間軸</span><span class="m3l-chip" style="color:#c89010">━ 女兒線</span><span class="m3l-sep">｜</span><span class="m3l-title">光弧</span><span class="m3l-chip" style="color:#ff4858">⌒ 穿越</span><span class="m3l-chip" style="color:#4da6ff">⤺ 推回</span><span class="m3l-chip" style="color:#b78aff">∿ 夢境</span><span class="m3l-chip" style="color:#ffd479">⊚ 疊合</span><span class="m3l-sep">｜</span><span class="m3l-chip" style="color:rgba(220,205,180,.8)">● 集數軸（點節點或弧頂標籤可跳到該集）</span></div><div id="map3d-status" style="font-size:11px;opacity:.5;padding:8px 2px">3D 模組載入中…</div>';
+          '<div class="ip-section-note">' + _m3Note + '</div><div id="map3d-wrap" style="width:100%;height:320px;border-radius:14px;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,#171310,#0a0807);touch-action:none"></div><div class="map3d-legend"><span class="m3l-title">軌道</span><span class="m3l-chip m3l-female-rainbow">━ 學妹線</span><span class="m3l-chip" style="color:#a8a49c">━ 時間軸</span><span class="m3l-chip" style="color:#c89010">━ 女兒線</span><span class="m3l-sep">｜</span><span class="m3l-title">光弧</span><span class="m3l-chip" style="color:#ff4858">⌒ 穿越</span><span class="m3l-chip" style="color:#4da6ff">⤺ 推回</span><span class="m3l-chip" style="color:#b78aff">∿ 夢境</span><span class="m3l-chip" style="color:#ffd479">⊚ 疊合</span><span class="m3l-sep">｜</span><span class="m3l-chip" style="color:rgba(220,205,180,.8)">● 集數軸（點節點或弧頂標籤可跳到該集）</span></div><div id="map3d-status" style="font-size:11px;opacity:.5;padding:8px 2px">3D 模組載入中…</div>';
         try {
           const THREE = await import("./assets/lm402/vendor-three.module.js");
           _map3d = initMap3D(THREE, document.getElementById("map3d-wrap"));
@@ -10153,6 +10260,9 @@
       var SILENCE_EPS = [3, 40];
       // 章節專屬導讀標籤:高潮與結尾用專屬語,其餘沿用預設
       var COMPANION_LABELS = { 3: "這裡是那一眼。先聽聽，當時其他人怎麼看？", 40: "紅線快到盡頭，有人停下來陪你走完。", 41: "紅線到了盡頭，也有人停下來，陪你回頭看。" };
+      // EP3 專屬標籤只給讀過 EP3 的讀者(首讀不先點破);建 episodes 時已讀集合尚未初始化,直接讀既有 key
+      var _ep3ReadBefore = false;
+      try { _ep3ReadBefore = (JSON.parse(localStorage.getItem("redtime_read_eps_v1") || "[]") || []).indexOf(3) !== -1; } catch (e) {}
       // N2 沿紅線：建 arc → [ep 升序] 索引（EPISODES 已依 ep 序），驅動同視角連續導覽
       const ARC_SEQ = {};
       EPISODES.forEach((e) => { (ARC_SEQ[e.arc] = ARC_SEQ[e.arc] || []).push(e.ep); });
@@ -10194,7 +10304,7 @@
           tH = breathH + `<div class="ep-teaser" onclick="goToEp(${nx.ep})"><div class="et-label">下一集</div><div class="et-num">${fmtEp(nx.ep)} · ${escapeHtml(ARC_LBL[nx.arc] || nx.arc)}</div>${pv ? `<div class="et-text">${escapeHtml(pv)}</div>` : ""}<div class="et-arrow">繼續閱讀 →</div></div>`;
         } else {
           // 完讀收束卡：讀到最後一集不該斷在灰按鈕，把終點變成新一圈的起點
-          tH = `<div class="ep-finale"><div class="ef-kicker">你走完了 1991 → 2026，整條紅線</div><div class="ef-title">「我也相信。」</div><div class="ef-stones"><div class="ef-stone"><div class="efs-tag">拱心石一 · 相信</div><p class="efs-quote">我不是因為「我看過了」才相信。<br>我是因為「我願意相信」，所以相信。<br>就跟把拔一樣。</p></div><div class="ef-stone"><div class="efs-tag">拱心石二 · 沒有放棄</div><p class="efs-quote">「謝謝妳從來都沒有放棄過我。」</p></div></div><div class="ef-sub">兩塊基石，跨了三十五年，才對上同一句話。接下來，換你決定怎麼再走一次。</div><div class="ef-actions"><button type="button" class="ef-btn ef-btn-main" onclick="goToEp(0)">✦ 回 EP0 · 再走一次紅線</button><a class="ef-btn" href="lm402.html">↗ 走進 LM402 · 親眼看那一眼</a><a class="ef-btn" href="demos/platform-run/index.html">再陪把拔跑一次月台</a><button type="button" class="ef-btn" onclick="if(window.__FAN_QUIZ__)window.__FAN_QUIZ__.open()">✦ 鐵粉測驗 · 看你記得多少</button></div></div>`;
+          tH = `<div class="ep-finale"><div class="ef-kicker">你走完了 1991 → 2026，整條紅線</div><div class="ef-title">「我也相信。」</div><div class="ef-stones"><div class="ef-stone"><div class="efs-tag">拱心石一 · 相信</div><p class="efs-quote">我不是因為「我看過了」才相信。<br>我是因為「我願意相信」，所以相信。<br>就跟把拔一樣。</p></div><div class="ef-stone"><div class="efs-tag">拱心石二 · 沒有放棄</div><p class="efs-quote">「謝謝妳從來都沒有放棄過我。」</p></div></div><div class="ef-sub">兩塊基石，跨了三十五年，才對上同一句話。接下來，換你決定怎麼再走一次。</div><div class="ef-actions"><button type="button" class="ef-btn ef-btn-main" onclick="goToEp(0)">✦ 回 EP0 · 再走一次紅線</button><a class="ef-btn" href="lm402.html">↗ 走進 LM402 · 親眼看那一眼</a><a class="ef-btn" href="demos/platform-run/index.html">再陪把拔跑一次月台</a><a class="ef-btn" href="demos/695/tiantanglu-3d/index.html">走一段他的天堂路</a><button type="button" class="ef-btn" onclick="if(window.__FAN_QUIZ__)window.__FAN_QUIZ__.open()">✦ 鐵粉測驗 · 看你記得多少</button></div></div>`;
         }
         const pvBtn =
           idx > 0
@@ -10221,7 +10331,7 @@
         const litH = litPool.length
           ? `<div class="ep-note ep-literati"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleLiterati(this, ${ep.ep})">▸ 文人說</div><div class="ep-note-body hidden" id="lit-body-${ep.ep}"></div></div>`
           : "";
-        const compLabel = COMPANION_LABELS[ep.ep] || "紅線經過這裡，有人停下來等你";
+        const compLabel = (ep.ep === 3 && !_ep3ReadBefore) ? "紅線經過這裡，有人停下來等你" : (COMPANION_LABELS[ep.ep] || "紅線經過這裡，有人停下來等你");
         // N8 時空定錨：從時間軸說明(tline)機械抽出年份，做成標題列常駐 chip。只取年份，不推算角色年齡(避免破壞 canon)。
         const _ym = tline ? (tline.match(/(\d{4})\s*[-–~]\s*(\d{4})/) || tline.match(/(\d{4})/)) : null;
         const yearChip = _ym ? `<span class="ep-time-chip" title="${escapeHtml(tline)}">${_ym[2] ? _ym[1] + "–" + _ym[2] : _ym[1]}</span>` : "";
@@ -10464,12 +10574,16 @@
       // ── 回讀提示:讀過會改寫前面理解的集數後,浮出一則回頭的邀請 ──
       // 觸發與回讀目標全部取自既有母題資料(ANNOTATIONS 重讀線索的回指),不自創對應:
       //  EP14 線索回指 EP8(鋼鐵人的願望)/ EP25 線索回指 EP17(七盞白光)
-      //  EP32 線索回指 EP11(愛因斯坦句)/ EP41 線索回指 EP30(藏起名字的少年)
+      //  EP26 線索回指 EP19(什麼是『愛』)/ EP32 線索回指 EP11(愛因斯坦句)
+      //  EP35 線索回指 EP27(永遠年輕)/ EP41 線索回指 EP30(藏起名字的少年)
       var REREAD_HINTS = {
-        14: { back: 8, text: "讀到這裡，EP8 那個鋼鐵人的願望，已經換了意思。" },
-        25: { back: 17, text: "現在回頭看，EP17 醒來時的那七盞白光，已經換了意思。" },
-        32: { back: 11, text: "現在回頭看，EP11 那句隨口說的愛因斯坦，已經換了意思。" },
-        41: { back: 30, text: "走到這裡，EP30 那個把名字藏起來的少年，已經換了意思。" },
+        14: { back: 8, text: "讀到這裡，回頭看 EP8 那個鋼鐵人的願望。" },
+        25: { back: 17, text: "現在回頭看，EP17 醒來時的那七盞白光。" },
+        26: { back: 19, text: "現在回頭看，EP19 那句氣著問的『愛』。" },
+        32: { back: 11, text: "現在回頭看，EP11 那句隨口說的愛因斯坦。" },
+        35: { back: 27, text: "現在回頭看，EP27 那句笑著說的永遠年輕。" },
+        38: { back: 32, text: "現在回頭看，EP32 她貼著脈搏問的那一句。" },
+        41: { back: 30, text: "走到這裡，回頭看 EP30 那個把名字藏起來的少年。" },
       };
       var _rereadShown = (function () {
         try { return new Set(JSON.parse(localStorage.getItem("redtime_reread_hints_v1") || "[]")); }
@@ -10581,6 +10695,44 @@
       document.body.classList.add("js-ready");
       applyCompanionPref(); /* 章節建構完才有 .ep-companion 可套偏好與計數 */
 
+      /* ── 完讀日期戳:第一次走到結局卡的那一天,記一次,之後不再改寫 ──
+         只在讀者主動打開的位置安靜顯示(結局卡 / 紅線留痕),不彈窗、不提醒 */
+      var FINISHED_AT_KEY = "redtime_finished_at_v1";
+      function _finishedAtTs() {
+        try {
+          var v = parseInt(localStorage.getItem(FINISHED_AT_KEY) || "", 10);
+          return Number.isFinite(v) && v > 0 ? v : 0;
+        } catch (e) { return 0; }
+      }
+      function _stampDateStr(ts) {
+        var d = new Date(ts);
+        return d.getFullYear() + " 年 " + (d.getMonth() + 1) + " 月 " + d.getDate() + " 日";
+      }
+      function _stampOver30d(ts) {
+        return Date.now() - ts > 30 * 24 * 60 * 60 * 1000;
+      }
+      function renderFinaleStamp() {
+        var fin = document.querySelector(".ep-finale");
+        if (!fin || fin.querySelector(".ef-stamp")) return;
+        var ts = _finishedAtTs();
+        if (!ts) return;
+        var el = document.createElement("div");
+        el.className = "ef-stamp";
+        var line = document.createElement("span");
+        line.textContent = "你第一次走到這裡，是 " + _stampDateStr(ts);
+        el.appendChild(line);
+        if (_stampOver30d(ts)) {
+          var q = document.createElement("span");
+          q.className = "ef-stamp-quote";
+          q.textContent = "「等待的時候，也算在約會的時間裡。」";
+          el.appendChild(q);
+        }
+        var acts = fin.querySelector(".ef-actions");
+        if (acts) fin.insertBefore(el, acts);
+        else fin.appendChild(el);
+      }
+      renderFinaleStamp();
+
       /* 揪心:結局卡留白 — 觀察結局卡本身(它在最後一集底部,整集 .visible 太早觸發);進場後「我也相信」先落定,過一拍 ef-sub/ef-actions 才安靜淡入(CSS .ef-in) */
       (function () {
         var fin = document.querySelector(".ep-finale");
@@ -10591,6 +10743,11 @@
             if (e.isIntersecting) {
               e.target.classList.add("ef-in");
               finObs.unobserve(e.target);
+              // 第一次走到結局卡,把日期記下來(一次性,已有就不動)
+              try {
+                if (!_finishedAtTs()) localStorage.setItem(FINISHED_AT_KEY, String(Date.now()));
+              } catch (err) {}
+              renderFinaleStamp();
               // 走到結局卡 = 讀完最後一集,最後一次回讀的邀請在這裡浮出
               setTimeout(function () { fireRereadHint(41); }, 4000);
             }
@@ -11875,6 +12032,7 @@
         { ep: 19, line: "21 歲的誓言，和一則隔了十七年才落地的訊息。" },
         { ep: 39, line: "他一直站在她永遠找得到他的地方。" },
         { ep: 40, line: "在最苦的那些夜裡，他把那個願望撐成了自己的信念。" },
+        { ep: 41, line: "一個最普通的禮拜天，那份相信被下一個人接了過去。" },
       ];
       function renderBeliefPath() {
         var panel = document.getElementById('cur-panel-5');
@@ -11889,7 +12047,7 @@
             + '<span class="og-go">讀這一站 →</span>'
             + '</button>';
         }).join('');
-        panel.innerHTML = '<div class="cur-intro">把散落在各集的學長線收成一條路：一個願望，怎麼被一個人用二十年慢慢養成信念。不劇透，只給一條走的順序。</div><div class="og-grid">' + cards + '</div>';
+        panel.innerHTML = '<div class="cur-intro">把散落在各集的學長線收成一條路：一個願望，怎麼被一個人用二十年慢慢養成信念，再交到下一個人手上。不劇透，只給一條走的順序。</div><div class="og-grid">' + cards + '</div>';
         _curCache[5] = true;
       }
       // N7 那一眼·五視角導覽：同一秒(2005 後門那一眼)在 5 集各演一次，用既有 canon 金句做並排卡片+跳轉。
@@ -12167,6 +12325,81 @@
         savePref(PREF_KEYS.timebadge, on ? "1" : "0");
         _syncComfortActive();
       }
+      // ── 紅線信物:閱讀腳印的匯出/匯入。只動白名單鍵,全程本機,不連網不上傳 ──
+      var KEEPSAKE_KEYS = [
+        "redtime_read_eps_v1",
+        "redtime_finished_at_v1",
+        "redtime_eggs_v1",
+        "redtime_bookmarks_v1",
+        "lm402_endings_completed_v1",
+        "lm402_endings_stamps_v1",
+        "tiantanglu_cleared_v1",
+        "platformRunCleared_v1",
+      ];
+      function _keepsakeStatus(msg) {
+        var el = document.getElementById("cp-keepsake-status");
+        if (el) el.textContent = msg || "";
+      }
+      function exportKeepsake() {
+        var data = {}, n = 0;
+        KEEPSAKE_KEYS.forEach(function (k) {
+          try {
+            var v = localStorage.getItem(k);
+            if (v !== null) { data[k] = v; n++; }
+          } catch (e) {}
+        });
+        if (!n) { _keepsakeStatus("這台裝置還沒有腳印，先往下讀吧。"); return; }
+        var d = new Date();
+        var pad = function (x) { return (x < 10 ? "0" : "") + x; };
+        var fname = "紅線信物-" + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + ".json";
+        var payload = JSON.stringify({ format: "redtime_keepsake_v1", exported_at: d.toISOString(), data: data }, null, 2);
+        try {
+          var blob = new Blob([payload], { type: "application/json" });
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement("a");
+          a.href = url;
+          a.download = fname;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(function () { try { URL.revokeObjectURL(url); } catch (e) {} }, 4000);
+          _keepsakeStatus("信物已打包（" + n + " 項）。收好，換一台裝置時接回來就好。");
+        } catch (e) {
+          _keepsakeStatus("打包沒成功，這個瀏覽器可能不支援下載。");
+        }
+      }
+      function importKeepsake(input) {
+        var f = input && input.files && input.files[0];
+        if (input) input.value = ""; /* 同一檔可重選 */
+        if (!f) return;
+        if (f.size > 1024 * 1024) { _keepsakeStatus("這個檔案太大了，不像是紅線信物。"); return; }
+        var r = new FileReader();
+        r.onload = function () {
+          var obj = null;
+          try { obj = JSON.parse(String(r.result || "")); }
+          catch (e) { _keepsakeStatus("讀不懂這個檔案。確認它是之前匯出的信物。"); return; }
+          var src = obj && obj.data && typeof obj.data === "object" && !Array.isArray(obj.data) ? obj.data : null;
+          if (!src) { _keepsakeStatus("讀不懂這個檔案。確認它是之前匯出的信物。"); return; }
+          /* 鍵白名單過濾:白名單外一律丟棄,值必須是字串且長度有上限 */
+          var picked = {}, n = 0;
+          KEEPSAKE_KEYS.forEach(function (k) {
+            if (typeof src[k] === "string" && src[k].length <= 262144) { picked[k] = src[k]; n++; }
+          });
+          if (!n) { _keepsakeStatus("檔案裡沒有認得的腳印。"); return; }
+          if (!window.confirm("要把這份信物（" + n + " 項腳印）接回這台裝置嗎？\n會蓋過這裡現有的紀錄，然後重新整理頁面。")) {
+            _keepsakeStatus("");
+            return;
+          }
+          var w = 0;
+          Object.keys(picked).forEach(function (k) {
+            try { localStorage.setItem(k, picked[k]); w++; } catch (e) {}
+          });
+          _keepsakeStatus("接回來了（" + w + " 項）。");
+          try { location.reload(); } catch (e) {}
+        };
+        r.onerror = function () { _keepsakeStatus("檔案讀取失敗，再試一次。"); };
+        r.readAsText(f);
+      }
       function openComfort() {
         var p = document.getElementById("comfort-pop");
         if (p) { p.classList.add("show"); _syncComfortActive(); dialogOpenA11y(p); }
@@ -12430,9 +12663,49 @@
           var lb = JSON.parse(localStorage.getItem("platformRunLeaderboard_v2") || "[]");
           if (lb && lb.length) rows.push(["你陪把拔跑過月台", "留下了紀錄"]);
         } catch (e) {}
+        // 三道試煉印記:讀三個場景既有的本地紀錄(與 LM402 結局卡同一組 key)。
+        // 走過的印,由該結局自己的句子開口;還沒走過的,只留一句「還在路上」,不催促。
+        var renDone = false, aoDone = false, zhuiDone = false;
+        try {
+          var re = JSON.parse(localStorage.getItem("lm402_endings_completed_v1") || "[]");
+          renDone = Array.isArray(re) && re.length > 0;
+        } catch (e) {}
+        try { aoDone = localStorage.getItem("tiantanglu_cleared_v1") === "1"; } catch (e) {}
+        try { zhuiDone = localStorage.getItem("platformRunCleared_v1") === "1"; } catch (e) {}
+        var seals = [
+          { g: "忍", name: "LM402", done: renDone, line: "「第一道試煉，走過了。」" },
+          { g: "熬", name: "天堂路", done: aoDone, line: "「我只是相信『相信的力量』。」" },
+          { g: "追", name: "月台上的狂奔", done: zhuiDone, line: "「我趕上了。」" },
+        ];
+        var sealsHTML = '<div class="rlt-seals"><div class="rlt-seals-lead">三道試煉</div>'
+          + seals.map(function (s) {
+              return '<div class="rlt-seal' + (s.done ? " lit" : "") + '"><span class="rlt-seal-glyph">' + escapeHtml(s.g) + '</span><span class="rlt-seal-name">' + escapeHtml(s.name) + '</span><span class="rlt-seal-state">' + escapeHtml(s.done ? s.line : "還在路上") + "</span></div>";
+            }).join("")
+          + "</div>";
+        // 日期戳:第一次走完 / 第一次看見那一眼。沒有紀錄就整段不出現,不催促
+        var stampHTML = "";
+        var finTs = (typeof _finishedAtTs === "function") ? _finishedAtTs() : 0;
+        if (finTs) {
+          stampHTML += '<div class="rlt-stamp">你第一次走到這裡，是 ' + escapeHtml(_stampDateStr(finTs)) + "</div>";
+          if (_stampOver30d(finTs)) stampHTML += '<div class="rlt-stamp rlt-stamp-quote">「等待的時候，也算在約會的時間裡。」</div>';
+        }
+        try {
+          var st = JSON.parse(localStorage.getItem("lm402_endings_stamps_v1") || "{}");
+          if (st && typeof st === "object" && !Array.isArray(st)) {
+            // 那一眼的兩個結局鍵(一眼瞬間 / 後門那一眼),取較早的那一次
+            var eyeTs = 0;
+            ["perfect_eye", "canon"].forEach(function (k) {
+              var v = st[k];
+              if (typeof v === "number" && v > 0 && (!eyeTs || v < eyeTs)) eyeTs = v;
+            });
+            if (eyeTs && typeof _stampDateStr === "function") {
+              stampHTML += '<div class="rlt-stamp">你第一次看見那一眼，是 ' + escapeHtml(_stampDateStr(eyeTs)) + "</div>";
+            }
+          }
+        } catch (e) {}
         return '<div class="redline-trace"><div class="rlt-lead">紅線經過的地方，留下的東西</div><div class="rlt-rows">'
           + rows.map(function (r) { return '<div class="rlt-row"><span class="rlt-k">' + escapeHtml(r[0]) + '</span><span class="rlt-v">' + escapeHtml(r[1]) + "</span></div>"; }).join("")
-          + '</div><div class="rlt-note">這裡不計分、也不排名，只是紅線陪你走到哪了。</div></div>';
+          + "</div>" + sealsHTML + stampHTML + '<div class="rlt-note">這裡不計分、也不排名，只是紅線陪你走到哪了。</div></div>';
       }
       function openEggShelf() {
         document.getElementById("modal-eyebrow").textContent = "紅線留痕";

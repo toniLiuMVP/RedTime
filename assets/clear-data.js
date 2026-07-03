@@ -1,5 +1,5 @@
-/* 清除我的本機資料 — 共用模組（遊戲頁 lm402 / 月台 / 天堂路 載入用）。
-   ⚠️ reader.html 有一份等價的 inline 實作；改 PREFIXES 或文案時，兩邊都要改。
+/* 清除我的本機資料:共用模組（reader / lm402 / 月台 / 天堂路 皆載入此檔）。
+   單一來源：PREFIXES 白名單與文案只在這裡維護（reader.html 的 inline 版已移除，直接用本模組）。
    最高規最嚴謹：只動本站前綴白名單 key，絕不 localStorage.clear()（以免動到同源其他資料）；
    動手前完整列舉數量＋類別並要求明確確認；全程不連網、不上傳，資料本就只存在這台裝置。 */
 (function () {
@@ -33,7 +33,7 @@
     for (var j = 0; j < keys.length; j++) {
       try { localStorage.removeItem(keys[j]); removed++; } catch (e) {}
     }
-    alert("已清除 " + removed + " 項本機紀錄。頁面將重新整理，回到乾淨的起點。");
+    alert("已清除 " + removed + " 項本機紀錄。頁面將重新整理，回到乾淨的起點。\n\n「我走了，你要好好照顧自己。」");
     try { location.reload(); } catch (e) {}
   }
   window.clearAllMyData = clearAllMyData;
