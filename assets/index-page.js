@@ -255,12 +255,19 @@ return {
   for (var i = 0; i < 150; i++) pts.push(mkP());
 
   var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  var drawScheduled = false; // 單一 rAF 鏈:避免恢復時疊出第二條迴圈
+  function schedule() {
+    if (drawScheduled) return;
+    drawScheduled = true;
+    requestAnimationFrame(function () { drawScheduled = false; draw(); });
+  }
   function draw() {
 frame++;
 if (prefersReducedMotion.matches) return; // prefers-reduced-motion：停止 hero canvas rAF（CSS 已隱藏，動畫應真正停止而非只是看不見）
+if (document.documentElement.classList.contains("motion-still")) return; // 頁面級停止動畫開關：停在最後一格
 /* 當 hero 完全滾出視野時暫停繪製，節省 CPU/電池 */
 if (cvs.getBoundingClientRect().bottom < 0) {
-  requestAnimationFrame(draw);
+  schedule();
   return;
 }
 var time = frame * 0.016;
@@ -285,16 +292,17 @@ pts = pts.filter(function(p) {
   return true;
 });
 while (pts.length < 150) pts.push(mkP());
-requestAnimationFrame(draw);
+schedule();
   }
   resize();
   draw();
   var onReducedMotionChange = function (mq) {
-    if (!mq.matches) draw(); // 使用者關閉「減少動態」→ 恢復 hero 動畫
+    if (!mq.matches) schedule(); // 使用者關閉「減少動態」→ 恢復 hero 動畫
   };
   if (prefersReducedMotion.addEventListener) prefersReducedMotion.addEventListener("change", onReducedMotionChange);
   else if (prefersReducedMotion.addListener) prefersReducedMotion.addListener(onReducedMotionChange);
   window.addEventListener("resize", resize, { passive: true });
+  window.__HERO_ANIM__ = { resume: schedule }; // 供停止動畫開關恢復 rAF
 })();
 
 // ── block 2 ──
@@ -781,4 +789,35 @@ el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key ===
     a.setAttribute("href", "mailto:" + u + "@" + d);
     if (!a.getAttribute("aria-label")) a.setAttribute("aria-label", "寫信給作者（電子郵件）");
   });
+})();
+
+// ── block 7 ──
+// 首屏連續動畫的停止/播放開關（狀態記憶於本機；系統已減少動態時不顯示，因為動畫本就停止）
+(function () {
+  var KEY = "redtime_motion_still_v1";
+  var hero = document.getElementById("hero");
+  if (!hero) return;
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+  if (reduce.matches) return;
+  var root = document.documentElement;
+  var btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "motion-toggle";
+  function paint(still) {
+    btn.setAttribute("aria-pressed", still ? "true" : "false");
+    btn.setAttribute("aria-label", still ? "播放首頁動畫" : "停止首頁動畫");
+    btn.textContent = still ? "▶ 播放動畫" : "❚❚ 停止動畫";
+  }
+  var still0 = false;
+  try { still0 = localStorage.getItem(KEY) === "1"; } catch (e) {}
+  if (still0) root.classList.add("motion-still");
+  paint(still0);
+  btn.addEventListener("click", function () {
+    var still = !root.classList.contains("motion-still");
+    root.classList.toggle("motion-still", still);
+    try { localStorage.setItem(KEY, still ? "1" : "0"); } catch (e) {}
+    paint(still);
+    if (!still && window.__HERO_ANIM__) window.__HERO_ANIM__.resume();
+  });
+  hero.appendChild(btn);
 })();

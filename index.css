@@ -3498,3 +3498,119 @@ a.tl-event:hover .tl-event-go,
 a.tl-event:focus-visible .tl-event-go {
   color: rgba(232, 200, 122, 0.95);
 }
+
+/* 樞紐句(浪漫與揪心之間的一行轉軸):複用 mid-echo 版型,純靜語不可點 */
+.pivot-echo {
+  margin: 64px auto 8px;
+}
+
+/* 2013 動人節點:偏黃蜜橙,對位「紅線有點偏黃色」 */
+.is-36 {
+  border-color: #f0a058;
+  background: linear-gradient(
+    180deg,
+    rgba(240, 160, 88, 0.16),
+    rgba(240, 160, 88, 0.05)
+  );
+  color: #f0a058;
+}
+
+/* 遊戲入口卡分級小標:低調 chip,不搶卡片本體 */
+.trial-game .tg-rating {
+  margin-left: 8px;
+  font-family: "Noto Sans TC", sans-serif;
+  font-size: 9.5px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: rgba(234, 230, 222, 0.45);
+  border: 1px solid rgba(234, 230, 222, 0.18);
+  border-radius: 4px;
+  padding: 1px 5px;
+  vertical-align: 1.5px;
+  white-space: nowrap;
+}
+
+/* 首屏連續動畫的停止/播放開關(按鈕由 JS 建立;系統減少動態時不出現) */
+.motion-toggle {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 5;
+  background: rgba(18, 18, 18, 0.55);
+  border: 1px solid rgba(234, 230, 222, 0.2);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-family: "DM Mono", "Noto Sans TC", monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: rgba(234, 230, 222, 0.55);
+  cursor: pointer;
+  transition: color 0.25s ease, border-color 0.25s ease;
+}
+.motion-toggle:hover,
+.motion-toggle:focus-visible {
+  color: var(--parchment);
+  border-color: rgba(234, 230, 222, 0.55);
+}
+/* 停止狀態:只停無限循環的那一段,一次性入場動畫不受影響 */
+html.motion-still .hero-title {
+  animation-play-state: running, paused;
+}
+html.motion-still .scroll-line {
+  animation-play-state: paused;
+}
+
+/* 首訪冷開場(overlay 由 JS 建立;回訪與減少動態皆不出現) */
+.cold-open {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  background: #0c0b0a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 1.4s ease;
+}
+.cold-open.co-out,
+.cold-open.co-out-fast {
+  opacity: 0;
+  pointer-events: none;
+}
+.cold-open.co-out-fast {
+  transition-duration: 0.4s;
+}
+.co-line {
+  font-family: "Noto Serif TC", serif;
+  font-size: clamp(20px, 4.5vw, 30px);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  color: var(--parchment);
+  min-height: 1.7em;
+  margin: 0;
+}
+.co-skip {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  background: none;
+  border: 1px solid rgba(234, 230, 222, 0.25);
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-family: "Noto Sans TC", sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: rgba(234, 230, 222, 0.55);
+  cursor: pointer;
+  transition: color 0.25s ease, border-color 0.25s ease;
+}
+.co-skip:hover,
+.co-skip:focus-visible {
+  color: var(--parchment);
+  border-color: rgba(234, 230, 222, 0.6);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cold-open {
+    display: none;
+  }
+}

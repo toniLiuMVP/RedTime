@@ -78,6 +78,7 @@
     <script src="assets/load-fonts.js" data-href="fonts/fonts.css"></script><!-- F6:826KB 字型 CSS 改非阻塞載入(已 preload,font-display:swap → FOUT 極短),不擋首屏 render -->
     <noscript><link rel="stylesheet" href="fonts/fonts.css" /></noscript>
     <link rel="stylesheet" href="index.css" />
+    <script src="assets/index-cold-open.js"></script><!-- 首訪冷開場:同步載入確保 overlay 先於首屏繪製;回訪/減少動態直接 return -->
     <noscript>
       <style>
         .reveal { opacity: 1 !important; transform: none !important; }
@@ -339,15 +340,15 @@
         <div class="trials-title">三道試煉 · 忍 · 熬 · 追</div>
         <a class="trial-game" href="lm402.html">
           <span class="tg-motif">忍</span>
-          <span class="tg-body"><span class="tg-name">↗ 走進 LM402</span><span class="tg-line">你會忍不住想上前，但她沒有。那一眼，難的是站好。<span class="tg-ep">→ 玩完讀 EP38</span></span></span>
+          <span class="tg-body"><span class="tg-name">↗ 走進 LM402<span class="tg-rating">普遍級</span></span><span class="tg-line">你會忍不住想上前，但她沒有。那一眼，難的是站好。<span class="tg-ep">→ 玩完讀 EP38</span></span></span>
         </a>
         <a class="trial-game" href="demos/695/tiantanglu-3d/index.html">
           <span class="tg-motif">熬</span>
-          <span class="tg-body"><span class="tg-name">↗ 天堂路</span><span class="tg-line">先撐過去，才接得住後來。他靠相信，熬過那段。<span class="tg-ep">→ 玩完讀 EP40</span></span></span>
+          <span class="tg-body"><span class="tg-name">↗ 天堂路<span class="tg-rating">輔12級</span></span><span class="tg-line">先撐過去，才接得住後來。他靠相信，熬過那段。<span class="tg-ep">→ 玩完讀 EP40</span></span></span>
         </a>
         <a class="trial-game" href="demos/platform-run/index.html">
           <span class="tg-motif">追</span>
-          <span class="tg-body"><span class="tg-name">月台上的狂奔</span><span class="tg-line">在車門關上前趕到她身邊。每一次，都趕上。<span class="tg-ep">→ 玩完讀 EP36</span></span></span>
+          <span class="tg-body"><span class="tg-name">月台上的狂奔<span class="tg-rating">普遍級</span></span><span class="tg-line">在車門關上前趕到她身邊。每一次，都趕上。<span class="tg-ep">→ 玩完讀 EP36</span></span></span>
         </a>
       </div>
     </section>
@@ -367,6 +368,10 @@
         <li class="rp-node"><a href="reader.html#ep-41"><span class="rp-n">EP41</span><span class="rp-why">知道救不了現在。唯一能做的，是相信。</span></a></li>
       </ol>
     </section>
+    <!-- 樞紐句:浪漫與揪心之間的一行轉軸(引自天堂路故事書架同句) -->
+    <div class="reveal is-slow mid-echo pivot-echo">
+      <blockquote class="mid-echo-quote">當初有多浪漫，後來就有多揪心。</blockquote>
+    </div>
     <!-- P0-1: 新讀者引路 modal— 5-step onboarding overlay -->
     <div id="newcomer-tour" class="tour-overlay" hidden aria-hidden="true">
       <div class="tour-card" role="dialog" aria-labelledby="tour-title" aria-modal="true">
@@ -463,6 +468,7 @@
             <div class="tour-final-actions">
               <a class="tour-final-primary" href="reader.html#ep-3">✦ 開始讀 EP3</a>
               <a class="tour-final-secondary" href="reader.html">從 EP0 開始</a>
+              <a class="tour-final-secondary" href="lm402.html">比較想先動手？→ 走進 LM402，玩完會接回 EP38</a>
             </div>
           </div>
         </div>
@@ -779,6 +785,15 @@
             <div class="tl-event-label">有一段路，紅線是灰的</div>
             <div class="tl-event-desc">兩個人斷了聯絡，只能靠相信，撐過那十七年。</div>
             <div class="tl-event-go">→ 讀這一段 · EP34</div>
+          </a>
+          <a class="tl-event" href="reader.html#ep-36" aria-label="讀這一段 · EP36">
+            <div class="tl-dot is-36">
+              <svg class="icon-svg" viewBox="0 0 24 24"><use href="#ic-person"></use></svg>
+            </div>
+            <div class="tl-event-year">2013年 · 捷運站男廁</div>
+            <div class="tl-event-label">把拔與一歲的她</div>
+            <div class="tl-event-desc">男廁木櫃上，鋪好的外套。</div>
+            <div class="tl-event-go">→ 讀這一段 · EP36</div>
           </a>
           <a class="tl-event" href="reader.html#ep-21" aria-label="讀這一段 · EP21">
             <div
