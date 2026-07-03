@@ -4512,3 +4512,117 @@ body.side-panel-collapsed .game-shell {
 /* 載入畫面法律資訊(虛構聲明/版權/連結) */
 .lm402-loader-legal{margin-top:22px;max-width:34em;font-size:11px;line-height:1.7;opacity:.42;text-align:center;}
 .lm402-loader-legal a{color:inherit;text-decoration:underline;}
+
+/* 結局卡「三道試煉」印記 + 忍字小框 */
+.ending-trials { margin: 18px 0 6px; }
+.ending-trials:empty { display: none; }
+.trial-ren-frame {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  justify-content: center;
+  padding: 13px 18px;
+  border: 1px solid rgba(255, 210, 160, 0.28);
+  border-radius: 14px;
+  background: rgba(255, 210, 160, 0.05);
+}
+.trial-ren-glyph {
+  font-size: 30px;
+  line-height: 1;
+  color: #ffd9a8;
+  text-shadow: 0 0 14px rgba(255, 200, 150, 0.35);
+}
+.trial-ren-line {
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  color: rgba(244, 236, 226, 0.82);
+}
+.trial-seals-kicker {
+  margin-top: 14px;
+  font-size: 11px;
+  letter-spacing: 0.26em;
+  text-align: center;
+  color: rgba(255, 217, 168, 0.6);
+}
+.trial-seal-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.trial-seal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 96px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+.trial-seal .seal-glyph {
+  font-size: 20px;
+  line-height: 1.2;
+  color: rgba(244, 236, 226, 0.35);
+}
+.trial-seal.lit .seal-glyph {
+  color: #ffd9a8;
+  text-shadow: 0 0 12px rgba(255, 200, 150, 0.4);
+}
+.trial-seal .seal-name {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: rgba(244, 236, 226, 0.6);
+}
+.trial-seal .seal-state {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: rgba(244, 236, 226, 0.45);
+}
+.trial-seal a.seal-state {
+  color: #ffd9a8;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.trial-seal a.seal-state:hover,
+.trial-seal a.seal-state:focus-visible {
+  color: #ffe8c8;
+  outline: none;
+}
+.trial-all-line {
+  margin-top: 12px;
+  font-size: 12.5px;
+  letter-spacing: 0.1em;
+  line-height: 1.8;
+  text-align: center;
+  color: rgba(255, 217, 168, 0.9);
+}
+
+/* 極淡還原鍵:HUD 隱去期間唯一留下的出口 */
+.ui-restore {
+  position: fixed;
+  top: max(14px, env(safe-area-inset-top));
+  left: max(14px, env(safe-area-inset-left));
+  z-index: 10001;
+  background: rgba(10, 9, 14, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  color: rgba(244, 236, 226, 0.6);
+  font-family: inherit;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  padding: 7px 14px;
+  cursor: pointer;
+  opacity: 0.18;
+  transition: opacity 0.3s ease;
+}
+.ui-restore:hover,
+.ui-restore:focus-visible {
+  opacity: 0.92;
+  outline: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-restore { transition: none; opacity: 0.4; }
+}

@@ -866,11 +866,54 @@ function createAudioSystem() {
     osc.stop(when + duration + release + 0.03);
   }
 
+  /* 鐘聲殘響:程式生成 impulse response(指數衰減 noise),零音檔;lazy 建一次重複用 */
+  let bellReverb = null;
+  function ensureBellReverb(ctx) {
+    if (bellReverb) return bellReverb;
+    const dur = 2.6;
+    const rate = ctx.sampleRate;
+    const buf = ctx.createBuffer(2, Math.floor(dur * rate), rate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = buf.getChannelData(ch);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2.8);
+    }
+    const conv = ctx.createConvolver();
+    conv.buffer = buf;
+    const wet = ctx.createGain();
+    wet.gain.value = 0.5;
+    conv.connect(wet).connect(ctx.destination);
+    bellReverb = conv;
+    return conv;
+  }
+
   function playCue(type) {
     if (!state.audioEnabled) return;
     const ctx = ensureContext();
     if (!ctx || ctx.state !== "running") return;
     const when = ctx.currentTime + 0.01;
+    if (type === "bell") {
+      /* 11:00 上課鐘:基音 + 鐘體 harmonic(2.756 物理比例),乾聲 + 2.6s 殘響尾音 */
+      const verb = ensureBellReverb(ctx);
+      const strike = (t0) => {
+        [[784, 0.028], [784 * 2.756, 0.009]].forEach(([freq, gain]) => {
+          const osc = ctx.createOscillator();
+          const amp = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(freq, t0);
+          amp.gain.setValueAtTime(0.0001, t0);
+          amp.gain.exponentialRampToValueAtTime(gain, t0 + 0.02);
+          amp.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.5);
+          osc.connect(amp);
+          amp.connect(ctx.destination);
+          amp.connect(verb);
+          osc.start(t0);
+          osc.stop(t0 + 1.7);
+        });
+      };
+      strike(when);
+      strike(when + 0.95);
+      return;
+    }
     if (type === "step") {
       playEnvelope(ctx, { type: "triangle", frequency: 110, duration: 0.04, gain: 0.018, when, attack: 0.004, release: 0.06 });
       playEnvelope(ctx, { type: "sine", frequency: 220, duration: 0.028, gain: 0.008, when: when + 0.006, attack: 0.004, release: 0.05 });
@@ -1100,6 +1143,8 @@ function hideAllGameUI() {
   if (dom.sidePanel) dom.sidePanel.style.display = "none";
   if (dom.hintPill) dom.hintPill.style.display = "none";
   if (dom.transcriptDock) dom.transcriptDock.style.display = "none";
+  const restore = document.getElementById("ui-restore");
+  if (restore) restore.hidden = false;
 }
 
 function showAllGameUI() {
@@ -1114,6 +1159,44 @@ function showAllGameUI() {
   if (dom.sidePanel) dom.sidePanel.style.display = "";
   if (dom.hintPill) dom.hintPill.style.display = "";
   if (dom.transcriptDock) dom.transcriptDock.style.display = "";
+  const restore = document.getElementById("ui-restore");
+  if (restore) restore.hidden = true;
+}
+
+/* ── 二周目低語:已有結局紀錄的再訪,意識菜市場的年紀低語(文字派)極淡浮現。
+   文字素材沿用 consciousness-text 的原文短句;音軌槽位先留好,之後有音檔再接。── */
+const replayWhisper = { armed: false, active: false, tried: 0 };
+if (typeof window !== "undefined" && !window.__WHISPER_SLOTS__) {
+  window.__WHISPER_SLOTS__ = {
+    tracks: { "18": null, "29": null, "33": null, "39": null, "49": null },
+    setTrack(age, url) { if (age in this.tracks) this.tracks[age] = url || null; },
+  };
+}
+function maybeStartReplayWhisper() {
+  if (replayWhisper.armed) return;
+  let revisit = false;
+  try {
+    const arr = JSON.parse(localStorage.getItem(STORAGE_KEYS.endingsCompleted) || "[]");
+    revisit = Array.isArray(arr) && arr.length > 0;
+  } catch (e) {}
+  if (!revisit) return;
+  replayWhisper.armed = true;
+  const tryEnable = () => {
+    if (state.phase !== "consciousness_market" || state.mode !== "play") return;
+    if (window.__CONSC_TEXT__ && typeof window.__CONSC_TEXT__.setIntensity === "function") {
+      window.__CONSC_TEXT__.setIntensity(0.26); /* 極淡,遠低於 opt-in 建議值,避免疊加過曝 */
+      replayWhisper.active = true;
+      setSubtitle("女兒", "又回到這間教室了。這一次，我聽得見她們小小聲在說話。", 5.0);
+    } else if (replayWhisper.tried++ < 20) {
+      safeTimeout(tryEnable, 600);
+    }
+  };
+  safeTimeout(tryEnable, 1600);
+}
+function stopReplayWhisper() {
+  if (!replayWhisper.active) return;
+  replayWhisper.active = false;
+  try { if (window.__CONSC_TEXT__) window.__CONSC_TEXT__.setIntensity(0); } catch (e) {}
 }
 
 function persistLookSetting() {
@@ -1474,6 +1557,7 @@ function setPhase(id) {
   state.phase = id;
   state.phaseClock = 0;
   state.cinematicGlow = 0;
+  if (id !== "consciousness_market") stopReplayWhisper();
   updateObjective(true);
   logDebug("phase", id);
 }
@@ -1632,7 +1716,7 @@ function applyEffect(effect) {
             try { window.__LETTERBOX_OFF__ && window.__LETTERBOX_OFF__(900); } catch (e) {}
             try { window.__CAMERA_BREATH_OFF__ && window.__CAMERA_BREATH_OFF__(); } catch (e) {}
             if (state.mode === "play" && window.__ACTS__) {
-              window.__ACTS__.runChain(["standStill", "hug", "msn", "redthread", "phoneCall", "sevenEleven", "riverbank", "infinite", "believe", "train1163", "knowingVsBelieving", "carnation", "threehearts"], function () {
+              window.__ACTS__.runChain(["standStill", "hug", "msn", "redthread", "phoneCall", "note", "sevenEleven", "riverbank", "infinite", "believe", "train1163", "knowingVsBelieving", "carnation", "threehearts"], function () {
                 setSubtitle("女兒", "我把他們的一輩子，都收進了時空口袋裡。原來相信，就是這樣撐過來的。", 6.0);
               });
             }
@@ -1646,6 +1730,7 @@ function applyEffect(effect) {
     state.flags.frontCallHeard = true;
     state.flags.autoFrontCall = true;
     setPhase("front_call");
+    audioSystem.playCue("bell");
     audioSystem.playCue("phone");
     setSubtitle("學長", "「妳在哪裡？」", 4.0);
     safeTimeout(() => {
@@ -1712,14 +1797,19 @@ function applyEffect(effect) {
       safeTimeout(function () {
         if (state.mode !== "play") { proceedToRear(); return; }
         state.councilPaused = true;   // council overlay 期間凍結 sim/phaseClock
-        window.__COUNCIL__.start(function (res) {
-          state.councilPaused = false;
-          try { if (window.__TWIN_BALANCE__) window.__TWIN_BALANCE__("off"); } catch (e) {}
-          saveCouncilSeen();
-          if (dom.councilReplay) dom.councilReplay.hidden = false;
-          if (dom.councilReadStory) dom.councilReadStory.hidden = false;
-          proceedToRear();
-        });
+        const enterCouncil = function () {
+          window.__COUNCIL__.start(function (res) {
+            state.councilPaused = false;
+            try { if (window.__TWIN_BALANCE__) window.__TWIN_BALANCE__("off"); } catch (e) {}
+            saveCouncilSeen();
+            if (dom.councilReplay) dom.councilReplay.hidden = false;
+            if (dom.councilReadStory) dom.councilReadStory.hidden = false;
+            proceedToRear();
+          });
+        };
+        /* 眨眼轉場:閉上眼睛,才飛得進她的腦海(reduced-motion 時為淡入淡出) */
+        if (typeof window.__BLINK__ === "function") window.__BLINK__(300, 100, 420, enterCouncil);
+        else enterCouncil();
       }, 1500);
     } else {
       proceedToRear();
@@ -1734,7 +1824,7 @@ function applyEffect(effect) {
       state.flags.loveArcSeen = true;
       window.__ACTS__.gaze(function () {
         if (window.__ACTS__ && state.mode === "play") {
-          window.__ACTS__.runChain(["standStill", "hug", "msn", "redthread", "phoneCall", "sevenEleven", "riverbank", "infinite", "believe", "train1163", "knowingVsBelieving", "carnation", "threehearts"], function () {
+          window.__ACTS__.runChain(["standStill", "hug", "msn", "redthread", "phoneCall", "note", "sevenEleven", "riverbank", "infinite", "believe", "train1163", "knowingVsBelieving", "carnation", "threehearts"], function () {
             startEnding("perfect_eye", { manual: false });
           });
         } else {
@@ -2102,6 +2192,7 @@ function finishIntro() {
   const resume = state.intro.replay ? state.intro.resume : null;
   clearTransientInput();
   state.mode = "play";
+  maybeStartReplayWhisper();
   if (dom.councilReplay && loadCouncilSeen()) dom.councilReplay.hidden = false;
   if (dom.councilReadStory && loadCouncilSeen()) dom.councilReadStory.hidden = false;
   state.cameraMode = "play";
@@ -2257,6 +2348,7 @@ function finishEndingSequence() {
   // 清除置中字幕並恢復 UI
   hideCenteredSubtitle();
   showAllGameUI();
+  renderTrialSeals();
   dom.endingOverlay.hidden = false;
   dom.body.classList.add("ending-open");
   // 確保按鈕區域在手機上可見：等動畫完成後自動滾到結局操作按鈕
@@ -2264,6 +2356,81 @@ function finishEndingSequence() {
     const actions = document.querySelector(".ending-actions");
     if (actions) actions.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, 1600);
+}
+
+/* ── 結局卡「三道試煉」印記:忍(LM402)/熬(天堂路)/追(月台),讀三遊戲既有本地紀錄。
+   不計分、不排名;沒走過的印只給一條前往的路。── */
+function renderTrialSeals() {
+  const host = document.getElementById("ending-trials");
+  if (!host) return;
+  while (host.firstChild) host.removeChild(host.firstChild);
+  let renDone = false;
+  let aoDone = false;
+  let zhuiDone = false;
+  try {
+    const arr = JSON.parse(localStorage.getItem(STORAGE_KEYS.endingsCompleted) || "[]");
+    renDone = Array.isArray(arr) && arr.length > 0;
+  } catch (e) {}
+  try { aoDone = localStorage.getItem("tiantanglu_cleared_v1") === "1"; } catch (e) {}
+  try { zhuiDone = localStorage.getItem("platformRunCleared_v1") === "1"; } catch (e) {}
+
+  const frame = document.createElement("div");
+  frame.className = "trial-ren-frame";
+  const glyph = document.createElement("span");
+  glyph.className = "trial-ren-glyph";
+  glyph.textContent = "忍";
+  const line = document.createElement("span");
+  line.className = "trial-ren-line";
+  line.textContent = "第一道試煉，走過了。";
+  frame.appendChild(glyph);
+  frame.appendChild(line);
+  host.appendChild(frame);
+
+  const kicker = document.createElement("div");
+  kicker.className = "trial-seals-kicker";
+  kicker.textContent = "三道試煉";
+  host.appendChild(kicker);
+
+  const row = document.createElement("div");
+  row.className = "trial-seal-row";
+  const seals = [
+    { glyph: "忍", name: "LM402", done: renDone, href: null },
+    { glyph: "熬", name: "天堂路", done: aoDone, href: "demos/695/tiantanglu-3d/index.html" },
+    { glyph: "追", name: "月台上的狂奔", done: zhuiDone, href: "demos/platform-run/index.html" },
+  ];
+  seals.forEach((seal) => {
+    const cell = document.createElement("div");
+    cell.className = "trial-seal" + (seal.done ? " lit" : "");
+    const g = document.createElement("span");
+    g.className = "seal-glyph";
+    g.textContent = seal.glyph;
+    const n = document.createElement("span");
+    n.className = "seal-name";
+    n.textContent = seal.name;
+    cell.appendChild(g);
+    cell.appendChild(n);
+    if (seal.done || !seal.href) {
+      const s = document.createElement("span");
+      s.className = "seal-state";
+      s.textContent = seal.done ? "走過了" : "還在路上";
+      cell.appendChild(s);
+    } else {
+      const a = document.createElement("a");
+      a.className = "seal-state";
+      a.href = seal.href;
+      a.textContent = "前往";
+      cell.appendChild(a);
+    }
+    row.appendChild(cell);
+  });
+  host.appendChild(row);
+
+  if (renDone && aoDone && zhuiDone) {
+    const all = document.createElement("div");
+    all.className = "trial-all-line";
+    all.textContent = "忍、熬、追，三道試煉都走過了。三條線，收在同一條紅線上。";
+    host.appendChild(all);
+  }
 }
 
 // 關閉結局卡片但保留最終場景，讓玩家回頭轉視角、再看一眼那一秒（不 reset）
@@ -2736,6 +2903,7 @@ function updatePhaseLogic(dt) {
   if (state.phase === "consciousness_market" && state.phaseClock >= 60 && !state.flags.autoFrontCall) {
     state.flags.autoFrontCall = true;
     setPhase("front_call");
+    audioSystem.playCue("bell");
     audioSystem.playCue("phone");
     setSubtitle("學長", "「妳在哪裡？」", 4.0);
     safeTimeout(() => {
@@ -2765,6 +2933,16 @@ function updatePhaseLogic(dt) {
 
     state.cinematicGlow = smoothstep(CINEMATIC_TIMELINE.successWindow[0], CINEMATIC_TIMELINE.successWindow[1], state.phaseClock);
     updateOneGlanceCinema(state.cinematicGlow);
+    /* 情緒峰值前 3 秒:那一眼落定之前先靜下來,HUD 全隱(留一顆極淡還原鍵);峰值後由結局流程歸位 */
+    if (
+      !state.flags.preGlanceUIHidden &&
+      !state.flags.backdoorAnchored &&
+      !state.endingSequence &&
+      state.phaseClock >= CINEMATIC_TIMELINE.lockWindow - 3
+    ) {
+      state.flags.preGlanceUIHidden = true;
+      hideAllGameUI();
+    }
     if (state.phaseClock >= CINEMATIC_TIMELINE.lockWindow && !state.endingSequence && !state.flags.backdoorAnchored) {   // 選了「站在後門」=要走完整 gaze→13幕戀愛弧→perfect_eye,別讓 4.1s 自動結局搶先(4.1<4.2 race)把它吃掉成一張普通卡
       if (aligned) {
         startEnding(state.memories.size >= 4 ? "memory" : "canon");
@@ -2775,6 +2953,7 @@ function updatePhaseLogic(dt) {
   } else {
     state.cinematicGlow = 0;
     updateOneGlanceCinema(0);
+    if (state.flags.preGlanceUIHidden) state.flags.preGlanceUIHidden = false;
   }
 }
 
@@ -3908,6 +4087,15 @@ window.__lm402Ready = true;
     } catch (e) { return new Set(); }
   }
   let done = load();
+  /* 紀念品時間戳:每個結局第一次抵達的時刻(行囊/紅線留痕跨頁可讀) */
+  const STAMP_KEY = "lm402_endings_stamps_v1";
+  function loadStamps() {
+    try {
+      const obj = JSON.parse(localStorage.getItem(STAMP_KEY) || "{}");
+      return obj && typeof obj === "object" && !Array.isArray(obj) ? obj : {};
+    } catch (e) { return {}; }
+  }
+  let stamps = loadStamps();
   function syncPill() {
     try {
       const pill = document.getElementById("hud-collected-pill");
@@ -3919,6 +4107,10 @@ window.__lm402Ready = true;
       if (!key || ALL_ENDINGS.indexOf(key) === -1 || done.has(key)) return;
       done.add(key);
       try { localStorage.setItem(STORAGE_KEYS.endingsCompleted, JSON.stringify(Array.from(done))); } catch (e) {}
+      if (!stamps[key]) {
+        stamps[key] = Date.now();
+        try { localStorage.setItem(STAMP_KEY, JSON.stringify(stamps)); } catch (e) {}
+      }
       syncPill();
     } catch (e) {}
   }
@@ -3927,7 +4119,23 @@ window.__lm402Ready = true;
     count: () => done.size,
     total: ALL_ENDINGS.length,
     list: () => Array.from(done),
-    reset: () => { done = new Set(); try { localStorage.removeItem(STORAGE_KEYS.endingsCompleted); } catch (e) {} syncPill(); },
+    stamps: () => ({ ...stamps }),
+    reset: () => {
+      done = new Set();
+      stamps = {};
+      try { localStorage.removeItem(STORAGE_KEYS.endingsCompleted); } catch (e) {}
+      try { localStorage.removeItem(STAMP_KEY); } catch (e) {}
+      syncPill();
+    },
   };
   syncPill();
+})();
+
+/* ── 極淡還原鍵:HUD 隱去期間唯一留下的出口 ── */
+(function setupUiRestore() {
+  const restore = document.getElementById("ui-restore");
+  if (!restore) return;
+  restore.addEventListener("click", () => {
+    showAllGameUI();
+  });
 })();

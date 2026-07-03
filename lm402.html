@@ -646,6 +646,7 @@
       </div>
     </section>
 
+    <button id="ui-restore" class="ui-restore" type="button" hidden aria-label="顯示介面">顯示介面</button>
     <section id="ending-overlay" class="ending-overlay" hidden>
       <div id="ending-card" class="ending-card">
         <button id="ending-close" class="gg-close" type="button" aria-label="關閉，回去看場景">×</button>
@@ -678,8 +679,9 @@
         ></div>
         <div class="ls-11"
           id="ending-tracker-summary"
-         
+
         ></div>
+        <div id="ending-trials" class="ending-trials"></div>
         <div class="ending-actions">
           <div class="thread-tie" aria-hidden="true"><span class="ttl"></span><span class="ttk"></span><span class="ttr"></span></div>
           <button id="ending-retry" class="ending-button primary" type="button">
@@ -734,6 +736,8 @@
     </section>
 
 <script src="assets/lm402/page-c2.js"></script>
+    <!-- 眨眼轉場模組（設 window.__BLINK__，供 acts 幕間與議會進場使用）-->
+    <script src="./assets/lm402/blink-patch.js"></script>
     <!-- 雙時空B Act1 意識菜市場議會模組（設 window.__COUNCIL__，供 app.js 觸發）-->
     <script src="./assets/lm402/council.js"></script>
     <!-- 雙時空B Acts 2-10 戀愛弧 overlay 模組（設 window.__ACTS__）-->

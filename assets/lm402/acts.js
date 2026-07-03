@@ -936,8 +936,13 @@
     function next() {
       if (i >= ids.length) { _chainProgress = null; if (onAll) onAll(); return; }
       _chainProgress = { i: i, total: ids.length, skipAll: function () { i = ids.length; } }; // skipAll:把游標推到尾端,下一次 next() 即收鏈呼叫 onAll
+      const idx = i;
       const fn = map[ids[i++]];
-      if (typeof fn === "function") fn(arm(next)); else next();
+      if (typeof fn !== "function") { next(); return; }
+      const run = function () { fn(arm(next)); };
+      // 幕與幕之間一次極輕的眨眼(第 2 幕起;reduced-motion 時 __BLINK__ 內部自動退為淡入淡出)
+      if (idx > 0 && typeof window.__BLINK__ === "function") window.__BLINK__(180, 60, 300, run);
+      else run();
     }
     next();
   }
