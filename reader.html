@@ -3210,6 +3210,22 @@
         background: rgba(180, 90, 50, 0.1);
         color: #8a4520;
       }
+      /* B1「你還不知道」標記:完讀者才顯示的極淡靜態小字,貼在正文段落後,不打斷行距。
+         靜態常駐小字(比照 moto-note-egg 無入場動畫):不用 opacity/animation ——
+         這些標記位在 content-visibility 收合的 episode 子樹裡,CSS 動畫會被凍在 0% frame
+         而卡成永久隱形(對完讀者=看不到)。靜態可見最穩,也最符合「不打斷、極淡」的意圖。 */
+      .fin-mark {
+        margin: 2px 0 10px;
+        padding-left: 13px;
+        border-left: 2px solid rgba(232, 150, 120, 0.28);
+        font: 400 12px/1.72 "Noto Sans TC", sans-serif;
+        color: rgba(220, 200, 190, 0.52);
+        letter-spacing: 0.01em;
+      }
+      body.day-mode .fin-mark {
+        border-left-color: rgba(180, 90, 50, 0.3);
+        color: rgba(120, 90, 78, 0.72);
+      }
       .lit-comment {
         font-family: "Noto Sans TC", sans-serif;
         font-size: 12.6px;
@@ -10260,6 +10276,14 @@
       var SILENCE_EPS = [3, 40];
       // 章節專屬導讀標籤:高潮與結尾用專屬語,其餘沿用預設
       var COMPANION_LABELS = { 3: "這裡是那一眼。先聽聽，當時其他人怎麼看？", 40: "紅線快到盡頭，有人停下來陪你走完。", 41: "紅線到了盡頭，也有人停下來，陪你回頭看。" };
+      // B1「你還不知道」標記資料表(完讀者才顯示;_injectFinishedMarks 由下方 build loop 每集呼叫)。
+      // 必須定義在 build loop 之前 —— 否則 loop 呼叫 _injectFinishedMarks 時此表尚未賦值(var hoisting → undefined)。
+      var FIN_MARKS = {
+        0: { anchor: "「我會照顧妳一輩子的☺️」", text: "第一次讀，這只是一句把拔的承諾。" },
+        1: { anchor: "我海軍陸戰隊欸😄", text: "第一次讀，這只是把拔逗妳的一句玩笑話。" },
+        2: { anchor: "你要好好照顧自己！", text: "第一次讀，這只是一張讓人成長的紙條。" },
+        6: { anchor: "也算在約會的時間裡", text: "這時候的等待，還是甜的。" },
+      };
       // EP3 專屬標籤只給讀過 EP3 的讀者(首讀不先點破);建 episodes 時已讀集合尚未初始化,直接讀既有 key
       var _ep3ReadBefore = false;
       try { _ep3ReadBefore = (JSON.parse(localStorage.getItem("redtime_read_eps_v1") || "[]") || []).indexOf(3) !== -1; } catch (e) {}
@@ -10361,6 +10385,7 @@
         bd.className = "ep-body";
         bd.innerHTML = ep.html;
         _injectMotoNote(bd, ep.ep); /* 機車紙條彩蛋:在紙條段落後注入「同一張紙條」跨集連結(不改故事正文) */
+        _injectFinishedMarks(bd, ep.ep); /* B1:完讀者才顯示的「你還不知道」標記,貼在正文段落後(容器層,正文一字不動;初讀者零 DOM 差異) */
         _injectDecodeTerms(bd); /* N3:把編碼母題詞(1163/20:57)在正文裡做成可懸停解碼(只 wrap text node,不改故事正文) */
         _injectEraNotes(bd); /* 時代註解:時代物件詞的可開關旁註(同 N3 管線,只 wrap text node,預設關) */
         _buildEpSectionNav(sec, bd, ep.ep); /* 長集分節導航:依正文既有分隔線插入導航節點(容器層,正文一字不動) */
@@ -11465,6 +11490,33 @@
         });
         ann.appendChild(links);
         target.parentNode.insertBefore(ann, target.nextSibling);
+      }
+
+      /* B1「你還不知道」標記:四個落點,完讀者(__REDTIME_FINISHED__())才顯示。
+         初讀者:早退出,DOM 一字不加(零劇透、零差異)。
+         做法比照 _injectMotoNote —— 依正文既有段落文字定位 anchor <p>,在其後插入一個
+         獨立的極淡小字 sibling;正文 text node 一字不動。
+         ⚠️ FIN_MARKS 定義在 build loop「之前」(見上方 SILENCE_EPS 附近):此函式由 build loop
+         每集呼叫,若把資料表放這裡(loop 之後)會因 var hoisting 拿到 undefined 而整個 loop throw。 */
+      function _injectFinishedMarks(bd, epNum) {
+        if (!bd) return;
+        if (typeof window.__REDTIME_FINISHED__ !== "function" || !window.__REDTIME_FINISHED__()) return;
+        var spec = FIN_MARKS[epNum];
+        if (!spec) return;
+        var nodes = bd.querySelectorAll("p");
+        var target = null;
+        for (var i = 0; i < nodes.length; i++) {
+          if (nodes[i].textContent.indexOf(spec.anchor) !== -1) {
+            /* 同集若多段命中(如 EP0「我會照顧妳一輩子的」出現兩次),取最短者=首句本身,避開含「但是」的收尾句 */
+            if (!target || nodes[i].textContent.length < target.textContent.length) target = nodes[i];
+          }
+        }
+        if (!target) return;
+        var mark = document.createElement("div");
+        mark.className = "fin-mark";
+        mark.setAttribute("role", "note");
+        mark.textContent = spec.text;
+        target.parentNode.insertBefore(mark, target.nextSibling);
       }
       function renderBookmarkBar() {
         var bar = document.getElementById("jp-bookmarks");
