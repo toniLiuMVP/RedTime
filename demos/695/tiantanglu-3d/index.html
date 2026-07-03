@@ -40,8 +40,8 @@
   #c{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:1;}
 
   /* ── 準星 (可調 size/gap/thick/color) ── */
-  :root{--ch-size:8px;--ch-gap:4px;--ch-thick:2px;--ch-color:#ffe0b8;}
-  #cross{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;pointer-events:none;width:60px;height:60px;transition:transform .08s ease;}
+  :root{--ch-size:8px;--ch-gap:4px;--ch-thick:2px;--ch-color:#ffe0b8;--ch-drop:0px;}
+  #cross{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;pointer-events:none;width:60px;height:60px;transition:transform .08s ease;margin-top:var(--ch-drop,0px);}
   #cross i{position:absolute;background:var(--ch-color);box-shadow:0 0 2px rgba(0,0,0,.85);transition:box-shadow .08s ease;}
   /* 極克制命中確認(中性,非去爽違反:不加✕/數字/分數):打中那一拍準星微微一縮一亮,讓遠距離也知道「打中了」 */
   #cross.confirm{transform:translate(-50%,-50%) scale(1.16);}
@@ -621,7 +621,7 @@
   <div class="sec"><b>載具</b>：走近悍馬車／大砲／坦克按 <b>E</b>(手機按「使用」鈕)上車，再按一次下車。WASD 駕駛，左鍵／射擊鈕開炮，撞擊能殲敵。實戰中油料／砲彈有限(軍械庫可補)，普通以上難度需先在軍械庫買使用權。</div>
   <div class="sec"><b>軍營探索</b>：慢慢走。走近那頭牛、那件反穿的外套，按 <b>E</b>(手機按「使用」鈕)，夢會對你說一句話。</div>
   <div class="sec"><b>進入實戰</b>：走到靶場(紅白標靶處)按 <b>E</b>(手機按「使用」鈕)，閉眼睜眼進入「實戰模擬練習」。</div>
-  <div class="sec"><b>目標</b>：撐過考驗後，畫面會提示你按 <b>H</b> 放下槍(手機按「放下槍」)。這不是要你變強，是撐到那一刻，終於可以放下。</div>
+  <div class="sec"><b>目標</b>：撐過考驗後，畫面會提示你按住 <b>H</b> 把槍放到底(手機按住「放下槍」)。放慢一點也沒關係，沒有計時。這不是要你變強，是撐到那一刻，終於可以放下。</div>
   <div class="sec"><b>覺得難</b>：左上齒輪(或 <b>TAB</b>)可隨時調難度，預設新手最好上手。在軍營裡顧那頭牛、翻開大兵日記、看那件反穿的外套，會解鎖血量彈藥最寬裕的「劇情模式」。不用逞強，這裡沒有人會對你說加油。</div>
   <div class="close" id="tut-close">走上天堂路</div>
 </div></div>
