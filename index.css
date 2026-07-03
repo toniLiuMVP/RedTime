@@ -377,13 +377,6 @@
         font-weight: 400;
         line-height: 1.7;
         color: var(--parchment);
-        margin: 0 0 26px;
-      }
-      .ache-frame {
-        font-size: 14px;
-        letter-spacing: 0.1em;
-        line-height: 2.1;
-        color: var(--mist);
         margin: 0;
       }
       /* 情緒導演模式：跟著紅線走一次 */
@@ -1226,11 +1219,9 @@
         pointer-events: none;
       }
 
-      /* 原聲帶歌詞:文字層自託管;native details,鍵盤可展開 */
+      /* 原聲帶歌詞:文字層自託管。安靜清單,點曲名開彈窗,不搶影片卡的戲 */
       .lyrics-shelf {
         margin-top: 18px;
-        display: grid;
-        gap: 8px;
       }
       .lyrics-head {
         font-family: "DM Mono", monospace;
@@ -1238,44 +1229,149 @@
         letter-spacing: 0.3em;
         text-transform: uppercase;
         color: var(--mist);
-        margin-bottom: 2px;
+        margin-bottom: 8px;
       }
-      details.lyrics {
+      .lyric-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .lyric-track {
+        cursor: pointer;
+        padding: 5px 11px;
+        font-family: "Noto Sans TC", sans-serif;
+        font-size: 12px;
+        font-weight: 300;
+        letter-spacing: 0.03em;
+        color: var(--warm);
+        background: rgba(255, 255, 255, 0.015);
         border: 1px solid var(--seam);
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.012);
+        border-radius: 999px;
+        transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+      }
+      .lyric-track:hover {
+        color: var(--parchment);
+        border-color: rgba(200, 144, 16, 0.4);
+        background: rgba(200, 144, 16, 0.05);
+      }
+      .lyric-track:focus-visible {
+        outline: 2px solid var(--amber);
+        outline-offset: 2px;
+      }
+
+      /* 歌詞彈窗:固定最大高度、內部捲動,頁面本身不變長 */
+      .lyrics-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: rgba(12, 12, 12, 0.9);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+      }
+      .lyrics-modal:not([hidden]) {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .lyrics-dialog {
+        position: relative;
+        width: 100%;
+        max-width: 560px;
+        max-height: min(70vh, 640px);
+        display: flex;
+        flex-direction: column;
+        background: linear-gradient(180deg, rgba(18, 18, 18, 0.98), rgba(10, 10, 10, 0.96));
+        border: 1px solid var(--seam);
+        border-radius: 12px;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
         overflow: hidden;
       }
-      details.lyrics > summary {
-        cursor: pointer;
-        padding: 11px 16px;
-        font-size: 13px;
-        color: var(--parchment);
-        letter-spacing: 0.04em;
-        list-style: none;
-        user-select: none;
+      @supports (height: 100dvh) {
+        .lyrics-dialog { max-height: min(70dvh, 640px); }
       }
-      details.lyrics > summary::-webkit-details-marker {
-        display: none;
+      .lyrics-dialog-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 18px 14px;
+        border-bottom: 1px solid var(--seam);
+        flex: 0 0 auto;
       }
-      details.lyrics > summary::before {
-        content: "▸ ";
-        color: var(--mist);
-        font-size: 11px;
-      }
-      details.lyrics[open] > summary::before {
-        content: "▾ ";
-      }
-      .lyrics-text {
+      .lyrics-dialog-title {
         margin: 0;
-        padding: 2px 18px 18px;
+        font-family: "Noto Serif TC", serif;
+        font-size: 16px;
+        font-weight: 500;
+        letter-spacing: 0.03em;
+        color: var(--parchment);
+      }
+      .lyrics-dialog-close {
+        flex: 0 0 auto;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 1px solid var(--seam);
+        background: transparent;
+        color: var(--mist);
+        font-size: 14px;
+        cursor: pointer;
+        transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+      }
+      .lyrics-dialog-close:hover {
+        color: var(--parchment);
+        border-color: rgba(224, 72, 96, 0.4);
+        background: rgba(224, 72, 96, 0.08);
+      }
+      .lyrics-dialog-close:focus-visible {
+        outline: 2px solid var(--rose);
+        outline-offset: 2px;
+      }
+      .lyrics-dialog-body {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        padding: 18px 22px 24px;
+        -webkit-overflow-scrolling: touch;
+      }
+      .lyrics-dialog-body:focus-visible {
+        outline: none;
+      }
+      .lyric-line {
+        margin: 0;
         font-family: "Noto Sans TC", sans-serif;
-        font-size: 13px;
+        font-size: 14px;
         font-weight: 300;
         line-height: 2;
-        color: rgba(234, 230, 222, 0.78);
-        white-space: pre-wrap;
+        color: rgba(234, 230, 222, 0.82);
         overflow-wrap: break-word;
+      }
+      .lyric-gap {
+        height: 0.9em;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .lyrics-modal { transition: none; }
+      }
+      @media (max-width: 640px) {
+        /* 手機直立:彈窗滿版好讀 */
+        .lyrics-modal { padding: 0; }
+        .lyrics-dialog {
+          max-width: none;
+          width: 100%;
+          height: 100%;
+          max-height: 100%;
+          border: 0;
+          border-radius: 0;
+        }
+        @supports (height: 100dvh) {
+          .lyrics-dialog { height: 100dvh; max-height: 100dvh; }
+        }
+        .lyric-line { font-size: 15px; }
       }
 
       /* ─── ABOUT ─── */
@@ -3348,7 +3444,7 @@
                 border-radius: 10px;
                 overflow: hidden;
                 border: 1px solid var(--seam) }
-.is-8 { 
+.is-8 {
                   position: absolute;
                   inset: 0;
                   width: 100%;
@@ -3356,7 +3452,7 @@
                   padding: 0;
                   border: 0;
                   cursor: pointer;
-                  background: #000 center / cover no-repeat
+                  background: #000 center / contain no-repeat
                     url('assets/video-thumbs/eACPFC4K89o.webp') }
 .is-9 { 
                 margin-top: 12px;
@@ -3373,15 +3469,15 @@
                   padding: 0;
                   border: 0;
                   cursor: pointer;
-                  background: #000 center / cover no-repeat
+                  background: #000 center / contain no-repeat
                     url('assets/video-thumbs/Ne3mv-6Ufl8.webp') }
-/* 自家劇照同時鋪在外框容器:按鈕被替換或單層背景失效時,此區仍是劇照紀念位,不是黑框 */
+/* 自家劇照同時鋪在外框容器:按鈕被替換或單層背景失效時,此區仍是劇照紀念位,不是黑框。用 contain 讓整張劇照完整可見、四邊不裁切 */
 .is-5 > .reveal:first-child .is-7 {
-  background: #000 center / cover no-repeat
+  background: #000 center / contain no-repeat
     url('assets/video-thumbs/eACPFC4K89o.webp');
 }
 .is-5 > .reveal:last-child .is-7 {
-  background: #000 center / cover no-repeat
+  background: #000 center / contain no-repeat
     url('assets/video-thumbs/Ne3mv-6Ufl8.webp');
 }
 .is-11 { 

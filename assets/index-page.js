@@ -862,3 +862,67 @@ el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key ===
   });
   hero.appendChild(btn);
 })();
+
+// ── block 8 ──
+// 歌詞清單 + 彈窗：點曲名開 modal，固定高度內部捲動，頁面不變長。
+// 詞由 #lyrics-data JSON 靜態注入（編譯期文本），逐行 textContent 建構，零 innerHTML。
+(function () {
+  var dataEl = document.getElementById("lyrics-data");
+  var modal = document.getElementById("lyrics-modal");
+  var list = document.getElementById("lyric-list");
+  if (!dataEl || !modal || !list) return;
+  var songs;
+  try { songs = JSON.parse(dataEl.textContent); } catch (e) { return; }
+  if (!Array.isArray(songs)) return;
+
+  var dialog = modal.querySelector(".lyrics-dialog");
+  var titleEl = modal.querySelector(".lyrics-dialog-title");
+  var bodyEl = modal.querySelector(".lyrics-dialog-body");
+  var closeBtn = modal.querySelector(".lyrics-dialog-close");
+  var lastFocus = null;
+
+  function render(song) {
+    titleEl.textContent = song.title;
+    while (bodyEl.firstChild) bodyEl.removeChild(bodyEl.firstChild);
+    (song.lines || []).forEach(function (line) {
+      var p = document.createElement("p");
+      p.className = line === "" ? "lyric-line lyric-gap" : "lyric-line";
+      p.textContent = line;   // 純文字，非 HTML
+      bodyEl.appendChild(p);
+    });
+  }
+
+  function open(i, trigger) {
+    var song = songs[i];
+    if (!song) return;
+    lastFocus = trigger || document.activeElement;
+    render(song);
+    modal.hidden = false;
+    modal.setAttribute("aria-hidden", "false");
+    bodyEl.scrollTop = 0;
+    try { bodyEl.focus(); } catch (e) {}
+  }
+
+  function close() {
+    if (modal.hidden) return;
+    modal.hidden = true;
+    modal.setAttribute("aria-hidden", "true");
+    if (lastFocus && typeof lastFocus.focus === "function") {
+      try { lastFocus.focus(); } catch (e) {}
+    }
+    lastFocus = null;
+  }
+
+  list.querySelectorAll(".lyric-track").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      open(parseInt(btn.getAttribute("data-lyric"), 10), btn);
+    });
+  });
+  if (closeBtn) closeBtn.addEventListener("click", close);
+  modal.addEventListener("click", function (e) {
+    if (e.target === modal) close();   // 點背景關閉；點對話框內不關
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !modal.hidden) close();
+  });
+})();
