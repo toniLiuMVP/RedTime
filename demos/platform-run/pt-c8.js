@@ -206,3 +206,84 @@
     }).observe(rs, { attributes: true, attributeFilter: ["class"] });
   }
 })();
+
+/* ── 特大熱美:首次拾取的一次性正文回聲(引文 verbatim,只出現一生一次) ── */
+(function () {
+  "use strict";
+  if (typeof document === "undefined" || !window.MutationObserver) return;
+
+  var KEY = "platformRunCoffeeEcho_v1";
+  function alreadyShown() {
+    try { return localStorage.getItem(KEY) === "1"; } catch (e) { return false; }
+  }
+  function markShown() {
+    try { localStorage.setItem(KEY, "1"); } catch (e) {}
+  }
+  if (alreadyShown()) return;
+
+  var _rmq2 = null;
+  function reduced2() {
+    try {
+      if (!_rmq2) _rmq2 = window.matchMedia("(prefers-reduced-motion: reduce)");
+      return _rmq2.matches;
+    } catch (e) { return false; }
+  }
+
+  var st = document.createElement("style");
+  st.id = "pt-coffee-echo-style";
+  st.textContent = [
+    "#pt-coffee-echo{position:fixed;left:50%;bottom:clamp(96px,16vh,150px);transform:translateX(-50%);",
+    "z-index:9500;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:6px;",
+    "opacity:0;transition:opacity .9s ease,translate .9s ease;translate:0 8px;max-width:86vw;text-align:center}",
+    "#pt-coffee-echo.on{opacity:1;translate:0 0}",
+    "#pt-coffee-echo .pce-q{font-family:'Noto Serif TC','Noto Serif CJK TC',serif;",
+    "font-size:clamp(15px,2.2vw,20px);letter-spacing:.12em;line-height:1.9;color:#e8c988;",
+    "text-shadow:0 1px 10px rgba(0,0,0,.65),0 0 18px rgba(217,179,106,.22)}",
+    "#pt-coffee-echo .pce-src{font-size:10px;letter-spacing:.3em;color:#8e7a63}",
+    "@media (prefers-reduced-motion:reduce){#pt-coffee-echo{transition:none;translate:0 0}}"
+  ].join("");
+  (document.head || document.documentElement).appendChild(st);
+
+  var shown = false;
+  function showEcho() {
+    if (shown) return;
+    shown = true;
+    markShown();
+    var box = document.createElement("div");
+    box.id = "pt-coffee-echo";
+    box.setAttribute("role", "status");
+    var q = document.createElement("span");
+    q.className = "pce-q";
+    q.textContent = "我握著特大熱美。";
+    var src = document.createElement("span");
+    src.className = "pce-src";
+    src.textContent = "EP 39";
+    box.appendChild(q);
+    box.appendChild(src);
+    (document.body || document.documentElement).appendChild(box);
+    var hold = 4200;
+    if (reduced2()) {
+      box.classList.add("on");
+      setTimeout(function () { box.remove(); }, hold);
+    } else {
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { box.classList.add("on"); });
+      });
+      setTimeout(function () {
+        box.classList.remove("on");
+        setTimeout(function () { box.remove(); }, 1000);
+      }, hold);
+    }
+  }
+
+  var notify = document.getElementById("pickup-notify");
+  if (!notify) return;
+  var mo = new MutationObserver(function () {
+    var t = notify.textContent || "";
+    if (t.indexOf("特大熱美") !== -1) {
+      mo.disconnect();
+      showEcho();
+    }
+  });
+  mo.observe(notify, { childList: true, characterData: true, subtree: true });
+})();
