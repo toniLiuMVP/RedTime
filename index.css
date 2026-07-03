@@ -1208,6 +1208,75 @@
         outline: 2px solid #ff8fa0;
         outline-offset: 3px;
       }
+      /* 劇照上的片名:自家文字,不依賴影片來源載入 */
+      .yt-facade-caption {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1;
+        padding: 30px 14px 10px;
+        font-family: "Noto Sans TC", sans-serif;
+        font-size: 12px;
+        font-weight: 300;
+        letter-spacing: 0.1em;
+        text-align: left;
+        color: rgba(234, 230, 222, 0.9);
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.6));
+        pointer-events: none;
+      }
+
+      /* 原聲帶歌詞:文字層自託管;native details,鍵盤可展開 */
+      .lyrics-shelf {
+        margin-top: 18px;
+        display: grid;
+        gap: 8px;
+      }
+      .lyrics-head {
+        font-family: "DM Mono", monospace;
+        font-size: 9px;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--mist);
+        margin-bottom: 2px;
+      }
+      details.lyrics {
+        border: 1px solid var(--seam);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.012);
+        overflow: hidden;
+      }
+      details.lyrics > summary {
+        cursor: pointer;
+        padding: 11px 16px;
+        font-size: 13px;
+        color: var(--parchment);
+        letter-spacing: 0.04em;
+        list-style: none;
+        user-select: none;
+      }
+      details.lyrics > summary::-webkit-details-marker {
+        display: none;
+      }
+      details.lyrics > summary::before {
+        content: "▸ ";
+        color: var(--mist);
+        font-size: 11px;
+      }
+      details.lyrics[open] > summary::before {
+        content: "▾ ";
+      }
+      .lyrics-text {
+        margin: 0;
+        padding: 2px 18px 18px;
+        font-family: "Noto Sans TC", sans-serif;
+        font-size: 13px;
+        font-weight: 300;
+        line-height: 2;
+        color: rgba(234, 230, 222, 0.78);
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+      }
 
       /* ─── ABOUT ─── */
       #about {
@@ -3296,7 +3365,7 @@
                 color: var(--warm);
                 line-height: 1.8;
                 font-weight: 300 }
-.is-10 { 
+.is-10 {
                   position: absolute;
                   inset: 0;
                   width: 100%;
@@ -3306,6 +3375,15 @@
                   cursor: pointer;
                   background: #000 center / cover no-repeat
                     url('assets/video-thumbs/Ne3mv-6Ufl8.webp') }
+/* 自家劇照同時鋪在外框容器:按鈕被替換或單層背景失效時,此區仍是劇照紀念位,不是黑框 */
+.is-5 > .reveal:first-child .is-7 {
+  background: #000 center / cover no-repeat
+    url('assets/video-thumbs/eACPFC4K89o.webp');
+}
+.is-5 > .reveal:last-child .is-7 {
+  background: #000 center / cover no-repeat
+    url('assets/video-thumbs/Ne3mv-6Ufl8.webp');
+}
 .is-11 { 
                 border-color: var(--jade);
                 background: linear-gradient(

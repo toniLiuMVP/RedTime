@@ -506,13 +506,23 @@ _bd = bd; return card;
 
   // 回訪狀態：同源讀 reader 寫的進度／已讀集／鐵粉成績（全部唯讀，不回寫）
   function getReturnState() {
-    var st = { hasProgress: false, lastEp: null, readCount: 0, quizBest: 0, cleared: 0 };
+    var st = { hasProgress: false, lastEp: null, readCount: 0, quizBest: 0, cleared: 0, finished: false };
     try { var p = parseInt(localStorage.getItem("redtime-progress"), 10); if (isFinite(p) && p >= 0) { st.hasProgress = true; st.lastEp = p; } } catch (e) {}
     try { var r = JSON.parse(localStorage.getItem("redtime_read_eps_v1") || "[]"); if (Array.isArray(r)) st.readCount = r.length; } catch (e) {}
     try { st.quizBest = parseInt(localStorage.getItem("redtime_entry_quiz_best_v1") || "0", 10) || 0; } catch (e) {}
     try { var cb = JSON.parse(localStorage.getItem("redtime_fan_cleared_blocks") || "[]"); if (Array.isArray(cb)) st.cleared = cb.length; } catch (e) {}
     if (st.readCount > 0) st.hasProgress = true;
+    // 完讀判定單一來源:assets/finished-state.js 的 window.__REDTIME_FINISHED__()
+    try { st.finished = typeof window.__REDTIME_FINISHED__ === "function" && window.__REDTIME_FINISHED__(); } catch (e) {}
     return st;
+  }
+  // 平滑捲動至區塊(prefers-reduced-motion 時直接跳)
+  function scrollToSection(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var reduce = false;
+    try { reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+    try { el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }); } catch (e) { el.scrollIntoView(); }
   }
   // 首頁繼續閱讀條：有進度才現身
   (function setupSpoilerMasks() {
@@ -533,6 +543,16 @@ _bd = bd; return card;
       var el = document.getElementById("hero-continue");
       if (!el) return;
       var st = getReturnState();
+      if (st.finished) {
+        // 完讀者:不再說「停在哪」,認出走完的人
+        el.href = READER + "#ep-0";
+        el.setAttribute("aria-label", "你已走完全部章節，從 EP0 再走一次");
+        while (el.firstChild) el.removeChild(el.firstChild);
+        el.appendChild(ce("span", "btn-continue-lbl", "你走完了整條紅線"));
+        el.appendChild(ce("span", "btn-continue-main", "帶著看過了，從 EP0 再走一次 →"));
+        el.hidden = false;
+        return;
+      }
       if (!st.hasProgress || st.lastEp == null) return;
       el.href = READER + "#ep-" + st.lastEp;
       el.setAttribute("aria-label", "繼續閱讀，回到上次讀到的 EP" + st.lastEp);
@@ -545,8 +565,29 @@ _bd = bd; return card;
 
   function renderChoose(card) {
     var st = getReturnState();
+    if (st.finished) return renderFinishedBack(card, st);
     if (st.hasProgress && st.lastEp != null) return renderWelcomeBack(card, st);
     return renderChooseFresh(card);
+  }
+
+  // 完讀者回訪分支:走完 EP0~EP41 的人,不再問「停在哪」,句子認出走完的人
+  function renderFinishedBack(card, st) {
+    clearCard(card);
+    card.appendChild(ce("div", "ob-kicker", "你走完了整條紅線。這一次，是帶著看過了回來的。"));
+    card.appendChild(ce("div", "ob-title", "EP0 到 EP41，都亮過了"));
+    var sub = "已讀 " + st.readCount + " 集";
+    if (st.cleared > 0) sub += " · 鐵粉通過 " + st.cleared + " 座月台";
+    else if (st.quizBest > 0) sub += " · 進站試煉最佳 " + st.quizBest + " / 10";
+    card.appendChild(ce("div", "ob-sub", sub));
+    var opts = ce("div", "ob-options");
+    function opt(t, s, fn) { var e = optEl("button", t, s); e.addEventListener("click", fn); return e; }
+    opts.appendChild(opt("📖 從 EP0 再走一次", "知道結局之後重讀，很多句子會換一個亮法。", function () { remember("read"); go(READER + "#ep-0"); }));
+    opts.appendChild(opt("↗ 站進三個場景", "LM402、天堂路、月台。這次不趕進度，站一會兒。", function () { closeModal(); scrollToSection("trials"); }));
+    opts.appendChild(opt("✦ 看紅線留痕", "你點亮過的時刻，都還留在時間軸上。", function () { closeModal(); scrollToSection("timeline-sec"); }));
+    card.appendChild(opts);
+    var mini = ce("a", "ob-mini", "或考考自己還記得多少 · 鐵粉題庫 →"); mini.href = READER + "#fanquiz";
+    mini.addEventListener("click", function () { remember("fan"); });
+    card.appendChild(mini);
   }
 
   // 老粉回訪分支：先接住「你回來了」，再給繼續／換新題／重選視角
