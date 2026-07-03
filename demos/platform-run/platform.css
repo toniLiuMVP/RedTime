@@ -25,6 +25,9 @@ canvas{display:block;width:100%;height:100%}
 .title-read:hover{background:rgba(159,208,255,.12);color:#cfe7ff}
 .title-best{font-size:clamp(11px,1.5vw,14px);color:#8a7560;letter-spacing:0.18em;margin-top:14px;opacity:0;animation:fadeUp 1.5s 2.4s forwards}
 .title-best:empty{display:none}
+.title-inapp-hint{display:none;margin-top:12px;max-width:min(84vw,460px);font-size:11px;line-height:1.8;color:#8a7560;letter-spacing:0.06em;opacity:0;animation:fadeUp 1.5s 2.5s forwards}
+.title-inapp-hint b{color:#c8b89a;font-weight:500}
+@media (pointer:coarse){.title-inapp-hint{display:block}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 
