@@ -1249,6 +1249,17 @@
         border-radius: 999px;
         transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
       }
+      .lyric-num {
+        font-family: "DM Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        color: var(--mist);
+        margin-right: 7px;
+      }
+      .lyric-track:hover .lyric-num,
+      .lyric-track:focus-visible .lyric-num {
+        color: rgba(200, 144, 16, 0.7);
+      }
       .lyric-track:hover {
         color: var(--parchment);
         border-color: rgba(200, 144, 16, 0.4);
