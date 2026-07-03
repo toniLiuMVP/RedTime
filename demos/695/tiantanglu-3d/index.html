@@ -290,6 +290,37 @@
   #dead .restart{margin-top:26px;font-size:16px;letter-spacing:.2em;color:#fdf3e2;background:rgba(255,255,255,.08);
     border:1px solid rgba(255,220,170,.45);border-radius:40px;padding:13px 30px;cursor:pointer;pointer-events:auto;}
   #dead .restart:hover{background:rgba(255,220,170,.18);}
+  #dead #soft-guide{margin-top:30px;opacity:.9;}
+  #dead .sg-q{font-size:13px;letter-spacing:.12em;opacity:.72;line-height:1.9;padding:0 24px;}
+  #dead button.sg-btn{margin-top:12px;font-family:'Noto Serif TC',serif;font-size:14px;padding:11px 24px;background:rgba(255,255,255,.05);border-color:rgba(255,220,170,.3);}
+
+  /* ── 波間大兵日記一行(極淡浮出,幾秒淡出) ── */
+  #diary-drip{position:fixed;left:0;right:0;top:64%;z-index:4;text-align:center;pointer-events:none;
+    font-family:'Noto Serif TC',serif;font-size:clamp(13px,2vw,17px);letter-spacing:.14em;line-height:1.9;
+    color:#e8d9c6;opacity:0;transition:opacity 1.8s ease;padding:0 8vw;text-shadow:0 1px 10px rgba(0,0,0,.65);white-space:pre-line;}
+  body.touch #diary-drip{top:58%;font-size:13px;}
+  @media (prefers-reduced-motion: reduce){ #diary-drip{transition:none;} }
+
+  /* ── 入口:社群內建瀏覽器提醒(僅觸控裝置顯示) ── */
+  .enter-inapp{display:none;margin-top:12px;font-size:11.5px;line-height:1.8;opacity:.62;max-width:480px;letter-spacing:.04em;}
+  @media (pointer: coarse){ .enter-inapp{display:block;} }
+
+  /* ── 結局選單:「熬」小框 + 三印狀態列 ── */
+  .clear-ao{display:flex;align-items:center;gap:14px;margin:16px auto 6px;padding:12px 16px;max-width:440px;
+    border:1px solid rgba(214,84,58,.4);border-radius:12px;background:rgba(214,84,58,.06);}
+  .clear-ao .ao-word{flex:0 0 auto;font-size:30px;font-weight:700;color:#e0714e;line-height:1;
+    border:1.5px solid rgba(224,113,78,.55);border-radius:8px;padding:8px 10px;}
+  .clear-ao .ao-cap{font-size:12.5px;letter-spacing:.06em;line-height:1.8;opacity:.82;text-align:left;}
+  .clear-seals{margin:12px auto 18px;max-width:440px;}
+  .clear-seals .cs-title{font-size:11px;letter-spacing:.1em;opacity:.5;margin-bottom:10px;}
+  .clear-seals .cs-row{display:flex;justify-content:center;gap:12px;}
+  .cs-seal{flex:1;max-width:130px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;
+    border:1px solid rgba(255,220,170,.16);border-radius:10px;background:rgba(255,255,255,.02);opacity:.45;}
+  .cs-seal i{font-style:normal;font-size:20px;font-weight:700;color:#cfc2b2;line-height:1;}
+  .cs-seal b{font-size:10.5px;font-weight:400;letter-spacing:.06em;opacity:.75;}
+  .cs-seal em{font-style:normal;font-size:10px;letter-spacing:.1em;opacity:.7;}
+  .cs-seal.lit{opacity:1;border-color:rgba(224,113,78,.5);background:rgba(214,84,58,.07);}
+  .cs-seal.lit i{color:#e0714e;}
 
   /* ── 波次 ── */
   #wave{position:fixed;top:22px;left:50%;transform:translateX(-50%);z-index:4;pointer-events:none;
@@ -510,13 +541,16 @@
 
 <div id="scar"></div>
 <div id="dmg"></div>
-<div id="dead"><div class="mend" id="mend-line"></div><div class="s" id="dead-stats">撐到第 0 波</div><div class="restart" id="restart-btn">再撐一次 ▸</div></div>
+<div id="dead"><div class="mend" id="mend-line"></div><div class="s" id="dead-stats">撐到第 0 波</div><div class="restart" id="restart-btn">再撐一次 ▸</div>
+  <div id="soft-guide" hidden><div class="sg-q">要不要換一條安靜一點的路？故事一樣走得完。</div><button type="button" class="restart sg-btn" id="soft-guide-btn">換一條安靜一點的路 ▸</button></div>
+</div>
 <div id="scope"><div class="lens"></div><div class="v"></div><div class="h"></div><div class="dot"></div></div>
 <div id="hitmark">✕</div>
 <div id="wave">準備</div>
 <div id="vehhud"></div>
 <canvas id="radar" width="296" height="296"></canvas>
 <div id="narr"></div>
+<div id="diary-drip" aria-hidden="true"></div>
 <div id="shards">夢的碎片 0/3</div>
 <div id="hint"></div>
 <div id="gaze"><canvas id="gaze-cv"></canvas><div class="lb lb-t"></div><div class="lb lb-b"></div><div id="gaze-line"></div><button id="close-eyes" type="button">閉上眼睛</button><div id="rainbow"></div></div>
@@ -566,10 +600,12 @@
 <div id="enter">
   <div class="ring">點擊畫面任何地方，讓滑鼠控制視角</div>
   <div class="sub">WASD 走動 · 左鍵開火 · 完整操作見下方「📖 新手教學」</div>
+  <div class="enter-inapp">若您是從社群軟體（Threads、FB、IG、LINE）的內建瀏覽器開啟，請點右上角「•••」選擇<b>在 Safari / 原生瀏覽器中開啟</b>，3D 場景才能完整呈現。</div>
   <div id="tut-btn">📖 新手教學</div>
   <div id="diary-btn">我只想讀大兵日記 ▸</div>
   <div class="enter-legal" style="margin-top:22px;font-size:11px;line-height:1.7;opacity:.5;max-width:520px;pointer-events:auto;">
-    普遍級 · 本作為文學創作，部分取材自真實經歷並經改編虛構，如有雷同純屬巧合<br />
+    輔12級 · 本作為文學創作，部分取材自真實經歷並經改編虛構，如有雷同純屬巧合<br />
+    含虛構戰場情節，依遊戲軟體分級管理辦法自評為輔12級，未滿十二歲者不宜遊玩<br />
     © toni · 版權所有 ·
     <a href="../../../privacy.html" style="color:inherit;text-decoration:underline;">隱私</a> ·
     <a href="../../../terms.html" style="color:inherit;text-decoration:underline;">使用條款</a> ·
@@ -604,7 +640,7 @@
   <div class="d-line">「如果是你，承受得了周芷若那一劍嗎？」</div>
   <div class="d-line">「要當個不倒人，打不倒的自信、敲不碎的心。」</div>
   <div class="d-reflect">你剛剛撐過來了。這正是 EP40 裡，他靠「相信相信的力量」熬過的那段。先變堅強，才接得住後來的。 <a href="../../../reader.html#ep-40">讀 EP40 →</a></div>
-  <div class="d-photo"><div class="d-photo-cap">每當我閉上眼睛，我就可以看見妳。</div></div>
+  <div class="d-photo"><div class="d-photo-cap">每當我閉上眼睛，我就可以看見妳。 <a href="../../../reader.html#ep-5">讀 EP5 →</a></div></div>
   <div class="thread-tie" aria-hidden="true"><span class="ttl"></span><span class="ttk"></span><span class="ttr"></span></div>
   <div class="d-link-hint">這條紅線，還牽著另外兩段時間</div>
   <a class="d-link" href="../../../lm402.html">走進 LM402 · 一眼瞬間</a>
@@ -612,7 +648,8 @@
   <a class="d-link" href="../../../index.html">回首頁</a>
   <div class="d-link" id="diary-story" style="cursor:pointer;">戰前 · 戰後的故事 · 全 42 集</div>
   <div class="d-legal" style="margin-top:18px;font-size:11px;line-height:1.7;opacity:.55;">
-    普遍級 · 本作為文學創作，部分取材自真實經歷並經改編虛構，如有雷同純屬巧合<br />
+    輔12級 · 本作為文學創作，部分取材自真實經歷並經改編虛構，如有雷同純屬巧合<br />
+    含虛構戰場情節，依遊戲軟體分級管理辦法自評為輔12級，未滿十二歲者不宜遊玩<br />
     © toni · 版權所有 ·
     <a href="../../../privacy.html" style="color:inherit;text-decoration:underline;">隱私</a> ·
     <a href="../../../terms.html" style="color:inherit;text-decoration:underline;">使用條款</a> ·
@@ -671,6 +708,15 @@
 <div id="clear"><div class="panel">
   <h2>走完天堂路</h2>
   <div class="clear-sub" id="clear-sub"></div>
+  <div class="clear-ao"><span class="ao-word">熬</span><span class="ao-cap">先撐過去，才接得住後來。他靠相信，熬過那段。</span></div>
+  <div class="clear-seals" id="clear-seals">
+    <div class="cs-title">三道試煉 · 每走完一線，落一枚印 · 不計分、也不排名</div>
+    <div class="cs-row">
+      <span class="cs-seal" id="seal-ren"><i>忍</i><b>LM402</b><em></em></span>
+      <span class="cs-seal" id="seal-ao"><i>熬</i><b>天堂路</b><em></em></span>
+      <span class="cs-seal" id="seal-zhui"><i>追</i><b>月台上的狂奔</b><em></em></span>
+    </div>
+  </div>
   <div class="clear-actions">
     <button type="button" data-act="before" class="cta">戰前的故事<small>當初有多浪漫 · 邊聽歌邊讀</small></button>
     <button type="button" data-act="after" class="cta">戰後的故事<small>後來就有多揪心 · 邊聽歌邊讀</small></button>
