@@ -881,6 +881,29 @@ el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key ===
   var closeBtn = modal.querySelector(".lyrics-dialog-close");
   var lastFocus = null;
 
+  // 卡拉OK：點曲名時讓原聲帶影片跳到該首起點自動播。
+  // 用內嵌網址 start=秒數（純 iframe src，不載外部 API、零計費、CSP 內）。
+  var ostFacade = document.querySelector(".yt-facade.is-10");
+  var ostBox = ostFacade ? ostFacade.closest(".is-7") : null;
+  var ostId = ostFacade ? (ostFacade.getAttribute("data-yt-id") || "") : "";
+  var ostTitle = ostFacade ? (ostFacade.getAttribute("data-yt-title") || "") : "";
+  function seekOst(startSec) {
+    if (!ostBox || !/^[A-Za-z0-9_-]{11}$/.test(ostId)) return;  // 白名單：合法 11 碼 ID
+    var s = parseInt(startSec, 10);
+    if (!isFinite(s) || s < 0) s = 0;
+    var ifr = document.createElement("iframe");
+    ifr.style.cssText = "position:absolute;inset:0;width:100%;height:100%;border:0";
+    ifr.src = "https://www.youtube-nocookie.com/embed/" + ostId + "?autoplay=1&start=" + s;
+    ifr.title = ostTitle;
+    ifr.setAttribute("frameborder", "0");
+    ifr.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
+    ifr.setAttribute("allow", "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture");
+    ifr.setAttribute("allowfullscreen", "");
+    var old = ostBox.querySelector(".yt-facade, iframe");
+    if (old) ostBox.replaceChild(ifr, old);
+    else ostBox.appendChild(ifr);
+  }
+
   function render(song) {
     titleEl.textContent = song.title;
     while (bodyEl.firstChild) bodyEl.removeChild(bodyEl.firstChild);
@@ -915,7 +938,8 @@ el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key ===
 
   list.querySelectorAll(".lyric-track").forEach(function (btn) {
     btn.addEventListener("click", function () {
-      open(parseInt(btn.getAttribute("data-lyric"), 10), btn);
+      seekOst(btn.getAttribute("data-start"));   // 先讓影片從該首開始播
+      open(parseInt(btn.getAttribute("data-lyric"), 10), btn);   // 再開歌詞視窗
     });
   });
   if (closeBtn) closeBtn.addEventListener("click", close);
