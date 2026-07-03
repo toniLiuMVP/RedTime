@@ -1875,6 +1875,39 @@ body[data-ui-preset="ending"] #scene-canvas {
   line-height: 1.86;
   font-size: calc(15px * var(--game-font-scale, 1));
 }
+/* 解鎖曲目:EP5 原句先浮現,歌名行數秒後才接上 */
+.ending-song-unlock {
+  margin-top: 16px;
+  padding: 12px 18px;
+  border-left: 2px solid rgba(240, 201, 137, 0.35);
+  line-height: 1.9;
+}
+.ending-song-unlock .esu-quote {
+  color: var(--ink);
+  font-size: calc(14px * var(--game-font-scale, 1));
+  opacity: 0;
+  transition: opacity 1.8s ease;
+}
+.ending-song-unlock .esu-song {
+  margin-top: 10px;
+  color: #f0c989;
+  font-size: calc(12px * var(--game-font-scale, 1));
+  letter-spacing: 0.08em;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+.ending-song-unlock.show-quote .esu-quote {
+  opacity: 1;
+}
+.ending-song-unlock.show-song .esu-song {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ending-song-unlock .esu-quote,
+  .ending-song-unlock .esu-song {
+    transition: none;
+  }
+}
 .ending-title {
   font-size: clamp(42px, 5.4vw, 58px);
   letter-spacing: 0.04em;

@@ -2322,12 +2322,35 @@ function startOneGazeEnding() {
   startEnding("one_gaze", { manual: true });
 }
 
+/* 解鎖曲目:結局卡內先浮現 EP5 原句,數秒後才接歌名行(reduced-motion 同時顯示,不做序列) */
+function revealSongUnlock(box) {
+  const songLine = "\u{1F3B5} 已解鎖新音樂：一眼瞬間";
+  appendTranscriptEntry("", "「每當我閉上眼睛，我就可以看見妳。」");
+  appendTranscriptEntry("", songLine);
+  if (!box) return;
+  box.hidden = false;
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce) {
+    box.classList.add("show-quote", "show-song");
+    return;
+  }
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => box.classList.add("show-quote"));
+  });
+  safeTimeout(() => box.classList.add("show-song"), 3800);
+}
+
 function finishEndingSequence() {
   /* ── 一眼瞬間結局 → 解鎖新音樂 ── */
+  const songUnlockBox = document.getElementById("ending-song-unlock");
+  if (songUnlockBox) {
+    songUnlockBox.hidden = true;
+    songUnlockBox.classList.remove("show-quote", "show-song");
+  }
   if (state.ending === "one_gaze" || state.ending === "perfect_eye") {
     const justUnlocked = audioSystem.unlockSong("one_gaze_song");
     if (justUnlocked) {
-      showCenteredSubtitle("", "\u{1F3B5} 已解鎖新音樂：一眼瞬間", 4.0, "center-low");
+      revealSongUnlock(songUnlockBox);
       audioSystem.switchSong("one_gaze_song");
     }
   }
