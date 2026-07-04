@@ -30,6 +30,7 @@
     ".pt-motif-frame .pmf-txt{display:flex;flex-direction:column;gap:4px;text-align:left}",
     ".pt-motif-frame .pmf-eyebrow{font-size:10px;letter-spacing:.3em;color:#8e7a63}",
     ".pt-motif-frame .pmf-line{font-size:clamp(12px,1.6vw,14px);letter-spacing:.08em;color:#c8b89a;line-height:1.8}",
+    ".pt-motif-frame .pmf-sub{font-size:clamp(10px,1.3vw,12px);letter-spacing:.06em;color:#8e7a63;line-height:1.7}",
     ".pt-seal-row{display:flex;gap:clamp(16px,2.6vw,26px);align-items:center}",
     ".pt-seal{display:flex;flex-direction:column;align-items:center;gap:5px}",
     ".pt-seal .ps-ch{font-family:'Noto Serif TC','Noto Serif CJK TC',serif;font-size:clamp(14px,2vw,18px);line-height:1;padding:5px 6px;border-radius:2px;",
@@ -169,6 +170,7 @@
     var txt = el("span", "pmf-txt");
     txt.appendChild(el("span", "pmf-eyebrow", "三道試煉 · 追"));
     txt.appendChild(el("span", "pmf-line", "在車門關上前趕到她身邊。每一次，都趕上。"));
+    txt.appendChild(el("span", "pmf-sub", "二十年前他說：我會照顧妳一輩子的。"));
     frame.appendChild(txt);
     block.appendChild(frame);
     var row = el("div", "pt-seal-row");
