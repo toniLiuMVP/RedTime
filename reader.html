@@ -5299,6 +5299,17 @@
       .og-card .og-arc { font: 600 9.5px/1 "Noto Sans TC", sans-serif; letter-spacing: 0.16em; color: var(--t3); }
       .og-card .og-line { font-size: 14px; line-height: 1.55; color: var(--t1); }
       .og-card .og-go { font: italic 11px "Cormorant Garamond", serif; color: var(--amber); letter-spacing: 0.04em; }
+      /* B1 開放懸念牆:問句卡 + 首次提出集數標 + 永久關閉鈕。reduced-motion 時 .oq-in 不套用,直接顯示。 */
+      .oq-card .oq-q { font: 400 14.5px/1.6 "Noto Serif TC", serif; color: var(--t1); }
+      .oq-card .oq-raise { font: 500 10.5px/1.4 "Noto Sans TC", sans-serif; letter-spacing: 0.04em; color: var(--t3); }
+      .oq-dismiss { margin-top: 16px; background: none; border: none; padding: 4px 2px; color: rgba(233, 224, 200, 0.4); font: 500 11.5px/1.4 "Noto Sans TC", sans-serif; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+      .oq-dismiss:hover { color: rgba(233, 224, 200, 0.7); }
+      body.day-mode .oq-dismiss { color: #9a8a70; }
+      body.day-mode .oq-dismiss:hover { color: #6a5a40; }
+      @media (prefers-reduced-motion: no-preference) {
+        .oq-in { animation: oqIn 0.45s ease both; }
+        @keyframes oqIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+      }
       .cur-tab.active { color: rgba(233, 196, 142, 0.95); border-bottom-color: rgba(233, 196, 142, 0.8); }
       .cur-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 16px 18px calc(28px + env(safe-area-inset-bottom, 0px)); -webkit-overflow-scrolling: touch; }
       .cur-panel { display: none; }
@@ -7505,6 +7516,7 @@
         <button class="cur-tab" type="button" role="tab" onclick="switchCurTab(3,this)">回讀線索</button>
         <button class="cur-tab" type="button" role="tab" onclick="switchCurTab(4,this)">那一眼</button>
         <button class="cur-tab" type="button" role="tab" onclick="switchCurTab(5,this)">相信的養成</button>
+        <button class="cur-tab" type="button" role="tab" id="cur-tab-open-q" onclick="switchCurTab(6,this)" style="display:none">還懸著的問題</button>
       </div>
       <div class="cur-body">
         <div class="cur-panel active" id="cur-panel-0"></div>
@@ -7513,6 +7525,7 @@
         <div class="cur-panel" id="cur-panel-3"></div>
         <div class="cur-panel" id="cur-panel-4"></div>
         <div class="cur-panel" id="cur-panel-5"></div>
+        <div class="cur-panel" id="cur-panel-6"></div>
       </div>
     </div>
 
@@ -10324,6 +10337,11 @@
           var breathH = isSilence ? `<div class="ep-breath${ep.ep === 3 ? ' ep-breath-held' : ''}" aria-hidden="true"><span class="eb-line"></span><span class="eb-text">讓這一段，先停在這裡。</span><span class="eb-line"></span></div>` : "";
           // 預告文字優先序:該集策劃 canon 金句 → toni 親寫的下一集導讀 synopsis(mood-not-plot,無爆雷) → 無(只剩標題)
           var pv = isSilence ? "" : ((typeof SHARE_LINES !== "undefined" && SHARE_LINES[nx.ep]) ? SHARE_LINES[nx.ep] : ((ANNOTATIONS[String(nx.ep)] && ANNOTATIONS[String(nx.ep)][0]) || ""));
+          // ⛔ 不變式:章末「下一集」預告永遠是「氛圍不是情節」(mood-not-plot),不可洩漏後面才揭曉的真相。
+          // 上面取的 [0] logline / canon 金句在資料上目前都安全,但這是脆弱契約 —— 有人日後把後段爆雷句
+          // 誤放進 [0] 或 EGGS 金句,就會在首讀者眼前劇透。這道守門把命中「往後才揭曉」句型的候選整條捨棄,
+          // 退回純章節標題(pv 清空),寧可少一句預告也不劇透。改資料時請維持此不變式。
+          if (pv && /揭曉|才知道|才從.*口中|其實是|原來.*就是|到 ?EP ?\d+ 才|第二次讀才|才明白|才由|才顯/.test(pv)) pv = "";
           if (pv.length > 60) pv = pv.slice(0, 60) + "…";
           tH = breathH + `<div class="ep-teaser" onclick="goToEp(${nx.ep})"><div class="et-label">下一集</div><div class="et-num">${fmtEp(nx.ep)} · ${escapeHtml(ARC_LBL[nx.arc] || nx.arc)}</div>${pv ? `<div class="et-text">${escapeHtml(pv)}</div>` : ""}<div class="et-arrow">繼續閱讀 →</div></div>`;
         } else {
@@ -12041,7 +12059,13 @@
         var ov = document.getElementById('curation-overlay');
         var p = document.getElementById('curation-panel');
         if (!ov || !p) return;
+        refreshOpenQuestionsTab(); /* B1:依最新閱讀進度決定「還懸著的問題」tab 是否出現/隱藏 */
         var active = p.querySelector('.cur-tab.active');
+        /* 若剛好停在已被隱藏的 open-questions tab(問題全答完),退回第一個 tab */
+        if (active && active.id === 'cur-tab-open-q' && active.style.display === 'none') {
+          switchCurTab(0, p.querySelector('.cur-tab'));
+          active = p.querySelector('.cur-tab.active');
+        }
         var idx = active ? Array.prototype.indexOf.call(active.parentElement.children, active) : 0;
         renderCurTab(idx);
         ov.classList.add('show');
@@ -12074,6 +12098,7 @@
         else if (i === 3) renderMotifIndex();
         else if (i === 4) renderOneGlance();
         else if (i === 5) renderBeliefPath();
+        else if (i === 6) renderOpenQuestions();
       }
       // 相信的養成 · 學長線路徑:順著同一條線讀,看「相信」怎麼從一個願望長成信念。
       // 每站說明只給持有理由不劇透,句句對應既有母題資料(ANNOTATIONS 線索),不新增詮釋。
@@ -12101,6 +12126,83 @@
         }).join('');
         panel.innerHTML = '<div class="cur-intro">把散落在各集的學長線收成一條路：一個願望，怎麼被一個人用二十年慢慢養成信念，再交到下一個人手上。不劇透，只給一條走的順序。</div><div class="og-grid">' + cards + '</div>';
         _curCache[5] = true;
+      }
+      /* B1 開放懸念牆「還懸著的問題」——與 EGGS/GRANNY 帳本方向相反、互補:
+         帳本是回顧式(triggerEp 解鎖後顯示「我們現在知道的她/他」);本牆是前瞻式(還沒被回答的問題)。
+         資料全部 verbatim 取自既有文字:三條來自 EP11 charTraits(EGGS 內)、兩條來自 GRANNY 開放問句 title。零新增劇情陳述。
+         反劇透雙門檻:raiseEp 已讀才出現(新讀者讀到那集前看不到);answerEp 已讀後安靜消失(面板永不寫出答案)。
+         answerEp 判準偏保守(寧可多留):穿越機制在 EP38 對齊「29 歲身體裡的 18 歲」才算正式解開;「飛不到」是全書結局的痛,設最後一集。
+         去收集感:不打勾/不計數/不進度條/不成就;清單只會隨著讀下去自然變短,全部答完就整個消失。 */
+      var OPEN_QUESTIONS = [
+        { q: "她知道 2005年09月22日20:57 這個精確時刻，為什麼？", raiseEp: 11, answerEp: 38 },
+        { q: "她提到「不知道是第N次的嘗試」，她曾經失敗過", raiseEp: 11, answerEp: 38 },
+        { q: "她人在 2006年，卻要趕回 2005年，她在穿越時間？", raiseEp: 11, answerEp: 38 },
+        { q: "她為什麼又回到了 2025 年？", raiseEp: 12, answerEp: 38 },
+        { q: "為什麼飛得再遠，還是飛不到？", raiseEp: 26, answerEp: 41 }
+      ];
+      var OPEN_Q_DISMISS_KEY = "redtime_open_questions_dismissed_v1";
+      function _openQDismissed() {
+        try { return localStorage.getItem(OPEN_Q_DISMISS_KEY) === "1"; } catch (e) { return false; }
+      }
+      // 一條問句「還懸著」的條件:raiseEp 已讀(讀到才看得到) 且 answerEp 尚未讀(讀到答案的集就消失;answerEp 為 null=永不自動移除)
+      function _isRead(n) {
+        if (typeof _readEps !== "undefined" && _readEps && _readEps.has(n)) return true;
+        if (typeof maxEpReached !== "undefined" && maxEpReached >= n) return true;
+        return false;
+      }
+      function _openQuestionsLive() {
+        if (_openQDismissed()) return [];
+        return OPEN_QUESTIONS.filter(function (o) {
+          return _isRead(o.raiseEp) && !(o.answerEp !== null && _isRead(o.answerEp));
+        });
+      }
+      // tab 只在「有還懸著的問題」時出現;全部答完(或永久關閉)就整個 tab 隱藏,不留任何完成獎/空狀態
+      function refreshOpenQuestionsTab() {
+        var tab = document.getElementById("cur-tab-open-q");
+        if (!tab) return;
+        tab.style.display = _openQuestionsLive().length ? "" : "none";
+      }
+      function renderOpenQuestions() {
+        var panel = document.getElementById("cur-panel-6");
+        if (!panel) return;
+        panel.replaceChildren(); /* 每次重建以反映最新閱讀進度(不快取:問題會隨閱讀消失) */
+        var live = _openQuestionsLive();
+        if (!live.length) { refreshOpenQuestionsTab(); return; }
+        var reduce = false;
+        try { reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+        var intro = document.createElement("div");
+        intro.className = "cur-intro";
+        intro.textContent = "還沒被回答的問題，先擱在這裡。你讀下去，它們會一條一條自己消失。";
+        panel.appendChild(intro);
+        var grid = document.createElement("div");
+        grid.className = "og-grid oq-grid";
+        live.forEach(function (o) {
+          var card = document.createElement("button");
+          card.type = "button";
+          card.className = "og-card arc-female oq-card" + (reduce ? "" : " oq-in");
+          card.setAttribute("aria-label", "跳到首次提出這個問題的 " + fmtEp(o.raiseEp));
+          card.addEventListener("click", function () { closeCuration(); goToEp(o.raiseEp); });
+          var qline = document.createElement("span");
+          qline.className = "og-line oq-q";
+          qline.textContent = o.q; /* verbatim,textContent 逐條建,零 innerHTML 拼接 */
+          card.appendChild(qline);
+          var meta = document.createElement("span");
+          meta.className = "oq-raise";
+          meta.textContent = "這個問題從 " + fmtEp(o.raiseEp) + " 起，一直懸著";
+          card.appendChild(meta);
+          grid.appendChild(card);
+        });
+        panel.appendChild(grid);
+        var dismiss = document.createElement("button");
+        dismiss.type = "button";
+        dismiss.className = "oq-dismiss";
+        dismiss.textContent = "不再顯示這一區";
+        dismiss.addEventListener("click", function () {
+          try { localStorage.setItem(OPEN_Q_DISMISS_KEY, "1"); } catch (e) {}
+          refreshOpenQuestionsTab();
+          switchCurTab(0, document.querySelector("#curation-panel .cur-tab"));
+        });
+        panel.appendChild(dismiss);
       }
       // N7 那一眼·五視角導覽：同一秒(2005 後門那一眼)在 5 集各演一次，用既有 canon 金句做並排卡片+跳轉。
       // 不摘錄/不重排正文(保留聖地留白)，只給「五道門」。導覽版。
