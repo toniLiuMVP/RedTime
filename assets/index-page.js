@@ -864,25 +864,20 @@ el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key ===
 })();
 
 // ── block 8 ──
-// 歌詞清單 + 彈窗：點曲名開 modal，固定高度內部捲動，頁面不變長。
+// 卡拉OK：點曲名 → 原聲帶影片跳到該首起點繼續播（不覆蓋、不中斷），
+// 同時在首頁內嵌展開該首歌詞（一次一首 accordion，再點同一首收合）。不用彈窗，讀者可邊看邊讀。
 // 詞由 #lyrics-data JSON 靜態注入（編譯期文本），逐行 textContent 建構，零 innerHTML。
 (function () {
   var dataEl = document.getElementById("lyrics-data");
-  var modal = document.getElementById("lyrics-modal");
   var list = document.getElementById("lyric-list");
-  if (!dataEl || !modal || !list) return;
+  var inline = document.getElementById("lyric-inline");
+  if (!dataEl || !list || !inline) return;
   var songs;
   try { songs = JSON.parse(dataEl.textContent); } catch (e) { return; }
   if (!Array.isArray(songs)) return;
 
-  var dialog = modal.querySelector(".lyrics-dialog");
-  var titleEl = modal.querySelector(".lyrics-dialog-title");
-  var bodyEl = modal.querySelector(".lyrics-dialog-body");
-  var closeBtn = modal.querySelector(".lyrics-dialog-close");
-  var lastFocus = null;
-
-  // 卡拉OK：點曲名時讓原聲帶影片跳到該首起點自動播。
-  // 用內嵌網址 start=秒數（純 iframe src，不載外部 API、零計費、CSP 內）。
+  // 影片跳到該首起點繼續播。用內嵌網址 start=秒數（純 iframe src，不載外部 API，零計費、CSP 內）。
+  // 影片留在原位（不被彈窗覆蓋），瀏覽器不會因 iframe 不可見而暫停播放。
   var ostFacade = document.querySelector(".yt-facade.is-10");
   var ostBox = ostFacade ? ostFacade.closest(".is-7") : null;
   var ostId = ostFacade ? (ostFacade.getAttribute("data-yt-id") || "") : "";
@@ -892,7 +887,8 @@ el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key ===
     var s = parseInt(startSec, 10);
     if (!isFinite(s) || s < 0) s = 0;
     var ifr = document.createElement("iframe");
-    ifr.style.cssText = "position:absolute;inset:0;width:100%;height:100%;border:0";
+    // 明確 top/left/width/height（避開 Safari 對 inset 簡寫 + 假比例框的裁切）
+    ifr.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;display:block;border:0";
     ifr.src = "https://www.youtube-nocookie.com/embed/" + ostId + "?autoplay=1&start=" + s;
     ifr.title = ostTitle;
     ifr.setAttribute("frameborder", "0");
@@ -904,49 +900,48 @@ el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key ===
     else ostBox.appendChild(ifr);
   }
 
-  function render(song) {
-    titleEl.textContent = song.title;
-    while (bodyEl.firstChild) bodyEl.removeChild(bodyEl.firstChild);
+  var openIdx = -1;
+  function renderInline(song) {
+    inline.replaceChildren();
+    var t = document.createElement("div");
+    t.className = "lyric-inline-title";
+    t.textContent = song.title;
+    inline.appendChild(t);
     (song.lines || []).forEach(function (line) {
       var p = document.createElement("p");
       p.className = line === "" ? "lyric-line lyric-gap" : "lyric-line";
       p.textContent = line;   // 純文字，非 HTML
-      bodyEl.appendChild(p);
+      inline.appendChild(p);
     });
+    inline.hidden = false;
+    inline.scrollTop = 0;
   }
-
-  function open(i, trigger) {
-    var song = songs[i];
-    if (!song) return;
-    lastFocus = trigger || document.activeElement;
-    render(song);
-    modal.hidden = false;
-    modal.setAttribute("aria-hidden", "false");
-    bodyEl.scrollTop = 0;
-    try { bodyEl.focus(); } catch (e) {}
-  }
-
-  function close() {
-    if (modal.hidden) return;
-    modal.hidden = true;
-    modal.setAttribute("aria-hidden", "true");
-    if (lastFocus && typeof lastFocus.focus === "function") {
-      try { lastFocus.focus(); } catch (e) {}
-    }
-    lastFocus = null;
+  function collapse() {
+    inline.hidden = true;
+    inline.replaceChildren();
+    openIdx = -1;
+    list.querySelectorAll(".lyric-track").forEach(function (b) {
+      b.setAttribute("aria-expanded", "false");
+      b.classList.remove("is-open");
+    });
   }
 
   list.querySelectorAll(".lyric-track").forEach(function (btn) {
+    btn.setAttribute("aria-expanded", "false");
     btn.addEventListener("click", function () {
-      seekOst(btn.getAttribute("data-start"));   // 先讓影片從該首開始播
-      open(parseInt(btn.getAttribute("data-lyric"), 10), btn);   // 再開歌詞視窗
+      var i = parseInt(btn.getAttribute("data-lyric"), 10);
+      if (openIdx === i) { collapse(); return; }   // 再點同一首＝收合歌詞（不重播影片）
+      var song = songs[i];
+      if (!song) return;
+      seekOst(btn.getAttribute("data-start"));      // 只在切到新歌時讓影片跳播
+      openIdx = i;
+      list.querySelectorAll(".lyric-track").forEach(function (b) {
+        b.setAttribute("aria-expanded", "false");
+        b.classList.remove("is-open");
+      });
+      btn.setAttribute("aria-expanded", "true");
+      btn.classList.add("is-open");
+      renderInline(song);
     });
-  });
-  if (closeBtn) closeBtn.addEventListener("click", close);
-  modal.addEventListener("click", function (e) {
-    if (e.target === modal) close();   // 點背景關閉；點對話框內不關
-  });
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && !modal.hidden) close();
   });
 })();

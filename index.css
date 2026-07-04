@@ -1219,7 +1219,7 @@
         pointer-events: none;
       }
 
-      /* 原聲帶歌詞:文字層自託管。安靜清單,點曲名開彈窗,不搶影片卡的戲 */
+      /* 原聲帶歌詞:文字層自託管。安靜清單,點曲名在首頁內嵌展開,不搶影片卡的戲 */
       .lyrics-shelf {
         margin-top: 18px;
       }
@@ -1269,8 +1269,35 @@
         outline: 2px solid var(--amber);
         outline-offset: 2px;
       }
+      /* 展開中的曲名(accordion 高亮) */
+      .lyric-track.is-open {
+        color: var(--parchment);
+        border-color: rgba(200, 144, 16, 0.5);
+        background: rgba(200, 144, 16, 0.07);
+      }
+      .lyric-track.is-open .lyric-num {
+        color: rgba(200, 144, 16, 0.8);
+      }
+      /* 首頁內嵌歌詞:點曲名在原地展開(一次一首),影片繼續播,頁面不被彈窗覆蓋。最大高度內捲避免過度撐長 */
+      .lyric-inline {
+        margin-top: 12px;
+        border: 1px solid var(--seam);
+        border-radius: 10px;
+        padding: 16px 16px 14px;
+        background: rgba(255, 255, 255, 0.015);
+        max-height: min(58vh, 500px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .lyric-inline-title {
+        font-family: "Noto Serif TC", serif;
+        font-size: 15px;
+        letter-spacing: 0.04em;
+        color: var(--parchment);
+        margin-bottom: 12px;
+      }
 
-      /* 歌詞彈窗:固定最大高度、內部捲動,頁面本身不變長 */
+      /* 已停用的歌詞彈窗樣式(改內嵌後保留為死碼,待清理輪移除;下方 .lyric-line/.lyric-gap 為內嵌複用勿刪) */
       .lyrics-modal {
         position: fixed;
         inset: 0;
@@ -3449,11 +3476,15 @@
                 text-transform: uppercase;
                 color: var(--mist);
                 margin-bottom: 12px }
-.is-7 { 
+.is-7 {
                 position: relative;
                 padding-bottom: 56.25%;
                 border-radius: 10px;
                 overflow: hidden;
+                /* Safari:圓角 + overflow:hidden 對 absolute iframe 裁切失準 → 自建合成層強制正確裁切,防原聲帶播放後右緣被切 */
+                -webkit-transform: translateZ(0);
+                transform: translateZ(0);
+                isolation: isolate;
                 border: 1px solid var(--seam) }
 .is-8 {
                   position: absolute;
