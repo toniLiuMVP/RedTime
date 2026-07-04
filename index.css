@@ -3453,7 +3453,7 @@
 .is-4 { margin-bottom: 48px }
 .is-5 {
             display: grid;
-            grid-template-columns: 1.6fr 1fr;
+            grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
             gap: 28px;
             align-items: start;
             max-width: 1100px;
@@ -3478,17 +3478,17 @@
                 margin-bottom: 12px }
 .is-7 {
                 position: relative;
-                padding-bottom: 56.25%;
+                /* 用現代 aspect-ratio 取代 padding-bottom 假比例:根治 Safari 在 grid 浮點欄寬下,百分比 padding 次像素捨入溢出被 overflow:hidden 從右緣切掉 */
+                aspect-ratio: 16 / 9;
                 border-radius: 10px;
                 overflow: hidden;
-                /* Safari:圓角 + overflow:hidden 對 absolute iframe 裁切失準 → 自建合成層強制正確裁切,防原聲帶播放後右緣被切 */
-                -webkit-transform: translateZ(0);
-                transform: translateZ(0);
+                /* isolation:建獨立堆疊上下文,讓 Safari 圓角對 iframe 角落也正確裁切 */
                 isolation: isolate;
                 border: 1px solid var(--seam) }
 .is-8 {
                   position: absolute;
-                  inset: 0;
+                  top: 0;
+                  left: 0;
                   width: 100%;
                   height: 100%;
                   padding: 0;
@@ -3505,7 +3505,8 @@
                 font-weight: 300 }
 .is-10 {
                   position: absolute;
-                  inset: 0;
+                  top: 0;
+                  left: 0;
                   width: 100%;
                   height: 100%;
                   padding: 0;
