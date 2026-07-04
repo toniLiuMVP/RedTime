@@ -3226,6 +3226,72 @@
         border-left-color: rgba(180, 90, 50, 0.3);
         color: rgba(120, 90, 78, 0.72);
       }
+      /* ── 浪漫輪：把正文寫的光／暗／節奏做成同義的呈現 ──
+         全部 scoped 在自己那一段的 wrapper class 上，效果只作用於該段；
+         wrapper 只是 position:relative 的透明容器，不改行流、不動正文一字。
+         峰值極淡（閾下），過場一次即靜止，無循環無脈動；reduce-motion 直接靜態到位。
+         觸發：romObs（IntersectionObserver）在該段進視窗時加一次性 .rom-in。 */
+      .rom-seg {
+        position: relative;
+        display: block;
+        margin: 0;
+        padding: 0;
+      }
+      /* A2 EP38 逆光呼吸：極淡暖白線性漸層，從走廊那頭（右側）斜灑，羽化到 0 */
+      .rom-a2::before {
+        content: "";
+        position: absolute;
+        top: -14%;
+        right: -4%;
+        width: 78%;
+        height: 128%;
+        pointer-events: none;
+        background: linear-gradient(255deg, rgba(255, 246, 228, 0.06) 0%, rgba(255, 246, 228, 0.028) 34%, rgba(255, 246, 228, 0) 68%);
+        opacity: 0;
+        transition: opacity 0.9s ease;
+        z-index: 0;
+      }
+      .rom-a2.rom-in::before { opacity: 1; }
+      .rom-a2 > * { position: relative; z-index: 1; }
+      /* A3 EP28 戲院暗場：進場瞬間該段背景比正文底色降約 4% 明度，700ms 回正常 */
+      .rom-a3 {
+        border-radius: 4px;
+        background: rgba(0, 0, 0, 0);
+      }
+      /* 進場瞬間立刻降 4% 明度（不過場），再 700ms 回底色（像燈熄了又被螢幕光照回） */
+      .rom-a3.rom-in { background: rgba(0, 0, 0, 0.04); transition: none; }
+      .rom-a3.rom-in.rom-a3-settle { background: rgba(0, 0, 0, 0); transition: background-color 0.7s ease; }
+      body.day-mode .rom-a3.rom-in { background: rgba(20, 12, 4, 0.04); }
+      /* B2 EP6 行距鬆一拍：桌機才啟用；一次性極慢撐開段距後靜止不回收 */
+      .rom-b2 { transition: none; }
+      /* B3 EP39 鬥嘴呼吸：說話者交替微偏 + 半拍段距，讓乒乓來回被眼睛看見 */
+      .rom-b3 { transition: none; }
+      /* B4 收梢留白：收梢句後多給半拍留白（純空白 margin，無符號無色） */
+      .rom-tail-spacer {
+        display: block;
+        height: 0;
+        transition: height 0.9s ease;
+      }
+      .rom-tail-spacer.rom-in { height: 1.6em; }
+      @media (prefers-reduced-motion: no-preference) {
+        /* 桌機 + 允許動效才啟用 B2 撐開；reduce 或手機維持原行距 */
+        .rom-b2.rom-in { transition: line-height 2.4s ease; }
+      }
+      @media (min-width: 861px) and (prefers-reduced-motion: no-preference) {
+        .rom-b2 { line-height: 1.85; }
+        .rom-b2.rom-in { line-height: 2.05; }
+        /* B3：交替說話者微偏（一字寬左右），加半拍段距；桌機才做。
+           rom-say-a / rom-say-b 與 rom-b3 掛在同一個 wrapper 上 */
+        .rom-b3.rom-say-a, .rom-b3.rom-say-b { transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1), margin-top 1.1s ease; }
+        .rom-b3.rom-in.rom-say-a { transform: translateX(-0.5em); margin-top: 0.5em; }
+        .rom-b3.rom-in.rom-say-b { transform: translateX(0.5em); margin-top: 0.5em; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        /* reduce：全部靜態到位，不做過場（A2 淡出的暖白直接不顯示，A3 不 dip，留白直接就位） */
+        .rom-a2::before { transition: none; opacity: 0; }
+        .rom-a3, .rom-a3.rom-in { transition: none; background: rgba(0, 0, 0, 0); }
+        .rom-tail-spacer { transition: none; height: 1.6em; }
+      }
       .lit-comment {
         font-family: "Noto Sans TC", sans-serif;
         font-size: 12.6px;
@@ -8413,6 +8479,7 @@
           "現在時間線，二十年後把話說完",
           "「我沒有在賭，我只是相信『相信的力量』」這句在這裡第一次被說得這麼輕，卻要到 EP40 看完《功夫》那場哭泣與擁抱，你才知道這句信念是從天堂路、從那張紙條的傷口裡熬出來的；而它最後會傳到女兒手上，在 EP41 變成她學會的「知道救不了現在，相信才可以」。",
           "「我一直都會站在妳永遠都找得到我的地方」這句承諾，其實他早就在做了；EP26、EP29 裡那些他一個人在 7-11 的夜晚、只為呼吸她走過的空氣的身影，正是這句話最安靜的證明。",
+          "他們的默契，藏在鬥嘴的節奏裡：她拿會計系的精算噎他「你不怕有賭錯的可能」，他一句「我又不是死會計系」笑著接住。這種你來我往、誰都不肯先軟的接招，從 EP29 那次「彩虹會消失」的一來一回，一路練到二十年後還這麼順。",
         ],
         40: [
           "看完《功夫》之後的哭泣與擁抱，讓故事繼續往後走。",
@@ -10404,6 +10471,7 @@
         bd.innerHTML = ep.html;
         _injectMotoNote(bd, ep.ep); /* 機車紙條彩蛋:在紙條段落後注入「同一張紙條」跨集連結(不改故事正文) */
         _injectFinishedMarks(bd, ep.ep); /* B1:完讀者才顯示的「你還不知道」標記,貼在正文段落後(容器層,正文一字不動;初讀者零 DOM 差異) */
+        _injectRomanceWraps(bd, ep.ep); /* 浪漫輪 A2/A3/B2/B3/B4:依 verbatim 錨句把段落包一層 scoped wrapper(不改正文一字),進視窗一次性套效果 */
         _injectDecodeTerms(bd); /* N3:把編碼母題詞(1163/20:57)在正文裡做成可懸停解碼(只 wrap text node,不改故事正文) */
         _injectEraNotes(bd); /* 時代註解:時代物件詞的可開關旁註(同 N3 管線,只 wrap text node,預設關) */
         _buildEpSectionNav(sec, bd, ep.ep); /* 長集分節導航:依正文既有分隔線插入導航節點(容器層,正文一字不動) */
@@ -10619,12 +10687,14 @@
       //  EP14 線索回指 EP8(鋼鐵人的願望)/ EP25 線索回指 EP17(七盞白光)
       //  EP26 線索回指 EP19(什麼是『愛』)/ EP32 線索回指 EP11(愛因斯坦句)
       //  EP35 線索回指 EP27(永遠年輕)/ EP41 線索回指 EP30(藏起名字的少年)
+      //  EP36→EP3:讀過 EP35「那光的年紀是十八歲」謎底後,回看 EP3 那一眼真正看見的是誰
       var REREAD_HINTS = {
         14: { back: 8, text: "讀到這裡，回頭看 EP8 那個鋼鐵人的願望。" },
         25: { back: 17, text: "現在回頭看，EP17 醒來時的那七盞白光。" },
         26: { back: 19, text: "現在回頭看，EP19 那句氣著問的『愛』。" },
         32: { back: 11, text: "現在回頭看，EP11 那句隨口說的愛因斯坦。" },
         35: { back: 27, text: "現在回頭看，EP27 那句笑著說的永遠年輕。" },
+        36: { back: 3, text: "讀過 EP35 之後，回頭看 EP3 那一眼——他看見的其實是十八歲。" },
         38: { back: 32, text: "現在回頭看，EP32 她貼著脈搏問的那一句。" },
         41: { back: 30, text: "走到這裡，回頭看 EP30 那個把名字藏起來的少年。" },
       };
@@ -11536,6 +11606,92 @@
         mark.textContent = spec.text;
         target.parentNode.insertBefore(mark, target.nextSibling);
       }
+
+      /* ── 浪漫輪：段落 wrapper 注入 ──
+         比照 _injectMotoNote 的做法：以正文既有 verbatim 片段定位 <p>，把它包一層透明
+         wrapper（class 掛 scoped 效果）；正文 text node 一字不動、不 innerHTML 重組。
+         wrapper 統一帶 .rom-anim → 由下方 romObs 在進視窗時加一次性 .rom-in 啟動過場。 */
+      var _romObs = null;
+      function _romObserver() {
+        if (_romObs) return _romObs;
+        if (!("IntersectionObserver" in window)) return null;
+        _romObs = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (!e.isIntersecting) return;
+            e.target.classList.add("rom-in");
+            /* A3 戲院暗場：dip 進來後隔一拍再 settle 回底色（燈熄了又被螢幕光照回） */
+            if (e.target.classList.contains("rom-a3")) {
+              setTimeout(function () { e.target.classList.add("rom-a3-settle"); }, 40);
+            }
+            _romObs.unobserve(e.target);
+          });
+        }, { threshold: 0, rootMargin: "0px 0px -20% 0px" });
+        return _romObs;
+      }
+      /* 依 verbatim 片段找出「最貼近」的段落 <p>（取命中且最短者，避開含它的長段） */
+      function _romFindP(bd, frag) {
+        var nodes = bd.querySelectorAll("p");
+        var best = null;
+        for (var i = 0; i < nodes.length; i++) {
+          if (nodes[i].textContent.indexOf(frag) !== -1) {
+            if (!best || nodes[i].textContent.length < best.textContent.length) best = nodes[i];
+          }
+        }
+        return best;
+      }
+      /* 把某個 <p>（或連續一段 <p>）包進一個 wrapper div；回傳 wrapper（失敗回 null） */
+      function _romWrap(target, cls, extraTail) {
+        if (!target || !target.parentNode) return null;
+        var w = document.createElement("div");
+        w.className = "rom-seg rom-anim " + cls;
+        target.parentNode.insertBefore(w, target);
+        w.appendChild(target);
+        if (extraTail) { for (var k = 0; k < extraTail; k++) { var sib = w.nextSibling; if (sib) w.appendChild(sib); else break; } }
+        return w;
+      }
+      function _injectRomanceWraps(bd, epNum) {
+        if (!bd) return;
+        var obs = _romObserver();
+        function attach(w) { if (w && obs) obs.observe(w); else if (w) w.classList.add("rom-in"); }
+        // A2 EP38 逆光呼吸
+        if (epNum === 38) {
+          var p = _romFindP(bd, "把地板照得有點過分地亮");
+          if (p) attach(_romWrap(p, "rom-a2"));
+        }
+        // A3 EP28 戲院暗場（只包「電影一開演，燈就暗下來」那一段；不觸及後面的悲傷句）
+        if (epNum === 28) {
+          var pc = _romFindP(bd, "電影一開演，燈就暗下來");
+          if (pc) attach(_romWrap(pc, "rom-a3"));
+        }
+        // B2 EP6 行距鬆一拍
+        if (epNum === 6) {
+          var p6 = _romFindP(bd, "等待的時候，也算在約會的時間裡");
+          if (p6) attach(_romWrap(p6, "rom-b2"));
+        }
+        // B3 EP39 鬥嘴呼吸（交替說話者微偏）+ B4 收梢留白
+        if (epNum === 39) {
+          var pA = _romFindP(bd, "妳先開口");
+          var pB = _romFindP(bd, "我立馬就回");
+          if (pA) { var wA = _romWrap(pA, "rom-b3 rom-say-a"); attach(wA); }
+          if (pB) { var wB = _romWrap(pB, "rom-b3 rom-say-b"); attach(wB); }
+          // B4：EP39 收梢句「我又不是死會計系😂」後多半拍留白
+          _romTailSpacer(bd, "我又不是死會計系", obs);
+        }
+        // B4 EP29 收梢留白：「把那句浪漫吞回去」一帶
+        if (epNum === 29) {
+          _romTailSpacer(bd, "把那句浪漫吞回去", obs);
+        }
+      }
+      function _romTailSpacer(bd, frag, obs) {
+        var p = _romFindP(bd, frag);
+        if (!p || !p.parentNode) return;
+        var sp = document.createElement("div");
+        sp.className = "rom-tail-spacer rom-anim";
+        sp.setAttribute("aria-hidden", "true");
+        p.parentNode.insertBefore(sp, p.nextSibling);
+        if (obs) obs.observe(sp); else sp.classList.add("rom-in");
+      }
+
       function renderBookmarkBar() {
         var bar = document.getElementById("jp-bookmarks");
         if (!bar || !_bookmarks) return;
