@@ -52,7 +52,7 @@
     idx++;
     line.textContent = TEXT.slice(0, idx);
     if (idx < TEXT.length) later(type, 550);
-    else later(function () { dismiss(false); }, 1200);
+    else later(function () { dismiss(false); }, 1700);
   }
   later(type, 900);
   later(function () {
