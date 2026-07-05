@@ -2394,6 +2394,7 @@ function renderTrialSeals() {
     const arr = JSON.parse(localStorage.getItem(STORAGE_KEYS.endingsCompleted) || "[]");
     renDone = Array.isArray(arr) && arr.length > 0;
   } catch (e) {}
+  // 三印判準 SSOT:docs/three-seals.md(改判準必三邊同改;追印用 _cleared_v1 非 leaderboard)
   try { aoDone = localStorage.getItem("tiantanglu_cleared_v1") === "1"; } catch (e) {}
   try { zhuiDone = localStorage.getItem("platformRunCleared_v1") === "1"; } catch (e) {}
 
@@ -3888,7 +3889,7 @@ function bindUI() {
   }
   // req 2:手機直立 = 完整可玩的遊戲小說,預設自動維持直向(不再用全屏卡片硬鎖
   //   隱藏 UI)。橫向建議改成入口的一行細提示(page-c1.js 於 DOMContentLoaded 顯示);
-  //   內建瀏覽器→原生瀏覽器提示交給 inapp-banner.js(可關閉橫幅)。
+  //   內建瀏覽器→原生瀏覽器提示改由各入口頁的一行細字說明呈現(不再用獨立橫幅)。
   if (isMobileLayout()) {
     portraitOptIn = true;
     dom.body.classList.remove("landscape-prompt");

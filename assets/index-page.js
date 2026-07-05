@@ -39,7 +39,6 @@ ifr.style.cssText =
 ifr.src =
   "https://www.youtube-nocookie.com/embed/" + id + "?autoplay=1";
 ifr.title = btn.getAttribute("data-yt-title") || "";
-ifr.setAttribute("frameborder", "0");
 ifr.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
 ifr.setAttribute(
   "allow",
@@ -532,6 +531,7 @@ _bd = bd; return card;
       e.preventDefault();
       e.stopPropagation();
       el.classList.add("revealed");
+      el.setAttribute("aria-expanded", "true");   // 狀態正確(SR 知道已展開),label 保留遮罩語意不主動朗讀微雷
     }
     el.addEventListener("click", reveal);
     el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") reveal(e); });
@@ -891,7 +891,6 @@ el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key ===
     ifr.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;display:block;border:0";
     ifr.src = "https://www.youtube-nocookie.com/embed/" + ostId + "?autoplay=1&start=" + s;
     ifr.title = ostTitle;
-    ifr.setAttribute("frameborder", "0");
     ifr.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
     ifr.setAttribute("allow", "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture");
     ifr.setAttribute("allowfullscreen", "");

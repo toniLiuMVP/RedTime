@@ -140,6 +140,7 @@
   })();
 
   /* ── 結局畫面:「追」小框(對位首頁三道試煉卡)+ 三印狀態列(跨遊戲共用鑰匙) ── */
+  // 三印判準 SSOT:docs/three-seals.md(改判準必三邊同改)
   function hasRen() { // 忍:LM402 至少一個結局
     try {
       var a = JSON.parse(localStorage.getItem("lm402_endings_completed_v1") || "[]");

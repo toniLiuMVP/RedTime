@@ -126,7 +126,7 @@ a {
   color: var(--gold);
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.56);
 }
-.rotate-card h1 {
+.rotate-card h2 {
   margin: 12px 0 10px;
   font:
     600 46px/1.1 "Cormorant Garamond", "Noto Serif TC",
@@ -2858,8 +2858,8 @@ body.landscape-prompt .debug-panel {
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 40px;
   cursor: pointer;
-  backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   transition:
     opacity 0.3s,
     background 0.2s,

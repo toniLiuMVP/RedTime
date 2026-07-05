@@ -2,10 +2,12 @@
 <html lang="zh-Hant-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self'; connect-src 'self' blob:; worker-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none';">
 <title>天堂路 · 時間裡的兩個妳</title>
 <meta name="color-scheme" content="dark" />
+<!-- clickjacking 防線(與其他頁一致):被框時先藏內容 -->
+<script src="../../../assets/frame-guard.js"></script>
 <link rel="modulepreload" href="../../_vendor/three.module.js">
 <link rel="modulepreload" href="scene.js">
 <!-- T11：場景初始化即載的最大兩個 prop，preload 讓瀏覽器 parse JS 前就並行抓 -->
@@ -27,6 +29,25 @@
 <meta name="twitter:title" content="天堂路 · 時間裡的兩個妳" />
 <meta name="twitter:description" content="《時間裡的兩個妳》3D 第一人稱互動場景：天堂路。" />
 <link rel="canonical" href="https://toniliumvp.github.io/RedTime/demos/695/tiantanglu-3d/index.html" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "VideoGame",
+  "name": "天堂路",
+  "description": "《時間裡的兩個妳》3D 第一人稱互動場景：天堂路。把拔夢回兩棲偵搜結訓的那條路，對位 EP40。",
+  "author": { "@type": "Person", "name": "toni" },
+  "url": "https://toniliumvp.github.io/RedTime/demos/695/tiantanglu-3d/index.html",
+  "inLanguage": "zh-TW",
+  "gamePlatform": "Web Browser",
+  "genre": "Interactive Fiction",
+  "isAccessibleForFree": true,
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "時間裡的兩個妳",
+    "url": "https://toniliumvp.github.io/RedTime/"
+  }
+}
+</script>
 <link rel="manifest" href="../../../manifest.json" />
 <link rel="apple-touch-icon" href="../../../assets/pwa-icon-192.png" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -36,8 +57,10 @@
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{width:100%;height:100%;overflow:hidden;background:#1a1620;
     font-family:"Noto Serif TC","Songti TC",ui-serif,serif;color:#fdf6ee;
-    user-select:none;-webkit-user-select:none;touch-action:none;}
-  #c{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:1;}
+    user-select:none;-webkit-user-select:none;}
+  /* B4 折衷:pinch 縮放鎖在遊戲畫布(瞄準不誤觸),頁面其餘(教學/設定/結算 overlay)仍可放大 = WCAG 1.4.4 弱視可讀 */
+  #c{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:1;touch-action:none;}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
 
   /* ── 準星 (可調 size/gap/thick/color) ── */
   :root{--ch-size:8px;--ch-gap:4px;--ch-thick:2px;--ch-color:#ffe0b8;--ch-drop:0px;}
@@ -533,6 +556,7 @@
 </style>
 </head>
 <body>
+<h1 class="sr-only">天堂路 · 時間裡的兩個妳 · 3D 第一人稱互動場景</h1>
 <canvas id="c"></canvas>
 
 <div id="cross">

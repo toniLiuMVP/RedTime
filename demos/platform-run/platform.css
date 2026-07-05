@@ -145,16 +145,16 @@ canvas{display:block;width:100%;height:100%}
 #vignette{position:fixed;inset:0;z-index:8;pointer-events:none;opacity:0;transition:opacity 0.3s;background:radial-gradient(ellipse at center,transparent 45%,rgba(220,90,70,0.30) 80%,rgba(240,150,90,0.30) 100%)}
 
 /* ── 手機觸控搖桿 ── */
-#touch-controls{position:fixed;bottom:30px;left:20px;z-index:40;display:none}
+#touch-controls{position:fixed;bottom:calc(30px + env(safe-area-inset-bottom,0px));left:calc(20px + env(safe-area-inset-left,0px));z-index:40;display:none}
 #joystick-area{width:120px;height:120px;border-radius:50%;background:rgba(0,0,0,0.08);border:2px solid rgba(0,0,0,0.15);position:relative}
 #joystick-knob{width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,0.18);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transition:none}
-#sprint-btn{position:fixed;bottom:60px;right:30px;z-index:40;display:none;width:64px;height:64px;border-radius:50%;background:rgba(243,156,18,0.3);border:2px solid rgba(243,156,18,0.6);color:#fff;font-size:14px;font-weight:700;line-height:64px;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;text-shadow:0 1px 4px rgba(0,0,0,0.5),0 0 8px rgba(243,156,18,0.6)}
+#sprint-btn{position:fixed;bottom:calc(60px + env(safe-area-inset-bottom,0px));right:calc(30px + env(safe-area-inset-right,0px));z-index:40;display:none;width:64px;height:64px;border-radius:50%;background:rgba(243,156,18,0.3);border:2px solid rgba(243,156,18,0.6);color:#fff;font-size:14px;font-weight:700;line-height:64px;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;text-shadow:0 1px 4px rgba(0,0,0,0.5),0 0 8px rgba(243,156,18,0.6)}
 
 /* ── 跳躍按鈕（手機）── */
-#jump-btn{position:fixed;bottom:140px;right:30px;z-index:40;display:none;width:64px;height:64px;border-radius:50%;background:rgba(46,204,113,0.3);border:2px solid rgba(46,204,113,0.6);color:#fff;font-size:14px;font-weight:700;line-height:64px;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;text-shadow:0 1px 4px rgba(0,0,0,0.5),0 0 8px rgba(46,204,113,0.6)}
+#jump-btn{position:fixed;bottom:calc(140px + env(safe-area-inset-bottom,0px));right:calc(30px + env(safe-area-inset-right,0px));z-index:40;display:none;width:64px;height:64px;border-radius:50%;background:rgba(46,204,113,0.3);border:2px solid rgba(46,204,113,0.6);color:#fff;font-size:14px;font-weight:700;line-height:64px;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;text-shadow:0 1px 4px rgba(0,0,0,0.5),0 0 8px rgba(46,204,113,0.6)}
 
 /* ── 必殺技按鈕 ── */
-#ultimate-btn{position:fixed;bottom:220px;right:30px;z-index:40;display:none;width:64px;height:64px;border-radius:50%;background:rgba(255,215,0,0.25);border:2px solid rgba(255,215,0,0.65);color:#fff;font-size:12px;font-weight:700;line-height:1.2;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;padding-top:18px;text-shadow:0 1px 4px rgba(0,0,0,0.5),0 0 8px rgba(255,215,0,0.6)}
+#ultimate-btn{position:fixed;bottom:calc(220px + env(safe-area-inset-bottom,0px));right:calc(30px + env(safe-area-inset-right,0px));z-index:40;display:none;width:64px;height:64px;border-radius:50%;background:rgba(255,215,0,0.25);border:2px solid rgba(255,215,0,0.65);color:#fff;font-size:12px;font-weight:700;line-height:1.2;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;padding-top:18px;text-shadow:0 1px 4px rgba(0,0,0,0.5),0 0 8px rgba(255,215,0,0.6)}
 #ultimate-btn.used{opacity:0.3;border-color:rgba(255,215,0,0.15);pointer-events:none}
 
 /* ── 道具拾取通知 ── */
@@ -239,6 +239,7 @@ scroll-behavior: auto !important;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.3s ease;
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 .pt-tutorial-trigger:hover {
@@ -251,7 +252,7 @@ scroll-behavior: auto !important;
 body:has(#title-screen.hide) .pt-tutorial-trigger { display: none !important; }
 .pt-tutorial-overlay {
   position: fixed; inset: 0; z-index: 9999;
-  background: rgba(18, 18, 18, 0.96); backdrop-filter: blur(20px);
+  background: rgba(18, 18, 18, 0.96); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
   display: flex; align-items: center; justify-content: center;
   padding: 24px; opacity: 0; pointer-events: none;
   transition: opacity 0.3s ease;

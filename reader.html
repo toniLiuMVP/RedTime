@@ -1105,6 +1105,7 @@
           rgba(10, 12, 18, 0.72)
         );
         box-shadow: 0 26px 70px rgba(0, 0, 0, 0.28);
+        -webkit-backdrop-filter: blur(18px);
         backdrop-filter: blur(18px);
       }
       .hero-guide-kicker {
@@ -1227,6 +1228,7 @@
           rgba(9, 11, 18, 0.74)
         );
         box-shadow: 0 22px 52px rgba(0, 0, 0, 0.28);
+        -webkit-backdrop-filter: blur(18px);
         backdrop-filter: blur(18px);
       }
       .rail-kicker {
@@ -1444,8 +1446,8 @@
           top: 0;
           z-index: 300;
           background: rgba(18, 18, 18, 0.92);
-          backdrop-filter: blur(14px);
           -webkit-backdrop-filter: blur(14px);
+          backdrop-filter: blur(14px);
           border-bottom: 1px solid var(--line2);
           display: flex;
           align-items: center;
@@ -1506,8 +1508,8 @@
           min-width: 170px;
           padding: 8px;
           background: rgba(18, 18, 18, 0.97);
-          backdrop-filter: blur(14px);
           -webkit-backdrop-filter: blur(14px);
+          backdrop-filter: blur(14px);
           border: 1px solid var(--line2);
           border-radius: 8px;
           box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
@@ -1815,8 +1817,8 @@
           inset: 0;
           background: rgba(0, 0, 0, 0.55);
           z-index: 699;
-          backdrop-filter: blur(2px);
           -webkit-backdrop-filter: blur(2px);
+          backdrop-filter: blur(2px);
         }
         #jump-overlay.open {
           display: block;
@@ -1927,8 +1929,8 @@
         height: calc(50px + env(safe-area-inset-top, 0px));
         padding-top: env(safe-area-inset-top, 0px);
         background: rgba(18, 18, 18, 0.93);
-        backdrop-filter: blur(14px);
         -webkit-backdrop-filter: blur(14px);
+        backdrop-filter: blur(14px);
         border-bottom: 1px solid var(--line2);
         z-index: 500;
         display: flex;
@@ -1984,6 +1986,7 @@
         inset: 0;
         z-index: 900;
         background: rgba(0, 0, 0, 0.75);
+        -webkit-backdrop-filter: blur(4px);
         backdrop-filter: blur(4px);
         opacity: 0;
         pointer-events: none;
@@ -2205,6 +2208,7 @@
         inset: 0;
         z-index: 800;
         background: rgba(0, 0, 0, 0.65);
+        -webkit-backdrop-filter: blur(4px);
         backdrop-filter: blur(4px);
         opacity: 0;
         pointer-events: none;
@@ -4399,8 +4403,8 @@
         right: 0;
         padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
         background: rgba(18, 18, 18, 0.94);
-        backdrop-filter: blur(14px);
         -webkit-backdrop-filter: blur(14px);
+        backdrop-filter: blur(14px);
         border-top: 1px solid var(--line2);
         z-index: 400;
         transition:
@@ -4692,6 +4696,7 @@
         position: absolute;
         inset: 0;
         background: rgba(0, 0, 0, 0.82);
+        -webkit-backdrop-filter: blur(6px);
         backdrop-filter: blur(6px);
         cursor: pointer;
       }
@@ -5033,7 +5038,7 @@
         --line2: rgba(60, 40, 12, 0.09);
         --t1: #33240f;
         --t2: #574019;
-        --t3: #755b30;
+        --t3: #5f4720;
       }
       body.day-mode #hero {
         background:
@@ -6388,8 +6393,8 @@
         border-radius: 8px;
         border: 1px solid var(--line);
         background: rgba(18, 18, 18, 0.82);
-        backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
         color: var(--t2);
         font-size: 14px;
         cursor: pointer;
@@ -6449,8 +6454,8 @@
           z-index: 400;
           padding: 12px 5px;
           background: rgba(18, 18, 18, 0.72);
-          backdrop-filter: blur(10px);
           -webkit-backdrop-filter: blur(10px);
+          backdrop-filter: blur(10px);
           border: 1px solid var(--line2);
           border-radius: 20px;
           opacity: 0.3;
@@ -7921,7 +7926,7 @@
         <div class="modal-hd">
           <div class="modal-ey">
             <span id="modal-eyebrow">彩蛋</span
-            ><button id="modal-close" onclick="closeModal()">✕</button>
+            ><button id="modal-close" onclick="closeModal()" aria-label="關閉視窗">✕</button>
           </div>
           <span id="modal-glyph"></span>
           <div id="modal-title"></div>
@@ -10379,7 +10384,7 @@
         // ann[2]+ = 重讀線索（再讀一次才看得懂的伏筆／回指），EPxx 可點跳轉
         const clues = ann.slice(2).filter(Boolean);
         const cluesH = clues.length
-          ? `<div class="ep-note ep-clues"><div class="ep-note-toggle" role="button" tabindex="0" data-n="${clues.length}" onclick="toggleClues(this)">▸ 重讀線索（${clues.length}）</div><div class="ep-note-body hidden">${clues.map((c) => `<div class="ep-clue">${linkifyEpRefs(c)}</div>`).join("")}</div></div>`
+          ? `<div class="ep-note ep-clues"><div class="ep-note-toggle" role="button" tabindex="0" aria-expanded="false" data-n="${clues.length}" onclick="toggleClues(this)">▸ 重讀線索（${clues.length}）</div><div class="ep-note-body hidden">${clues.map((c) => `<div class="ep-clue">${linkifyEpRefs(c)}</div>`).join("")}</div></div>`
           : "";
         const vis = TL.filter((e) => e.from <= ep.ep);
         const evtsH =
@@ -10434,12 +10439,12 @@
         // 說書人：每集 10 位，展開時顯示三位（renderStoryteller 負責內容）
         const stPool = (typeof STORYTELLERS !== 'undefined' && STORYTELLERS[String(ep.ep)]) || [];
         const stH = stPool.length
-          ? `<div class="ep-note ep-storyteller"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleStoryteller(this, ${ep.ep})">▸ 說書人</div><div class="ep-note-body hidden" id="st-body-${ep.ep}"></div></div>`
+          ? `<div class="ep-note ep-storyteller"><div class="ep-note-toggle" role="button" tabindex="0" aria-expanded="false" onclick="toggleStoryteller(this, ${ep.ep})">▸ 說書人</div><div class="ep-note-body hidden" id="st-body-${ep.ep}"></div></div>`
           : '';
         // 文人說：本集有資料才出現；展開時隨機抽 1-10 位（renderLiterati 負責內容）
         const litPool = (LITERATI && LITERATI[String(ep.ep)]) || [];
         const litH = litPool.length
-          ? `<div class="ep-note ep-literati"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleLiterati(this, ${ep.ep})">▸ 文人說</div><div class="ep-note-body hidden" id="lit-body-${ep.ep}"></div></div>`
+          ? `<div class="ep-note ep-literati"><div class="ep-note-toggle" role="button" tabindex="0" aria-expanded="false" onclick="toggleLiterati(this, ${ep.ep})">▸ 文人說</div><div class="ep-note-body hidden" id="lit-body-${ep.ep}"></div></div>`
           : "";
         const compLabel = (ep.ep === 3 && !_ep3ReadBefore) ? "紅線經過這裡，有人停下來等你" : (COMPANION_LABELS[ep.ep] || "紅線經過這裡，有人停下來等你");
         // N8 時空定錨：從時間軸說明(tline)機械抽出年份，做成標題列常駐 chip。只取年份，不推算角色年齡(避免破壞 canon)。
@@ -10466,7 +10471,7 @@
         const arcNavH = _seq.length > 1
           ? `<div class="ep-arc-nav" aria-label="沿紅線 · 同視角導覽"><button type="button" class="ean-btn" ${_aprev === null ? "disabled" : `onclick="goToEp(${_aprev})"`} aria-label="同視角上一集">‹ 上一段</button><span class="ean-mid"><span class="ean-line">${escapeHtml(_aline)}</span><span class="ean-pos">${_apos + 1} / ${_seq.length}</span></span><button type="button" class="ean-btn" ${_anext === null ? "disabled" : `onclick="goToEp(${_anext})"`} aria-label="同視角下一集">沿著紅線 ›</button></div>`
           : "";
-        sec.innerHTML = `${recapH}<div class="ep-bg-num">${fmtEp(ep.ep).replace("EP", "")}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${escapeHtml(ARC_LBL[arc] || arc)}</span>${yearChip}</div><div class="ep-title">${escapeHtml(cT)}</div></div><div class="ep-companion"><div class="ep-companion-tag" role="button" tabindex="0" aria-label="導讀區，點開展開賞析" onclick="toggleCompanion(this)"><span class="ec-line"></span><span class="ec-lbl"><span class="ec-arrow">▸</span> ${escapeHtml(compLabel)}<span class="ec-count"></span></span><span class="ec-line"></span></div><div class="ep-companion-body">${stH}${vis.length === 0 ? "" : `<div class="ep-info-strip"><div class="ep-info-head" role="button" tabindex="0" onclick="toggleEpInfo(this)"><span class="eih-icon">${renderIcon("guide")}</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-arc-legend"><span class="tal-chip" style="color:var(--jade)">● 把拔</span><span class="tal-chip" style="color:var(--silver)">● 學長</span><span class="tal-chip" style="color:var(--f3,#ff4858)">● 學妹</span><span class="tal-chip" style="color:var(--amber)">● 女兒</span><span class="tal-chip" style="color:var(--ember)">● 複合</span></div><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>`}${tline ? `<div class="ep-tline-wrap"><div class="ep-tline-toggle" role="button" tabindex="0" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${escapeHtml(tline)}</span></div></div>` : ""}${note ? `<div class="ep-note"><div class="ep-note-toggle" role="button" tabindex="0" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${linkifyEpRefs(note)}</div></div>` : ""}${cluesH}${grannyH}${scienceH}${litH}</div></div><div class="ep-story-divider" aria-hidden="true"><span class="esd-line"></span><span class="esd-mark">✦ 故事正文</span><span class="esd-line"></span></div><div class="ep-body-wrap"></div>${tH}${arcNavH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
+        sec.innerHTML = `${recapH}<div class="ep-bg-num">${fmtEp(ep.ep).replace("EP", "")}</div><div class="ep-hd"><div class="ep-meta"><span class="ep-num-tag">${fmtEp(ep.ep)}</span><span class="arc-badge ${arc}">${escapeHtml(ARC_LBL[arc] || arc)}</span>${yearChip}</div><div class="ep-title">${escapeHtml(cT)}</div></div><div class="ep-companion"><div class="ep-companion-tag" role="button" tabindex="0" aria-expanded="false" aria-label="導讀區，點開展開賞析" onclick="toggleCompanion(this)"><span class="ec-line"></span><span class="ec-lbl"><span class="ec-arrow">▸</span> ${escapeHtml(compLabel)}<span class="ec-count"></span></span><span class="ec-line"></span></div><div class="ep-companion-body">${stH}${vis.length === 0 ? "" : `<div class="ep-info-strip"><div class="ep-info-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleEpInfo(this)"><span class="eih-icon">${renderIcon("guide")}</span><span class="eih-lbl-c">▸ 展開故事時間線</span><span class="eih-lbl-o" style="display:none">▾ 故事時間線（收合）</span><span class="eih-count">${vis.length} 個時刻</span></div><div class="ep-info-body"><div class="tl-arc-legend"><span class="tal-chip" style="color:var(--jade)">● 把拔</span><span class="tal-chip" style="color:var(--silver)">● 學長</span><span class="tal-chip" style="color:var(--f3,#ff4858)">● 學妹</span><span class="tal-chip" style="color:var(--amber)">● 女兒</span><span class="tal-chip" style="color:var(--ember)">● 複合</span></div><div class="tl-inline"><div class="tl-row-inline">${evtsH}</div></div></div></div>`}${tline ? `<div class="ep-tline-wrap"><div class="ep-tline-toggle" role="button" tabindex="0" aria-expanded="false" onclick="toggleTline(this)">▸ 時間軸說明</div><div class="ep-tline-body ep-tline-hidden"><span class="ep-tline-text">⏱ ${escapeHtml(tline)}</span></div></div>` : ""}${note ? `<div class="ep-note"><div class="ep-note-toggle" role="button" tabindex="0" aria-expanded="false" onclick="toggleNote(this)">▸ 導讀注解</div><div class="ep-note-body hidden">${linkifyEpRefs(note)}</div></div>` : ""}${cluesH}${grannyH}${scienceH}${litH}</div></div><div class="ep-story-divider" aria-hidden="true"><span class="esd-line"></span><span class="esd-mark">✦ 故事正文</span><span class="esd-line"></span></div><div class="ep-body-wrap"></div>${tH}${arcNavH}<div class="ep-nav">${pvBtn}${nxBtn}</div>`;
         const bd = document.createElement("div");
         bd.className = "ep-body";
         bd.innerHTML = ep.html;
@@ -11958,6 +11963,7 @@
         const wrap = h.closest(".ep-companion");
         if (!wrap) return;
         const open = wrap.classList.toggle("open");
+        h.setAttribute('aria-expanded', open ? 'true' : 'false');
         try { localStorage.setItem(COMPANION_PREF_KEY, open ? "1" : "0"); } catch (e) {}
       }
       function applyCompanionPref() {
@@ -11965,6 +11971,8 @@
         try { open = localStorage.getItem(COMPANION_PREF_KEY) === "1"; } catch (e) {}
         document.querySelectorAll(".ep-companion").forEach((w) => {
           w.classList.toggle("open", open);
+          const tag = w.querySelector(".ep-companion-tag");
+          if (tag) tag.setAttribute('aria-expanded', open ? 'true' : 'false');
           const c = w.querySelector(".ec-count");
           const nItems = w.querySelectorAll(".ep-companion-body > *").length;
           if (c) c.textContent = "（" + nItems + "）";
@@ -11973,6 +11981,7 @@
       function toggleEpInfo(h) {
         h.classList.toggle("open");
         h.nextElementSibling.classList.toggle("open");
+        h.setAttribute('aria-expanded', h.classList.contains("open") ? 'true' : 'false');
         const c = h.querySelector(".eih-lbl-c");
         const o = h.querySelector(".eih-lbl-o");
         if (c && o) {
@@ -11984,16 +11993,19 @@
       function toggleNote(h) {
         const b = h.nextElementSibling;
         const hid = b.classList.toggle("hidden");
+        h.setAttribute('aria-expanded', hid ? 'false' : 'true');
         h.textContent = (hid ? "▸" : "▾") + " 導讀注解";
       }
       function toggleTline(h) {
         const b = h.nextElementSibling;
         const hid = b.classList.toggle("ep-tline-hidden");
+        h.setAttribute('aria-expanded', hid ? 'false' : 'true');
         h.textContent = (hid ? "▸" : "▾") + " 時間軸說明";
       }
       function toggleClues(h) {
         const b = h.nextElementSibling;
         const hid = b.classList.toggle("hidden");
+        h.setAttribute('aria-expanded', hid ? 'false' : 'true');
         h.textContent = (hid ? "▸" : "▾") + " 重讀線索（" + (h.dataset.n || "") + "）";
       }
       // 文人說：每次展開都重新隨機抽 1-10 位 → 每一次都有驚喜。純 DOM 建構（零 innerHTML）
@@ -12582,12 +12594,14 @@
       function toggleStoryteller(h, ep) {
         const b = h.nextElementSibling;
         const hid = b.classList.toggle('hidden');
+        h.setAttribute('aria-expanded', hid ? 'false' : 'true');
         h.textContent = (hid ? '▸' : '▾') + ' 說書人';
         if (!hid) renderStoryteller(ep);
       }
       function toggleLiterati(h, ep) {
         const b = h.nextElementSibling;
         const hid = b.classList.toggle("hidden");
+        h.setAttribute('aria-expanded', hid ? 'false' : 'true');
         h.textContent = (hid ? "▸" : "▾") + " 文人說";
         if (!hid) renderLiterati(ep);
       }
@@ -12976,6 +12990,7 @@
         } catch (e) {}
         // 三道試煉印記:讀三個場景既有的本地紀錄(與 LM402 結局卡同一組 key)。
         // 走過的印,由該結局自己的句子開口;還沒走過的,只留一句「還在路上」,不催促。
+        // 三印判準 SSOT:docs/three-seals.md(改判準必三邊同改;追印用 _cleared_v1 非 leaderboard)
         var renDone = false, aoDone = false, zhuiDone = false;
         try {
           var re = JSON.parse(localStorage.getItem("lm402_endings_completed_v1") || "[]");
