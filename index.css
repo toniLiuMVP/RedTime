@@ -484,6 +484,59 @@
         color: rgba(234, 230, 222, 0.5);
         letter-spacing: 0.04em;
       }
+      /* C36：電影之眼 · 讀者自省層 */
+      .cine-eye {
+        flex-basis: 100%;
+        max-width: 620px;
+        margin: 30px auto 4px;
+        padding-top: 26px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        text-align: center;
+      }
+      .cine-eye-title {
+        font-family: "Noto Serif TC", serif;
+        font-size: 16px;
+        font-weight: 400;
+        letter-spacing: 0.14em;
+        color: rgba(234, 230, 222, 0.78);
+        margin-bottom: 20px;
+      }
+      .cine-eye-cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+      @media (max-width: 620px) {
+        .cine-eye-cards { grid-template-columns: 1fr; }
+      }
+      .cine-eye-card {
+        padding: 14px 14px;
+        border: 1px solid var(--seam);
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.012);
+        text-align: left;
+      }
+      .cine-eye-role {
+        font-family: "DM Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        color: rgba(233, 196, 142, 0.82);
+        margin-bottom: 9px;
+      }
+      .cine-eye-q {
+        margin: 0;
+        font-family: "Noto Serif TC", serif;
+        font-size: 13.5px;
+        line-height: 1.8;
+        color: var(--warm);
+      }
+      .cine-eye-note {
+        margin-top: 16px;
+        font-size: 11.5px;
+        line-height: 1.85;
+        letter-spacing: 0.03em;
+        color: rgba(234, 230, 222, 0.42);
+      }
       /* N15：三道試煉 · 忍 · 熬 · 追 */
       .trials-frame {
         flex-basis: 100%;
@@ -524,6 +577,42 @@
         font-style: italic;
         color: rgba(234, 230, 222, 0.6);
         margin-top: 14px;
+      }
+      /* C02 命題定調（about-body 開頭） */
+      .about-premise {
+        font-family: "Noto Serif TC", serif;
+        font-size: 16px;
+        line-height: 1.85;
+        color: rgba(234, 230, 222, 0.86);
+        letter-spacing: 0.02em;
+        margin-bottom: 6px;
+      }
+      /* C17 重讀邀請（about-body 段末） */
+      .about-reread {
+        font-style: italic;
+        color: rgba(234, 230, 222, 0.6);
+        margin-top: 12px;
+      }
+      /* C14 招牌書腰句（about-body 段末） */
+      .about-signature {
+        margin-top: 18px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        font-family: "Noto Serif TC", serif;
+        font-size: 14.5px;
+        line-height: 1.9;
+        letter-spacing: 0.05em;
+        color: rgba(233, 196, 142, 0.82);
+      }
+      /* C43 書名第二層副標（about-left，讀者為主詞） */
+      .about-you {
+        margin-top: 16px;
+        font-family: "Cormorant Garamond", "Noto Serif TC", serif;
+        font-style: italic;
+        font-size: 15px;
+        line-height: 1.75;
+        letter-spacing: 0.04em;
+        color: rgba(234, 230, 222, 0.6);
       }
       .trial-game {
         display: flex;
@@ -1983,6 +2072,17 @@
         line-height: 1.9;
         font-weight: 300;
       }
+      /* C11：20:57 抒情句（貼 EP11「一秒不差」母題） */
+      .tl-lyric {
+        display: block;
+        margin-top: 6px;
+        font-family: "Noto Serif TC", serif;
+        font-size: 11.5px;
+        font-style: italic;
+        line-height: 1.75;
+        letter-spacing: 0.04em;
+        color: rgba(234, 230, 222, 0.5);
+      }
       /* 灰色暗節點：中段那段路，紅線是灰的 */
       .tl-event.tl-dark .tl-dot.is-dark {
         border-color: rgba(140, 138, 136, 0.55);
@@ -2334,6 +2434,15 @@
         font-size: 13.5px;
         line-height: 1.75;
         color: var(--warm);
+      }
+      /* C32：三聲部語感（每個角色的說話質地）*/
+      .tour-char-voice {
+        display: block;
+        margin-top: 8px;
+        font-style: italic;
+        font-size: 12.5px;
+        line-height: 1.7;
+        color: rgba(234, 230, 222, 0.52);
       }
       .tour-samples {
         margin-top: 12px;
@@ -3341,6 +3450,9 @@
       .ob-kicker b{color:#ffd9a8;font-weight:600}
       .ob-echo{margin-top:1em;padding:.85em 1em;border-left:2px solid rgba(168,220,220,.5);background:rgba(168,220,220,.06);border-radius:0 8px 8px 0;font-size:12.5px;line-height:1.85;color:rgba(220,228,228,.86)}
       .ob-echo-tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.14em;color:rgba(168,220,220,.95);margin-right:.2em}
+      /* C31/C34「留意」note 卡：暖金色，與青色「互文鈎」echo 卡視覺區分 */
+      .ob-note{border-left-color:rgba(240,200,144,.55);background:rgba(240,200,144,.06);color:rgba(232,222,206,.86)}
+      .ob-note .ob-echo-tag{color:rgba(240,200,144,.95)}
       .ob-title{font-size:clamp(20px,3vw,26px);font-weight:700;margin:.7em 0 .2em;color:#fff3df;letter-spacing:.03em}
       .ob-sub{font-size:13px;color:rgba(220,210,196,.7);line-height:1.8;margin-bottom:1.2em}
       .ob-options{display:flex;flex-direction:column;gap:12px;margin-top:1.1em}

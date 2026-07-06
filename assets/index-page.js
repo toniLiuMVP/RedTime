@@ -458,10 +458,10 @@ for (var _si = 0; _si < _samples.length; _si++) {
   ];
 
   var VIEWPOINTS = {
-father: { name: "把拔", sub: "父親視角", ep: RECOMMENDED_ENTRIES.father, text: "他是那種會說「我海軍陸戰隊欸」來掩飾捨不得的爸爸。從 EP0 進，你會先笑出來，然後在某一句之後，突然鼻酸。", recs: "推薦入手：EP0（最短、最低門檻）→ EP36（月台狂奔「我趕上了」）", echo: "想知道那個被他抱起來的小女孩，長大後怎麼喊他嗎？去女兒視角：她說「現在的我已經不叫你『把拔』了，我現在都直接叫你一聲『爸』」。" },
+father: { name: "把拔", sub: "父親視角", ep: RECOMMENDED_ENTRIES.father, text: "他是那種會說「我海軍陸戰隊欸」來掩飾捨不得的爸爸。從 EP0 進，你會先笑出來，然後在某一句之後，突然鼻酸。", recs: "推薦入手：EP0（最短、最低門檻）→ EP36（月台狂奔「我趕上了」）", echo: "想知道那個被他抱起來的小女孩，長大後怎麼喊他嗎？去女兒視角：她說「現在的我已經不叫你『把拔』了，我現在都直接叫你一聲『爸』」。", note: "他是全書笑得最多的聲音，留意他的玩笑什麼時候開始變少。" },
 male: { name: "學長", sub: "男主視角", ep: RECOMMENDED_ENTRIES.male, text: "2005 年，他站錯了門。電話那頭一句「你走到後門」，他繞過去，抬頭那一眼：「也太像徐若瑄了吧。」二十年的故事從這一秒開始。", recs: "推薦入手：EP3（一眼瞬間，故事的起點）→ EP39（相信的力量）", echo: "你站在前門撲空的這一眼，她在後門也記了一輩子。去學妹視角，看同一場「一眼瞬間」她那一邊的聲音。" },
 female: { name: "學妹（阿姨）", sub: "女主視角", ep: RECOMMENDED_ENTRIES.female, text: "29 歲的身體裡，住著 18 歲的意識。她第二次闖進同一間教室，只為了看清楚一個人。教室裡不同年紀的自己正在七嘴八舌。", recs: "推薦入手：EP38（意識菜市場）→ EP13（她用離開去愛）", echo: "她用一通電話逼他下定決心，自己也痛，「傷你有多深，我就有多痛」。去學長視角，看那一刀落下後，他在伯達樓轉角站了多久。" },
-daughter: { name: "女兒", sub: "夢境視角", ep: RECOMMENDED_ENTRIES.daughter, text: "她飛遍所有時間線，卻被禁止干預。她什麼都知道，直到發現「知道」救不了現在的他。而她最後選擇相信，不是因為看過了，是因為願意。", recs: "推薦入手：EP41（拱心石「這不是童話故事」）→ EP16（女兒對爸爸最柔軟的告白）", echo: "她最後選擇跟把拔一樣去「相信」。去把拔視角，看那個不能穿越、只能相信的人，怎麼在所有平行世界裡都選擇把她生下來。" },
+daughter: { name: "女兒", sub: "夢境視角", ep: RECOMMENDED_ENTRIES.daughter, text: "她飛遍所有時間線，卻被禁止干預。她什麼都知道，直到發現「知道」救不了現在的他。而她最後選擇相信，不是因為看過了，是因為願意。", recs: "推薦入手：EP41（拱心石「這不是童話故事」）→ EP16（女兒對爸爸最柔軟的告白）", echo: "她最後選擇跟把拔一樣去「相信」。去把拔視角，看那個不能穿越、只能相信的人，怎麼在所有平行世界裡都選擇把她生下來。", note: "留意她怎麼稱呼自己。讀著讀著，「青春期少女」會長成「青春未來少女」。" },
 mixed: { name: "複合視角", sub: "多線交織", ep: RECOMMENDED_ENTRIES.mixed, text: "兩三條時間線塞在同一集裡，同一秒鐘被不同人各看一遍。建議先讀過幾集再進來，不然會認不出誰是誰。", recs: "推薦入手：EP24（小年夜急症室七盞白光，與 LM402 一眼瞬間互文）。建議讀過幾集再來。", echo: "先把男女主讀過，回頭看 EP24 那七盞白光到底在照誰，才會起雞皮疙瘩。" }
   };
 
@@ -703,6 +703,7 @@ card.appendChild(ce("div", "ob-title", v.name));
 card.appendChild(ce("div", "ob-sub", v.text));
 card.appendChild(ce("div", "ob-kicker", v.recs));
 if (v.echo) { var eh = ce("div", "ob-echo"); eh.appendChild(ce("span", "ob-echo-tag", "互文鈎")); eh.appendChild(document.createTextNode(" " + v.echo)); card.appendChild(eh); }
+if (v.note) { var nh = ce("div", "ob-echo ob-note"); nh.appendChild(ce("span", "ob-echo-tag", "留意")); nh.appendChild(document.createTextNode(" " + v.note)); card.appendChild(nh); }
 var opts = ce("div", "ob-options");
 var a = optEl("a", "📖 從這裡入手 → EP" + v.ep, v.name + "視角最推薦的第一集，直接開讀。"); a.href = READER + "#ep-" + v.ep;
 opts.appendChild(a); card.appendChild(opts);

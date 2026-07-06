@@ -7381,6 +7381,7 @@
                   <div><dt>一針一針</dt><dd>心碎之後，把心用時間慢慢縫回來的方式；全書縫合的意象。<button type="button" class="whois-jump" onclick="goToEp(19)" aria-label="跳到初次出現的 EP19">初次出現 · EP19 →</button></dd></div>
                   <div><dt>款款的</dt><dd>台語，慢慢地、輕輕柔柔地。<button type="button" class="whois-jump" onclick="goToEp(41)" aria-label="跳到初次出現的 EP41">初次出現 · EP41 →</button></dd></div>
                 </dl>
+                <p class="whois-note" style="margin:9px 0 2px;font-size:.86em;line-height:1.75;opacity:.62;">這裡的注音、emoji 和台語都不是隨手打的。文字丟掉了表情和聲音，它們是被找回來的那一部分。</p>
               </div>
             </details>
             <p class="hero-fiction-note">本作為文學改編，部分情節取材自真實經歷並經重組與虛構；請以文學作品閱讀，勿對號入座。</p>
@@ -7589,6 +7590,7 @@
         <button class="cur-tab" type="button" role="tab" onclick="switchCurTab(4,this)">那一眼</button>
         <button class="cur-tab" type="button" role="tab" onclick="switchCurTab(5,this)">相信的養成</button>
         <button class="cur-tab" type="button" role="tab" onclick="switchCurTab(7,this)">物件的回聲</button>
+        <button class="cur-tab" type="button" role="tab" onclick="switchCurTab(8,this)">命運阿嬤說過的話</button>
         <button class="cur-tab" type="button" role="tab" id="cur-tab-open-q" onclick="switchCurTab(6,this)" style="display:none">還懸著的問題</button>
       </div>
       <div class="cur-body">
@@ -7600,6 +7602,7 @@
         <div class="cur-panel" id="cur-panel-5"></div>
         <div class="cur-panel" id="cur-panel-6"></div>
         <div class="cur-panel" id="cur-panel-7"></div>
+        <div class="cur-panel" id="cur-panel-8"></div>
       </div>
     </div>
 
@@ -10040,7 +10043,7 @@
             ? "「我早就知道結局，所以飛去那些日子，是很安全的。」（EP41）"
             : "三條軌道是三條時間線，跨軌的光弧是穿越。拖曳旋轉 · 滾輪縮放 · 你讀到哪，光弧亮到哪。";
         p.innerHTML =
-          '<div class="ip-section-note">' + _m3Note + '</div><div id="map3d-wrap" style="width:100%;height:320px;border-radius:14px;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,#171310,#0a0807);touch-action:none"></div><div class="map3d-legend"><span class="m3l-title">軌道</span><span class="m3l-chip m3l-female-rainbow">━ 學妹線</span><span class="m3l-chip" style="color:#a8a49c">━ 時間軸</span><span class="m3l-chip" style="color:#c89010">━ 女兒線</span><span class="m3l-sep">｜</span><span class="m3l-title">光弧</span><span class="m3l-chip" style="color:#ff4858">⌒ 穿越</span><span class="m3l-chip" style="color:#4da6ff">⤺ 推回</span><span class="m3l-chip" style="color:#b78aff">∿ 夢境</span><span class="m3l-chip" style="color:#ffd479">⊚ 疊合</span><span class="m3l-sep">｜</span><span class="m3l-chip" style="color:rgba(220,205,180,.8)">● 集數軸（點節點或弧頂標籤可跳到該集）</span></div><div id="map3d-status" style="font-size:11px;opacity:.5;padding:8px 2px">3D 模組載入中…</div>';
+          '<div class="ip-section-note">' + _m3Note + '</div><div id="map3d-wrap" role="img" aria-label="三條時間線的立體地圖，各視角以顏色與文字標示，可拖曳旋轉、滾輪縮放" style="width:100%;height:320px;border-radius:14px;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,#171310,#0a0807);touch-action:none"></div><div class="map3d-legend"><span class="m3l-title">軌道</span><span class="m3l-chip m3l-female-rainbow">━ 學妹線</span><span class="m3l-chip" style="color:#a8a49c">━ 時間軸</span><span class="m3l-chip" style="color:#c89010">━ 女兒線</span><span class="m3l-sep">｜</span><span class="m3l-title">光弧</span><span class="m3l-chip" style="color:#ff4858">⌒ 穿越</span><span class="m3l-chip" style="color:#4da6ff">⤺ 推回</span><span class="m3l-chip" style="color:#b78aff">∿ 夢境</span><span class="m3l-chip" style="color:#ffd479">⊚ 疊合</span><span class="m3l-sep">｜</span><span class="m3l-chip" style="color:rgba(220,205,180,.8)">● 集數軸（點節點或弧頂標籤可跳到該集）</span></div><div id="map3d-status" style="font-size:11px;opacity:.5;padding:8px 2px">3D 模組載入中…</div>';
         try {
           const THREE = await import("./assets/lm402/vendor-three.module.js");
           _map3d = initMap3D(THREE, document.getElementById("map3d-wrap"));
@@ -12209,7 +12212,7 @@
         { label: '離別', kw: ['離', '別', '送', '歸', '萍', '天涯'] }
       ];
       // 0/1/4/5 是編譯期靜態內容 → 建一次即快取；tab 2(目錄)/3(回讀線索)依「已讀狀態」每次重算，刻意不快取（故無對應 key）。
-      var _curCache = { 0: false, 1: false, 4: false, 5: false };
+      var _curCache = { 0: false, 1: false, 4: false, 5: false, 8: false };
       // 攤平所有 LITERATI 真句(kind:quote),帶 ep;voice 擬寫不取(避去識別風險,也較難引)
       function _litQuotes() {
         var out = [];
@@ -12277,6 +12280,7 @@
         else if (i === 5) renderBeliefPath();
         else if (i === 6) renderOpenQuestions();
         else if (i === 7) renderObjectEchoes();
+        else if (i === 8) renderGrannyWords();
       }
       // 相信的養成 · 學長線路徑:順著同一條線讀,看「相信」怎麼從一個願望長成信念。
       // 每站說明只給持有理由不劇透,句句對應既有母題資料(ANNOTATIONS 線索),不新增詮釋。
@@ -12327,6 +12331,24 @@
         }).join('');
         panel.innerHTML = '<div class="cur-intro">同一種心意，藏在兩件不一樣的東西裡。這些物件各自出現在不同的集數，卻悄悄呼應著彼此。點集數可以跳過去看。</div><div class="og-grid">' + cards + '</div>';
         _curCache[7] = true;
+      }
+      // C35 命運阿嬤說過的話:只 verbatim 列 canon 阿嬤原句,不加站方詮釋。句子皆取自故事正文,點集數可跳回原處。
+      var GRANNY_WORDS = [
+        { line: "命運不是命定！但紅線，是命中注定。", ep: 26 },
+        { line: "不能干預任何事件，也不能和任何人有互動。", ep: 21 },
+        { line: "規則沒有變。不能干預，不能互動。", ep: 41 },
+      ];
+      function renderGrannyWords() {
+        var panel = document.getElementById('cur-panel-8');
+        if (!panel || _curCache[8]) return;
+        var cards = GRANNY_WORDS.map(function (g) {
+          return '<div class="og-card arc-mixed">'
+            + '<span class="og-line">「' + escapeHtml(g.line) + '」</span>'
+            + '<span class="oe-eps" style="margin-top:7px;display:flex;gap:8px;flex-wrap:wrap;"><button type="button" class="motif-ep" onclick="closeCuration();goToEp(' + g.ep + ')">' + fmtEp(g.ep) + '</button></span>'
+            + '</div>';
+        }).join('');
+        panel.innerHTML = '<div class="cur-intro">命運阿嬤在故事裡說過的話，原句照錄。點集數可以跳回她說這句話的那一集。</div><div class="og-grid">' + cards + '</div>';
+        _curCache[8] = true;
       }
       /* B1 開放懸念牆「還懸著的問題」——與 EGGS/GRANNY 帳本方向相反、互補:
          帳本是回顧式(triggerEp 解鎖後顯示「我們現在知道的她/他」);本牆是前瞻式(還沒被回答的問題)。
@@ -12451,7 +12473,7 @@
           panel.innerHTML = '<div class="cur-intro">往下讀，紅線埋下的伏筆與回指會慢慢浮現。讀過越多集，這裡能回看的就越多。</div>';
           return;
         }
-        panel.innerHTML = '<div class="cur-intro">把你讀過的集數裡，那些「再讀一次才看得懂」的伏筆與回指收在一起。有些句子要走過結局才讀得懂，讀懂之後，它反而更沉。只顯示你已讀到的，不爆雷。點集數或句中的 EP 都能跳回去。</div><div class="motif-list">' + rows + '</div>';
+        panel.innerHTML = '<div class="cur-intro">把你讀過的集數裡，那些「再讀一次才看得懂」的伏筆與回指收在一起。有些句子要走過結局才讀得懂，讀懂之後，它反而更沉。只顯示你已讀到的，不爆雷。點集數或句中的 EP 都能跳回去。有些委屈不會在同一集被安慰。把相鄰的兩集連著讀，一個人沒說出口的心事，常常在另一個人那一集裡，被輕輕接住。</div><div class="motif-list">' + rows + '</div>';
       }
       // #8 主題選讀:文人句子按主題橫向排列
       function renderThemeCuration() {
