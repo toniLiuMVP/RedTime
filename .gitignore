@@ -94,6 +94,9 @@ assets/sw-register.js
 # Draft / reference documents
 *.pdf
 
+# Source material / research report folders (local only, never public)
+/*報告/
+
 # Pages and assets kept local only (not served publicly)
 # OLD = superseded versions; canonical public pages are lm402.html + demos/platform-run/
 /dev-bg-compare.html
