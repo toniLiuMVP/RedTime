@@ -501,6 +501,30 @@
         color: rgba(234, 230, 222, 0.82);
         margin-bottom: 10px;
       }
+      /* C13 三道試煉統攝副標：換你替他站好、撐住、追上 */
+      .trials-lead {
+        text-align: center;
+        font: 400 12px/1.75 "Noto Serif TC", serif;
+        letter-spacing: 0.08em;
+        color: rgba(234, 230, 222, 0.56);
+        margin: -4px auto 16px;
+        max-width: 26em;
+      }
+      /* C21 導讀鏡片：不評判、不讓讀者選邊 */
+      .who-lens {
+        text-align: center;
+        font: 400 12.5px/1.85 "Noto Serif TC", serif;
+        letter-spacing: 0.05em;
+        color: rgba(234, 230, 222, 0.52);
+        margin: 14px auto 0;
+        max-width: 30em;
+      }
+      /* C16 成年重逢向邀請語（about 區，不進分享 meta） */
+      .about-invite {
+        font-style: italic;
+        color: rgba(234, 230, 222, 0.6);
+        margin-top: 14px;
+      }
       .trial-game {
         display: flex;
         align-items: center;
@@ -3515,6 +3539,20 @@
 }
 .cta-hint a:hover {
   border-bottom-color: rgba(240, 200, 144, 0.8);
+}
+/* C01 hero 不對稱鉤子：與定位副標成對句的第二拍(收斂間距、略淡) */
+.hero-subline-2 {
+  margin-top: 4px;
+  color: rgba(234, 230, 222, 0.5);
+}
+/* C03 回讀承諾：CTA 下方一行安靜的 serif 小字 */
+.cta-reread {
+  margin: 14px auto 2px;
+  max-width: 30em;
+  font: 400 12px/1.85 "Noto Serif TC", serif;
+  letter-spacing: 0.06em;
+  color: rgba(234, 230, 222, 0.44);
+  text-align: center;
 }
 /* 字級面板折衷收合 */
 .site-font-collapse {

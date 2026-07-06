@@ -7371,6 +7371,7 @@
                 <p class="whois-row"><b>學妹</b> ＝ <b>阿姨</b><span>同一個女人，橫跨二十年的兩個稱呼</span></p>
                 <p class="whois-row"><b>把拔</b> ＝ <b>學長</b><span>同一個男人，橫跨二十年。年輕時是學妹的學長，後來成了女兒的把拔</span></p>
                 <p class="whois-row"><b>女兒</b> 是把拔的女兒，她飛遍所有時間線，卻被禁止干預</p>
+                <p class="whois-note" style="margin:9px 0 2px;font-size:.86em;line-height:1.75;opacity:.62;">每一集的標題其實都在記一件事：此刻，是誰把誰放進了自己的未來。</p>
                 <dl class="whois-gloss">
                   <div><dt>LM402</dt><dd>2005 年那間教室的編號；「那一眼」就發生在這裡。<button type="button" class="whois-jump" onclick="goToEp(3)" aria-label="跳到初次出現的 EP3">初次出現 · EP3 →</button></dd></div>
                   <div><dt>那一眼</dt><dd>鐘響後，學長走到後門，與站在那裡的學妹對上的那一秒；全書的時空原點。<button type="button" class="whois-jump" onclick="goToEp(3)" aria-label="跳到初次出現的 EP3">初次出現 · EP3 →</button></dd></div>
@@ -7587,6 +7588,7 @@
         <button class="cur-tab" type="button" role="tab" onclick="switchCurTab(3,this)">回讀線索</button>
         <button class="cur-tab" type="button" role="tab" onclick="switchCurTab(4,this)">那一眼</button>
         <button class="cur-tab" type="button" role="tab" onclick="switchCurTab(5,this)">相信的養成</button>
+        <button class="cur-tab" type="button" role="tab" onclick="switchCurTab(7,this)">物件的回聲</button>
         <button class="cur-tab" type="button" role="tab" id="cur-tab-open-q" onclick="switchCurTab(6,this)" style="display:none">還懸著的問題</button>
       </div>
       <div class="cur-body">
@@ -7597,6 +7599,7 @@
         <div class="cur-panel" id="cur-panel-4"></div>
         <div class="cur-panel" id="cur-panel-5"></div>
         <div class="cur-panel" id="cur-panel-6"></div>
+        <div class="cur-panel" id="cur-panel-7"></div>
       </div>
     </div>
 
@@ -8343,6 +8346,7 @@
           "過去時間線，學妹重新看見自己",
           "「睜開眼睛看到天花板上的燈光是七盞白光」在這一集只是醒來的一瞬，等到 EP24、EP25 才會知道，那是 2006 年小年夜她倒下時，急診室天花板永遠留在她身體裡的光。",
           "「學長，生日快樂。」這句在這裡化成一道金黃色電流打在心上，正是 EP19 裡讓沉默十七年的那條時間線，重新亮起來的同一則訊息。",
+          "有些告別不是在說再見那一刻才發生的。二十年裡，有一個人一直不自覺地先騎到那條路，一騎就是好多年。故事最深的痛，常藏在一個人自己都沒察覺的習慣裡。",
         ],
         18: [
           "學長入伍後，還一直記得她留給他的話。",
@@ -10419,7 +10423,11 @@
           tH = breathH + `<div class="ep-teaser" onclick="goToEp(${nx.ep})"><div class="et-label">下一集</div><div class="et-num">${fmtEp(nx.ep)} · ${escapeHtml(ARC_LBL[nx.arc] || nx.arc)}</div>${pv ? `<div class="et-text">${escapeHtml(pv)}</div>` : ""}<div class="et-arrow">繼續閱讀 →</div></div>`;
         } else {
           // 完讀收束卡：讀到最後一集不該斷在灰按鈕，把終點變成新一圈的起點
-          tH = `<div class="ep-finale"><div class="ef-kicker">你走完了 1991 → 2026，整條紅線</div><div class="ef-title">「我也相信。」</div><div class="ef-stones"><div class="ef-stone"><div class="efs-tag">拱心石一 · 相信</div><p class="efs-quote">我不是因為「我看過了」才相信。<br>我是因為「我願意相信」，所以相信。<br>就跟把拔一樣。</p></div><div class="ef-stone"><div class="efs-tag">拱心石二 · 沒有放棄</div><p class="efs-quote">「謝謝妳從來都沒有放棄過我。」</p></div></div><div class="ef-sub">兩塊基石，跨了三十五年，才對上同一句話。接下來，換你決定怎麼再走一次。</div><div class="ef-actions"><button type="button" class="ef-btn ef-btn-main" onclick="goToEp(0)">✦ 回 EP0 · 再走一次紅線</button><a class="ef-btn" href="lm402.html">↗ 走進 LM402 · 親眼看那一眼</a><a class="ef-btn" href="demos/platform-run/index.html">再陪把拔跑一次月台</a><a class="ef-btn" href="demos/695/tiantanglu-3d/index.html">走一段他的天堂路</a><button type="button" class="ef-btn" onclick="if(window.__FAN_QUIZ__)window.__FAN_QUIZ__.open()">✦ 鐵粉測驗 · 看你記得多少</button></div></div>`;
+          // C33 完讀者專屬收尾註：只有真正走完全集(__REDTIME_FINISHED__)才顯示;新讀者/跳讀者零影響、不爆雷
+          var _finNote = (typeof window.__REDTIME_FINISHED__ === "function" && window.__REDTIME_FINISHED__())
+            ? "<div class=\"ef-finished-note\" style=\"margin:16px auto 0;max-width:30em;font:italic 400 13px/1.95 'Noto Serif TC',serif;letter-spacing:.03em;color:rgba(234,230,222,.5);text-align:center;\">你剛讀完的最後幾行裡，一朵康乃馨、一句「沒有放棄」、一個「也」字，在這裡一起到齊了。</div>"
+            : "";
+          tH = `<div class="ep-finale"><div class="ef-kicker">你走完了 1991 → 2026，整條紅線</div><div class="ef-title">「我也相信。」</div><div class="ef-stones"><div class="ef-stone"><div class="efs-tag">拱心石一 · 相信</div><p class="efs-quote">我不是因為「我看過了」才相信。<br>我是因為「我願意相信」，所以相信。<br>就跟把拔一樣。</p></div><div class="ef-stone"><div class="efs-tag">拱心石二 · 沒有放棄</div><p class="efs-quote">「謝謝妳從來都沒有放棄過我。」</p></div></div><div class="ef-sub">兩塊基石，跨了三十五年，才對上同一句話。接下來，換你決定怎麼再走一次。</div>${_finNote}<div class="ef-actions"><button type="button" class="ef-btn ef-btn-main" onclick="goToEp(0)">✦ 回 EP0 · 再走一次紅線</button><a class="ef-btn" href="lm402.html">↗ 走進 LM402 · 親眼看那一眼</a><a class="ef-btn" href="demos/platform-run/index.html">再陪把拔跑一次月台</a><a class="ef-btn" href="demos/695/tiantanglu-3d/index.html">走一段他的天堂路</a><button type="button" class="ef-btn" onclick="if(window.__FAN_QUIZ__)window.__FAN_QUIZ__.open()">✦ 鐵粉測驗 · 看你記得多少</button></div></div>`;
         }
         const pvBtn =
           idx > 0
@@ -12268,6 +12276,7 @@
         else if (i === 4) renderOneGlance();
         else if (i === 5) renderBeliefPath();
         else if (i === 6) renderOpenQuestions();
+        else if (i === 7) renderObjectEchoes();
       }
       // 相信的養成 · 學長線路徑:順著同一條線讀,看「相信」怎麼從一個願望長成信念。
       // 每站說明只給持有理由不劇透,句句對應既有母題資料(ANNOTATIONS 線索),不新增詮釋。
@@ -12295,6 +12304,29 @@
         }).join('');
         panel.innerHTML = '<div class="cur-intro">把散落在各集的學長線收成一條路：一個願望，怎麼被一個人用二十年慢慢養成信念，再交到下一個人手上。不劇透，只給一條走的順序。</div><div class="og-grid">' + cards + '</div>';
         _curCache[5] = true;
+      }
+      // C10 物件的回聲:成對母題導讀。每對兩件物件在不同集各出現,卻互相呼應。配對經 toni 拍板,句句站方框架、不劇透、可跳集。
+      var OBJECT_ECHOES = [
+        { a: "車站", b: "7-11", line: "都是一個人站著等另一個人的地方。", eps: [36, 39] },
+        { a: "紅線", b: "康乃馨", line: "都是晚到、卻仍然到達的證明。", eps: [22, 41] },
+        { a: "紙條", b: "七盞白光", line: "都是身體先記住，要很多年後才讀懂的印記。", eps: [12, 24] },
+        { a: "後門", b: "民安西路", line: "都是明明可以不走，卻還是走過去的路。", eps: [38, 12] },
+        { a: "抱", b: "紅線", line: "小時候是抱得起，長大是牽得住，同一種「我在」。", eps: [1, 22] },
+        { a: "軍規手機殼", b: "海軍陸戰隊", line: "都是他用「硬」把「怕」包起來的方式。", eps: [41, 1] },
+      ];
+      function renderObjectEchoes() {
+        var panel = document.getElementById('cur-panel-7');
+        if (!panel || _curCache[7]) return;
+        var cards = OBJECT_ECHOES.map(function (o) {
+          var eps = o.eps.map(function (n) { return '<button type="button" class="motif-ep" onclick="closeCuration();goToEp(' + n + ')">' + fmtEp(n) + '</button>'; }).join('');
+          return '<div class="og-card arc-mixed">'
+            + '<span class="og-arc">' + escapeHtml(o.a) + ' 與 ' + escapeHtml(o.b) + '</span>'
+            + '<span class="og-line">' + escapeHtml(o.line) + '</span>'
+            + '<span class="oe-eps" style="margin-top:7px;display:flex;gap:8px;flex-wrap:wrap;">' + eps + '</span>'
+            + '</div>';
+        }).join('');
+        panel.innerHTML = '<div class="cur-intro">同一種心意，藏在兩件不一樣的東西裡。這些物件各自出現在不同的集數，卻悄悄呼應著彼此。點集數可以跳過去看。</div><div class="og-grid">' + cards + '</div>';
+        _curCache[7] = true;
       }
       /* B1 開放懸念牆「還懸著的問題」——與 EGGS/GRANNY 帳本方向相反、互補:
          帳本是回顧式(triggerEp 解鎖後顯示「我們現在知道的她/他」);本牆是前瞻式(還沒被回答的問題)。
@@ -12394,7 +12426,7 @@
             + '<span class="og-go">讀這個視角 · ' + fmtEp(n) + ' →</span>'
             + '</button>';
         }).join('');
-        panel.innerHTML = '<div class="cur-intro">2005 年，後門的那一眼。同一秒鐘，學長、學妹、女兒各自在不同的位置看見了它。而這一秒會被走過很多遍，每一遍的看見、忍住、伸手都不一樣。最後一道門，是學長多年後，回頭再看這一眼。挑一道走進去，全貌得你自己拼。</div><div class="og-grid">' + cards + '</div>';
+        panel.innerHTML = '<div class="cur-intro">2005 年，後門的那一眼。同一秒鐘，學長、學妹、女兒各自在不同的位置看見了它。而這一秒會被走過很多遍，每一遍的看見、忍住、伸手都不一樣。來不及好好當一次父女，來不及在年輕時就懂得愛，來不及在看得最清楚時伸手碰到。最後一道門，是學長多年後，回頭再看這一眼。挑一道走進去，全貌得你自己拼。</div><div class="og-grid">' + cards + '</div>';
         _curCache[4] = true;
       }
       // N1 安全後向母題索引：把「已讀集數」的重讀線索（ANNOTATIONS clue，含回指 EP 連結）收成一處。
@@ -12419,7 +12451,7 @@
           panel.innerHTML = '<div class="cur-intro">往下讀，紅線埋下的伏筆與回指會慢慢浮現。讀過越多集，這裡能回看的就越多。</div>';
           return;
         }
-        panel.innerHTML = '<div class="cur-intro">把你讀過的集數裡，那些「再讀一次才看得懂」的伏筆與回指收在一起。只顯示你已讀到的，不爆雷。點集數或句中的 EP 都能跳回去。</div><div class="motif-list">' + rows + '</div>';
+        panel.innerHTML = '<div class="cur-intro">把你讀過的集數裡，那些「再讀一次才看得懂」的伏筆與回指收在一起。有些句子要走過結局才讀得懂，讀懂之後，它反而更沉。只顯示你已讀到的，不爆雷。點集數或句中的 EP 都能跳回去。</div><div class="motif-list">' + rows + '</div>';
       }
       // #8 主題選讀:文人句子按主題橫向排列
       function renderThemeCuration() {
