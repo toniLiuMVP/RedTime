@@ -10578,10 +10578,18 @@
             }
 
             // 1. Mark all EP <= N as visible(force lazy layout so offsetTop is accurate)
+            //    ⚠️ 深連結空白/落不準修:單靠 class(body.hash-jumping .episode.visible{content-visibility:visible})
+            //    在 in-app 瀏覽器(Threads WKWebView)/首載重繪期不會同步 materialise → 章節區塊空白、
+            //    或捲動落點被夾。改用 inline content-visibility 直接強制,配合下方 offsetHeight 同步 reflow,
+            //    讓 target 內容立即 render、位置立即穩定。
             EPISODES.forEach((ep) => {
               if (ep.ep <= targetN) {
                 const s = document.getElementById('ep-' + ep.ep);
-                if (s) s.classList.add('visible');
+                if (s) {
+                  s.classList.add('visible');
+                  s.style.contentVisibility = 'visible';
+                  s.style.containIntrinsicSize = 'auto';
+                }
               }
             });
 
@@ -10646,6 +10654,15 @@
                   var corr = 0, stable = 0;
                   function _step() {
                     corr++;
+                    // 雙捲動保險:main-col 為捲軸(桌面/寬屏)時,先確保 window 已捲過 hero,
+                    // 否則 main-col 的章節被 ~1030px 的 hero 蓋住 → 使用者停在 hero(Threads 深連結真兇之一)。
+                    // materialise 後每幀補一次,hero 一離開視窗頂端就停。
+                    if (_host && heroEl && heroEl.getBoundingClientRect().bottom > 4) {
+                      var sbh = document.documentElement.style.scrollBehavior;
+                      document.documentElement.style.scrollBehavior = 'auto';
+                      window.scrollTo(0, heroEl.offsetTop + heroEl.offsetHeight);
+                      document.documentElement.style.scrollBehavior = sbh;
+                    }
                     var rr = target.getBoundingClientRect();
                     var base = _host ? _host.getBoundingClientRect().top : 0;
                     var desired = base + topOffset + 8;
@@ -10662,7 +10679,7 @@
                         window.scrollBy({ top: delta, behavior: 'auto' }); document.documentElement.style.scrollBehavior = sbw;
                       }
                     }
-                    if (stable < 2 && corr < 40) requestAnimationFrame(_step);
+                    if (stable < 2 && corr < 120) requestAnimationFrame(_step);
                     else onDone(corr);
                   }
                   requestAnimationFrame(_step);
