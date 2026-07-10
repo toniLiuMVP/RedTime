@@ -171,7 +171,7 @@
     var txt = el("span", "pmf-txt");
     txt.appendChild(el("span", "pmf-eyebrow", "三道試煉 · 追"));
     txt.appendChild(el("span", "pmf-line", "在車門關上前趕到她身邊。每一次，都趕上。"));
-    txt.appendChild(el("span", "pmf-sub", "二十年前他說：我會照顧妳一輩子的。"));
+    txt.appendChild(el("span", "pmf-sub", "他一直記得那句：我會照顧妳一輩子的。"));
     frame.appendChild(txt);
     block.appendChild(frame);
     var row = el("div", "pt-seal-row");
