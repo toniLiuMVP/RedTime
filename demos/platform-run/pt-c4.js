@@ -1,6 +1,6 @@
 // platform-run 外部化 inline script #4（CSP 撤 unsafe-inline）
 /* C6 — 月台雙時空 — Q 鍵視角切換 + 紅線視覺
- 設計：Q 按下時切換 view-year (2005 ↔ 2025)， 顯示一條垂直紅線
+ 設計：Q 按下時切換 view-year (2018 ↔ 2025)， 顯示一條垂直紅線
  (EP36 「我們之間就還有一條拉得再長也不會斷的線」)。
  只動 DOM overlay， 不動 game logic。 */
 (function () {
@@ -74,7 +74,7 @@ function ensureRoot() {
   label.textContent = 'view ';
   const year = document.createElement('span');
   year.className = 'c6-year';
-  year.textContent = '2005';
+  year.textContent = '2018';
   ind.appendChild(label);
   ind.appendChild(year);
   root.appendChild(line);
@@ -83,9 +83,9 @@ function ensureRoot() {
   return root;
 }
 
-let currentYear = '2005';
+let currentYear = '2018';
 function setYear(y) {
-  if (y !== '2005' && y !== '2025') return;
+  if (y !== '2018' && y !== '2025') return;
   currentYear = y;
   ensureStyle();
   const root = ensureRoot();
@@ -95,7 +95,7 @@ function setYear(y) {
 }
 
 function toggle() {
-  setYear(currentYear === '2005' ? '2025' : '2005');
+  setYear(currentYear === '2018' ? '2025' : '2018');
 }
 
 function hide() {
