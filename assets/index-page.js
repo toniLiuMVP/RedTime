@@ -602,7 +602,7 @@ _bd = bd; return card;
     var opts = ce("div", "ob-options");
     function opt(t, s, fn) { var e = optEl("button", t, s); e.addEventListener("click", fn); return e; }
     opts.appendChild(opt("📖 繼續讀 EP" + st.lastEp, "回到你上次停下來的那一頁。", function () { remember("read"); go(READER + "#ep-" + st.lastEp); }));
-    opts.appendChild(opt("★ 鐵粉測驗 · 再來十題", "五十座月台、由淺入深，每次抽到的都不一樣。", function () { remember("fan"); renderQuiz(card); }));
+    opts.appendChild(opt("★ 鐵粉測驗 · 再來十題", "十級難度、上千題隨機抽，每次都不一樣。", function () { remember("fan"); renderQuiz(card); }));
     opts.appendChild(opt("🔀 換一條視角重看", "再選一次入口，從別人的眼睛把同一秒重看一遍。", function () { renderChooseFresh(card); }));
     card.appendChild(opts);
     var mini = ce("a", "ob-mini", "或從第一頁，重新走一次那條紅線 →"); mini.href = READER;
@@ -687,7 +687,7 @@ function summary() {
   card.appendChild(ce("div", "ob-title", tier.t));
   card.appendChild(ce("div", "ob-sub", tier.m));
   var opts = ce("div", "ob-options");
-  var c = optEl("a", "看完整 100 題鐵粉題庫 →", "一百題，分五十座月台。這十題只是開胃，看你能撐到第幾站還笑得出來。"); c.href = READER + "#fanquiz"; opts.appendChild(c);
+  var c = optEl("a", "進入十級鐵粉題庫 →", "上千題、十級月台由淺入深。這十題只是開胃，看你能撐到第幾站還笑得出來。"); c.href = READER + "#fanquiz"; opts.appendChild(c);
   var a = optEl("a", "📖 回去重讀全集", "EP0 到 EP41，從頭再走一次那條紅線。"); a.href = READER; opts.appendChild(a);
   var b = optEl("button", "🏃 再陪把拔跑一次月台", "EP36 的那 30 秒，這次換你跑。"); b.addEventListener("click", function () { go("demos/platform-run/index.html"); }); opts.appendChild(b);
   card.appendChild(opts);
