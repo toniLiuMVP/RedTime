@@ -3285,6 +3285,18 @@
       .ep-recap-egg > .ep-recap { margin: 0; }
       .moto-egg { margin: 14px 0 4px; }
       .fin-egg { margin: 2px 0 8px; }
+      /* 微雷遮罩:章末「下一集預告」引句 / 「本集分節」chip 標題預設微雷模糊。
+         點一下只揭示該顆(不導航 / 不跳段落),再點才走原本行為;一鍵展開(toggleAllSections)全部清楚。
+         與 index.html .spoiler-mask 同語彙,scoped 在 .rspo 家族,和 .rt-egg 占位體系並存互不干擾。
+         blur 對 day / dark 兩主題皆通用(模糊本身與底色無關);揭示後 .rspo-text 回到 .et-text / .esn-btn 既有主題色。 */
+      .rspo .rspo-text {
+        filter: blur(5px);
+        transition: filter 0.3s ease;
+      }
+      .rspo.revealed .rspo-text { filter: none; }
+      @media (prefers-reduced-motion: reduce) {
+        .rspo .rspo-text { transition: none; }
+      }
       /* ── 浪漫輪：把正文寫的光／暗／節奏做成同義的呈現 ──
          全部 scoped 在自己那一段的 wrapper class 上，效果只作用於該段；
          wrapper 只是 position:relative 的透明容器，不改行流、不動正文一字。
@@ -10508,7 +10520,8 @@
           // 退回純章節標題(pv 清空),寧可少一句預告也不劇透。改資料時請維持此不變式。
           if (pv && /揭曉|才知道|才從.*口中|其實是|原來.*就是|到 ?EP ?\d+ 才|第二次讀才|才明白|才由|才顯/.test(pv)) pv = "";
           if (pv.length > 60) pv = pv.slice(0, 60) + "…";
-          tH = breathH + `<div class="ep-teaser" onclick="goToEp(${nx.ep})"><div class="et-label">下一集</div><div class="et-num">${fmtEp(nx.ep)} · ${escapeHtml(ARC_LBL[nx.arc] || nx.arc)}</div>${pv ? `<div class="et-text">${escapeHtml(pv)}</div>` : ""}<div class="et-arrow">繼續閱讀 →</div></div>`;
+          const _tzLbl = escapeHtml(`下一集 ${fmtEp(nx.ep)}，微雷預告，點一下先顯示`);
+          tH = breathH + `<div class="ep-teaser" onclick="epTeaserNav(event,this,${nx.ep})"${pv ? ` aria-label="${_tzLbl}" data-rspo-label="${_tzLbl}" aria-expanded="false"` : ""}><div class="et-label">下一集</div><div class="et-num">${fmtEp(nx.ep)} · ${escapeHtml(ARC_LBL[nx.arc] || nx.arc)}</div>${pv ? `<div class="et-text rspo"><span class="rspo-text">${escapeHtml(pv)}</span></div>` : ""}<div class="et-arrow">繼續閱讀 →</div></div>`;
         } else {
           // 完讀收束卡：讀到最後一集不該斷在灰按鈕，把終點變成新一圈的起點
           // C33 完讀者專屬收尾註：只有真正走完全集(__REDTIME_FINISHED__)才顯示;新讀者/跳讀者零影響、不爆雷
@@ -11448,6 +11461,19 @@
       // 正文超過門檻的長集,依既有 <hr class="divider"> 把正文分節,插入集內跳點列。
       // 只插入導航節點與空錨點(容器層),正文節點與文字一字不動;分節名取自該節第一行原文。
       // (門檻常數與 ERA_NOTES 同區宣告)
+      /* 微雷揭示:章末「下一集預告」— 整卡單一互動目標。
+         引句模糊時,第一次啟用(點擊或鍵盤)只揭示引句、不導航;揭示後再啟用才前往下一集。
+         滑鼠與鍵盤(全域 a11y patch 的 Enter/Space → click)走同一條路,無巢狀焦點。 */
+      function epTeaserNav(e, card, ep) {
+        var m = card ? card.querySelector(".rspo") : null;
+        if (m && !m.classList.contains("revealed")) {
+          m.classList.add("revealed");
+          card.removeAttribute("aria-label"); /* 揭示後讓輔助技術直接讀卡片完整內容 */
+          card.setAttribute("aria-expanded", "true");
+          return;
+        }
+        goToEp(ep);
+      }
       function _buildEpSectionNav(sec, bd, epNum) {
         try {
           var total = (bd.textContent || "").length;
@@ -11483,7 +11509,7 @@
           nav.setAttribute("aria-label", "本集分節");
           var lbl = document.createElement("span");
           lbl.className = "esn-lbl";
-          lbl.textContent = "本集分節 · 這一集比較長，可以先跳到想看的段落";
+          lbl.textContent = "本集分節 · 這一集比較長，可以先跳到想看的段落（點一下亮起標題，再點前往）";
           nav.appendChild(lbl);
           var list = document.createElement("div");
           list.className = "esn-list";
@@ -11499,10 +11525,30 @@
             if (!txt) return;
             var b = document.createElement("button");
             b.type = "button";
-            b.className = "esn-btn";
-            b.textContent = (k + 1) + " · " + txt;
-            b.setAttribute("aria-label", "跳到第 " + (k + 1) + " 節：" + txt);
-            b.addEventListener("click", function () { _scrollToEpAnchor(anchor); });
+            b.className = "esn-btn rspo";
+            /* 微雷遮罩:序號(1·2·3·)保持清楚給結構感,標題文字模糊 → 拆成兩個 span */
+            var numSpan = document.createElement("span");
+            numSpan.className = "esn-num";
+            numSpan.textContent = (k + 1) + " · ";
+            var txtSpan = document.createElement("span");
+            txtSpan.className = "rspo-text";
+            txtSpan.textContent = txt;
+            b.appendChild(numSpan);
+            b.appendChild(txtSpan);
+            var blurLabel = "第 " + (k + 1) + " 節，微雷·點一下顯示";
+            b.setAttribute("aria-expanded", "false");
+            b.setAttribute("aria-label", blurLabel);      /* 模糊態:不把標題文字洩漏給輔助技術 */
+            b.setAttribute("data-rspo-label", blurLabel); /* 一鍵收合時還原模糊態語意 */
+            b.addEventListener("click", function () {
+              /* 每顆獨立:第一次點只揭示這一顆(不跳段落);揭示後再點才走原本跳段落 */
+              if (b.classList.contains("rspo") && !b.classList.contains("revealed")) {
+                b.classList.add("revealed");
+                b.setAttribute("aria-expanded", "true");
+                b.removeAttribute("aria-label"); /* 揭示後 SR 直接讀按鈕文字「N · 標題」 */
+                return;
+              }
+              _scrollToEpAnchor(anchor);
+            });
             list.appendChild(b);
           });
           if (list.children.length < 3) return; /* 錨點留著無害,導航列太短就不出 */
@@ -13844,6 +13890,33 @@
           if (allExpanded) w.classList.remove("collapsed");
           else w.classList.add("collapsed");
           if (h) h.setAttribute("aria-expanded", allExpanded ? "true" : "false");
+        });
+        // 一鍵展開時所有微雷遮罩(章末預告 .et-text / 分節 chip 標題)跟著清楚化;
+        // 一鍵收合時還原模糊態。單顆揭示不經此路徑,不寫入展開偏好(載入會呼叫 toggleAllSections(true) 自然涵蓋)。
+        document.querySelectorAll(".rspo").forEach((el) => {
+          const isChip = el.classList.contains("esn-btn"); // chip 是真按鈕(有 aria 語意);teaser .et-text 為純視覺層,語意掛在外層卡片
+          const card = isChip ? null : (el.closest ? el.closest(".ep-teaser") : null);
+          if (allExpanded) {
+            el.classList.add("revealed");
+            if (isChip) {
+              el.setAttribute("aria-expanded", "true");
+              el.removeAttribute("aria-label");
+            } else if (card) {
+              card.removeAttribute("aria-label");
+              card.setAttribute("aria-expanded", "true");
+            }
+          } else {
+            el.classList.remove("revealed");
+            if (isChip) {
+              el.setAttribute("aria-expanded", "false");
+              const lbl = el.getAttribute("data-rspo-label");
+              if (lbl) el.setAttribute("aria-label", lbl);
+            } else if (card) {
+              const clbl = card.getAttribute("data-rspo-label");
+              if (clbl) card.setAttribute("aria-label", clbl);
+              card.setAttribute("aria-expanded", "false");
+            }
+          }
         });
         // Update FAB button
         const icon = document.getElementById("fab-ta-icon");
