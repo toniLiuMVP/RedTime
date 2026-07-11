@@ -531,7 +531,9 @@ _bd = bd; return card;
       e.preventDefault();
       e.stopPropagation();
       el.classList.add("revealed");
-      el.setAttribute("aria-expanded", "true");   // 狀態正確(SR 知道已展開),label 保留遮罩語意不主動朗讀微雷
+      el.setAttribute("aria-expanded", "true");   // 狀態正確(SR 知道已展開),label 保留遮罩語意
+      el.setAttribute("tabindex", "-1");          // 揭示後退出 tab 序,鍵盤焦點回到外層連結/卡片
+      el.removeAttribute("aria-label");           // 揭示後移除遮罩語意,讓輔助技術直接讀實際文字不主動朗讀微雷
     }
     el.addEventListener("click", reveal);
     el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") reveal(e); });

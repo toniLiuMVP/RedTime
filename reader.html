@@ -1497,6 +1497,12 @@
           color: var(--t1);
         }
         /* T20：次要功能（展開/自動/彩蛋/三遊戲）收進「更多」下拉，頂欄第一眼只剩讀相關 */
+        /* 窄桌面(768-929px)工具列易溢出:主列一鍵鈕讓位,改由「⋯ 更多」內的備援項承接 */
+        @media (min-width: 768px) and (max-width: 929px) {
+          #dsk-toggle-all { display: none; }
+          #dsk-toggle-all-menu { display: flex; }
+        }
+        @media (min-width: 930px) { #dsk-toggle-all-menu { display: none; } }
         .dsk-more-wrap { position: relative; display: inline-flex; }
         .dsk-more {
           position: absolute;
@@ -3230,6 +3236,55 @@
         border-left-color: rgba(180, 90, 50, 0.3);
         color: rgba(120, 90, 78, 0.72);
       }
+      /* 預設收合占位:非正文註解(前情回顧 / 母題盒 / 首讀註)先收成極小占位,
+         單點該項或一鍵展開才顯示;展開後內容零改動。第一次讀不被別人的筆記打擾。 */
+      .rt-egg-holder {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin: 0;
+        padding: 4px 9px;              /* padding 撐可點面積 ≥44px,視覺仍小 */
+        border: 0;
+        background: none;
+        border-radius: 6px;
+        font: 400 11px/1 "Noto Sans TC", sans-serif;
+        letter-spacing: 0.08em;
+        color: rgba(234, 230, 222, 0.45);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: color 0.2s ease, background 0.2s ease;
+      }
+      .rt-egg-holder .reh-mark { font-size: 10px; opacity: 0.9; }
+      .rt-egg-holder { position: relative; }
+      .rt-egg-holder::before { content: ""; position: absolute; inset: -10px -8px; }
+
+      .rt-egg-holder:hover,
+      .rt-egg-holder:focus-visible {
+        color: rgba(234, 230, 222, 0.74);
+        background: rgba(255, 255, 255, 0.045);
+        outline: none;
+      }
+      body.day-mode .rt-egg-holder { color: rgba(120, 96, 78, 0.62); }
+      body.day-mode .rt-egg-holder:hover,
+      body.day-mode .rt-egg-holder:focus-visible {
+        color: rgba(120, 90, 60, 0.92);
+        background: rgba(120, 90, 50, 0.08);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .rt-egg-holder { transition: none; }
+      }
+      /* 收合態:只留占位,原內容隱藏;展開態:占位隱藏,原內容顯示(內容本身不改) */
+      .rt-egg.collapsed > .ep-recap,
+      .rt-egg.collapsed > .moto-note-egg,
+      .rt-egg.collapsed > .fin-mark { display: none; }
+      /* 展開後占位鈕保留(可再單點收合),淡化避免搶正文 */
+      .rt-egg:not(.collapsed) > .rt-egg-holder { opacity: 0.28; }
+      .rt-egg:not(.collapsed) > .rt-egg-holder:hover,
+      .rt-egg:not(.collapsed) > .rt-egg-holder:focus-visible { opacity: 0.6; }
+      .ep-recap-egg { max-width: var(--measure); margin: 0 auto 12px; }
+      .ep-recap-egg > .ep-recap { margin: 0; }
+      .moto-egg { margin: 14px 0 4px; }
+      .fin-egg { margin: 2px 0 8px; }
       /* ── 浪漫輪：把正文寫的光／暗／節奏做成同義的呈現 ──
          全部 scoped 在自己那一段的 wrapper class 上，效果只作用於該段；
          wrapper 只是 position:relative 的透明容器，不改行流、不動正文一字。
@@ -7469,6 +7524,15 @@
             <span class="ui-glyph btn-icon" data-ui-icon="guide"></span
             ><span>故事導覽</span>
           </button>
+          <button
+            class="dsk-btn dsk-btn-toggle"
+            onclick="toggleAllSections()"
+            id="dsk-toggle-all"
+            aria-label="一鍵展開或收合所有導讀"
+          >
+            <span class="ui-glyph btn-icon" data-ui-icon="grid-plus"></span
+            ><span>一鍵展開</span>
+          </button>
           <button class="dsk-btn" onclick="cycleFont()" id="btn-font" aria-label="切換字體大小">
             字 A
           </button>
@@ -7491,18 +7555,10 @@
               ⋯ 更多
             </button>
             <div class="dsk-more" id="dsk-more" role="menu">
+            <button class="dsk-btn" id="dsk-toggle-all-menu" role="menuitem" onclick="toggleAllSections()" aria-label="一鍵展開或收合所有導讀"><span class="ui-glyph btn-icon" data-ui-icon="grid-plus"></span><span>一鍵展開</span></button>
               <button class="dsk-btn" onclick="openCuration()" role="menuitem">
                 <span class="btn-icon" aria-hidden="true">✦</span
                 ><span>選讀策展</span>
-              </button>
-              <button
-                class="dsk-btn dsk-btn-toggle"
-                onclick="toggleAllSections()"
-                id="dsk-toggle-all"
-                role="menuitem"
-              >
-                <span class="ui-glyph btn-icon" data-ui-icon="grid-plus"></span
-                ><span>一鍵展開</span>
               </button>
               <button
                 class="dsk-btn dsk-auto-btn"
@@ -10497,7 +10553,7 @@
             const _pa = ANNOTATIONS[String(EPISODES[j].ep)];
             const _pLog = _pa && _pa[0] ? _pa[0] : "";
             if (_pLog) {
-              recapH = `<div class="ep-recap" onclick="goToEp(${EPISODES[j].ep})" role="button" tabindex="0" aria-label="回顧同視角上一集 ${fmtEp(EPISODES[j].ep)}"><span class="er-lbl">這條線上次 · ${fmtEp(EPISODES[j].ep)}</span><span class="er-text">${escapeHtml(_pLog)}</span></div>`;
+              recapH = `<div class="rt-egg ep-recap-egg collapsed"><button type="button" class="rt-egg-holder" aria-expanded="false" aria-label="展開這條線上次的回顧 ${fmtEp(EPISODES[j].ep)}" onclick="toggleEgg(this)"><span class="reh-mark">✦</span>上次</button><div class="ep-recap" onclick="goToEp(${EPISODES[j].ep})" role="button" tabindex="0" aria-label="回顧同視角上一集 ${fmtEp(EPISODES[j].ep)}"><span class="er-lbl">這條線上次 · ${fmtEp(EPISODES[j].ep)}</span><span class="er-text">${escapeHtml(_pLog)}</span></div></div>`;
             }
             break;
           }
@@ -11670,7 +11726,22 @@
           links.appendChild(a);
         });
         ann.appendChild(links);
-        target.parentNode.insertBefore(ann, target.nextSibling);
+        /* 預設收合:正文流中只留一個極小 ✦ 占位,點擊才展開母題盒(注入定位不變) */
+        var wrap = document.createElement("div");
+        wrap.className = "rt-egg moto-egg collapsed";
+        var holder = document.createElement("button");
+        holder.type = "button";
+        holder.className = "rt-egg-holder";
+        holder.setAttribute("aria-expanded", "false");
+        holder.setAttribute("aria-label", "展開母題註記");
+        var hm = document.createElement("span");
+        hm.className = "reh-mark";
+        hm.textContent = "✦";
+        holder.appendChild(hm);
+        holder.addEventListener("click", function () { toggleEgg(holder); });
+        wrap.appendChild(holder);
+        wrap.appendChild(ann);
+        target.parentNode.insertBefore(wrap, target.nextSibling);
       }
 
       /* B1「你還不知道」標記:四個落點,完讀者(__REDTIME_FINISHED__())才顯示。
@@ -11697,7 +11768,23 @@
         mark.className = "fin-mark";
         mark.setAttribute("role", "note");
         mark.textContent = spec.text;
-        target.parentNode.insertBefore(mark, target.nextSibling);
+        /* 完讀 gating 上方不變(初讀者仍零注入);完讀者這層預設收合成極小占位,點擊才展開 */
+        var wrap = document.createElement("div");
+        wrap.className = "rt-egg fin-egg collapsed";
+        var holder = document.createElement("button");
+        holder.type = "button";
+        holder.className = "rt-egg-holder";
+        holder.setAttribute("aria-expanded", "false");
+        holder.setAttribute("aria-label", "展開首讀註");
+        var hm = document.createElement("span");
+        hm.className = "reh-mark";
+        hm.textContent = "✦";
+        holder.appendChild(hm);
+        holder.appendChild(document.createTextNode("註"));
+        holder.addEventListener("click", function () { toggleEgg(holder); });
+        wrap.appendChild(holder);
+        wrap.appendChild(mark);
+        target.parentNode.insertBefore(wrap, target.nextSibling);
       }
 
       /* ── 浪漫輪：段落 wrapper 注入 ──
@@ -12064,6 +12151,14 @@
           const nItems = w.querySelectorAll(".ep-companion-body > *").length;
           if (c) c.textContent = "（" + nItems + "）";
         });
+      }
+      /* 三類非正文占位(前情回顧 / 母題盒 / 首讀註)共用的單條展開/收合。
+         session 內 DOM 狀態即記憶,不做單條持久化(整體偏好由一鍵展開統管)。 */
+      function toggleEgg(h) {
+        const w = h && h.closest ? h.closest(".rt-egg") : null;
+        if (!w) return;
+        const collapsed = w.classList.toggle("collapsed");
+        h.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
       }
       function toggleEpInfo(h) {
         h.classList.toggle("open");
@@ -13343,11 +13438,12 @@
         const arcNote = g.arc_note
           ? `<div class="eg-arc-note"><div class="eg-arc-dot" style="background:${c}"></div><div class="eg-arc-note-text">${g.arc_note}</div></div>`
           : "";
-        return `<div class="ep-granny"><div class="ep-granny-toggle" onclick="toggleGranny(this)"><div class="eg-avatar">${renderIcon("granny")}</div><span class="eg-label">命運阿嬤說 · <span style="font-size:10px;opacity:.7;letter-spacing:.08em">陪你看這一段</span></span><span class="eg-arrow">▾</span></div><div class="ep-granny-body"><div class="eg-kicker">${typeLabel}</div><div class="eg-title">${g.title}</div><div class="eg-text">${g.body}</div><div class="eg-diagram">${svg}</div><div class="eg-diagram-cap">圖示怎麼看：○ 出發 → ● 抵達，弧線顏色＝這一段的型態（<span style="color:rgba(255,72,88,.9)">穿越</span>・<span style="color:rgba(77,166,255,.9)">推回</span>・<span style="color:rgba(183,138,255,.9)">夢境</span>・<span style="color:rgba(255,212,121,.9)">疊合</span>）</div>${arcNote}</div></div>`;
+        return `<div class="ep-granny"><div class="ep-granny-toggle" aria-expanded="false" onclick="toggleGranny(this)"><div class="eg-avatar">${renderIcon("granny")}</div><span class="eg-label">命運阿嬤說 · <span style="font-size:10px;opacity:.7;letter-spacing:.08em">陪你看這一段</span></span><span class="eg-arrow">▾</span></div><div class="ep-granny-body"><div class="eg-kicker">${typeLabel}</div><div class="eg-title">${g.title}</div><div class="eg-text">${g.body}</div><div class="eg-diagram">${svg}</div><div class="eg-diagram-cap">圖示怎麼看：○ 出發 → ● 抵達，弧線顏色＝這一段的型態（<span style="color:rgba(255,72,88,.9)">穿越</span>・<span style="color:rgba(77,166,255,.9)">推回</span>・<span style="color:rgba(183,138,255,.9)">夢境</span>・<span style="color:rgba(255,212,121,.9)">疊合</span>）</div>${arcNote}</div></div>`;
       }
       function toggleGranny(h) {
-        h.classList.toggle("open");
+        const open = h.classList.toggle("open");
         h.nextElementSibling.classList.toggle("open");
+        h.setAttribute('aria-expanded', open ? 'true' : 'false');
       }
       /* buildScience — per-EP 科普小單元 (mimics buildGranny);
           — review caught: aria-expanded sync for a11y */
@@ -13656,11 +13752,13 @@
 
       // ── Toggle ALL episode sections ──
       let allExpanded = false;
-      function toggleAllSections() {
-        allExpanded = !allExpanded;
+      function toggleAllSections(force) {
+        allExpanded = (force === true || force === false) ? force : !allExpanded;
         // 導讀區容器跟著一鍵展開/收起
         document.querySelectorAll(".ep-companion").forEach((w) => {
           w.classList.toggle("open", allExpanded);
+          const tag = w.querySelector(".ep-companion-tag");
+          if (tag) tag.setAttribute("aria-expanded", allExpanded ? "true" : "false");
         });
         // Episode info strips
         document.querySelectorAll(".ep-info-head").forEach((h) => {
@@ -13686,6 +13784,7 @@
               o.style.display = "none";
             }
           }
+          h.setAttribute("aria-expanded", allExpanded ? "true" : "false");
         });
         // Tline (時間軸說明)
         document.querySelectorAll(".ep-tline-toggle").forEach((h) => {
@@ -13693,6 +13792,7 @@
           if (allExpanded) body.classList.remove("ep-tline-hidden");
           else body.classList.add("ep-tline-hidden");
           h.textContent = (allExpanded ? "▾" : "▸") + " 時間軸說明";
+          h.setAttribute("aria-expanded", allExpanded ? "true" : "false");
         });
         // Notes / 重讀線索 / 文人說（共用 ep-note-toggle，必須保留各自標題，不可一律改成「導讀注解」）
         document.querySelectorAll(".ep-note-toggle").forEach((h) => {
@@ -13712,6 +13812,7 @@
             const ep2 = parseInt(body.id.slice("st-body-".length), 10);
             if (!isNaN(ep2) && typeof renderStoryteller === "function") renderStoryteller(ep2);
           }
+          h.setAttribute("aria-expanded", allExpanded ? "true" : "false");
         });
         // Granny sections
         document.querySelectorAll(".ep-granny-toggle").forEach((h) => {
@@ -13723,6 +13824,7 @@
             h.classList.remove("open");
             body.classList.remove("open");
           }
+          h.setAttribute("aria-expanded", allExpanded ? "true" : "false");
         });
         // Science sections (科普 — 用 aria-expanded，鏡像 toggleScience)
         document.querySelectorAll(".ep-science-toggle").forEach((h) => {
@@ -13736,22 +13838,39 @@
           }
           h.setAttribute("aria-expanded", allExpanded ? "true" : "false");
         });
+        // 非正文占位:前情回顧 / 母題盒 / 首讀註(fin-mark 只在完讀者 DOM 存在時才有節點)
+        document.querySelectorAll(".rt-egg").forEach((w) => {
+          const h = w.querySelector(".rt-egg-holder");
+          if (allExpanded) w.classList.remove("collapsed");
+          else w.classList.add("collapsed");
+          if (h) h.setAttribute("aria-expanded", allExpanded ? "true" : "false");
+        });
         // Update FAB button
         const icon = document.getElementById("fab-ta-icon");
         const label = document.getElementById("fab-ta-label");
         if (icon) setFabIcon(icon, allExpanded ? "grid-minus" : "grid-plus");
         if (label) label.textContent = allExpanded ? "一鍵收合" : "一鍵展開";
         // update desktop button
-        const dskBtn = document.getElementById("dsk-toggle-all");
-        if (dskBtn) {
+        [document.getElementById("dsk-toggle-all"), document.getElementById("dsk-toggle-all-menu")].forEach((dskBtn) => {
+          if (!dskBtn) return;
           setLabeledButton(
             dskBtn,
             allExpanded ? "grid-minus" : "grid-plus",
             allExpanded ? "一鍵收合" : "一鍵展開",
           );
           dskBtn.classList.toggle("expanded", allExpanded);
-        }
+        });
+        // 持久化整體展開偏好;一併寫導讀區偏好(修掉過去一鍵展開不寫 companion 的落差,行為一致)
+        try {
+          localStorage.setItem("redtime_reader_notes_expanded_v1", allExpanded ? "1" : "0");
+          localStorage.setItem(COMPANION_PREF_KEY, allExpanded ? "1" : "0");
+        } catch (e) {}
       }
+      /* load 時若上次選了「一鍵展開」,自動全展(含導讀區與三類占位);未設或為 0 維持預設收合。
+         此時章節 DOM 已建好、toggleAllSections 及其依賴皆已定義,可安全呼叫。 */
+      try {
+        if (localStorage.getItem("redtime_reader_notes_expanded_v1") === "1") toggleAllSections(true);
+      } catch (e) {}
 
       // ── Hero canvas ──
       (function () {
