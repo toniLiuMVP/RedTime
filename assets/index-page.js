@@ -690,7 +690,7 @@ function summary() {
   card.appendChild(ce("div", "ob-sub", tier.m));
   var opts = ce("div", "ob-options");
   var c = optEl("a", "進入十級鐵粉題庫 →", "上千題、十級月台由淺入深。這十題只是開胃，看你能撐到第幾站還笑得出來。"); c.href = READER + "#fanquiz"; opts.appendChild(c);
-  var a = optEl("a", "📖 回去重讀全集", "EP0 到 EP41，從頭再走一次那條紅線。"); a.href = READER; opts.appendChild(a);
+  var a = optEl("a", "📖 回去重讀全集", "EP0 到 EP42，從頭再走一次那條紅線。"); a.href = READER; opts.appendChild(a);
   var b = optEl("button", "🏃 再陪把拔跑一次月台", "EP36 的那 30 秒，這次換你跑。"); b.addEventListener("click", function () { go("demos/platform-run/index.html"); }); opts.appendChild(b);
   card.appendChild(opts);
 }
