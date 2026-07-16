@@ -49,7 +49,7 @@ GUIDE.forEach(function (g) {
   });
   card.appendChild(sec);
 });
-var foot = ce("a", "gg-readall", "📖 直接閱讀全集 · EP0 到 EP41 →"); foot.href = READER; card.appendChild(foot);
+var foot = ce("a", "gg-readall", "📖 直接閱讀全集 · EP0 到 EP42 →"); foot.href = READER; card.appendChild(foot);
 bd.appendChild(card); document.body.appendChild(bd);
 bd.addEventListener("click", function (e) { if (e.target === bd) close(); });
 document.addEventListener("keydown", onKey);

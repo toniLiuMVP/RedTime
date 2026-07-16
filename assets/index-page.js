@@ -572,11 +572,11 @@ _bd = bd; return card;
     return renderChooseFresh(card);
   }
 
-  // 完讀者回訪分支:走完 EP0~EP41 的人,不再問「停在哪」,句子認出走完的人
+  // 完讀者回訪分支:走完 EP0~EP42 的人,不再問「停在哪」,句子認出走完的人
   function renderFinishedBack(card, st) {
     clearCard(card);
     card.appendChild(ce("div", "ob-kicker", "你走完了整條紅線。這一次，是帶著看過了回來的。"));
-    card.appendChild(ce("div", "ob-title", "EP0 到 EP41，都亮過了"));
+    card.appendChild(ce("div", "ob-title", "EP0 到 EP42，都亮過了"));
     var sub = "已讀 " + st.readCount + " 集";
     if (st.cleared > 0) sub += " · 鐵粉通過 " + st.cleared + " 座月台";
     else if (st.quizBest > 0) sub += " · 進站試煉最佳 " + st.quizBest + " / 10";
