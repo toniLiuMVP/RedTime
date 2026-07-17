@@ -588,6 +588,8 @@
       /* 結局留白:「我也相信」先落定,過一拍按鈕才安靜出現 */
       .ep-finale .ef-stones, .ep-finale .ef-sub, .ep-finale .ef-coda, .ep-finale .ef-actions, .ep-finale .ef-stamp { opacity: 0; visibility: hidden; transition: opacity 0.9s ease, visibility 0s; }
       .ep-finale.ef-in .ef-stones, .ep-finale.ef-in .ef-sub, .ep-finale.ef-in .ef-coda, .ep-finale.ef-in .ef-actions, .ep-finale.ef-in .ef-stamp { opacity: 1; visibility: visible; transition-delay: 1.6s; }
+      /* 尾聲晚一拍:便當句在拱心石與按鈕落定後才浮現 */
+      .ep-finale.ef-in .ef-coda { transition-delay: 2.1s; }
       /* 那一眼之前先靜下來:EP3 的呼吸標記多給一段留白 */
       .ep-breath.ep-breath-held { margin-top: 84px; }
       @media (prefers-reduced-motion: reduce) {
