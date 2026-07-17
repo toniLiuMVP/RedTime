@@ -47,7 +47,10 @@
       if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
         tasks.push(
           navigator.serviceWorker.getRegistrations().then(function (regs) {
-            return Promise.all(regs.map(function (r) { return r.unregister(); }));
+            var local = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+            return Promise.all(regs.filter(function (r) {
+              return local || (r.scope && r.scope.indexOf("/RedTime/") !== -1);
+            }).map(function (r) { return r.unregister(); }));
           })
         );
       }
@@ -56,7 +59,9 @@
       if (window.caches && caches.keys) {
         tasks.push(
           caches.keys().then(function (keys) {
-            return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+            return Promise.all(keys.filter(function (k) {
+              return k.indexOf("redtime-") === 0;
+            }).map(function (k) { return caches.delete(k); }));
           })
         );
       }

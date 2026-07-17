@@ -74,17 +74,17 @@ credentials.json
 .tools/
 *.uncompressed.glb
 
-# AI-Control workflow v3.0 (2026-05-17)
+# Review artifacts (local only)
 docs/reviews/
 docs/session-logs/
 
-# Local memory store (Claude session continuity)
+# Local notes
 .remember/
 
-# Dual-AI handoff zone (Claude Code ↔ Codex CLI local coordination)
+# Local coordination scratch
 ClaudeCodeXCodex/
 
-# Visual mockup previews (toni 決策用,不上 GitHub Pages)
+# Visual mockup previews (local only)
 mockup/
 
 # CSP refactor work-in-progress (not yet wired)
