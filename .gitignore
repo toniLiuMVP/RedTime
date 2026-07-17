@@ -52,6 +52,7 @@ Backup/
 *.original.js
 *.original.css
 *.docx
+*.pages
 *.doc
 
 # Test outputs
