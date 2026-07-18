@@ -7,9 +7,9 @@
 
 // — Cache version 分離 —
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
-const STATIC_VERSION = 'static-v86-20260717';  // bump: re-subset webfonts for new story glyphs
+const STATIC_VERSION = 'static-v87-20260718';  // bump: train GLB recolor(自強號 livery)+ cache limit/webp allowlist
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v375-20260717';   // bump every deploy that changes html/js/css; auto-reload then delivers the fix to clients still on the prior worker
+const RUNTIME_VERSION = 'runtime-v376-20260718';   // bump every deploy that changes html/js/css; auto-reload then delivers the fix to clients still on the prior worker
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
@@ -54,7 +54,7 @@ const RUNTIME_PRECACHE_URLS = [
 // 大型靜態資源(GLB / vendor / fonts / images)→ STATIC_CACHE
 // 其他(html / data.js / app.js / css)→ RUNTIME_CACHE
 function isStaticAsset(url) {
-  return /\.(glb|woff2?|ttf|otf|png|jpg|jpeg|svg|ico)$/i.test(url) ||
+  return /\.(glb|woff2?|ttf|otf|png|jpg|jpeg|webp|svg|ico)$/i.test(url) ||
          url.includes('/fonts/fonts.css') ||   // large invariant stylesheet, precached in STATIC — serve cache-first to match
          url.includes('/vendor-three') ||
          url.includes('/_vendor/') ||
@@ -83,7 +83,7 @@ self.addEventListener('activate', event => {
 });
 
 // 各 cache 上限(防 trim 雙層分開)
-const MAX_STATIC_ITEMS = 60;     // GLB / vendor / fonts / images:不容易長
+const MAX_STATIC_ITEMS = 400;    // 字型子集(231 個 woff2)+ 三遊戲 GLB/引擎 + 圖示的完整工作集要能全裝;上限太低會把 3D 引擎資產逐出、破壞離線保證
 const MAX_RUNTIME_ITEMS = 80;    // html / dynamic JS:常變動
 
 async function trimCache(cacheName, maxItems) {
@@ -97,7 +97,7 @@ async function trimCache(cacheName, maxItems) {
 // 安全紀律:cache allowlist — 只 cache 已知 file type 或 html(避免 cache 異常 path)
 function isCacheable(pathname) {
   if (pathname === '/' || pathname.endsWith('/') || pathname.endsWith('.html')) return true;
-  return /\.(js|mjs|css|glb|woff2?|ttf|otf|png|jpg|jpeg|svg|ico|wasm|json|mp3|m4a|ogg|wav)$/i.test(pathname);
+  return /\.(js|mjs|css|glb|woff2?|ttf|otf|png|jpg|jpeg|webp|svg|ico|wasm|json|mp3|m4a|ogg|wav)$/i.test(pathname);
 }
 
 // — 離線收藏包(opt-in message handler) —

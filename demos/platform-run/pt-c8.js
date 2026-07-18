@@ -38,6 +38,8 @@
     ".pt-seal .ps-n{font-size:10px;letter-spacing:.14em;color:#6d5f4e}",
     ".pt-seal.on .ps-ch{border-color:rgba(217,179,106,.6);color:#e8c988;background:rgba(217,179,106,.07);box-shadow:0 0 12px rgba(217,179,106,.18)}",
     ".pt-seal.on .ps-n{color:#b8956a}",
+    ".pt-seal .ps-go{font-size:9.5px;letter-spacing:.14em;color:#b8956a;text-decoration:none;border-bottom:1px solid rgba(184,149,106,.5);padding-bottom:1px;transition:color .2s,border-color .2s}",
+    ".pt-seal .ps-go:hover,.pt-seal .ps-go:focus-visible{color:#e8c988;border-color:rgba(232,201,136,.75)}",
     "@media (prefers-reduced-motion:reduce){#pt-trial-block{animation-duration:.01ms;animation-delay:0s}}"
   ].join("");
   (document.head || document.documentElement).appendChild(st);
@@ -177,10 +179,11 @@
     var row = el("div", "pt-seal-row");
     row.setAttribute("role", "group");
     sealEls = {};
-    [["忍", "LM402", "ren"], ["熬", "天堂路", "ao"], ["追", "月台", "zhui"]].forEach(function (s) {
+    [["忍", "LM402", "ren", "../../lm402.html"], ["熬", "天堂路", "ao", "../695/tiantanglu-3d/index.html"], ["追", "月台", "zhui", null]].forEach(function (s) {
       var seal = el("span", "pt-seal");
       seal.appendChild(el("span", "ps-ch", s[0]));
       seal.appendChild(el("span", "ps-n", s[1]));
+      seal.__href = s[3];   // 未得且有去處的印,結算時給一條「前往」的路
       sealEls[s[2]] = seal;
       row.appendChild(seal);
     });
@@ -193,7 +196,23 @@
     if (!block || !sealEls) return;
     var states = { ren: hasRen(), ao: hasAo(), zhui: hasZhui() };
     Object.keys(states).forEach(function (k) {
-      sealEls[k].classList.toggle("on", states[k]);
+      var seal = sealEls[k];
+      seal.classList.toggle("on", states[k]);
+      // 對位 LM402 renderTrialSeals:沒走過、又有去處的印,補一條可點的「前往」
+      var go = seal.querySelector(".ps-go");
+      if (!states[k] && seal.__href) {
+        if (!go) {
+          go = document.createElement("a");
+          go.className = "ps-go";
+          go.href = seal.__href;
+          go.textContent = "前往";
+          var nm = seal.querySelector(".ps-n");
+          go.setAttribute("aria-label", "前往" + (nm ? nm.textContent : ""));
+          seal.appendChild(go);
+        }
+      } else if (go) {
+        go.remove();
+      }
     });
     var row = block.querySelector(".pt-seal-row");
     if (row) row.setAttribute("aria-label",
