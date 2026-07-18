@@ -4096,6 +4096,59 @@
       body.quiet-read .ep-teaser:focus-within {
         opacity: 1;
       }
+      /* ═══ 靜讀第三檔「全隱」:輔文層完全不渲染,像電子書只剩正文與章名。
+         遊戲橋接(ep-game-bridge)與分節導覽保留 — 那是路,不是註。 ═══ */
+      body.quiet-hide .ep-recap,
+      body.quiet-hide .ep-companion,
+      body.quiet-hide .ep-tline-wrap,
+      body.quiet-hide .ep-note,
+      body.quiet-hide .ep-teaser,
+      body.quiet-hide .ep-science,
+      body.quiet-hide .ep-granny,
+      body.quiet-hide .time-lab,
+      body.quiet-hide .ep-literati {
+        display: none !important;
+      }
+      /* ═══ 一鍵閱讀模式:美感優先(預設) vs 閱讀優先(body.focus-read) ═══
+         閱讀優先 = 星空動畫停(JS 經既有暫停機制)+ 輔文至少淡化 + 浮動 UI 退場
+         + hero 封面收成輕量標題 + 手機頂欄向下捲自動藏。 */
+      body.focus-read #prog-knots,
+      body.focus-read #fab-bar,
+      body.focus-read #jump-tb {
+        opacity: 0.18;
+        transition: opacity 0.3s ease;
+      }
+      body.focus-read #prog-knots:hover,
+      body.focus-read #fab-bar:hover,
+      body.focus-read #fab-bar:focus-within,
+      body.focus-read #jump-tb:hover,
+      body.focus-read #jump-tb:focus-within {
+        opacity: 1;
+      }
+      /* hero 封面精簡:藏氛圍件,留標題與入口,進來直接見正文 */
+      body.focus-read #hero-canvas,
+      body.focus-read .hero-poster,
+      body.focus-read .hero-sub-en,
+      body.focus-read .hero-updated,
+      body.focus-read .hero-divider,
+      body.focus-read .hero-newcomer,
+      body.focus-read .hero-reading-tip,
+      body.focus-read .hero-whois,
+      body.focus-read .hero-motion-toggle {
+        display: none !important;
+      }
+      body.focus-read #hero {
+        min-height: 0;
+        padding-top: 26px;
+        padding-bottom: 26px;
+      }
+      body.focus-read .hero-title {
+        font-size: clamp(24px, 4vw, 34px);
+      }
+      /* 手機頂欄:閱讀優先時向下捲自動收起(往上捲即回),滿版面沉浸 */
+      body.focus-read.scroll-down #topnav-mobile.visible {
+        transform: translateY(-100%);
+      }
       .ep-teaser {
         margin-top: 32px;
         padding: 16px 17px;
@@ -7611,6 +7664,7 @@
           <button class="dsk-btn" onclick="openSearch()" id="btn-search" aria-label="全文搜尋 · 找場景、台詞、伏筆" title="全文搜尋（/ 或 Cmd+K）">
             🔍 搜尋
           </button>
+          <button class="dsk-btn" id="btn-mode-dsk" onclick="toggleReadMode()" aria-pressed="false" aria-label="目前是美感優先模式，點一下切到閱讀優先（乾淨純讀）">氛圍</button>
           <button class="dsk-btn" onclick="openComfort()" aria-label="閱讀設定 · 主題與行寬">
             <span class="ui-glyph btn-icon" data-ui-icon="sun"></span
             ><span>燈光</span>
@@ -7659,6 +7713,8 @@
           <div class="nav-title" id="nav-ep-title">時間裡的兩個妳</div>
           <span id="time-badge-mob" class="time-badge" hidden></span>
           <div class="nav-actions">
+            <button class="nav-btn" id="btn-mode-mob" onclick="toggleReadMode()" aria-pressed="false"
+              style="font-size:11px;font-weight:700" aria-label="目前是美感優先模式，點一下切到閱讀優先（乾淨純讀）">氛圍</button>
             <a class="nav-btn" href="lm402.html"
               style="font-size:11px;text-decoration:none;font-weight:700">LM402</a>
             <a class="nav-btn" href="demos/695/tiantanglu-3d/index.html"
@@ -7998,10 +8054,11 @@
           <button type="button" data-width="default" onclick="setWidth('default')">標準</button>
           <button type="button" data-width="wide" onclick="setWidth('wide')">寬</button>
         </div>
-        <div class="cp-row-lbl">靜讀（淡化導讀、保留正文）</div>
+        <div class="cp-row-lbl">靜讀（導讀等輔文的顯示方式）</div>
         <div class="cp-row">
-          <button type="button" data-quiet="0" onclick="setQuiet(false)">標準</button>
-          <button type="button" data-quiet="1" onclick="setQuiet(true)">靜讀</button>
+          <button type="button" data-quiet="0" onclick="setQuiet(0)">標準</button>
+          <button type="button" data-quiet="1" onclick="setQuiet(1)">淡化</button>
+          <button type="button" data-quiet="2" onclick="setQuiet(2)">全隱</button>
         </div>
         <div class="cp-row-lbl">時空定位（頂欄顯示目前的年份與視角）</div>
         <div class="cp-row">
@@ -9649,6 +9706,9 @@
         progress: "redtime-progress",
         width: "redtime-width",
         quiet: "redtime-quiet",
+        mode: "redtime-read-mode",
+        prefocusQuiet: "redtime-prefocus-quiet",
+        prefocusMotion: "redtime-prefocus-motion",
         timebadge: "redtime-timebadge",
         eranotes: "redtime-eranotes",
         heromotion: "redtime-heromotion",
@@ -10020,9 +10080,11 @@
         if (savedWidth === "narrow" || savedWidth === "wide" || savedWidth === "default") {
           document.body.setAttribute("data-width", savedWidth);
         }
-        if (loadPref(PREF_KEYS.quiet) === "1") {
-          document.body.classList.add("quiet-read");
-        }
+        var _savedQuiet = parseInt(loadPref(PREF_KEYS.quiet) || "0", 10) || 0;
+        if (_savedQuiet >= 1) document.body.classList.add("quiet-read");
+        if (_savedQuiet >= 2) document.body.classList.add("quiet-hide");
+        // 一鍵閱讀模式還原(boot:只掛 class + 寫動畫 pref,不模擬點擊;新訪預設美感優先)
+        if (loadPref(PREF_KEYS.mode) === "focus") setReadMode("focus", true);
         if (loadPref(PREF_KEYS.eranotes) === "1") {
           document.body.classList.add("era-on");
           if (typeof _syncEraTermA11y === "function") _syncEraTermA11y(true);
@@ -11348,7 +11410,17 @@
         const atHero = heroBottom > Math.max(120, window.innerHeight * 0.62);
         document.body.classList.toggle("at-hero", atHero);
         if (atHero && topnav) topnav.classList.remove("visible");
+        // 閱讀優先:向下捲頂欄自動收(>10px 防抖),往上捲即回;美感模式不啟用
+        const y = window.scrollY || 0;
+        if (document.body.classList.contains("focus-read")) {
+          if (y - _lastScrollY > 10) document.body.classList.add("scroll-down");
+          else if (_lastScrollY - y > 10) document.body.classList.remove("scroll-down");
+        } else {
+          document.body.classList.remove("scroll-down");
+        }
+        _lastScrollY = y;
       }
+      let _lastScrollY = 0;
       window.addEventListener("scroll", syncMobileChrome, { passive: true });
       window.addEventListener("resize", syncMobileChrome);
       syncMobileChrome();
@@ -13088,16 +13160,69 @@
         savePref(PREF_KEYS.width, w);
         _syncComfortActive();
       }
-      // 靜讀模式：淡化導讀裝飾（說書人/注解/時間線/teaser）、保留正文與 emoji（可逆）
-      function setQuiet(on) {
-        document.body.classList.toggle("quiet-read", !!on);
-        savePref(PREF_KEYS.quiet, on ? "1" : "0");
+      // 靜讀模式三檔：0 標準 / 1 淡化（hover 顯現）/ 2 全隱（電子書式只剩正文）。
+      // 向後兼容 boolean 呼叫（true=1 / false=0）；可逆。
+      function setQuiet(v) {
+        var lvl = v === true ? 1 : v === false ? 0 : (parseInt(v, 10) || 0);
+        if (lvl < 0 || lvl > 2) lvl = 0;
+        document.body.classList.toggle("quiet-read", lvl >= 1);
+        document.body.classList.toggle("quiet-hide", lvl >= 2);
+        savePref(PREF_KEYS.quiet, String(lvl));
         _syncComfortActive();
+      }
+      /* ── 一鍵閱讀模式:aesthetic(美感優先,預設) / focus(閱讀優先) ──
+         focus = 輔文至少淡化 + 星空動畫停(走既有暫停鈕機制) + 浮動 UI 退場
+                 + hero 收成輕量標題 + 手機頂欄向下捲自動藏(CSS body.focus-read)。
+         切回 aesthetic = 氛圍全開(preset 語意,批次還原)。boot=載入還原,不模擬點擊。 */
+      function setReadMode(m, boot) {
+        var focus = m === "focus";
+        document.body.classList.toggle("focus-read", focus);
+        if (!focus) document.body.classList.remove("scroll-down");
+        savePref(PREF_KEYS.mode, focus ? "focus" : "aesthetic");
+        var mb = document.querySelector(".hero-motion-toggle");
+        if (!boot) {
+          var lvl = parseInt(loadPref(PREF_KEYS.quiet) || "0", 10) || 0;
+          if (focus) {
+            // 進場記快照:退場只還原「focus 自己抬高的」,不動使用者本來就選好的(對稱保護)
+            savePref(PREF_KEYS.prefocusQuiet, String(lvl));
+            savePref(PREF_KEYS.prefocusMotion, (mb && mb.getAttribute("aria-pressed") === "true") ? "paused" : "playing");
+            if (lvl < 1) setQuiet(1);                    // 至少淡化;使用者已選全隱則不動
+          } else {
+            // 退場:還原進場前的靜讀檔位(預設 0),不硬清使用者自選的全隱
+            var back = parseInt(loadPref(PREF_KEYS.prefocusQuiet) || "0", 10) || 0;
+            setQuiet(back);
+          }
+        }
+        // 星空:focus 停(鈕存在走完整機制;boot 時鈕未建,寫 pref 讓初始化讀到)。
+        // 退場只在「進場前本來在播」時才恢復播放 — 使用者自己按過暫停的維持暫停。
+        if (focus) {
+          if (mb) { if (mb.getAttribute("aria-pressed") !== "true") mb.click(); }
+          else savePref(PREF_KEYS.heromotion, "0");
+        } else if (!boot && mb && mb.getAttribute("aria-pressed") === "true"
+                   && loadPref(PREF_KEYS.prefocusMotion) !== "paused") {
+          mb.click();
+        }
+        _syncModeBtns();
+      }
+      function toggleReadMode() {
+        setReadMode(document.body.classList.contains("focus-read") ? "aesthetic" : "focus");
+      }
+      function _syncModeBtns() {
+        var focus = document.body.classList.contains("focus-read");
+        ["btn-mode-dsk", "btn-mode-mob"].forEach(function (id) {
+          var b = document.getElementById(id);
+          if (!b) return;
+          b.textContent = focus ? "純讀" : "氛圍";
+          b.setAttribute("aria-pressed", focus ? "true" : "false");
+          b.setAttribute("aria-label", focus
+            ? "目前是閱讀優先模式，點一下切回美感優先（氛圍全開）"
+            : "目前是美感優先模式，點一下切到閱讀優先（乾淨純讀）");
+        });
       }
       function _syncComfortActive() {
         var t = document.body.classList.contains("sepia-mode") ? "sepia" : (document.body.classList.contains("day-mode") ? "day" : "night");
         var w = document.body.getAttribute("data-width") || "default";
-        var q = document.body.classList.contains("quiet-read") ? "1" : "0";
+        var q = document.body.classList.contains("quiet-hide") ? "2" : (document.body.classList.contains("quiet-read") ? "1" : "0");
         var tb = document.body.classList.contains("hide-timebadge") ? "0" : "1";
         document.querySelectorAll("#comfort-pop [data-theme]").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-theme") === t); });
         document.querySelectorAll("#comfort-pop [data-width]").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-width") === w); });
