@@ -4033,18 +4033,22 @@
         bottom: 14px;
         z-index: 5;
         appearance: none;
-        border: 1px solid rgba(255, 255, 255, 0.18);
+        border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 999px;
-        background: rgba(18, 16, 14, 0.55);
+        background: rgba(18, 16, 14, 0.35);
         color: rgba(255, 248, 244, 0.72);
         font: inherit;
         font-size: 0.72em;
         letter-spacing: 0.06em;
         padding: 5px 12px;
         cursor: pointer;
+        /* 幽靈化:平常淡進背景不搶氛圍,hover/鍵盤聚焦才亮回來(點擊區域不變) */
+        opacity: 0.35;
+        transition: opacity 0.3s ease, color 0.25s ease, border-color 0.25s ease;
       }
       .hero-motion-toggle:hover,
       .hero-motion-toggle:focus-visible {
+        opacity: 1;
         color: var(--amber);
         border-color: var(--amber);
       }
