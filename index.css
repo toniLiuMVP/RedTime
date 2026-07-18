@@ -623,6 +623,24 @@
         color: #e8c87a;
       }
       .trial-game .tg-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+      /* 三道試煉:通關後在卡上點亮「已走過」印記(唯讀,不改導航) */
+      .trial-game.trial-cleared .tg-motif {
+        border-color: rgba(224, 113, 78, 0.6);
+        background: rgba(214, 84, 58, 0.09);
+        color: #e0714e;
+        position: relative;
+      }
+      .trial-game .tg-motif .tg-done {
+        position: absolute;
+        bottom: -13px;
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        font-family: "Noto Sans TC", sans-serif;
+        font-size: 8.5px;
+        letter-spacing: 0.14em;
+        color: rgba(224, 113, 78, 0.85);
+      }
       .trial-game .tg-name { font-size: 13.5px; font-weight: 500; color: var(--parchment); }
       .trial-game .tg-line { font-size: 12px; line-height: 1.6; color: rgba(234, 230, 222, 0.6); }
       .trial-game .tg-ep { color: #e8c87a; margin-left: 6px; white-space: nowrap; }

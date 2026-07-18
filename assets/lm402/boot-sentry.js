@@ -1,7 +1,7 @@
 /* boot-sentry.js — LM402 開機自癒哨兵（classic script，CSP 'self'）
    目的：任何原因造成的「黑畫面」（舊 Service Worker / 壞快取 / 模組載入失敗）
    不再讓訪客卡死：
-   1) 開機 12 秒內若「進場 gate 與 cold-open 都沒長出來」且無 ready 旗標 → 視為 boot 失敗
+   1) 開機 20 秒內若「進場 gate 與 cold-open 都沒長出來」且無 ready 旗標 → 視為 boot 失敗
    2) 第一次失敗：自動 註銷 SW + 清 caches + 帶 cache-bust 參數重載（每個分頁只自動嘗試一次）
    3) 再失敗：顯示可讀的錯誤面板（含捕捉到的 JS 錯誤）讓訪客一鍵重試或回首頁
    不依賴任何模組；對正常使用者零干擾（健康時計時器靜默取消）。 */
@@ -9,7 +9,7 @@
   "use strict";
   var HEAL_KEY = "lm402_boot_heal_v1";
   var TEST = /[?&]bootsentrytest=1/.test(location.search);
-  var TIMEOUT_MS = TEST ? 3000 : 12000;
+  var TIMEOUT_MS = TEST ? 3000 : 20000;   // 20s:慢裝置 3D 建場可能 >12s,避免把「慢但正常」誤判成壞掉而清快取重載
   var errors = [];
 
   window.addEventListener("error", function (e) {

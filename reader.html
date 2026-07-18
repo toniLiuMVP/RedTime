@@ -5134,6 +5134,29 @@
         --t2: #574019;
         --t3: #5f4720;
       }
+      /* 淺色主題(day/sepia,JS 同掛 day-mode class)補漏:hero「誰是誰」onboarding、遊戲橋接、學妹篩選鈕
+         原為 dark-mode 硬編近白色,淺底下對比僅約 1.1:1 近乎隱形。用 theme 變數處 sepia 自動套本身值。 */
+      body.day-mode .whois-row { color: var(--t2); }
+      body.day-mode .whois-row b { color: var(--t1); }
+      body.day-mode .whois-gloss dd { color: var(--t2); }
+      body.day-mode .hero-fiction-note { color: var(--t3); }
+      body.day-mode .hero-motion-toggle {
+        color: var(--t2);
+        background: rgba(122, 80, 0, 0.08);
+        border-color: rgba(122, 80, 0, 0.28);
+      }
+      body.day-mode .ep-game-bridge {
+        color: var(--t1);
+        background: linear-gradient(180deg, rgba(122, 80, 0, 0.07), rgba(122, 80, 0, 0.04));
+        border-color: rgba(122, 80, 0, 0.3);
+      }
+      body.day-mode .ep-game-bridge:hover {
+        border-color: rgba(122, 80, 0, 0.5);
+        background: linear-gradient(180deg, rgba(122, 80, 0, 0.11), rgba(122, 80, 0, 0.06));
+      }
+      body.day-mode .ep-game-bridge .egb-eyebrow { color: var(--amber); }
+      body.day-mode .ep-game-bridge .egb-arrow { color: var(--amber); }
+      body.day-mode .jp-filter-btn[data-arc="female"].active { border-color: #8a6a00; color: #8a6a00; }
       body.day-mode #hero {
         background:
           radial-gradient(
@@ -13088,6 +13111,8 @@
       // ── 紅線信物:閱讀腳印的匯出/匯入。只動白名單鍵,全程本機,不連網不上傳 ──
       var KEEPSAKE_KEYS = [
         "redtime_read_eps_v1",
+        "redtime-progress",         // 上次讀到第幾集(換裝置接回續讀位置)
+        "redtime_ep_ratio_v1",      // 章內捲動比例(續讀落點)
         "redtime_finished_at_v1",
         "redtime_eggs_v1",
         "redtime_bookmarks_v1",
@@ -13146,7 +13171,18 @@
             if (typeof src[k] === "string" && src[k].length <= 262144) { picked[k] = src[k]; n++; }
           });
           if (!n) { _keepsakeStatus("檔案裡沒有認得的腳印。"); return; }
-          if (!window.confirm("要把這份信物（" + n + " 項腳印）接回這台裝置嗎？\n會蓋過這裡現有的紀錄，然後重新整理頁面。")) {
+          /* 若這份信物含「完讀」狀態,接回後會解開只給讀完全書的人看的收尾內容 → 先提醒可能提前看到結局 */
+          var _willFinish = false;
+          try {
+            if (picked["redtime_finished_at_v1"]) { _willFinish = true; }
+            else if (picked["redtime_read_eps_v1"]) {
+              var _re = JSON.parse(picked["redtime_read_eps_v1"]);
+              if (Array.isArray(_re)) { var _s = new Set(_re); _willFinish = true; for (var _i = 0; _i <= 42; _i++) { if (!_s.has(_i)) { _willFinish = false; break; } } }
+            }
+          } catch (e) {}
+          var _msg = "要把這份信物（" + n + " 項腳印）接回這台裝置嗎？\n會蓋過這裡現有的紀錄，然後重新整理頁面。";
+          if (_willFinish) { _msg += "\n\n這份信物帶著「讀完全書」的腳印，接回後會解開只給完讀者看的收尾註記，可能因此提前看到結局。"; }
+          if (!window.confirm(_msg)) {
             _keepsakeStatus("");
             return;
           }

@@ -380,6 +380,30 @@ if (card) card.scrollTop = 0;
   }
 
   document.addEventListener("DOMContentLoaded", function () {
+// 三道試煉:通關的印在首頁卡上點亮「已走過」(唯讀,判準同三印 SSOT — docs/three-seals.md)
+(function markTrials() {
+  function done(kind) {
+    try {
+      if (kind === "ren") { var a = JSON.parse(localStorage.getItem("lm402_endings_completed_v1") || "[]"); return Array.isArray(a) && a.length > 0; }
+      if (kind === "ao") return localStorage.getItem("tiantanglu_cleared_v1") === "1";
+      if (kind === "zhui") return localStorage.getItem("platformRunCleared_v1") === "1";
+    } catch (e) {}
+    return false;
+  }
+  var map = [["lm402.html", "ren"], ["tiantanglu-3d", "ao"], ["platform-run", "zhui"]];
+  document.querySelectorAll(".trial-game").forEach(function (card) {
+    var href = card.getAttribute("href") || "";
+    var m = map.find(function (x) { return href.indexOf(x[0]) !== -1; });
+    if (m && done(m[1]) && !card.querySelector(".tg-done")) {
+      card.classList.add("trial-cleared");
+      var b = document.createElement("span");
+      b.className = "tg-done";
+      b.textContent = "已走過";
+      var motif = card.querySelector(".tg-motif");
+      if (motif) motif.appendChild(b); else card.appendChild(b);
+    }
+  });
+})();
 // Auto-open from query string (?tour=1 from reader.html)
 const params = new URLSearchParams(window.location.search);
 if (params.get("tour") === "1") {
