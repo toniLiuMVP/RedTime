@@ -2443,6 +2443,7 @@ function renderTrialSeals() {
       a.className = "seal-state";
       a.href = seal.href;
       a.textContent = "前往";
+      a.setAttribute("aria-label", "前往" + seal.name);
       cell.appendChild(a);
     }
     row.appendChild(cell);

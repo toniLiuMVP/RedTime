@@ -587,23 +587,6 @@
         letter-spacing: 0.02em;
         margin-bottom: 6px;
       }
-      /* C17 重讀邀請（about-body 段末） */
-      .about-reread {
-        font-style: italic;
-        color: rgba(234, 230, 222, 0.6);
-        margin-top: 12px;
-      }
-      /* C14 招牌書腰句（about-body 段末） */
-      .about-signature {
-        margin-top: 18px;
-        padding-top: 16px;
-        border-top: 1px solid rgba(255, 255, 255, 0.06);
-        font-family: "Noto Serif TC", serif;
-        font-size: 14.5px;
-        line-height: 1.9;
-        letter-spacing: 0.05em;
-        color: rgba(233, 196, 142, 0.82);
-      }
       /* C43 書名第二層副標（about-left，讀者為主詞） */
       .about-you {
         margin-top: 16px;
