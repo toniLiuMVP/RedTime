@@ -1047,10 +1047,10 @@
       .whois-row { margin: 0 0 8px; font: 300 12px/1.6 "Noto Sans TC", sans-serif; color: rgba(234, 230, 222, 0.78); }
       .whois-row b { color: rgba(236, 231, 218, 0.96); font-weight: 600; }
       .whois-row span { display: block; font-size: 11px; opacity: 0.6; margin-top: 1px; }
-      .whois-gloss { margin: 11px 0 0; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.06); display: flex; flex-direction: column; gap: 6px; }
-      .whois-gloss div { display: flex; gap: 8px; font: 300 11px/1.55 "Noto Sans TC", sans-serif; }
-      .whois-gloss dt { flex-shrink: 0; min-width: 52px; color: var(--amber); opacity: 0.82; font-weight: 500; }
-      .whois-gloss dd { margin: 0; color: rgba(234, 230, 222, 0.66); }
+      .whois-gloss { margin: 11px 0 0; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.06); display: flex; flex-direction: column; gap: 9px; }
+      .whois-gloss div { display: flex; gap: 9px; font: 300 11.5px/1.66 "Noto Sans TC", sans-serif; }
+      .whois-gloss dt { flex-shrink: 0; min-width: 54px; color: var(--amber); opacity: 0.85; font-weight: 500; }
+      .whois-gloss dd { margin: 0; color: rgba(234, 230, 222, 0.74); }
       /* Q2 進故事前的軟性免責(取材真人經歷的去識別緩衝) */
       .hero-fiction-note { max-width: 300px; margin: 14px auto 0; font: 300 11px/1.7 "Noto Sans TC", sans-serif; color: rgba(234, 230, 222, 0.55); letter-spacing: 0.03em; }
       .hero-scene-link {
@@ -1992,6 +1992,11 @@
       .nav-btn:active {
         border-color: var(--t2);
         color: var(--t1);
+      }
+      /* 模式鈕(紅線/閱讀/小說)在 44px 方鈕內 2+2 堆疊:收緊行高與字距,兩行置中不溢出 */
+      #btn-mode-mob {
+        line-height: 1.12;
+        letter-spacing: 0.06em;
       }
 
       /* ═══════ JUMP DRAWER ══════════════════════ */
@@ -5560,7 +5565,42 @@
       .cur-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 16px 18px calc(28px + env(safe-area-inset-bottom, 0px)); -webkit-overflow-scrolling: touch; }
       .cur-panel { display: none; }
       .cur-panel.active { display: block; }
-      .cur-intro { font: 400 12.5px/1.85 "Noto Sans TC", sans-serif; color: rgba(233, 224, 200, 0.62); margin-bottom: 14px; }
+      /* ═══ 統一 meta 文案排版系統(編輯級精修):把科普層 .es-* 的黃金排版 DNA(領句/分段/節奏/層次)
+         收成共用 token,反向套到策展導言、辭典、回讀線索等落後 surface。全站非故事文案同一套語言。
+         四主題(夜=:root / 日 / 羊皮紙 / 小說)各給對應色階,故事正文不受影響。 ═══ */
+      :root {
+        --meta-lead-size: 13.6px;
+        --meta-lead-lh: 1.62;
+        --meta-lead-color: rgba(240, 236, 228, 0.95);
+        --meta-body-size: 13px;
+        --meta-body-lh: 1.92;
+        --meta-body-color: rgba(234, 227, 208, 0.82);
+        --meta-muted-color: rgba(233, 224, 200, 0.58);
+        --meta-para-gap: 0.9em;
+        --meta-accent: rgba(196, 164, 132, 0.5);
+      }
+      body.day-mode {
+        --meta-lead-color: #2a2418;
+        --meta-body-color: #48402f;
+        --meta-muted-color: #6a5a40;
+        --meta-accent: rgba(146, 104, 36, 0.42);
+      }
+      body.sepia-mode {
+        --meta-lead-color: #2e2314;
+        --meta-body-color: #4a3c26;
+        --meta-muted-color: #6b573a;
+        --meta-accent: rgba(146, 104, 36, 0.46);
+      }
+      body.novel-read {
+        --meta-lead-color: var(--t1);
+        --meta-body-color: var(--t1);
+        --meta-muted-color: var(--t2);
+      }
+      /* meta 導言:容器化,支援領句 + 多段落節奏。單句導言仍可直接放文字(套 body 色階)。 */
+      .cur-intro { font: 400 var(--meta-body-size)/var(--meta-body-lh) "Noto Sans TC", sans-serif; color: var(--meta-body-color); margin-bottom: 16px; max-width: 40em; }
+      .cur-intro p { color: var(--meta-body-color); margin: 0 0 var(--meta-para-gap); }
+      .cur-intro p:last-child { margin-bottom: 0; }
+      .cur-intro .lead { font-size: var(--meta-lead-size); line-height: var(--meta-lead-lh); color: var(--meta-lead-color); padding-left: 11px; border-left: 2px solid var(--meta-accent); }
       .cur-theme-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
       .cur-chip, .cur-chip2 { background: rgba(196, 164, 132, 0.08); border: 1px solid rgba(196, 164, 132, 0.3); border-radius: 999px; color: rgba(233, 224, 200, 0.78); font: 500 13px/1 "Noto Serif TC", serif; padding: 6px 14px; cursor: pointer; transition: all 0.18s; }
       .cur-chip.on, .cur-chip2.on, .cur-chip:hover, .cur-chip2:hover { background: rgba(233, 196, 142, 0.18); border-color: rgba(233, 196, 142, 0.6); color: rgba(245, 224, 190, 0.98); }
@@ -7797,7 +7837,7 @@
           <span id="time-badge-mob" class="time-badge" hidden></span>
           <div class="nav-actions">
             <button class="nav-btn" id="btn-mode-mob" onclick="toggleReadMode()" aria-pressed="false"
-              style="font-size:11px;font-weight:700" aria-label="目前是紅線模式，點一下切到閱讀模式">紅線模式</button>
+              style="font-size:11px;font-weight:700" aria-label="目前是紅線模式，點一下切到閱讀模式">紅線<br>模式</button>
             <a class="nav-btn" href="lm402.html"
               style="font-size:11px;text-decoration:none;font-weight:700">LM402</a>
             <a class="nav-btn" href="demos/695/tiantanglu-3d/index.html"
@@ -12874,7 +12914,7 @@
             + '<span class="og-go">讀這一站 →</span>'
             + '</button>';
         }).join('');
-        panel.innerHTML = '<div class="cur-intro">把散落在各集的學長線收成一條路：一個願望，怎麼被一個人用二十年慢慢養成信念，再交到下一個人手上。不劇透，只給一條走的順序。這條路上，「相信」會被說很多次；它的份量，是前面幾集一點一點長出來的，別急著跳到最後一站去看。</div><div class="og-grid">' + cards + '</div>';
+        panel.innerHTML = '<div class="cur-intro"><p class="lead">把散落在各集的學長線收成一條路：一個願望，怎麼被一個人用二十年慢慢養成信念，再交到下一個人手上。</p><p>不劇透，只給一條走的順序。這條路上，「相信」會被說很多次；它的份量，是前面幾集一點一點長出來的，別急著跳到最後一站去看。</p></div><div class="og-grid">' + cards + '</div>';
         _curCache[5] = true;
       }
       // 抱之弧 · 一個動詞的四十三夜:「抱」從被禁止,到被渴望、被忍住、被代理、被反身、
@@ -12904,7 +12944,7 @@
             + '<span class="og-go">讀這一站 →</span>'
             + '</button>';
         }).join('');
-        panel.innerHTML = '<div class="cur-intro">全書最長的一條線，是一個動詞：抱。它被禁止、被渴望、被忍住、被代理、被反身、被教學，最後被執行。這裡收成十站，照順序走，你會看見一個擁抱怎麼用二十年學會自己。不劇透，只給一條走的順序。</div><div class="og-grid">' + cards + '</div>';
+        panel.innerHTML = '<div class="cur-intro"><p class="lead">全書最長的一條線，是一個動詞：抱。它被禁止、被渴望、被忍住、被代理、被反身、被教學，最後被執行。</p><p>這裡收成十站，照順序走，你會看見一個擁抱怎麼用二十年學會自己。不劇透，只給一條走的順序。</p></div><div class="og-grid">' + cards + '</div>';
         _curCache[9] = true;
       }
       // C10 物件的回聲:成對母題導讀。每對兩件物件在不同集各出現,卻互相呼應。配對經 toni 拍板,句句站方框架、不劇透、可跳集。
@@ -12931,7 +12971,7 @@
             + '<span class="oe-eps" style="margin-top:7px;display:flex;gap:8px;flex-wrap:wrap;">' + eps + '</span>'
             + '</div>';
         }).join('');
-        panel.innerHTML = '<div class="cur-intro">同一種心意，藏在兩件不一樣的東西裡。這些物件各自出現在不同的集數，卻悄悄呼應著彼此。點集數可以跳過去看。</div><div class="og-grid">' + cards + '</div>';
+        panel.innerHTML = '<div class="cur-intro"><p class="lead">同一種心意，藏在兩件不一樣的東西裡。</p><p>這些物件各自出現在不同的集數，卻悄悄呼應著彼此。點集數可以跳過去看。</p></div><div class="og-grid">' + cards + '</div>';
         _curCache[7] = true;
       }
       // C35 命運阿嬤說過的話:只 verbatim 列 canon 阿嬤原句,不加站方詮釋。句子皆取自故事正文,點集數可跳回原處。
@@ -12949,7 +12989,7 @@
             + '<span class="oe-eps" style="margin-top:7px;display:flex;gap:8px;flex-wrap:wrap;"><button type="button" class="motif-ep" onclick="closeCuration();goToEp(' + g.ep + ')">' + fmtEp(g.ep) + '</button></span>'
             + '</div>';
         }).join('');
-        panel.innerHTML = '<div class="cur-intro">命運阿嬤在故事裡說過的話，原句照錄。點集數可以跳回她說這句話的那一集。</div><div class="og-grid">' + cards + '</div>';
+        panel.innerHTML = '<div class="cur-intro"><p class="lead">命運阿嬤在故事裡說過的話，原句照錄。</p><p>點集數可以跳回她說這句話的那一集。</p></div><div class="og-grid">' + cards + '</div>';
         _curCache[8] = true;
       }
       /* B1 開放懸念牆「還懸著的問題」——與 EGGS/GRANNY 帳本方向相反、互補:
@@ -12999,7 +13039,7 @@
         try { reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
         var intro = document.createElement("div");
         intro.className = "cur-intro";
-        intro.textContent = "還沒被回答的問題，先擱在這裡。你讀下去，它們會一條一條自己消失。";
+        intro.innerHTML = '<p class="lead">還沒被回答的問題，先擱在這裡。</p><p>你讀下去，它們會一條一條自己消失。</p>';
         panel.appendChild(intro);
         var grid = document.createElement("div");
         grid.className = "og-grid oq-grid";
@@ -13052,7 +13092,7 @@
             + '<span class="og-go">讀這個視角 · ' + fmtEp(n) + ' →</span>'
             + '</button>';
         }).join('');
-        panel.innerHTML = '<div class="cur-intro">2005 年，後門的那一眼。同一秒鐘，學長、學妹、女兒各自在不同的位置看見了它。而這一秒會被走過很多遍，每一遍的看見、忍住、伸手都不一樣。來不及好好當一次父女，來不及在年輕時就懂得愛，來不及在看得最清楚時伸手碰到。最後一道門，是學長多年後，回頭再看這一眼。挑一道走進去，全貌得你自己拼。</div><div class="og-grid">' + cards + '</div>';
+        panel.innerHTML = '<div class="cur-intro"><p class="lead">2005 年，後門的那一眼。同一秒鐘，學長、學妹、女兒各自在不同的位置看見了它。</p><p>而這一秒會被走過很多遍，每一遍的看見、忍住、伸手都不一樣。來不及好好當一次父女，來不及在年輕時就懂得愛，來不及在看得最清楚時伸手碰到。</p><p>最後一道門，是學長多年後，回頭再看這一眼。挑一道走進去，全貌得你自己拼。</p></div><div class="og-grid">' + cards + '</div>';
         _curCache[4] = true;
       }
       // N1 安全後向母題索引：把「已讀集數」的重讀線索（ANNOTATIONS clue，含回指 EP 連結）收成一處。
@@ -13074,16 +13114,16 @@
           });
         }
         if (!rows) {
-          panel.innerHTML = '<div class="cur-intro">往下讀，紅線埋下的伏筆與回指會慢慢浮現。讀過越多集，這裡能回看的就越多。</div>';
+          panel.innerHTML = '<div class="cur-intro"><p class="lead">往下讀，紅線埋下的伏筆與回指會慢慢浮現。</p><p>讀過越多集，這裡能回看的就越多。</p></div>';
           return;
         }
-        panel.innerHTML = '<div class="cur-intro">把你讀過的集數裡，那些「再讀一次才看得懂」的伏筆與回指收在一起。有些句子要走過結局才讀得懂，讀懂之後，它反而更沉。只顯示你已讀到的，不爆雷。點集數或句中的 EP 都能跳回去。有些委屈不會在同一集被安慰。把相鄰的兩集連著讀，一個人沒說出口的心事，常常在另一個人那一集裡，被輕輕接住。這個故事偶爾會在最痛的地方，忽然開一個很輕的玩笑；讀太快就順順地滑過去了，慢下來看它一眼，有時候那不是在笑，是一個人已經答不出話了。</div><div class="motif-list">' + rows + '</div>';
+        panel.innerHTML = '<div class="cur-intro"><p class="lead">把你讀過的集數裡，那些「再讀一次才看得懂」的伏筆與回指收在一起。</p><p>有些句子要走過結局才讀得懂，讀懂之後，它反而更沉。只顯示你已讀到的，不爆雷。點集數或句中的 EP 都能跳回去。</p><p>有些委屈不會在同一集被安慰。把相鄰的兩集連著讀，一個人沒說出口的心事，常常在另一個人那一集裡，被輕輕接住。</p><p>這個故事偶爾會在最痛的地方，忽然開一個很輕的玩笑；讀太快就順順地滑過去了，慢下來看它一眼，有時候那不是在笑，是一個人已經答不出話了。</p></div><div class="motif-list">' + rows + '</div>';
       }
       // #8 主題選讀:文人句子按主題橫向排列
       function renderThemeCuration() {
         var panel = document.getElementById('cur-panel-0');
         if (!panel || _curCache[0]) return;
-        var html = '<div class="cur-intro">把散落各集的文人句子，按主題重新排成一條線來讀。</div><div class="cur-theme-chips">';
+        var html = '<div class="cur-intro"><p class="lead">把散落各集的文人句子，按主題重新排成一條線來讀。</p></div><div class="cur-theme-chips">';
         CURATION_THEMES.forEach(function (t, ti) {
           html += '<button type="button" class="cur-chip' + (ti === 0 ? ' on' : '') + '" onclick="pickTheme(' + ti + ',this)">' + escapeHtml(t.label) + '</button>';
         });
@@ -13129,7 +13169,7 @@
       function renderTimeDialogue() {
         var panel = document.getElementById('cur-panel-1');
         if (!panel || _curCache[1]) return;
-        var html = '<div class="cur-intro">同一個念頭，跨越上千年。挑一個主題，聽不同朝代的人輪流說一句，像一場穿越時空的對話。</div><div class="cur-theme-chips">';
+        var html = '<div class="cur-intro"><p class="lead">同一個念頭，跨越上千年。</p><p>挑一個主題，聽不同朝代的人輪流說一句，像一場穿越時空的對話。</p></div><div class="cur-theme-chips">';
         CURATION_THEMES.forEach(function (t, ti) {
           html += '<button type="button" class="cur-chip2' + (ti === 0 ? ' on' : '') + '" onclick="pickDialogue(' + ti + ',this)">' + escapeHtml(t.label) + '</button>';
         });
@@ -13219,8 +13259,8 @@
           body = eps.map(function (ep) { return _guideRowHTML(ep, hasRead, curN); }).join('');
         }
         var intro = _guideMode === 'year'
-          ? '依「故事年份」重排（同一年的章節聚在一起）。因為集數順序並不等於故事發生的時序，故事在 1991 到 2026 之間來回跳。'
-          : '全 43 集目錄：看每一章是什麼、多長，再決定要不要點進去。左側色條是視角線（把拔／學長／學妹／女兒／混合），已讀打勾、目前所在標 ◉。';
+          ? '<p class="lead">依「故事年份」重排（同一年的章節聚在一起）。</p><p>因為集數順序並不等於故事發生的時序，故事在 1991 到 2026 之間來回跳。</p>'
+          : '<p class="lead">全 43 集目錄：看每一章是什麼、多長，再決定要不要點進去。</p><p>左側色條是視角線（把拔／學長／學妹／女兒／混合），已讀打勾、目前所在標 ◉。</p>';
         panel.innerHTML = '<div class="cur-intro">' + intro + '</div>'
           + '<div class="gtoc-modes"><button type="button" class="gtoc-mode-btn' + (_guideMode === 'all' ? ' active' : '') + '" onclick="setGuideMode(\'all\',this)">依集數</button><button type="button" class="gtoc-mode-btn' + (_guideMode === 'year' ? ' active' : '') + '" onclick="setGuideMode(\'year\',this)">依年份</button></div>'
           + '<div class="gtoc-head">已讀 ' + readCount + ' / ' + eps.length + '</div>'
@@ -13349,10 +13389,12 @@
         var focus = document.body.classList.contains("focus-read");
         var name = novel ? "小說模式" : focus ? "閱讀模式" : "紅線模式";
         var next = novel ? "紅線模式" : focus ? "小說模式" : "閱讀模式";
+        // 手機鈕(44×44 固定)在「XX」後強制斷行 → 2+2 乾淨堆疊;桌機鈕 nowrap 一行不動
+        var mobHtml = escapeHtml(name.slice(0, 2)) + "<br>" + escapeHtml(name.slice(2));
         ["btn-mode-dsk", "btn-mode-mob"].forEach(function (id) {
           var b = document.getElementById(id);
           if (!b) return;
-          b.textContent = name;
+          if (id === "btn-mode-mob") { b.innerHTML = mobHtml; } else { b.textContent = name; }
           b.setAttribute("aria-pressed", focus ? "true" : "false");
           b.setAttribute("aria-label", "目前是" + name + "，點一下切到" + next);
         });
