@@ -3901,3 +3901,15 @@ html.motion-still .scroll-line {
     display: none;
   }
 }
+
+/* ═══ 小說模式(html.novel-read,由 index-cold-open.js 依 redtime-read-mode 早期掛載):
+   全站文字最高對比 — 色階變數整組上抬,低對比殘點掃描驅動逐群覆蓋。
+   門檻:正文 AAA(≥7:1),輔助文字至少 AA(≥4.5:1);夜色文字用近白非純白(避散光光暈)。 ═══ */
+html.novel-read {
+  --parchment: #f5f2ea;
+  --warm: #e4dfd4;
+  --mist: #c8c3b8;
+  --amber: #e8b84a;
+  --jade: #46c88a;
+  --rose: #ff6a80;
+}

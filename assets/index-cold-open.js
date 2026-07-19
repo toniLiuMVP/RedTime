@@ -1,3 +1,13 @@
+/* 小說模式(全站最高對比)早期掛載:reader 選的三態模式跨頁生效。
+   同步跑於首屏繪製前(此檔在 head 同步載)防止對比閃換;body 未 parse 故掛 html 元素。 */
+(function () {
+  try {
+    if (localStorage.getItem("redtime-read-mode") === "novel") {
+      document.documentElement.classList.add("novel-read");
+    }
+  } catch (e) {}
+})();
+
 /* 首訪冷開場:全黑畫面以打字節奏浮現標語,浮現完停一拍再淡入整頁。
    只出現一次(本機記憶);減少動態偏好或無法記憶時直接不出現。 */
 (function () {

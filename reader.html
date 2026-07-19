@@ -4149,6 +4149,7 @@
       body.focus-read.scroll-down #topnav-mobile.visible {
         transform: translateY(-100%);
       }
+
       .ep-teaser {
         margin-top: 32px;
         padding: 16px 17px;
@@ -6068,6 +6069,86 @@
         border-color: rgba(40, 120, 130, 0.35);
         color: rgba(20, 80, 90, 0.85);
       }
+
+      /* ↓ 小說模式規則置於所有主題覆蓋之後:同特異性下靠順序勝出(novel 蓋 day/sepia) */
+      /* ═══ 小說模式(novel-read=閱讀模式最強化):全站文字最高對比,桌機手機都不會看不清。
+         機制:色階變數整組上抬(夜間更亮/日·羊皮紙更深),掃描驅動的低對比殘點逐群覆蓋。
+         門檻:正文 AAA(≥7:1),輔助文字至少 AA(≥4.5:1)。 ═══ */
+      body.novel-read {
+        --t1: #f5f2ea;
+        --t2: #e4dfd4;
+        --t3: #c8c3b8;
+        --silver: #c8c4bc;
+        --amber: #e8b84a;
+        --jade: #46c88a;
+        --ember: #ff8a5c;
+      }
+      body.novel-read.day-mode {
+        --t1: #0c0802;
+        --t2: #221604;
+        --t3: #3c2c0e;
+        --silver: #3a362e;
+        --amber: #5c3c00;
+        --jade: #06481f;
+        --ember: #5c2410;
+      }
+      body.novel-read.sepia-mode {
+        --t1: #140c02;
+        --t2: #241804;
+        --t3: #38280c;
+      }
+      /* 淡化檔在小說模式下仍要讀得到:0.26 → 0.6(退位但不至於看不清) */
+      body.novel-read.quiet-read .ep-recap,
+      body.novel-read.quiet-read .ep-companion,
+      body.novel-read.quiet-read .ep-tline-wrap,
+      body.novel-read.quiet-read .ep-note,
+      body.novel-read.quiet-read .ep-teaser {
+        opacity: 0.6;
+      }
+      /* 裝飾性大集數浮水印:小說模式直接不顯示(它本來就刻意極淡,拉清楚反而干擾正文) */
+      body.novel-read .ep-bg-num { display: none; }
+      /* 小說模式承諾面:幽靈化/刻意淡的 UI 全數拉清楚(掃描驅動,蓋過 focus 的退場規則) */
+      body.novel-read #prog-knots,
+      body.novel-read #fab-bar,
+      body.novel-read #jump-tb,
+      body.novel-read .fab-label,
+      body.novel-read .fab-icon,
+      body.novel-read .fab-nav-btn,
+      body.novel-read .ep-sec-nav {
+        opacity: 1 !important;
+      }
+      /* !important 是刻意的:承諾層語義上要壓過所有主題(day/sepia 元件覆蓋特異性更高)與淡化規則 */
+      body.novel-read .ec-count,
+      body.novel-read .ec-lbl,
+      body.novel-read .esd-mark,
+      body.novel-read .ean-btn,
+      body.novel-read .eb-text,
+      body.novel-read .rt-egg-holder,
+      body.novel-read .fab-label,
+      body.novel-read .fab-icon {
+        color: var(--t2) !important;
+        opacity: 1 !important;
+      }
+      /* disabled 導航鈕(第一集/最後一集):保留「不可用」的退位感但拉到可辨識。
+         三個按鈕家族都要(fab-nav/ean 的 disabled 態別被上面的 opacity:1 blanket 抹掉) */
+      body.novel-read .ep-nav-btn.disabled { opacity: 0.62 !important; }
+      body.novel-read .fab-nav-btn.disabled { opacity: 0.45 !important; }
+      body.novel-read .ean-btn:disabled { opacity: 0.45 !important; }
+      /* novel 下手動降回淡化檔(quiet=1)時,hover/聚焦仍要能看清(蓋過 0.6 的同特異性 tie) */
+      body.novel-read.quiet-read .ep-recap:hover,
+      body.novel-read.quiet-read .ep-recap:focus-visible,
+      body.novel-read.quiet-read .ep-companion:hover,
+      body.novel-read.quiet-read .ep-companion:focus-within,
+      body.novel-read.quiet-read .ep-tline-wrap:hover,
+      body.novel-read.quiet-read .ep-tline-wrap:focus-within,
+      body.novel-read.quiet-read .ep-note:hover,
+      body.novel-read.quiet-read .ep-note:focus-within,
+      body.novel-read.quiet-read .ep-teaser:hover,
+      body.novel-read.quiet-read .ep-teaser:focus-within {
+        opacity: 1;
+      }
+      /* 結局留白的屏息浮現:保留漸近感,但 held 態拉到過 AA 門檻 */
+      body.novel-read .ep-breath-held { opacity: 0.78 !important; }
       .eg-kicker {
         font-family: "DM Mono", monospace;
         font-size: 8.1px;
@@ -7664,7 +7745,7 @@
           <button class="dsk-btn" onclick="openSearch()" id="btn-search" aria-label="全文搜尋 · 找場景、台詞、伏筆" title="全文搜尋（/ 或 Cmd+K）">
             🔍 搜尋
           </button>
-          <button class="dsk-btn" id="btn-mode-dsk" onclick="toggleReadMode()" aria-pressed="false" aria-label="目前是美感優先模式，點一下切到閱讀優先（乾淨純讀）">氛圍</button>
+          <button class="dsk-btn" id="btn-mode-dsk" onclick="toggleReadMode()" aria-pressed="false" aria-label="目前是紅線模式，點一下切到閱讀模式">紅線模式</button>
           <button class="dsk-btn" onclick="openComfort()" aria-label="閱讀設定 · 主題與行寬">
             <span class="ui-glyph btn-icon" data-ui-icon="sun"></span
             ><span>燈光</span>
@@ -7714,7 +7795,7 @@
           <span id="time-badge-mob" class="time-badge" hidden></span>
           <div class="nav-actions">
             <button class="nav-btn" id="btn-mode-mob" onclick="toggleReadMode()" aria-pressed="false"
-              style="font-size:11px;font-weight:700" aria-label="目前是美感優先模式，點一下切到閱讀優先（乾淨純讀）">氛圍</button>
+              style="font-size:11px;font-weight:700" aria-label="目前是紅線模式，點一下切到閱讀模式">紅線模式</button>
             <a class="nav-btn" href="lm402.html"
               style="font-size:11px;text-decoration:none;font-weight:700">LM402</a>
             <a class="nav-btn" href="demos/695/tiantanglu-3d/index.html"
@@ -10083,8 +10164,9 @@
         var _savedQuiet = parseInt(loadPref(PREF_KEYS.quiet) || "0", 10) || 0;
         if (_savedQuiet >= 1) document.body.classList.add("quiet-read");
         if (_savedQuiet >= 2) document.body.classList.add("quiet-hide");
-        // 一鍵閱讀模式還原(boot:只掛 class + 寫動畫 pref,不模擬點擊;新訪預設美感優先)
-        if (loadPref(PREF_KEYS.mode) === "focus") setReadMode("focus", true);
+        // 三態閱讀模式還原(boot:只掛 class + 寫動畫 pref,不模擬點擊;新訪預設紅線模式)
+        var _savedMode = loadPref(PREF_KEYS.mode);
+        if (_savedMode === "focus" || _savedMode === "novel") setReadMode(_savedMode, true);
         if (loadPref(PREF_KEYS.eranotes) === "1") {
           document.body.classList.add("era-on");
           if (typeof _syncEraTermA11y === "function") _syncEraTermA11y(true);
@@ -13174,27 +13256,38 @@
          focus = 輔文至少淡化 + 星空動畫停(走既有暫停鈕機制) + 浮動 UI 退場
                  + hero 收成輕量標題 + 手機頂欄向下捲自動藏(CSS body.focus-read)。
          切回 aesthetic = 氛圍全開(preset 語意,批次還原)。boot=載入還原,不模擬點擊。 */
+      /* 三態閱讀模式:紅線模式(aesthetic,氛圍全開,預設)→ 閱讀模式(focus,乾淨純讀)
+         → 小說模式(novel,閱讀模式最強化+全站文字最高對比)。點鈕循環切換。 */
       function setReadMode(m, boot) {
-        var focus = m === "focus";
+        var focus = m === "focus" || m === "novel";
+        var novel = m === "novel";
+        var wasFocus = document.body.classList.contains("focus-read");
         document.body.classList.toggle("focus-read", focus);
+        document.body.classList.toggle("novel-read", novel);
         if (!focus) document.body.classList.remove("scroll-down");
-        savePref(PREF_KEYS.mode, focus ? "focus" : "aesthetic");
+        savePref(PREF_KEYS.mode, novel ? "novel" : (focus ? "focus" : "aesthetic"));
         var mb = document.querySelector(".hero-motion-toggle");
         if (!boot) {
           var lvl = parseInt(loadPref(PREF_KEYS.quiet) || "0", 10) || 0;
-          if (focus) {
-            // 進場記快照:退場只還原「focus 自己抬高的」,不動使用者本來就選好的(對稱保護)
+          if (focus && !wasFocus) {
+            // 由紅線模式進場才記快照:退場只還原「preset 自己抬高的」,不動使用者本來就選好的
             savePref(PREF_KEYS.prefocusQuiet, String(lvl));
             savePref(PREF_KEYS.prefocusMotion, (mb && mb.getAttribute("aria-pressed") === "true") ? "paused" : "playing");
             if (lvl < 1) setQuiet(1);                    // 至少淡化;使用者已選全隱則不動
-          } else {
-            // 退場:還原進場前的靜讀檔位(預設 0),不硬清使用者自選的全隱
+          }
+          if (novel) {
+            // 小說模式=最強化:輔文全隱,畫面只剩正文與導航(退回紅線模式仍還原快照)
+            var curLvl = parseInt(loadPref(PREF_KEYS.quiet) || "0", 10) || 0;
+            if (curLvl < 2) setQuiet(2);
+          }
+          if (!focus) {
+            // 退回紅線模式:還原進場前的靜讀檔位(預設 0),不硬清使用者自選的全隱
             var back = parseInt(loadPref(PREF_KEYS.prefocusQuiet) || "0", 10) || 0;
             setQuiet(back);
           }
         }
-        // 星空:focus 停(鈕存在走完整機制;boot 時鈕未建,寫 pref 讓初始化讀到)。
-        // 退場只在「進場前本來在播」時才恢復播放 — 使用者自己按過暫停的維持暫停。
+        // 星空:閱讀/小說停(鈕存在走完整機制;boot 時鈕未建,寫 pref 讓初始化讀到)。
+        // 退回紅線模式只在「進場前本來在播」時才恢復播放 — 使用者自己按過暫停的維持暫停。
         if (focus) {
           if (mb) { if (mb.getAttribute("aria-pressed") !== "true") mb.click(); }
           else savePref(PREF_KEYS.heromotion, "0");
@@ -13205,18 +13298,21 @@
         _syncModeBtns();
       }
       function toggleReadMode() {
-        setReadMode(document.body.classList.contains("focus-read") ? "aesthetic" : "focus");
+        var cur = document.body.classList.contains("novel-read") ? "novel"
+          : (document.body.classList.contains("focus-read") ? "focus" : "aesthetic");
+        setReadMode(cur === "aesthetic" ? "focus" : cur === "focus" ? "novel" : "aesthetic");
       }
       function _syncModeBtns() {
+        var novel = document.body.classList.contains("novel-read");
         var focus = document.body.classList.contains("focus-read");
+        var name = novel ? "小說模式" : focus ? "閱讀模式" : "紅線模式";
+        var next = novel ? "紅線模式" : focus ? "小說模式" : "閱讀模式";
         ["btn-mode-dsk", "btn-mode-mob"].forEach(function (id) {
           var b = document.getElementById(id);
           if (!b) return;
-          b.textContent = focus ? "純讀" : "氛圍";
+          b.textContent = name;
           b.setAttribute("aria-pressed", focus ? "true" : "false");
-          b.setAttribute("aria-label", focus
-            ? "目前是閱讀優先模式，點一下切回美感優先（氛圍全開）"
-            : "目前是美感優先模式，點一下切到閱讀優先（乾淨純讀）");
+          b.setAttribute("aria-label", "目前是" + name + "，點一下切到" + next);
         });
       }
       function _syncComfortActive() {
