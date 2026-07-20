@@ -4072,7 +4072,7 @@
         background: rgba(18, 16, 14, 0.35);
         color: rgba(255, 248, 244, 0.72);
         font: inherit;
-        font-size: 0.72em;
+        font-size: 11px; /* 幽靈化小鈕:固定小尺寸,不隨封面大字級被 em 放大(原 0.72em 相對封面顯示字級偏大) */
         letter-spacing: 0.06em;
         padding: 5px 12px;
         cursor: pointer;
@@ -6184,8 +6184,8 @@
         display: none !important;
       }
       /* 非閱讀類工具與入口在小說模式一併隱藏:手機工具列(fab)+ 桌機頂欄/更多選單/側欄。
-         導覽、一鍵展開/收合、彩蛋、選讀、鐵粉,以及遊戲入口(LM402/天堂路/月台,.game-link)。
-         display:none 蓋過承諾面的 opacity:1。 */
+         導覽、一鍵展開/收合、彩蛋、選讀、鐵粉(挑戰鈕 #sb-fan-btn + 側欄稱號等級徽章 #sbFanTitle),
+         以及遊戲入口(LM402/天堂路/月台,.game-link)。display:none 蓋過承諾面的 opacity:1。 */
       body.novel-read .fab-guide,
       body.novel-read .fab-toggle-all,
       body.novel-read .fab-egg,
@@ -6197,6 +6197,7 @@
       body.novel-read #dsk-curation-btn,
       body.novel-read #dsk-egg-btn,
       body.novel-read #sb-fan-btn,
+      body.novel-read #sbFanTitle,
       body.novel-read .game-link {
         display: none !important;
       }

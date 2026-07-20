@@ -6,6 +6,8 @@
     var m = localStorage.getItem("redtime-read-mode");
     if (m === "novel" || m == null) {
       document.documentElement.classList.add("novel-read");
+    } else if (m === "focus") {
+      document.documentElement.classList.add("focus-read");
     }
   } catch (e) {}
 })();

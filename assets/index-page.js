@@ -768,6 +768,9 @@ el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key ===
   if (!tourDeep) {
     var _routerFired = false;
     function _tryOpenRouter() {
+      /* 小說模式=乾淨如新書:不彈進站分流窗(它露出遊戲/測驗/引路等大量資訊,與「只留書名+翻開第一頁」相斥)。
+         想看分流→用 nav 模式鈕切回紅線/閱讀。切回後若觸發器尚未觸發,仍會照常彈出。 */
+      if (document.documentElement.classList.contains("novel-read")) return;
       if (_routerFired) return;
       _routerFired = true;
       /* 使用者已在讀新手導覽就別打斷(分流窗 openModal 會強制關導覽) */
@@ -969,5 +972,39 @@ el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key ===
       btn.classList.add("is-open");
       renderInline(song);
     });
+  });
+})();
+
+
+/* ─── index 入口頁三態閱讀模式切換(與 reader 共用 redtime-read-mode:aesthetic 紅線／focus 閱讀／novel 小說)───
+   小說模式=乾淨如新書(只留書名＋翻開第一頁),focus／aesthetic=完整首頁。class 掛在 html 元素:
+   novel-read 由 index-cold-open.js 早期掛載防閃;此處負責點擊切換與標籤同步,跨頁沿用同一把鑰匙。 */
+(function () {
+  var KEY = "redtime-read-mode";
+  var btn = document.getElementById("idx-mode-btn");
+  if (!btn) return;
+  var root = document.documentElement;
+  function cur() {
+    var m = null;
+    try { m = localStorage.getItem(KEY); } catch (e) {}
+    return (m === "aesthetic" || m === "focus" || m === "novel") ? m : "novel"; // null=新訪→小說
+  }
+  function sync(m) {
+    var name = m === "novel" ? "小說模式" : m === "focus" ? "閱讀模式" : "紅線模式";
+    var next = m === "novel" ? "紅線模式" : m === "focus" ? "小說模式" : "閱讀模式";
+    btn.textContent = name;
+    btn.setAttribute("aria-pressed", (m === "novel" || m === "focus") ? "true" : "false"); // 對齊 reader:任何非紅線閱讀模式皆 pressed,跨頁讀屏一致
+    btn.setAttribute("aria-label", "目前是" + name + "，點一下切到" + next);
+  }
+  function apply(m) {
+    root.classList.toggle("novel-read", m === "novel");
+    root.classList.toggle("focus-read", m === "focus");
+    try { localStorage.setItem(KEY, m); } catch (e) {}
+    sync(m);
+  }
+  sync(cur()); // 初始標籤(class 已由 cold-open 依 pref 掛好,此處只同步鈕面)
+  btn.addEventListener("click", function () {
+    var m = cur();
+    apply(m === "aesthetic" ? "focus" : m === "focus" ? "novel" : "aesthetic");
   });
 })();

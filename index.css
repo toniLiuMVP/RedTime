@@ -3913,3 +3913,40 @@ html.novel-read {
   --jade: #46c88a;
   --rose: #ff6a80;
 }
+
+/* ═══ 小說模式=乾淨如新書:index 入口頁只留「書名 + 翻開第一頁」(＋繼續閱讀鈕)。
+   其餘 hero 副文、故事介紹區塊、遊戲入口、時間軸、社群一律隱藏;想看完整介紹→用 nav 的模式切換鈕切回紅線/閱讀。
+   刻意保留:字級控制與 nav 模式鈕(功能/無障礙)、頁尾法律連結(合規)。 ═══ */
+html.novel-read #main-content > section:not(#hero) { display: none !important; }
+html.novel-read .hero-pre,
+html.novel-read .hero-en,
+html.novel-read .hero-tagline,
+html.novel-read .hero-subline,
+html.novel-read .cta-hint,
+html.novel-read .cta-reread,
+html.novel-read .hero-scroll { display: none !important; }
+html.novel-read #nav .nav-link,
+html.novel-read #nav .nav-cta { display: none !important; }
+
+/* nav 三態模式切換鈕(index 版;寫同一把 redtime-read-mode,與 reader 同步)。小說模式刻意不隱藏它=切回完整版的出口。 */
+.nav-mode-toggle {
+  padding: 6px 14px;
+  border: 1px solid rgba(233, 196, 142, 0.32);
+  color: rgba(233, 196, 142, 0.85);
+  border-radius: 2px;
+  background: rgba(233, 196, 142, 0.05);
+  font-family: "Noto Sans TC", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.18s, border-color 0.18s, color 0.18s;
+  -webkit-tap-highlight-color: transparent;
+}
+.nav-mode-toggle:hover,
+.nav-mode-toggle:focus-visible {
+  background: rgba(233, 196, 142, 0.12);
+  border-color: rgba(233, 196, 142, 0.6);
+  color: var(--parchment);
+}
