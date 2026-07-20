@@ -6179,11 +6179,13 @@
       body.novel-read .ep-granny,
       body.novel-read .time-lab,
       body.novel-read .ep-literati,
-      body.novel-read .fin-egg {
+      body.novel-read .fin-egg,
+      body.novel-read .moto-egg {
         display: none !important;
       }
-      /* 非閱讀類工具鈕在小說模式一併隱藏:手機工具列(fab)+ 桌機頂欄/更多選單/側欄。
-         導覽、一鍵展開/收合、彩蛋、選讀、鐵粉。display:none 蓋過承諾面的 opacity:1。 */
+      /* 非閱讀類工具與入口在小說模式一併隱藏:手機工具列(fab)+ 桌機頂欄/更多選單/側欄。
+         導覽、一鍵展開/收合、彩蛋、選讀、鐵粉,以及遊戲入口(LM402/天堂路/月台,.game-link)。
+         display:none 蓋過承諾面的 opacity:1。 */
       body.novel-read .fab-guide,
       body.novel-read .fab-toggle-all,
       body.novel-read .fab-egg,
@@ -6194,7 +6196,8 @@
       body.novel-read #dsk-toggle-all-menu,
       body.novel-read #dsk-curation-btn,
       body.novel-read #dsk-egg-btn,
-      body.novel-read #sb-fan-btn {
+      body.novel-read #sb-fan-btn,
+      body.novel-read .game-link {
         display: none !important;
       }
       /* 裝飾性大集數浮水印:小說模式直接不顯示(它本來就刻意極淡,拉清楚反而干擾正文) */
@@ -7859,13 +7862,13 @@
                 <span class="ui-glyph btn-icon" data-ui-icon="egg"></span
                 ><span>彩蛋</span>
               </button>
-              <a class="dsk-btn dsk-home-btn" href="lm402.html" role="menuitem"
+              <a class="dsk-btn dsk-home-btn game-link" href="lm402.html" role="menuitem"
                 ><span>LM402</span></a
               >
-              <a class="dsk-btn dsk-home-btn" href="demos/695/tiantanglu-3d/index.html" role="menuitem"
+              <a class="dsk-btn dsk-home-btn game-link" href="demos/695/tiantanglu-3d/index.html" role="menuitem"
                 ><span>天堂路</span></a
               >
-              <a class="dsk-btn dsk-home-btn" href="demos/platform-run/index.html" role="menuitem"
+              <a class="dsk-btn dsk-home-btn game-link" href="demos/platform-run/index.html" role="menuitem"
                 ><span>月台上的狂奔</span></a
               >
             </div>
@@ -7878,11 +7881,11 @@
           <div class="nav-actions">
             <button class="nav-btn" id="btn-mode-mob" onclick="toggleReadMode()" aria-pressed="false"
               style="font-size:11px;font-weight:700" aria-label="目前是紅線模式，點一下切到閱讀模式">紅線<br>模式</button>
-            <a class="nav-btn" href="lm402.html"
+            <a class="nav-btn game-link" href="lm402.html"
               style="font-size:11px;text-decoration:none;font-weight:700">LM402</a>
-            <a class="nav-btn" href="demos/695/tiantanglu-3d/index.html"
+            <a class="nav-btn game-link" href="demos/695/tiantanglu-3d/index.html"
               style="font-size:11px;text-decoration:none;font-weight:700">天堂路</a>
-            <a class="nav-btn" href="demos/platform-run/index.html" aria-label="月台上的狂奔"
+            <a class="nav-btn game-link" href="demos/platform-run/index.html" aria-label="月台上的狂奔"
               style="font-size:11px;text-decoration:none;font-weight:700">月台</a>
           </div>
         </div>
