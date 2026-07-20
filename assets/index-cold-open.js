@@ -1,8 +1,10 @@
 /* 小說模式(全站最高對比)早期掛載:reader 選的三態模式跨頁生效。
-   同步跑於首屏繪製前(此檔在 head 同步載)防止對比閃換;body 未 parse 故掛 html 元素。 */
+   同步跑於首屏繪製前(此檔在 head 同步載)防止對比閃換;body 未 parse 故掛 html 元素。
+   預設小說模式:新訪(從未選過模式=null)即套用;明確選過紅線("aesthetic")/閱讀("focus")則不掛。 */
 (function () {
   try {
-    if (localStorage.getItem("redtime-read-mode") === "novel") {
+    var m = localStorage.getItem("redtime-read-mode");
+    if (m === "novel" || m == null) {
       document.documentElement.classList.add("novel-read");
     }
   } catch (e) {}

@@ -10236,11 +10236,19 @@
         if (savedWidth === "narrow" || savedWidth === "wide" || savedWidth === "default") {
           document.body.setAttribute("data-width", savedWidth);
         }
-        var _savedQuiet = parseInt(loadPref(PREF_KEYS.quiet) || "0", 10) || 0;
+        // 三態閱讀模式:回訪還原本人上次選擇;新訪(從未選過模式=null)預設小說模式(novel)。
+        // 明確選過的紅線/閱讀會存成 "aesthetic"/"focus",故只有 null(從未選過)才套預設,不覆蓋使用者選擇。
+        var _savedMode = loadPref(PREF_KEYS.mode) || "novel";
+        // 靜讀檔位:回訪讀本人存值;新訪跟隨小說模式預設全隱(輔文只剩正文與導航,導航仍由 novel 規則保持可見),
+        // 與互動切入小說模式的最終狀態一致。使用者自選過的靜讀檔位(含 "0")一律優先。
+        var _savedQuietRaw = loadPref(PREF_KEYS.quiet);
+        var _savedQuiet = parseInt(
+          (_savedQuietRaw != null && _savedQuietRaw !== "") ? _savedQuietRaw : (_savedMode === "novel" ? "2" : "0"),
+          10
+        ) || 0;
         if (_savedQuiet >= 1) document.body.classList.add("quiet-read");
         if (_savedQuiet >= 2) document.body.classList.add("quiet-hide");
-        // 三態閱讀模式還原(boot:只掛 class + 寫動畫 pref,不模擬點擊;新訪預設紅線模式)
-        var _savedMode = loadPref(PREF_KEYS.mode);
+        // boot:只掛 class + 寫動畫 pref,不模擬點擊。
         if (_savedMode === "focus" || _savedMode === "novel") setReadMode(_savedMode, true);
         if (loadPref(PREF_KEYS.eranotes) === "1") {
           document.body.classList.add("era-on");
