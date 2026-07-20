@@ -1384,6 +1384,35 @@
         .search-res-sci { border-left: 2px solid rgba(120,196,198,.5); }
         .search-res-snip { font-size: 14px; line-height: 1.75; }
         .search-res-snip mark { background: rgba(255,72,88,.32); color: #fff; padding: 0 2px; border-radius: 2px; }
+        /* 搜尋 / 查證 分頁 */
+        .search-tabs { flex: 1; display: flex; gap: 6px; }
+        .search-tab { background: transparent; border: 1px solid var(--line2, #2c2c34); border-radius: 8px; color: #9a9a9a; font-size: 14px; font-family: inherit; padding: 8px 18px; cursor: pointer; letter-spacing: .1em; }
+        .search-tab:hover { color: #d0d0d0; }
+        .search-tab.active { color: #12140d; background: #f0d4a8; border-color: #f0d4a8; font-weight: 700; }
+        .search-tab:focus-visible { outline: 2px solid rgba(22,168,100,.78); outline-offset: 2px; }
+        .search-inputrow { display: flex; gap: 8px; padding: 14px 14px 0; }
+        /* 查證分頁 */
+        .verify-inputwrap { padding: 14px; }
+        .verify-input { width: 100%; min-height: 6em; background: rgba(255,255,255,.04); border: 1px solid var(--line2, #2c2c34); border-radius: 8px; color: #e0e0e0; font-size: 16px; padding: 10px 14px; font-family: inherit; line-height: 1.7; resize: vertical; }
+        .verify-input:focus { outline: 2px solid rgba(22,168,100,.78); outline-offset: 2px; }
+        .verify-bar { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .verify-btn { background: #f0d4a8; color: #12140d; border: 0; border-radius: 8px; padding: 8px 20px; font-size: 14px; font-family: inherit; font-weight: 700; letter-spacing: .08em; cursor: pointer; }
+        .verify-btn.alt { background: transparent; color: #9a9a9a; border: 1px solid var(--line2, #2c2c34); }
+        .verify-btn.alt:hover { color: #d0d0d0; }
+        .verify-verdict { padding: 14px 16px; border-radius: 10px; margin: 4px 14px 12px; border-left: 4px solid #8a8a94; background: rgba(255,255,255,.03); }
+        .verify-verdict.ok { border-left-color: #7fae8d; background: rgba(127,174,141,.10); }
+        .verify-verdict.warn { border-left-color: #e6b98c; background: rgba(230,185,140,.10); }
+        .verify-verdict.bad { border-left-color: #c4555f; background: rgba(196,85,95,.10); }
+        .verify-verdict .vv-h { font-size: 15px; letter-spacing: .08em; margin-bottom: 5px; color: #e0e0e0; }
+        .verify-verdict.ok .vv-h { color: #9fd4ad; }
+        .verify-verdict.warn .vv-h { color: #f0cfa0; }
+        .verify-verdict.bad .vv-h { color: #e88a92; }
+        .verify-verdict .vv-d { font-size: 13px; color: #b8b2a4; line-height: 1.75; }
+        .verify-hit { border: 1px solid var(--line2, #2c2c34); border-left: 3px solid #f0d4a8; border-radius: 0 8px 8px 0; padding: 12px 14px; margin: 8px 14px; background: rgba(255,255,255,.02); }
+        .verify-hit .vh-ep { color: #f0d4a8; font-family: "DM Mono", monospace; font-size: 12px; letter-spacing: .12em; margin-bottom: 8px; }
+        .verify-hit .vh-tag { float: right; color: #8a8a94; font-size: 11px; letter-spacing: .06em; }
+        .verify-hit .vh-ln { font-size: 14px; color: #c8c2b4; line-height: 1.7; margin: 2px 0; }
+        .verify-hit .vh-ln.m { color: #fff; background: rgba(240,212,168,.16); border-radius: 3px; padding: 0 3px; }
       /* ↑↑↑ 全域區塊結束 ↑↑↑ */
       /* 手機工具列的「放大鏡」(一鍵跳最大字、長輩友善)恢復顯示;工具列改 5×2 容納 10 項,順帶放大每顆觸控目標 */
       @media (min-width: 768px) {
@@ -7828,9 +7857,6 @@
               <a class="dsk-btn dsk-home-btn" href="demos/platform-run/index.html" role="menuitem"
                 ><span>月台上的狂奔</span></a
               >
-              <a class="dsk-btn dsk-home-btn" href="verify.html" role="menuitem"
-                ><span>引文查證器</span></a
-              >
             </div>
           </div>
         </div>
@@ -13632,32 +13658,196 @@
           ov.id = "search-overlay";
           ov.className = "search-overlay";
           var box = document.createElement("div"); box.className = "search-box";
+          // 頭部：搜尋 / 查證 分頁 + 關閉
           var head = document.createElement("div"); head.className = "search-head";
+          var tabs = document.createElement("div"); tabs.className = "search-tabs"; tabs.setAttribute("role", "tablist");
+          var tabFind = document.createElement("button");
+          tabFind.id = "search-tab-find"; tabFind.type = "button"; tabFind.className = "search-tab active";
+          tabFind.setAttribute("role", "tab"); tabFind.setAttribute("aria-selected", "true"); tabFind.textContent = "搜尋";
+          var tabVerify = document.createElement("button");
+          tabVerify.id = "search-tab-verify"; tabVerify.type = "button"; tabVerify.className = "search-tab";
+          tabVerify.setAttribute("role", "tab"); tabVerify.setAttribute("aria-selected", "false"); tabVerify.textContent = "查證";
+          tabs.append(tabFind, tabVerify);
+          var close = document.createElement("button");
+          close.className = "search-close"; close.type = "button";
+          close.setAttribute("aria-label", "關閉"); close.textContent = "✕";
+          head.append(tabs, close);
+          // 搜尋分頁
+          var paneFind = document.createElement("div"); paneFind.id = "search-pane-find"; paneFind.className = "search-pane";
+          var inputRow = document.createElement("div"); inputRow.className = "search-inputrow";
           var input = document.createElement("input");
           input.id = "search-input"; input.type = "search"; input.autocomplete = "off";
           input.setAttribute("aria-label", "全文搜尋輸入");
           input.placeholder = "在 43 集裡找一句話…（例：1163、後門、蒸便當）";
-          var close = document.createElement("button");
-          close.className = "search-close"; close.type = "button";
-          close.setAttribute("aria-label", "關閉搜尋"); close.textContent = "✕";
-          head.append(input, close);
+          inputRow.appendChild(input);
           var results = document.createElement("div");
           results.id = "search-results"; results.className = "search-results";
           var hint = document.createElement("div"); hint.className = "search-hint";
           hint.textContent = "想找哪一句、哪一個場景？打進來，43 集的正文和科普，我幫你一頁一頁翻。";
           results.appendChild(hint);
-          box.append(head, results); ov.appendChild(box); document.body.appendChild(ov);
+          paneFind.append(inputRow, results);
+          // 查證分頁（手稿取用同頁 EPISODES，判定沿用離線查證器邏輯）
+          var paneVerify = document.createElement("div"); paneVerify.id = "search-pane-verify"; paneVerify.className = "search-pane"; paneVerify.hidden = true;
+          var vwrap = document.createElement("div"); vwrap.className = "verify-inputwrap";
+          var vInput = document.createElement("textarea");
+          vInput.id = "verify-input"; vInput.className = "verify-input";
+          vInput.setAttribute("aria-label", "引文查證輸入");
+          vInput.placeholder = "貼上要查證的句子，可含「」，可跨行。";
+          var vbar = document.createElement("div"); vbar.className = "verify-bar";
+          var vGo = document.createElement("button"); vGo.type = "button"; vGo.className = "verify-btn"; vGo.textContent = "查證";
+          var vClear = document.createElement("button"); vClear.type = "button"; vClear.className = "verify-btn alt"; vClear.textContent = "清除";
+          var vRnd = document.createElement("button"); vRnd.type = "button"; vRnd.className = "verify-btn alt"; vRnd.textContent = "隨機取一句";
+          vbar.append(vGo, vClear, vRnd);
+          vwrap.append(vInput, vbar);
+          var vres = document.createElement("div"); vres.id = "verify-results"; vres.className = "search-results";
+          _verifyHint(vres);
+          paneVerify.append(vwrap, vres);
+          box.append(head, paneFind, paneVerify); ov.appendChild(box); document.body.appendChild(ov);
           var t;
           input.addEventListener("input", function () { clearTimeout(t); t = setTimeout(function () { runSearch(input.value); }, 200); });
           input.addEventListener("keydown", function (e) { if (e.key === "Escape") closeSearch(); });
+          tabFind.addEventListener("click", function () { _searchTab("find"); });
+          tabVerify.addEventListener("click", function () { _searchTab("verify"); });
+          vGo.addEventListener("click", runVerify);
+          vClear.addEventListener("click", function () { vInput.value = ""; _verifyHint(document.getElementById("verify-results")); try { vInput.focus(); } catch (e) {} });
+          vRnd.addEventListener("click", function () { verifyRandom(); });
+          vInput.addEventListener("keydown", function (e) { if (e.key === "Escape") closeSearch(); else if ((e.metaKey || e.ctrlKey) && e.key === "Enter") runVerify(); });
           close.addEventListener("click", closeSearch);
           ov.addEventListener("click", function (e) { if (e.target === ov) closeSearch(); });
         }
         ov.classList.add("open");
-        setTimeout(function () { try { document.getElementById("search-input").focus(); } catch (e) {} }, 50);
+        _searchTab(ov.dataset.tab || "find");
       }
       function closeSearch() { var ov = document.getElementById("search-overlay"); if (ov) ov.classList.remove("open"); }
       window.openSearch = openSearch; window.closeSearch = closeSearch;
+      // 搜尋 / 查證 分頁切換
+      function _searchTab(tab) {
+        var ov = document.getElementById("search-overlay"); if (!ov) return;
+        var isV = tab === "verify";
+        ov.dataset.tab = isV ? "verify" : "find";
+        var tf = document.getElementById("search-tab-find"), tv = document.getElementById("search-tab-verify");
+        var pf = document.getElementById("search-pane-find"), pv = document.getElementById("search-pane-verify");
+        if (tf) { tf.classList.toggle("active", !isV); tf.setAttribute("aria-selected", isV ? "false" : "true"); }
+        if (tv) { tv.classList.toggle("active", isV); tv.setAttribute("aria-selected", isV ? "true" : "false"); }
+        if (pf) pf.hidden = isV;
+        if (pv) pv.hidden = !isV;
+        setTimeout(function () { try { document.getElementById(isV ? "verify-input" : "search-input").focus(); } catch (e) {} }, 50);
+      }
+      // ── 引文查證（併入搜尋面板的「查證」分頁）──
+      // 手稿取用同頁 EPISODES（正文即真相來源，隨正文更新）；判定沿用離線查證器演算法（去空白後逐字比對 + 最長共同子串相似度）。
+      var _VERIFY_EPS = null;
+      function _verifyFlat(s) { return (s || "").replace(/[\s\u3000\u200b]+/g, ""); }
+      function _verifyData() {
+        if (_VERIFY_EPS) return _VERIFY_EPS;
+        _VERIFY_EPS = EPISODES.map(function (e) {
+          var lines = [];
+          if (e.title) lines.push(e.title);
+          stripHtml(e.html || "").split(/\n+/).forEach(function (l) { l = l.trim(); if (l) lines.push(l); });
+          return { ep: e.ep, lines: lines, flat: _verifyFlat(lines.join("")) };
+        });
+        return _VERIFY_EPS;
+      }
+      // 已知問題字串：人工判定的禁用/勘誤清單，無法由正文推導，故內嵌。
+      var _VERIFY_PH = [
+        ["你只是，還沒走到我這裡", "此句不存在於現行正文。四份既有分析已將其列為禁用。可能為「會不會你只是還沒醒？」與「而我還沒走到未來。」二句之合成。"],
+        ["把知道放下、選擇相信", "評論概括入引號。原文為 EP41：我不是因為「我看過了」才相信。我是因為「我願意相信」，所以相信。"],
+        ["妳就是第14,000,606種", "世界知識污染。原文僅：就像奇異博士提前預看了1千4百萬種結果。"],
+        ["蒸便當全給你", "拼接。原文：妳說妳不餓，把自己帶的蒸便當，全部給我吃。"],
+        ["你對家裡沒什麼貢獻", "截斷。原文：你對家裡已經沒什麼貢獻了，可以不要再鬧事了嗎？"],
+        ["不能干預、不能互動", "評論術語，非原文。"],
+        ["每個人都被理解", "評論概括，非原文。"],
+        ["只要夠努力就能解決一切", "評論概括，非原文。"],
+        ["重逢之後還是會痛", "評論概括，非原文。"],
+        ["難的是站好", "評論概括，非原文。原文相關句：然後站好等他。"],
+        ["二說不說", "已勘誤。現行版本為「二話不說」。"],
+        ["理容院", "已勘誤。現行版本為「美容院」。"]
+      ];
+      function _verifySim(a, b) {
+        if (!a.length || !b.length) return 0;
+        var m = Math.min(a.length, b.length), best = 0;
+        for (var w = m; w >= Math.max(3, Math.floor(m * 0.5)); w--) {
+          for (var i = 0; i + w <= a.length; i++) { if (b.indexOf(a.substr(i, w)) >= 0) { best = w; i = a.length; w = 0; } }
+          if (best) break;
+        }
+        return 2 * best / (a.length + b.length);
+      }
+      function _verifyHint(box, txt) {
+        if (!box) return;
+        box.textContent = "";
+        var h = document.createElement("div"); h.className = "search-hint";
+        h.textContent = txt || "貼上任一句子，與 43 集正文逐字比對，判定逐字相符／近似／改寫／無對應，並標出所在章節。引用前先查在不在。";
+        box.appendChild(h);
+      }
+      function _verifyVerdict(box, cls, head, desc) {
+        var v = document.createElement("div"); v.className = "verify-verdict " + cls;
+        var vh = document.createElement("div"); vh.className = "vv-h"; vh.textContent = head;
+        var vd = document.createElement("div"); vd.className = "vv-d"; vd.textContent = desc;
+        v.append(vh, vd); box.appendChild(v);
+      }
+      function _verifyRenderHit(box, e, q, fuzzy) {
+        var hit = document.createElement("div"); hit.className = "verify-hit";
+        var ep = document.createElement("div"); ep.className = "vh-ep"; ep.textContent = fmtEp(e.ep);
+        var tag = document.createElement("span"); tag.className = "vh-tag"; tag.textContent = fuzzy ? "最接近段落" : "命中";
+        ep.appendChild(tag); hit.appendChild(ep);
+        var best = -1, i, j;
+        if (!fuzzy) {
+          for (i = 0; i < e.lines.length; i++) {
+            var acc = "";
+            for (j = i; j < Math.min(i + 6, e.lines.length); j++) { acc += _verifyFlat(e.lines[j]); if (acc.indexOf(q) >= 0) { best = i; break; } }
+            if (best >= 0) break;
+          }
+        } else {
+          var bb = 0;
+          for (i = 0; i < e.lines.length; i++) { var v = _verifySim(q, _verifyFlat(e.lines.slice(i, i + 3).join(""))); if (v > bb) { bb = v; best = i; } }
+        }
+        if (best < 0) best = 0;
+        var a = Math.max(0, best - 2), b = Math.min(e.lines.length, best + 7);
+        for (i = a; i < b; i++) {
+          var isM = !fuzzy && i >= best && i < best + 6 && q.indexOf(_verifyFlat(e.lines[i]).substr(0, 4)) >= 0;
+          var ln = document.createElement("div"); ln.className = "vh-ln" + (isM ? " m" : ""); ln.textContent = e.lines[i];
+          hit.appendChild(ln);
+        }
+        box.appendChild(hit);
+      }
+      function runVerify() {
+        var ta = document.getElementById("verify-input"), box = document.getElementById("verify-results");
+        if (!box) return;
+        var raw = (ta ? ta.value : "").trim();
+        if (!raw) { _verifyHint(box); return; }
+        var q = _verifyFlat(raw.replace(/^[「『]|[」』]$/g, ""));
+        if (q.length < 3) { box.textContent = ""; _verifyVerdict(box, "warn", "太短", "請輸入至少三個字。"); return; }
+        for (var p = 0; p < _VERIFY_PH.length; p++) {
+          var pat = _verifyFlat(_VERIFY_PH[p][0]);
+          if (q.indexOf(pat) >= 0 || (pat.indexOf(q) >= 0 && q.length >= 6)) {
+            box.textContent = ""; _verifyVerdict(box, "bad", "已知問題字串", _VERIFY_PH[p][1]); return;
+          }
+        }
+        var data = _verifyData(), hits = [], k;
+        for (k = 0; k < data.length; k++) { if (data[k].flat.indexOf(q) >= 0) hits.push(data[k]); }
+        box.textContent = "";
+        if (hits.length) {
+          _verifyVerdict(box, "ok", "逐字相符", "此句存在於現行正文，可直接引用。出現於 " + hits.map(function (h) { return "EP" + h.ep; }).join("、") + "。");
+          hits.forEach(function (h) { _verifyRenderHit(box, h, q, false); });
+        } else {
+          var bb = 0, be = null;
+          for (k = 0; k < data.length; k++) { var s = _verifySim(q, data[k].flat); if (s > bb) { bb = s; be = data[k]; } }
+          var pct = Math.round(bb * 100);
+          if (bb >= 0.9) _verifyVerdict(box, "warn", "近似（" + pct + "%）", "極可能是標點全形半形差異或舊版文字。請以下方原文為準逐字校正。");
+          else if (bb >= 0.6) _verifyVerdict(box, "warn", "改寫（" + pct + "%）", "與原文有明顯出入，通常是跨行拼接或概括入引號。不可加引號使用。");
+          else _verifyVerdict(box, "bad", "無對應（" + pct + "%）", "現行正文中查無此句。若確定引用自本作，請核對版本；否則不得以引文形式使用。");
+          if (be) _verifyRenderHit(box, be, q, true);
+        }
+      }
+      function verifyRandom(tries) {
+        tries = tries || 0;
+        var data = _verifyData();
+        var e = data[Math.floor(Math.random() * data.length)];
+        var c = e.lines.filter(function (l) { return l.length >= 8 && l.length <= 40; });
+        if (!c.length) { return tries < 20 ? verifyRandom(tries + 1) : undefined; }
+        var ta = document.getElementById("verify-input");
+        if (ta) ta.value = c[Math.floor(Math.random() * c.length)];
+        runVerify();
+      }
       function _searchHint(box, txt, cls) { box.textContent = ""; var h = document.createElement("div"); h.className = cls; h.textContent = txt; box.appendChild(h); }
       function runSearch(q) {
         var box = document.getElementById("search-results");
