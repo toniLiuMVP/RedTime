@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v87-20260718';  // bump: train GLB recolor(自強號 livery)+ cache limit/webp allowlist
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v386-20260719';   // bump every deploy that changes html/js/css; auto-reload then delivers the fix to clients still on the prior worker
+const RUNTIME_VERSION = 'runtime-v387-20260719';   // bump every deploy that changes html/js/css; auto-reload then delivers the fix to clients still on the prior worker
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
@@ -48,6 +48,8 @@ const RUNTIME_PRECACHE_URLS = [
   '/RedTime/lm402.html',
   '/RedTime/demos/platform-run/index.html',
   '/RedTime/demos/695/tiantanglu-3d/index.html',
+  // 引文查證器(離線・內嵌手稿全文)— 落實引用守則「引用前先查在不在」
+  '/RedTime/verify.html',
 ];
 
 // — 路徑分流規則 —
