@@ -3915,9 +3915,11 @@ html.novel-read {
 }
 
 /* ═══ 小說模式=乾淨如新書:index 入口頁只留「書名 + 翻開第一頁」(＋繼續閱讀鈕)。
-   其餘 hero 副文、故事介紹區塊、遊戲入口、時間軸、社群一律隱藏;想看完整介紹→用 nav 的模式切換鈕切回紅線/閱讀。
-   刻意保留:字級控制與 nav 模式鈕(功能/無障礙)、頁尾法律連結(合規)。 ═══ */
-html.novel-read #main-content > section:not(#hero) { display: none !important; }
+   其餘 hero 副文、故事介紹區塊、遊戲入口、時間軸、社群、以及夾在區塊之間的樞紐引句(.mid-echo)一律隱藏;
+   想看完整介紹→用 nav 的模式切換鈕切回紅線/閱讀。刻意保留:字級控制與 nav 模式鈕(功能/無障礙)、頁尾法律連結(合規)。
+   用 > *(非只 > section):#main-content 的直接子含 section 也含 .mid-echo 樞紐句 <div>/<a>,只 > section 會漏掉它們。
+   排除 #newcomer-tour:那是自管顯隱的引路 modal(?tour=1 深連仍需可開),不由此規則強制 display:none。 ═══ */
+html.novel-read #main-content > *:not(#hero):not(#newcomer-tour) { display: none !important; }
 html.novel-read .hero-pre,
 html.novel-read .hero-en,
 html.novel-read .hero-tagline,
