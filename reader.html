@@ -6166,13 +6166,36 @@
         --t2: #241804;
         --t3: #38280c;
       }
-      /* 淡化檔在小說模式下仍要讀得到:0.26 → 0.6(退位但不至於看不清) */
-      body.novel-read.quiet-read .ep-recap,
-      body.novel-read.quiet-read .ep-companion,
-      body.novel-read.quiet-read .ep-tline-wrap,
-      body.novel-read.quiet-read .ep-note,
-      body.novel-read.quiet-read .ep-teaser {
-        opacity: 0.6;
+      /* ═══ 小說模式=剛拆封的一本新小說:只留正文與基本閱讀控制
+         (章節/搜尋/自動/字體/放大鏡/燈光/首頁/翻頁)。導讀輔文與首讀註(fin-egg)一律
+         「完全隱藏」,不受靜讀檔位影響 —— 小說模式本身即承諾「乾淨、全新」,像第一次翻開一本新書。
+         想看導讀/註解/彩蛋等,切回紅線或閱讀模式即可,一切原樣還原(可逆)。 ═══ */
+      body.novel-read .ep-recap,
+      body.novel-read .ep-companion,
+      body.novel-read .ep-tline-wrap,
+      body.novel-read .ep-note,
+      body.novel-read .ep-teaser,
+      body.novel-read .ep-science,
+      body.novel-read .ep-granny,
+      body.novel-read .time-lab,
+      body.novel-read .ep-literati,
+      body.novel-read .fin-egg {
+        display: none !important;
+      }
+      /* 非閱讀類工具鈕在小說模式一併隱藏:手機工具列(fab)+ 桌機頂欄/更多選單/側欄。
+         導覽、一鍵展開/收合、彩蛋、選讀、鐵粉。display:none 蓋過承諾面的 opacity:1。 */
+      body.novel-read .fab-guide,
+      body.novel-read .fab-toggle-all,
+      body.novel-read .fab-egg,
+      body.novel-read .fab-curation,
+      body.novel-read .fab-fan,
+      body.novel-read #dsk-guide-btn,
+      body.novel-read #dsk-toggle-all,
+      body.novel-read #dsk-toggle-all-menu,
+      body.novel-read #dsk-curation-btn,
+      body.novel-read #dsk-egg-btn,
+      body.novel-read #sb-fan-btn {
+        display: none !important;
       }
       /* 裝飾性大集數浮水印:小說模式直接不顯示(它本來就刻意極淡,拉清楚反而干擾正文) */
       body.novel-read .ep-bg-num { display: none; }
@@ -6203,19 +6226,7 @@
       body.novel-read .ep-nav-btn.disabled { opacity: 0.62 !important; }
       body.novel-read .fab-nav-btn.disabled { opacity: 0.45 !important; }
       body.novel-read .ean-btn:disabled { opacity: 0.45 !important; }
-      /* novel 下手動降回淡化檔(quiet=1)時,hover/聚焦仍要能看清(蓋過 0.6 的同特異性 tie) */
-      body.novel-read.quiet-read .ep-recap:hover,
-      body.novel-read.quiet-read .ep-recap:focus-visible,
-      body.novel-read.quiet-read .ep-companion:hover,
-      body.novel-read.quiet-read .ep-companion:focus-within,
-      body.novel-read.quiet-read .ep-tline-wrap:hover,
-      body.novel-read.quiet-read .ep-tline-wrap:focus-within,
-      body.novel-read.quiet-read .ep-note:hover,
-      body.novel-read.quiet-read .ep-note:focus-within,
-      body.novel-read.quiet-read .ep-teaser:hover,
-      body.novel-read.quiet-read .ep-teaser:focus-within {
-        opacity: 1;
-      }
+      /* (小說模式已改為完全隱藏導讀輔文,原 quiet=1 淡化/hover 還原規則不再適用,故移除) */
       /* 結局留白的屏息浮現:保留漸近感,但 held 態拉到過 AA 門檻 */
       body.novel-read .ep-breath-held { opacity: 0.78 !important; }
       .eg-kicker {
@@ -7794,7 +7805,7 @@
             ><span class="ui-glyph btn-icon" data-ui-icon="home"></span
             ><span>首頁</span></a
           >
-          <button class="dsk-btn" onclick="toggleInfoPanel()">
+          <button class="dsk-btn" id="dsk-guide-btn" onclick="toggleInfoPanel()">
             <span class="ui-glyph btn-icon" data-ui-icon="guide"></span
             ><span>故事導覽</span>
           </button>
@@ -7831,7 +7842,7 @@
             </button>
             <div class="dsk-more" id="dsk-more" role="menu">
             <button class="dsk-btn" id="dsk-toggle-all-menu" role="menuitem" onclick="toggleAllSections()" aria-label="一鍵展開或收合所有導讀"><span class="ui-glyph btn-icon" data-ui-icon="grid-plus"></span><span>一鍵展開</span></button>
-              <button class="dsk-btn" onclick="openCuration()" role="menuitem">
+              <button class="dsk-btn" id="dsk-curation-btn" onclick="openCuration()" role="menuitem">
                 <span class="btn-icon" aria-hidden="true">✦</span
                 ><span>選讀策展</span>
               </button>
@@ -8160,7 +8171,7 @@
           <span class="fab-icon" data-ui-icon="sun"></span
           ><span class="fab-label">燈光</span>
         </button>
-        <button class="fab-item" type="button" onclick="openEggShelf()" aria-label="打開彩蛋收藏架">
+        <button class="fab-item fab-egg" type="button" onclick="openEggShelf()" aria-label="打開彩蛋收藏架">
           <span class="fab-icon" id="egg-icon" data-ui-icon="egg"></span
           ><span class="fab-label">彩蛋</span>
         </button>
