@@ -3953,8 +3953,12 @@ html.novel-read #nav .nav-cta { display: none !important; }
   color: var(--parchment);
 }
 
-/* 小說模式=封面:頁尾只留身分與法律(© / 隱私 / 條款 / 致謝),故事與遊戲導覽入口(翻開故事/LM402/天堂路/月台)與社群連結一律收起。 */
-html.novel-read footer .foot-link:not([href="privacy.html"]):not([href="terms.html"]):not([href="credits.html"]) {
+/* 小說模式=封面:頁尾只藏「故事/遊戲導覽入口」(翻開故事/LM402/天堂路/月台)。
+   社群(YouTube/FB/LINE/Threads)與法律(隱私/條款/致謝)一律保留,與 reader 小說模式頁尾一致(社群留)。 */
+html.novel-read footer .foot-link[href="reader.html"],
+html.novel-read footer .foot-link[href="lm402.html"],
+html.novel-read footer .foot-link[href*="tiantanglu"],
+html.novel-read footer .foot-link[href*="platform-run"] {
   display: none !important;
 }
 
