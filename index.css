@@ -3813,6 +3813,14 @@ a.tl-event:focus-visible .tl-event-go {
   vertical-align: 1.5px;
   white-space: nowrap;
 }
+.trial-game .tg-rating-why {
+  margin-left: 6px;
+  font-family: "Noto Sans TC", sans-serif;
+  font-size: 9.5px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: rgba(234, 230, 222, 0.35);
+}
 
 /* 首屏連續動畫的停止/播放開關(按鈕由 JS 建立;系統減少動態時不出現) */
 .motion-toggle {
