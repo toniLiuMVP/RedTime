@@ -6199,8 +6199,29 @@
       body.novel-read #sb-fan-btn,
       body.novel-read #sbFanTitle,
       body.novel-read .ep-game-bridge,
+      body.novel-read .ep-sec-nav,
+      body.novel-read .ep-finale,
+      body.novel-read .rt-egg,
+      body.novel-read #reread-hint,
       body.novel-read .game-link {
         display: none !important;
+      }
+      /* 小說模式=只剩故事正文:本集分節(.ep-sec-nav)、結尾卡(.ep-finale,含完讀者卡)、
+         回顧/母題/完讀彩蛋(.rt-egg 全變體)、紅線回頭處回讀提示(#reread-hint)一律隱藏(display:none 壓過承諾面 opacity:1)。 */
+      /* 完讀者專屬:小說模式「小說模式」鈕亮紅線光(看完全集才亮=乾淨留白是常態,世界等你真正開啟)。幽靜脈動,尊重 reduced-motion。 */
+      @keyframes rt-finished-glow {
+        0%, 100% { box-shadow: 0 0 5px rgba(228, 70, 80, 0.35), inset 0 0 0 1px rgba(228, 70, 80, 0.45); border-color: rgba(228, 70, 80, 0.6); }
+        50%      { box-shadow: 0 0 14px rgba(228, 70, 80, 0.7), inset 0 0 1px rgba(228, 70, 80, 0.4);  border-color: rgba(228, 70, 80, 0.95); }
+      }
+      /* 只用紅色邊框+脈動光暈當「紅線特效」,不強改文字色(保各主題原本可讀色,day/sepia 淺底不會變低對比)。
+         border-color 交給 keyframe 驅動脈動(base 不設 !important 才不會壓掉動畫)。 */
+      #btn-mode-dsk.is-finished-glow,
+      #btn-mode-mob.is-finished-glow {
+        animation: rt-finished-glow 2.6s ease-in-out infinite;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #btn-mode-dsk.is-finished-glow,
+        #btn-mode-mob.is-finished-glow { animation: none; border-color: rgba(228, 70, 80, 0.8); box-shadow: 0 0 9px rgba(228, 70, 80, 0.55); }
       }
       /* 裝飾性大集數浮水印:小說模式直接不顯示(它本來就刻意極淡,拉清楚反而干擾正文) */
       body.novel-read .ep-bg-num { display: none; }
@@ -13471,6 +13492,8 @@
         var focus = document.body.classList.contains("focus-read");
         var name = novel ? "小說模式" : focus ? "閱讀模式" : "紅線模式";
         var next = novel ? "紅線模式" : focus ? "小說模式" : "閱讀模式";
+        // 完讀者專屬:小說模式下,看完全集(__REDTIME_FINISHED__)者的鈕亮紅線光 — 乾淨留白是常態,看完了才亮=世界等你真正開啟
+        var finishedGlow = novel && (typeof window.__REDTIME_FINISHED__ === "function" && window.__REDTIME_FINISHED__());
         // 手機鈕(44×44 固定)在「XX」後強制斷行 → 2+2 乾淨堆疊;桌機鈕 nowrap 一行不動
         var mobHtml = escapeHtml(name.slice(0, 2)) + "<br>" + escapeHtml(name.slice(2));
         ["btn-mode-dsk", "btn-mode-mob"].forEach(function (id) {
@@ -13479,6 +13502,7 @@
           if (id === "btn-mode-mob") { b.innerHTML = mobHtml; } else { b.textContent = name; }
           b.setAttribute("aria-pressed", focus ? "true" : "false");
           b.setAttribute("aria-label", "目前是" + name + "，點一下切到" + next);
+          b.classList.toggle("is-finished-glow", finishedGlow);
         });
       }
       function _syncComfortActive() {

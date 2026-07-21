@@ -3952,3 +3952,21 @@ html.novel-read #nav .nav-cta { display: none !important; }
   border-color: rgba(233, 196, 142, 0.6);
   color: var(--parchment);
 }
+
+/* 小說模式=封面:頁尾只留身分與法律(© / 隱私 / 條款 / 致謝),故事與遊戲導覽入口(翻開故事/LM402/天堂路/月台)與社群連結一律收起。 */
+html.novel-read footer .foot-link:not([href="privacy.html"]):not([href="terms.html"]):not([href="credits.html"]) {
+  display: none !important;
+}
+
+/* 完讀者專屬:小說模式「小說模式」鈕亮紅線光(看完全集才亮=乾淨留白是常態,世界等你真正開啟)。幽靜脈動,尊重 reduced-motion。 */
+@keyframes rt-finished-glow-idx {
+  0%, 100% { box-shadow: 0 0 5px rgba(228, 70, 80, 0.35), inset 0 0 0 1px rgba(228, 70, 80, 0.45); border-color: rgba(228, 70, 80, 0.6); }
+  50%      { box-shadow: 0 0 14px rgba(228, 70, 80, 0.7), inset 0 0 1px rgba(228, 70, 80, 0.4); border-color: rgba(228, 70, 80, 0.95); }
+}
+/* 只用紅色邊框+脈動光暈當「紅線特效」,不強改文字色;border-color 交給 keyframe 驅動脈動。 */
+.nav-mode-toggle.is-finished-glow {
+  animation: rt-finished-glow-idx 2.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-mode-toggle.is-finished-glow { animation: none; border-color: rgba(228, 70, 80, 0.8); box-shadow: 0 0 9px rgba(228, 70, 80, 0.55); }
+}

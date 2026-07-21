@@ -995,6 +995,9 @@ el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key ===
     btn.textContent = name;
     btn.setAttribute("aria-pressed", (m === "novel" || m === "focus") ? "true" : "false"); // 對齊 reader:任何非紅線閱讀模式皆 pressed,跨頁讀屏一致
     btn.setAttribute("aria-label", "目前是" + name + "，點一下切到" + next);
+    // 完讀者專屬:小說模式下,看完全集(__REDTIME_FINISHED__)者的鈕亮紅線光 — 世界等你真正開啟
+    var finishedGlow = m === "novel" && (typeof window.__REDTIME_FINISHED__ === "function" && window.__REDTIME_FINISHED__());
+    btn.classList.toggle("is-finished-glow", finishedGlow);
   }
   function apply(m) {
     root.classList.toggle("novel-read", m === "novel");
