@@ -7962,6 +7962,7 @@
         <button class="cur-tab" type="button" role="tab" aria-selected="false" data-tab="5" onclick="switchCurTab(5,this)">相信的養成</button>
         <button class="cur-tab" type="button" role="tab" aria-selected="false" data-tab="9" onclick="switchCurTab(9,this)">抱之弧</button>
         <button class="cur-tab" type="button" role="tab" aria-selected="false" data-tab="10" onclick="switchCurTab(10,this)">餓養軸</button>
+        <button class="cur-tab" type="button" role="tab" aria-selected="false" data-tab="11" onclick="switchCurTab(11,this)">跑之弧</button>
         <button class="cur-tab" type="button" role="tab" aria-selected="false" data-tab="7" onclick="switchCurTab(7,this)">物件的回聲</button>
         <button class="cur-tab" type="button" role="tab" aria-selected="false" data-tab="8" onclick="switchCurTab(8,this)">命運阿嬤說過的話</button>
         <button class="cur-tab" type="button" role="tab" aria-selected="false" data-tab="6" id="cur-tab-open-q" onclick="switchCurTab(6,this)" style="display:none">還懸著的問題</button>
@@ -7978,6 +7979,7 @@
         <div class="cur-panel" id="cur-panel-8"></div>
         <div class="cur-panel" id="cur-panel-9"></div>
         <div class="cur-panel" id="cur-panel-10"></div>
+        <div class="cur-panel" id="cur-panel-11"></div>
       </div>
     </div>
 
@@ -10918,6 +10920,7 @@
         6: { anchor: "也算在約會的時間裡", text: "這時候的等待，還是甜的。" },
         12: { anchor: "就抱著。", text: "第一次讀，這只是她的一個請求。" },
         37: { anchor: "妳可以在劇本上做記號、畫圈圈", text: "妳是拿著螢光筆的人。他是不能偷看結局的人。" },
+        42: { anchor: "我老婆被車撞到", text: "整部書裡，「老婆」兩個字，只在這裡出現過一次。" },
       };
       // EP3 專屬標籤只給讀過 EP3 的讀者(首讀不先點破);建 episodes 時已讀集合尚未初始化,直接讀既有 key
       var _ep3ReadBefore = false;
@@ -12892,7 +12895,7 @@
         { label: '離別', kw: ['離', '別', '送', '歸', '萍', '天涯'] }
       ];
       // 0/1/4/5 是編譯期靜態內容 → 建一次即快取；tab 2(目錄)/3(回讀線索)依「已讀狀態」每次重算，刻意不快取（故無對應 key）。
-      var _curCache = { 0: false, 1: false, 4: false, 5: false, 8: false, 9: false, 10: false };
+      var _curCache = { 0: false, 1: false, 4: false, 5: false, 8: false, 9: false, 10: false, 11: false };
       // 攤平所有 LITERATI 真句(kind:quote),帶 ep;voice 擬寫不取(避去識別風險,也較難引)
       function _litQuotes() {
         var out = [];
@@ -12966,6 +12969,7 @@
         else if (i === 8) renderGrannyWords();
         else if (i === 9) renderHugArc();
         else if (i === 10) renderHungerArc();
+        else if (i === 11) renderRunArc();
       }
       // 相信的養成 · 學長線路徑:順著同一條線讀,看「相信」怎麼從一個願望長成信念。
       // 每站說明只給持有理由不劇透,句句對應既有母題資料(ANNOTATIONS 線索),不新增詮釋。
@@ -13050,6 +13054,33 @@
         }).join('');
         panel.innerHTML = '<div class="cur-intro"><p class="lead">全書有兩條愛的動詞。一條是抱，另一條是餵。</p><p>飢餓是唯一能中止穿越的力量，餵是抱之後最後一個動作。這裡收成一條路，看「肚子會餓嗎」這句話怎麼從一個人傳到另一個人。不劇透，只給一條走的順序。</p></div><div class="og-grid">' + cards + '</div>';
         _curCache[10] = true;
+      }
+      // 跑之弧 · 來得及的單位:與 相信的養成/抱之弧/餓養軸 並列的動詞讀法線。
+      // 這部書量「來得及」不用修辭時間,只用身體做得到的秒數。每站導語逐字驗過站上正文
+      // EPISODES(EP11/18/36/37/38/42);「逃跑」全書僅 EP38 一處且被否定,經實檔核實。
+      var RUN_ARC = [
+        { ep: 11, line: "「是因為快趕不上，還是因為快見到學長？」為了一通每天準時的電話，她用跑的。趕上，從這裡開始是甜的。" },
+        { ep: 18, line: "「人生跑馬燈跑了 10 秒鐘，我回憶了跟學妹的一生。」一生的重量，用一次奔跑的長度來量。" },
+        { ep: 36, line: "非常短、非常用力的三十秒。門快要關上的前兩秒，「我趕上了。」他一邊喘氣，一邊笑。不管多趕、多累，每一次都趕上。" },
+        { ep: 37, line: "因為不知道未來會怎樣，他把每一次月台上的狂奔，都當成「只有一次」。" },
+        { ep: 38, line: "全書唯一的「逃跑」在這裡，而且是被否定的：「妳在這 20 分鐘沒有逃跑」。全身都想往前衝的時候，難的是站好。" },
+        { ep: 42, line: "這條用秒數量出來的線，收在一個地址：「我到妳公司樓下。」到了，就是抵達。" },
+      ];
+      function renderRunArc() {
+        var panel = document.getElementById('cur-panel-11');
+        if (!panel || _curCache[11]) return;
+        var cards = RUN_ARC.map(function (st, i) {
+          var ep = EPISODES.find(function (e) { return e.ep === st.ep; });
+          if (!ep) return '';
+          var arc = sanitizeClassToken(ep.arc || 'mixed');
+          return '<button type="button" class="og-card arc-' + arc + '" onclick="closeCuration();goToEp(' + st.ep + ')">'
+            + '<span class="bp-step">第 ' + (i + 1) + ' 站 · ' + fmtEp(st.ep) + '</span>'
+            + '<span class="og-line">' + escapeHtml(st.line) + '</span>'
+            + '<span class="og-go">讀這一站 →</span>'
+            + '</button>';
+        }).join('');
+        panel.innerHTML = '<div class="cur-intro"><p class="lead">這部書量「來得及」，不用千鈞一髮的修辭，只用身體做得到的秒數：一秒、兩秒、十秒、三十秒。</p><p>與相信的養成、抱之弧、餓養軸並列的一條動詞線：跑，是為了趕上。照順序走，你會看見「趕上」怎麼從一個女孩的雀躍，變成一個父親的承諾，最後停在一個地址。不劇透，只給一條走的順序。</p></div><div class="og-grid">' + cards + '</div>';
+        _curCache[11] = true;
       }
       // C10 物件的回聲:成對母題導讀。每對兩件物件在不同集各出現,卻互相呼應。配對經 toni 拍板,句句站方框架、不劇透、可跳集。
       var OBJECT_ECHOES = [
