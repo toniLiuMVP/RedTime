@@ -85,6 +85,9 @@ import("./assets/lm402/app.js")
   .then(() => { window.__lm402Ready = true; })
   .catch((err) => {
     console.error("[lm402] failed to load scene module", err);
+    // 進場旗標只證明「點了進場鈕」,證明不了 import 鏈健康。
+    // 這裡清掉,20 秒 boot-sentry 才會判定不健康 → purge 壞掉的 SW 快取自癒。
+    window.__lm402GateEntered = false;
     const loader = document.getElementById("lm402-loader");
     if (loader) {
       const inner = loader.querySelector(".loader-inner");

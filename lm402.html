@@ -80,6 +80,38 @@
     <link rel="modulepreload" href="assets/lm402/vendor-three.module.js" />
     <link rel="modulepreload" href="assets/lm402/three.core.js" />
     <link rel="modulepreload" href="assets/lm402/renderer.js" />
+    <!-- 補齊整棵依賴樹：只 preload renderer 的話，瀏覽器仍得等 lm402-mod1.js
+         動態 import app.js、再解析 app.js 才知道要抓 data.js / ui-panels.js，
+         解析 renderer.js 才知道要抓 GLTFLoader / DRACOLoader —— 每一層都是一個
+         往返。這幾支全是靜態 import（mod1 → app.js → data.js・ui-panels.js・
+         renderer.js → GLTFLoader.js・DRACOLoader.js），先抓一定用得到，不是死流量。 -->
+    <link rel="modulepreload" href="assets/lm402/app.js" />
+    <link rel="modulepreload" href="assets/lm402/data.js" />
+    <link rel="modulepreload" href="assets/lm402/ui-panels.js" />
+    <link rel="modulepreload" href="assets/lm402/GLTFLoader.js" />
+    <link rel="modulepreload" href="assets/lm402/DRACOLoader.js" />
+    <!-- 第三層(renderer.js 的靜態 import)與第四層(GLTFLoader/postfx 的靜態 import)：
+         少了這批,瀏覽器要等 renderer.js 抵達解析後才發現還有 15+ 支要抓,又一輪往返。 -->
+    <link rel="modulepreload" href="assets/lm402/postfx.js" />
+    <link rel="modulepreload" href="assets/lm402/motion-blur.js" />
+    <link rel="modulepreload" href="assets/lm402/postfx-focus.js" />
+    <link rel="modulepreload" href="assets/lm402/expression-rig.js" />
+    <link rel="modulepreload" href="assets/lm402/cloth-rig.js" />
+    <link rel="modulepreload" href="assets/lm402/consciousness-lights.js" />
+    <link rel="modulepreload" href="assets/lm402/consciousness-particles.js" />
+    <link rel="modulepreload" href="assets/lm402/consciousness-text.js" />
+    <link rel="modulepreload" href="assets/lm402/e4-props.js" />
+    <link rel="modulepreload" href="assets/lm402/environment-presets.js" />
+    <link rel="modulepreload" href="assets/lm402/envmap-sunset.js" />
+    <link rel="modulepreload" href="assets/lm402/initiated-interactions.js" />
+    <link rel="modulepreload" href="assets/lm402/junior-materials-hr.js" />
+    <link rel="modulepreload" href="assets/lm402/narrative-audio.js" />
+    <link rel="modulepreload" href="assets/lm402/narrative-letter.js" />
+    <link rel="modulepreload" href="assets/lm402/narrative-overlay.js" />
+    <link rel="modulepreload" href="assets/lm402/narrative-transitions.js" />
+    <link rel="modulepreload" href="assets/lm402/polaroid.js" />
+    <link rel="modulepreload" href="assets/lm402/BufferGeometryUtils.js" />
+    <link rel="modulepreload" href="assets/lm402/SkeletonUtils.js" />
     <!-- GLB prefetch 已移除：GLB 載入管線目前未啟用（manifest 未接），prefetch 是 134KB 死流量 -->
     <script src="assets/load-fonts.js" data-href="fonts/fonts.css"></script><!-- F6:826KB 字型 CSS 改非阻塞載入(已 preload,font-display:swap),不擋 LM402 首屏 -->
     <noscript><link rel="stylesheet" href="fonts/fonts.css" /></noscript>

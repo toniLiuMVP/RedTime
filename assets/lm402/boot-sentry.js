@@ -28,6 +28,13 @@
     if (TEST) return false;
     return !!(
       window.__lm402Ready ||
+      // 玩家已經按下玄關進場鈕（lm402-mod1.js enterScene 設此旗標）。
+      // 必須認這一項：進場後玄關節點在 1.2 秒就被移除，而 __lm402Ready 要等
+      // app.js 動態 import 完成並把 3D 場景建起來才會翻 true。慢裝置建場
+      // 可能超過 20 秒 → 兩個既有條件同時為假 → 被判 boot 失敗而 purgeAndReload
+      // 清光快取重載，反而讓下一次載入更慢（把「慢但正常」誤殺成「壞掉」）。
+      // 旗標為 true 代表模組確實跑到了進場流程，boot 本身沒壞。
+      window.__lm402GateEntered ||
       document.getElementById("cinematic-gate-enter") ||
       document.getElementById("cold-open")
     );

@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v88-20260726';  // bump: font subset re-cut(new glyph coverage)
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v400-20260729';   // bump every deploy that changes html/js/css; auto-reload then delivers the fix to clients still on the prior worker
+const RUNTIME_VERSION = 'runtime-v401-20260729';   // bump every deploy that changes html/js/css; auto-reload then delivers the fix to clients still on the prior worker
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
@@ -53,14 +53,18 @@ const RUNTIME_PRECACHE_URLS = [
 ];
 
 // — 路徑分流規則 —
-// 大型靜態資源(GLB / vendor / fonts / images)→ STATIC_CACHE
+// 大型靜態資源(GLB / vendor / fonts / images / 音訊 / wasm)→ STATIC_CACHE
 // 其他(html / data.js / app.js / css)→ RUNTIME_CACHE
 function isStaticAsset(url) {
   return /\.(glb|woff2?|ttf|otf|png|jpg|jpeg|webp|svg|ico)$/i.test(url) ||
+         /\.(mp3|m4a|ogg)$/i.test(url) ||   // BGM 單首 4-7MB 且內容不變;走 RUNTIME 會被每次部署的 bump 沖掉、等於每次上線重下
+         /\.wasm$/i.test(url) ||   // draco decoder wasm:binary,只在 vendor 換版時才變
          url.includes('/fonts/fonts.css') ||   // large invariant stylesheet, precached in STATIC — serve cache-first to match
          url.includes('/vendor-three') ||
          url.includes('/_vendor/') ||
          url.includes('/GLTFLoader') ||
+         url.includes('/DRACOLoader') ||
+         url.includes('/draco/') ||   // decoder 目錄(wasm wrapper JS + wasm)— 與 STATIC_PRECACHE_URLS 對齊,precache 完就別再 network-first
          url.includes('/three.core') ||
          url.includes('/babylon');   // Babylon UMD 8MB → STATIC cache（on-demand,僅 ?webgpu=1 抓）
 }
@@ -156,6 +160,65 @@ self.addEventListener('message', event => {
   })());
 });
 
+// 暖檔 in-flight 去重表(url → Promise)。SW 被回收重啟時歸零,無妨 — 只影響去重不影響正確性。
+const _warmInFlight = new Map();
+
+// STATIC 資產的 Range 請求:快取命中 → 切片自組 206;未命中 → passthrough(+音訊背景暖檔)。
+// 任何一步出錯一律回退到原生 fetch,絕不讓 SW 成為播放失敗的原因。
+async function serveRangeFromStatic(event, request) {
+  try {
+    const rangeHeader = request.headers.get('range') || '';
+    // multi-range(帶逗號)不模擬,交給網路
+    const m = /^bytes=(\d*)-(\d*)$/i.exec(rangeHeader.trim());
+    if (!m || rangeHeader.includes(',')) return fetch(request);
+    const cache = await caches.open(STATIC_CACHE);
+    const full = await cache.match(request.url);
+    if (!full || full.status !== 200) {
+      // 只對音訊做背景暖檔(wasm/vendor 走 fetch() 不帶 Range,不會進到這裡)。
+      // in-flight 去重:媒體棧首播會連發多個 Range 請求(探測 + 本體 + seek 重連),
+      // cache.put 完成前全都 miss — 不去重的話同一首歌會並發下載多次完整檔。
+      if (/\.(mp3|m4a|ogg)$/i.test(new URL(request.url).pathname)) {
+        if (!_warmInFlight.has(request.url)) {
+          const warm = (async () => {
+            try {
+              const res = await fetch(request.url, { cache: 'no-cache' });
+              if (res && res.status === 200) {
+                await cache.put(request.url, res);
+                await trimCache(STATIC_CACHE, MAX_STATIC_ITEMS);
+              }
+            } catch (e) { /* 暖檔失敗不影響本次播放 */ }
+          })().finally(() => _warmInFlight.delete(request.url));
+          _warmInFlight.set(request.url, warm);
+        }
+        event.waitUntil(_warmInFlight.get(request.url));
+      }
+      return fetch(request);
+    }
+    const buf = await full.arrayBuffer();
+    const size = buf.byteLength;
+    let start, end;
+    if (m[1] === '') {           // 後綴形式 bytes=-N:最後 N bytes
+      if (m[2] === '') return fetch(request);
+      start = Math.max(0, size - Number(m[2]));
+      end = size - 1;
+    } else {
+      start = Number(m[1]);
+      end = m[2] === '' ? size - 1 : Math.min(Number(m[2]), size - 1);
+    }
+    if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || start > end || start >= size) {
+      return fetch(request);
+    }
+    const headers = new Headers();
+    headers.set('Content-Type', full.headers.get('Content-Type') || 'application/octet-stream');
+    headers.set('Content-Range', `bytes ${start}-${end}/${size}`);
+    headers.set('Content-Length', String(end - start + 1));
+    headers.set('Accept-Ranges', 'bytes');
+    return new Response(buf.slice(start, end + 1), { status: 206, statusText: 'Partial Content', headers });
+  } catch (e) {
+    return fetch(request);
+  }
+}
+
 self.addEventListener('fetch', event => {
   const { request } = event;
 
@@ -173,15 +236,38 @@ self.addEventListener('fetch', event => {
   // 安全紀律 4:path allowlist(只 cache 已知 file type / html,避免異常 path 入 cache)
   if (!isCacheable(url.pathname)) return;
 
+  // 安全紀律 5:帶 Range 的請求(音訊 seek / 媒體 partial load)不走一般 cache 邏輯 —
+  // 206 partial 無法 cache.put(Cache API 規格直接 throw TypeError),完整快取直接回 200
+  // 給 Range 請求媒體 seek 也會異常。但 <audio> 的 mp3 載入「一律」帶 Range(Chrome/Safari),
+  // 單純 passthrough 會讓 BGM 永遠進不了 STATIC 快取、每次部署重下 4-7MB/首。
+  // 解法:STATIC 資產的 Range 請求改由 serveRangeFromStatic 處理 —
+  //   快取有完整檔 → 從快取切片自組合規 206 回應(離線播放 + seek 都成立);
+  //   快取沒有(且是音訊)→ passthrough 原請求,同時背景抓一次完整檔入快取(僅首播多一次下載,
+  //   之後所有回訪與部署都命中;STATIC 不隨 RUNTIME bump 失效)。
+  // 其餘(非 STATIC)Range 請求維持 passthrough。
+  if (request.headers.has('range')) {
+    if (isStaticAsset(url.pathname)) {
+      event.respondWith(serveRangeFromStatic(event, request));
+    }
+    return;
+  }
+
   // STATIC 大型不變資產(GLB / vendor / fonts / images):cache-first
   // 回訪瞬命中、省頻寬;靠 STATIC_VERSION bump + activate 清舊版做 invalidation。
   // (前提:sw.js 本身不可被強快取,GitHub Pages 預設 max-age 短 + 瀏覽器 24h 強制檢查兜底)
   if (isStaticAsset(url.pathname)) {
     event.respondWith(
-      caches.match(request).then(cached => {
+      // 先查 STATIC_CACHE 本尊,查無再全域 match(離線收藏包當後備)。
+      // 直接全域 match 會按 cache「建立順序」搜尋 — 建過離線包的用戶,舊 pack 條目
+      // 會永久遮蔽之後 STATIC_VERSION bump 換上的新內容(例如字型子集重切白做)。
+      caches.open(STATIC_CACHE)
+        .then(c => c.match(request))
+        .then(hit => hit || caches.match(request))
+        .then(cached => {
         if (cached) return cached;
         return fetch(request).then(response => {
-          if (response.ok) {
+          // 只快取完整的 200(206/partial 一律不入 cache — cache.put 會 throw)
+          if (response.status === 200) {
             const clone = response.clone();
             caches.open(STATIC_CACHE)
               .then(cache => cache.put(request, clone))
@@ -199,7 +285,8 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     fetch(request)
       .then(response => {
-        if (response.ok) {
+        // 只快取完整的 200(206/partial 一律不入 cache — cache.put 會 throw)
+        if (response.status === 200) {
           const clone = response.clone();
           caches.open(RUNTIME_CACHE)
             .then(cache => cache.put(request, clone))
@@ -211,7 +298,12 @@ self.addEventListener('fetch', event => {
         }
         return response;
       })
-      .catch(() => caches.match(request).then(cached => {
+      .catch(() => caches.open(RUNTIME_CACHE)
+        // 離線回退同樣先查 RUNTIME 本尊再全域 match — 理由同 STATIC 分支:
+        // 別讓較早建立的離線收藏包永久遮蔽較新的 runtime 副本。
+        .then(c => c.match(request))
+        .then(hit => hit || caches.match(request))
+        .then(cached => {
         if (cached) return cached;
         // 離線且未快取的「導覽請求」(分享深連 / 帶 utm 的 URL / 未 precache 的路徑)
         // → 回退到快取的 app shell,讓 PWA 真正離線可用,而非瀏覽器錯誤頁。
