@@ -3401,7 +3401,9 @@ let _whiteoutOpaqueSince = 0;
 function maskPauseKey(now) {
   let key = "";
   if (state.storyPaused) key += "s";
-  if (state.councilPaused) key += "c";
+  /* councilPaused 刻意不列:council 浮層是半透明的(中心約 58% 透視),
+     且進場同時點亮呼吸光柱/記憶粒子/飄字(time 驅動,不吃 dt=0)——
+     停渲染會讓玩家隔著浮層看靜格,與橋段的視覺目標矛盾。 */
   const bo = dom.endingBlackout;
   if (bo && !bo.hidden && bo.style.opacity === "1") {
     if (!_blackoutOpaqueSince) _blackoutOpaqueSince = now;
