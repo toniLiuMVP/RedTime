@@ -138,13 +138,30 @@ let liveState = null;
 /* ── Graphics Quality System ──
    tier 表定義在建場之前：createLm402Scene 需要在首幀前知道 tier，
    幾何細分（segK）與寫實組件才能在建場時就用正確檔位。 */
+/* renderScale（R3 統一解析度）— 取代舊欄位 maxPixelRatio。
+   舊語意：maxPixelRatio 只夾 drawing buffer（device px），而 postfx 的 RT 一律是 CSS px
+     → 最後一支 composite 在 device px 的像素數上跑，來源卻只有 CSS px。
+       1920×1080 CSS + dpr2 + ultra：final pass 8.29Mpx 讀 2.07Mpx 的圖 —
+       4 倍 fill 全花在 bilinear 放大，零新資訊；且 ultra(4.0) 與 perfect(8.0)
+       在任何 dpr≤2 的螢幕上完全等價，tier 語意是假的。
+   新語意：renderScale = 3D 內部解析度相對 CSS px 的倍率，同時驅動
+     renderer 的 setPixelRatio 與 postfx 的 RT 尺寸 → composite 永遠 1:1。
+   檔位取值理由：
+     ultra 是桌機預設檔（getDefaultQuality 非行動一律回 ultra），維持 1.0 =
+       3D 內部解析度與改動前完全相同，純賺 final pass 那 4 倍；
+     perfect 才升到 1.25（自願選重檔者才付 1.56× 的 3D 成本，
+       而且是這條管線第一次真的比 ultra 更清楚）；
+     low / smooth 在新語意下首度能真正降低 3D 成本
+       （舊語意只縮 drawing buffer，postfx RT 永遠 1× CSS，3D 一點沒省）。
+     smooth 是行動預設檔（getDefaultQuality 行動回 smooth），行動端那 0.85 由此處負責 —
+       postfx.js setSize() 的 dprScale 已退為常數 1.0，不會再乘第二次。 */
 const QUALITY_TIERS = {
-  low:     { shadowMapSize: 256,  maxPixelRatio: 0.75, dustCount: 16,  mirrorOpacity: 0.04, portraitBoost: 1 },
-  smooth:  { shadowMapSize: 512,  maxPixelRatio: 1.0,  dustCount: 32,  mirrorOpacity: 0.08, portraitBoost: 1 },
-  high:    { shadowMapSize: 1024, maxPixelRatio: 1.5,  dustCount: 64,  mirrorOpacity: 0.10, portraitBoost: 1 },
-  ultra:   { shadowMapSize: 2048, maxPixelRatio: 4.0,  dustCount: 128, mirrorOpacity: 0.14, portraitBoost: 1 },
-  perfect: { shadowMapSize: 4096, maxPixelRatio: 8.0,  dustCount: 256, mirrorOpacity: 0.18, portraitBoost: 1.5 },
-  real:    { shadowMapSize: 4096, maxPixelRatio: 8.0,  dustCount: 320, mirrorOpacity: 0.20, portraitBoost: 1.5, realisticJunior: true, juniorDetail: 3 },
+  low:     { shadowMapSize: 256,  renderScale: 0.7,  dustCount: 16,  mirrorOpacity: 0.04, portraitBoost: 1 },
+  smooth:  { shadowMapSize: 512,  renderScale: 0.85, dustCount: 32,  mirrorOpacity: 0.08, portraitBoost: 1 },
+  high:    { shadowMapSize: 1024, renderScale: 1.0,  dustCount: 64,  mirrorOpacity: 0.10, portraitBoost: 1 },
+  ultra:   { shadowMapSize: 2048, renderScale: 1.0,  dustCount: 128, mirrorOpacity: 0.14, portraitBoost: 1 },
+  perfect: { shadowMapSize: 4096, renderScale: 1.25, dustCount: 256, mirrorOpacity: 0.18, portraitBoost: 1.5 },
+  real:    { shadowMapSize: 4096, renderScale: 1.25, dustCount: 320, mirrorOpacity: 0.20, portraitBoost: 1.5, realisticJunior: true, juniorDetail: 3 },
 };
 // real（真實畫質）自選單隱藏：tier 定義與 renderer 邏輯全保留、不再更新，
 // console 走 window.__REAL_TIER__() 仍可開啟（封存非刪除）

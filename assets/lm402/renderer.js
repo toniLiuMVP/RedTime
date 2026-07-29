@@ -3537,9 +3537,13 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     shadowMapSize:
       runtimeState.qualityTiers?.[runtimeState.qualityTier]?.shadowMapSize ??
       (V ? 896 : 2048),
-    maxPixelRatio:
-      runtimeState.qualityTiers?.[runtimeState.qualityTier]?.maxPixelRatio ??
-      (V ? 1 : 1.5),
+    // renderScale（R3 統一解析度）：3D 內部解析度相對 CSS px 的倍率。
+    // 同時驅動 setPixelRatio（drawing buffer）與 __postfx.setSize（RT 尺寸），
+    // 故 final composite 永遠 1:1，不再拿 device px 放大 CSS px 來源。
+    // fallback 跟著 tier 表的行動端預設走（V = coarse pointer → 0.85）。
+    renderScale:
+      runtimeState.qualityTiers?.[runtimeState.qualityTier]?.renderScale ??
+      (V ? 0.85 : 1.0),
     dustCount:
       runtimeState.qualityTiers?.[runtimeState.qualityTier]?.dustCount ??
       (V ? 48 : 96),
@@ -7227,9 +7231,23 @@ export function createLm402Scene(D, runtimeOptions = {}) {
   // layout thrash，但畫布尺寸只在 resize 類事件後才會變。
   // 改事件驅動：resize／orientationchange／visualViewport resize 設 dirty，
   // render() 只在 dirty（含首幀，旗標初值為 true）時跑一次，跑完由 qo() 自己清旗標。
-  // devicePixelRatio 變化（頁面縮放、拖到不同 DPI 螢幕）本身就會觸發 window resize，
-  // 故 maxPixelRatio 這條路徑一併涵蓋；品質檔切換那邊仍是直接呼叫 qo()，即時生效。
+  // R3 統一解析度後 renderScale 與 devicePixelRatio 解耦：postfx 開啟時 pixelRatio 只看
+  // renderScale，dpr 變化（頁面縮放、拖到不同 DPI 螢幕）不再影響 3D 內部解析度，
+  // 但它會觸發 window resize → qo() 重跑，CSS 尺寸與 RT 尺寸仍會同步更新。
+  // postfx 關閉（或建立失敗）時才回頭吃 dpr（見 qo() 內的分支）— 那條路徑下 3D 是
+  // 真的用 drawing buffer 在畫，dpr 變化必須反映，而 resize 事件同樣涵蓋。
+  // 品質檔切換那邊仍是直接呼叫 qo()，即時生效。
   let _viewportDirty = !0;
+  // S4：postfx 動態開關（window.__POSTFX__.tuning.enabled，console 與 app.js 都可改）
+  //   翻轉時 drawing buffer 的語意會變（postfx 開 = RT 解析度來源；關 = 直接畫到螢幕），
+  //   pixelRatio 必須跟著換算式，否則關掉 postfx 後畫面會真的變糊。
+  //   __postfx 建立失敗為 null 時等同「永遠關閉」，走同一條分支。
+  //   判據刻意與 postfx.js render() 開頭的 `if (!tuning.enabled)` 同為 truthiness，
+  //   避免有人塞 0 / null 時兩邊對「開著沒」的認定不一致。
+  function _postfxActive() {
+    return !!(__postfx && __postfx.tuning && __postfx.tuning.enabled);
+  }
+  let _postfxWasActive = _postfxActive();
   if (typeof window !== "undefined") {
     const markViewportDirty = () => {
       _viewportDirty = !0;
@@ -7249,9 +7267,16 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         1,
         Math.round(e.height || D.clientHeight || window.innerHeight || 1),
       );
-    (U.setPixelRatio(
-      Math.min(window.devicePixelRatio || 1, renderTuning.maxPixelRatio),
-    ),
+    // postfx 開：drawing buffer 只是 final composite 的輸出面，尺寸必須等於 postfx RT
+    //   （= CSS px × renderScale），composite 才是 1:1。這裡不再夾 devicePixelRatio —
+    //   那正是「輸出比來源大、4 倍 fill 換零新資訊」的元凶。
+    // postfx 關／建立失敗：3D 真的畫在 drawing buffer 上，此時 dpr 才有意義（上限 2）。
+    ((_postfxWasActive = _postfxActive()),
+      U.setPixelRatio(
+        _postfxWasActive
+          ? renderTuning.renderScale
+          : Math.min(window.devicePixelRatio || 1, 2),
+      ),
       U.setSize(t, o, !1),
       U.setViewport(0, 0, t, o),
       U.setScissor(0, 0, t, o),
@@ -7260,7 +7285,17 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       (U.domElement.style.height = `${o}px`),
       (q.aspect = t / o),
       q.updateProjectionMatrix());
-    __postfx?.setSize?.(t, o);
+    // 傳 render px（CSS px × renderScale），不是 CSS px：
+    //   postfx 端的 dprScale 因此可退為常數 1.0，RT 尺寸 == drawing buffer 尺寸，
+    //   且 matFinal 的 uTexel（1/width, 1/height）自動對應 tDiffuse 的實際尺寸
+    //   （舊碼那裡拿 CSS px 當 RT 尺寸用，行動端 0.85 縮放後 texel 是錯的 — 順手修掉）。
+    // 用 Math.floor 不用 Math.round：Three 的 setSize 是
+    //   canvas.width = Math.floor(width * pixelRatio)、setViewport 也是 .floor()，
+    //   四捨五入會在非整數乘積（例：390 CSS × 0.85 = 331.5）差 1 px，composite 又不是 1:1。
+    __postfx?.setSize?.(
+      Math.max(1, Math.floor(t * renderTuning.renderScale)),
+      Math.max(1, Math.floor(o * renderTuning.renderScale)),
+    );
   }
   const _isMobile = () => window.innerWidth <= 1080;
   function _o(e, t = 0, o = !0) {
@@ -7670,6 +7705,11 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     _worldGroup: j,
     _scene: W,
     render: function (s) {
+      // S4：postfx 開關翻轉偵測。__POSTFX__.tuning.enabled 可被 console／app.js 隨時改，
+      // 沒有事件可掛，故在每幀開頭比對狀態（一次布林讀取，成本可忽略）。
+      // 翻轉 → 標 dirty → 同一幀的 qo() 立刻換算式（postfx.render 在本函式尾端才跑，
+      // 所以這一幀就已經是對的 pixelRatio）。
+      _postfxActive() !== _postfxWasActive && (_viewportDirty = !0);
       _viewportDirty && qo();
       const sceneTime = s.time ?? 0;
       const perfectType = s.endingSequence?.type ?? s.ending,
@@ -8498,9 +8538,9 @@ export function createLm402Scene(D, runtimeOptions = {}) {
           shadowMapSize:
             runtimeState.qualityTiers?.[runtimeState.qualityTier]
               ?.shadowMapSize ?? renderTuning.shadowMapSize,
-          maxPixelRatio:
+          renderScale:
             runtimeState.qualityTiers?.[runtimeState.qualityTier]
-              ?.maxPixelRatio ?? renderTuning.maxPixelRatio,
+              ?.renderScale ?? renderTuning.renderScale,
           dustCount:
             runtimeState.qualityTiers?.[runtimeState.qualityTier]?.dustCount ??
             renderTuning.dustCount,
