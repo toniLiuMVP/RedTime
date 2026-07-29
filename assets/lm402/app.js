@@ -3461,9 +3461,6 @@ function tick(now) {
     adaptSubtitleBackground();
     audioSystem.update(dt);
     updateCharacterAudio(dt);
-    if (typeof window !== "undefined" && window.__E4_PROPS__) {
-      window.__E4_PROPS__.update(dt);   // E4 雨/雪粒子 + 雲微飄
-    }
     const maskKey = maskPauseKey(now);
     if (maskKey !== _maskPrevKey) {
       /* 遮罩組合有變動（含解除）：歸零計數、立刻恢復渲染 */
@@ -3471,7 +3468,13 @@ function tick(now) {
       _maskPrevKey = maskKey;
       _maskIdleFrames = 0;
     }
-    if (!maskKey || _maskIdleFrames < MASK_IDLE_RENDER_FRAMES) {
+    const willRender = !maskKey || _maskIdleFrames < MASK_IDLE_RENDER_FRAMES;
+    /* E4 粒子每幀全量重寫 position buffer — 只在本幀會渲染時才算,
+       否則黑幕期間純燒 CPU 餵一個停掉的 renderer。恢復時粒子從暫停處續動。 */
+    if (willRender && typeof window !== "undefined" && window.__E4_PROPS__) {
+      window.__E4_PROPS__.update(dt);   // E4 雨/雪粒子 + 雲微飄
+    }
+    if (willRender) {
       if (maskKey) _maskIdleFrames += 1;
       renderFrame();
     }

@@ -15,6 +15,9 @@
 <link rel="modulepreload" href="../../assets/lm402/three.core.js">
 <link rel="modulepreload" href="./game.js">
 <link rel="modulepreload" href="./postfx.js">
+<!-- postfx.js 的第二層靜態 import,少了它們仍多一輪往返 -->
+<link rel="modulepreload" href="./motion-blur.js">
+<link rel="modulepreload" href="./postfx-focus.js">
 <!-- T11：場景初始化即載的最大 prop，preload 讓瀏覽器 parse JS 前就並行抓。
      crossorigin 必要：FileLoader 的 fetch 是 mode:cors + credentials:same-origin，
      preload 不加 crossorigin 時是 no-cors + include，永不匹配 → 會下載兩次 -->
