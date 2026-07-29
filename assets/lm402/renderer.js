@@ -47,6 +47,14 @@ let __initiated = null;
 let __polaroid = null;
 const __sunFar = new e.Vector3();   // Tier 7：太陽世界座標暫存（每幀 reuse）
 const __sunUv = new e.Vector2();    // Tier 7：太陽螢幕座標（NDC → UV）
+// 眼高偏移常數（雙時空注視點：角色腳底 + 1.34m）。原本每幀 new 兩個一模一樣的
+// Vector3 丟給 add()，而 add() 只讀不寫參數 → 常數共用完全安全。
+const __EYE_OFFSET_134 = new e.Vector3(0, 1.34, 0);
+// rear_wait 跟拍鏡頭的暫存向量（每幀 reuse，取代原本 6 個 new/clone）。
+// 只在同一個 branch 內部使用、當幀用完即丟，沒有跨幀持有。
+const __camFwd = new e.Vector3();
+const __camFollow = new e.Vector3();
+const __camLook = new e.Vector3();
 export const WORLD_SCALE = 1 / 80;
 const a = new e.Vector3(),
   n = new e.Vector3(),
@@ -149,6 +157,11 @@ function buildJuniorHairRibbon(t, o, a, n = {}) {
       opacity: n.opacity ?? 0.96,
       alphaTest: n.alphaTest ?? 0.18,
       side: e.DoubleSide,
+      // 單片錐形髮片（PlaneGeometry + 1.2~1.6cm 微弓，不自我摺疊）：
+      // 同一像素只會被正面或背面其中一面覆蓋，renderer 預設的
+      // BackSide→FrontSide 兩趟畫法結果完全相同，但每趟都會打一次
+      // needsUpdate（program 參數重評估 + uniform 重傳）。改走單趟。
+      forceSinglePass: !0,
       depthWrite: !1,
       roughness: n.roughness ?? 0.44,
       metalness: 0.03,
@@ -3130,6 +3143,26 @@ function loadJuniorGltfModel(t, o = {}) {
     }
   });
 }
+// GLB 材質 transmission 守衛（見載入 callback 的說明）。
+// material 可能是陣列（multi-material mesh），兩種都要走到。
+function __stripGltfTransmission(root, kind) {
+  if (!root?.traverse) return 0;
+  let hit = 0;
+  root.traverse((obj) => {
+    const m = obj.material;
+    if (!m) return;
+    (Array.isArray(m) ? m : [m]).forEach((mat) => {
+      if (!mat || !(mat.transmission > 0)) return;
+      console.warn(
+        `[lm402] GLB 材質帶 transmission=${mat.transmission}（${kind ?? "glb"} / ${
+          mat.name || obj.name || "unnamed"
+        }）— 已強制歸零：transmission>0 會讓 three 每幀多渲一次整個不透明場景。`,
+      );
+      ((mat.transmission = 0), (mat.needsUpdate = !0), (hit += 1));
+    });
+  });
+  return hit;
+}
 function attachJuniorGltfModel(t, o, a = {}) {
   if (!t) return null;
   const n = o?.scene ?? o?.scenes?.[0] ?? null;
@@ -3188,6 +3221,45 @@ function attachJuniorGltfModel(t, o, a = {}) {
     n
   );
 }
+// 舊程序頭／臉／髮零件在 pose refs 上的鍵名。原本函式體內有兩份一模一樣的
+// 34 元素陣列字面量，而這支函式是每幀跑的 —— 等於每幀配置兩個 34 格陣列
+// 外加兩個 forEach closure。改成模組層鍵名常數，逐鍵取 refs。
+const JUNIOR_LEGACY_HEAD_KEYS = [
+  "head",
+  "jaw",
+  "faceSideL",
+  "faceSideR",
+  "facePlane",
+  "faceShell",
+  "frontHairStripL",
+  "frontHairStripR",
+  "frontHairInnerL",
+  "frontHairInnerR",
+  "hairCurtainL",
+  "hairCurtainR",
+  "sideLockL",
+  "sideLockR",
+  "fringe",
+  "browL",
+  "browR",
+  "eyeWhiteL",
+  "eyeWhiteR",
+  "irisL",
+  "irisR",
+  "eyeContourL",
+  "eyeContourR",
+  "eyeSparkleL",
+  "eyeSparkleR",
+  "faceFront",
+  "mouth",
+  "noseTip",
+  "noseBridge",
+  "lipGloss",
+  "closeupRefinement",
+  "referenceHairCap",
+  "headGlow",
+  "hairBack",
+];
 function setJuniorHeroLeadVisibility(t, o, a = {}) {
   if (!t) return;
   const n = Boolean(o),
@@ -3207,56 +3279,40 @@ function setJuniorHeroLeadVisibility(t, o, a = {}) {
         t.userData.basePosition ??= t.position.clone(),
         t.userData.baseRotation ??= t.rotation.clone());
     };
-  [
-    t.head,
-    t.jaw,
-    t.faceSideL,
-    t.faceSideR,
-    t.facePlane,
-    t.faceShell,
-    t.frontHairStripL,
-    t.frontHairStripR,
-    t.frontHairInnerL,
-    t.frontHairInnerR,
-    t.hairCurtainL,
-    t.hairCurtainR,
-    t.sideLockL,
-    t.sideLockR,
-    t.fringe,
-    t.browL,
-    t.browR,
-    t.eyeWhiteL,
-    t.eyeWhiteR,
-    t.irisL,
-    t.irisR,
-    t.eyeContourL,
-    t.eyeContourR,
-    t.eyeSparkleL,
-    t.eyeSparkleR,
-    t.faceFront,
-    t.mouth,
-    t.noseTip,
-    t.noseBridge,
-    t.lipGloss,
-    t.closeupRefinement,
-    t.referenceHairCap,
-    t.headGlow,
-    t.hairBack,
+  // dirty 檢查 —— 這支函式每幀被呼叫（render 的 referenceJunior 區塊），但它做的
+  // 事情完全由下面這幾個布林決定，而且每一筆寫入都是冪等的（同一組輸入 → 同一組
+  // visible / base transform）。輸入沒變就直接 early-return；第一次呼叫時
+  // __leadSig 還不存在，必定跑滿。
+  // 例外：h（顯示程序 hero 頭 = 已下架的 real tier）為真時一律照跑不 early-return，
+  //   因為那條路徑靠「每幀重跑」壓制兩件事：(1) 上游 GLB 切換器每幀 re-show 的
+  //   舊頭區零件（見下方 headZoneHideList）；(2) pose 動畫每幀寫進 heroHeadRoot 的
+  //   rotation，靠這裡還原成 base。
+  // roots 的有無也編進 signature：pose 上的 runtimeModelRoot / heroCloseupModelRoot
+  //   是建場後段才掛上去的，從 null 變成物件時必須重跑一次。
+  const _leadSig =
+    (n ? 1 : 0) |
+    (i ? 2 : 0) |
+    (h ? 4 : 0) |
+    (l ? 8 : 0) |
+    (c ? 16 : 0) |
+    (s ? 32 : 0) |
+    (u ? 64 : 0) |
+    (r ? 128 : 0);
+  if (!h && t.__leadSig === _leadSig) return;
+  t.__leadSig = _leadSig;
   // hero 頭與舊臉共位：GLB ready（i）或 hero 頭顯示中（h，真實畫質全程）都得藏舊臉
-  ].forEach((t) => d(t, i || h ? !1 : !0));
+  const _legacyHeadVisible = i || h ? !1 : !0;
+  JUNIOR_LEGACY_HEAD_KEYS.forEach((k) => d(t[k], _legacyHeadVisible));
   t.legacyChildren?.forEach((t) => d(t, i ? !1 : (l || !0)));
   if (s) {
     p(s);
     // h && !i：GLB ready 時程序 hero 頭必須讓位（避免未來接線後雙頭共存）
-    const o = h && !i;
-    (s.visible = o),
-      o
-        ? (s.position.copy(s.userData.basePosition),
-          s.rotation.copy(s.userData.baseRotation),
-          s.scale.copy(s.userData.baseScale))
-        : (s.position.copy(s.userData.basePosition),
-          s.rotation.copy(s.userData.baseRotation),
-          s.scale.copy(s.userData.baseScale));
+    // 原本是一個三元式，但 true / false 兩個分支的內容一字不差（都是還原 base
+    // transform）—— 死條件，合併成單一路徑。
+    ((s.visible = h && !i),
+      s.position.copy(s.userData.basePosition),
+      s.rotation.copy(s.userData.baseRotation),
+      s.scale.copy(s.userData.baseScale));
   }
   if (u) {
     p(u), (u.visible = !1);
@@ -3269,42 +3325,7 @@ function setJuniorHeroLeadVisibility(t, o, a = {}) {
       r.scale.copy(r.userData.baseScale));
   }
   if (!n && !i && !h) {
-    [
-      t.head,
-      t.jaw,
-      t.faceSideL,
-      t.faceSideR,
-      t.facePlane,
-      t.faceShell,
-      t.frontHairStripL,
-      t.frontHairStripR,
-      t.frontHairInnerL,
-      t.frontHairInnerR,
-      t.hairCurtainL,
-      t.hairCurtainR,
-      t.sideLockL,
-      t.sideLockR,
-      t.fringe,
-      t.browL,
-      t.browR,
-      t.eyeWhiteL,
-      t.eyeWhiteR,
-      t.irisL,
-      t.irisR,
-      t.eyeContourL,
-      t.eyeContourR,
-      t.eyeSparkleL,
-      t.eyeSparkleR,
-      t.faceFront,
-      t.mouth,
-      t.noseTip,
-      t.noseBridge,
-      t.lipGloss,
-      t.closeupRefinement,
-      t.referenceHairCap,
-      t.headGlow,
-      t.hairBack,
-    ].forEach((t) => t && (t.visible = !0));
+    JUNIOR_LEGACY_HEAD_KEYS.forEach((k) => d(t[k], !0));
     t.closeupRefinement && (t.closeupRefinement.visible = !1);
   }
   // hero 頭顯示時，每幀補掃 refs 表未收錄的舊頭區零件（睫毛 box／腮紅球／
@@ -3613,6 +3634,13 @@ export function createLm402Scene(D, runtimeOptions = {}) {
   ((U.outputColorSpace = e.SRGBColorSpace),
     (U.toneMapping = e.ACESFilmicToneMapping),
     (U.toneMappingExposure = 1.14),
+    // 成本保險絲：正常路徑上已經沒有任何 transmission>0 的材質（窗玻璃已改走
+    // clearcoat + envMap，見 Vt），所以這個值平常完全不會被用到。
+    // 但只要有人不小心讓 transmission 復活（GLB 帶 KHR_materials_transmission、
+    // console debug API、未來新材質），three 就會每幀把整個不透明場景多渲一次到
+    // transmissionRenderTarget（全解析度 + 4xMSAA + 完整 mipmap，且永不釋放）。
+    // 先把那份 RT 釘在半解析度：意外發生時成本降到 1/4，畫面也只是折射略糊。
+    (U.transmissionResolutionScale = 0.5),
     (U.shadowMap.enabled = !0),
     // Tier 9.1 VSMShadowMap — variance shadow maps，距離自適應軟陰影（取代 PCFSoftShadowMap）
     (U.shadowMap.type = e.VSMShadowMap));
@@ -4295,7 +4323,16 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     // 拉回 r37 剩 28 的 over-standoff:procedural shader hooks + 程序 mesh
     // ════════════════════════════════════════════════════════════════
     // M1 (r38) SSS approximation — skin transmission + thickness cheap fake
+    // ⚠ 成本警告：這支 API 會把 transmission 寫進皮膚材質。只要場上出現任何一顆
+    //   transmission>0 的可見材質,three 每幀就會把整個不透明場景「多渲一次」到
+    //   transmissionRenderTarget（全解析度 + 強制 4xMSAA + 完整 mipmap 鏈,
+    //   而且該 RT 一旦建立就永不釋放）。也就是說呼叫這支 = 全場 draw call 翻倍。
+    //   正常出貨路徑上沒有任何 transmission 材質,請只在 debug 時開。
     window.__SSS__ = (strength = 0.5, thickness = 0.3) => {
+      console.warn(
+        "[__SSS__] 此操作會啟用全場 transmission pass:每幀整個不透明場景會被多渲一次" +
+          "(transmissionRenderTarget,懶建立後永不釋放)。僅供 debug 使用。",
+      );
       let count = 0;
       W.traverse((obj) => {
         if (!obj.material || typeof obj.material.transmission !== 'number') return;
@@ -5153,9 +5190,15 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     (Te.shadow.normalBias = 0.026),
     // Tier 9.1 VSM 軟陰影 — device-aware（iOS-safe）：
     //   mobile 走輕量(1536² / radius 7 / 16 samples)避免 4096² 在行動 GPU 過重,
-    //   desktop 保留 premium(4096² / radius 14 / 40 samples)。
+    //   desktop 保留 premium(4096²/2048² / radius 14 / 20 samples)。
+    // 【LM402 R2 V1】desktop blurSamples 40 → 20（原值 40）。
+    //   VSM 的 blur 是「兩趟 separable」,每趟 blurSamples 次 fetch,成本 = mapSize² × N × 2。
+    //   2048² × 40 × 2 ≈ 3.35 億 texture fetch / 幀,是本專案單一最重的固定開銷。
+    //   radius 維持 14 不動 —— 柔邊寬度由 radius 決定,samples 只決定該寬度內的取樣密度;
+    //   20 樣本對 radius 14 的核心仍是超取樣(每 0.7 texel 一個 tap),陰影邊緣的
+    //   banding 門檻遠未觸及,故視覺近乎無損而成本直接砍半。
     (Te.shadow.radius = V ? 7 : 14),
-    (Te.shadow.blurSamples = V ? 16 : 40),
+    (Te.shadow.blurSamples = V ? 16 : 20),
     // 尊重畫質檔位（原本硬編 1536/4096 蓋掉 renderTuning.shadowMapSize，tier 形同失效）；
     // 行動裝置仍以 1536 為上限（iOS-safe）
     (Te.shadow.mapSize.set(
@@ -5166,20 +5209,32 @@ export function createLm402Scene(D, runtimeOptions = {}) {
   // E3 季節時間環境 — 5 preset 切換（dusk/night/rainy/snowy/day）
   // 窗戶玻璃 + 窗框材質 — 提前宣告(下方 createEnvironmentPresets 需要 glassMaterial,
   // 不可在宣告前引用 → 否則 const TDZ ReferenceError)
+  // 窗玻璃(8 塊常駐,全 tier)。**不要再加回 transmission**：
+  //   three 只要場上存在任一 transmission>0 的可見材質,每幀就會把整個不透明
+  //   場景「多渲一次」到 transmissionRenderTarget（全解析度 + 強制 4xMSAA +
+  //   完整 mipmap 鏈,且該 RT 懶建立後永不釋放）。而這裡的參數根本吃不到
+  //   transmission 的兩項視覺增益：thickness 0.05 的折射位移是次像素、
+  //   roughness 0.03 取 mip LOD≈0 —— 折射與粗糙透射兩者都被自身參數抵銷。
+  //   玻璃質感真正的來源是 clearcoat:1 的高光 + envMap 反射 + color,全部保留。
+  //   opacity 0.14 → 0.18 補回失去的透射混合量（環境 preset 也改 lerp opacity）。
+  //   ior 一併移除是安全的：下面的 reflectivity 是 ior 的 accessor
+  //   （setter: ior=(1+0.4r)/(1-0.4r)）且寫在 ior 之後,原本就把 1.52 蓋成 1.6316。
+  // forceSinglePass: transparent + DoubleSide 的材質,renderer 內部會用
+  //   BackSide/FrontSide 各畫一次,每次切換都打一發 needsUpdate（program 參數
+  //   重評估 + uniform 重傳）。單片平面玻璃同一像素只會被其中一面覆蓋,
+  //   單趟 DoubleSide 的結果完全相同。
   const Vt = new e.MeshPhysicalMaterial({
       color: "#dce8f2",
       roughness: 0.03,
       metalness: 0.01,
-      transmission: 0.95,
-      thickness: 0.05,
       transparent: !0,
-      opacity: 0.14,
-      ior: 1.52,
+      opacity: 0.18,
       clearcoat: 1,
       clearcoatRoughness: 0.01,
       envMapIntensity: 0.5,
       reflectivity: 0.6,
       side: e.DoubleSide,
+      forceSinglePass: !0,
       depthWrite: !1,
     }),
     Et = new e.MeshStandardMaterial({
@@ -5520,6 +5575,9 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       transparent: !0,
       opacity: renderTuning.mirrorOpacity,
       side: e.DoubleSide,
+      // 水平地板反光片（法線朝 +Y，攝影機永遠在地板上方）：背面那趟本來就被
+      // 背面剔除掉，單趟結果相同，省掉每幀兩次 needsUpdate。
+      forceSinglePass: !0,
     }),
   );
   (ht.position.set(N + 1.02, 0.018, re),
@@ -6024,6 +6082,10 @@ export function createLm402Scene(D, runtimeOptions = {}) {
           opacity: 1.25 * t.alpha,
           depthWrite: !1,
           side: e.DoubleSide,
+          // 單片光束平面、depthWrite 關：同一像素只會被其中一面覆蓋，
+          // 兩趟（BackSide→FrontSide）與單趟像素結果相同，但兩趟每幀各打一次
+          // needsUpdate。8 條光束 × 2 = 每幀 16 次無謂的 program 參數重評估。
+          forceSinglePass: !0,
         }),
         n = new e.Mesh(new e.PlaneGeometry(g(t.width), g(t.reach)), a);
       ("right" === t.side
@@ -6828,7 +6890,14 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     };
     return rig;
   };
-  (_wrapIntensityGate(__conscLights), _wrapIntensityGate(__conscParticles));
+  // 文字派同樣掛閘：它的 update() 每幀跑 12 個 sprite 的 lifecycle
+  //（life 累加／到期 respawn 換 texture＋重算球面座標／寫 opacity／推位移），
+  // 而 __TWIN_BALANCE__('off') 之後 master=0，所有 sprite 的 opacity 都是 0。
+  // dirty 一幀補跑的機制在這裡也必要：setIntensity(0) 之後要再跑一次 update
+  // 才會把已經有 opacity 的 sprite 歸零（update 內 opacity = sin(...) * master）。
+  (_wrapIntensityGate(__conscLights),
+    _wrapIntensityGate(__conscParticles),
+    _wrapIntensityGate(__conscText));
   // 預設:文字派 0.30(淡)— 不啟用光柱與粒子,避免任何在學妹頭部的光暈疊加
   // 之前的 B3=0.30 default 在學妹頭部形成可見光球,訪客體驗訂正後關閉
   //   __CONSC_LIGHTS__.setIntensity(>0)      // 想要 5 盞光柱再開(會有頭部光暈)
@@ -7016,6 +7085,12 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             const a = attachJuniorGltfModel(t.root, t.gltf, {
               scale: "hero_closeup" === t.kind ? 0.7696 : 0.7488,
             });
+            // KHR_materials_transmission 守衛 —— GLB 是唯一能「無聲」把
+            // transmission 打開的路徑（美術在 Blender 勾了 Transmission，匯出後
+            // GLTFLoader 直接寫進 material.transmission）。只要有一顆這種材質可見,
+            // three 每幀就會把整個不透明場景多渲一次到 transmissionRenderTarget。
+            // 這裡一次 traverse 掃掉並出警告,讓它變成看得見的問題而不是掉幀。
+            a && __stripGltfTransmission(a, t.kind);
             a &&
               ((t.root.userData.ready = !0),
               (t.root.userData.assetKind = t.kind),
@@ -7623,12 +7698,20 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             t.characters.fatherEcho.z,
           ),
           ko.position.set(t.characters.auntEcho.x, 0, t.characters.auntEcho.z),
-          Bo.traverse((e) => {
-            e.material && (e.material.opacity = t.characters.fatherEcho.alpha);
-          }),
-	          ko.traverse((e) => {
-	            e.material && (e.material.opacity = t.characters.auntEcho.alpha);
-	          }),
+          // 回聲角色（把拔／阿姨）：整棵 traverse 每幀寫 opacity 很貴，而這兩位
+          // 大多時間 alpha=0、visible=false（見上面的 Bo.visible / ko.visible）。
+          // 用 visible 當閘門最省：不可見那幾幀完全不跑；而 visible 是在同一串
+          // 敘述的前段就依 alpha>0.02 更新好的，所以重新現身的「第一幀」閘門
+          // 已經是開的，opacity 不會慢一拍。（senior 那邊用 alpha<1 是因為它
+          // 大多時間 alpha=1 且常駐可見，閘門條件不同。）
+          Bo.visible &&
+            Bo.traverse((e) => {
+              e.material && (e.material.opacity = t.characters.fatherEcho.alpha);
+            }),
+          ko.visible &&
+            ko.traverse((e) => {
+              e.material && (e.material.opacity = t.characters.auntEcho.alpha);
+            }),
           (() => {
             const e = Co.userData.runtimeModelRoot ?? null,
               o = Co.userData.heroCloseupModelRoot ?? null,
@@ -7834,8 +7917,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
               : "eye_contact" === t.phase
                 ? 1.98
                 : 1.32));
-        (vo.senior.copy(Go.position).add(new e.Vector3(0, 1.34, 0)),
-          vo.junior.copy(Co.position).add(new e.Vector3(0, 1.34, 0)));
+        (vo.senior.copy(Go.position).add(__EYE_OFFSET_134),
+          vo.junior.copy(Co.position).add(__EYE_OFFSET_134));
       })(s),
         (function (e, t, o) {
           e.forEach((e) => {
@@ -7845,8 +7928,12 @@ export function createLm402Scene(D, runtimeOptions = {}) {
               a.position.set(e.x, e.y, e.z),
               (a.position.y += 0.04 * Math.sin(1.6 * o + 0.18 * e.z) + 0.16),
               a.scale.setScalar(e.id === t ? 0.98 : 0.72),
-              (a.children[0].material.opacity = e.id === t ? 0.34 : 0.08),
-              (a.children[1].material.opacity = e.id === t ? 0.22 : 0.06),
+              // opacity 只有兩種值（作用中 / 非作用中），整場大多時候一動也不動 →
+              // 值真的變了才寫。emissiveIntensity 帶 sin 動畫，維持每幀寫。
+              a.children[0].material.opacity !== (e.id === t ? 0.34 : 0.08) &&
+                (a.children[0].material.opacity = e.id === t ? 0.34 : 0.08),
+              a.children[1].material.opacity !== (e.id === t ? 0.22 : 0.06) &&
+                (a.children[1].material.opacity = e.id === t ? 0.22 : 0.06),
               a.children[1].material.emissiveIntensity !== void 0 &&
                 (a.children[1].material.emissiveIntensity =
                   e.id === t ? 0.8 + 0.4 * Math.sin(3.2 * o) : 0.3 + 0.2 * Math.sin(1.6 * o)));
@@ -7974,8 +8061,10 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             const lookTgt = Co.position.clone().add(new e.Vector3(0, 1.4, 0));
             if (et < WALK_END) {
               q.position.copy(followPos);
-              q.fov = 46;
-              q.updateProjectionMatrix();
+              // fov 在整段 WALK 都是常數 46，但原本每幀都重建投影矩陣。
+              // 照第一人稱段（下方 q.fov !== fov）的寫法加守衛：aspect 變動另有
+              // qo() 負責 updateProjectionMatrix，這裡只在 fov 真的改了才重算。
+              q.fov !== 46 && ((q.fov = 46), q.updateProjectionMatrix());
               q.lookAt(lookTgt);
               return;
             }
@@ -8040,15 +8129,17 @@ export function createLm402Scene(D, runtimeOptions = {}) {
           })(s));
       else if ("rear_wait" === s.phase && s.phaseClock > 3.0 && "ghost" === s.controlMode) {
         // rear_wait 過場：跟拍鏡頭跟著學妹走向後門（腳本模式）
+        // 這是一般過場（不是 ending 專段），每幀都會跑：原本一幀 new/clone 6 個
+        // Vector3，改用模組層暫存就地算。fov 是常數 46，加上與下方同款守衛。
         H.visible = !1;
-        const fwd = new e.Vector3(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y));
-        const followPos = Co.position.clone()
-          .add(fwd.clone().multiplyScalar(-2.5))
-          .add(new e.Vector3(0, 1.8, 0));
-        q.fov = 46;
-        q.updateProjectionMatrix();
-        q.position.copy(followPos);
-        q.lookAt(Co.position.clone().add(new e.Vector3(0, 1.4, 0)));
+        __camFwd.set(Math.sin(Co.rotation.y), 0, Math.cos(Co.rotation.y));
+        __camFollow.copy(Co.position).addScaledVector(__camFwd, -2.5);
+        __camFollow.y += 1.8;
+        __camLook.copy(Co.position);
+        __camLook.y += 1.4;
+        q.fov !== 46 && ((q.fov = 46), q.updateProjectionMatrix());
+        q.position.copy(__camFollow);
+        q.lookAt(__camLook);
       } else {
         H.visible = !1;
         /* 第一人稱控制學妹時隱藏學妹模型（攝影機在模型內部） */
@@ -8284,23 +8375,29 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         _ponytailHidden = __rigRootHidden(_pose?.ponytailGroup),
         _conscOn = (rig) =>
           Boolean(rig) &&
-          (!(rig.__masterIntensity <= 0) || rig.__intensityDirty === !0);
+          (!(rig.__masterIntensity <= 0) || rig.__intensityDirty === !0),
+        // 這一段原本一幀要問 performance.now() 七次（各 rig／各意識派／postfx），
+        // 每次都是一趟 high-resolution timer 呼叫，而且七個值還互相差幾微秒。
+        // 取一次共用：單位跟原本一樣是「秒」（原本每處都寫 /1000）。
+        _nowSec = performance.now() / 1000;
       (updateWormhole(0.016),
-        _heroHeadHidden || __juniorRig?.update?.(performance.now() / 1000),
-        _heroHeadHidden || __clothRig?.update?.(performance.now() / 1000),
-        _ponytailHidden || __ponytailRig?.update?.(performance.now() / 1000),
+        _heroHeadHidden || __juniorRig?.update?.(_nowSec),
+        _heroHeadHidden || __clothRig?.update?.(_nowSec),
+        _ponytailHidden || __ponytailRig?.update?.(_nowSec),
         _conscOn(__conscLights) &&
-          (__conscLights.update(performance.now() / 1000),
+          (__conscLights.update(_nowSec),
           (__conscLights.__intensityDirty = !1)),
         _conscOn(__conscParticles) &&
-          (__conscParticles.update(performance.now() / 1000),
+          (__conscParticles.update(_nowSec),
           (__conscParticles.__intensityDirty = !1)),
-        __conscText?.update?.(performance.now() / 1000),
+        // 文字派同樣走 master intensity 閘門（見建場處 _wrapIntensityGate）
+        _conscOn(__conscText) &&
+          (__conscText.update(_nowSec), (__conscText.__intensityDirty = !1)),
         // Tier 7：每幀計算太陽 NDC 位置（god rays + lens flare 用）
         __sunFar.copy(SUNSET_SUN_DIR).multiplyScalar(1000).add(q.position).project(q),
         __sunUv.set(__sunFar.x * 0.5 + 0.5, __sunFar.y * 0.5 + 0.5),
         __adaptiveStep(),
-        (__postfx ? __postfx.render(performance.now() / 1000, __sunUv) : U.render(W, q)));
+        (__postfx ? __postfx.render(_nowSec, __sunUv) : U.render(W, q)));
     },
     resize: qo,
     resolveMotion: function (t, o, a = 0.28) {
