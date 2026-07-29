@@ -3307,6 +3307,10 @@ function setJuniorHeroLeadVisibility(t, o, a = {}) {
     r.rotation.copy(r.userData.baseRotation);
     r.scale.copy(r.userData.baseScale);
   }
+  // closeupRefinement 也必須每幀壓回:上游 GLB 切換器每幀把全部 legacyChildren
+  // re-show(visible=!i,出貨 i 恆 false),closeupRefinement 在快照內 —
+  // 閘掉壓回會讓特寫髮絲+太陽穴暗斑球從第 2 幀起永久可見(審核 R2 抓到)。
+  if (!n && !i && !h && t.closeupRefinement) t.closeupRefinement.visible = !1;
   if (!h && t.__leadSig === _leadSig) return;
   t.__leadSig = _leadSig;
   // hero 頭與舊臉共位：GLB ready（i）或 hero 頭顯示中（h，真實畫質全程）都得藏舊臉
@@ -4432,6 +4436,9 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     // M4 (r38) Eye cornea reflection layer(每角色程序加 mesh)
     let _corneaMeshes = [];
     window.__EYE_CORNEA__ = (radius = 0.011, intensity = 0.6) => {
+      // R2 起全場已無 transmission 材質;此 API 的 transmission:0.95 會讓
+      // renderer 恢復「每幀整個不透明場景多渲一次」的 transmission pass。
+      console.warn('[__EYE_CORNEA__] 啟用 transmission pass:不透明場景將每幀多渲一次(debug 專用,勿在出貨路徑呼叫)');
       _corneaMeshes.forEach(m => m.parent && m.parent.remove(m));
       _corneaMeshes = [];
       ['__GO__', '__CO__', '__BO__', '__KO__'].forEach(key => {

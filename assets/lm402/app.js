@@ -3519,10 +3519,10 @@ function tick(now) {
     if (willRender) {
       if (maskKey) _maskIdleFrames += 1;
       /* 本幀會畫才需要對字幕卡套背景（原本在 willRender 判定之前無條件呼叫，
-         裡面有一支 document.querySelector 全文件掃描）。遮罩期間（讀故事 /
-         全黑全白）字幕卡本來就看不到，恢復渲染的第一幀就會補套；而且 CSS 端
-         的 .cinematic-subtitle-card 自己有 --subtitle-adaptive-bg 預設值，
-         真的漏套一幀也只是略深一點，不會沒有背景。 */
+         裡面有一支 document.querySelector 全文件掃描）。字幕層 z-index 58 高於
+         黑/白幕的 55，遮罩期新建的字幕卡會以 CSS 預設 --subtitle-adaptive-bg
+         撐到「恢復渲染那一幀」才補套 —— 兩值同色相僅 alpha 差(0.45 vs 0.62)，
+         黑幕上不可辨、白幕上略深，屬可接受的視覺邊角(審核 R2 已核定)。 */
       adaptSubtitleBackground();
       renderFrame();
     }
