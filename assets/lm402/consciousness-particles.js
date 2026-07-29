@@ -148,7 +148,10 @@ export function createConsciousnessParticles(options = {}) {
     uniforms: {
       uMap: { value: getParticleTexture() },
       uIntensity: { value: 0.5 },           // 1.0 → 0.5（fix「粒子蓋過學妹」）
-      uPixelRatio: { value: window.devicePixelRatio || 1 },
+      // gl_PointSize 的單位是 drawing buffer 像素 → 這裡要的是 renderer 實際的
+      // pixelRatio,不是 devicePixelRatio。兩者在 renderScale 制度下並不相等,
+      // 建立時由呼叫端傳入、之後每次 qo() 用 setPixelRatio() 同步。
+      uPixelRatio: { value: options.pixelRatio ?? (window.devicePixelRatio || 1) },
     },
     transparent: true,
     depthWrite: false,
@@ -207,9 +210,15 @@ export function createConsciousnessParticles(options = {}) {
     material.dispose();
   }
 
+  function setPixelRatio(v) {
+    const n = Number(v);
+    if (Number.isFinite(n) && n > 0) material.uniforms.uPixelRatio.value = n;
+  }
+
   return {
     update,
     setIntensity,
+    setPixelRatio,
     dispose,
     points,
     inspectParticleCount: () => PARTICLE_COUNT,
@@ -218,7 +227,7 @@ export function createConsciousnessParticles(options = {}) {
 
 function makeNoOp() {
   return {
-    update: () => {}, setIntensity: () => {}, dispose: () => {},
+    update: () => {}, setIntensity: () => {}, setPixelRatio: () => {}, dispose: () => {},
     points: null, inspectParticleCount: () => 0,
   };
 }

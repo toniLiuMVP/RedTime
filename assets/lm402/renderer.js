@@ -6883,6 +6883,9 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     anchor: { x: 0, y: 1.45, z: 0 },  // 學妹頭部位置
     radius: 0.55,
     heightRange: 1.4,
+    // gl_PointSize 吃 drawing buffer 像素,故要 renderer 實際的 pixelRatio
+    // (renderScale 制度下 ≠ devicePixelRatio);之後每次 qo() 會再同步一次
+    pixelRatio: U.getPixelRatio(),
   });
   // 雙時空 B4 意識菜市場 · 文字派 — 12 個 sprite 漂浮詩意短句（5 個年紀內心話）
   __conscText = createConsciousnessText({
@@ -7241,7 +7244,9 @@ export function createLm402Scene(D, runtimeOptions = {}) {
   // S4：postfx 動態開關（window.__POSTFX__.tuning.enabled，console 與 app.js 都可改）
   //   翻轉時 drawing buffer 的語意會變（postfx 開 = RT 解析度來源；關 = 直接畫到螢幕），
   //   pixelRatio 必須跟著換算式，否則關掉 postfx 後畫面會真的變糊。
-  //   __postfx 建立失敗為 null 時等同「永遠關閉」，走同一條分支。
+  //   註：__postfx 目前是無 try/catch 的 const（createPostFX 若丟例外，整個
+  //   createLm402Scene 會一起失敗），所以 null 分支現在不可達 —— 這裡的 `__postfx &&`
+  //   與下游的 `?.` 是為了「日後若把 createPostFX 包成可降級」預留，不是已生效的容錯保證。
   //   判據刻意與 postfx.js render() 開頭的 `if (!tuning.enabled)` 同為 truthiness，
   //   避免有人塞 0 / null 時兩邊對「開著沒」的認定不一致。
   function _postfxActive() {
@@ -7255,6 +7260,22 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     (window.addEventListener("resize", markViewportDirty),
       window.addEventListener("orientationchange", markViewportDirty),
       window.visualViewport?.addEventListener("resize", markViewportDirty));
+  }
+  /* renderScale 的唯一權威換算：tier 值 + 兩道夾制。
+     (1) 行動裝置上限 0.85 —— 舊 postfx 的 `isMobile() ? 0.85 : 1.0` 是「無條件裝置護欄」，
+         把它綁進 tier 表只覆蓋得到預設檔；loadQualitySetting() 先吃 localStorage，
+         已持久化 ultra/perfect 的行動使用者會直接吃到 +38% / +116% 的 3D 成本。
+         同檔 shadowMapSize 早有同型夾制（V ? Math.min(1536, …)，註解寫明「持久化重檔也不超標」），
+         而 renderScale 是 fill rate 的平方項，更該夾。
+     (2) devicePixelRatio < 1（瀏覽器縮小顯示）時不超取樣 —— 此時 CSS px 數本來就變多，
+         再用 >dpr 的倍率等於同一批內容多畫數倍像素後被瀏覽器丟掉。
+         dpr >= 1 時不夾，perfect 檔的 1.25 超取樣是刻意的。 */
+  function _effectiveRenderScale() {
+    let s = renderTuning.renderScale;
+    if (V) s = Math.min(0.85, s);
+    const dpr = window.devicePixelRatio || 1;
+    if (dpr < 1) s = Math.min(s, dpr);
+    return s;
   }
   function qo() {
     _viewportDirty = !1;
@@ -7274,7 +7295,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     ((_postfxWasActive = _postfxActive()),
       U.setPixelRatio(
         _postfxWasActive
-          ? renderTuning.renderScale
+          ? _effectiveRenderScale()
           : Math.min(window.devicePixelRatio || 1, 2),
       ),
       U.setSize(t, o, !1),
@@ -7292,10 +7313,16 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     // 用 Math.floor 不用 Math.round：Three 的 setSize 是
     //   canvas.width = Math.floor(width * pixelRatio)、setViewport 也是 .floor()，
     //   四捨五入會在非整數乘積（例：390 CSS × 0.85 = 331.5）差 1 px，composite 又不是 1:1。
+    const _rs = _effectiveRenderScale();
     __postfx?.setSize?.(
-      Math.max(1, Math.floor(t * renderTuning.renderScale)),
-      Math.max(1, Math.floor(o * renderTuning.renderScale)),
+      Math.max(1, Math.floor(t * _rs)),
+      Math.max(1, Math.floor(o * _rs)),
     );
+    /* 手寫 shader 的 gl_PointSize 單位是 drawing buffer 像素，必須跟著 pixelRatio 走。
+       three 內建的 PointsMaterial（本檔另外三處 Points）由 refreshUniformsPoints 自動乘上
+       renderer 的 _pixelRatio，唯獨 consciousness-particles 自帶一份 devicePixelRatio，
+       renderScale 改動後會脫鉤（dpr=2 桌機預設 ultra 下粒子直徑加倍）。 */
+    __conscParticles?.setPixelRatio?.(U.getPixelRatio());
   }
   const _isMobile = () => window.innerWidth <= 1080;
   function _o(e, t = 0, o = !0) {
