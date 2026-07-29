@@ -385,6 +385,12 @@ export function createSkinMaterialHR(color = "#f9e7da") {
     sheenColor: new THREE.Color("#ffd5bf"),
     sheenRoughness: 0.5,
     // A1 SSS 強化（雙時空走極限：transmission/thickness/atten 全推）
+    // ⚠ 注意:此 transmission 參數只在已下架的 real tier 生效
+    //   （本材質只掛在 buildReferenceJuniorHeroHead 的程序 hero 頭上,
+    //     而 hero 頭的 showHeroHeadRoot 由 _tierRealismOn 控制,預設 false）。
+    //   開啟 real tier 會啟用全場 transmission pass —— three 只要偵測到任何
+    //   transmission>0 的可見材質,每幀就會把整個不透明場景多渲一次到
+    //   transmissionRenderTarget（全解析度 + 4xMSAA + 完整 mipmap,永不釋放）。
     transmission: 0.085,           // 0.05 → 0.085
     thickness: 0.95,               // 0.6 → 0.95
     ior: 1.4,

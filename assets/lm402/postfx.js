@@ -108,19 +108,35 @@ const FS_BLUR = /* glsl */ `
 `;
 
 // ─────────────────────────────────────────────────────────────
-//  Bloom Composite — 疊加 base + bloom（控強度）
+//  Bloom Composite — 單 pass 一次合成 base + 全部 mip
+//  【LM402 R2 V5a】取代原 FS_BLOOM_ADD 的 N 次 ping-pong。
+//    原鏈（N=4）:
+//      p0 = base + m3*S
+//      p1 = p0   + m2*S*(0.6/2)
+//      p2 = p1   + m1*S*(0.6/3)
+//      p3 = p2   + m0*S*(0.6/4)
+//    展開 = base + m3*S + m2*0.30S + m1*0.20S + m0*0.15S
+//    每一步都只是「純線性加權相加」（原 shader 是 base + bloom*uStrength,
+//    中間沒有 clamp / tonemap / saturate / 非線性混合）,故可無條件併成一次。
+//    合併後中間 3 次 HalfFloat round-trip 消失 → 精度只增不減。
+//    累加順序刻意維持 base → m[N-1] → … → m[0],與原鏈逐字對應。
 // ─────────────────────────────────────────────────────────────
-const FS_BLOOM_ADD = /* glsl */ `
+const buildBloomCompositeFS = (mips) => {
+  let decl = "";
+  let body = "";
+  for (let i = mips - 1; i >= 0; i--) {
+    decl += `  uniform sampler2D tMip${i};\n  uniform float uW${i};\n`;
+    body += `    c += texture2D(tMip${i}, vUv).rgb * uW${i};\n`;
+  }
+  return /* glsl */ `
   varying vec2 vUv;
   uniform sampler2D tBase;
-  uniform sampler2D tBloom;
-  uniform float uStrength;
-  void main() {
-    vec3 base  = texture2D(tBase,  vUv).rgb;
-    vec3 bloom = texture2D(tBloom, vUv).rgb;
-    gl_FragColor = vec4(base + bloom * uStrength, 1.0);
+${decl}  void main() {
+    vec3 c = texture2D(tBase, vUv).rgb;
+${body}    gl_FragColor = vec4(c, 1.0);
   }
 `;
+};
 
 // ─────────────────────────────────────────────────────────────
 //  Depth-Aware DOF — 根據 depth 與 focalDistance 模糊
@@ -583,9 +599,15 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     depthBuffer: false,
     stencilBuffer: false,
   });
-  const bloomMipRTs = Array.from({ length: tuning.bloom.mips }, () => ({ a: makeRT(), b: makeRT() }));
-  // Codex r44 #3 + Phase 4 #1 (🔴):Bloom composite ping-pong RT pair(避免 read+write 同 RT feedback loop)
-  const bloomCompositeRTs = { a: makeRT(), b: makeRT() };
+  // 【LM402 R2 V5a】mip 數在 factory 期固定下來：composite shader 是依這個數字產生的
+  //   （sampler 數量寫死在 GLSL 裡）,RT 陣列長度也是它,兩者必須永遠一致。
+  //   之前直接讀 tuning.bloom.mips,若有人 runtime 改它,mip 迴圈會直接 index 出界。
+  const BLOOM_MIPS = tuning.bloom.mips;
+  const bloomMipRTs = Array.from({ length: BLOOM_MIPS }, () => ({ a: makeRT(), b: makeRT() }));
+  // 【LM402 R2 V5a】composite 從 ping-pong pair 砍成單張:
+  //   新的 single-pass composite 只讀 sceneRT + 各 mip、只寫這一張,不存在 read/write
+  //   同 RT 的 feedback loop,故不再需要 a/b 兩張全解析度 HalfFloat RT。
+  const bloomCompositeRT = makeRT();
 
   // ─── DOF / Final 中間 RT ───
   const dofRT = makeRT();
@@ -618,14 +640,16 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
       uDirection: { value: new THREE.Vector2(1, 0) },
     },
   });
-  const matBloomAdd = new THREE.ShaderMaterial({
-    vertexShader: VS_FULLSCREEN, fragmentShader: FS_BLOOM_ADD,
+  // 【LM402 R2 V5a】單 pass bloom composite（uniforms 依 mip 數動態生成）
+  const bloomCompositeUniforms = { tBase: { value: null } };
+  for (let i = 0; i < BLOOM_MIPS; i++) {
+    bloomCompositeUniforms[`tMip${i}`] = { value: null };
+    bloomCompositeUniforms[`uW${i}`] = { value: 0 };
+  }
+  const matBloomComposite = new THREE.ShaderMaterial({
+    vertexShader: VS_FULLSCREEN, fragmentShader: buildBloomCompositeFS(BLOOM_MIPS),
     depthTest: false, depthWrite: false,
-    uniforms: {
-      tBase:     { value: null },
-      tBloom:    { value: null },
-      uStrength: { value: tuning.bloom.strength },
-    },
+    uniforms: bloomCompositeUniforms,
   });
   const matDOF = new THREE.ShaderMaterial({
     vertexShader: VS_FULLSCREEN, fragmentShader: FS_DOF,
@@ -710,8 +734,7 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     const H = Math.max(1, Math.round(h * dprScale));
 
     sceneRT.setSize(W, H);
-    bloomCompositeRTs.a.setSize(W, H);
-    bloomCompositeRTs.b.setSize(W, H);
+    bloomCompositeRT.setSize(W, H);
     dofRT.setSize(W, H);
     finalRT.setSize(W, H);
     // SSAO full-res（避免 half-res 上採樣 banding / 跨深度邊緣滲色,單 8-tap pass 成本可控 + adaptive 弱機先砍 SSAO）
@@ -768,21 +791,24 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
       fsq.render(renderer, matBright, bloomMipRTs[0].a);
 
       // 各層水平+垂直 blur，並逐層降採樣
-      for (let i = 0; i < tuning.bloom.mips; i++) {
+      // 【LM402 R2 V5b】刪掉原本 i>0 的「down-sample copy」pass。
+      //   那個 pass 用的是 matBlur（9-tap 高斯）、方向 (1,0)、uTexel = 1/當前 mip 尺寸,
+      //   而下一行的水平 blur 用完全相同的 material / 方向 / uTexel —— 等於對同一份資料
+      //   連做兩次一模一樣的水平模糊,垂直卻只做一次。結果是 bloom 在 mip≥1 變成
+      //   橫向 σ≈2√2、縱向 σ≈2 的非等向拉伸（水平拖影）。
+      //   拿掉之後,水平 blur 直接讀上一層的輸出 bloomMipRTs[i-1].a:
+      //     - 取樣的 texel 間距仍是 1/cur.a.(w|h)（destination 尺寸,不是 source 尺寸）,
+      //       與被刪掉那個 pass 一字不差 → 降採樣的等效核心完全保留;
+      //     - 解析度變化由 render target 尺寸差 + LinearFilter 自然完成（cur.b 是
+      //       目標尺寸,GPU 以 bilinear 取樣較大的 source）。
+      //   淨效果:每層省一趟全 mip pass,且 bloom 由非等向改為等向（水平不再多糊一層）。
+      for (let i = 0; i < BLOOM_MIPS; i++) {
         const cur = bloomMipRTs[i];
         // 從上一 mip 拿 input（或 i=0 從 bright 完的 cur.a）
         const inputTex = (i === 0) ? cur.a.texture : bloomMipRTs[i - 1].a.texture;
 
-        if (i > 0) {
-          // 把上層的結果 down-sample 到當前 mip 尺寸（用 blur material 也行，這裡簡化為 copy）
-          matBlur.uniforms.tDiffuse.value = inputTex;
-          matBlur.uniforms.uTexel.value.set(1 / cur.a.width, 1 / cur.a.height);
-          matBlur.uniforms.uDirection.value.set(1, 0);
-          fsq.render(renderer, matBlur, cur.a);
-        }
-
-        // 水平 blur a → b
-        matBlur.uniforms.tDiffuse.value = cur.a.texture;
+        // 水平 blur（兼降採樣）input → b
+        matBlur.uniforms.tDiffuse.value = inputTex;
         matBlur.uniforms.uTexel.value.set(1 / cur.a.width, 1 / cur.a.height);
         matBlur.uniforms.uDirection.value.set(1, 0);
         fsq.render(renderer, matBlur, cur.b);
@@ -793,25 +819,22 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
         fsq.render(renderer, matBlur, cur.a);
       }
 
-      // Codex r44 #3 + Phase 4 修正 (🟡→🔴 ping-pong):Bloom multi-mip pyramid 累加(避免 feedback loop)
-      //   累加順序:depth N-1 → N-2 → ... → 0,每層用 add blend(實質 up-sample composite)
-      //   權重:每 mip 0.6/(N-i) 衰減 — 中尺度 mip 貢獻最大,符合 bloom pyramid 物理
-      //   ping-pong:read RT_A → write RT_B,swap each iteration(WebGL safe,no feedback loop)
-      let readRT = sceneRT, writeRT = bloomCompositeRTs.a;
-      matBloomAdd.uniforms.tBase.value = readRT.texture;
-      matBloomAdd.uniforms.tBloom.value = bloomMipRTs[tuning.bloom.mips - 1].a.texture;
-      matBloomAdd.uniforms.uStrength.value = tuning.bloom.strength;
-      fsq.render(renderer, matBloomAdd, writeRT);
-      // 依序加上 mid + shallow mips(深→淺 reverse,額外累加層)— ping-pong swap
-      for (let i = tuning.bloom.mips - 2; i >= 0; i--) {
-        readRT = writeRT;
-        writeRT = (writeRT === bloomCompositeRTs.a) ? bloomCompositeRTs.b : bloomCompositeRTs.a;
-        matBloomAdd.uniforms.tBase.value = readRT.texture;
-        matBloomAdd.uniforms.tBloom.value = bloomMipRTs[i].a.texture;
-        matBloomAdd.uniforms.uStrength.value = tuning.bloom.strength * (0.6 / (tuning.bloom.mips - i));
-        fsq.render(renderer, matBloomAdd, writeRT);
+      // 【LM402 R2 V5a】Bloom multi-mip pyramid 累加 — 單 pass。
+      //   原本是 N 趟全解析度 ping-pong（N=4:每趟讀 2 張全解析度 HalfFloat、寫 1 張,
+      //   純粹為了做加權相加）。權重與累加順序在此逐字保留:
+      //     最深 mip（i = N-1）權重 = strength
+      //     其餘 mip（i < N-1）權重 = strength * 0.6 / (N - i)
+      //   uniform 一次設好,shader 內以同樣順序累加 → 數學等價（詳見 shader 上方註解）。
+      matBloomComposite.uniforms.tBase.value = sceneRT.texture;
+      for (let i = 0; i < BLOOM_MIPS; i++) {
+        matBloomComposite.uniforms[`tMip${i}`].value = bloomMipRTs[i].a.texture;
+        matBloomComposite.uniforms[`uW${i}`].value =
+          (i === BLOOM_MIPS - 1)
+            ? tuning.bloom.strength
+            : tuning.bloom.strength * (0.6 / (BLOOM_MIPS - i));
       }
-      postBloomRT = writeRT;
+      fsq.render(renderer, matBloomComposite, bloomCompositeRT);
+      postBloomRT = bloomCompositeRT;
     }
 
     // 3. DOF — 用 focalProvider 決定焦距,結合 depth 模糊
@@ -880,14 +903,13 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
   // ─── 釋放 ───
   function dispose() {
     sceneRT.dispose();
-    bloomCompositeRTs.a.dispose();
-    bloomCompositeRTs.b.dispose();
+    bloomCompositeRT.dispose();
     dofRT.dispose();
     ssaoRT.dispose();
     finalRT.dispose();
     motionBlur.dispose();
     bloomMipRTs.forEach((m) => { m.a.dispose(); m.b.dispose(); });
-    [matBright, matBlur, matBloomAdd, matDOF, matSSAO, matFinal].forEach((m) => m.dispose());
+    [matBright, matBlur, matBloomComposite, matDOF, matSSAO, matFinal].forEach((m) => m.dispose());
     fsq.dispose();
     // Codex r44 Phase 5 #4 (🟡):釋放全域 canvas texture cache(避免 GPU 累積)
     if (_lensDirtTexture) { _lensDirtTexture.dispose(); _lensDirtTexture = null; }

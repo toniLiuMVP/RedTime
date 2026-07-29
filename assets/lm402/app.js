@@ -2061,39 +2061,76 @@ function hotspotVisible(hotspot) {
   return hotspot.revealIn.includes(state.phase) || (state.phase === "rear_wait" && hotspot.id === "backdoor");
 }
 
+/* 每幀被叫兩次（updateActiveHotspot 一次、buildSceneState 餵給 renderer 一次），
+   原本每次都 map 出一個新陣列 + 一組新物件。熱點清單本身是靜態的，每幀真正會變的
+   只有 x / z / visible 三個欄位 → 改成模組層預配置：陣列與物件都只建一次，之後
+   就地填值並回傳同一個參照。
+   下游持有情形已確認安全：
+     - renderer 的 pickHotspot / hotspot marker 迴圈都只在當幀讀完就丟，不留參照。
+     - state.activeHotspot 會跨幀持有其中一個物件（updateActiveHotspot 末尾指派），
+       但池子是「一格對一個固定 hotspot」，槽位與 id 永遠對應，跨幀讀到的仍是同一個
+       熱點，只是 x/z/visible 會即時反映最新值（原本也是每幀重建成最新值）。 */
+const HOTSPOT_STATE_POOL = HOTSPOTS.map((hotspot) => {
+  const base = HOTSPOT_MAP[hotspot.id];
+  return {
+    id: hotspot.id,
+    type: hotspot.type,
+    label: hotspot.label,
+    prompt: hotspot.prompt,
+    x: base.x,
+    y: base.y,
+    z: base.z,
+    radius: base.radius,
+    visible: false,
+  };
+});
 function buildHotspotState() {
-  return HOTSPOTS.map((hotspot) => {
+  for (let i = 0; i < HOTSPOTS.length; i += 1) {
+    const hotspot = HOTSPOTS[i];
     const base = HOTSPOT_MAP[hotspot.id];
-    let x = base.x;
-    let z = base.z;
+    const slot = HOTSPOT_STATE_POOL[i];
     if (hotspot.id === "front_call") {
-      x = state.characters.senior.x;
-      z = state.characters.senior.z;
+      slot.x = state.characters.senior.x;
+      slot.z = state.characters.senior.z;
     } else if (hotspot.id === "junior") {
-      x = state.characters.junior.x;
-      z = state.characters.junior.z;
+      slot.x = state.characters.junior.x;
+      slot.z = state.characters.junior.z;
+    } else {
+      slot.x = base.x;
+      slot.z = base.z;
     }
-    return {
-      id: hotspot.id,
-      type: hotspot.type,
-      label: hotspot.label,
-      prompt: hotspot.prompt,
-      x,
-      y: base.y,
-      z,
-      radius: base.radius,
-      visible: hotspotVisible(hotspot),
-    };
-  });
+    slot.visible = hotspotVisible(hotspot);
+  }
+  return HOTSPOT_STATE_POOL;
 }
 
+// 【LM402 R2 V4】updateActionButtons 每幀被 updateActiveHotspot 呼叫,
+//   但這四個值幾乎每幀都相同。無條件寫 textContent 會排 layout,
+//   無條件寫 aria-label 會讓輔助技術的無障礙樹每幀失效（螢幕閱讀器重讀 / 卡頓）。
+//   模組層快取上次寫入值,值變了才寫。
+let _abInteractText = null;
+let _abInteractLabel = null;
+let _abInspectLabel = null;
+let _focusPromptSrc = null;   // updateActiveHotspot 的 focusPrompt 文字快取（同一守衛策略）
 function updateActionButtons() {
   const active = state.activeHotspot;
   dom.interactBtn.disabled = false;
   dom.inspectBtn.disabled = false;
-  dom.interactBtn.textContent = active ? (active.type === "memory" ? "看" : "互") : "互";
-  dom.interactBtn.setAttribute("aria-label", active ? active.prompt : "互動");
-  dom.inspectBtn.setAttribute("aria-label", active ? `對焦 ${active.label}` : "對焦目前目標");
+  const interactText = active ? (active.type === "memory" ? "看" : "互") : "互";
+  const interactLabel = active ? active.prompt : "互動";
+  const inspectLabel = active ? `對焦 ${active.label}` : "對焦目前目標";
+  if (interactText !== _abInteractText) {
+    _abInteractText = interactText;
+    dom.interactBtn.textContent = interactText;
+  }
+  if (interactLabel !== _abInteractLabel) {
+    _abInteractLabel = interactLabel;
+    dom.interactBtn.setAttribute("aria-label", interactLabel);
+  }
+  if (inspectLabel !== _abInspectLabel) {
+    _abInspectLabel = inspectLabel;
+    dom.inspectBtn.setAttribute("aria-label", inspectLabel);
+  }
 }
 
 function updateActiveHotspot() {
@@ -2131,7 +2168,13 @@ function updateActiveHotspot() {
   state.activeHotspot = picked ? hotspots.find((item) => item.id === picked.id) : null;
 
   if (state.activeHotspot) {
-    dom.focusPrompt.textContent = `${state.activeHotspot.prompt} · F / 點一下互動`;
+    // 【LM402 R2 V4】同守衛:prompt 沒變就不重組字串、不重寫 textContent
+    //   （這裡原本每幀組一次模板字串 + 每幀一次 textContent 寫入 → 每幀 layout invalidate）。
+    const promptText = state.activeHotspot.prompt;
+    if (promptText !== _focusPromptSrc) {
+      _focusPromptSrc = promptText;
+      dom.focusPrompt.textContent = `${promptText} · F / 點一下互動`;
+    }
     dom.focusPrompt.classList.add("show");
   } else {
     dom.focusPrompt.classList.remove("show");
@@ -3458,7 +3501,6 @@ function tick(now) {
       updateTimeWatch();
     }
 
-    adaptSubtitleBackground();
     audioSystem.update(dt);
     updateCharacterAudio(dt);
     const maskKey = maskPauseKey(now);
@@ -3476,6 +3518,12 @@ function tick(now) {
     }
     if (willRender) {
       if (maskKey) _maskIdleFrames += 1;
+      /* 本幀會畫才需要對字幕卡套背景（原本在 willRender 判定之前無條件呼叫，
+         裡面有一支 document.querySelector 全文件掃描）。字幕層 z-index 58 高於
+         黑/白幕的 55，遮罩期新建的字幕卡會以 CSS 預設 --subtitle-adaptive-bg
+         撐到「恢復渲染那一幀」才補套 —— 兩值同色相僅 alpha 差(0.45 vs 0.62)，
+         黑幕上不可辨、白幕上略深，屬可接受的視覺邊角(審核 R2 已核定)。 */
+      adaptSubtitleBackground();
       renderFrame();
     }
     _tickFuse.count = 0; /* 成功一幀就重置(只熔斷「連續」同錯) */
@@ -4086,7 +4134,9 @@ function bindUI() {
   syncSpeedUI();
 }
 
-function handleResize() {
+// 【LM402 R2 V2】applyResizeLayout = 原 handleResize 本體(同步版),只在真的要跑時呼叫。
+//   對外的 handleResize 改成「rAF 合併」的排程器,見下方。
+function applyResizeLayout() {
   const mobileLayout = isMobileLayout();
   const mobileLandscape = isMobileLandscape();
   const wasMobileLandscape = dom.body.classList.contains("is-mobile-landscape");
@@ -4123,12 +4173,31 @@ function handleResize() {
   updatePointerHint();
   syncDockState();
   syncTranscriptUI();
-  scene.resize();
+  // 【LM402 R2 V2】移除 scene.resize() 直呼。
+  //   renderer.js 內部已自行監聽 window resize / orientationchange / visualViewport resize
+  //   並設 _viewportDirty,render() 每幀開頭在 dirty 時才跑一次 qo()（惰性路徑,第一輪加入）。
+  //   這裡再直呼等於旁路那條惰性路徑:每個 resize 事件都同步重配 13+ 張 render target
+  //   （sceneRT / 4×2 bloom mip / composite / dof / ssao / final / motionBlur）並強制 layout。
+  //   刪掉後 renderer 自理,同一幀內連發的 resize 事件只會合併成一次 GPU 重配。
   window.requestAnimationFrame(() => {
     renderDebugPanel();
   });
   renderDebugPanel();
   logDebug("resize", `${window.innerWidth}x${window.innerHeight}`);
+}
+
+// 【LM402 R2 V2】resize 事件合併:window resize 與 visualViewport resize 綁同一 handler,
+//   行動裝置轉向 / 網址列收合時兩者會連發多次。原本每次都同步做
+//   getBoundingClientRect（強制 layout）+ setProperty ×7 + classList ×4 + dataset,
+//   等於一輪事件裡反覆 layout thrash。改成一輪只排一次 rAF,rAF 內執行一次,
+//   兩個 listener 自然去重。
+let _resizeRafId = 0;
+function handleResize() {
+  if (_resizeRafId) return;
+  _resizeRafId = window.requestAnimationFrame(() => {
+    _resizeRafId = 0;
+    applyResizeLayout();
+  });
 }
 
 updateObjective(true);
@@ -4139,7 +4208,11 @@ bindUI();
 initPanelSystem();
 // Show music prompt after loader fades (~1400ms)
 setTimeout(() => audioSystem.showPrompt(), 1400);
-handleResize();
+// 【LM402 R2 V2】開機這一次維持同步：--stage-* / --joystick-* / --action-size 這幾個
+//   CSS 變數決定行動版控制鈕的尺寸與位置,還有 mobileControls 的 aria-hidden 與
+//   setHudCollapsed(true),都必須在首次繪製前就位,不能延到下一幀。
+//   之後的事件走 rAF 合併版 handleResize。
+applyResizeLayout();
 window.addEventListener("resize", handleResize);
 window.visualViewport?.addEventListener("resize", handleResize);
 
