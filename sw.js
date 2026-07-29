@@ -160,6 +160,9 @@ self.addEventListener('message', event => {
   })());
 });
 
+// 暖檔 in-flight 去重表(url → Promise)。SW 被回收重啟時歸零,無妨 — 只影響去重不影響正確性。
+const _warmInFlight = new Map();
+
 // STATIC 資產的 Range 請求:快取命中 → 切片自組 206;未命中 → passthrough(+音訊背景暖檔)。
 // 任何一步出錯一律回退到原生 fetch,絕不讓 SW 成為播放失敗的原因。
 async function serveRangeFromStatic(event, request) {
@@ -171,17 +174,23 @@ async function serveRangeFromStatic(event, request) {
     const cache = await caches.open(STATIC_CACHE);
     const full = await cache.match(request.url);
     if (!full || full.status !== 200) {
-      // 只對音訊做背景暖檔(wasm/vendor 走 fetch() 不帶 Range,不會進到這裡)
+      // 只對音訊做背景暖檔(wasm/vendor 走 fetch() 不帶 Range,不會進到這裡)。
+      // in-flight 去重:媒體棧首播會連發多個 Range 請求(探測 + 本體 + seek 重連),
+      // cache.put 完成前全都 miss — 不去重的話同一首歌會並發下載多次完整檔。
       if (/\.(mp3|m4a|ogg)$/i.test(new URL(request.url).pathname)) {
-        event.waitUntil((async () => {
-          try {
-            const res = await fetch(request.url, { cache: 'no-cache' });
-            if (res && res.status === 200) {
-              await cache.put(request.url, res);
-              await trimCache(STATIC_CACHE, MAX_STATIC_ITEMS);
-            }
-          } catch (e) { /* 暖檔失敗不影響本次播放 */ }
-        })());
+        if (!_warmInFlight.has(request.url)) {
+          const warm = (async () => {
+            try {
+              const res = await fetch(request.url, { cache: 'no-cache' });
+              if (res && res.status === 200) {
+                await cache.put(request.url, res);
+                await trimCache(STATIC_CACHE, MAX_STATIC_ITEMS);
+              }
+            } catch (e) { /* 暖檔失敗不影響本次播放 */ }
+          })().finally(() => _warmInFlight.delete(request.url));
+          _warmInFlight.set(request.url, warm);
+        }
+        event.waitUntil(_warmInFlight.get(request.url));
       }
       return fetch(request);
     }
@@ -248,7 +257,13 @@ self.addEventListener('fetch', event => {
   // (前提:sw.js 本身不可被強快取,GitHub Pages 預設 max-age 短 + 瀏覽器 24h 強制檢查兜底)
   if (isStaticAsset(url.pathname)) {
     event.respondWith(
-      caches.match(request).then(cached => {
+      // 先查 STATIC_CACHE 本尊,查無再全域 match(離線收藏包當後備)。
+      // 直接全域 match 會按 cache「建立順序」搜尋 — 建過離線包的用戶,舊 pack 條目
+      // 會永久遮蔽之後 STATIC_VERSION bump 換上的新內容(例如字型子集重切白做)。
+      caches.open(STATIC_CACHE)
+        .then(c => c.match(request))
+        .then(hit => hit || caches.match(request))
+        .then(cached => {
         if (cached) return cached;
         return fetch(request).then(response => {
           // 只快取完整的 200(206/partial 一律不入 cache — cache.put 會 throw)
@@ -283,7 +298,12 @@ self.addEventListener('fetch', event => {
         }
         return response;
       })
-      .catch(() => caches.match(request).then(cached => {
+      .catch(() => caches.open(RUNTIME_CACHE)
+        // 離線回退同樣先查 RUNTIME 本尊再全域 match — 理由同 STATIC 分支:
+        // 別讓較早建立的離線收藏包永久遮蔽較新的 runtime 副本。
+        .then(c => c.match(request))
+        .then(hit => hit || caches.match(request))
+        .then(cached => {
         if (cached) return cached;
         // 離線且未快取的「導覽請求」(分享深連 / 帶 utm 的 URL / 未 precache 的路徑)
         // → 回退到快取的 app shell,讓 PWA 真正離線可用,而非瀏覽器錯誤頁。
