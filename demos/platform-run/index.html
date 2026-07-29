@@ -14,6 +14,10 @@
 <link rel="modulepreload" href="../../assets/lm402/vendor-three.module.js">
 <link rel="modulepreload" href="../../assets/lm402/three.core.js">
 <link rel="modulepreload" href="./game.js">
+<!-- R3：NPC 合批用的 mergeGeometries。../_vendor/BufferGeometryUtils.js 只是 re-export shim，
+     真正的實作在 assets/lm402/BufferGeometryUtils.js，兩層一起 preload 才不會多一趟往返。 -->
+<link rel="modulepreload" href="../_vendor/BufferGeometryUtils.js">
+<link rel="modulepreload" href="../../assets/lm402/BufferGeometryUtils.js">
 <link rel="modulepreload" href="./postfx.js">
 <!-- postfx.js 的第二層靜態 import,少了它們仍多一輪往返 -->
 <link rel="modulepreload" href="./motion-blur.js">

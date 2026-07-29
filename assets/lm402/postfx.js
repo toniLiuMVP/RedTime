@@ -571,11 +571,15 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     motionBlurAmount: 0.3,                                    // 0-1,0.3 = 自然拖影
   };
 
-  // ─── DPR-aware 解析度（手機降畫質） ───
+  // ─── 解析度（R3 起由呼叫端決定：setSize 收到的就是 render px） ───
   let width = 1, height = 1;
   let dprScale = 1;
-  // 跟 renderer.js 陰影的 V = matchMedia("(pointer: coarse)") 對齊,避免 iPad / coarse-pointer laptop 預算不一致(shadow tier 跟 RT scale 用同一判據)
-  const isMobile = () => (typeof window !== "undefined" && window.matchMedia && window.matchMedia("(pointer: coarse)").matches) || window.innerWidth <= 1080;
+  // R3 統一解析度後這裡不再自行判斷行動端降畫質 —— 那個決定移到
+  //   app.js QUALITY_TIERS 的 renderScale（單一真相），renderer.js 的 qo() 換算後傳進來。
+  //   舊註解保留備查：本判據原本刻意跟 renderer.js 陰影的
+  //   V = matchMedia("(pointer: coarse)") 對齊，避免 iPad / coarse-pointer laptop
+  //   的 shadow tier 與 RT scale 用到不同判據。renderer.js 的 renderScale fallback
+  //   （tier 表沒給值時 V ? 0.85 : 1.0）沿用同一個 V，語意因此仍然一致。
 
   // ─── 主場景 RT（HalfFloat 保留 HDR；附 DepthTexture 給 DOF） ───
   const sceneRT = new THREE.WebGLRenderTarget(1, 1, {
@@ -726,10 +730,28 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
   if (getJuniorAnchor) setJuniorAnchor(getJuniorAnchor());
 
   // ─── Resize ───
-  function setSize(w, h) {
+  /* SSAO 的 uRadius 是 RT texel 倍數、DOF 的 uMaxBlur 是 RT pixel —— 兩者的螢幕表觀
+   大小都會隨 RT 尺寸浮動。renderScale 之前恆為 1.0(桌機),這兩個手調值就是照
+   「RT == CSS px」校準的;renderScale 成為真旋鈕後,tier 之間會有 0.7→1.25 的漂移
+   (low 檔 AO 半徑在螢幕上放大約 1.43 倍、perfect 縮到 0.8 倍)。上傳時乘 renderScale
+   把它們正規化回螢幕空間;ultra(1.0)因此與改動前完全相同。 */
+let renderScale = 1;
+function setRenderScale(v) {
+  const n = Number(v);
+  if (Number.isFinite(n) && n > 0) renderScale = n;
+}
+
+function setSize(w, h) {
     width = w; height = h;
-    // 手機降 0.85x，桌機 1.0x
-    dprScale = isMobile() ? 0.85 : 1.0;
+    // R3 統一解析度：呼叫端（renderer.js qo()）傳進來的已經是 render px
+    //   （CSS px × renderTuning.renderScale），不再是 CSS px。
+    // 故這裡的 dprScale 退為常數 1.0 —— RT 尺寸 == drawing buffer 尺寸，
+    //   最後一支 composite（fsq.render(..., null)）永遠 1:1，不再放大。
+    // 行動端那 0.85 現在由 app.js QUALITY_TIERS 的 renderScale 負責
+    //   （行動預設檔 smooth = 0.85；getDefaultQuality() 行動一律回 smooth）。
+    //   若這裡再乘一次 isMobile() ? 0.85 會變成 0.7225，RT 又與 drawing buffer 不等，
+    //   等於把剛修掉的「輸出比來源大」重新裝回去。
+    dprScale = 1.0;
     const W = Math.max(1, Math.round(w * dprScale));
     const H = Math.max(1, Math.round(h * dprScale));
 
@@ -772,7 +794,7 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
       matSSAO.uniforms.uTexel.value.set(1 / ssaoRT.width, 1 / ssaoRT.height);
       matSSAO.uniforms.uNear.value = camera.near;
       matSSAO.uniforms.uFar.value = camera.far;
-      matSSAO.uniforms.uRadius.value = tuning.ssao.radius;
+      matSSAO.uniforms.uRadius.value = tuning.ssao.radius * renderScale;
       matSSAO.uniforms.uIntensity.value = tuning.ssao.intensity;
       matSSAO.uniforms.uBias.value = tuning.ssao.bias;
       fsq.render(renderer, matSSAO, ssaoRT);
@@ -854,7 +876,7 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
       matDOF.uniforms.uTexel.value.set(1 / postBloomRT.width, 1 / postBloomRT.height);
       matDOF.uniforms.uFocalDist.value = focal;
       matDOF.uniforms.uFocalRange.value = tuning.dof.focalRange;
-      matDOF.uniforms.uMaxBlur.value = tuning.dof.maxBlur;
+      matDOF.uniforms.uMaxBlur.value = tuning.dof.maxBlur * renderScale;
       matDOF.uniforms.uNear.value = camera.near;
       matDOF.uniforms.uFar.value = camera.far;
       fsq.render(renderer, matDOF, dofRT);
@@ -916,5 +938,5 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     if (_rainTexture) { _rainTexture.dispose(); _rainTexture = null; }
   }
 
-  return { render, setSize, setJuniorAnchor, dispose, tuning };
+  return { render, setSize, setRenderScale, setJuniorAnchor, dispose, tuning };
 }

@@ -3537,9 +3537,13 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     shadowMapSize:
       runtimeState.qualityTiers?.[runtimeState.qualityTier]?.shadowMapSize ??
       (V ? 896 : 2048),
-    maxPixelRatio:
-      runtimeState.qualityTiers?.[runtimeState.qualityTier]?.maxPixelRatio ??
-      (V ? 1 : 1.5),
+    // renderScale（R3 統一解析度）：3D 內部解析度相對 CSS px 的倍率。
+    // 同時驅動 setPixelRatio（drawing buffer）與 __postfx.setSize（RT 尺寸），
+    // 故 final composite 永遠 1:1，不再拿 device px 放大 CSS px 來源。
+    // fallback 跟著 tier 表的行動端預設走（V = coarse pointer → 0.85）。
+    renderScale:
+      runtimeState.qualityTiers?.[runtimeState.qualityTier]?.renderScale ??
+      (V ? 0.85 : 1.0),
     dustCount:
       runtimeState.qualityTiers?.[runtimeState.qualityTier]?.dustCount ??
       (V ? 48 : 96),
@@ -6879,6 +6883,9 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     anchor: { x: 0, y: 1.45, z: 0 },  // 學妹頭部位置
     radius: 0.55,
     heightRange: 1.4,
+    // gl_PointSize 吃 drawing buffer 像素,故要 renderer 實際的 pixelRatio
+    // (renderScale 制度下 ≠ devicePixelRatio);之後每次 qo() 會再同步一次
+    pixelRatio: U.getPixelRatio(),
   });
   // 雙時空 B4 意識菜市場 · 文字派 — 12 個 sprite 漂浮詩意短句（5 個年紀內心話）
   __conscText = createConsciousnessText({
@@ -7227,9 +7234,19 @@ export function createLm402Scene(D, runtimeOptions = {}) {
   // layout thrash，但畫布尺寸只在 resize 類事件後才會變。
   // 改事件驅動：resize／orientationchange／visualViewport resize 設 dirty，
   // render() 只在 dirty（含首幀，旗標初值為 true）時跑一次，跑完由 qo() 自己清旗標。
-  // devicePixelRatio 變化（頁面縮放、拖到不同 DPI 螢幕）本身就會觸發 window resize，
-  // 故 maxPixelRatio 這條路徑一併涵蓋；品質檔切換那邊仍是直接呼叫 qo()，即時生效。
+  // R3 統一解析度後 renderScale 與 devicePixelRatio 解耦：postfx 開啟時 pixelRatio 只看
+  // renderScale，dpr 變化（頁面縮放、拖到不同 DPI 螢幕）不再影響 3D 內部解析度，
+  // 但它會觸發 window resize → qo() 重跑，CSS 尺寸與 RT 尺寸仍會同步更新。
+  // postfx 關閉（或建立失敗）時才回頭吃 dpr（見 qo() 內的分支）— 那條路徑下 3D 是
+  // 真的用 drawing buffer 在畫，dpr 變化必須反映，而 resize 事件同樣涵蓋。
+  // 品質檔切換那邊仍是直接呼叫 qo()，即時生效。
   let _viewportDirty = !0;
+  // postfx 開或關，drawing buffer 都是 CSS px × renderScale：
+  //   開 → buffer 是 final composite 的輸出面，尺寸必須等於 postfx RT 才 1:1；
+  //   關 → 3D 直接畫進 buffer，而 renderScale 的語意本來就是「3D 內部解析度相對 CSS px」。
+  //   兩者對「該畫多少像素」的答案相同，所以不再分支、也不需要偵測 tuning.enabled 翻轉
+  //   （舊版那條 `min(dpr,2)` 分支會讓 low 檔在 dpr2 上從 0.7 跳到 2.0 ≈ 8 倍像素，
+  //    方向與 tier 語意相反，且繞過了 _effectiveRenderScale 的行動端夾制）。
   if (typeof window !== "undefined") {
     const markViewportDirty = () => {
       _viewportDirty = !0;
@@ -7237,6 +7254,22 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     (window.addEventListener("resize", markViewportDirty),
       window.addEventListener("orientationchange", markViewportDirty),
       window.visualViewport?.addEventListener("resize", markViewportDirty));
+  }
+  /* renderScale 的唯一權威換算：tier 值 + 兩道夾制。
+     (1) 行動裝置上限 0.85 —— 舊 postfx 的 `isMobile() ? 0.85 : 1.0` 是「無條件裝置護欄」，
+         把它綁進 tier 表只覆蓋得到預設檔；loadQualitySetting() 先吃 localStorage，
+         已持久化 ultra/perfect 的行動使用者會直接吃到 +38% / +116% 的 3D 成本。
+         同檔 shadowMapSize 早有同型夾制（V ? Math.min(1536, …)，註解寫明「持久化重檔也不超標」），
+         而 renderScale 是 fill rate 的平方項，更該夾。
+     (2) devicePixelRatio < 1（瀏覽器縮小顯示）時不超取樣 —— 此時 CSS px 數本來就變多，
+         再用 >dpr 的倍率等於同一批內容多畫數倍像素後被瀏覽器丟掉。
+         dpr >= 1 時不夾，perfect 檔的 1.25 超取樣是刻意的。 */
+  function _effectiveRenderScale() {
+    let s = renderTuning.renderScale;
+    if (V) s = Math.min(0.85, s);
+    const dpr = window.devicePixelRatio || 1;
+    if (dpr < 1) s = Math.min(s, dpr);
+    return s;
   }
   function qo() {
     _viewportDirty = !1;
@@ -7249,9 +7282,8 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         1,
         Math.round(e.height || D.clientHeight || window.innerHeight || 1),
       );
-    (U.setPixelRatio(
-      Math.min(window.devicePixelRatio || 1, renderTuning.maxPixelRatio),
-    ),
+    // 不再夾 devicePixelRatio —— 那正是「輸出比來源大、4 倍 fill 換零新資訊」的元凶。
+    (U.setPixelRatio(_effectiveRenderScale()),
       U.setSize(t, o, !1),
       U.setViewport(0, 0, t, o),
       U.setScissor(0, 0, t, o),
@@ -7260,7 +7292,25 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       (U.domElement.style.height = `${o}px`),
       (q.aspect = t / o),
       q.updateProjectionMatrix());
-    __postfx?.setSize?.(t, o);
+    // 傳 render px（CSS px × renderScale），不是 CSS px：
+    //   postfx 端的 dprScale 因此可退為常數 1.0，RT 尺寸 == drawing buffer 尺寸，
+    //   且 matFinal 的 uTexel（1/width, 1/height）自動對應 tDiffuse 的實際尺寸
+    //   （舊碼那裡拿 CSS px 當 RT 尺寸用，行動端 0.85 縮放後 texel 是錯的 — 順手修掉）。
+    // 用 Math.floor 不用 Math.round：Three 的 setSize 是
+    //   canvas.width = Math.floor(width * pixelRatio)、setViewport 也是 .floor()，
+    //   四捨五入會在非整數乘積（例：390 CSS × 0.85 = 331.5）差 1 px，composite 又不是 1:1。
+    const _rs = _effectiveRenderScale();
+    // SSAO/DOF 的半徑是 RT texel/pixel 單位,要跟著 RT 尺寸正規化回螢幕空間
+    __postfx?.setRenderScale?.(_rs);
+    __postfx?.setSize?.(
+      Math.max(1, Math.floor(t * _rs)),
+      Math.max(1, Math.floor(o * _rs)),
+    );
+    /* 手寫 shader 的 gl_PointSize 單位是 drawing buffer 像素，必須跟著 pixelRatio 走。
+       three 內建的 PointsMaterial（本檔另外三處 Points）由 refreshUniformsPoints 自動乘上
+       renderer 的 _pixelRatio，唯獨 consciousness-particles 自帶一份 devicePixelRatio，
+       renderScale 改動後會脫鉤（dpr=2 桌機預設 ultra 下粒子直徑加倍）。 */
+    __conscParticles?.setPixelRatio?.(U.getPixelRatio());
   }
   const _isMobile = () => window.innerWidth <= 1080;
   function _o(e, t = 0, o = !0) {
@@ -7670,6 +7720,10 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     _worldGroup: j,
     _scene: W,
     render: function (s) {
+      // S4：postfx 開關翻轉偵測。__POSTFX__.tuning.enabled 可被 console／app.js 隨時改，
+      // 沒有事件可掛，故在每幀開頭比對狀態（一次布林讀取，成本可忽略）。
+      // 翻轉 → 標 dirty → 同一幀的 qo() 立刻換算式（postfx.render 在本函式尾端才跑，
+      // 所以這一幀就已經是對的 pixelRatio）。
       _viewportDirty && qo();
       const sceneTime = s.time ?? 0;
       const perfectType = s.endingSequence?.type ?? s.ending,
@@ -8498,9 +8552,9 @@ export function createLm402Scene(D, runtimeOptions = {}) {
           shadowMapSize:
             runtimeState.qualityTiers?.[runtimeState.qualityTier]
               ?.shadowMapSize ?? renderTuning.shadowMapSize,
-          maxPixelRatio:
+          renderScale:
             runtimeState.qualityTiers?.[runtimeState.qualityTier]
-              ?.maxPixelRatio ?? renderTuning.maxPixelRatio,
+              ?.renderScale ?? renderTuning.renderScale,
           dustCount:
             runtimeState.qualityTiers?.[runtimeState.qualityTier]?.dustCount ??
             renderTuning.dustCount,
