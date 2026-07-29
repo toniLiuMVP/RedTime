@@ -324,9 +324,20 @@ function getGameTimeDisplay() {
   if (state.phase === "eye_contact") return "11:07";
   return "10:40";
 }
+/* 每幀 getElementById + textContent 寫同一個字串（時間只在 phase 換／
+   consciousness_market 每 3 秒才變一次）。節點是 lm402.html 的靜態節點、不會被
+   重建，快取起來；值沒變就不碰 DOM，省掉每幀一次的 style/layout 失效。 */
+let _timeWatchEl = null;
+let _timeWatchLastText = null;
 function updateTimeWatch() {
-  const display = document.getElementById("time-watch-display");
-  if (display) display.textContent = getGameTimeDisplay();
+  if (!_timeWatchEl) {
+    _timeWatchEl = document.getElementById("time-watch-display");
+    if (!_timeWatchEl) return; /* 還沒掛上：下一幀再找 */
+  }
+  const next = getGameTimeDisplay();
+  if (next === _timeWatchLastText) return;
+  _timeWatchLastText = next;
+  _timeWatchEl.textContent = next;
 }
 
 /* ── Stair Warp System ── */
@@ -354,13 +365,23 @@ function checkStairWarp() {
 
 /* ── Subtitle Background Adaptation ── */
 let subtitleAdaptFrame = 0;
+/* 寫進去的是固定值，原本每幀對 2~3 個節點各做一次 setProperty。
+   字幕框／氛圍框是靜態節點：套一次就夠。電影字幕卡是動態掛載的，
+   記住上次套過的節點，換了節點才補套。 */
+const SUBTITLE_BACKDROP_COLOR = "rgba(8, 10, 14, 0.45)";
+let subtitleAdaptStaticApplied = false;
+let subtitleAdaptCinematicEl = null;
 function adaptSubtitleBackground() {
   if (!dom.subtitleBox || !dom.ambienceBox) return;
-  const backdropColor = "rgba(8, 10, 14, 0.45)";
-  dom.subtitleBox.style.setProperty("--subtitle-adaptive-bg", backdropColor);
-  dom.ambienceBox.style.setProperty("--subtitle-adaptive-bg", backdropColor);
+  if (!subtitleAdaptStaticApplied) {
+    dom.subtitleBox.style.setProperty("--subtitle-adaptive-bg", SUBTITLE_BACKDROP_COLOR);
+    dom.ambienceBox.style.setProperty("--subtitle-adaptive-bg", SUBTITLE_BACKDROP_COLOR);
+    subtitleAdaptStaticApplied = true;
+  }
   const cinematicSub = document.querySelector(".cinematic-subtitle-card");
-  if (cinematicSub) cinematicSub.style.setProperty("--subtitle-adaptive-bg", backdropColor);
+  if (cinematicSub === subtitleAdaptCinematicEl) return;
+  subtitleAdaptCinematicEl = cinematicSub;
+  if (cinematicSub) cinematicSub.style.setProperty("--subtitle-adaptive-bg", SUBTITLE_BACKDROP_COLOR);
 }
 
 function clampLookScalar(value) {
@@ -391,8 +412,14 @@ const initialAudioEnabled =
   localStorage.getItem(STORAGE_KEYS.audioEnabled) === "1" ||
   (typeof window !== "undefined" && window.__lm402AutoplayPrimed === true);
 
+/* matchMedia() 每次呼叫都會新建一個 MediaQueryList 物件；查詢字串是常數，
+   而 isMobileLayout() 一幀會被呼叫好幾次（wantsLandscape、看視速度、字幕模式…）。
+   模組層建一次重複用即可 —— MediaQueryList.matches 本來就是即時值，
+   視窗尺寸／指標型態改變後讀到的仍是最新結果。 */
+const _mqMobileWidth = window.matchMedia("(max-width: 1080px)");
+const _mqPointerCoarse = window.matchMedia("(pointer: coarse)");
 function isMobileLayout() {
-  return window.matchMedia("(max-width: 1080px)").matches || window.matchMedia("(pointer: coarse)").matches;
+  return _mqMobileWidth.matches || _mqPointerCoarse.matches;
 }
 
 // 直向可遊玩：玩家在「請橫向」卡片點「維持直向繼續」後設為 true，
@@ -3347,6 +3374,50 @@ function renderFrame() {
 }
 
 const _tickFuse = { lastMsg: null, count: 0, halted: false }; /* tick 重複錯誤熔斷器 */
+let _lastLandscapeWanted = null; /* 橫向鎖的上次寫入值（null = 尚未寫過，首幀必寫） */
+
+/* ── 遮罩暫停時停止渲染 ──
+   storyPaused / councilPaused 期間 dt 已被設 0（模擬凍結），但畫面仍每幀全量
+   重繪；ending 全黑時整張 canvas 被不透明黑幕蓋住，畫出來的像素沒有任何人
+   看得到。這兩種情況繼續 render 純粹在燒 GPU 與電池（行動裝置尤其明顯）。
+
+   作法：進入遮罩狀態後仍多渲染 MASK_IDLE_RENDER_FRAMES 幀，讓進入當下的最後
+   一次狀態變更確實畫進 framebuffer（canvas 內容會留在螢幕上，不會變空白），
+   之後才跳過 renderFrame()。遮罩組合一有變動、或遮罩解除，就把計數歸零立刻
+   恢復渲染，並比照 closeStoryReader() 重置 tick.last 避免恢復時 dt 大跳。
+
+   ending 黑幕在 lm402.css 是 `transition: opacity 1.5s ease-in`，漸暗過程中
+   畫面仍看得見，因此要等 opacity 目標值設為 1 且轉場時間走完才算「全黑」。
+   讀 el.hidden 與 el.style.opacity 都只碰 inline CSSOM，不會強制 layout。
+
+   保守原則：任何判斷不到 / 不確定的狀態一律回傳「沒有遮罩」＝ 照常渲染。 */
+const MASK_IDLE_RENDER_FRAMES = 2;
+const ENDING_BLACKOUT_FADE_MS = 1600; /* CSS 1.5s transition + 緩衝 */
+const ENDING_WHITEOUT_FADE_MS = 2100; /* CSS 2s transition + 緩衝 */
+let _maskIdleFrames = 0;
+let _maskPrevKey = "";
+let _blackoutOpaqueSince = 0;
+let _whiteoutOpaqueSince = 0;
+function maskPauseKey(now) {
+  let key = "";
+  if (state.storyPaused) key += "s";
+  if (state.councilPaused) key += "c";
+  const bo = dom.endingBlackout;
+  if (bo && !bo.hidden && bo.style.opacity === "1") {
+    if (!_blackoutOpaqueSince) _blackoutOpaqueSince = now;
+    if (now - _blackoutOpaqueSince >= ENDING_BLACKOUT_FADE_MS) key += "b";
+  } else {
+    _blackoutOpaqueSince = 0; /* 黑幕收回 / 還沒全黑：重新計時 */
+  }
+  const wo = dom.endingWhiteout;
+  if (wo && !wo.hidden && wo.style.opacity === "1") {
+    if (!_whiteoutOpaqueSince) _whiteoutOpaqueSince = now;
+    if (now - _whiteoutOpaqueSince >= ENDING_WHITEOUT_FADE_MS) key += "w";
+  } else {
+    _whiteoutOpaqueSince = 0; /* 白幕收回 / 還沒全白：重新計時 */
+  }
+  return key;
+}
 function tick(now) {
   try {
     if (!tick.last) {
@@ -3357,8 +3428,16 @@ function tick(now) {
     if (state.storyPaused || state.councilPaused) dt = 0; /* 遊戲內讀故事 / 意識菜市場 council overlay 期間：凍結時間與模擬，仍續 render，不跳出遊戲 */
     state.time += dt;
 
-    dom.rotateLock.hidden = !wantsLandscape();
-    dom.body.classList.toggle("landscape-prompt", wantsLandscape());
+    /* 原本每幀呼叫兩次 wantsLandscape() 再寫兩次同值 DOM。
+       呼叫一次、值真的翻轉了才寫。「維持直向繼續」那條路徑會同步把
+       portraitOptIn 設 true（wantsLandscape() 即刻轉 false），
+       所以那邊的直接寫入不會跟這裡的快取脫鉤。 */
+    const landscapeWanted = wantsLandscape();
+    if (landscapeWanted !== _lastLandscapeWanted) {
+      _lastLandscapeWanted = landscapeWanted;
+      dom.rotateLock.hidden = !landscapeWanted;
+      dom.body.classList.toggle("landscape-prompt", landscapeWanted);
+    }
 
     if (state.mode === "intro") {
       updateIntro(dt);
@@ -3383,7 +3462,17 @@ function tick(now) {
     if (typeof window !== "undefined" && window.__E4_PROPS__) {
       window.__E4_PROPS__.update(dt);   // E4 雨/雪粒子 + 雲微飄
     }
-    renderFrame();
+    const maskKey = maskPauseKey(now);
+    if (maskKey !== _maskPrevKey) {
+      /* 遮罩組合有變動（含解除）：歸零計數、立刻恢復渲染 */
+      if (!maskKey && _maskPrevKey) tick.last = 0; /* 同 closeStoryReader()：重置 dt 基準 */
+      _maskPrevKey = maskKey;
+      _maskIdleFrames = 0;
+    }
+    if (!maskKey || _maskIdleFrames < MASK_IDLE_RENDER_FRAMES) {
+      if (maskKey) _maskIdleFrames += 1;
+      renderFrame();
+    }
     _tickFuse.count = 0; /* 成功一幀就重置(只熔斷「連續」同錯) */
     _tickFuse.lastMsg = null;
   } catch (err) {

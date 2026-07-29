@@ -25,6 +25,18 @@ let __ponytailRig = null;
 let __conscLights = null;
 let __conscParticles = null;
 let __conscText = null;
+// 每幀 rig 閘門：物件自身或任一祖先 visible=false → 這一幀根本不會被畫出來
+// （three 收集物件／光源走 traverseVisible），此時跑 spring 物理或表情狀態機
+// 純屬白工。程序化 hero 頭（pose.heroHeadRoot）由 setJuniorHeroLeadVisibility
+// 的 showHeroHeadRoot 控制，預設 false — 全場大多時間都是隱藏的。
+// 保守原則：根物件解析不到（null）＝狀態不明，回 false 讓 update 照常跑。
+// 各 rig 的 update 內部都有 dt clamp（0.05／0.1），重新可見時不會因為
+// lastTime 過期而爆衝。
+function __rigRootHidden(root) {
+  if (!root) return !1;
+  for (let o = root; o; o = o.parent) if (!o.visible) return !0;
+  return !1;
+}
 let __envPresets = null;
 let __e4Props = null;
 let __narrativeOverlay = null;
@@ -3607,6 +3619,34 @@ export function createLm402Scene(D, runtimeOptions = {}) {
   const W = new e.Scene();
   ((W.background = new e.Color("#ccd8e4")),
     (W.fog = new e.Fog("#d0dce6", 12, 65)));
+  // ════════════════════════════════════════════════════════════════
+  // 光源池（常駐）— r36 美術燈的 program-churn 修正
+  // three 的 shader program 快取鍵含各型光源「數量」，而光源收集走
+  // traverseVisible：燈被 add／remove／切 visible 都會改變 program key →
+  // 全場材質重編譯。__RIM_LIGHT__／__CATCHLIGHT__ 原本在「一眼瞬間」
+  // climax 當幀才建燈，重編譯就正好砸在最不能掉幀的那一格。
+  // 正確做法：開場就把這 1+3 盞常駐 add 進場景、visible=true、intensity=0，
+  // 之後只 ramp intensity（intensity=0 不改 program key，也不會被移出燈列表）。
+  // 對應的 _OFF_ 路徑一律只歸零 intensity，絕不 remove。
+  // ════════════════════════════════════════════════════════════════
+  const _rimLight = new e.DirectionalLight(new e.Color("#ff9a4f"), 0);
+  (_rimLight.position.set(0, 8, -15),
+    _rimLight.target.position.set(0, 1.5, 0),
+    (_rimLight.visible = !0),
+    W.add(_rimLight),
+    W.add(_rimLight.target));
+  const _catchlightConfigs = [
+    { pos: [2, 3, 3], color: "#ffffff", mult: 1 },
+    { pos: [-2, 1, 2], color: "#ffd9a8", mult: 0.5 },
+    { pos: [0, 2, -3], color: "#88aacc", mult: 0.3 },
+  ];
+  const _catchlights = _catchlightConfigs.map((c) => {
+    const light = new e.PointLight(new e.Color(c.color), 0, 8);
+    (light.position.set(c.pos[0], c.pos[1], c.pos[2]),
+      (light.visible = !0),
+      W.add(light));
+    return light;
+  });
   const q = new e.PerspectiveCamera(74, 1, 0.03, 180);
   q.rotation.order = "YXZ";
   // === Tier 1 後製管線：黃昏 HDR IBL + 電影派 Bloom/DOF/Vignette ===
@@ -3721,18 +3761,17 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     U.toneMapping = e.NeutralToneMapping;
     U.toneMappingExposure = 1.0;
     // L2 (r36) Rim Light 強化 — 學妹後門 11:00「一眼瞬間」邊光描輪廓(暖橘 #ff9a4f)
-    let _rimLight = null;
+    // 燈本體在場景初始化時就常駐（見上方「光源池」），這裡只設定屬性 + ramp intensity。
     window.__RIM_LIGHT__ = (intensity = 1.2, color = '#ff9a4f') => {
-      if (_rimLight) W.remove(_rimLight);
-      _rimLight = new e.DirectionalLight(new e.Color(color), intensity);
+      _rimLight.color.set(color);
       _rimLight.position.set(0, 8, -15);
       _rimLight.target.position.set(0, 1.5, 0);
-      W.add(_rimLight); W.add(_rimLight.target);
+      _rimLight.intensity = intensity;
       console.info(`[__RIM_LIGHT__] intensity=${intensity} color=${color}`);
       return _rimLight;
     };
     window.__RIM_LIGHT_OFF__ = () => {
-      if (_rimLight) { W.remove(_rimLight); _rimLight = null; }
+      _rimLight.intensity = 0;
       console.info('[__RIM_LIGHT__] off');
     };
     // K1 (r36) Camera Breath — 鏡頭呼吸(0.5-1Hz hand-held 感)
@@ -3796,24 +3835,19 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       console.info('[__LETTERBOX__] off');
     };
     // L8 (r36) Catchlight 升 2-3 點 — 眼神光複雜化(角色「活感」)
-    let _catchlights = [];
+    // 3 盞燈本體常駐（見上方「光源池」），count 之外的只歸零 intensity，不移除。
     window.__CATCHLIGHT__ = (count = 3, intensity = 0.8) => {
-      _catchlights.forEach(l => W.remove(l)); _catchlights = [];
-      const configs = [
-        { pos: [2, 3, 3],   color: '#ffffff', i: intensity },
-        { pos: [-2, 1, 2],  color: '#ffd9a8', i: intensity * 0.5 },
-        { pos: [0, 2, -3],  color: '#88aacc', i: intensity * 0.3 },
-      ];
-      for (let i = 0; i < Math.min(count, configs.length); i++) {
-        const c = configs[i];
-        const light = new e.PointLight(new e.Color(c.color), c.i, 8);
+      _catchlights.forEach((light, i) => {
+        const c = _catchlightConfigs[i];
+        light.color.set(c.color);
         light.position.set(c.pos[0], c.pos[1], c.pos[2]);
-        W.add(light); _catchlights.push(light);
-      }
-      console.info(`[__CATCHLIGHT__] ${count} lights added`);
+        light.intensity = i < count ? intensity * c.mult : 0;
+      });
+      const lit = Math.max(0, Math.min(count, _catchlights.length));
+      console.info(`[__CATCHLIGHT__] ${lit} lights lit`);
     };
     window.__CATCHLIGHT_OFF__ = () => {
-      _catchlights.forEach(l => W.remove(l)); _catchlights = [];
+      _catchlights.forEach(l => { l.intensity = 0; });
       console.info('[__CATCHLIGHT__] off');
     };
     // L4 (r36) Contact Shadow 程序近接陰影(SSAO-like 簡化版)
@@ -5009,6 +5043,9 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     colliders: 0,
     mobileBlackRegionDetected: !1,
   };
+  // render() 每幀寫入的 debug 快照 builder（惰性；見 render 內說明）。
+  // 首幀之前為 null，此時 getDebugSnapshot() 退回上面的初始 X。
+  let __debugSnapshotBuild = null;
   const j = new e.Group(),
     $ = new e.Group(),
     H = new e.Group(),
@@ -6772,6 +6809,26 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     radius: 0.7,
     heightRange: 1.0,
   });
+  // 意識菜市場三派的 master intensity 追蹤 —— render 迴圈的 early-return 依據。
+  // 光柱與粒子預設 setIntensity(0)(見下方),但 update() 仍每幀重算 5 盞燈的
+  // 呼吸強度、重寫 150 顆粒子的 position/life buffer 並整包上傳 GPU,全程在
+  // 替看不見的東西算錢。這裡就地(不換物件,window.__CONSC_*__ 拿到的是同一個)
+  // 包一層 setIntensity 記下 master 值,強度為 0 時 render 直接跳過 update。
+  // dirty:強度剛被改動時務必再跑一次 update —— 光柱的 intensity 是在 update()
+  // 內才寫進 light.intensity 的(建構時是 baseIntensity 0.45),少跑這一次
+  // 5 盞 SpotLight 會卡在 0.45 亮著,反而變成 bug。
+  const _wrapIntensityGate = (rig) => {
+    if (!rig || typeof rig.setIntensity !== "function") return rig;
+    const _set = rig.setIntensity;
+    ((rig.__masterIntensity = 1), (rig.__intensityDirty = !0));
+    rig.setIntensity = function (v) {
+      ((rig.__masterIntensity = Math.max(0, Math.min(1, Number(v) || 0))),
+        (rig.__intensityDirty = !0));
+      return _set.call(this, v);
+    };
+    return rig;
+  };
+  (_wrapIntensityGate(__conscLights), _wrapIntensityGate(__conscParticles));
   // 預設:文字派 0.30(淡)— 不啟用光柱與粒子,避免任何在學妹頭部的光暈疊加
   // 之前的 B3=0.30 default 在學妹頭部形成可見光球,訪客體驗訂正後關閉
   //   __CONSC_LIGHTS__.setIntensity(>0)      // 想要 5 盞光柱再開(會有頭部光暈)
@@ -7074,7 +7131,24 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     Uo = b("rgba(255,157,182,1)", 3.2, 1.8, 0.22);
   H.add(Do, Vo, Eo, Uo);
   const Wo = b("rgba(255,100,136,1)", 4.8, 2.2, 0.18);
+  // qo() 每次都 getBoundingClientRect（強制 layout）再跑 setPixelRatio／setSize／
+  // setViewport／setScissor／updateProjectionMatrix 一整串；每幀呼叫等於每幀一次
+  // layout thrash，但畫布尺寸只在 resize 類事件後才會變。
+  // 改事件驅動：resize／orientationchange／visualViewport resize 設 dirty，
+  // render() 只在 dirty（含首幀，旗標初值為 true）時跑一次，跑完由 qo() 自己清旗標。
+  // devicePixelRatio 變化（頁面縮放、拖到不同 DPI 螢幕）本身就會觸發 window resize，
+  // 故 maxPixelRatio 這條路徑一併涵蓋；品質檔切換那邊仍是直接呼叫 qo()，即時生效。
+  let _viewportDirty = !0;
+  if (typeof window !== "undefined") {
+    const markViewportDirty = () => {
+      _viewportDirty = !0;
+    };
+    (window.addEventListener("resize", markViewportDirty),
+      window.addEventListener("orientationchange", markViewportDirty),
+      window.visualViewport?.addEventListener("resize", markViewportDirty));
+  }
   function qo() {
+    _viewportDirty = !1;
     const e = (D.parentElement ?? D).getBoundingClientRect(),
       t = Math.max(
         1,
@@ -7505,7 +7579,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     _worldGroup: j,
     _scene: W,
     render: function (s) {
-      qo();
+      _viewportDirty && qo();
       const sceneTime = s.time ?? 0;
       const perfectType = s.endingSequence?.type ?? s.ending,
         perfectPhase = "perfect" === perfectType ? Ao(s.endingSequence?.time ?? 0) : null,
@@ -7583,11 +7657,23 @@ export function createLm402Scene(D, runtimeOptions = {}) {
 	                    (e.position.copy(e.userData.basePosition),
 	                    e.scale.copy(e.userData.baseScale),
 	                    e.rotation.copy(e.userData.baseRotation))),
+              // 落地高度校正：原本每幀 updateMatrixWorld(true) + Box3.setFromObject
+              // 整棵 runtime GLB（數十個 mesh）。但緊接在上面才剛把 position／
+              // scale／rotation 複寫回 base 值，且 setFromObject 走的是 geometry
+              // boundingBox × matrixWorld（不吃骨架變形）—— 每幀算出來的 footY 是
+              // 同一個常數。改成模型 ready 後算一次、快取進該 root 的 userData，
+              // 之後只套用已知位移；換模型時 userData 跟著新的 root 物件走，
+              // 快取自動失效。算出非有限值就不寫快取，下一幀重算。
               r && e?.userData?.ready && (() => {
-                e.updateMatrixWorld(!0);
-                juniorHeroAnchorBox.setFromObject(e);
-                const footY = juniorHeroAnchorBox.min.y;
-                if (Number.isFinite(footY) && Math.abs(footY) > 0.001) {
+                let footY = e.userData.__groundOffsetY;
+                if (!Number.isFinite(footY)) {
+                  e.updateMatrixWorld(!0);
+                  juniorHeroAnchorBox.setFromObject(e);
+                  footY = juniorHeroAnchorBox.min.y;
+                  if (!Number.isFinite(footY)) return;
+                  e.userData.__groundOffsetY = footY;
+                }
+                if (Math.abs(footY) > 0.001) {
                   e.position.y -= footY;
                 }
               })(),
@@ -8098,24 +8184,33 @@ export function createLm402Scene(D, runtimeOptions = {}) {
               e.material && (e.material.opacity = t);
             })));
       }
-      const S = (D.parentElement ?? D).getBoundingClientRect(),
-        G = D.getBoundingClientRect(),
-        C = U.getSize(r),
-        B = U.getDrawingBufferSize(i),
-        k = U.domElement.width || B.x || 0,
-        T = U.domElement.height || B.y || 0,
-        I = Math.round(G.width),
-        R = Math.round(G.height),
-        V = Math.round(S.width),
-        E = Math.round(S.height),
-        _ =
-          (V > 0 && I > 0 && Math.abs(V - I) > 4) ||
-          (E > 0 && R > 0 && Math.abs(E - R) > 4) ||
-          Math.abs(I - D.clientWidth) > 4 ||
-          Math.abs(R - D.clientHeight) > 4 ||
-          Math.abs(Math.round(C.x) - V) > 4 ||
-          Math.abs(Math.round(C.y) - E) > 4;
-      ((X = {
+      // debug 快照惰性化：這份快照 40+ 欄位，含 2 次 getBoundingClientRect（強制
+      // layout）與整棵 runtime 模型的 Box3().setFromObject。但消費端只有
+      // renderDebugPanel() 與 __LM402_DEBUG__.snapshot()，兩者都只在 ?debug=1
+      // （+ localStorage lm402_dev）時才拿得到 — 一般玩家全程在替不存在的面板算錢。
+      // 改法：每幀只留一個捕捉本幀 scope 的 builder closure（一次配置），
+      // 真的被 getDebugSnapshot() 要求時才執行。closure 捕捉 render 的區域變數，
+      // 求值時機仍在同一個 tick（renderFrame 內 scene.render 後隨即 renderDebugPanel），
+      // debug 面板開啟時的內容與原本一致。
+      __debugSnapshotBuild = () => {
+        const S = (D.parentElement ?? D).getBoundingClientRect(),
+          G = D.getBoundingClientRect(),
+          C = U.getSize(r),
+          B = U.getDrawingBufferSize(i),
+          k = U.domElement.width || B.x || 0,
+          T = U.domElement.height || B.y || 0,
+          I = Math.round(G.width),
+          R = Math.round(G.height),
+          V = Math.round(S.width),
+          E = Math.round(S.height),
+          _ =
+            (V > 0 && I > 0 && Math.abs(V - I) > 4) ||
+            (E > 0 && R > 0 && Math.abs(E - R) > 4) ||
+            Math.abs(I - D.clientWidth) > 4 ||
+            Math.abs(R - D.clientHeight) > 4 ||
+            Math.abs(Math.round(C.x) - V) > 4 ||
+            Math.abs(Math.round(C.y) - E) > 4;
+        return {
         camera: {
           x: Number(q.position.x.toFixed(3)),
           y: Number(q.position.y.toFixed(3)),
@@ -8178,13 +8273,28 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         qualityTier: runtimeState.qualityTier,
         rendererProfile: U.__lm402RendererProfile ?? "unknown",
         assetState: { ...assetState },
-      }),
-        updateWormhole(0.016),
-        __juniorRig?.update?.(performance.now() / 1000),
-        __clothRig?.update?.(performance.now() / 1000),
-        __ponytailRig?.update?.(performance.now() / 1000),
-        __conscLights?.update?.(performance.now() / 1000),
-        __conscParticles?.update?.(performance.now() / 1000),
+        };
+      };
+      // rig 閘門：看不見的東西不跑（見檔頭 __rigRootHidden 說明）。
+      // 表情 rig 與 hero 頭髮 cloth 共用程序化 hero 頭這個根；身體馬尾用自己的
+      // ponytailGroup。意識菜市場光柱／粒子改看 master intensity（0 就跳過，
+      // 但強度剛變動的那一幀一定要補跑一次，否則 5 盞 SpotLight 會停在建構值）。
+      const _pose = Co.userData.pose,
+        _heroHeadHidden = __rigRootHidden(_pose?.heroHeadRoot),
+        _ponytailHidden = __rigRootHidden(_pose?.ponytailGroup),
+        _conscOn = (rig) =>
+          Boolean(rig) &&
+          (!(rig.__masterIntensity <= 0) || rig.__intensityDirty === !0);
+      (updateWormhole(0.016),
+        _heroHeadHidden || __juniorRig?.update?.(performance.now() / 1000),
+        _heroHeadHidden || __clothRig?.update?.(performance.now() / 1000),
+        _ponytailHidden || __ponytailRig?.update?.(performance.now() / 1000),
+        _conscOn(__conscLights) &&
+          (__conscLights.update(performance.now() / 1000),
+          (__conscLights.__intensityDirty = !1)),
+        _conscOn(__conscParticles) &&
+          (__conscParticles.update(performance.now() / 1000),
+          (__conscParticles.__intensityDirty = !1)),
         __conscText?.update?.(performance.now() / 1000),
         // Tier 7：每幀計算太陽 NDC 位置（god rays + lens flare 用）
         __sunFar.copy(SUNSET_SUN_DIR).multiplyScalar(1000).add(q.position).project(q),
@@ -8318,7 +8428,9 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         qo());
     },
     getDebugSnapshot: function () {
-      return X;
+      // 被要求時才組建（builder 由 render 每幀更新）；結果快取進 X，
+      // 首幀之前 builder 尚未存在就退回初始 X，維持原本的回傳形狀。
+      return __debugSnapshotBuild ? (X = __debugSnapshotBuild()) : X;
     },
     spawnHologram: function (t, o) {
       (Xo &&

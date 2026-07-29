@@ -151,18 +151,31 @@ export function createJuniorExpressionRig(refs, options = {}) {
     return WORLD_FOCUSES[Math.floor(Math.random() * WORLD_FOCUSES.length)];
   }
 
+  // 高刷滑鼠的 pointermove 每秒可達上千次:handler 只記座標,
+  // getBoundingClientRect(強制 layout)+ 全模型 raycast 移到 update() 每幀至多一次
+  let _pointerDirty = false;
+  let _pointerClientX = 0;
+  let _pointerClientY = 0;
+  function processPointerHover() {
+    if (!_pointerDirty) return;
+    _pointerDirty = false;
+    const rect = canvasEl.getBoundingClientRect();
+    _ndc.x = ((_pointerClientX - rect.left) / rect.width) * 2 - 1;
+    _ndc.y = -((_pointerClientY - rect.top) / rect.height) * 2 + 1;
+    const cam = getCamera();
+    const head = getJuniorHead();
+    if (!cam || !head) return;
+    _raycaster.setFromCamera(_ndc, cam);
+    const hits = _raycaster.intersectObject(head, true);
+    isHovered = hits.length > 0;
+  }
+
   // C6 raycaster + click reaction 註冊
   if (canvasEl && getCamera && getJuniorHead) {
     canvasEl.addEventListener("pointermove", (event) => {
-      const rect = canvasEl.getBoundingClientRect();
-      _ndc.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      _ndc.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-      const cam = getCamera();
-      const head = getJuniorHead();
-      if (!cam || !head) return;
-      _raycaster.setFromCamera(_ndc, cam);
-      const hits = _raycaster.intersectObject(head, true);
-      isHovered = hits.length > 0;
+      _pointerClientX = event.clientX;
+      _pointerClientY = event.clientY;
+      _pointerDirty = true;
     }, { passive: true });
 
     canvasEl.addEventListener("click", () => {
@@ -266,6 +279,8 @@ export function createJuniorExpressionRig(refs, options = {}) {
     if (lastTime === 0) lastTime = time;
     const dt = Math.min(0.1, time - lastTime);
     lastTime = time;
+
+    processPointerHover(); // pointermove 累積的 hover 檢測:每幀至多一次 raycast
 
     // 自動眨眼狀態機
     if (state.autoBlink && !manualBlinkOverride) {

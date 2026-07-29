@@ -80,6 +80,16 @@
     <link rel="modulepreload" href="assets/lm402/vendor-three.module.js" />
     <link rel="modulepreload" href="assets/lm402/three.core.js" />
     <link rel="modulepreload" href="assets/lm402/renderer.js" />
+    <!-- 補齊整棵依賴樹：只 preload renderer 的話，瀏覽器仍得等 lm402-mod1.js
+         動態 import app.js、再解析 app.js 才知道要抓 data.js / ui-panels.js，
+         解析 renderer.js 才知道要抓 GLTFLoader / DRACOLoader —— 每一層都是一個
+         往返。這幾支全是靜態 import（mod1 → app.js → data.js・ui-panels.js・
+         renderer.js → GLTFLoader.js・DRACOLoader.js），先抓一定用得到，不是死流量。 -->
+    <link rel="modulepreload" href="assets/lm402/app.js" />
+    <link rel="modulepreload" href="assets/lm402/data.js" />
+    <link rel="modulepreload" href="assets/lm402/ui-panels.js" />
+    <link rel="modulepreload" href="assets/lm402/GLTFLoader.js" />
+    <link rel="modulepreload" href="assets/lm402/DRACOLoader.js" />
     <!-- GLB prefetch 已移除：GLB 載入管線目前未啟用（manifest 未接），prefetch 是 134KB 死流量 -->
     <script src="assets/load-fonts.js" data-href="fonts/fonts.css"></script><!-- F6:826KB 字型 CSS 改非阻塞載入(已 preload,font-display:swap),不擋 LM402 首屏 -->
     <noscript><link rel="stylesheet" href="fonts/fonts.css" /></noscript>
