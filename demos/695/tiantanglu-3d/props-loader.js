@@ -13,18 +13,27 @@ export function loadSceneProps(THREE, parent, opts) {
   const items = (opts && opts.items) || [];
   const loaded = [];
   let loader;
+  let tt_draco = null;                              // 外提:全部載完要 dispose(DRACOLoader 內部養 worker pool,不收會一直閒置佔著)
+  // 完成訊號 + Draco 收工:任何結束路徑(正常跑完/init 失敗/parent.add 失敗)都只跑一次
+  let tt_done = false;
+  function tt_finish() {
+    if (tt_done) return;
+    tt_done = true;
+    try { if (tt_draco) { tt_draco.dispose(); tt_draco = null; } } catch (e) { console.warn("[props] draco.dispose failed:", e && e.message); }
+    if (opts && typeof opts.onComplete === "function") { try { opts.onComplete(); } catch (e) { console.warn("[props] onComplete failed:", e && e.message); } }
+  }
   try {
     loader = new GLTFLoader();
-    const draco = new DRACOLoader();
-    draco.setDecoderPath(new URL("../../../assets/lm402/draco/", import.meta.url).href);
-    loader.setDRACOLoader(draco);
+    tt_draco = new DRACOLoader();
+    tt_draco.setDecoderPath(new URL("../../../assets/lm402/draco/", import.meta.url).href);
+    loader.setDRACOLoader(tt_draco);
   }
-  catch (e) { console.warn("[props] GLTFLoader init failed:", e && e.message); return { loaded }; }
+  catch (e) { console.warn("[props] GLTFLoader init failed:", e && e.message); tt_finish(); return { loaded }; }
 
   const group = new THREE.Group();
   group.name = "blenderProps";
   group.visible = !opts || opts.visible !== false;
-  try { parent.add(group); } catch (e) { console.warn("[props] parent.add failed:", e && e.message); return { loaded }; }
+  try { parent.add(group); } catch (e) { console.warn("[props] parent.add failed:", e && e.message); tt_finish(); return { loaded }; }
 
   const cache = {};                                 // 同檔只抓一次,重複的用 clone(咾咕石×4 只抓 1 次)
   function place(template, it) {
@@ -37,7 +46,18 @@ export function loadSceneProps(THREE, parent, opts) {
         c.castShadow = true;
         c.receiveShadow = true;
         // 不再關 raycast:道具是實體,子彈/視線該被擋(寫實掩體)
-        if (c.material) { const ms = Array.isArray(c.material) ? c.material : [c.material]; for (const m of ms) if (m) m.envMapIntensity = 1.0; }   // 多材質 GLB:c.material 可能是陣列,要逐一寫(否則反射全失=扁平)
+        // 多材質 GLB:c.material 可能是陣列,要逐一寫(否則反射全失=扁平)
+        // ⚠ 注意:cache[it.file] 存的是同一份 gltf.scene,clone(true) 只複製節點不複製材質
+        //    → 同一個材質物件被所有 clone 共用,這裡寫進去的值會一次串到全部 clone(目前是刻意的:值都相同)
+        if (c.material) {
+          const ms = Array.isArray(c.material) ? c.material : [c.material];
+          for (const m of ms) if (m) {
+            m.envMapIntensity = 1.0;
+            // 透射歸零守衛:KHR_materials_transmission 會強制走 transmission pass(額外一次全場景 render target),
+            // 一顆道具就能砍掉整體幀率。目前 15 個 GLB 都沒帶這個 extension,純未來防呆,零額外遍歷成本。
+            if (m.transmission > 0) { m.transmission = 0; m.thickness = 0; }
+          }
+        }
       }
     });
     group.add(o);
@@ -72,7 +92,7 @@ export function loadSceneProps(THREE, parent, opts) {
   }
   let i = 0;
   function next() {
-    if (i >= items.length) return;
+    if (i >= items.length) { tt_finish(); return; }   // 鏈尾:唯一的「全部載完」訊號(每個 next() 不是在此收尾就是恰好再排一個 next)
     const it = items[i++];
     if (cache[it.file]) { try { place(cache[it.file], it); } catch (e) { console.warn("[props] place failed", it.file, e && e.message); } next(); return; }
     loader.load(
