@@ -3298,6 +3298,15 @@ function setJuniorHeroLeadVisibility(t, o, a = {}) {
     (s ? 32 : 0) |
     (u ? 64 : 0) |
     (r ? 128 : 0);
+  // runtime GLB root 的 base 還原必須「每幀」做,不能進 early-return 閘:
+  // 上游 IIFE 每幀先套 footY 落地位移,舊行為是本函式同幀最後覆寫回 base —
+  // 閘掉會讓穩態 Y 變成 base−footY,且 signature 翻轉幀出現單幀跳動
+  // (審核 R2 抓到;GLB manifest 未接前此路徑休眠,先修保未來)。
+  if (r) {
+    r.position.copy(r.userData.basePosition);
+    r.rotation.copy(r.userData.baseRotation);
+    r.scale.copy(r.userData.baseScale);
+  }
   if (!h && t.__leadSig === _leadSig) return;
   t.__leadSig = _leadSig;
   // hero 頭與舊臉共位：GLB ready（i）或 hero 頭顯示中（h，真實畫質全程）都得藏舊臉
