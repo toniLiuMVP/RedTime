@@ -3597,7 +3597,10 @@ export function createLm402Scene(D, runtimeOptions = {}) {
                3) 成本是實的:antialias:true 讓瀏覽器把 default framebuffer 配成
                   4x MSAA（color + depth 都乘 4），並且每一幀 present 前要做一次
                   full-screen resolve。以實測 canvas 930×760 為例，光是 resolve 的
-                  頻寬就是每幀 ~13.5 MB（px × 20 B）。
+                  頻寬就是每幀 ~13.5 MiB（706,800 px × 20 B = 14,136,000 B；
+                  20 B = 讀 4 個樣本 16 B + 寫 resolve 目標 4 B）。
+                  （單位是 MiB 不是 MB —— 本輪的探針欄名寫 MB 但值算的是 MiB，
+                    別再照抄那個欄名。）
                4) 唯一真的靠它抗鋸齒的情況是「postfx 不存在」（建構或 render 失敗）。
                   context attributes 事後不可改，所以那條路徑改用超取樣補償
                   （見 _effectiveBufferScale：__postfx === null 時 buffer × 1.5）。
@@ -3668,7 +3671,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
               antialias: o.antialias,
               alpha: !1,
               powerPreference: o.powerPreference,
-              preserveDrawingBuffer: !0, // 死參數（見上）— E10 Polaroid 實際靠 rAF 內截圖,見 polaroid.js
+              preserveDrawingBuffer: !0, // 死參數（見上）— E10 Polaroid 實際是在 click handler 內截圖（page-c7.js:13 await import 後直接 snap()）;rAF 方案是 polaroid.js 列的**未實作**選項 (2)
             });
             return ((a.__lm402RendererProfile = o.label), a);
           } catch (e) {
@@ -7418,8 +7421,31 @@ export function createLm402Scene(D, runtimeOptions = {}) {
      blit，但那條路徑本來的用意是「最省」，這會改變它的語意，要想清楚再動。
      postfx 的 RT 尺寸（下方 __postfx.setSize）必須維持用 _effectiveRenderScale():
      final composite 要跟 drawing buffer 1:1，不能被這個 1.5 汙染。 */
-  function _effectiveBufferScale() {
-    return _effectiveRenderScale() * (__postfx ? 1 : 1.5);
+  /* 【R4 審核 C1】像素預算夾制。那個 1.5 是乘在 tier 的 renderScale 上而且原本完全沒有夾:
+     perfect 檔桌機 renderScale 1.25 → bufferScale 1.875,2560×1440 CSS 就變成
+     4800×2700 = 12.96 Mpx 的 drawing buffer —— 而會走到降級路徑的機器,多半正是弱機。
+     C1 與 C2 是一對:加了 C2 的能力型 pre-flight 之後,`__postfx === null` 從「幾乎不可達」
+     變成「設計上可達」,這條路徑上的無上限 1.875 就從理論風險變成真實風險。
+     回傳值恆夾在 [base, base*1.5]:
+       - 下界保證降級後絕不比 postfx 開著時更模糊(不會出現「降級反而更糊」的反轉)
+       - 預算沒觸發時**逐 bit 等於原本的值** → R4 既有實測與 golden 值不需重跑
+         (perfect 要到約 2100×1180 CSS 才觸發;行動端因 _effectiveRenderScale() 的
+          `if (V) s = Math.min(0.85, s)` 夾制,永不觸發)
+     ⚠ 所以 MAX_BUFFER_PX **不是絕對上限**,是「額外超取樣的預算」:下界既然是 base,
+       當 CSS 尺寸本身就讓 base 超過預算時(例:3840×2160 CSS × perfect 1.25 = 12.96 Mpx),
+       回傳值會退回 base、預算被突破。這是刻意的 —— 那個像素量 postfx 開著時本來也要付
+       (它同樣以 base 渲進 RT),夾到比 base 更低只會讓降級路徑比正常路徑更糊。
+       實測夾制效果:perfect 2560×1440 從 12.96 Mpx 夾到 8.30 Mpx;
+       perfect 1920×1080 (7.29 Mpx) 未觸發、逐 bit 不變。
+     只在 __postfx === null 時生效,所以完全不影響「final composite 與 drawing buffer 1:1」
+     那條不變量(那條只在 postfx 存在時才有意義)。 */
+  const MAX_BUFFER_PX = 8.3e6; // ≈ 3840×2160
+  function _effectiveBufferScale(w, h) {
+    const base = _effectiveRenderScale();
+    if (__postfx) return base;
+    if (!(w > 0 && h > 0)) return base * 1.5; // 拿不到尺寸時退回舊行為
+    const capScale = Math.sqrt(MAX_BUFFER_PX / (w * h));
+    return Math.max(base, Math.min(base * 1.5, capScale));
   }
   function qo() {
     _viewportDirty = !1;
@@ -7435,7 +7461,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     // 不再夾 devicePixelRatio —— 那正是「輸出比來源大、4 倍 fill 換零新資訊」的元凶。
     // 【R4】drawing buffer 用 _effectiveBufferScale（postfx 在 → 等於 renderScale；
     //   postfx 降級 → ×1.5 超取樣補 AA）；postfx RT 仍用 _effectiveRenderScale。
-    (U.setPixelRatio(_effectiveBufferScale()),
+    (U.setPixelRatio(_effectiveBufferScale(t, o)),
       U.setSize(t, o, !1),
       U.setViewport(0, 0, t, o),
       U.setScissor(0, 0, t, o),

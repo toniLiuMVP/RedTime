@@ -13,13 +13,21 @@
  *   `new WebGLRenderer({ preserveDrawingBuffer: !0 })` 那個參數不生效；真正生效的是
  *   getContext 用的共用 attributes，那裡是 `preserveDrawingBuffer: !1`
  *   （實測 gl.getContextAttributes().preserveDrawingBuffer === false）。
- *   為什麼截圖還是拿得到畫面（R4 實測 Chromium/ANGLE：照片區 stdDev ≈ 85、非空白）：
+ *   為什麼截圖還是拿得到畫面：
  *     - 場景是連續 rAF 渲染，任何時刻都剛畫完一幀；
  *     - Chromium 對 preserveDrawingBuffer:false 是「延後清除」——合成後不立刻清，
  *       要等下一個繪圖指令，期間 drawImage / toDataURL 讀到的仍是剛才那一幀。
- *   但這是實作行為、不是規範保證:WebGL 規範允許在合成後就把 drawing buffer 清掉，
+ *   ⚠ R4 實測環境要寫清楚，別把它當成真機證據：Chromium headless +
+ *     ANGLE/**SwiftShader**（`--use-angle=swiftshader`，純軟體後端），照片區
+ *     stdDev ≈ 85、非空白。軟體後端的 drawing buffer 生命週期跟硬體後端不必然相同，
+ *     所以這個結果**不能外推到真機**。
+ *   而且這是實作行為、不是規範保證:WebGL 規範允許在合成後就把 drawing buffer 清掉，
  *   嚴格實作（歷史上的 Safari / Firefox）可能讓 rAF 外的讀取拿到空白。
- *   本專案未在真機 Safari 驗證過這條路徑 → 列為待驗風險（R5）。
+ *   → 待驗（R5）:真機 **Chrome（ANGLE D3D11 / Metal）** 與 **Safari** 各截一張。
+ *     真機 Chrome 也要驗的理由不是「後端會清 buffer」，而是本專案的 default framebuffer
+ *     配置跟一般情況不同兩點:renderer.js 的 `desynchronized: !0`（可能被提升為低延遲
+ *     swap chain）、以及 R4 S3 把 `antialias` 改成 false（改變了 polaroid 讀的那塊
+ *     framebuffer 的配置）。
  *   真要保證的話有三條路，各有代價:
  *     (1) 把 renderer.js 共用 attributes 的 preserveDrawingBuffer 改成 true
  *         —— 每幀多一份 default framebuffer 的保留/複製成本，為了一個少用功能常駐付費；

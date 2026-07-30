@@ -513,6 +513,26 @@ function getRainTexture() {
 //  工廠：建立後製管線實例
 // ═════════════════════════════════════════════════════════════
 export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null } = {}) {
+  /* 【R4 審核 C2】能力型 pre-flight:沒有 float-renderable color buffer 就直接拋。
+     為什麼非做不可:本模組每一張 RT 都是 HalfFloatType。在缺
+     EXT_color_buffer_float / EXT_color_buffer_half_float 的裝置上,RT 綁定時 FBO 會是
+     incomplete —— 而 vendored three **全檔 0 個 checkFramebufferStatus**(vendor-three.module.js
+     與 three.core.js 都是 0),所以它不會拋、不會回報,只會靜靜地什麼都畫不出來。
+     結果是 `__postfx` 永遠不為 null → renderer.js 的兩層 try/catch(factory 與 __renderFrame)
+     都接不到 → 使用者看到永久黑畫面,唯一線索是一行 warnOnce。
+     這個 throw 直接落進 renderer.js 既有的 factory catch,沿用同一條 `__postfx = null`
+     降級路徑（已由 `?postfxfail=1` 實測走通),不新增任何機制。
+     ⚠ 必須 OR 兩個擴充,不可只查 EXT_color_buffer_float:renderer.js 有一條
+       `contextIds: ["webgl", "experimental-webgl"]` 的 WebGL1 fallback profile,
+       在 WebGL1 上前者根本不存在,單查會讓每一個 fallback context 都永久失去後製。
+     判據是純布林能力查詢:不看畫面、不看時序、不綁 framebuffer,所以不需要 resetState(),
+     也不可能誤殺（不像「readPixels 判全黑」會被 cold-open 的合法黑幕誤殺）。 */
+  if (renderer && renderer.extensions && typeof renderer.extensions.has === "function") {
+    if (!renderer.extensions.has("EXT_color_buffer_float") &&
+        !renderer.extensions.has("EXT_color_buffer_half_float")) {
+      throw new Error("[lm402] no float-renderable color buffer (EXT_color_buffer_float / _half_float) — postfx unavailable");
+    }
+  }
   // ─── 預設參數（電影派微 Bloom + 暖棕暗角 + DOF） ───
   const tuning = {
     enabled: true,
@@ -577,7 +597,8 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
   // extra:覆蓋預設（目前只有 ssaoRT 用 —— 單通道 AO 不需要 RGBA）。
   //   注意 three 的 render target 是「懶配置」：GL 的 framebuffer/texture 直到
   //   第一次 renderer.setRenderTarget(rt) 才在 WebGLTextures.setupRenderTarget 建立
-  //   （見 vendored three：`void 0===o.__webglFramebuffer && xe.setupRenderTarget(e)`）。
+  //   （見 vendored three，可 grep 的原文前綴：`if(void 0===o.__webglFramebuffer)xe.setupRenderTarget(e)`
+  //    —— 原始碼是 if/else-if 鏈,不是 && 短路;語意相同,但要引就引逐字版才查得到）。
   //   所以「建了但從沒被綁定的 RT」佔 0 bytes GPU 記憶體，setSize 也只是改 JS 欄位。
   const makeRT = (extra) => new THREE.WebGLRenderTarget(1, 1, {
     type: THREE.HalfFloatType,
@@ -777,6 +798,13 @@ function setSize(w, h) {
   function render(time = 0, sunUv = null) {
     if (!tuning.enabled) {
       // 緊急停用：直接 render 到螢幕（fallback）
+      /* 【R4 審核 C4】這條路徑把**真 3D 幾何**畫進 default framebuffer,而此時 __postfx
+         不是 null → renderer.js 的 _effectiveBufferScale() 回 ×1,加上 R4 S3 把 context 的
+         antialias 寫死 false → 這條路徑既無 MSAA 也無超取樣（baseline 桌機此路徑有 4× MSAA）。
+         只留一行 warn 而不改 _effectiveBufferScale 的判據,是刻意的:改判據就得補旗標翻轉偵測
+         （buffer 尺寸不會自己跟著旗標變),而這個旗標全 repo 零寫入者、只能從 devtools 手動翻。
+         詳細後果與兩條修法見 renderer.js 的 ⚠【已知缺口】註解。 */
+      console.warn("[postfx] enabled=false → 直接 render 到螢幕;context antialias 已關(R4 S3),此路徑無 AA。見 renderer.js 的 ⚠【已知缺口】註解");
       renderer.setRenderTarget(null);
       renderer.render(scene, camera);
       return;
