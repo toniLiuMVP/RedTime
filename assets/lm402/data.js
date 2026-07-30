@@ -943,26 +943,12 @@ export const MOBILE_DENSITY_PRESETS = {
     railMinHeight: 54,
   },
 };
-export const RENDER_QUALITY_TIERS = {
-  desktop: {
-    id: "desktop",
-    label: "Desktop Cinematic",
-    shadowMapSize: 2048,
-    maxPixelRatio: 1.5,
-    dustCount: 96,
-    mirrorOpacity: 0.12,
-    portraitBoost: 1,
-  },
-  mobile: {
-    id: "mobile",
-    label: "Mobile Balanced",
-    shadowMapSize: 896,
-    maxPixelRatio: 1,
-    dustCount: 48,
-    mirrorOpacity: 0.08,
-    portraitBoost: 0.92,
-  },
-};
+/* 【R4】此處原有 `export const RENDER_QUALITY_TIERS = { desktop, mobile }` 已刪除:
+   全 repo 零 import（含沒有任何 `import * as` 指向 data.js），是徹底的死資料。
+   它留下的唯一痕跡是 renderer.js 裡 `qualityTier` 的 fallback 鍵名 "desktop"/"mobile"
+   —— 那兩個字串原本就是為了索引這張表而寫的（見 renderer.js 該處的註解）。
+   注意它的 maxPixelRatio 欄位連 renderer.js 都沒有對應鍵，R3 統一解析度後
+   真相是 app.js QUALITY_TIERS 的 renderScale，這張表早已與現實脫節。 */
 export const CHARACTER_ASSET_MANIFEST = {
   junior2005: {
     id: "junior2005",

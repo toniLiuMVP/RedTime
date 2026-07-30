@@ -17,6 +17,19 @@
  *
  * 預設 disabled(疊加效果預設關鎖紀律)。
  * console API:__MOTION_BLUR__.enable() / disable() / setIntensity(0.3)
+ *
+ * 【R4 記帳備註】本模組目前是完全沒有被執行的 wire-up stub:postfx.js 的
+ *   `useMB = tuning.motionBlur && tuning.motionBlurAmount > 0.001`,而 tuning.motionBlur
+ *   預設 false 且全 repo 沒有任何程式碼寫入它 → apply() 從沒被呼叫過。
+ *   下面 rtA / rtB 兩張「full-res RGBA16F」看起來很貴,但 three 的 render target 是
+ *   懶配置 —— GL 的 framebuffer/texture 直到第一次 renderer.setRenderTarget(rt) 才在
+ *   WebGLTextures.setupRenderTarget 建立。既然 apply() 沒跑過,它們就沒被綁定過,
+ *   佔用 0 bytes GPU 記憶體（R4 實測:開機後 full-res RGBA16F 貼圖恰好 4 張,全部屬於
+ *   postfx 的 sceneRT / bloomComposite / dof / ssao,沒有 motion blur 的那兩張）。
+ *   → 想省記憶體的話改成 lazy 建 RT 是白做工;真正的成本只有幾個 JS 物件與每次
+ *     setSize 的欄位寫入。要清理的話該整條 wire-up 一起拿掉（但那會改變開機期
+ *     three.generateUUID 消耗的 Math.random() 次數 → 位移後續程序化內容,需與其他
+ *     同類改動併為一次)。
  */
 
 import * as THREE from "./vendor-three.module.js";
