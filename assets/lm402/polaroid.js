@@ -4,9 +4,28 @@
  * 給玩家「把當下畫面變成有年份戳記的紀念品」的功能。
  *
  * 流程：
- *   點按鈕 → toDataURL 拿 canvas 像素（renderer 已設 preserveDrawingBuffer:true）
+ *   點按鈕 → drawImage(WebGL canvas) 拿像素
  *   → 畫到 offscreen canvas + 拍立得邊框 + 年份戳 + 副標 + 時間戳
  *   → toBlob 觸發瀏覽器下載
+ *
+ * ⚠️【R4 更正】原註解寫「renderer 已設 preserveDrawingBuffer:true」是錯的。
+ *   renderer.js 是自己 getContext 再把 context 傳給 three，所以
+ *   `new WebGLRenderer({ preserveDrawingBuffer: !0 })` 那個參數不生效；真正生效的是
+ *   getContext 用的共用 attributes，那裡是 `preserveDrawingBuffer: !1`
+ *   （實測 gl.getContextAttributes().preserveDrawingBuffer === false）。
+ *   為什麼截圖還是拿得到畫面（R4 實測 Chromium/ANGLE：照片區 stdDev ≈ 85、非空白）：
+ *     - 場景是連續 rAF 渲染，任何時刻都剛畫完一幀；
+ *     - Chromium 對 preserveDrawingBuffer:false 是「延後清除」——合成後不立刻清，
+ *       要等下一個繪圖指令，期間 drawImage / toDataURL 讀到的仍是剛才那一幀。
+ *   但這是實作行為、不是規範保證:WebGL 規範允許在合成後就把 drawing buffer 清掉，
+ *   嚴格實作（歷史上的 Safari / Firefox）可能讓 rAF 外的讀取拿到空白。
+ *   本專案未在真機 Safari 驗證過這條路徑 → 列為待驗風險（R5）。
+ *   真要保證的話有三條路，各有代價:
+ *     (1) 把 renderer.js 共用 attributes 的 preserveDrawingBuffer 改成 true
+ *         —— 每幀多一份 default framebuffer 的保留/複製成本，為了一個少用功能常駐付費；
+ *     (2) 把截圖搬進 requestAnimationFrame 回呼（要把 snap() 改成 async，動到
+ *         page-c7.js 與 window.__POLAROID__ 的同步介面）；
+ *     (3) 截圖前主動 renderer.render() 一次再立刻讀（需要把 renderer handle 傳進本模組）。
  *
  * 拍立得設計：
  *   - 比例：3:4 ≈ 經典 polaroid

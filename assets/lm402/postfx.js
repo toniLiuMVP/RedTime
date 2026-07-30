@@ -5,7 +5,7 @@
  *   ┌─────────────┐   ┌──────────┐   ┌────────────┐   ┌────────┐
  *   │ Scene Render│──▶│  Bloom   │──▶│    DOF     │──▶│ Final  │──▶ Screen
  *   │  (HDR HF RT)│   │  (multi  │   │ (depth-aw  │   │(vignet │
- *   │             │   │  mip up) │   │  blur)     │   │ +FXAA) │
+ *   │             │   │  mip up) │   │  blur)     │   │ +grade)│
  *   └─────────────┘   └──────────┘   └────────────┘   └────────┘
  *           │                                           ▲
  *           └──── DepthTexture ─────────────────────────┘
@@ -250,9 +250,12 @@ const FS_SSAO = /* glsl */ `
 `;
 
 // ─────────────────────────────────────────────────────────────
-//  Final Pass — Vignette + FXAA + ACES (renderer 已做，但這裡再 sharpen)
+//  Final Pass — Vignette + Grade + ACES (renderer 已做，但這裡再 sharpen)
 //  注意：renderer.toneMapping 在「直接 render to screen」時自動套用，
 //        但我們是 render to RT 再 blit 出來，所以最終 pass 要自己 tone map。
+//  【R4】此 pass 沒有、也從來沒有做過 AA：原本 declare 的 fxaa() 與 uFxaa uniform
+//    main() 一次都沒呼叫（r29 Codex 已記錄為假功能），R4 一併刪除。
+//    3D 的抗鋸齒 100% 來自 sceneRT 的 MSAA（samples: tuning.msaa），與本 pass 無關。
 // ─────────────────────────────────────────────────────────────
 const FS_FINAL = /* glsl */ `
   varying vec2 vUv;
@@ -262,7 +265,6 @@ const FS_FINAL = /* glsl */ `
   uniform float uVignetteOffset;
   uniform float uVignetteDarkness;
   uniform float uExposure;
-  uniform bool  uFxaa;
   // Tier 5 新加 uniforms
   uniform float uChromaStrength;
   uniform float uGrainAmount;
@@ -299,33 +301,8 @@ const FS_FINAL = /* glsl */ `
     return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
   }
 
-  // FXAA（簡化：只取 luma 邊緣）
+  // 亮度（色彩分級 / lens dirt / rain 的 luma 加成都用它）
   float luma(vec3 c) { return dot(c, vec3(0.299, 0.587, 0.114)); }
-  vec3 fxaa(sampler2D tex, vec2 uv, vec2 texel) {
-    vec3 rgbNW = texture2D(tex, uv + vec2(-1.0, -1.0) * texel).rgb;
-    vec3 rgbNE = texture2D(tex, uv + vec2( 1.0, -1.0) * texel).rgb;
-    vec3 rgbSW = texture2D(tex, uv + vec2(-1.0,  1.0) * texel).rgb;
-    vec3 rgbSE = texture2D(tex, uv + vec2( 1.0,  1.0) * texel).rgb;
-    vec3 rgbM  = texture2D(tex, uv).rgb;
-    float lumaNW = luma(rgbNW); float lumaNE = luma(rgbNE);
-    float lumaSW = luma(rgbSW); float lumaSE = luma(rgbSE);
-    float lumaM  = luma(rgbM);
-    float lumaMin = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));
-    float lumaMax = max(lumaM, max(max(lumaNW, lumaNE), max(lumaSW, lumaSE)));
-    vec2 dir;
-    dir.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));
-    dir.y =  ((lumaNW + lumaSW) - (lumaNE + lumaSE));
-    float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) * 0.03125, 0.0078);
-    float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);
-    dir = clamp(dir * rcpDirMin, vec2(-8.0), vec2(8.0)) * texel;
-    vec3 rgbA = 0.5 * (texture2D(tex, uv + dir * (1.0/3.0 - 0.5)).rgb +
-                       texture2D(tex, uv + dir * (2.0/3.0 - 0.5)).rgb);
-    vec3 rgbB = rgbA * 0.5 + 0.25 *
-                (texture2D(tex, uv + dir * -0.5).rgb +
-                 texture2D(tex, uv + dir *  0.5).rgb);
-    float lumaB = luma(rgbB);
-    return (lumaB < lumaMin || lumaB > lumaMax) ? rgbA : rgbB;
-  }
 
   // Tier 5 偽隨機（grain 用，per-frame 變化靠 uTime）
   float rand(vec2 st) {
@@ -546,9 +523,10 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     // SSAO — depth-only ambient occlusion(half-res 8-tap unrolled,iOS-safe)。AO 給 final pass multiply(接地 / 角落 / 摺痕環境光遮蔽)
     ssao:     { enabled: true, intensity: 0.40, radius: 8.0, bias: 0.03 },  // full-res 8-tap,radius 8 texel = 接觸 AO 跨度(full-res texel 較小故 4→8 補償),intensity 0.40 / bias 0.03 留建築接觸區避免髒臉
     vignette: { color: [0.18, 0.10, 0.05], offset: 0.55, darkness: 0.32 },  // 0.42→0.32
-    // Fix 4 (r29 Codex finding):⚠️ 假功能 — uFxaa uniform/fxaa() function 都 declare 但 main shader 沒呼叫 fxaa()
-    // 改 toggle 視覺不會變(dead code)。保留 console API 不破 backward-compat,未來 sprint 真 wire FXAA 或 remove
-    fxaa:     false, // dead code(see Fix 4)
+    // Fix 4 (r29 Codex finding) 的 `fxaa` 旋鈕已於 R4 刪除:那個 uniform/函式從來沒被
+    //   main() 呼叫過(純假功能),旋鈕本身也沒有任何外部讀者(全 repo 只有本檔提到)。
+    //   真正的 AA 在下方 `msaa`(sceneRT 的 samples)。設 tuning.fxaa 現在只是加一個
+    //   沒人讀的屬性,與改動前「設了也不會變」的行為一致,故不破壞任何既有用法。
     exposure: 0.95,  // 0.92→0.95 微調
     // Tier 5 電影級後製（過曝高量 effect 預設關）
     chroma:    { strength: 0 },                                // 0.0028 → 0（鏡頭色散，console 開：0.002~0.006）
@@ -596,12 +574,18 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
   sceneRT.depthTexture.type = THREE.UnsignedIntType;  // 16-bit → 24-bit:near 0.03 / far 180 在 1-6m(學妹站位)有足夠深度精度,消除 iOS SSAO / DOF banding shimmer
 
   // ─── Bloom 多層 mip RT（每層 1/2 解析度） ───
-  const makeRT = () => new THREE.WebGLRenderTarget(1, 1, {
+  // extra:覆蓋預設（目前只有 ssaoRT 用 —— 單通道 AO 不需要 RGBA）。
+  //   注意 three 的 render target 是「懶配置」：GL 的 framebuffer/texture 直到
+  //   第一次 renderer.setRenderTarget(rt) 才在 WebGLTextures.setupRenderTarget 建立
+  //   （見 vendored three：`void 0===o.__webglFramebuffer && xe.setupRenderTarget(e)`）。
+  //   所以「建了但從沒被綁定的 RT」佔 0 bytes GPU 記憶體，setSize 也只是改 JS 欄位。
+  const makeRT = (extra) => new THREE.WebGLRenderTarget(1, 1, {
     type: THREE.HalfFloatType,
     minFilter: THREE.LinearFilter,
     magFilter: THREE.LinearFilter,
     depthBuffer: false,
     stencilBuffer: false,
+    ...extra,
   });
   // 【LM402 R2 V5a】mip 數在 factory 期固定下來：composite shader 是依這個數字產生的
   //   （sampler 數量寫死在 GLSL 裡）,RT 陣列長度也是它,兩者必須永遠一致。
@@ -617,9 +601,27 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
   const dofRT = makeRT();
 
   // ─── SSAO RT（full-res，避免 half-res 上採樣 banding / 跨深度邊緣滲色;單 8-tap pass 成本可控 + adaptive 弱機先砍） ───
-  const ssaoRT = makeRT();
+  /* 【R4】RGBA16F → R16F（8 B/px → 2 B/px，full-res 省 75%）。
+     為什麼是無損的：
+       - 寫入端 FS_SSAO 只產生灰階 `vec4(vec3(ao), 1.0)`，資訊全在 .r；
+         g/b/a 是同值複製 + 常數 1.0，RED-only draw buffer 丟掉它們不損失任何資料。
+       - 讀取端 FS_FINAL 只取 `texture2D(uAO, vUv).r`（R16F 採樣回 (r,0,0,1)，.r 不變）。
+       - 精度不變：兩者的 r 都是同一個 half float，逐 bit 相同。
+       - 尺寸與 sceneRT 相同（full-res），final pass 是 1:1 取樣，LinearFilter 不介入插值。
+     r184 / WebGL2 支援性：three 的 getInternalFormat 對 RED+HALF_FLOAT 明確映射到 R16F；
+     R16F 的 color-renderable 由 EXT_color_buffer_float / EXT_color_buffer_half_float 提供，
+     而本專案既有的 RGBA16F sceneRT 已經依賴同一組擴充，故不引入新的硬體前提。 */
+  const ssaoRT = makeRT({ format: THREE.RedFormat });
 
   // ─── Motion Blur 中間 RT(final pass 結果寫這,motion-blur composite 寫 canvas)──
+  /* 【R4 帳目校正】這張 + motion-blur 內部兩張都是「宣告了但永遠沒被綁定」的 RT：
+     tuning.motionBlur 預設 false 且全 repo 沒有任何程式碼寫入它 → useMB 恆為 false →
+     finalRT / rtA / rtB 從來沒進過 setRenderTarget。依上面 makeRT 註解說明的懶配置，
+     它們今天佔用 0 bytes GPU 記憶體（實測：開機後 full-res RGBA16F 貼圖恰好 4 張 =
+     sceneRT resolve + bloomCompositeRT + dofRT + ssaoRT，沒有第 5-7 張）。
+     所以把它們改成 lazy 建立「省不到記憶體」，只會多一條分支；真正想省的話該做的是
+     把 motion blur 整條 wire-up 拿掉（那會改變開機期物件數 → 位移 three.generateUUID
+     消耗的 Math.random() 序列 → 程序化貼圖/粒子重排，需要跟其他同類改動一起付一次代價）。 */
   const finalRT = makeRT();
   const motionBlur = createMotionBlur({ renderer, width: 1, height: 1 });
 
@@ -692,7 +694,6 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
       uVignetteOffset:    { value: tuning.vignette.offset },
       uVignetteDarkness:  { value: tuning.vignette.darkness },
       uExposure:          { value: tuning.exposure },
-      uFxaa:              { value: tuning.fxaa },
       // Tier 5
       uChromaStrength:    { value: tuning.chroma.strength },
       uGrainAmount:       { value: tuning.grain.amount },
@@ -883,14 +884,13 @@ function setSize(w, h) {
       postBloomRT = dofRT;
     }
 
-    // 4. Final — Vignette + FXAA + tone map → 直 render 到螢幕
+    // 4. Final — Vignette + colorGrade + tone map → 直 render 到螢幕
     matFinal.uniforms.tDiffuse.value = postBloomRT.texture;
     matFinal.uniforms.uTexel.value.set(1 / width, 1 / height);
     matFinal.uniforms.uVignetteColor.value.fromArray(tuning.vignette.color);
     matFinal.uniforms.uVignetteOffset.value = tuning.vignette.offset;
     matFinal.uniforms.uVignetteDarkness.value = tuning.vignette.darkness;
     matFinal.uniforms.uExposure.value = tuning.exposure;
-    matFinal.uniforms.uFxaa.value = tuning.fxaa;
     // Tier 5 uniforms
     matFinal.uniforms.uChromaStrength.value = tuning.chroma.strength;
     matFinal.uniforms.uGrainAmount.value = tuning.grain.amount;

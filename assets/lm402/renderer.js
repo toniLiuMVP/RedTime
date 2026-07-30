@@ -3529,6 +3529,14 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       runtimeOptions.characterAssets?.junior2005 ?? {},
     ),
     runtimeState = {
+      /* 【R4】"mobile"/"desktop" 這兩個鍵名的來歷:它們原本是 data.js 的
+         RENDER_QUALITY_TIERS（{desktop, mobile}）的鍵，那張表 R4 已刪除（全 repo 零 import）。
+         今天生產路徑傳進來的 qualityTier 是 app.js QUALITY_TIERS 的
+         low / smooth / high / ultra / perfect / real，不是這兩個字串;所以這組 fallback
+         只在「呼叫端完全沒傳 qualityTier」時用得到，而那種情況下 qualityTiers 也是 {} →
+         下面每一項查表都落到各自的 (V ? … : …) fallback，鍵名實際上不影響任何結果。
+         ⚠️ 不要順手把鍵名改成 "smooth"/"ultra":若呼叫端只傳了 qualityTiers 而沒傳
+         qualityTier，改名會讓查表突然命中真實的 tier 物件 → 行為改變。 */
       qualityTier: runtimeOptions.qualityTier ?? (V ? "mobile" : "desktop"),
       qualityTiers: runtimeOptions.qualityTiers ?? {},
       characterAssets: runtimeOptions.characterAssets ?? {},
@@ -3569,12 +3577,41 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       loadedModels: [],
       lastError: null,
     },
+    // 參數 o（= V，coarse pointer）自 R4 起不再被本 IIFE 讀取:它唯一的用途是
+    // webgl2-hq 的 `antialias: !o`，而那條已改成常數 false（見下方長註解）。
+    // 保留參數位以免動到呼叫端與其他 profile 的形狀。
     U = (function (t, o) {
       const a = [
           {
             label: "webgl2-hq",
+            /* 【R4 S3】原本是 `antialias: !o`（o = V = coarse pointer）→ 桌機要 MSAA、
+               行動端不要。改成常數 false，理由如下：
+
+               1) 它保護不到任何邊緣。正常路徑上 postfx 是開著的，3D 全部渲進
+                  postfx 的 sceneRT，而 default framebuffer 一整幀只收到「一張
+                  clip-space ±1 的全螢幕四邊形」（postfx.js 最後那支
+                  fsq.render(matFinal, null)）。那張四邊形沒有任何內部幾何邊緣可抗，
+                  MSAA 的取樣預算全部花在「同一個顏色取 4 次再平均回同一個顏色」。
+               2) 真正的 AA 來自 postfx.js 的 sceneRT（`samples: tuning.msaa` = 4），
+                  這次改動完全沒有動它 → 3D 邊緣的鋸齒表現不變。
+               3) 成本是實的:antialias:true 讓瀏覽器把 default framebuffer 配成
+                  4x MSAA（color + depth 都乘 4），並且每一幀 present 前要做一次
+                  full-screen resolve。以實測 canvas 930×760 為例，光是 resolve 的
+                  頻寬就是每幀 ~13.5 MB（px × 20 B）。
+               4) 唯一真的靠它抗鋸齒的情況是「postfx 不存在」（建構或 render 失敗）。
+                  context attributes 事後不可改，所以那條路徑改用超取樣補償
+                  （見 _effectiveBufferScale：__postfx === null 時 buffer × 1.5）。
+                  這也是為什麼 S2 必須先讓降級路徑真的能走通。
+
+               ⚠️ 下面 `new e.WebGLRenderer({ antialias: ... })` 那個參數是死參數:本檔
+                  自己 getContext 再把 context 傳給 three，vendored three 只有在
+                  `null === context` 時才會用 attribute 區塊去自行建 context。真正生效的
+                  是這裡的 profile 值（經由第 3 個 for 迴圈內的 `a` 物件傳進 getContext）。
+                  同一根因也讓 `preserveDrawingBuffer: !0` 成為死參數 —— 實際生效的是
+                  下方共用 attribute 的 `preserveDrawingBuffer: !1`（實測
+                  getContextAttributes().preserveDrawingBuffer === false）。 */
             contextIds: ["webgl2"],
-            antialias: !o,
+            antialias: !1,
             powerPreference: "high-performance",
           },
           {
@@ -3620,10 +3657,18 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             const a = new e.WebGLRenderer({
               canvas: t,
               context: r,
+              /* ⚠️【R4】這個 options 物件裡的 context attributes 全部是死參數:
+                 上面已經自己 getContext 並用 `context: r` 傳進來，而 vendored three
+                 的 attribute 區塊被 `null === context` 包住 → antialias /
+                 preserveDrawingBuffer / alpha / powerPreference 一律不生效。
+                 真正生效的是 profile 的 antialias（→ 上方 `a` 物件）與共用 attribute
+                 `n` 的 preserveDrawingBuffer: !1（實測 getContextAttributes() 為
+                 {antialias:false, preserveDrawingBuffer:false}）。
+                 保留這幾行只為了讓 three 收到 canvas/context；別再照字面相信它們。 */
               antialias: o.antialias,
               alpha: !1,
               powerPreference: o.powerPreference,
-              preserveDrawingBuffer: !0, // E10 Polaroid 拍照需要：toDataURL 才能拿到 pixels
+              preserveDrawingBuffer: !0, // 死參數（見上）— E10 Polaroid 實際靠 rAF 內截圖,見 polaroid.js
             });
             return ((a.__lm402RendererProfile = o.label), a);
           } catch (e) {
@@ -3640,7 +3685,9 @@ export function createLm402Scene(D, runtimeOptions = {}) {
           antialias: !1,
           alpha: !1,
           powerPreference: "default",
-          preserveDrawingBuffer: !0, // E10 Polaroid 拍照
+          // 這一支沒有傳 context → three 自己 getContext，故這裡的 attributes 是「活的」
+          // （包含 preserveDrawingBuffer:!0）。只有三個 profile 全部拿不到 context 時才會走到。
+          preserveDrawingBuffer: !0, // E10 Polaroid 拍照（此 profile 下真的生效）
         });
         return ((o.__lm402RendererProfile = "three-fallback"), o);
       } catch (e) {
@@ -3697,7 +3744,81 @@ export function createLm402Scene(D, runtimeOptions = {}) {
   // === Tier 1 後製管線：黃昏 HDR IBL + 電影派 Bloom/DOF/Vignette ===
   const __sunsetEnvMap = buildSunsetEnvMap(U);
   W.environment = __sunsetEnvMap;
-  const __postfx = createPostFX({ renderer: U, scene: W, camera: q });
+  /* 【R4 S2】postfx 不再是「建不起來就整個場景陪葬」的單點故障。
+     為什麼需要這層：R4 把 context 的 antialias 關成常數 false（見上方 webgl2-hq profile
+     的註解）。postfx 開著時 default framebuffer 只有一張全螢幕四邊形、零內部邊緣，
+     MSAA 純浪費；但 postfx 若不存在，3D 就是直接畫進 default framebuffer，那時
+     context MSAA 本來是唯一的 AA 來源。context attributes 建立後不可再改
+     （沒有 setContextAttributes），所以降級路徑改用超取樣補償（_effectiveBufferScale）。
+     前提是這條降級路徑真的能走通 —— 也就是這個 try/catch 與下面的 __renderFrame。
+     兩種失敗都要接：
+       (a) 建構期拋出（createPostFX 內唯一有實質機率的是 getContext("2d") 回 null，
+           lens dirt / rain 的程序化貼圖用得到 2D canvas）；
+       (b) 第一次 render() 期拋出（three 的 render target 是懶配置，GL 物件到
+           setRenderTarget 才建；DepthTexture 尺寸不符會在那時丟
+           "WebGLRenderTarget: Attached DepthTexture is initialized to the incorrect size."）。
+     ⚠️ 此處的 catch 內不可碰 _viewportDirty（它在本函式更下面才 `let` 宣告，現在還在 TDZ）
+        也不需要碰：它的初值就是 !0，第一次 render 自然會跑 qo()，降級後的
+        pixelRatio 因此在第一幀就正確。 */
+  let __postfx = null;
+  try {
+    // 測試鉤子（沿用 boot-sentry.js 的 bootsentrytest=1 先例）:?postfxfail=1 強制建構失敗,
+    // 讓降級路徑可以在真實頁面上被驗證,而不是只存在於推論裡。
+    if (
+      typeof window !== "undefined" &&
+      /[?&]postfxfail=1/.test(window.location?.search || "")
+    ) {
+      throw new Error("[lm402] postfxfail=1 test hook — forced createPostFX failure");
+    }
+    __postfx = createPostFX({ renderer: U, scene: W, camera: q });
+  } catch (err) {
+    __postfx = null;
+    console.error(
+      "[lm402] createPostFX 建立失敗 — 降級為無後製直接渲染（超取樣補 AA）",
+      err,
+    );
+  }
+
+  /* 【R4 S2】唯一的「畫這一幀」入口。
+     - __postfx 為 null → 直接畫進 default framebuffer。
+     - 否則走 postfx；render 期拋出就 one-shot 永久降級（不逐幀洗版 console）。
+     降級時必須 setRenderTarget(null) + resetState():拋出的那一刻 renderer 很可能
+     還綁在 sceneRT 上，不 reset 的話之後每一幀都會畫進那張 RT，畫面永久停在
+     最後一次 composite 的內容（實質等於白/黑畫面）。 */
+  let __postfxRenderFailed = !1;
+  function __renderFrame(nowSec, sunUv) {
+    if (!__postfx) {
+      U.render(W, q);
+      return;
+    }
+    try {
+      __postfx.render(nowSec, sunUv);
+    } catch (err) {
+      if (!__postfxRenderFailed) {
+        __postfxRenderFailed = !0;
+        console.error(
+          "[lm402] postfx.render 失敗 — 永久降級為無後製直接渲染（超取樣補 AA）",
+          err,
+        );
+      }
+      const dead = __postfx;
+      __postfx = null;
+      if (typeof window !== "undefined") window.__POSTFX__ = null;
+      try {
+        dead.dispose();
+      } catch (e) {}
+      try {
+        U.setRenderTarget(null);
+        U.resetState();
+      } catch (e) {}
+      // 降級後 drawing buffer 要換算成超取樣尺寸；下一幀開頭的 `_viewportDirty && qo()`
+      // 會處理（這一幀先用舊 pixelRatio 畫出東西，比黑畫面好）。
+      _viewportDirty = !0;
+      try {
+        U.render(W, q);
+      } catch (e) {}
+    }
+  }
 
   // Adaptive quality auto-step — FPS 持續低就依序砍 SSAO → bloom → DOF,回升就還原。
   // 純 postfx tuning flag toggle(不動 DPR / resize,避免 churn)。console API __ADAPTIVE_Q__ 可關。
@@ -7271,6 +7392,20 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     if (dpr < 1) s = Math.min(s, dpr);
     return s;
   }
+  /* 【R4 S3b】drawing buffer 的倍率 = renderScale × (postfx 存在 ? 1 : 1.5)。
+     為什麼要分家:context 的 antialias 已固定為 false（見建 renderer 處的長註解），
+     postfx 開著時那是純浪費、關掉零視覺代價；但 postfx 不存在時 3D 是直接畫進
+     default framebuffer，那條路徑就完全沒有 AA 了。context attributes 建立後不可修改
+     （WebGL 沒有 setContextAttributes），所以唯一還能動的 AA 手段是超取樣:
+     buffer 畫 1.5×，CSS 尺寸不變 → 由瀏覽器縮放時做 box filter，等效 ~2.25 samples/px。
+     判據刻意只認 `__postfx === null`（建構失敗或 render 期 one-shot failover 後），
+     不認 tuning.enabled —— 那個旗標可被 console 隨時翻轉而現在沒有翻轉偵測（見 render()
+     開頭的註解），拿它當判據會做出一條只有一半會生效的分支。
+     postfx 的 RT 尺寸（下方 __postfx.setSize）必須維持用 _effectiveRenderScale():
+     final composite 要跟 drawing buffer 1:1，不能被這個 1.5 汙染。 */
+  function _effectiveBufferScale() {
+    return _effectiveRenderScale() * (__postfx ? 1 : 1.5);
+  }
   function qo() {
     _viewportDirty = !1;
     const e = (D.parentElement ?? D).getBoundingClientRect(),
@@ -7283,7 +7418,9 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         Math.round(e.height || D.clientHeight || window.innerHeight || 1),
       );
     // 不再夾 devicePixelRatio —— 那正是「輸出比來源大、4 倍 fill 換零新資訊」的元凶。
-    (U.setPixelRatio(_effectiveRenderScale()),
+    // 【R4】drawing buffer 用 _effectiveBufferScale（postfx 在 → 等於 renderScale；
+    //   postfx 降級 → ×1.5 超取樣補 AA）；postfx RT 仍用 _effectiveRenderScale。
+    (U.setPixelRatio(_effectiveBufferScale()),
       U.setSize(t, o, !1),
       U.setViewport(0, 0, t, o),
       U.setScissor(0, 0, t, o),
@@ -7720,10 +7857,12 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     _worldGroup: j,
     _scene: W,
     render: function (s) {
-      // S4：postfx 開關翻轉偵測。__POSTFX__.tuning.enabled 可被 console／app.js 隨時改，
-      // 沒有事件可掛，故在每幀開頭比對狀態（一次布林讀取，成本可忽略）。
-      // 翻轉 → 標 dirty → 同一幀的 qo() 立刻換算式（postfx.render 在本函式尾端才跑，
-      // 所以這一幀就已經是對的 pixelRatio）。
+      /* 【R4 S3c 修過期註解】這裡曾經寫著「postfx 開關翻轉偵測」，但 R3 統一解析度時
+         已經把那段偵測移除了（理由見 _viewportDirty 宣告處：postfx 開或關，drawing
+         buffer 都是 CSS px × renderScale，答案相同所以不需要偵測 tuning.enabled）。
+         現在這一行只做一件事:viewport 被標脏（resize / orientationchange /
+         visualViewport resize / 品質檔切換 / postfx 降級）時，在畫這一幀之前先重算，
+         這樣同一幀的 render 就已經用對的 pixelRatio 與 RT 尺寸。 */
       _viewportDirty && qo();
       const sceneTime = s.time ?? 0;
       const perfectType = s.endingSequence?.type ?? s.ending,
@@ -8467,7 +8606,10 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         __sunFar.copy(SUNSET_SUN_DIR).multiplyScalar(1000).add(q.position).project(q),
         __sunUv.set(__sunFar.x * 0.5 + 0.5, __sunFar.y * 0.5 + 0.5),
         __adaptiveStep(),
-        (__postfx ? __postfx.render(_nowSec, __sunUv) : U.render(W, q)));
+        // 【R4 S2】原本是 `(__postfx ? __postfx.render(...) : U.render(W, q))`。
+        //   抽成 helper 以便加上 render 期的 one-shot failover（見建場處 __renderFrame）。
+        //   逗號序列的項數與最後一項的求值位置不變；兩種寫法的值都是 undefined。
+        __renderFrame(_nowSec, __sunUv));
     },
     resize: qo,
     resolveMotion: function (t, o, a = 0.28) {
