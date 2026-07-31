@@ -123,6 +123,8 @@
     <noscript><link rel="stylesheet" href="fonts/fonts-v2.css" /></noscript>
     <!-- 開機自癒哨兵：黑畫面（壞快取/舊 SW/模組失敗）→ 自動清快取重載一次，再失敗顯示可讀面板 -->
     <script src="assets/lm402/boot-sentry.js"></script>
+    <!-- R5 W4:WebGL2 缺失提示(r184 需要 WebGL2;三款遊戲頁共用同一支,本頁原本漏掛 → 不支援裝置只看到靜默黑畫面) -->
+    <script src="demos/_vendor/webgl-notice.js"></script>
     <!-- Audio auto-stop hook：頁面隱藏 / 關閉時自動停所有音樂（toni 要求；對所有玩家生效） -->
 <script src="assets/adopt-style-shim.js"></script>
 <script src="assets/lm402/page-c1.js"></script>
