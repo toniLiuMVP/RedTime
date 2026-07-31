@@ -858,8 +858,11 @@ function setSize(w, h) {
          renderer.js 的 _effectiveBufferScale 判據因此維持 `__postfx === null`:修好之後
          default framebuffer 在這條路徑上也只承接一張全螢幕四邊形,×1 是正確答案。
          代價:多一次全螢幕 blit(一個 draw + 一張全解析度取樣)。這條路徑的原意是「最省」,
-         語意確實被改成「最省但保畫質」—— 但原本的「省」是省在拿掉 postfx 的 6-10 支 pass,
-         少的那一支 blit 只佔其中極小一塊,而換回來的是不會有人願意接受的鋸齒。
+         語意確實被改成「最省但保畫質」—— 但原本的「省」是省在拿掉 postfx 的後製 pass,
+         而那才是大頭:R5 實測(GL 層逐 draw 分桶,930×760)開↔關的差是 **每幀 12 支
+         offscreen pass**(SSAO 1 + bright 1 + 4 mip × 水平/垂直 2 = 8 + bloom composite 1
+         + DOF 1;1876 → 1864 draws/frame),blit 佔的那一支只是零頭,換回來的是
+         不會有人願意接受的全畫面鋸齒。
          尺寸不在這裡管:sceneRT 由 qo() → setSize() 依 renderScale 配好,停用分支不得另設。 */
       if (!_disabledPathWarned) {
         _disabledPathWarned = true;

@@ -7402,8 +7402,9 @@ export function createLm402Scene(D, runtimeOptions = {}) {
      （WebGL 沒有 setContextAttributes），所以唯一還能動的 AA 手段是超取樣:
      buffer 畫 1.5×，CSS 尺寸不變 → 由瀏覽器縮放時做 box filter，等效 ~2.25 samples/px。
      判據刻意只認 `__postfx === null`（建構失敗或 render 期 one-shot failover 後），
-     不認 tuning.enabled —— 那個旗標可被 console 隨時翻轉而現在沒有翻轉偵測（見 render()
-     開頭的註解），拿它當判據會做出一條只有一半會生效的分支。
+     不認 tuning.enabled —— 那個旗標可被 console 隨時翻轉而沒有翻轉偵測（buffer 尺寸不會
+     自己跟著旗標變），拿它當判據會做出一條只有一半會生效的分支。R5 G5a 之後更不需要認它:
+     停用分支已改成走 sceneRT 再 blit（見下），default framebuffer 兩條路徑都只收全螢幕四邊形。
      ✅【R4 的已知缺口已於 R5 G5a 修復，判據維持不變】R4 時 postfx.js 的 render() 開頭是
        `if (!tuning.enabled) { renderer.setRenderTarget(null); renderer.render(scene, camera); return; }`
      —— 那條路徑把**真正的 3D 幾何**直接畫進 default framebuffer，而此時 __postfx 不是 null，
