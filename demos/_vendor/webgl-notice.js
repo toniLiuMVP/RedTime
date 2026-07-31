@@ -1,13 +1,18 @@
 /* WebGL 可用性檢查:不支援 3D 的瀏覽器/裝置,在標題畫面頂端顯示一句提示,
    引導到頁面既有的「我只想讀這一段 / 回首頁」出口(那些是真 <a href>,即使遊戲模組
-   在 WebGL 失敗時中止仍可點)。純外部檔(CSP script-src 'self'),不依賴任何遊戲模組。 */
+   在 WebGL 失敗時中止仍可點)。純外部檔(CSP script-src 'self'),不依賴任何遊戲模組。
+   【R5 W4】判據從 webgl2||webgl 改成只認 webgl2:vendored three 是 r184,
+   r163 起已移除 WebGL1 支援(WebGLState 無條件 texImage3D → WebGL1 context 直接
+   TypeError)。實測 --disable-webgl2 下三款遊戲全部開不起來,而舊判據判「有 WebGL」
+   不出聲 → WebGL1-only 裝置只看到靜默黑畫面。真正的門檻就是 WebGL2。
+   探測用 failIfMajorPerformanceCaveat:false(預設)+ 獨立 canvas,不碰遊戲的 canvas。 */
 (function () {
   "use strict";
   function webglOK() {
     try {
-      if (!window.WebGLRenderingContext) return false;
+      if (!window.WebGL2RenderingContext) return false;
       var c = document.createElement("canvas");
-      return !!(c.getContext("webgl2") || c.getContext("webgl") || c.getContext("experimental-webgl"));
+      return !!c.getContext("webgl2");
     } catch (e) { return false; }
   }
   function showNotice() {
@@ -23,7 +28,7 @@
     s.background = "rgba(20,16,14,.95)"; s.color = "#f0e6d6";
     s.font = "14px/1.7 'Noto Sans TC','Noto Sans CJK TC',sans-serif"; s.letterSpacing = ".02em";
     s.borderBottom = "1px solid rgba(224,113,78,.5)";
-    n.textContent = "你的瀏覽器或裝置不支援 3D（WebGL），這個場景無法顯示。可以改用下方「我只想讀這一段」讀故事，或回首頁。";
+    n.textContent = "你的瀏覽器或裝置不支援 3D（需要 WebGL2），這個場景無法顯示。可以改用頁面上的「我只想讀這一段」讀故事，或回首頁。";
     (document.body || document.documentElement).appendChild(n);
   }
   function run() { if (!webglOK()) showNotice(); }

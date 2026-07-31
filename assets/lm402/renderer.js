@@ -3623,12 +3623,31 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             antialias: !1,
             powerPreference: "default",
           },
-          {
-            label: "webgl-safe",
-            contextIds: ["webgl", "experimental-webgl"],
-            antialias: !1,
-            powerPreference: "default",
-          },
+          /* 【R5 W4】這裡原本還有第三個 profile:
+               { label: "webgl-safe", contextIds: ["webgl", "experimental-webgl"], … }
+             它從來沒被驗證走通過。W4 實測(chromium `--disable-webgl2` + SwiftShader,
+             真的只剩 WebGL1)證明它**不只是死碼,而且有害**,已整條移除:
+
+             1) three 這一版用不了 WebGL1。vendored three 是 r184,WebGL1 支援在 r163 就
+                被移除了:`WebGLState` 的模組本體無條件跑
+                `k[e.TEXTURE_2D_ARRAY]=z(e.TEXTURE_2D_ARRAY,e.TEXTURE_2D_ARRAY,1,1)`,
+                而 z() 對 2D_ARRAY / 3D 走的是 `e.texImage3D(...)`(逐字可 grep)——
+                WebGL1 context 上那是 undefined,`new WebGLRenderer({context: webgl1})`
+                當場 TypeError。這個 throw 被下面的 `catch (e) { s = e; … }` 吞掉,
+                所以外面只看得到後續那個牛頭不對馬嘴的錯誤。
+             2) 它會**汙染 canvas**,連帶廢掉最後一支 three-fallback。一張 canvas 一旦拿過
+                WebGL1 context,之後 getContext("webgl2") 永遠回 null。W4 實測(頁內
+                canvasPoisonTest:gotWebgl1First=true → thenWebgl2=false)與真頁面的
+                console 對得起來:WebGL1-only 下 LM402 的錯誤是
+                `THREE.WebGLRenderer: A WebGL context could not be created.
+                 Reason: Canvas has an existing context of a different type`(×2,three 自己
+                retry 一次)—— 而同一個環境下月台/天堂路(它們沒有 WebGL1 profile)拿到的是
+                誠實的 `Reason: disabled by enterprise policy or commandline switch`。
+                也就是說:這個 profile 把「沒有 WebGL2」偽裝成「canvas 已被佔用」,
+                並且真的讓 three-fallback 從「還有一次機會」變成「必定失敗」。
+             移除後 WebGL1-only 裝置仍然開不起來(那是 three r184 的硬限制,不是本檔能修的),
+             但錯誤訊息會誠實,而且 three-fallback 在「有 WebGL2、只是我們的 attributes 被拒」
+             的情況下重新變成一條真的還能走的路。 */
         ],
         n = {
           alpha: !1,
@@ -3640,6 +3659,9 @@ export function createLm402Scene(D, runtimeOptions = {}) {
           desynchronized: !0,
         };
       let s = null;
+      // 【R5 W4】剩下的 profile 全是 webgl2 → 只要有一支拿到 context 就代表這台機器有 WebGL2。
+      //   用來把最後的錯誤從「Unable to create WebGL renderer.」升級成講得出原因的訊息。
+      let w2 = !1;
       for (const o of a) {
         const a = {
           ...n,
@@ -3655,7 +3677,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
           }
           if (r) break;
         }
-        if (r)
+        if (r && (w2 = !0), r)
           try {
             const a = new e.WebGLRenderer({
               canvas: t,
@@ -3695,6 +3717,21 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         return ((o.__lm402RendererProfile = "three-fallback"), o);
       } catch (e) {
         s = e;
+      }
+      /* 【R5 W4】誠實的失敗訊息。舊碼一律丟 `s`(最後一個內部錯誤)或
+         "Unable to create WebGL renderer.",在最常見的失敗成因(裝置只有 WebGL1)下
+         那個訊息完全指不到根因。這裡不改變「會失敗」這件事 —— three r184 沒有 WebGL1
+         支援,本檔修不了 —— 只讓錯誤講得出原因,好讓 console / boot-sentry 收到的
+         `unhandledrejection` 文字對除錯有用。
+         上述殘留已於 R5(6e90d4b)修復:lm402.html 已補掛 demos/_vendor/webgl-notice.js,
+           該腳本判據已改為只認 webgl2 —— WebGL1-only 裝置會看到頁面 banner 說明。
+           本 throw(給 console/boot-sentry 的具名錯誤)與頁面 banner 是互補的兩層。 */
+      if (!w2) {
+        const err = new Error(
+          "[lm402] 這台裝置/瀏覽器沒有 WebGL2,LM402 的 3D 場景無法啟動(本專案的 three r184 已不支援 WebGL1)。",
+        );
+        ((err.name = "LM402NoWebGL2"), s && (err.cause = s));
+        throw err;
       }
       throw s || new Error("Unable to create WebGL renderer.");
     })(D, V);
@@ -7402,23 +7439,25 @@ export function createLm402Scene(D, runtimeOptions = {}) {
      （WebGL 沒有 setContextAttributes），所以唯一還能動的 AA 手段是超取樣:
      buffer 畫 1.5×，CSS 尺寸不變 → 由瀏覽器縮放時做 box filter，等效 ~2.25 samples/px。
      判據刻意只認 `__postfx === null`（建構失敗或 render 期 one-shot failover 後），
-     不認 tuning.enabled —— 那個旗標可被 console 隨時翻轉而現在沒有翻轉偵測（見 render()
-     開頭的註解），拿它當判據會做出一條只有一半會生效的分支。
-     ⚠【已知缺口，讀到這裡的人請先看完】postfx.js 的 render() 開頭有一條
+     不認 tuning.enabled —— 那個旗標可被 console 隨時翻轉而沒有翻轉偵測（buffer 尺寸不會
+     自己跟著旗標變），拿它當判據會做出一條只有一半會生效的分支。R5 G5a 之後更不需要認它:
+     停用分支已改成走 sceneRT 再 blit（見下），default framebuffer 兩條路徑都只收全螢幕四邊形。
+     ✅【R4 的已知缺口已於 R5 G5a 修復，判據維持不變】R4 時 postfx.js 的 render() 開頭是
        `if (!tuning.enabled) { renderer.setRenderTarget(null); renderer.render(scene, camera); return; }`
      —— 那條路徑把**真正的 3D 幾何**直接畫進 default framebuffer，而此時 __postfx 不是 null，
      所以這裡回 ×1，於是那條路徑既沒有 MSAA（context antialias 已固定 false）也沒有超取樣
-     → 全畫面鋸齒。R4 現況之所以安全，只是因為 **tuning.enabled 預設 true 且全 repo 沒有
-     任何一處寫入 false**（postfx.js / renderer.js / app.js 皆無寫入點，也沒有任何
-     `__POSTFX__.tuning.enabled =` 的呼叫者）—— 它目前只能從 console 手動翻，是除錯用的。
-     **所以：如果哪天要把 tuning.enabled 接到畫質檔（它的註解寫著「緊急停用」，這是很自然的
-     下一步），必須同時做兩件事，否則低階機會安靜地拿到沒有 AA 的畫面：**
-       (1) 這裡的判據改成「postfx 是否真的在做 composite」，
-       (2) 補翻轉偵測（把 _viewportDirty 設起來讓下一次 qo() 重配 buffer），
-           因為 buffer 尺寸不會自己跟著旗標變。
-     或者換一條完全不需要翻轉偵測的路:讓 postfx.render() 的停用分支改成
-     「照樣畫進 sceneRT（它有 samples:4）再 blit 到螢幕」—— 保住 MSAA，代價是多一次全螢幕
-     blit，但那條路徑本來的用意是「最省」，這會改變它的語意，要想清楚再動。
+     → 全畫面鋸齒。R5 選了「不需要翻轉偵測」的那條修法：停用分支改成
+     **照樣渲進 sceneRT（它有 `samples: tuning.msaa` = 4 的 MSAA renderbuffer）再用一支
+     copy pass blit 到螢幕**（postfx.js 的 FS_COPY / matCopy，tone map 與 sRGB 由 three 的
+     `<tonemapping_fragment>` / `<colorspace_fragment>` 兩個 chunk 負責，與舊行為逐字等價）。
+     於是：
+       - AA 回來了，且來源與正常路徑同一張 sceneRT（同樣 4× MSAA）；
+       - default framebuffer 在停用路徑上也只承接一張全螢幕四邊形 → **這裡回 ×1 是正確的**，
+         `__postfx === null` 這個判據不必改，也不必補「旗標翻轉偵測 + 重配 drawing buffer」
+         （旗標可被 console 隨時翻，buffer 尺寸不會自己跟著變，那套機制純屬多餘複雜度）。
+     代價只有一次全螢幕 blit；tuning.enabled 因此現在**可以**安全地接到畫質檔。
+     （仍然沒有任何一處寫入 false：postfx.js / renderer.js / app.js 皆無寫入點，
+       目前只能從 console 手動翻，是除錯用的。）
      postfx 的 RT 尺寸（下方 __postfx.setSize）必須維持用 _effectiveRenderScale():
      final composite 要跟 drawing buffer 1:1，不能被這個 1.5 汙染。 */
   /* 【R4 審核 C1】像素預算夾制。那個 1.5 是乘在 tier 的 renderScale 上而且原本完全沒有夾:

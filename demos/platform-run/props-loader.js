@@ -25,6 +25,14 @@ export function loadSceneProps(THREE, scene, parent, opts) {
   group.name = "blenderProps";
   group.visible = !opts || opts.visible !== false;
   try { parent.add(group); } catch (e) { console.warn("[props] parent.add failed:", e && e.message); return { loaded }; }
+  // 【R5】凍結 group 本身(不只實例):group 若每幀 updateMatrix → 標 dirty → force 下傳,
+  //   684 個子孫即使各自 matrixAutoUpdate=false 也照樣跑 multiplyMatrices。
+  //   實測(R4 審核):全 auto 47.10 µs / 只凍實例 32.92 µs / 同時凍 group 7.41 µs。
+  //   group 生涯零 transform 寫入(__SCENE_PROPS__.show 只切 visible),identity 烘一次即可。
+  //   r184:updateMatrix() 結尾設 matrixWorldNeedsUpdate=!0,下一趟 updateMatrixWorld
+  //   會把 matrixWorld 算對再定住(子節點遞迴無條件,凍結是自我修復的)。
+  group.updateMatrix();
+  group.matrixAutoUpdate = false;
 
   const cache = {};                                 // 同檔只抓一次,重複的用 clone
   function place(template, it) {
@@ -47,6 +55,12 @@ export function loadSceneProps(THREE, scene, parent, opts) {
       const sink = box.min.y - (it.groundY || 0);
       if (sink < -0.01) o.position.y -= sink;
     } catch (e) {}
+    // 【R5】凍結整個 prop 實例(o 自己 + 全部子孫)。必須在托起貼地**之後**:
+    //   position.y -= sink 要被 updateMatrix() 烘進凍結矩陣。
+    //   ⚠ 只能凍 clone `o`,絕不可凍 template —— Object3D.copy() 會複製 matrixAutoUpdate,
+    //   凍了 template 之後 clone 出來的實例會帶著凍結旗標、position.set 全部無效,疊在原點。
+    //   日後要讓任何 prop 動起來(動畫/物理),必須先把該子樹 matrixAutoUpdate 設回 true。
+    o.traverse((c) => { c.updateMatrix(); c.matrixAutoUpdate = false; });
     loaded.push(o);
   }
   let i = 0;
