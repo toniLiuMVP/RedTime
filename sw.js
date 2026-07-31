@@ -27,8 +27,17 @@ const STATIC_PRECACHE_URLS = [
   // Draco geometry decoder (shared)
   '/RedTime/assets/lm402/draco/draco_wasm_wrapper.js',
   '/RedTime/assets/lm402/draco/draco_decoder.wasm',
+  // three.js addons:GLTFLoader 的兩個靜態相依。少了它們,離線首訪三個 3D 頁的
+  // module graph 會斷(頁面殼進得去、遊戲載不起來 — R5 W2 實測「離線保證是假的」的元凶)。
+  '/RedTime/assets/lm402/BufferGeometryUtils.js',
+  '/RedTime/assets/lm402/SkeletonUtils.js',
+  '/RedTime/demos/_vendor/BufferGeometryUtils.js',
   // 共用 assets
-  '/RedTime/fonts/fonts.css',
+  // 【R5 W3-②】fonts-v2.css = 去重版(790 → 231 條 @font-face,gzip −71.4%),
+  //   刻意用**新檔名**而不是覆寫 + bump STATIC_VERSION:woff2 的 231 個 URL 逐一不變,
+  //   改名讓回訪者保留全部已快取字型與 mp3(bump 則最壞重下 ~24MB)。
+  //   舊 fonts.css 檔案保留在 repo(舊 offline pack 與尚未換版的 RUNTIME html 仍引用它)。
+  '/RedTime/fonts/fonts-v2.css',
   '/RedTime/assets/og-image.jpg',
   '/RedTime/assets/pwa-icon-192.png',
   '/RedTime/assets/pwa-icon-512.png',
@@ -59,10 +68,13 @@ function isStaticAsset(url) {
   return /\.(glb|woff2?|ttf|otf|png|jpg|jpeg|webp|svg|ico)$/i.test(url) ||
          /\.(mp3|m4a|ogg)$/i.test(url) ||   // BGM 單首 4-7MB 且內容不變;走 RUNTIME 會被每次部署的 bump 沖掉、等於每次上線重下
          /\.wasm$/i.test(url) ||   // draco decoder wasm:binary,只在 vendor 換版時才變
-         url.includes('/fonts/fonts.css') ||   // large invariant stylesheet, precached in STATIC — serve cache-first to match
+         url.includes('/fonts/fonts.css') ||   // 舊版(仍被舊 offline pack / 未換版 html 引用)— 維持 STATIC 語意
+         url.includes('/fonts/fonts-v2.css') ||   // 去重版(R5 W3-②),precached in STATIC — serve cache-first to match
          url.includes('/vendor-three') ||
          url.includes('/_vendor/') ||
          url.includes('/GLTFLoader') ||
+         url.includes('/BufferGeometryUtils') ||   // GLTFLoader 的靜態相依;與 /GLTFLoader 同級,必須同走 STATIC(否則 GLTFLoader 秒命中、module graph 卻卡在 RUNTIME 網路請求上;離線首訪直接斷鏈)
+         url.includes('/SkeletonUtils') ||         // 同上,GLTFLoader.js:69 靜態 import
          url.includes('/DRACOLoader') ||
          url.includes('/draco/') ||   // decoder 目錄(wasm wrapper JS + wasm)— 與 STATIC_PRECACHE_URLS 對齊,precache 完就別再 network-first
          url.includes('/three.core') ||
@@ -117,7 +129,7 @@ const OFFLINE_PACK_URLS = (() => {
     '/RedTime/assets/clear-data.js',
   '/RedTime/assets/finished-state.js',
     '/RedTime/assets/frame-guard.js',
-    '/RedTime/fonts/fonts.css',
+    '/RedTime/fonts/fonts-v2.css',
     '/RedTime/favicon.svg',
     '/RedTime/assets/og-image.jpg',
   ];
@@ -163,6 +175,53 @@ self.addEventListener('message', event => {
 // 暖檔 in-flight 去重表(url → Promise)。SW 被回收重啟時歸零,無妨 — 只影響去重不影響正確性。
 const _warmInFlight = new Map();
 
+// 音訊冷路徑的「合成回應」工具。
+// 為什麼冷路徑不能直接 return 網路 response:Chrome 的媒體層對同一個 URL 只維持一份
+// UrlData(blink::UrlIndex),並要求該 URL 上每一段 range 回應的「來源型態」一致。首播若拿到
+// 網路 response,之後暖檔落地、seek 改由本 SW 從快取切片自組 206,兩者混用會讓媒體層判定
+// data-source read failure → MediaError code 2「PIPELINE_ERROR_READ: FFmpegDemuxer: data source
+// error」,播放當場卡死(補 ETag / Last-Modified 無效,實測過)。解法是首播就把網路 response
+// 重新包成 SW 自建的 Response — 從第一個 byte 起全程同一種來源,seek / loop / 離線都一致。
+// 這個 UrlData 會跨 SW 更新與同分頁導覽存活,所以「只在冷快取那一次」也必須合成。
+function synthesizeResponse(net, body) {
+  // 204 / 205 / 304 規格上不得帶 body,Response 建構子會 throw;這類狀態(實測未出現過)原樣回。
+  if (!body || net.status === 204 || net.status === 205 || net.status === 304) return net;
+  const headers = new Headers();
+  net.headers.forEach((v, k) => headers.set(k, v));
+  return new Response(body, { status: net.status, statusText: net.statusText, headers });
+}
+
+// 背景暖檔 + in-flight 去重。
+// 去重必須保留:媒體棧首播會連發多個 Range 請求,cache.put 完成前全都 miss —
+// 不去重的話同一首歌會並發下載多次完整檔。
+// putFromStream 有值 = 已經有整檔串流可直接寫入(零額外下載);null = 得自己抓一次完整檔。
+function startAudioWarm(event, url, cache, putFromStream) {
+  if (_warmInFlight.has(url)) return;
+  const warm = (async () => {
+    try {
+      if (putFromStream) await putFromStream();
+      else {
+        const res = await fetch(url, { cache: 'no-cache' });
+        if (!res || res.status !== 200) return;
+        await cache.put(url, res);
+      }
+      await trimCache(STATIC_CACHE, MAX_STATIC_ITEMS);
+    } catch (e) {
+      // tee 寫入失敗(quota / 連線中斷)→ 退回獨立抓一次;再失敗就放棄,不影響本次播放。
+      if (!putFromStream) return;
+      try {
+        const res = await fetch(url, { cache: 'no-cache' });
+        if (res && res.status === 200) {
+          await cache.put(url, res);
+          await trimCache(STATIC_CACHE, MAX_STATIC_ITEMS);
+        }
+      } catch (e2) { /* 暖檔失敗不影響本次播放 */ }
+    }
+  })().finally(() => _warmInFlight.delete(url));
+  _warmInFlight.set(url, warm);
+  event.waitUntil(warm);
+}
+
 // STATIC 資產的 Range 請求:快取命中 → 切片自組 206;未命中 → passthrough(+音訊背景暖檔)。
 // 任何一步出錯一律回退到原生 fetch,絕不讓 SW 成為播放失敗的原因。
 async function serveRangeFromStatic(event, request) {
@@ -174,25 +233,35 @@ async function serveRangeFromStatic(event, request) {
     const cache = await caches.open(STATIC_CACHE);
     const full = await cache.match(request.url);
     if (!full || full.status !== 200) {
-      // 只對音訊做背景暖檔(wasm/vendor 走 fetch() 不帶 Range,不會進到這裡)。
-      // in-flight 去重:媒體棧首播會連發多個 Range 請求(探測 + 本體 + seek 重連),
-      // cache.put 完成前全都 miss — 不去重的話同一首歌會並發下載多次完整檔。
-      if (/\.(mp3|m4a|ogg)$/i.test(new URL(request.url).pathname)) {
-        if (!_warmInFlight.has(request.url)) {
-          const warm = (async () => {
-            try {
-              const res = await fetch(request.url, { cache: 'no-cache' });
-              if (res && res.status === 200) {
-                await cache.put(request.url, res);
-                await trimCache(STATIC_CACHE, MAX_STATIC_ITEMS);
-              }
-            } catch (e) { /* 暖檔失敗不影響本次播放 */ }
-          })().finally(() => _warmInFlight.delete(request.url));
-          _warmInFlight.set(request.url, warm);
+      const isAudio = /\.(mp3|m4a|ogg)$/i.test(new URL(request.url).pathname);
+      const net = await fetch(request);
+      // 非音訊(wasm / vendor 之類極少數帶 Range 的請求)維持原樣直接回。
+      if (!isAudio) return net;
+
+      // 音訊冷路徑「一律合成回應」— 見 startAudioWarm() 上方長註解說明為何不能回原生 response。
+      // 這次網路回應是否已涵蓋整檔?(200,或 206 且 Content-Range 從 0 蓋到最後一個 byte)
+      const cr = /^bytes 0-(\d+)\/(\d+)$/.exec(net.headers.get('Content-Range') || '');
+      const coversWholeFile = net.status === 200 ||
+        (net.status === 206 && cr && Number(cr[1]) === Number(cr[2]) - 1);
+
+      if (coversWholeFile && net.body && !_warmInFlight.has(request.url)) {
+        // 整檔已經在這條連線上 → tee 成兩份:一份寫 cache,一份回給媒體層。只下載一次。
+        const [toCache, toClient] = net.body.tee();
+        const warmHeaders = new Headers();
+        for (const k of ['Content-Type', 'ETag', 'Last-Modified']) {
+          const v = net.headers.get(k);
+          if (v) warmHeaders.set(k, v);
         }
-        event.waitUntil(_warmInFlight.get(request.url));
+        startAudioWarm(event, request.url, cache, async () => {
+          await cache.put(request.url, new Response(toCache, { status: 200, statusText: 'OK', headers: warmHeaders }));
+        });
+        return synthesizeResponse(net, toClient);
       }
-      return fetch(request);
+
+      // 走到這裡代表:(a) origin 回的是真・部分內容(暖檔完成前就 seek),或
+      // (b) 已經有暖檔在跑。本次照常回,暖檔另外抓一次完整檔(HTTP cache 會補掉重疊部分)。
+      startAudioWarm(event, request.url, cache, null);
+      return synthesizeResponse(net, net.body);
     }
     const buf = await full.arrayBuffer();
     const size = buf.byteLength;
