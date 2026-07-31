@@ -8253,9 +8253,9 @@
         </div>
         <div class="cp-row-lbl">靜讀（導讀等輔文的顯示方式）</div>
         <div class="cp-row">
-          <button type="button" data-quiet="0" onclick="setQuiet(0)">標準</button>
-          <button type="button" data-quiet="1" onclick="setQuiet(1)">淡化</button>
-          <button type="button" data-quiet="2" onclick="setQuiet(2)">全隱</button>
+          <button type="button" data-quiet="0" onclick="setQuiet(0, true)">標準</button>
+          <button type="button" data-quiet="1" onclick="setQuiet(1, true)">淡化</button>
+          <button type="button" data-quiet="2" onclick="setQuiet(2, true)">全隱</button>
         </div>
         <div class="cp-row-lbl">時空定位（頂欄顯示目前的年份與視角）</div>
         <div class="cp-row">
@@ -9912,6 +9912,7 @@
         progress: "redtime-progress",
         width: "redtime-width",
         quiet: "redtime-quiet",
+        quietChoice: "redtime-quiet-choice",
         mode: "redtime-read-mode",
         prefocusQuiet: "redtime-prefocus-quiet",
         prefocusMotion: "redtime-prefocus-motion",
@@ -10289,13 +10290,16 @@
         // 三態閱讀模式:回訪還原本人上次選擇;新訪(從未選過模式=null)預設小說模式(novel)。
         // 明確選過的紅線/閱讀會存成 "aesthetic"/"focus",故只有 null(從未選過)才套預設,不覆蓋使用者選擇。
         var _savedMode = loadPref(PREF_KEYS.mode) || "novel";
-        // 靜讀檔位:回訪讀本人存值;新訪跟隨小說模式預設全隱(輔文只剩正文與導航,導航仍由 novel 規則保持可見),
-        // 與互動切入小說模式的最終狀態一致。使用者自選過的靜讀檔位(含 "0")一律優先。
-        var _savedQuietRaw = loadPref(PREF_KEYS.quiet);
-        var _savedQuiet = parseInt(
-          (_savedQuietRaw != null && _savedQuietRaw !== "") ? _savedQuietRaw : (_savedMode === "novel" ? "2" : "0"),
-          10
-        ) || 0;
+        // 靜讀殘留治理:舊版小說模式靠 setQuiet(2) 實作全隱,「全隱」被寫進與燈光面板自選同一把 key,
+        // 殘留後紅線/閱讀模式「故事正文」前的導讀區(說書人/時間線/科普/文人說/命運阿嬤)整組消失,切模式也救不回。
+        // 只有燈光面板會記 quietChoice 標記:沒有標記的 "2" 一律視為殘留,還原成該模式預設(閱讀 1 / 其餘 0),
+        // 快照鍵同步治理。使用者親選的全隱(任何模式下)有標記,完全尊重。
+        if (loadPref(PREF_KEYS.quietChoice) !== "1") {
+          if (loadPref(PREF_KEYS.quiet) === "2") savePref(PREF_KEYS.quiet, _savedMode === "focus" ? "1" : "0");
+          if (loadPref(PREF_KEYS.prefocusQuiet) === "2") savePref(PREF_KEYS.prefocusQuiet, "0");
+        }
+        // 靜讀檔位:讀本人存值。小說模式的全隱由 novel-read CSS 全權負責,boot 不再替新訪套 "2" 預設。
+        var _savedQuiet = parseInt(loadPref(PREF_KEYS.quiet) || "0", 10) || 0;
         if (_savedQuiet >= 1) document.body.classList.add("quiet-read");
         if (_savedQuiet >= 2) document.body.classList.add("quiet-hide");
         // boot:只掛 class + 寫動畫 pref,不模擬點擊。
@@ -13471,12 +13475,14 @@
       }
       // 靜讀模式三檔：0 標準 / 1 淡化（hover 顯現）/ 2 全隱（電子書式只剩正文）。
       // 向後兼容 boolean 呼叫（true=1 / false=0）；可逆。
-      function setQuiet(v) {
+      // byUser=燈光面板親手選的才記 quietChoice 標記:boot 的殘留治理只還原「沒有標記的全隱」,親選的永遠尊重。
+      function setQuiet(v, byUser) {
         var lvl = v === true ? 1 : v === false ? 0 : (parseInt(v, 10) || 0);
         if (lvl < 0 || lvl > 2) lvl = 0;
         document.body.classList.toggle("quiet-read", lvl >= 1);
         document.body.classList.toggle("quiet-hide", lvl >= 2);
         savePref(PREF_KEYS.quiet, String(lvl));
+        if (byUser) savePref(PREF_KEYS.quietChoice, "1");
         _syncComfortActive();
       }
       /* ── 一鍵閱讀模式:aesthetic(美感優先,預設) / focus(閱讀優先) ──
@@ -13502,11 +13508,8 @@
             savePref(PREF_KEYS.prefocusMotion, (mb && mb.getAttribute("aria-pressed") === "true") ? "paused" : "playing");
             if (lvl < 1) setQuiet(1);                    // 至少淡化;使用者已選全隱則不動
           }
-          if (novel) {
-            // 小說模式=最強化:輔文全隱,畫面只剩正文與導航(退回紅線模式仍還原快照)
-            var curLvl = parseInt(loadPref(PREF_KEYS.quiet) || "0", 10) || 0;
-            if (curLvl < 2) setQuiet(2);
-          }
+          // 小說模式不再動靜讀檔位:全隱由 body.novel-read 的 CSS 全權負責,不寫 redtime-quiet —
+          // 否則「全隱」殘留到紅線/閱讀模式,導讀區(說書人/時間線/科普/文人說/命運阿嬤)整組消失。
           if (!focus) {
             // 退回紅線模式:還原進場前的靜讀檔位(預設 0),不硬清使用者自選的全隱
             var back = parseInt(loadPref(PREF_KEYS.prefocusQuiet) || "0", 10) || 0;
