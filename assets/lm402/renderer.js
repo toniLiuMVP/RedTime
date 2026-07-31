@@ -3623,12 +3623,31 @@ export function createLm402Scene(D, runtimeOptions = {}) {
             antialias: !1,
             powerPreference: "default",
           },
-          {
-            label: "webgl-safe",
-            contextIds: ["webgl", "experimental-webgl"],
-            antialias: !1,
-            powerPreference: "default",
-          },
+          /* 【R5 W4】這裡原本還有第三個 profile:
+               { label: "webgl-safe", contextIds: ["webgl", "experimental-webgl"], … }
+             它從來沒被驗證走通過。W4 實測(chromium `--disable-webgl2` + SwiftShader,
+             真的只剩 WebGL1)證明它**不只是死碼,而且有害**,已整條移除:
+
+             1) three 這一版用不了 WebGL1。vendored three 是 r184,WebGL1 支援在 r163 就
+                被移除了:`WebGLState` 的模組本體無條件跑
+                `k[e.TEXTURE_2D_ARRAY]=z(e.TEXTURE_2D_ARRAY,e.TEXTURE_2D_ARRAY,1,1)`,
+                而 z() 對 2D_ARRAY / 3D 走的是 `e.texImage3D(...)`(逐字可 grep)——
+                WebGL1 context 上那是 undefined,`new WebGLRenderer({context: webgl1})`
+                當場 TypeError。這個 throw 被下面的 `catch (e) { s = e; … }` 吞掉,
+                所以外面只看得到後續那個牛頭不對馬嘴的錯誤。
+             2) 它會**汙染 canvas**,連帶廢掉最後一支 three-fallback。一張 canvas 一旦拿過
+                WebGL1 context,之後 getContext("webgl2") 永遠回 null。W4 實測(頁內
+                canvasPoisonTest:gotWebgl1First=true → thenWebgl2=false)與真頁面的
+                console 對得起來:WebGL1-only 下 LM402 的錯誤是
+                `THREE.WebGLRenderer: A WebGL context could not be created.
+                 Reason: Canvas has an existing context of a different type`(×2,three 自己
+                retry 一次)—— 而同一個環境下月台/天堂路(它們沒有 WebGL1 profile)拿到的是
+                誠實的 `Reason: disabled by enterprise policy or commandline switch`。
+                也就是說:這個 profile 把「沒有 WebGL2」偽裝成「canvas 已被佔用」,
+                並且真的讓 three-fallback 從「還有一次機會」變成「必定失敗」。
+             移除後 WebGL1-only 裝置仍然開不起來(那是 three r184 的硬限制,不是本檔能修的),
+             但錯誤訊息會誠實,而且 three-fallback 在「有 WebGL2、只是我們的 attributes 被拒」
+             的情況下重新變成一條真的還能走的路。 */
         ],
         n = {
           alpha: !1,
@@ -3640,6 +3659,9 @@ export function createLm402Scene(D, runtimeOptions = {}) {
           desynchronized: !0,
         };
       let s = null;
+      // 【R5 W4】剩下的 profile 全是 webgl2 → 只要有一支拿到 context 就代表這台機器有 WebGL2。
+      //   用來把最後的錯誤從「Unable to create WebGL renderer.」升級成講得出原因的訊息。
+      let w2 = !1;
       for (const o of a) {
         const a = {
           ...n,
@@ -3655,7 +3677,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
           }
           if (r) break;
         }
-        if (r)
+        if (r && (w2 = !0), r)
           try {
             const a = new e.WebGLRenderer({
               canvas: t,
@@ -3695,6 +3717,21 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         return ((o.__lm402RendererProfile = "three-fallback"), o);
       } catch (e) {
         s = e;
+      }
+      /* 【R5 W4】誠實的失敗訊息。舊碼一律丟 `s`(最後一個內部錯誤)或
+         "Unable to create WebGL renderer.",在最常見的失敗成因(裝置只有 WebGL1)下
+         那個訊息完全指不到根因。這裡不改變「會失敗」這件事 —— three r184 沒有 WebGL1
+         支援,本檔修不了 —— 只讓錯誤講得出原因,好讓 console / boot-sentry 收到的
+         `unhandledrejection` 文字對除錯有用。
+         ⚠ 已知殘留(不在本檔可修範圍,已回報):lm402.html 沒有引入 demos/_vendor/webgl-notice.js,
+           而且那支的判據是 `webgl2 || webgl` —— WebGL1-only 裝置上它認為「有 WebGL」而不出聲。
+           所以三款遊戲在 WebGL1-only 下目前都是「靜靜地黑畫面」,使用者看不到任何說明。 */
+      if (!w2) {
+        const err = new Error(
+          "[lm402] 這台裝置/瀏覽器沒有 WebGL2,LM402 的 3D 場景無法啟動(本專案的 three r184 已不支援 WebGL1)。",
+        );
+        ((err.name = "LM402NoWebGL2"), s && (err.cause = s));
+        throw err;
       }
       throw s || new Error("Unable to create WebGL renderer.");
     })(D, V);
