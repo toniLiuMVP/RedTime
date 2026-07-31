@@ -3723,9 +3723,9 @@ export function createLm402Scene(D, runtimeOptions = {}) {
          那個訊息完全指不到根因。這裡不改變「會失敗」這件事 —— three r184 沒有 WebGL1
          支援,本檔修不了 —— 只讓錯誤講得出原因,好讓 console / boot-sentry 收到的
          `unhandledrejection` 文字對除錯有用。
-         ⚠ 已知殘留(不在本檔可修範圍,已回報):lm402.html 沒有引入 demos/_vendor/webgl-notice.js,
-           而且那支的判據是 `webgl2 || webgl` —— WebGL1-only 裝置上它認為「有 WebGL」而不出聲。
-           所以三款遊戲在 WebGL1-only 下目前都是「靜靜地黑畫面」,使用者看不到任何說明。 */
+         上述殘留已於 R5(6e90d4b)修復:lm402.html 已補掛 demos/_vendor/webgl-notice.js,
+           該腳本判據已改為只認 webgl2 —— WebGL1-only 裝置會看到頁面 banner 說明。
+           本 throw(給 console/boot-sentry 的具名錯誤)與頁面 banner 是互補的兩層。 */
       if (!w2) {
         const err = new Error(
           "[lm402] 這台裝置/瀏覽器沒有 WebGL2,LM402 的 3D 場景無法啟動(本專案的 three r184 已不支援 WebGL1)。",

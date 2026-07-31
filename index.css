@@ -2289,7 +2289,14 @@
         padding: 24px;
         opacity: 0;
         pointer-events: none;
+        /* 【R5 審核 B1】雙寫:content-visibility 是離散屬性,不加 allow-discrete 的話
+           關閉導覽會一幀瞬滅(只剩遮罩淡出)。第二行在支援引擎(Chrome 117+/Safari 18+/
+           Firefox 129+)讓淡出全程可見、終點才 skip;不認得 allow-discrete 的引擎
+           (Chrome 85-116 支援 content-visibility 但不認它)把第二行整條判無效丟棄、
+           退回第一行 = 既有行為,不會更糟。淡入不受影響(初始 hidden 首次計算即生效,
+           不觸發轉場),W3-① 的字型延載收益完整保留。 */
         transition: opacity 0.3s ease;
+        transition: opacity 0.3s ease, content-visibility 0.3s allow-discrete;
       }
       .tour-overlay:not([hidden]) {
         opacity: 1;

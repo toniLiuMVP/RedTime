@@ -340,6 +340,10 @@ overlay.hidden = true;
 overlay.setAttribute("aria-hidden", "true");
 document.body.style.overflow = "";
 try { localStorage.setItem(TOUR_KEY, "1"); } catch (e) {}
+// 【R5 審核 B1】關閉時焦點原本從 overlay 內按鈕被重置到 body,鍵盤使用者無聲失位;
+// 還給常駐的觸發鈕(順帶修掉 R4 起「焦點滯留隱形按鈕」的舊 a11y 問題)。
+var t = document.querySelector(".btn-newcomer");
+if (t) t.focus();
   };
 
   window.tourNext = function () {

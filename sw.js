@@ -9,7 +9,7 @@
 // 升 STATIC_VERSION 才會重下 GLB / vendor(僅在 vendor 升版或 GLB 換新時)
 const STATIC_VERSION = 'static-v88-20260726';  // bump: font subset re-cut(new glyph coverage)
 // 升 RUNTIME_VERSION 重下 html / data.js / app.js(每次 source 變動)
-const RUNTIME_VERSION = 'runtime-v404-20260730';   // bump every deploy that changes html/js/css; auto-reload then delivers the fix to clients still on the prior worker
+const RUNTIME_VERSION = 'runtime-v405-20260731';   // bump every deploy that changes html/js/css; auto-reload then delivers the fix to clients still on the prior worker
 
 const STATIC_CACHE = `redtime-${STATIC_VERSION}`;
 const RUNTIME_CACHE = `redtime-${RUNTIME_VERSION}`;
@@ -27,11 +27,21 @@ const STATIC_PRECACHE_URLS = [
   // Draco geometry decoder (shared)
   '/RedTime/assets/lm402/draco/draco_wasm_wrapper.js',
   '/RedTime/assets/lm402/draco/draco_decoder.wasm',
-  // three.js addons:GLTFLoader 的兩個靜態相依。少了它們,離線首訪三個 3D 頁的
-  // module graph 會斷(頁面殼進得去、遊戲載不起來 — R5 W2 實測「離線保證是假的」的元凶)。
+  // three.js addons:GLTFLoader 的兩個靜態相依,必須與 /GLTFLoader 同走 STATIC
+  // (否則頁面 JS 已在 RUNTIME 快取時,離線仍斷在這兩支)。
+  // ⚠ 措辭校正(R5 審核 B3):這不是「離線首訪」的完整保證 —— 三個 3D 頁的入口模組鏈
+  // (scene.js / game.js / app.js…)走 network-first 且不在任何 precache,離線只有
+  // 「上線期間實際開過該頁」才進得了遊戲,且 RUNTIME bump 後再度失效。
+  // 真・離線首訪要把入口鏈也 precache(容量/失效策略另議,見 R6 backlog)。
   '/RedTime/assets/lm402/BufferGeometryUtils.js',
   '/RedTime/assets/lm402/SkeletonUtils.js',
   '/RedTime/demos/_vendor/BufferGeometryUtils.js',
+  // 【R5 審核 A1】webgl-notice.js 判據已在本輪就地改寫(webgl→webgl2),但它走
+  // 永不失效的 STATIC cache-first(`/_vendor/` 規則)且原本不在 precache →
+  // R5 前訪過遊戲頁的回訪者會**永遠**命中舊判據,WebGL1-only 靜默黑畫面照舊,
+  // 而那正是這次修復唯一的目標族群。precache 的 install-time addAll 對同名
+  // cache 執行 put 覆寫 → 新 SW 一裝即生效,不必 bump STATIC_VERSION。
+  '/RedTime/demos/_vendor/webgl-notice.js',
   // 共用 assets
   // 【R5 W3-②】fonts-v2.css = 去重版(790 → 231 條 @font-face,gzip −71.4%),
   //   刻意用**新檔名**而不是覆寫 + bump STATIC_VERSION:woff2 的 231 個 URL 逐一不變,
@@ -73,7 +83,7 @@ function isStaticAsset(url) {
          url.includes('/vendor-three') ||
          url.includes('/_vendor/') ||
          url.includes('/GLTFLoader') ||
-         url.includes('/BufferGeometryUtils') ||   // GLTFLoader 的靜態相依;與 /GLTFLoader 同級,必須同走 STATIC(否則 GLTFLoader 秒命中、module graph 卻卡在 RUNTIME 網路請求上;離線首訪直接斷鏈)
+         url.includes('/BufferGeometryUtils') ||   // GLTFLoader 的靜態相依;與 /GLTFLoader 同級,必須同走 STATIC(否則 GLTFLoader 秒命中、module graph 卻卡在 RUNTIME 網路請求上;離線時斷鏈)
          url.includes('/SkeletonUtils') ||         // 同上,GLTFLoader.js:69 靜態 import
          url.includes('/DRACOLoader') ||
          url.includes('/draco/') ||   // decoder 目錄(wasm wrapper JS + wasm)— 與 STATIC_PRECACHE_URLS 對齊,precache 完就別再 network-first
@@ -246,6 +256,13 @@ async function serveRangeFromStatic(event, request) {
 
       if (coversWholeFile && net.body && !_warmInFlight.has(request.url)) {
         // 整檔已經在這條連線上 → tee 成兩份:一份寫 cache,一份回給媒體層。只下載一次。
+        // 【R5 審核 B4 記帳】WHATWG Streams 的 tee 對較慢分支沒有背壓上限:
+        // cache.put 全速吃 toCache 時,媒體層還沒讀走的 chunk 會滯留在 SW 的
+        // stream 佇列,峰值 ≤ 最大單檔(一眼瞬間.mp3 ≈ 7MB)。這是冷快取首播的
+        // 一次性短暫暫存;媒體層 cancel toClient 時該分支佇列由規格清空
+        // (chunk 只進另一分支);每 URL 由 _warmInFlight 鎖一份不會並發疊加。
+        // 同類佇列語意(response.clone 即 tee)R4 起就施加於 8MB Babylon 等全部
+        // STATIC 資產,非新風險類別;暖路徑的 arrayBuffer+slice 峰值(~14MB)本就更高。
         const [toCache, toClient] = net.body.tee();
         const warmHeaders = new Headers();
         for (const k of ['Content-Type', 'ETag', 'Last-Modified']) {
