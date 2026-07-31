@@ -405,6 +405,39 @@ const FS_FINAL = /* glsl */ `
 `;
 
 // ─────────────────────────────────────────────────────────────
+//  Copy Pass —【R5 G5a】tuning.enabled=false 的 sceneRT → 螢幕 blit
+//  只有這一條路徑用得到。刻意「純 copy + three 自己的兩個 chunk」而不是
+//  抄 FS_FINAL 的 ACES/pow(1/2.2):
+//    - `#include <tonemapping_fragment>` / `<colorspace_fragment>` 會被 three 的
+//      parseIncludes 展開（ShaderMaterial 不是 RawShaderMaterial，走的是「非 raw」
+//      的 prefixFragment，該 prefix 內含 `#define TONE_MAPPING` +
+//      tonemapping_pars_fragment + getToneMappingFunction，以及
+//      colorspace_pars_fragment + linearToOutputTexel）。
+//    - 展開後套用的就是 renderer.toneMapping(ACESFilmic)+toneMappingExposure(1.14)
+//      與 renderer.outputColorSpace(sRGB) —— 逐字等於「舊的停用分支
+//      `renderer.render(scene, camera)` 直接畫進 canvas」時,場景材質自己套的那兩個
+//      chunk。所以本改動只換了「幾何畫到哪張 buffer」,沒有換色彩管線。
+//    - 反之若抄 FS_FINAL 的 uExposure(0.95)+Narkowicz ACES fit+pow(1/2.2),
+//      會與舊行為(1.14 + three 的 ACES + 真 sRGB transfer)對不上,等於偷改停用分支
+//      的觀感。
+//  依據(vendored three，可 grep 的逐字片段):
+//    `r.toneMapped&&(null!==F&&!0!==F.isXRRenderTarget||(Le=e.toneMapping))`
+//      → render target 非 null 時 toneMapping = NoToneMapping,故 sceneRT 內是
+//        **未 tone map 的 linear HDR**,tone map 必須留到這一支寫 canvas 時才做;
+//    `outputColorSpace:null===F?e.outputColorSpace:…workingColorSpace`
+//      → 同理 sRGB encode 也只在寫 canvas 那一支發生。
+// ─────────────────────────────────────────────────────────────
+const FS_COPY = /* glsl */ `
+  varying vec2 vUv;
+  uniform sampler2D tDiffuse;
+  void main() {
+    gl_FragColor = texture2D(tDiffuse, vUv);
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
+  }
+`;
+
+// ─────────────────────────────────────────────────────────────
 //  Tier 6: Lens Dirt — 程式生成鏡頭髒污紋理
 //  做法：黑底 + 200 個小亮點（隨機灰塵）+ 8 個大光斑（油污 / 指紋）
 //  在 final pass 用 luma multiply 疊加：高光通過髒污會被點亮，暗處幾乎看不見
@@ -743,6 +776,19 @@ export function createPostFX({ renderer, scene, camera, getJuniorAnchor = null }
     },
   });
 
+  /* 【R5 G5a】停用分支專用的 copy 材質(sceneRT → 螢幕)。
+     為什麼建在 factory 而不是 lazy:render 迴圈內不新建物件是本專案的硬規定;
+     代價是模組物件數 +1(一次性、發生在建構期)→ three.generateUUID 多消耗 4 次
+     Math.random(),下游程序化內容的 RNG 序列會位移 → **本波之後不可再宣稱
+     LM402 跨 build 逐像素相同**(驗證改用 GL 帳目 A/B + 降級探針,見 ROUND5-STATE)。
+     GPU 成本 0:three 的 program 是懶編譯,tuning.enabled 一直是 true 的話這支
+     shader 永遠不會被編譯,也不會佔用任何 GL 資源。 */
+  const matCopy = new THREE.ShaderMaterial({
+    vertexShader: VS_FULLSCREEN, fragmentShader: FS_COPY,
+    depthTest: false, depthWrite: false,
+    uniforms: { tDiffuse: { value: null } },
+  });
+
   const fsq = new FullScreenQuad();
 
   // ─── 焦點狀態（給 focalProvider 平滑插值用） ───
@@ -794,19 +840,37 @@ function setSize(w, h) {
     });
   }
 
+  // 停用分支的一次性提示（舊碼是逐幀 console.warn，翻旗標等於洗版）
+  let _disabledPathWarned = false;
+
   // ─── 主 render ───
   function render(time = 0, sunUv = null) {
     if (!tuning.enabled) {
-      // 緊急停用：直接 render 到螢幕（fallback）
-      /* 【R4 審核 C4】這條路徑把**真 3D 幾何**畫進 default framebuffer,而此時 __postfx
-         不是 null → renderer.js 的 _effectiveBufferScale() 回 ×1,加上 R4 S3 把 context 的
-         antialias 寫死 false → 這條路徑既無 MSAA 也無超取樣（baseline 桌機此路徑有 4× MSAA）。
-         只留一行 warn 而不改 _effectiveBufferScale 的判據,是刻意的:改判據就得補旗標翻轉偵測
-         （buffer 尺寸不會自己跟著旗標變),而這個旗標全 repo 零寫入者、只能從 devtools 手動翻。
-         詳細後果與兩條修法見 renderer.js 的 ⚠【已知缺口】註解。 */
-      console.warn("[postfx] enabled=false → 直接 render 到螢幕;context antialias 已關(R4 S3),此路徑無 AA。見 renderer.js 的 ⚠【已知缺口】註解");
-      renderer.setRenderTarget(null);
+      /* 【R5 G5a】緊急停用 = 「照樣渲進 sceneRT,再 blit 到螢幕」,不是直接畫進
+         default framebuffer。
+         背景（R4 審核 C4 留下的缺口）:舊碼在這裡直接 renderer.render(scene, camera)
+         到 default framebuffer,而此時 __postfx 不是 null → renderer.js 的
+         _effectiveBufferScale() 回 ×1,加上 R4 S3 把 context 的 antialias 固定成 false
+         → 那條路徑既無 MSAA 也無超取樣,是全畫面鋸齒(baseline 桌機此路徑本來有 4× MSAA)。
+         修法選這一條的理由:sceneRT 本來就帶 `samples: tuning.msaa`(=4)的 MSAA
+         renderbuffer,幾何走它就自動保住 AA,**不需要**在 renderer.js 補「旗標翻轉偵測 +
+         重配 drawing buffer」那套機制(旗標可被 console 隨時翻,buffer 尺寸不會自己跟著變)。
+         renderer.js 的 _effectiveBufferScale 判據因此維持 `__postfx === null`:修好之後
+         default framebuffer 在這條路徑上也只承接一張全螢幕四邊形,×1 是正確答案。
+         代價:多一次全螢幕 blit(一個 draw + 一張全解析度取樣)。這條路徑的原意是「最省」,
+         語意確實被改成「最省但保畫質」—— 但原本的「省」是省在拿掉 postfx 的 6-10 支 pass,
+         少的那一支 blit 只佔其中極小一塊,而換回來的是不會有人願意接受的鋸齒。
+         尺寸不在這裡管:sceneRT 由 qo() → setSize() 依 renderScale 配好,停用分支不得另設。 */
+      if (!_disabledPathWarned) {
+        _disabledPathWarned = true;
+        console.warn("[postfx] enabled=false → 走 sceneRT-blit 降級路徑（保留 sceneRT 的 4× MSAA，無後製效果）");
+      }
+      renderer.setRenderTarget(sceneRT);
+      renderer.clear();
       renderer.render(scene, camera);
+      renderer.setRenderTarget(null);
+      matCopy.uniforms.tDiffuse.value = sceneRT.texture;
+      fsq.render(renderer, matCopy, null);   // null = 直接寫螢幕；tone map + sRGB 在 FS_COPY 的兩個 chunk
       return;
     }
 
@@ -959,7 +1023,7 @@ function setSize(w, h) {
     finalRT.dispose();
     motionBlur.dispose();
     bloomMipRTs.forEach((m) => { m.a.dispose(); m.b.dispose(); });
-    [matBright, matBlur, matBloomComposite, matDOF, matSSAO, matFinal].forEach((m) => m.dispose());
+    [matBright, matBlur, matBloomComposite, matDOF, matSSAO, matFinal, matCopy].forEach((m) => m.dispose());
     fsq.dispose();
     // Codex r44 Phase 5 #4 (🟡):釋放全域 canvas texture cache(避免 GPU 累積)
     if (_lensDirtTexture) { _lensDirtTexture.dispose(); _lensDirtTexture = null; }

@@ -7404,21 +7404,22 @@ export function createLm402Scene(D, runtimeOptions = {}) {
      判據刻意只認 `__postfx === null`（建構失敗或 render 期 one-shot failover 後），
      不認 tuning.enabled —— 那個旗標可被 console 隨時翻轉而現在沒有翻轉偵測（見 render()
      開頭的註解），拿它當判據會做出一條只有一半會生效的分支。
-     ⚠【已知缺口，讀到這裡的人請先看完】postfx.js 的 render() 開頭有一條
+     ✅【R4 的已知缺口已於 R5 G5a 修復，判據維持不變】R4 時 postfx.js 的 render() 開頭是
        `if (!tuning.enabled) { renderer.setRenderTarget(null); renderer.render(scene, camera); return; }`
      —— 那條路徑把**真正的 3D 幾何**直接畫進 default framebuffer，而此時 __postfx 不是 null，
      所以這裡回 ×1，於是那條路徑既沒有 MSAA（context antialias 已固定 false）也沒有超取樣
-     → 全畫面鋸齒。R4 現況之所以安全，只是因為 **tuning.enabled 預設 true 且全 repo 沒有
-     任何一處寫入 false**（postfx.js / renderer.js / app.js 皆無寫入點，也沒有任何
-     `__POSTFX__.tuning.enabled =` 的呼叫者）—— 它目前只能從 console 手動翻，是除錯用的。
-     **所以：如果哪天要把 tuning.enabled 接到畫質檔（它的註解寫著「緊急停用」，這是很自然的
-     下一步），必須同時做兩件事，否則低階機會安靜地拿到沒有 AA 的畫面：**
-       (1) 這裡的判據改成「postfx 是否真的在做 composite」，
-       (2) 補翻轉偵測（把 _viewportDirty 設起來讓下一次 qo() 重配 buffer），
-           因為 buffer 尺寸不會自己跟著旗標變。
-     或者換一條完全不需要翻轉偵測的路:讓 postfx.render() 的停用分支改成
-     「照樣畫進 sceneRT（它有 samples:4）再 blit 到螢幕」—— 保住 MSAA，代價是多一次全螢幕
-     blit，但那條路徑本來的用意是「最省」，這會改變它的語意，要想清楚再動。
+     → 全畫面鋸齒。R5 選了「不需要翻轉偵測」的那條修法：停用分支改成
+     **照樣渲進 sceneRT（它有 `samples: tuning.msaa` = 4 的 MSAA renderbuffer）再用一支
+     copy pass blit 到螢幕**（postfx.js 的 FS_COPY / matCopy，tone map 與 sRGB 由 three 的
+     `<tonemapping_fragment>` / `<colorspace_fragment>` 兩個 chunk 負責，與舊行為逐字等價）。
+     於是：
+       - AA 回來了，且來源與正常路徑同一張 sceneRT（同樣 4× MSAA）；
+       - default framebuffer 在停用路徑上也只承接一張全螢幕四邊形 → **這裡回 ×1 是正確的**，
+         `__postfx === null` 這個判據不必改，也不必補「旗標翻轉偵測 + 重配 drawing buffer」
+         （旗標可被 console 隨時翻，buffer 尺寸不會自己跟著變，那套機制純屬多餘複雜度）。
+     代價只有一次全螢幕 blit；tuning.enabled 因此現在**可以**安全地接到畫質檔。
+     （仍然沒有任何一處寫入 false：postfx.js / renderer.js / app.js 皆無寫入點，
+       目前只能從 console 手動翻，是除錯用的。）
      postfx 的 RT 尺寸（下方 __postfx.setSize）必須維持用 _effectiveRenderScale():
      final composite 要跟 drawing buffer 1:1，不能被這個 1.5 汙染。 */
   /* 【R4 審核 C1】像素預算夾制。那個 1.5 是乘在 tier 的 renderScale 上而且原本完全沒有夾:
