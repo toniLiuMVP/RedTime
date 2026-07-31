@@ -2295,6 +2295,20 @@
         opacity: 1;
         pointer-events: auto;
       }
+      /* 【R5 W3-①】overlay 蓋掉了 UA 的 [hidden]{display:none}(上面的 display:flex),
+         導致 1,075 個中文字在「隱藏」狀態照樣排版 → 冷載多拉 7 個 Noto Serif TC 子集
+         (實測 woff2 23→16 檔、1,241,196→759,912 bytes,−38.8%;2 reps 一致)。
+         用 content-visibility 而不是 display:none:保留 display:flex,
+         opacity 淡入的轉場機制不變(display:none 轉態沒有 before-change style,淡入會失效)。
+         negative control 已做:visibility:hidden 無效(仍 23 檔)。
+         舊瀏覽器(Safari<18 等)忽略此屬性 → 退回現況,零回歸、只是無效益。
+         代價:真的打開導覽時那 7 個子集才開始載(font-display:swap 短暫 FOUT),
+         是「延後」不是「消滅」。 */
+      .tour-overlay[hidden] {
+        content-visibility: hidden;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+      }
       .tour-card {
         position: relative;
         max-width: 720px;
