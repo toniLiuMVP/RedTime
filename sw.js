@@ -194,9 +194,23 @@ self.addEventListener('activate', event => {
 const MAX_STATIC_ITEMS = 400;    // 字型子集(231 個 woff2)+ 三遊戲 GLB/引擎 + 圖示的完整工作集要能全裝;上限太低會把 3D 引擎資產逐出、破壞離線保證
 const MAX_RUNTIME_ITEMS = 80;    // html / dynamic JS:常變動
 
-async function trimCache(cacheName, maxItems) {
+/* 【R6 審核修復】precache 條目豁免 trim。
+   三個鏡頭獨立命中同一條:RUNTIME precache 的遊戲殼(3 HTML + 3 CSS + verify.html)
+   是整份快取裡「唯一永不被重新請求」的鍵 —— network-first 的 cache.put 對其他頁面是
+   「刪同鍵再 append」(推到最新端),而殼從不被重新 put → 永遠停在最舊端 →
+   讀 43 章 + 開一次 LM402(~47 檔)≈ 105-110 鍵 > 80,trimCache 第一批吃掉的
+   正是本輪剛買到的離線殼;HTML 被逐出後斷網開遊戲頁,navigate 回退還會端出
+   reader.html。修法:trim 只在「非 precache 鍵」上計數與刪除(protect 集合以
+   pathname 比對);上限語意變成「precache 之外最多 N 條」,總量上界 = N + 名單長度。
+   STATIC 同樣加保護(對稱 + 未來擴名單時免踩同坑;現況 400 上限本就有餘裕)。 */
+const RUNTIME_PRECACHE_SET = new Set(RUNTIME_PRECACHE_URLS);
+const STATIC_PRECACHE_SET = new Set(STATIC_PRECACHE_URLS);
+async function trimCache(cacheName, maxItems, protectPaths) {
   const cache = await caches.open(cacheName);
-  const keys = await cache.keys();
+  let keys = await cache.keys();
+  if (protectPaths) keys = keys.filter(k => {
+    try { return !protectPaths.has(new URL(k.url).pathname); } catch (e) { return true; }
+  });
   if (keys.length > maxItems) {
     await Promise.all(keys.slice(0, keys.length - maxItems).map(k => cache.delete(k)));
   }
@@ -295,7 +309,7 @@ function startAudioWarm(event, url, cache, putFromStream) {
         if (!res || res.status !== 200) return;
         await cache.put(url, res);
       }
-      await trimCache(STATIC_CACHE, MAX_STATIC_ITEMS);
+      await trimCache(STATIC_CACHE, MAX_STATIC_ITEMS, STATIC_PRECACHE_SET);
     } catch (e) {
       // tee 寫入失敗(quota / 連線中斷)→ 退回獨立抓一次;再失敗就放棄,不影響本次播放。
       if (!putFromStream) return;
@@ -303,7 +317,7 @@ function startAudioWarm(event, url, cache, putFromStream) {
         const res = await fetch(url, { cache: 'no-cache' });
         if (res && res.status === 200) {
           await cache.put(url, res);
-          await trimCache(STATIC_CACHE, MAX_STATIC_ITEMS);
+          await trimCache(STATIC_CACHE, MAX_STATIC_ITEMS, STATIC_PRECACHE_SET);
         }
       } catch (e2) { /* 暖檔失敗不影響本次播放 */ }
     }
@@ -437,7 +451,7 @@ self.addEventListener('fetch', event => {
             const clone = response.clone();
             caches.open(STATIC_CACHE)
               .then(cache => cache.put(request, clone))
-              .then(() => trimCache(STATIC_CACHE, MAX_STATIC_ITEMS))
+              .then(() => trimCache(STATIC_CACHE, MAX_STATIC_ITEMS, STATIC_PRECACHE_SET))
               .catch(err => { console.warn('[sw] static cache.put failed:', url.pathname, err && err.message); });
           }
           return response;
@@ -456,7 +470,7 @@ self.addEventListener('fetch', event => {
           const clone = response.clone();
           caches.open(RUNTIME_CACHE)
             .then(cache => cache.put(request, clone))
-            .then(() => trimCache(RUNTIME_CACHE, MAX_RUNTIME_ITEMS))
+            .then(() => trimCache(RUNTIME_CACHE, MAX_RUNTIME_ITEMS, RUNTIME_PRECACHE_SET))
             .catch(err => {
               // cache.put 失敗(quota exceeded / Range response 等)— 不影響 main response delivery
               console.warn('[sw] cache.put failed:', url.pathname, err && err.message);
