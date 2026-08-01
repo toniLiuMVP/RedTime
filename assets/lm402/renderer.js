@@ -3908,16 +3908,20 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     // 會遮蔽外層同名的 module 變數;本函式不使用外層的相機 q。
     const s = Te.shadow, q = __adaptiveQ;
     const avg = q.samples.length >= 45 ? q.samples.reduce((a, b) => a + b, 0) / q.samples.length : 0;
-    const want = (U.shadowMap.enabled && q.enabled && __shN > 1 && (q.level > 0 || avg >= 50)) ? __shN : 1;
+    /* 門檻 45 而非 50(R6 收卷裁決):50 會造出 avg∈[45,50) 的死區 —— 治理器不降級
+       (要 <45)、閘門也不開(要 ≥50)→ 邊緣機在最需要省的時候拿不到隔幀。
+       LM402 的投影者已被 FNV 指紋證明全靜態(落後 1 幀 = 1/42000 texel),
+       視覺代價為零,沒有理由在邊緣機上關閉;遲滯交給治理器的 level 機制。 */
+    const want = (U.shadowMap.enabled && q.enabled && __shN > 1 && (q.level > 0 || avg >= 45)) ? __shN : 1;
     if (want < 2) {                       // 還原:一定要補一次 needsUpdate,否則停在舊圖
       if (__shOn) { __shOn = false; s.autoUpdate = true; s.needsUpdate = true; __shF = 0; }
       return;
     }
     if (!__shOn) { __shOn = true; s.autoUpdate = false; __shF = 0; }
-    // ★ setRuntimeConfig 換 tier 時會 dispose 掉 shadow.map / shadow.mapPass 並設成 null
-    //   (本檔 Te.shadow.map/mapPass 的 dispose 兩行)。autoUpdate=false 之下若不強制
-    //   needsUpdate,three 會直接 continue、永遠不再重建 → 全場靜默失去陰影。
-    //   這一行是整個改動的單點失效防線。
+    // ★ setRuntimeConfig 換 tier 時會 dispose 掉 shadow.map / shadow.mapPass 並設成 null。
+    //   【R6 收卷更正】這不是「拿掉就全滅」的單點防線 —— 實測把本子句剝掉後陰影照樣
+    //   在下一個 modulo 命中幀重建(three 的 null===shadow.map 分支)。它實際買到的是
+    //   「dispose 後最多 N−1 幀的無陰影閃格」消除,以及 N 調大時的保險;保留。
     if (__shF++ % __shN === 0 || !s.map || !s.mapPass) s.needsUpdate = true;
   }
   if (typeof window !== "undefined")
