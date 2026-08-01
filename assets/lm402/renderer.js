@@ -3902,22 +3902,71 @@ export function createLm402Scene(D, runtimeOptions = {}) {
   // 視覺代價 = 0:投影者集合(castShadow ∪ receiveShadow,VSM 下 receiveShadow 也進圖)
   //   的 matrix/morph FNV 指紋橫跨 85 秒 7 次取樣全同,太陽與 shadow camera 也全同;
   //   最悲觀的動件位移 0.00022 m / 6 s,對照 1 texel = 15.63 mm、blur 足跡 218.8 mm。
-  let __shF = 0, __shOn = false, __shN = 2;
+  /* 【R6 審核修復】狀態只有三個,而且都不是別人的:
+       __shF     = 隔幀計數器;__shN = 週期;__shEmaMs = 自帶的幀時 EMA。
+     「隔幀開沒開」不再另存鏡像,唯一狀態源是 Te.shadow.autoUpdate 本身
+     (與天堂路原版 tt_shTick 對齊)。理由:鏡像一旦與真值分歧,兩個方向都是靜默
+     失效 —— 別人把 autoUpdate 設回 true 而鏡像還是 true,就再也不會關回去(不省
+     卻回報 on);反向則沒人補 needsUpdate,陰影永久停在最後一張圖。本檔自己就有
+     一整段在講 tier 切換會 dispose shadow.map,Te.shadow 是多方會碰的物件。 */
+  let __shF = 0, __shN = 2, __shEmaMs = 0, __shLastMs = 0;
+  /* 為什麼自帶 EMA,而不是讀 __adaptiveQ.samples 算平均 fps:
+     (a) 寄生:samples 的唯一 push 點在 __adaptiveStep() 的 `!__postfx` 早退**之後**。
+         postfx 建構失敗(?postfxfail=1,或 lens dirt/rain 要的 getContext("2d") 回 null)
+         與 render 期 one-shot 降級之後,samples 恆空、level 恆 0 → 舊閘門恆為 false,
+         隔幀永久且靜默關閉。而那正是最貴的一條路:__postfx === null 時
+         _effectiveBufferScale 把 drawing buffer 放大到 1.5× 用超取樣補回失去的 MSAA,
+         畫素量最大的組態反而完全拿不到陰影節省。中途降級更糟 —— samples 凍結成一組
+         永不更新的死值,機器變快變慢都不再反應。
+     (b) <5fps 盲區:__adaptiveStep 的 `dt > 200` 過濾等價於「fps < 5 的幀不收」。真的
+         跑到 3-4fps 的機器(2048² VSM + 老內顯)samples 恆空 → avg 恆 0 → 隔幀永不
+         啟動,正好在最需要省的機器上失效。本 EMA 不做這個過濾。
+     (c) 30Hz 裝置:avg ≈ 30 永遠達不到門檻,只能等治理器把畫質一路砍到 level>0 才
+         順便開;而治理器分不出「GPU 跑不動」與「vsync 鎖 30Hz」。
+     (d) bimodal 高估:交替 16.7ms/300ms 的抖動機(實際 ~6.3fps)只有 16.7ms 的幀進
+         samples → avg ≈ 59.9(離線重放算式所得),不但 ≥45,還逼近 56 那條升級線;
+         「avg 是吞吐量代表」這個讀法不成立。EMA 長幀照收,同一台機器讀到 ema ≈ 162ms。
+     (e) 歸零震盪:治理器每次升降級都 `s.length = 0`,之後 ≥45 幀 avg = 0;升回 level 0
+         的那一刻隔幀被關掉再開,每次切換補一次 needsUpdate 全量重畫。EMA 是連續量,
+         沒有歸零點。
+     α = 0.05 → 時間常數約 20 幀。>1000ms 的樣本整筆丟棄:那是分頁切走 / 睡眠回來的
+     離群,不是這台機器的吞吐量(這是唯一的過濾,與 (b) 的 5fps 硬地板差 200 倍;
+     離線重放:200 幀 60fps + 一次 5 秒切走 + 40 幀 → 丟 1 筆,ema 仍是 16.70)。
+     角落:真的每幀都 >1s(<1fps)的機器一筆都收不到,ema 停在 0 → 閘門判定「開」。
+     方向正確(那種機器最該省),而且和 (b) 的舊行為(永不啟動)恰好相反。 */
   function __shTick() {
     // 注意:以下 s / q 是本函式的區域綁定(s = 太陽的 shadow,q = 治理器狀態),
     // 會遮蔽外層同名的 module 變數;本函式不使用外層的相機 q。
     const s = Te.shadow, q = __adaptiveQ;
-    const avg = q.samples.length >= 45 ? q.samples.reduce((a, b) => a + b, 0) / q.samples.length : 0;
-    /* 門檻 45 而非 50(R6 收卷裁決):50 會造出 avg∈[45,50) 的死區 —— 治理器不降級
-       (要 <45)、閘門也不開(要 ≥50)→ 邊緣機在最需要省的時候拿不到隔幀。
-       LM402 的投影者已被 FNV 指紋證明全靜態(落後 1 幀 = 1/42000 texel),
-       視覺代價為零,沒有理由在邊緣機上關閉;遲滯交給治理器的 level 機制。 */
-    const want = (U.shadowMap.enabled && q.enabled && __shN > 1 && (q.level > 0 || avg >= 45)) ? __shN : 1;
+    // 幀時取樣:每幀無條件更新(包含隔幀關閉期間,否則沒有回到「開」的路)。
+    const __shNow = performance.now();
+    const __shDt = __shNow - __shLastMs;
+    __shLastMs = __shNow;
+    if (__shDt > 0 && __shDt <= 1000)
+      __shEmaMs = __shEmaMs > 0 ? __shEmaMs + 0.05 * (__shDt - __shEmaMs) : __shDt;
+    /* 門檻 22.2ms ≈ 45fps(R6 收卷把 50 改成 45 的等價換算:1000/45 = 22.22),不是 20ms:
+       20ms(50fps)會造出 ema∈(20, 22.2] 的死區 —— 治理器不降級(它要 avg < 45)、閘門
+       也不開 → 邊緣機在最需要省的時候拿不到隔幀。門檻對齊之後,兩個子句把數線鋪滿:
+       fps ≥ 45 → ema 子句開;fps < 45 → 治理器降級 → level > 0 子句開。剩下的「關」
+       只有開機前幾幀的 ramp,以及 (d) 那種 avg 與 ema 分歧的抖動機。
+       三個子句各自的意思:
+         q.level > 0        治理器已經在砍畫質 = 這台機器需要省。
+         __shEmaMs <= 22.2  跑得動 = 隔幀不會讓它掉幀,而投影者已被 FNV 指紋證明全靜態
+                            (落後 1 幀 = 1/42000 texel),視覺代價為零,沒有理由不開。
+         __postfx === null  postfx 已死 = 確定是弱機/降級狀態,而且同時在付 1.5× buffer,
+                            更該開;這條也是治理器整個停擺時唯一還會動的訊號。
+       q.enabled 不在閘門裡:那是「鎖住 postfx tuning 做 A/B」的旋鈕(見 __ADAPTIVE_Q__),
+       把它當成陰影總開關會讓 A/B 組態量不到 −18.5%,而且 console 救不回來。陰影的逃生口
+       是 __SHADOW_INTERLEAVE__(1)。
+       門檻附近不會震盪:隔幀開 → 每幀成本降 → ema 降 → 續開;關 → 成本升 → ema 升 →
+       續關(正回饋 = 雙穩態)。真的變慢那條由 q.level > 0 接手。 */
+    const want = (U.shadowMap.enabled && __shN > 1 &&
+      (q.level > 0 || __shEmaMs <= 22.2 || __postfx === null)) ? __shN : 1;
     if (want < 2) {                       // 還原:一定要補一次 needsUpdate,否則停在舊圖
-      if (__shOn) { __shOn = false; s.autoUpdate = true; s.needsUpdate = true; __shF = 0; }
+      if (!s.autoUpdate) { s.autoUpdate = true; s.needsUpdate = true; __shF = 0; }
       return;
     }
-    if (!__shOn) { __shOn = true; s.autoUpdate = false; __shF = 0; }
+    if (s.autoUpdate) { s.autoUpdate = false; __shF = 0; }
     // ★ setRuntimeConfig 換 tier 時會 dispose 掉 shadow.map / shadow.mapPass 並設成 null。
     //   【R6 收卷更正】這不是「拿掉就全滅」的單點防線 —— 實測把本子句剝掉後陰影照樣
     //   在下一個 modulo 命中幀重建(three 的 null===shadow.map 分支)。它實際買到的是
@@ -3925,7 +3974,7 @@ export function createLm402Scene(D, runtimeOptions = {}) {
     if (__shF++ % __shN === 0 || !s.map || !s.mapPass) s.needsUpdate = true;
   }
   if (typeof window !== "undefined")
-    window.__SHADOW_INTERLEAVE__ = (n = 2) => (__shN = Math.max(1, n | 0), { n: __shN, on: __shOn });
+    window.__SHADOW_INTERLEAVE__ = (n = 2) => (__shN = Math.max(1, n | 0), { n: __shN, on: !Te.shadow.autoUpdate, emaMs: __shEmaMs });
 
   if (typeof window !== "undefined") {
     window.__POSTFX__ = __postfx;
@@ -8723,9 +8772,10 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         __sunFar.copy(SUNSET_SUN_DIR).multiplyScalar(1000).add(q.position).project(q),
         __sunUv.set(__sunFar.x * 0.5 + 0.5, __sunFar.y * 0.5 + 0.5),
         __adaptiveStep(),
-        // 【R6 R-2】Tier 9.2 陰影隔幀。必須在 __adaptiveStep() 之後(要吃到這一幀剛
-        //   更新的 fps 樣本與 level),且在 __renderFrame()/U.render 之前(needsUpdate
-        //   要在這一幀的 shadowMap.render 之前生效)。
+        // 【R6 R-2】Tier 9.2 陰影隔幀。放在 __adaptiveStep() 之後,是為了吃到這一幀剛
+        //   更新的 q.level(fps 訊號已改成 __shTick 自帶的 EMA,不再依賴治理器的 samples
+        //   —— 見 __shTick 上方的 (a)-(e));必須在 __renderFrame()/U.render 之前
+        //   (needsUpdate 要在這一幀的 shadowMap.render 之前生效)。
         __shTick(),
         // 【R4 S2】原本是 `(__postfx ? __postfx.render(...) : U.render(W, q))`。
         //   抽成 helper 以便加上 render 期的 one-shot failover（見建場處 __renderFrame）。
