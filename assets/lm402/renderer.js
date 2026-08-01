@@ -3890,6 +3890,39 @@ export function createLm402Scene(D, runtimeOptions = {}) {
       __adaptiveQ.cooldown = 120; s.length = 0;
     }
   }
+
+  // ── Tier 9.2 陰影隔幀(移植天堂路 tt_shTick)──────────────────────────────
+  // vendored three 的 WebGLShadowMap.render 裡,VSM 的 blur pass C(shadow,camera) 位於
+  // 逐燈迴圈內、`if(shadow.autoUpdate===false && shadow.needsUpdate===false) continue;`
+  // 之後 → 關 per-light autoUpdate 會一起跳過 depth pass + 兩趟 2048²×20 的 separable blur。
+  // 用 per-light 旗標而不是 renderer.shadowMap.autoUpdate:全域旗標的閘門在逐燈迴圈**之前**,
+  // 將來多一盞投影燈就會被一起卡住(天堂路 G2 已踩過)。
+  // 量測(R6 Wave R,1280×800 / canvas 930×760 / dpr1):陰影 pass = 全部 draw 的 37.0%
+  //   (2048² 桶 694 / 合計 1877);N=2 → 347(總 draw −18.5%);texture fetch −83.9M/frame。
+  // 視覺代價 = 0:投影者集合(castShadow ∪ receiveShadow,VSM 下 receiveShadow 也進圖)
+  //   的 matrix/morph FNV 指紋橫跨 85 秒 7 次取樣全同,太陽與 shadow camera 也全同;
+  //   最悲觀的動件位移 0.00022 m / 6 s,對照 1 texel = 15.63 mm、blur 足跡 218.8 mm。
+  let __shF = 0, __shOn = false, __shN = 2;
+  function __shTick() {
+    // 注意:以下 s / q 是本函式的區域綁定(s = 太陽的 shadow,q = 治理器狀態),
+    // 會遮蔽外層同名的 module 變數;本函式不使用外層的相機 q。
+    const s = Te.shadow, q = __adaptiveQ;
+    const avg = q.samples.length >= 45 ? q.samples.reduce((a, b) => a + b, 0) / q.samples.length : 0;
+    const want = (U.shadowMap.enabled && q.enabled && __shN > 1 && (q.level > 0 || avg >= 50)) ? __shN : 1;
+    if (want < 2) {                       // 還原:一定要補一次 needsUpdate,否則停在舊圖
+      if (__shOn) { __shOn = false; s.autoUpdate = true; s.needsUpdate = true; __shF = 0; }
+      return;
+    }
+    if (!__shOn) { __shOn = true; s.autoUpdate = false; __shF = 0; }
+    // ★ setRuntimeConfig 換 tier 時會 dispose 掉 shadow.map / shadow.mapPass 並設成 null
+    //   (本檔 Te.shadow.map/mapPass 的 dispose 兩行)。autoUpdate=false 之下若不強制
+    //   needsUpdate,three 會直接 continue、永遠不再重建 → 全場靜默失去陰影。
+    //   這一行是整個改動的單點失效防線。
+    if (__shF++ % __shN === 0 || !s.map || !s.mapPass) s.needsUpdate = true;
+  }
+  if (typeof window !== "undefined")
+    window.__SHADOW_INTERLEAVE__ = (n = 2) => (__shN = Math.max(1, n | 0), { n: __shN, on: __shOn });
+
   if (typeof window !== "undefined") {
     window.__POSTFX__ = __postfx;
     window.__ADAPTIVE_Q__ = __adaptiveQ;
@@ -8686,6 +8719,10 @@ export function createLm402Scene(D, runtimeOptions = {}) {
         __sunFar.copy(SUNSET_SUN_DIR).multiplyScalar(1000).add(q.position).project(q),
         __sunUv.set(__sunFar.x * 0.5 + 0.5, __sunFar.y * 0.5 + 0.5),
         __adaptiveStep(),
+        // 【R6 R-2】Tier 9.2 陰影隔幀。必須在 __adaptiveStep() 之後(要吃到這一幀剛
+        //   更新的 fps 樣本與 level),且在 __renderFrame()/U.render 之前(needsUpdate
+        //   要在這一幀的 shadowMap.render 之前生效)。
+        __shTick(),
         // 【R4 S2】原本是 `(__postfx ? __postfx.render(...) : U.render(W, q))`。
         //   抽成 helper 以便加上 render 期的 one-shot failover（見建場處 __renderFrame）。
         //   逗號序列的項數與最後一項的求值位置不變；兩種寫法的值都是 undefined。
