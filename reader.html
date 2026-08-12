@@ -1405,6 +1405,14 @@
         .verify-verdict.warn { border-left-color: #e6b98c; background: rgba(230,185,140,.10); }
         .verify-verdict.bad { border-left-color: #c4555f; background: rgba(196,85,95,.10); }
       .verify-verdict.zero { border-left-color: #8f9ad6; background: rgba(143,154,214,.10); }
+      .search-zero { margin: 10px 14px; padding: 12px 14px; border-radius: 10px; border-left: 4px solid #8f9ad6; background: rgba(143,154,214,.10); }
+      .search-zero .sz-h { font-size: 14px; color: #aab5e8; letter-spacing: .06em; margin-bottom: 5px; }
+      .search-zero .sz-d { font-size: 13px; color: #b8b2a4; line-height: 1.75; }
+      .verify-spec { margin: 0 14px 10px; padding: 8px 12px; border-radius: 8px; background: rgba(255,255,255,.03); color: #9a9484; font-size: 12px; letter-spacing: .03em; line-height: 1.7; }
+      .verify-rules { margin: 16px 14px 8px; padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,.07); }
+      .verify-rules .vr-h { font-size: 13px; letter-spacing: .1em; color: #c9b98a; margin-bottom: 7px; }
+      .verify-rules .vr-i { font-size: 12.5px; color: #b8b2a4; line-height: 1.85; }
+      .verify-rules .vr-f { font-size: 12.5px; color: #9a9484; margin-top: 6px; }
         .verify-verdict .vv-h { font-size: 15px; letter-spacing: .08em; margin-bottom: 5px; color: #e0e0e0; }
         .verify-verdict.ok .vv-h { color: #9fd4ad; }
         .verify-verdict.warn .vv-h { color: #f0cfa0; }
@@ -9920,6 +9928,33 @@
       };
       // N3：正文內「編碼母題詞」inline 解碼。defs 沿用已核可的辭典文字(canon-safe)。
       // 必須在 render loop 之前定義(const 無 hoisting，放後面會 TDZ 壞)。
+      // 零牆對照 12 對（F03《零牆總表》v3 §2）——左為全書 0 見之詞，右為底本實際寫的。
+      // 數字皆經底本複驗；與查證器 ZERO_WALLS 同源，此處只取最有對照力的 12 組。
+      const ZERO_PAIRS = [
+        [["我愛妳"], "我愛你 1 見（EP37，小朋友問老師的那句，還包在『』裡）"],
+        [["吻", "接吻", "親吻"], "抱 54 見"],
+        [["戒指"], "紅線 52 見"],
+        [["緣分"], "紅線 52 見・一眼瞬間 15 見"],
+        [["市集"], "菜市場 6 見（全在 EP38）"],
+        [["天堂路", "天堂"], "海軍陸戰隊 2 見；彼岸只有一個字——祂 12 見"],
+        [["求婚", "結婚", "離婚"], "老婆 1 見（EP42，向陌生人借滑鼠的那一句）"],
+        [["雷達", "軍中日記"], "夜哨 1 見・新加坡 1 見・演習 1 見（EP40 的軍旅骨架）"],
+        [["時光機"], "時空手錶 4 見——而且它沒有壞，功能一直正常"],
+        [["平行宇宙"], "平行世界 3 見（EP2、EP15、EP41）"],
+        [["二說不說"], "二話不說 1 見（EP42）"],
+        [["理容院"], "美容院 2 見"]
+      ];
+      // 查表前先確認該詞在現行正文中確實 0 見（與查證器同一道自檢），避免正文更新後說謊。
+      function _zeroPair(q) {
+        q = (q || "").trim(); if (!q) return null;
+        var data = _verifyData();
+        for (var i = 0; i < ZERO_PAIRS.length; i++) {
+          if (ZERO_PAIRS[i][0].indexOf(q) < 0) continue;
+          for (var j = 0; j < data.length; j++) { if (data[j].flat.indexOf(_verifyFlat(q)) >= 0) return null; }
+          return [q, ZERO_PAIRS[i][1]];
+        }
+        return null;
+      }
       const GLOSSARY_DECODE = {
         "1163": "一班火車的車次，一則用心編碼、卻被照字面讀的訊息。",
         "20:57": "學長會精準打電話來的那一分鐘。",
@@ -13875,7 +13910,41 @@
           vwrap.append(vInput, vbar);
           var vres = document.createElement("div"); vres.id = "verify-results"; vres.className = "search-results";
           _verifyHint(vres);
-          paneVerify.append(vwrap, vres);
+          // 底本規格卡：數字一律由頁內 EPISODES 即時計算，不寫死——底本更新即自動跟著改。
+          var vspec = document.createElement("div"); vspec.className = "verify-spec";
+          (function () {
+            var vpCount = {}, segs = 0, stars = 0;
+            EPISODES.forEach(function (e) {
+              var h = e.html || "";
+              (h.match(/<div class="viewpoint">([^<]*)<\/div>/g) || []).forEach(function (m) {
+                var lab = m.replace(/<[^>]+>/g, "");
+                var bar = lab.lastIndexOf("｜");            // EP42 行內式「2026年7月｜學長視角」
+                if (bar >= 0) lab = lab.slice(bar + 1);
+                vpCount[lab] = (vpCount[lab] || 0) + 1; segs++;
+              });
+              stars += (h.match(/🌟🌟🌟/g) || []).length;
+            });
+            var order = ["學長視角", "女兒視角", "學妹視角", "把拔視角"];
+            var dist = order.filter(function (k) { return vpCount[k]; })
+                            .map(function (k) { return k.replace("視角", "") + " " + vpCount[k]; }).join("・");
+            vspec.textContent = "底本 修訂四版 20260812｜EP0–EP" + (EPISODES.length - 1) +
+              " 連續 " + EPISODES.length + " 集・" + segs + " 段・" + stars + " 組 🌟🌟🌟｜視角 " + dist;
+          })();
+          // 引用四律：判定文案引用了這個名詞，此處給出四條全文（與 verify.html 頁尾同文）。
+          var vrules = document.createElement("div"); vrules.className = "verify-rules";
+          var rh = document.createElement("div"); rh.className = "vr-h"; rh.textContent = "引用四律";
+          vrules.appendChild(rh);
+          ["逐字——連標點一起照抄，不改全形半形、不補不刪。",
+           "中段省略一律用「……」，且不得刪去下文所依賴的先行詞。",
+           "內層引號「」『』照抄，不統一化。",
+           "概括不入引號——你自己的話就不要加引號。"].forEach(function (t, n) {
+            var li = document.createElement("div"); li.className = "vr-i";
+            li.textContent = (n + 1) + "　" + t; vrules.appendChild(li);
+          });
+          var rf = document.createElement("div"); rf.className = "vr-f";
+          rf.textContent = "引用前先查在不在。";
+          vrules.appendChild(rf);
+          paneVerify.append(vspec, vwrap, vres, vrules);
           box.append(head, paneFind, paneVerify); ov.appendChild(box); document.body.appendChild(ov);
           var t;
           input.addEventListener("input", function () { clearTimeout(t); t = setTimeout(function () { runSearch(input.value); }, 200); });
@@ -14214,7 +14283,21 @@
         if (typeof STORYTELLERS !== 'undefined') for (_sk in STORYTELLERS) { if (hits.length >= CAP) break; (STORYTELLERS[_sk] || []).forEach(function (s) { collectHits(s.text || '', +_sk, 'st', 1); }); }
         if (typeof LITERATI !== 'undefined') for (_sk in LITERATI) { if (hits.length >= CAP) break; (LITERATI[_sk] || []).forEach(function (e2) { collectHits((e2.quote || '') + ' ' + (e2.comment || ''), +_sk, 'lit', 1); }); }
         if (typeof LITERATI_DEBATES !== 'undefined') for (_sk in LITERATI_DEBATES) { if (hits.length >= CAP) break; (LITERATI_DEBATES[_sk] || []).forEach(function (d) { collectHits(d.topic || '', +_sk, 'debate', 1); (d.turns || []).forEach(function (t) { if (hits.length < CAP) collectHits(t.say || '', +_sk, 'debate', 1); }); }); }
-        if (!hits.length) { _searchHint(box, "找不到「" + q + "」。換個說法，我再幫你翻一次。", "search-empty"); return; }
+        if (!hits.length) {
+          // 零牆對照（F03 §2「最鋒利的防幻覺工具」12 對）：查無結果時，若查的是零見詞，
+          // 直接告訴讀者這本書寫的是什麼。數字皆經底本複驗。
+          var zp = _zeroPair(q);
+          _searchHint(box, "找不到「" + q + "」。" + (zp ? "" : "換個說法，我再幫你翻一次。"), "search-empty");
+          if (zp) {
+            var zb = document.createElement("div"); zb.className = "search-zero";
+            var z1 = document.createElement("div"); z1.className = "sz-h";
+            z1.textContent = "「" + zp[0] + "」全書 0 見";
+            var z2 = document.createElement("div"); z2.className = "sz-d";
+            z2.textContent = "這本書寫的是：" + zp[1];
+            zb.append(z1, z2); box.appendChild(zb);
+          }
+          return;
+        }
         box.textContent = "";
         var _cnt = document.createElement("div");
         _cnt.className = "search-res-count";
