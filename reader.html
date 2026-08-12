@@ -13934,7 +13934,12 @@
         ["二說不說", "已勘誤。現行版本為「二話不說」。"],
         ["理容院", "已勘誤。現行版本為「美容院」。"],
         ["我的鬼怪大人", "此劇名不存在於正文。EP28 車內那段看的是《苦盡柑來遇見你》；全書無「鬼怪」二字。"],
-        ["鬼怪", "全書無「鬼怪」二字。EP28 車裡聊的那部影集，劇名是《苦盡柑來遇見你》。"]
+        ["鬼怪", "全書無「鬼怪」二字。EP28 車裡聊的那部影集，劇名是《苦盡柑來遇見你》。"],
+        ["我會替妳陪著把拔", "EP34 偽台詞，現行正文 0 見（永禁）；曾誤載於站上時間線，已修除。"],
+        ["我必須強迫讓妳下定決心", "捏造引文，現行正文 0 見（永禁）。"],
+        ["意識市集", "外部自造誤詞，現行正文 0 見（永禁；市集 0、菜市場 6）。EP38 段題正形：「菜市場裡的我們｜意識開會」。"],
+        ["錶停了", "時空手錶功能正常，非停錶。EP23 逐字：「不管我現在在那個時空，都會自動顯示現在正確的時間還有日期」；凍結者為黑洞座標顯示，EP24：「2022年01月30日20:57:00」。"],
+        ["停掉的錶", "時空手錶功能正常，非停錶。凍結者為黑洞座標顯示（EP24），非手錶故障。"]
       ];
       function _verifySim(a, b) {
         if (!a.length || !b.length) return 0;
@@ -13945,6 +13950,25 @@
         }
         return 2 * best / (a.length + b.length);
       }
+      // _verifyCov(q,t)=查詢有多少比例逐字出現在 t 之中（遞迴分塊累計）。
+      // 舊 _verifySim 的分母含「整集全文長度」，一般引文對整集恆落在 0-20%，
+      // 使 0.9/0.6 判級不可達（一字之差與全然無關同判「無對應」）。
+      // 改以查詢長度為分母，並對最長共通段左右遞迴累加——否則字串中段的差異
+      // （如內層引號改寫）會把比對截成碎片而嚴重低估。計分只採 ≥4 字之段。
+      // 與 verify.html 之 cov() 同一演算法，兩處須同步修改。
+      function _verifyBlk(q, t) {
+        if (q.length < 4) return 0;
+        for (var w = q.length; w >= 4; w--) {
+          for (var i = 0; i + w <= q.length; i++) {
+            var p = q.substr(i, w), k = t.indexOf(p);
+            if (k >= 0) return w + _verifyBlk(q.slice(0, i), t.slice(0, k)) + _verifyBlk(q.slice(i + w), t.slice(k + w));
+          }
+        }
+        return 0;
+      }
+      function _verifyCov(q, t) { return q.length ? _verifyBlk(q, t) / q.length : 0; }
+      // 標點／引號差異專判：剝除全部標點與引號後若仍相符，差異僅在標點形。
+      function _verifyCore(s) { return (s || "").replace(/[「」『』（）(),，。.！!？?、；;：:…～~\-\s]+/g, ""); }
       function _verifyHint(box, txt) {
         if (!box) return;
         box.textContent = "";
@@ -14004,7 +14028,14 @@
           hits.forEach(function (h) { _verifyRenderHit(box, h, q, false); });
         } else {
           var bb = 0, be = null;
-          for (k = 0; k < data.length; k++) { var s = _verifySim(q, data[k].flat); if (s > bb) { bb = s; be = data[k]; } }
+          var cq = _verifyCore(q), punct = null;
+          if (cq.length >= 4) { for (k = 0; k < data.length; k++) { if (_verifyCore(data[k].flat).indexOf(cq) >= 0) { punct = data[k]; break; } } }
+          if (punct) {
+            _verifyVerdict(box, "warn", "標點差異", "文字本身與正文相符，差別只在標點或引號形（全形半形、「」與『』、逗號句號）。引用四律要求逐字含標點、內層「」『』照抄——請以下方原文為準逐字校正。出現於 EP" + punct.ep + "。");
+            _verifyRenderHit(box, punct, q, true);
+            return;
+          }
+          for (k = 0; k < data.length; k++) { var s = _verifyCov(q, data[k].flat); if (s > bb) { bb = s; be = data[k]; } }
           var pct = Math.round(bb * 100);
           if (bb >= 0.9) _verifyVerdict(box, "warn", "近似（" + pct + "%）", "極可能是標點全形半形差異或舊版文字。請以下方原文為準逐字校正。");
           else if (bb >= 0.6) _verifyVerdict(box, "warn", "改寫（" + pct + "%）", "與原文有明顯出入，通常是跨行拼接或概括入引號。不可加引號使用。");
