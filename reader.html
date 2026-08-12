@@ -1408,7 +1408,7 @@
       .search-zero { margin: 10px 14px; padding: 12px 14px; border-radius: 10px; border-left: 4px solid #8f9ad6; background: rgba(143,154,214,.10); }
       .search-zero .sz-h { font-size: 14px; color: #aab5e8; letter-spacing: .06em; margin-bottom: 5px; }
       .search-zero .sz-d { font-size: 13px; color: #b8b2a4; line-height: 1.75; }
-      /* 卷首書名行：底本 EP0 之首行，依 I02 計法歸戶 EP0。此處淡化呈現，
+      /* 卷首書名行：底本 EP0 之首行，依 I02 v5（20260812 修訂四版）計法歸戶 EP0。此處淡化呈現，
          既不改動正文歸戶，也不干擾閱讀節奏。 */
       .volume-title { text-align: center; color: #8a8478; letter-spacing: .18em; font-size: 13px; margin: 2px 0 14px; opacity: .75; }
       .verify-spec { margin: 0 14px 10px; padding: 8px 12px; border-radius: 8px; background: rgba(255,255,255,.03); color: #9a9484; font-size: 12px; letter-spacing: .03em; line-height: 1.7; }
@@ -9931,7 +9931,7 @@
       };
       // N3：正文內「編碼母題詞」inline 解碼。defs 沿用已核可的辭典文字(canon-safe)。
       // 必須在 render loop 之前定義(const 無 hoisting，放後面會 TDZ 壞)。
-      // 零牆對照 12 對（F03《零牆總表》v3 §2）——左為全書 0 見之詞，右為底本實際寫的。
+      // 零牆對照 12 對（F03《零牆總表》v3・80 面版 20260812 §2）——左為全書 0 見之詞，右為底本實際寫的。
       // 數字皆經底本複驗；與查證器 ZERO_WALLS 同源，此處只取最有對照力的 12 組。
       const ZERO_PAIRS = [
         [["我愛妳"], "我愛你 1 見（EP37，小朋友問老師的那句，還包在『』裡）"],
@@ -14029,7 +14029,7 @@
         ["錶停了", "時空手錶功能正常，非停錶。EP23 逐字：「不管我現在在那個時空，都會自動顯示現在正確的時間還有日期」；凍結者為黑洞座標顯示，EP24：「2022年01月30日20:57:00」。"],
         ["停掉的錶", "時空手錶功能正常，非停錶。凍結者為黑洞座標顯示（EP24），非手錶故障。"]
       ];
-      // ── 零牆詞表（F03《零牆總表》v3）──全書 0 見之詞：命中即代表這句不可能是逐字引文。
+      // ── 零牆詞表（F03《零牆總表》v3・80 面版 20260812）──全書 0 見之詞：命中即代表這句不可能是逐字引文。
       // 欄位 [詞, 說明, 對照原句(可空), 旗標]；旗標 strict＝僅短查詢觸發、ep43＝EP43/44 語彙、old＝舊版正字。
       // 已按詞長遞減排序（長詞優先命中）。與 verify.html 之 ZW 同一份資料，兩處須同步修改。
       var ZERO_WALLS = [
@@ -14081,9 +14081,6 @@
         ["過關", "「過關」在 43 集正文 0 見。站上測驗的介面用語，底本零供貨。"],
         ["跑酷", "「跑酷」在 43 集正文 0 見。EP37 那個場景的逐字是「月台上狂奔」，2 見。"],
         ["成就", "「成就」在 43 集正文 0 見。站方刻意不把閱讀做成成就徽章，故事本身也從沒用過這兩個字。"],
-        ["過世", "「過世」在 43 集正文 0 見，「去世」「葬禮」也是。這本書沒有任何一場死亡寫在台面上。"],
-        ["去世", "「去世」在 43 集正文 0 見，「過世」「葬禮」也是。"],
-        ["葬禮", "「葬禮」在 43 集正文 0 見。全書沒有喪儀場景。"],
         ["地獄", "「地獄」在 43 集正文 0 見，「天堂」也是。全書的彼岸只有一個字：祂，12 見。"],
         ["上帝", "「上帝」在 43 集正文 0 見，「天使」也是。書裡指涉神的字只有「祂」，12 見。"],
         ["天使", "「天使」在 43 集正文 0 見，「上帝」也是。書裡只用「祂」，12 見。"],
@@ -14287,7 +14284,7 @@
         if (typeof LITERATI !== 'undefined') for (_sk in LITERATI) { if (hits.length >= CAP) break; (LITERATI[_sk] || []).forEach(function (e2) { collectHits((e2.quote || '') + ' ' + (e2.comment || ''), +_sk, 'lit', 1); }); }
         if (typeof LITERATI_DEBATES !== 'undefined') for (_sk in LITERATI_DEBATES) { if (hits.length >= CAP) break; (LITERATI_DEBATES[_sk] || []).forEach(function (d) { collectHits(d.topic || '', +_sk, 'debate', 1); (d.turns || []).forEach(function (t) { if (hits.length < CAP) collectHits(t.say || '', +_sk, 'debate', 1); }); }); }
         if (!hits.length) {
-          // 零牆對照（F03 §2「最鋒利的防幻覺工具」12 對）：查無結果時，若查的是零見詞，
+          // 零牆對照（F03 v3 §2「最鋒利的防幻覺工具」12 對）：查無結果時，若查的是零見詞，
           // 直接告訴讀者這本書寫的是什麼。數字皆經底本複驗。
           var zp = _zeroPair(q);
           _searchHint(box, "找不到「" + q + "」。" + (zp ? "" : "換個說法，我再幫你翻一次。"), "search-empty");
