@@ -1,7 +1,7 @@
 // platform-run 外部化 inline script #4（CSP 撤 unsafe-inline）
 /* C6 — 月台雙時空 — Q 鍵視角切換 + 紅線視覺
  設計：Q 按下時切換 view-year (2018 ↔ 2025)， 顯示一條垂直紅線
- (EP36 「我們之間就還有一條拉得再長也不會斷的線」)。
+ (EP36 「我們之間，就還有一條拉得再長也不會斷的線。」)。
  只動 DOM overlay， 不動 game logic。 */
 (function () {
 const STYLE_ID = 'c6-redline-style';
