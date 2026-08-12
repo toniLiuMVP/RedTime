@@ -71,6 +71,26 @@ function sim(a,b){
   }
   return 2*best/(a.length+b.length);
 }
+/* cov(q,t)=查詢有多少比例逐字出現在 t 之中（遞迴分塊累計）。
+   舊 sim() 的分母含「整集全文長度」，一般引文對整集恆落在 0-20%，
+   使 0.9/0.6 判級不可達（一字之差與全然無關同判「無對應」）。
+   改以查詢長度為分母，並對最長共通段左右兩側遞迴累加——
+   否則字串中段的差異（如內層引號改寫）會把比對截成小碎片而嚴重低估。
+   計分只採 ≥4 字之段，避免無關中文因零星二三字巧合而虛高。 */
+function blk(q,t){
+  if(q.length<4)return 0;
+  for(let w=q.length;w>=4;w--){
+    for(let i=0;i+w<=q.length;i++){
+      const p=q.substr(i,w),k=t.indexOf(p);
+      if(k>=0) return w+blk(q.slice(0,i),t.slice(0,k))+blk(q.slice(i+w),t.slice(k+w));
+    }
+  }
+  return 0;
+}
+function cov(q,t){ return q.length? blk(q,t)/q.length : 0; }
+/* 標點／引號差異專判：剝除全部標點與引號後若仍相符，
+   差異僅在標點形（全半形、「」vs『』、逗號句號），屬「近原文」而非「無對應」。 */
+const core=s=>s.replace(/[「」『』（）()，,。.！!？?、；;：:…～~\-\s]+/g,'');
 function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 function chk(){
   const raw=document.getElementById('q').value.trim();
@@ -84,15 +104,25 @@ function chk(){
       return;
     }
   }
-  let hits=[];
-  for(const e of FULL){ if(e.flat.includes(q)) hits.push(e); }
+  let hits=[],allSingle=true;
+  for(const e of FULL){ if(e.flat.includes(q)){ hits.push(e); if(!e.lines.some(l=>flat(l).includes(q))) allSingle=false; } }
   let html='';
   if(hits.length){
-    html+='<div class="verdict ok"><div class="vh">逐字相符</div><div class="vd">此句存在於修訂三版，可直接引用。出現於 '+hits.map(h=>'EP'+h.ep).join('、')+'。</div></div>';
+    html+=allSingle
+      ?'<div class="verdict ok"><div class="vh">逐字相符</div><div class="vd">此句存在於修訂三版，可直接引用。出現於 '+hits.map(h=>'EP'+h.ep).join('、')+'。</div></div>'
+      :'<div class="verdict warn"><div class="vh">跨行拼接</div><div class="vd">字面在修訂三版中連得起來，但原文是分行的——引用時須保留分行，或以「……」標明省略，不得壓成一句。出現於 '+hits.map(h=>'EP'+h.ep).join('、')+'。</div></div>';
     for(const h of hits) html+=render(h,q);
   }else{
+    const cq=core(q);
+    let punct=null;
+    if(cq.length>=4) for(const e of FULL){ if(core(e.flat).includes(cq)){punct=e;break;} }
+    if(punct){
+      html+='<div class="verdict warn"><div class="vh">標點差異</div><div class="vd">文字本身與修訂三版相符，差別只在標點或引號形（全形半形、「」與『』、逗號句號）。引用四律要求逐字含標點、內層「」『』照抄——請以下方原文為準逐字校正。出現於 EP'+punct.ep+'。</div></div>';
+      html+=render(punct,q,true);
+      out.innerHTML=html;return;
+    }
     let bb=0,be=null;
-    for(const e of FULL){const s=sim(q,e.flat); if(s>bb){bb=s;be=e;}}
+    for(const e of FULL){const s=cov(q,e.flat); if(s>bb){bb=s;be=e;}}
     const p=Math.round(bb*100);
     if(bb>=0.9) html+='<div class="verdict warn"><div class="vh">近似（'+p+'%）</div><div class="vd">極可能是標點全形半形差異或舊版文字。請以下方原文為準逐字校正。</div></div>';
     else if(bb>=0.6) html+='<div class="verdict warn"><div class="vh">改寫（'+p+'%）</div><div class="vd">與原文有明顯出入，通常是跨行拼接或概括入引號。不可加引號使用。</div></div>';
